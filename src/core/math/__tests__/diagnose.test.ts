@@ -102,6 +102,12 @@ const CASES: readonly Case[] = [
     correct: '7/4',
   },
   {
+    code: 'MC-SUB-SMALLER-FROM-LARGER',
+    args: { minuend: '3 1/4', subtrahend: '1 3/4' },
+    value: '5/2',
+    correct: '3/2',
+  },
+  {
     code: 'MC-DEC-ALIGN-RIGHT',
     args: { a: '1.2', b: '0.35' },
     value: '0.47',
@@ -146,6 +152,30 @@ describe('W1 오개념 감지', () => {
       expect(detect(testCase, testCase.correct, testCase.correctRaw)).toBe(false);
     });
   }
+
+  it('MC-SUB-SMALLER-FROM-LARGER는 오개념 답만 감지하고 정답 표기는 감지하지 않는다', () => {
+    const detector = diagnoseDetectors['MC-SUB-SMALLER-FROM-LARGER'];
+    const args = { minuend: '3 1/4', subtrahend: '1 3/4' };
+    // (3 − 1) + (3/4 − 1/4) = 2 2/4
+    expect(detector?.({ value: '5/2', raw: '2 2/4', args })).toBe(true);
+    expect(detector?.({ value: '5/2', raw: '10/4', args })).toBe(true);
+    // 정답 1 2/4 = 1 1/2 = 3/2
+    expect(detector?.({ value: '3/2', raw: '1 2/4', args })).toBe(false);
+    expect(detector?.({ value: '3/2', raw: '1 1/2', args })).toBe(false);
+    expect(detector?.({ value: '6/4', raw: '6/4', args })).toBe(false);
+  });
+
+  it('MC-SUB-SMALLER-FROM-LARGER는 분수 부분을 거꾸로 뺄 수 없는 경우 감지하지 않는다', () => {
+    const detector = diagnoseDetectors['MC-SUB-SMALLER-FROM-LARGER'];
+    // 3 3/4 − 1 1/4은 빼지는 수의 분수 부분이 더 크다. 2 2/4는 정답이라 감지 대상이 아니다.
+    expect(
+      detector?.({ value: '5/2', raw: '2 2/4', args: { minuend: '3 3/4', subtrahend: '1 1/4' } }),
+    ).toBe(false);
+    // 빼지는 수가 대분수가 아니면 대상이 아니다.
+    expect(
+      detector?.({ value: '5/2', raw: '2 2/4', args: { minuend: '7/4', subtrahend: '1 3/4' } }),
+    ).toBe(false);
+  });
 
   it('정답과 같은 값이 나오는 오개념 답은 감지하지 않는다', () => {
     // 1/2 + 1/2 = 2/4는 분모끼리 더한 값이지만 답과 같다.

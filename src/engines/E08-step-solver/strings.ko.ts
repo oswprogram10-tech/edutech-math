@@ -1,0 +1,90 @@
+/** E08 단계 풀이의 학생 화면 문구. 화면에 하드코딩하지 않는다. */
+import type { OperatorKind, StepMode, TokenField } from './types';
+
+export const stepSolverStrings = {
+  name: '단계 풀이',
+  canvasLabel: '단계 풀이',
+  instructions: {
+    lines: '한 줄씩 식을 쓰고, 줄 옆 표시로 앞 줄과 값이 같은지 살펴보세요.',
+    'fraction-steps': '분수 계산을 여러 줄로 쓰고, 줄마다 단계 이름표를 붙여 보세요.',
+    debug: '친구의 풀이에서 틀린 줄을 고르고, 그 줄 아래에 고친 줄을 써 보세요.',
+  } satisfies Record<StepMode, string>,
+  configError: (message: string) => `단계 풀이 설정을 확인해 주세요: ${message}`,
+  lineName: (line: number) => `${line + 1}번째 줄`,
+  startLine: '처음 식',
+  equals: '=',
+  checkCorrect: '앞 줄과 값이 같아요',
+  checkWrong: '앞 줄과 값이 달라요',
+  checkNeutral: '아직 판정하지 않아요',
+  checkCorrectMark: '✓',
+  checkWrongMark: '✗',
+  checkNeutralMark: '·',
+  writeLine: (line: number) => `${line + 1}번째 줄에 쓰기`,
+  deleteLine: (line: number) => `${line + 1}번째 줄 지우기`,
+  addLine: '줄 추가',
+  lineKey: '현재 줄 지우기',
+  keypadLabel: '수식 키패드',
+  keyDigit: (digit: string) => `${digit} 쓰기`,
+  keyDecimal: '소수점',
+  keyFraction: '분수',
+  keyMixed: '대분수',
+  keyAdd: '더하기',
+  keySub: '빼기',
+  keyMul: '곱하기',
+  keyDiv: '나누기',
+  keyLParen: '여는 괄호',
+  keyRParen: '닫는 괄호',
+  keyBox: '네모 상자',
+  keyBackspace: '지우기',
+  fractionLabel: '분수',
+  mixedLabel: '대분수',
+  fieldLabels: {
+    value: '수',
+    whole: '자연수 부분',
+    num: '분자',
+    den: '분모',
+  } satisfies Record<TokenField, string>,
+  cellLabel: (line: number, field: TokenField) =>
+    `${line + 1}번째 줄 ${stepSolverStrings.fieldLabels[field]}`,
+  opNames: {
+    add: '더하기',
+    sub: '빼기',
+    mul: '곱하기',
+    div: '나누기',
+  } satisfies Record<OperatorKind, string>,
+  opSymbols: {
+    add: '+',
+    sub: '−',
+    mul: '×',
+    div: '÷',
+  } satisfies Record<OperatorKind, string>,
+  stepLabelTitle: '단계 이름표',
+  stepLabelNone: '이름표 없음',
+  stepLabelFor: (line: number) => `${line + 1}번째 줄 이름표`,
+  sampleTitle: '친구의 풀이',
+  samplePick: '틀린 줄을 골라 보세요.',
+  sampleLine: (line: number) => `${line + 1}번째 줄 고르기`,
+  sampleSelected: (line: number) => `${line + 1}번째 줄을 골랐어요`,
+  correctionTitle: '고친 줄',
+  counterexampleTitle: '한번 살펴보세요',
+  messageAddShrunk: (student: string, big: string) =>
+    `${student}는 더한 수 ${big}보다 작아요. 더했는데 왜 작아졌을까요?`,
+  messageAddShrunkHalf: (student: string, big: string) =>
+    `분모를 2배로 만들면 한 조각이 작아져요. ${student}는 더한 수 ${big}보다 작아요.`,
+  messageAddShrunkNoConvert: (student: string, big: string) =>
+    `분모만 바꾸고 분자는 그대로 두었어요. ${student}는 더한 수 ${big}보다 작아요.`,
+  messageAddQuestion: (a: string, b: string, student: string) =>
+    `두 수 ${a}, ${b}를 더했는데 ${student}가 됐어요. 더한 두 수보다 커졌나요?`,
+  messageBorrowAsTen: (student: string) =>
+    `받아내림한 1을 10/분모로 바꾸면 조각 수가 달라져요. ${student}를 다시 살펴보세요.`,
+  messageWholeMinus: (student: string) =>
+    `1을 분수로 바꾸지 않으면 빼는 수만큼 작아지지 않아요. ${student}를 다시 살펴보세요.`,
+  messageGeneric: (student: string) =>
+    `앞 줄과 값이 달라졌어요. ${student}에서 어느 부분이 달라졌는지 살펴보세요.`,
+  barPrevious: '앞 줄',
+  barCurrent: '이 줄',
+  barCheckLabel: '두 줄의 크기 비교',
+  overlayBarCheck: '두 줄을 막대로 비교',
+  emptyField: '빈칸',
+  keyboardHint: '키보드 숫자와 + − × ÷, 괄호로도 쓸 수 있어요. Tab으로 분수 칸을 옮겨요.',
+} as const;
