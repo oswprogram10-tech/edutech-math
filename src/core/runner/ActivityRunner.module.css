@@ -209,6 +209,38 @@
   justify-content: flex-end;
 }
 
+/* 부스터 모달. 원래 과제 화면은 뒤에 그대로 두어 조작 상태를 보존한다. */
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(20, 28, 45, 0.55);
+}
+
+.modal {
+  width: min(960px, 100%);
+  max-height: calc(100vh - 2rem);
+  overflow: auto;
+  padding: 1rem;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 18px 48px rgba(20, 28, 45, 0.28);
+}
+
+.modalTitle {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.modalActivity {
+  margin: 0.25rem 0 0.75rem;
+  color: var(--muted);
+}
+
 @media (min-width: 900px) {
   .panels[data-panel-count='2'] {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);

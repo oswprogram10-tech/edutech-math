@@ -83,7 +83,7 @@
             {
               "when": { "misconception": "MC-FRAC-ADD-DENOM" },
               "level": 1,
-              "say": "쓴 답 {student}를 다시 볼까요? {a}와 {b}를 더할 때 분모는 그대로 두는지 확인해 보세요."
+              "say": "쓴 답 {student}를 다시 볼까요? {a}에 {b}를 더했는데 {student}는 {a}보다 어떻게 달라졌나요?"
             },
             {
               "when": { "misconception": "MC-FRAC-ADD-DENOM" },

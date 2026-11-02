@@ -110,6 +110,11 @@ export interface MasteryRecord {
   readonly conceptId: string;
   /** 숙달 확률 0~1 */
   readonly p: number;
+  /**
+   * 정답을 낸 서로 다른 과제 ID. T013 이전 기록에는 없을 수 있으므로 선택 필드다.
+   * 숙달 판정은 이 목록의 서로 다른 과제 수를 센다.
+   */
+  readonly passedTasks?: readonly string[];
   readonly updatedAt: number;
 }
 

@@ -65,6 +65,25 @@ export function failureCount(session: RunnerSession, taskId: string): number {
   return session.failures[taskId] ?? 0;
 }
 
+/**
+ * 부스터를 통과한 뒤 그 과제를 다시 시작 상태로 되돌린다.
+ * 실패 횟수와 보여 준 힌트 단계를 0으로 만들어 힌트 ①부터 다시 시작하게 한다.
+ * 조작 상태·되돌리기 기록은 실행기 화면(TaskStage)이 그대로 들고 있다.
+ */
+export function resetTaskFailures(session: RunnerSession, taskId: string): RunnerSession {
+  const hadFailures = (session.failures[taskId] ?? 0) > 0;
+  const hadHints = (session.hintLevels[taskId] ?? 0) > 0;
+  const wasFailed = session.status === 'failed';
+  if (!hadFailures && !hadHints && !wasFailed) return session;
+
+  return {
+    ...session,
+    status: wasFailed ? 'active' : session.status,
+    failures: { ...session.failures, [taskId]: 0 },
+    hintLevels: { ...session.hintLevels, [taskId]: 0 },
+  };
+}
+
 /** 그 과제에서 지금까지 보여 준 가장 높은 힌트 단계(0~3). */
 export function shownHintLevel(session: RunnerSession, taskId: string): number {
   return session.hintLevels[taskId] ?? 0;

@@ -233,12 +233,20 @@ function parseMastery(value: unknown): MasteryRecord {
     throw new ShapeError('mastery.p');
   }
   if (!isFiniteNumber(value['updatedAt'])) throw new ShapeError('mastery.updatedAt');
+
+  // T013 이전 기록에는 passedTasks가 없다. 없으면 그대로 두고, 있으면 중복만 지운다.
+  const passedTasks = value['passedTasks'];
+  if (passedTasks !== undefined && !isStringArray(passedTasks)) {
+    throw new ShapeError('mastery.passedTasks');
+  }
+
   // 파일에 id가 있어도 learner·conceptId로 다시 만든다. 키가 어긋나면 합치기가 틀어진다.
   return {
     id: masteryId(value['learner'], value['conceptId']),
     learner: value['learner'],
     conceptId: value['conceptId'],
     p: value['p'],
+    ...(passedTasks === undefined ? {} : { passedTasks: [...new Set(passedTasks)] }),
     updatedAt: value['updatedAt'],
   };
 }
