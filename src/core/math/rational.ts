@@ -89,6 +89,7 @@ export class Rational {
       const num = BigInt(mixed[3] as string);
       const den = BigInt(mixed[4] as string);
       if (den === ZERO) throw new MathError('DIV_BY_ZERO', '분모가 0입니다.', { position: 0 });
+      if (whole < ONE || num < ONE) throw parseError(input, 0);
       if (num >= den) throw parseError(input, 0);
       return Rational.of(sign * (whole * den + num), den);
     }

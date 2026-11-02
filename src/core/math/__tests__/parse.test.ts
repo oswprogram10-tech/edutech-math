@@ -159,6 +159,9 @@ describe('parse 오류', () => {
   });
 
   it('잘못된 대분수·괄호·식을 거부한다', () => {
+    expect(codeOf(() => parse('0 3/4'))).toBe('PARSE');
+    expect(codeOf(() => parse('2 0/3'))).toBe('PARSE');
+    expect(codeOf(() => parse('1 0/3'))).toBe('PARSE');
     expect(codeOf(() => parse('1 4/3'))).toBe('PARSE');
     expect(codeOf(() => parse('1 2 / 3'))).toBe('PARSE');
     expect(codeOf(() => parse('1 2/3 4/5'))).toBe('PARSE');

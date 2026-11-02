@@ -1,8 +1,10 @@
 import type { Ast, BinaryNode, BinaryOperator, NumberNode, OperatorSymbol, RatioNode } from './ast';
-import { BINARY_SYMBOL } from './ast';
+import { BINARY_SYMBOL, containsBox, containsNumberForm } from './ast';
 import { evaluate } from './evaluate';
 import { Rational } from './rational';
 import { renderAst } from './render';
+
+const ONE = Rational.of(1n);
 
 export interface OperationStep {
   /** `root`, `root.left`, `root.right.expr`처럼 AST 안 위치를 가리키는 문자열. */
@@ -73,7 +75,7 @@ function findFirstByPrecedence(
     if (right !== undefined) return right;
   }
 
-  if (node.kind === 'binary' && matchesPrecedence(node.op, precedence)) {
+  if (node.kind === 'binary' && matchesPrecedence(node.op, precedence) && !containsBox(node)) {
     return { keys, node };
   }
   return undefined;
@@ -110,15 +112,48 @@ function replaceAt(node: Ast, keys: readonly PathKey[], replacement: Ast): Ast {
   };
 }
 
-function resultNode(value: Rational): NumberNode {
+function withUnicodeMinus(text: string): string {
+  return text.startsWith('-') ? `−${text.slice(1)}` : text;
+}
+
+function resultNode(value: Rational, left: Ast, right: Ast): NumberNode {
+  const hasDecimal = containsNumberForm(left, 'decimal') || containsNumberForm(right, 'decimal');
+  if (hasDecimal && value.isTerminatingDecimal()) {
+    return {
+      kind: 'number',
+      form: 'decimal',
+      value,
+      text: withUnicodeMinus(value.toDecimalString()),
+    };
+  }
+
+  const hasMixed = containsNumberForm(left, 'mixed') || containsNumberForm(right, 'mixed');
+  if (hasMixed && value.compareTo(ONE) > 0 && !value.isInteger()) {
+    const parts = value.toMixed();
+    return {
+      kind: 'number',
+      form: 'mixed',
+      value,
+      text: `${parts.whole.toString()} ${parts.num.toString()}/${parts.den.toString()}`,
+      whole: parts.whole.toString(),
+      num: parts.num.toString(),
+      den: parts.den.toString(),
+    };
+  }
+
   if (value.isInteger()) {
-    return { kind: 'number', form: 'integer', value, text: value.toString() };
+    return {
+      kind: 'number',
+      form: 'integer',
+      value,
+      text: withUnicodeMinus(value.toString()),
+    };
   }
   return {
     kind: 'number',
     form: 'fraction',
     value,
-    text: `${value.n.toString()}/${value.d.toString()}`,
+    text: withUnicodeMinus(value.toString()),
     num: value.n.toString(),
     den: value.d.toString(),
   };
@@ -145,7 +180,11 @@ export function operationOrder(ast: Ast): OperationStep[] {
     const result = evaluate(target.node);
 
     const before = renderAst(current);
-    current = replaceAt(current, target.keys, resultNode(result));
+    current = replaceAt(
+      current,
+      target.keys,
+      resultNode(result, target.node.left, target.node.right),
+    );
     steps.push({
       nodePath: pathString(target.keys),
       op: operatorSymbol(target.node),

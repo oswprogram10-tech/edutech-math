@@ -51,3 +51,35 @@ export const BINARY_SYMBOL: Record<BinaryOperator, ArithmeticSymbol> = {
   mul: '×',
   div: '÷',
 };
+
+/** 식 안에 □가 하나라도 있으면 true. */
+export function containsBox(ast: Ast): boolean {
+  switch (ast.kind) {
+    case 'box':
+      return true;
+    case 'number':
+      return false;
+    case 'group':
+      return containsBox(ast.expr);
+    case 'binary':
+      return containsBox(ast.left) || containsBox(ast.right);
+    case 'ratio':
+      return containsBox(ast.left) || containsBox(ast.right);
+  }
+}
+
+/** 식 안에 주어진 형태의 수 리터럴(또는 그 결과 노드)이 있으면 true. */
+export function containsNumberForm(ast: Ast, form: NumberForm): boolean {
+  switch (ast.kind) {
+    case 'number':
+      return ast.form === form;
+    case 'box':
+      return false;
+    case 'group':
+      return containsNumberForm(ast.expr, form);
+    case 'binary':
+      return containsNumberForm(ast.left, form) || containsNumberForm(ast.right, form);
+    case 'ratio':
+      return containsNumberForm(ast.left, form) || containsNumberForm(ast.right, form);
+  }
+}

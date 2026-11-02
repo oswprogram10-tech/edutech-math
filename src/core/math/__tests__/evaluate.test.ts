@@ -73,6 +73,23 @@ describe('solveForBox', () => {
     expect(solve('□ : 2', '3/2')).toBe('3');
   });
 
+  it('나누는 수에만 □가 있는 식도 푼다', () => {
+    expect(solve('12 ÷ □', '4')).toBe('3');
+    expect(solve('12 ÷ (□ + 1)', '3')).toBe('3');
+    expect(solve('12 ÷ (□ - 4)', '3')).toBe('8');
+    expect(solve('2 ÷ □', '1')).toBe('2');
+    expect(solve('2 × (12 ÷ □)', '6')).toBe('4');
+    expect(solve('12 ÷ □ + 1', '4')).toBe('4');
+    expect(solve('12 ÷ □', '5/2')).toBe('24/5');
+  });
+
+  it('나눗셈 결과가 0이면 NO_SOLUTION', () => {
+    expect(codeOf(() => solve('12 ÷ □', '0'))).toBe('NO_SOLUTION');
+    expect(codeOf(() => solve('12 ÷ (□ + 1)', '0'))).toBe('NO_SOLUTION');
+    expect(codeOf(() => solve('0 ÷ □', '0'))).toBe('NO_SOLUTION');
+    expect(codeOf(() => solve('0 ÷ □', '1'))).toBe('NO_SOLUTION');
+  });
+
   it('□가 없으면 NO_BOX', () => {
     expect(codeOf(() => solve('2 + 3', '5'))).toBe('NO_BOX');
   });
@@ -80,13 +97,16 @@ describe('solveForBox', () => {
   it('□가 여러 개면 MULTIPLE_BOX', () => {
     expect(codeOf(() => solve('□ + □', '4'))).toBe('MULTIPLE_BOX');
     expect(codeOf(() => solve('□ - □', '0'))).toBe('MULTIPLE_BOX');
+    expect(codeOf(() => solve('12 ÷ (□ + □)', '3'))).toBe('MULTIPLE_BOX');
   });
 
-  it('□끼리 곱하거나 □로 나누면 NONLINEAR', () => {
+  it('□끼리 곱하거나 □가 양쪽에 있으면 NONLINEAR', () => {
     expect(codeOf(() => solve('□ × □', '4'))).toBe('NONLINEAR');
-    expect(codeOf(() => solve('2 ÷ □', '1'))).toBe('NONLINEAR');
-    expect(codeOf(() => solve('1 : □', '2'))).toBe('NONLINEAR');
     expect(codeOf(() => solve('□ × (□ + 1)', '6'))).toBe('NONLINEAR');
+    expect(codeOf(() => solve('□ ÷ □', '2'))).toBe('NONLINEAR');
+    expect(codeOf(() => solve('(□ + 1) ÷ (□ - 1)', '2'))).toBe('NONLINEAR');
+    expect(codeOf(() => solve('12 ÷ (□ × □)', '3'))).toBe('NONLINEAR');
+    expect(codeOf(() => solve('1 : □', '2'))).toBe('NONLINEAR');
   });
 
   it('0으로 나누면 DIV_BY_ZERO', () => {

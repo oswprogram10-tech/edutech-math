@@ -141,6 +141,9 @@ class Parser {
     if (den === 0n) {
       throw new MathError('DIV_BY_ZERO', '분모가 0입니다.', { position: fractionToken.start });
     }
+    if (whole < 1n || num < 1n) {
+      throw this.error('대분수는 1 이상의 정수부와 1 이상의 분자가 필요합니다.', wholeToken.start);
+    }
     if (num >= den) {
       throw this.error('대분수의 분수 부분은 1보다 작아야 합니다.', fractionToken.start);
     }

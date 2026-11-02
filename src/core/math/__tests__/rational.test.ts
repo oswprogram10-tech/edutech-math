@@ -61,7 +61,14 @@ describe('Rational.parse', () => {
     expect(Rational.parse('0.25').toString()).toBe('1/4');
     expect(Rational.parse('1.50').toString()).toBe('3/2');
     expect(Rational.parse('-0.5').toString()).toBe('-1/2');
-    expect(Rational.parse('0 1/2').toString()).toBe('1/2');
+  });
+
+  it('대분수는 1 이상의 정수부와 1 이상의 분자만 받는다', () => {
+    expect(codeOf(() => Rational.parse('0 3/4'))).toBe('PARSE');
+    expect(codeOf(() => Rational.parse('0 1/2'))).toBe('PARSE');
+    expect(codeOf(() => Rational.parse('2 0/3'))).toBe('PARSE');
+    expect(codeOf(() => Rational.parse('1 0/3'))).toBe('PARSE');
+    expect(codeOf(() => Rational.parse('-0 3/4'))).toBe('PARSE');
   });
 
   it('큰 수를 Number를 거치지 않고 읽는다', () => {

@@ -110,15 +110,44 @@ describe('operationOrder 리터럴과 비', () => {
     expect(mixed).toHaveLength(1);
     expect(mixed[0]?.before).toBe('1 2/3 − 1/3');
     expect(mixed[0]?.result.toString()).toBe('4/3');
-    expect(mixed[0]?.after).toBe('4/3');
+    expect(mixed[0]?.after).toBe('1 1/3');
   });
 
-  it('소수도 리터럴로 유지하고 결과는 정확한 분수로 쓴다', () => {
+  it('소수 피연산자가 있으면 유한소수 결과를 소수로 쓴다', () => {
     const steps = operationOrder(parse('0.5 + 0.25'));
     expect(steps).toHaveLength(1);
     expect(steps[0]?.before).toBe('0.5 + 0.25');
     expect(steps[0]?.result.toString()).toBe('3/4');
-    expect(steps[0]?.after).toBe('3/4');
+    expect(steps[0]?.after).toBe('0.75');
+  });
+
+  it('소수 피연산자라도 결과가 순환소수면 분수로 쓴다', () => {
+    const steps = operationOrder(parse('0.5 ÷ 3'));
+    expect(steps).toHaveLength(1);
+    expect(steps[0]?.result.toString()).toBe('1/6');
+    expect(steps[0]?.after).toBe('1/6');
+  });
+
+  it('대분수 피연산자와 1보다 큰 결과는 대분수로 쓴다', () => {
+    const steps = operationOrder(parse('1 1/2 + 3/4'));
+    expect(steps).toHaveLength(1);
+    expect(steps[0]?.result.toString()).toBe('9/4');
+    expect(steps[0]?.after).toBe('2 1/4');
+  });
+
+  it('앞 단계의 표기 규칙을 다음 단계 before/after에도 이어 간다', () => {
+    const steps = operationOrder(parse('0.5 + 0.25 + 1'));
+    expect(steps).toHaveLength(2);
+    expect(steps[0]?.after).toBe('0.75 + 1');
+    expect(steps[1]?.before).toBe('0.75 + 1');
+    expect(steps[1]?.after).toBe('1.75');
+  });
+
+  it('중간 결과가 음수면 유니코드 마이너스로 쓴다', () => {
+    expect(operationOrder(parse('2 - 5'))[0]?.after).toBe('−3');
+    expect(operationOrder(parse('1/3 - 1/2'))[0]?.after).toBe('−1/6');
+    expect(operationOrder(parse('0.5 - 1'))[0]?.after).toBe('−0.5');
+    expect(operationOrder(parse('1 1/2 - 2'))[0]?.after).toBe('−1/2');
   });
 
   it('비는 계산 단계로 세지 않는다', () => {
@@ -134,11 +163,27 @@ describe('operationOrder 리터럴과 비', () => {
   });
 });
 
-describe('operationOrder 오류', () => {
-  it('□가 있으면 NO_BOX', () => {
-    expect(codeOf(() => operationOrder(parse('□ + 1')))).toBe('NO_BOX');
+describe('operationOrder □ 건너뛰기', () => {
+  it('□가 들어간 연산은 건너뛰고 나머지 단계만 낸다', () => {
+    const steps = operationOrder(parse('□ + 2 × 3'));
+    expect(ops(steps)).toEqual(['×']);
+    expect(steps[0]?.before).toBe('□ + 2 × 3');
+    expect(steps[0]?.after).toBe('□ + 6');
   });
 
+  it('괄호 안의 □ 연산도 건너뛴다', () => {
+    const steps = operationOrder(parse('(□ + 1) + 2 × 3'));
+    expect(ops(steps)).toEqual(['×']);
+    expect(steps[0]?.after).toBe('(□ + 1) + 6');
+  });
+
+  it('□에 의존하는 연산만 있으면 빈 목록이다', () => {
+    expect(operationOrder(parse('□ + 1'))).toEqual([]);
+    expect(operationOrder(parse('□ × 2 + 3 + 4'))).toEqual([]);
+  });
+});
+
+describe('operationOrder 오류', () => {
   it('0으로 나누면 DIV_BY_ZERO', () => {
     expect(codeOf(() => operationOrder(parse('1 ÷ 0')))).toBe('DIV_BY_ZERO');
   });
