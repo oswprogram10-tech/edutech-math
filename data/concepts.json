@@ -1,0 +1,2273 @@
+{
+  "$comment": "scripts/check-specs.mjs --concepts 로 생성. 직접 고치지 말고 docs/04-units 를 고친다.",
+  "concepts": [
+    {
+      "id": "g1s1u1.one-to-one",
+      "unit": "g1s1u1",
+      "label": "하나에 하나씩 대응하며 세기",
+      "prerequisites": []
+    },
+    {
+      "id": "g1s1u1.cardinality",
+      "unit": "g1s1u1",
+      "label": "마지막 수 = 전체 개수",
+      "prerequisites": [
+        "g1s1u1.one-to-one"
+      ]
+    },
+    {
+      "id": "g1s1u1.subitize",
+      "unit": "g1s1u1",
+      "label": "5 이하 한눈에 세기, 5와 몇으로 보기",
+      "prerequisites": [
+        "g1s1u1.cardinality"
+      ]
+    },
+    {
+      "id": "g1s1u1.number-order",
+      "unit": "g1s1u1",
+      "label": "0~9의 순서, 1 큰 수·1 작은 수, 0의 뜻",
+      "prerequisites": [
+        "g1s1u1.cardinality"
+      ]
+    },
+    {
+      "id": "g1s1u2.shape-families",
+      "unit": "g1s1u2",
+      "label": "상자·둥근기둥·공 모양 구별",
+      "prerequisites": []
+    },
+    {
+      "id": "g1s1u2.shape-properties",
+      "unit": "g1s1u2",
+      "label": "평평한 부분·둥근 부분, 쌓기·굴리기 성질",
+      "prerequisites": [
+        "g1s1u2.shape-families"
+      ]
+    },
+    {
+      "id": "g1s1u2.ignore-irrelevant",
+      "unit": "g1s1u2",
+      "label": "색·크기·방향과 상관없이 모양으로 분류",
+      "prerequisites": [
+        "g1s1u2.shape-families"
+      ]
+    },
+    {
+      "id": "g1s1u3.compose-decompose",
+      "unit": "g1s1u3",
+      "label": "9 이하 수 모으기·가르기",
+      "prerequisites": [
+        "g1s1u1"
+      ]
+    },
+    {
+      "id": "g1s1u3.addition-meaning",
+      "unit": "g1s1u3",
+      "label": "덧셈(합병·첨가) 상황과 식",
+      "prerequisites": [
+        "g1s1u3.compose-decompose"
+      ]
+    },
+    {
+      "id": "g1s1u3.subtraction-meaning",
+      "unit": "g1s1u3",
+      "label": "뺄셈(제거·비교) 상황과 식",
+      "prerequisites": [
+        "g1s1u3.compose-decompose"
+      ]
+    },
+    {
+      "id": "g1s1u3.zero-in-ops",
+      "unit": "g1s1u3",
+      "label": "0을 더하고 빼기",
+      "prerequisites": [
+        "g1s1u3.addition-meaning"
+      ]
+    },
+    {
+      "id": "g1s1u4.length-direct",
+      "unit": "g1s1u4",
+      "label": "한쪽 끝 맞추어 길이 비교(길다/짧다)",
+      "prerequisites": []
+    },
+    {
+      "id": "g1s1u4.area-direct",
+      "unit": "g1s1u4",
+      "label": "겹쳐서 넓이 비교(넓다/좁다)",
+      "prerequisites": []
+    },
+    {
+      "id": "g1s1u4.capacity-direct",
+      "unit": "g1s1u4",
+      "label": "옮겨 담아 들이 비교(많다/적다)",
+      "prerequisites": []
+    },
+    {
+      "id": "g1s1u4.weight-direct",
+      "unit": "g1s1u4",
+      "label": "저울로 무게 비교(무겁다/가볍다)",
+      "prerequisites": []
+    },
+    {
+      "id": "g1s1u5.ten-as-unit",
+      "unit": "g1s1u5",
+      "label": "10 = 10개씩 묶음 1개",
+      "prerequisites": [
+        "g1s1u1.cardinality"
+      ]
+    },
+    {
+      "id": "g1s1u5.tens-and-ones",
+      "unit": "g1s1u5",
+      "label": "몇십 몇 = 묶음 수 + 낱개 수",
+      "prerequisites": [
+        "g1s1u5.ten-as-unit"
+      ]
+    },
+    {
+      "id": "g1s1u5.order-to-50",
+      "unit": "g1s1u5",
+      "label": "50까지 수의 순서, 크기 비교",
+      "prerequisites": [
+        "g1s1u5.tens-and-ones"
+      ]
+    },
+    {
+      "id": "g1s2u1.tens-to-99",
+      "unit": "g1s2u1",
+      "label": "99까지 몇십 몇 읽고 나타내기",
+      "prerequisites": [
+        "g1s1u5.tens-and-ones"
+      ]
+    },
+    {
+      "id": "g1s2u1.hundred",
+      "unit": "g1s2u1",
+      "label": "10개씩 묶음 10개 = 100",
+      "prerequisites": [
+        "g1s2u1.tens-to-99"
+      ]
+    },
+    {
+      "id": "g1s2u1.chart-structure",
+      "unit": "g1s2u1",
+      "label": "수 배열표 ±1, ±10 구조, 크기 비교",
+      "prerequisites": [
+        "g1s2u1.tens-to-99"
+      ]
+    },
+    {
+      "id": "g1s2u1.even-odd",
+      "unit": "g1s2u1",
+      "label": "짝수·홀수",
+      "prerequisites": [
+        "g1s1u1.cardinality"
+      ]
+    },
+    {
+      "id": "g1s2u2.add-same-units",
+      "unit": "g1s2u2",
+      "label": "묶음끼리·낱개끼리 더하기(받아올림 없음)",
+      "prerequisites": [
+        "g1s2u1.tens-to-99",
+        "g1s1u3.addition-meaning"
+      ]
+    },
+    {
+      "id": "g1s2u2.sub-same-units",
+      "unit": "g1s2u2",
+      "label": "묶음끼리·낱개끼리 빼기(받아내림 없음)",
+      "prerequisites": [
+        "g1s2u1.tens-to-99",
+        "g1s1u3.subtraction-meaning"
+      ]
+    },
+    {
+      "id": "g1s2u2.jump-strategy",
+      "unit": "g1s2u2",
+      "label": "수직선에서 10씩·1씩 뛰어 더하고 빼기",
+      "prerequisites": [
+        "g1s2u1.chart-structure"
+      ]
+    },
+    {
+      "id": "g1s2u3.flat-shapes",
+      "unit": "g1s2u3",
+      "label": "네모·세모·동그라미 모양 구별",
+      "prerequisites": [
+        "g1s1u2.shape-families"
+      ]
+    },
+    {
+      "id": "g1s2u3.compose-shapes",
+      "unit": "g1s2u3",
+      "label": "모양을 붙여 다른 모양·그림 만들기",
+      "prerequisites": [
+        "g1s2u3.flat-shapes"
+      ]
+    },
+    {
+      "id": "g1s2u3.clock-hour",
+      "unit": "g1s2u3",
+      "label": "몇 시 읽고 나타내기",
+      "prerequisites": [
+        "g1s1u1.number-order"
+      ]
+    },
+    {
+      "id": "g1s2u3.clock-half",
+      "unit": "g1s2u3",
+      "label": "몇 시 30분 읽고 나타내기",
+      "prerequisites": [
+        "g1s2u3.clock-hour"
+      ]
+    },
+    {
+      "id": "g1s2u4.make-ten-pairs",
+      "unit": "g1s2u4",
+      "label": "더해서 10이 되는 두 수",
+      "prerequisites": [
+        "g1s1u3.compose-decompose"
+      ]
+    },
+    {
+      "id": "g1s2u4.ten-minus",
+      "unit": "g1s2u4",
+      "label": "10에서 빼기",
+      "prerequisites": [
+        "g1s2u4.make-ten-pairs"
+      ]
+    },
+    {
+      "id": "g1s2u4.three-addends",
+      "unit": "g1s2u4",
+      "label": "세 수의 덧셈·뺄셈, 10 먼저 만들기",
+      "prerequisites": [
+        "g1s2u4.make-ten-pairs"
+      ]
+    },
+    {
+      "id": "g1s2u5.repeat-core",
+      "unit": "g1s2u5",
+      "label": "반복 단위 찾기",
+      "prerequisites": []
+    },
+    {
+      "id": "g1s2u5.extend-pattern",
+      "unit": "g1s2u5",
+      "label": "규칙에 따라 다음 것 이어 가기",
+      "prerequisites": [
+        "g1s2u5.repeat-core"
+      ]
+    },
+    {
+      "id": "g1s2u5.translate-pattern",
+      "unit": "g1s2u5",
+      "label": "같은 규칙을 다른 표현으로 바꾸기(모양↔소리↔몸짓↔수)",
+      "prerequisites": [
+        "g1s2u5.repeat-core"
+      ]
+    },
+    {
+      "id": "g1s2u5.number-pattern",
+      "unit": "g1s2u5",
+      "label": "수 배열의 규칙(1씩·2씩·10씩)",
+      "prerequisites": [
+        "g1s1u5.order-to-50"
+      ]
+    },
+    {
+      "id": "g1s2u6.add-bridge-ten",
+      "unit": "g1s2u6",
+      "label": "10을 만들어 더하기(받아올림 있는 한 자리 덧셈)",
+      "prerequisites": [
+        "g1s2u4.make-ten-pairs"
+      ]
+    },
+    {
+      "id": "g1s2u6.sub-bridge-ten",
+      "unit": "g1s2u6",
+      "label": "10을 이용해 빼기(받아내림 있는 뺄셈)",
+      "prerequisites": [
+        "g1s2u4.ten-minus"
+      ]
+    },
+    {
+      "id": "g1s2u6.add-sub-relation",
+      "unit": "g1s2u6",
+      "label": "덧셈과 뺄셈의 관계(8+5=13 ↔ 13−5=8)",
+      "prerequisites": [
+        "g1s2u6.add-bridge-ten"
+      ]
+    },
+    {
+      "id": "g2s1u1.hundred-unit",
+      "unit": "g2s1u1",
+      "label": "10이 10개 = 100(백 모형 판)",
+      "prerequisites": [
+        "g1s2u1.hundred"
+      ]
+    },
+    {
+      "id": "g2s1u1.three-digit",
+      "unit": "g2s1u1",
+      "label": "몇백 몇십 몇 읽고 쓰기",
+      "prerequisites": [
+        "g2s1u1.hundred-unit"
+      ]
+    },
+    {
+      "id": "g2s1u1.digit-value",
+      "unit": "g2s1u1",
+      "label": "자리에 따른 숫자의 값, 0 자리",
+      "prerequisites": [
+        "g2s1u1.three-digit"
+      ]
+    },
+    {
+      "id": "g2s1u1.compare-skip",
+      "unit": "g2s1u1",
+      "label": "세 자리 수 크기 비교, 뛰어 세기(1·10·100씩)",
+      "prerequisites": [
+        "g2s1u1.three-digit"
+      ]
+    },
+    {
+      "id": "g2s1u2.side-vertex",
+      "unit": "g2s1u2",
+      "label": "변·꼭짓점 알고 세기",
+      "prerequisites": [
+        "g1s2u3.flat-shapes"
+      ]
+    },
+    {
+      "id": "g2s1u2.polygon-names",
+      "unit": "g2s1u2",
+      "label": "삼각형·사각형·오각형·육각형·원",
+      "prerequisites": [
+        "g2s1u2.side-vertex"
+      ]
+    },
+    {
+      "id": "g2s1u2.cube-building",
+      "unit": "g2s1u2",
+      "label": "쌓기나무 쌓기, 위치 말로 설명하기",
+      "prerequisites": [
+        "g1s1u2.shape-properties"
+      ]
+    },
+    {
+      "id": "g2s1u3.add-carry",
+      "unit": "g2s1u3",
+      "label": "받아올림 있는 두 자리 덧셈",
+      "prerequisites": [
+        "g1s2u6.add-bridge-ten",
+        "g1s2u2.add-same-units"
+      ]
+    },
+    {
+      "id": "g2s1u3.sub-borrow",
+      "unit": "g2s1u3",
+      "label": "받아내림 있는 두 자리 뺄셈",
+      "prerequisites": [
+        "g1s2u6.sub-bridge-ten",
+        "g1s2u2.sub-same-units"
+      ]
+    },
+    {
+      "id": "g2s1u3.column-record",
+      "unit": "g2s1u3",
+      "label": "세로셈 기록과 블록 조작의 대응",
+      "prerequisites": [
+        "g2s1u3.add-carry",
+        "g2s1u3.sub-borrow"
+      ]
+    },
+    {
+      "id": "g2s1u3.unknown-box",
+      "unit": "g2s1u3",
+      "label": "□를 사용한 덧셈식·뺄셈식",
+      "prerequisites": [
+        "g1s2u6.add-sub-relation"
+      ]
+    },
+    {
+      "id": "g2s1u4.unit-iteration",
+      "unit": "g2s1u4",
+      "label": "단위를 틈·겹침 없이 반복해 재기",
+      "prerequisites": [
+        "g1s1u4.length-direct"
+      ]
+    },
+    {
+      "id": "g2s1u4.standard-unit",
+      "unit": "g2s1u4",
+      "label": "표준 단위의 필요성, 1cm",
+      "prerequisites": [
+        "g2s1u4.unit-iteration"
+      ]
+    },
+    {
+      "id": "g2s1u4.ruler-use",
+      "unit": "g2s1u4",
+      "label": "자로 재기(영점·눈금 칸 세기), 약 몇 cm",
+      "prerequisites": [
+        "g2s1u4.standard-unit"
+      ]
+    },
+    {
+      "id": "g2s1u4.estimate-length",
+      "unit": "g2s1u4",
+      "label": "길이 어림하기",
+      "prerequisites": [
+        "g2s1u4.ruler-use"
+      ]
+    },
+    {
+      "id": "g2s1u5.clear-criterion",
+      "unit": "g2s1u5",
+      "label": "분명한 분류 기준 정하기",
+      "prerequisites": [
+        "g1s1u2.ignore-irrelevant"
+      ]
+    },
+    {
+      "id": "g2s1u5.sort-by-attribute",
+      "unit": "g2s1u5",
+      "label": "기준에 따라 분류하기, 기준 바꿔 다시 분류",
+      "prerequisites": [
+        "g2s1u5.clear-criterion"
+      ]
+    },
+    {
+      "id": "g2s1u5.count-sorted",
+      "unit": "g2s1u5",
+      "label": "분류하여 세고 결과 말하기",
+      "prerequisites": [
+        "g2s1u5.sort-by-attribute",
+        "g1s1u5"
+      ]
+    },
+    {
+      "id": "g2s1u6.equal-groups",
+      "unit": "g2s1u6",
+      "label": "몇씩 몇 묶음(같은 수씩 묶기)",
+      "prerequisites": [
+        "g1s2u1.even-odd",
+        "g1s1u5.ten-as-unit"
+      ]
+    },
+    {
+      "id": "g2s1u6.repeated-addition",
+      "unit": "g2s1u6",
+      "label": "몇의 몇 배 = 같은 수 여러 번 더하기",
+      "prerequisites": [
+        "g2s1u6.equal-groups",
+        "g2s1u3.add-carry"
+      ]
+    },
+    {
+      "id": "g2s1u6.array",
+      "unit": "g2s1u6",
+      "label": "배열로 곱셈 나타내기, 교환",
+      "prerequisites": [
+        "g2s1u6.equal-groups"
+      ]
+    },
+    {
+      "id": "g2s1u6.mult-sentence",
+      "unit": "g2s1u6",
+      "label": "곱셈식 a × b = c",
+      "prerequisites": [
+        "g2s1u6.repeated-addition"
+      ]
+    },
+    {
+      "id": "g2s2u1.thousand-unit",
+      "unit": "g2s2u1",
+      "label": "100이 10개 = 1000",
+      "prerequisites": [
+        "g2s1u1.hundred-unit"
+      ]
+    },
+    {
+      "id": "g2s2u1.four-digit",
+      "unit": "g2s2u1",
+      "label": "네 자리 수 읽고 쓰기, 자릿값",
+      "prerequisites": [
+        "g2s2u1.thousand-unit",
+        "g2s1u1.digit-value"
+      ]
+    },
+    {
+      "id": "g2s2u1.magnitude",
+      "unit": "g2s2u1",
+      "label": "10·100·1000·10000의 상대적 크기, 뛰어 세기, 크기 비교",
+      "prerequisites": [
+        "g2s2u1.four-digit"
+      ]
+    },
+    {
+      "id": "g2s2u2.facts-by-table",
+      "unit": "g2s2u2",
+      "label": "2~9단 곱셈구구",
+      "prerequisites": [
+        "g2s1u6.mult-sentence"
+      ]
+    },
+    {
+      "id": "g2s2u2.split-strategy",
+      "unit": "g2s2u2",
+      "label": "아는 곱셈으로 쪼개기(분배)",
+      "prerequisites": [
+        "g2s2u2.facts-by-table",
+        "g2s1u6.array"
+      ]
+    },
+    {
+      "id": "g2s2u2.table-step",
+      "unit": "g2s2u2",
+      "label": "단의 곱이 그 수만큼 커지는 규칙",
+      "prerequisites": [
+        "g2s2u2.facts-by-table"
+      ]
+    },
+    {
+      "id": "g2s2u2.one-zero",
+      "unit": "g2s2u2",
+      "label": "1의 곱, 0의 곱",
+      "prerequisites": [
+        "g2s1u6.equal-groups"
+      ]
+    },
+    {
+      "id": "g2s2u2.table-symmetry",
+      "unit": "g2s2u2",
+      "label": "곱셈표 대칭(교환법칙)",
+      "prerequisites": [
+        "g2s1u6.array"
+      ]
+    },
+    {
+      "id": "g2s2u3.meter-unit",
+      "unit": "g2s2u3",
+      "label": "1m = 100cm, 큰 단위의 필요",
+      "prerequisites": [
+        "g2s1u4.standard-unit",
+        "g2s1u1.hundred-unit"
+      ]
+    },
+    {
+      "id": "g2s2u3.m-cm-convert",
+      "unit": "g2s2u3",
+      "label": "몇 m 몇 cm ↔ 몇 cm",
+      "prerequisites": [
+        "g2s2u3.meter-unit"
+      ]
+    },
+    {
+      "id": "g2s2u3.length-add-sub",
+      "unit": "g2s2u3",
+      "label": "길이의 덧셈·뺄셈(받아올림·받아내림 포함)",
+      "prerequisites": [
+        "g2s2u3.m-cm-convert",
+        "g2s1u3"
+      ]
+    },
+    {
+      "id": "g2s2u3.estimate-m",
+      "unit": "g2s2u3",
+      "label": "1m 어림, 몸의 길이로 어림",
+      "prerequisites": [
+        "g2s2u3.meter-unit"
+      ]
+    },
+    {
+      "id": "g2s2u4.clock-minute",
+      "unit": "g2s2u4",
+      "label": "5분·1분 단위 시각 읽기",
+      "prerequisites": [
+        "g1s2u3.clock-half",
+        "g2s1u6.equal-groups"
+      ]
+    },
+    {
+      "id": "g2s2u4.hour-60",
+      "unit": "g2s2u4",
+      "label": "1시간 = 60분, 걸린 시간",
+      "prerequisites": [
+        "g2s2u4.clock-minute"
+      ]
+    },
+    {
+      "id": "g2s2u4.am-pm-day",
+      "unit": "g2s2u4",
+      "label": "오전·오후, 하루 = 24시간",
+      "prerequisites": [
+        "g2s2u4.hour-60"
+      ]
+    },
+    {
+      "id": "g2s2u4.calendar",
+      "unit": "g2s2u4",
+      "label": "1주일 = 7일, 달력의 규칙, 1년 = 12개월",
+      "prerequisites": [
+        "g1s2u5.number-pattern"
+      ]
+    },
+    {
+      "id": "g2s2u5.collect-table",
+      "unit": "g2s2u5",
+      "label": "자료 조사해 표로 나타내기",
+      "prerequisites": [
+        "g2s1u5.count-sorted"
+      ]
+    },
+    {
+      "id": "g2s2u5.simple-graph",
+      "unit": "g2s2u5",
+      "label": "○ 그래프 그리기(아래부터, 한 칸에 하나)",
+      "prerequisites": [
+        "g2s2u5.collect-table"
+      ]
+    },
+    {
+      "id": "g2s2u5.read-compare",
+      "unit": "g2s2u5",
+      "label": "표·그래프 읽고 비교·해석",
+      "prerequisites": [
+        "g2s2u5.simple-graph"
+      ]
+    },
+    {
+      "id": "g2s2u6.growth-pattern",
+      "unit": "g2s2u6",
+      "label": "쌓은 모양의 증가 규칙 찾고 다음 단계 예측",
+      "prerequisites": [
+        "g1s2u5.extend-pattern"
+      ]
+    },
+    {
+      "id": "g2s2u6.table-patterns",
+      "unit": "g2s2u6",
+      "label": "덧셈표·곱셈표의 규칙(가로·세로·대각선)",
+      "prerequisites": [
+        "g2s2u2.table-step",
+        "g2s2u2.table-symmetry"
+      ]
+    },
+    {
+      "id": "g2s2u6.describe-rule",
+      "unit": "g2s2u6",
+      "label": "규칙을 말·식으로 설명하기",
+      "prerequisites": [
+        "g2s2u6.growth-pattern"
+      ]
+    },
+    {
+      "id": "g3s1u1.add-regroup-3digit",
+      "unit": "g3s1u1",
+      "label": "세 자리 수 덧셈의 받아올림(두 번까지)",
+      "prerequisites": [
+        "g2s1u3"
+      ]
+    },
+    {
+      "id": "g3s1u1.sub-regroup-3digit",
+      "unit": "g3s1u1",
+      "label": "세 자리 수 뺄셈의 받아내림(두 번까지)",
+      "prerequisites": [
+        "g2s1u3",
+        "g2s2u1"
+      ]
+    },
+    {
+      "id": "g3s1u1.borrow-across-zero",
+      "unit": "g3s1u1",
+      "label": "0이 있는 자리를 건너는 연속 받아내림",
+      "prerequisites": [
+        "g3s1u1.sub-regroup-3digit"
+      ]
+    },
+    {
+      "id": "g3s1u1.estimate-sum-diff",
+      "unit": "g3s1u1",
+      "label": "몇백 몇십으로 어림해 결과 확인",
+      "prerequisites": [
+        "g2s2u1"
+      ]
+    },
+    {
+      "id": "g3s1u2.segment-ray-line",
+      "unit": "g3s1u2",
+      "label": "선분·반직선·직선 구별",
+      "prerequisites": [
+        "g2s1u2"
+      ]
+    },
+    {
+      "id": "g3s1u2.angle-right-angle",
+      "unit": "g3s1u2",
+      "label": "각과 직각",
+      "prerequisites": [
+        "g3s1u2.segment-ray-line"
+      ]
+    },
+    {
+      "id": "g3s1u2.right-triangle",
+      "unit": "g3s1u2",
+      "label": "직각삼각형",
+      "prerequisites": [
+        "g3s1u2.angle-right-angle"
+      ]
+    },
+    {
+      "id": "g3s1u2.rect-square",
+      "unit": "g3s1u2",
+      "label": "직사각형과 정사각형(정사각형도 직사각형)",
+      "prerequisites": [
+        "g3s1u2.angle-right-angle"
+      ]
+    },
+    {
+      "id": "g3s1u3.partitive-division",
+      "unit": "g3s1u3",
+      "label": "똑같이 나누기(등분제)",
+      "prerequisites": [
+        "g2s2u2"
+      ]
+    },
+    {
+      "id": "g3s1u3.quotitive-division",
+      "unit": "g3s1u3",
+      "label": "몇 개씩 덜어 내기(포함제)",
+      "prerequisites": [
+        "g2s2u2"
+      ]
+    },
+    {
+      "id": "g3s1u3.mul-div-relation",
+      "unit": "g3s1u3",
+      "label": "곱셈과 나눗셈의 관계",
+      "prerequisites": [
+        "g3s1u3.partitive-division",
+        "g3s1u3.quotitive-division"
+      ]
+    },
+    {
+      "id": "g3s1u3.quotient-by-times-table",
+      "unit": "g3s1u3",
+      "label": "곱셈구구로 몫 구하기",
+      "prerequisites": [
+        "g3s1u3.mul-div-relation"
+      ]
+    },
+    {
+      "id": "g3s1u4.area-model-split",
+      "unit": "g3s1u4",
+      "label": "넓이 모델로 자릿값 나누어 곱하기",
+      "prerequisites": [
+        "g2s2u2"
+      ]
+    },
+    {
+      "id": "g3s1u4.partial-products",
+      "unit": "g3s1u4",
+      "label": "부분곱의 합",
+      "prerequisites": [
+        "g3s1u4.area-model-split"
+      ]
+    },
+    {
+      "id": "g3s1u4.column-mul-carry",
+      "unit": "g3s1u4",
+      "label": "세로셈 곱셈과 받아올림",
+      "prerequisites": [
+        "g3s1u4.partial-products",
+        "g2s2u1"
+      ]
+    },
+    {
+      "id": "g3s1u5.mm-unit",
+      "unit": "g3s1u5",
+      "label": "1mm와 cm·mm 관계",
+      "prerequisites": [
+        "g2s2u3"
+      ]
+    },
+    {
+      "id": "g3s1u5.km-unit",
+      "unit": "g3s1u5",
+      "label": "1km와 m·km 관계",
+      "prerequisites": [
+        "g2s2u3"
+      ]
+    },
+    {
+      "id": "g3s1u5.second-unit",
+      "unit": "g3s1u5",
+      "label": "초 단위와 분·초 관계",
+      "prerequisites": [
+        "g2s2u4"
+      ]
+    },
+    {
+      "id": "g3s1u5.time-add-sub",
+      "unit": "g3s1u5",
+      "label": "시간의 덧셈과 뺄셈(60 묶기·풀기)",
+      "prerequisites": [
+        "g3s1u5.second-unit"
+      ]
+    },
+    {
+      "id": "g3s1u6.equal-parts",
+      "unit": "g3s1u6",
+      "label": "똑같이 나누기(등분)",
+      "prerequisites": [
+        "g3s1u3"
+      ]
+    },
+    {
+      "id": "g3s1u6.part-of-whole",
+      "unit": "g3s1u6",
+      "label": "전체에 대한 부분(분수 읽고 쓰기)",
+      "prerequisites": [
+        "g3s1u6.equal-parts"
+      ]
+    },
+    {
+      "id": "g3s1u6.unit-fraction",
+      "unit": "g3s1u6",
+      "label": "단위분수와 단위분수의 크기 비교",
+      "prerequisites": [
+        "g3s1u6.part-of-whole"
+      ]
+    },
+    {
+      "id": "g3s1u6.compare-same-denom",
+      "unit": "g3s1u6",
+      "label": "분모가 같은 분수의 크기 비교",
+      "prerequisites": [
+        "g3s1u6.unit-fraction"
+      ]
+    },
+    {
+      "id": "g3s1u6.tenths-decimal",
+      "unit": "g3s1u6",
+      "label": "0.1 단위 소수와 분수 10분의 몇의 관계",
+      "prerequisites": [
+        "g3s1u6.part-of-whole"
+      ]
+    },
+    {
+      "id": "g3s2u1.mul-by-tens",
+      "unit": "g3s2u1",
+      "label": "(몇십) × (몇십), (몇십몇) × (몇십)",
+      "prerequisites": [
+        "g3s1u4"
+      ]
+    },
+    {
+      "id": "g3s2u1.area-4-split",
+      "unit": "g3s2u1",
+      "label": "4분할 넓이 모델",
+      "prerequisites": [
+        "g3s1u4.area-model-split"
+      ]
+    },
+    {
+      "id": "g3s2u1.column-2x2",
+      "unit": "g3s2u1",
+      "label": "두 자리 × 두 자리 세로셈",
+      "prerequisites": [
+        "g3s2u1.area-4-split",
+        "g3s2u1.mul-by-tens"
+      ]
+    },
+    {
+      "id": "g3s2u2.divide-by-place",
+      "unit": "g3s2u2",
+      "label": "자리별로 나누기(블록 해체 분배)",
+      "prerequisites": [
+        "g3s1u3",
+        "g3s1u4"
+      ]
+    },
+    {
+      "id": "g3s2u2.remainder",
+      "unit": "g3s2u2",
+      "label": "나머지와 그 범위",
+      "prerequisites": [
+        "g3s2u2.divide-by-place"
+      ]
+    },
+    {
+      "id": "g3s2u2.long-division-steps",
+      "unit": "g3s2u2",
+      "label": "나눗셈 세로셈 단계(나누기·곱하기·빼기·내리기)",
+      "prerequisites": [
+        "g3s2u2.divide-by-place"
+      ]
+    },
+    {
+      "id": "g3s2u2.check-division",
+      "unit": "g3s2u2",
+      "label": "나눗셈 검산",
+      "prerequisites": [
+        "g3s2u2.remainder"
+      ]
+    },
+    {
+      "id": "g3s2u3.circle-definition",
+      "unit": "g3s2u3",
+      "label": "중심과 같은 거리의 점(원의 정의)",
+      "prerequisites": [
+        "g3s1u2"
+      ]
+    },
+    {
+      "id": "g3s2u3.radius-diameter",
+      "unit": "g3s2u3",
+      "label": "반지름·지름과 그 관계",
+      "prerequisites": [
+        "g3s2u3.circle-definition"
+      ]
+    },
+    {
+      "id": "g3s2u3.compass-construct",
+      "unit": "g3s2u3",
+      "label": "컴퍼스로 원·무늬 그리기",
+      "prerequisites": [
+        "g3s2u3.radius-diameter"
+      ]
+    },
+    {
+      "id": "g3s2u4.fraction-of-set",
+      "unit": "g3s2u4",
+      "label": "묶음(이산량)으로 분수 나타내기",
+      "prerequisites": [
+        "g3s1u6.part-of-whole",
+        "g3s1u3"
+      ]
+    },
+    {
+      "id": "g3s2u4.fraction-of-quantity",
+      "unit": "g3s2u4",
+      "label": "어떤 수의 분수만큼 구하기(12의 3/4)",
+      "prerequisites": [
+        "g3s2u4.fraction-of-set"
+      ]
+    },
+    {
+      "id": "g3s2u4.improper-mixed",
+      "unit": "g3s2u4",
+      "label": "진분수·가분수·대분수와 서로 바꾸기",
+      "prerequisites": [
+        "g3s1u6.unit-fraction"
+      ]
+    },
+    {
+      "id": "g3s2u4.compare-beyond-one",
+      "unit": "g3s2u4",
+      "label": "1보다 큰 분수의 크기 비교와 수직선 위치",
+      "prerequisites": [
+        "g3s2u4.improper-mixed",
+        "g3s1u6.compare-same-denom"
+      ]
+    },
+    {
+      "id": "g3s2u5.capacity-units",
+      "unit": "g3s2u5",
+      "label": "들이 단위 L·mL",
+      "prerequisites": [
+        "g3s1u5"
+      ]
+    },
+    {
+      "id": "g3s2u5.weight-units",
+      "unit": "g3s2u5",
+      "label": "무게 단위 kg·g(·t)",
+      "prerequisites": [
+        "g3s1u5"
+      ]
+    },
+    {
+      "id": "g3s2u5.measure-add-sub",
+      "unit": "g3s2u5",
+      "label": "들이·무게의 덧셈과 뺄셈",
+      "prerequisites": [
+        "g3s2u5.capacity-units",
+        "g3s2u5.weight-units"
+      ]
+    },
+    {
+      "id": "g3s2u5.estimate-measure",
+      "unit": "g3s2u5",
+      "label": "들이·무게 어림",
+      "prerequisites": [
+        "g3s2u5.capacity-units",
+        "g3s2u5.weight-units"
+      ]
+    },
+    {
+      "id": "g3s2u6.collect-organize",
+      "unit": "g3s2u6",
+      "label": "자료를 수집해 표로 정리",
+      "prerequisites": [
+        "g2s2u5"
+      ]
+    },
+    {
+      "id": "g3s2u6.pictograph-units",
+      "unit": "g3s2u6",
+      "label": "그림그래프의 큰·작은 그림 단위",
+      "prerequisites": [
+        "g3s2u6.collect-organize"
+      ]
+    },
+    {
+      "id": "g3s2u6.read-pictograph",
+      "unit": "g3s2u6",
+      "label": "그림그래프 읽고 해석하기",
+      "prerequisites": [
+        "g3s2u6.pictograph-units"
+      ]
+    },
+    {
+      "id": "g4s1u1.four-digit-groups",
+      "unit": "g4s1u1",
+      "label": "네 자리씩 끊어 읽고 쓰기(만·억·조)",
+      "prerequisites": [
+        "g2s2u1"
+      ]
+    },
+    {
+      "id": "g4s1u1.place-value-big",
+      "unit": "g4s1u1",
+      "label": "큰 수의 자릿값과 자리 숫자의 값",
+      "prerequisites": [
+        "g4s1u1.four-digit-groups"
+      ]
+    },
+    {
+      "id": "g4s1u1.ten-times",
+      "unit": "g4s1u1",
+      "label": "10배·100배·1000배 뛰어 세기",
+      "prerequisites": [
+        "g4s1u1.place-value-big"
+      ]
+    },
+    {
+      "id": "g4s1u1.compare-big",
+      "unit": "g4s1u1",
+      "label": "큰 수의 크기 비교",
+      "prerequisites": [
+        "g4s1u1.place-value-big"
+      ]
+    },
+    {
+      "id": "g4s1u2.angle-measure",
+      "unit": "g4s1u2",
+      "label": "각도 단위(°)와 각도기 사용",
+      "prerequisites": [
+        "g3s1u2"
+      ]
+    },
+    {
+      "id": "g4s1u2.acute-obtuse",
+      "unit": "g4s1u2",
+      "label": "예각·직각·둔각",
+      "prerequisites": [
+        "g4s1u2.angle-measure"
+      ]
+    },
+    {
+      "id": "g4s1u2.angle-add-sub",
+      "unit": "g4s1u2",
+      "label": "각도의 합과 차",
+      "prerequisites": [
+        "g4s1u2.angle-measure"
+      ]
+    },
+    {
+      "id": "g4s1u2.triangle-sum",
+      "unit": "g4s1u2",
+      "label": "삼각형 세 각의 합 180°",
+      "prerequisites": [
+        "g4s1u2.angle-add-sub"
+      ]
+    },
+    {
+      "id": "g4s1u2.quad-sum",
+      "unit": "g4s1u2",
+      "label": "사각형 네 각의 합 360°",
+      "prerequisites": [
+        "g4s1u2.triangle-sum"
+      ]
+    },
+    {
+      "id": "g4s1u3.mul-3x2",
+      "unit": "g4s1u3",
+      "label": "세 자리 × 두 자리",
+      "prerequisites": [
+        "g3s2u1"
+      ]
+    },
+    {
+      "id": "g4s1u3.div-by-2digit-estimate",
+      "unit": "g4s1u3",
+      "label": "두 자리 수로 나눌 때 몫 어림하기",
+      "prerequisites": [
+        "g3s2u2"
+      ]
+    },
+    {
+      "id": "g4s1u3.div-3by2",
+      "unit": "g4s1u3",
+      "label": "세 자리 ÷ 두 자리 세로셈과 나머지",
+      "prerequisites": [
+        "g4s1u3.div-by-2digit-estimate"
+      ]
+    },
+    {
+      "id": "g4s1u4.slide",
+      "unit": "g4s1u4",
+      "label": "밀기",
+      "prerequisites": [
+        "g3s1u2"
+      ]
+    },
+    {
+      "id": "g4s1u4.flip",
+      "unit": "g4s1u4",
+      "label": "뒤집기(위아래·좌우)",
+      "prerequisites": [
+        "g4s1u4.slide"
+      ]
+    },
+    {
+      "id": "g4s1u4.turn",
+      "unit": "g4s1u4",
+      "label": "돌리기(90°·180°·270°, 방향)",
+      "prerequisites": [
+        "g4s1u4.slide"
+      ]
+    },
+    {
+      "id": "g4s1u4.composite-pattern",
+      "unit": "g4s1u4",
+      "label": "이동을 이용한 무늬 만들기",
+      "prerequisites": [
+        "g4s1u4.flip",
+        "g4s1u4.turn"
+      ]
+    },
+    {
+      "id": "g4s1u5.bar-graph-make",
+      "unit": "g4s1u5",
+      "label": "표를 막대그래프로 나타내기",
+      "prerequisites": [
+        "g3s2u6"
+      ]
+    },
+    {
+      "id": "g4s1u5.scale-unit",
+      "unit": "g4s1u5",
+      "label": "눈금 한 칸의 크기 정하고 읽기",
+      "prerequisites": [
+        "g4s1u5.bar-graph-make"
+      ]
+    },
+    {
+      "id": "g4s1u5.interpret-bar",
+      "unit": "g4s1u5",
+      "label": "막대그래프 해석과 비교",
+      "prerequisites": [
+        "g4s1u5.scale-unit"
+      ]
+    },
+    {
+      "id": "g4s1u6.number-pattern",
+      "unit": "g4s1u6",
+      "label": "수 배열의 규칙 찾고 설명하기",
+      "prerequisites": [
+        "g2s2u6"
+      ]
+    },
+    {
+      "id": "g4s1u6.shape-calc-link",
+      "unit": "g4s1u6",
+      "label": "도형 배열과 계산식의 대응",
+      "prerequisites": [
+        "g4s1u6.number-pattern"
+      ]
+    },
+    {
+      "id": "g4s1u6.io-rule",
+      "unit": "g4s1u6",
+      "label": "입력·출력 규칙 추론",
+      "prerequisites": [
+        "g4s1u6.number-pattern"
+      ]
+    },
+    {
+      "id": "g4s2u1.unit-fraction-count",
+      "unit": "g4s2u1",
+      "label": "분수 = 단위분수의 개수",
+      "prerequisites": [
+        "g3s2u4.improper-mixed"
+      ]
+    },
+    {
+      "id": "g4s2u1.add-same-denom",
+      "unit": "g4s2u1",
+      "label": "분모가 같은 진분수 덧셈(합이 1보다 큰 경우 포함)",
+      "prerequisites": [
+        "g4s2u1.unit-fraction-count"
+      ]
+    },
+    {
+      "id": "g4s2u1.sub-same-denom",
+      "unit": "g4s2u1",
+      "label": "분모가 같은 진분수 뺄셈, 1 − 진분수",
+      "prerequisites": [
+        "g4s2u1.unit-fraction-count"
+      ]
+    },
+    {
+      "id": "g4s2u1.mixed-add-sub",
+      "unit": "g4s2u1",
+      "label": "대분수의 덧셈과 뺄셈",
+      "prerequisites": [
+        "g4s2u1.add-same-denom",
+        "g4s2u1.sub-same-denom",
+        "g3s2u4.improper-mixed"
+      ]
+    },
+    {
+      "id": "g4s2u1.mixed-borrow",
+      "unit": "g4s2u1",
+      "label": "대분수 뺄셈의 자연수 1 풀기(받아내림)",
+      "prerequisites": [
+        "g4s2u1.mixed-add-sub"
+      ]
+    },
+    {
+      "id": "g4s2u2.classify-by-sides",
+      "unit": "g4s2u2",
+      "label": "이등변삼각형·정삼각형과 그 성질(두 각/세 각이 같음)",
+      "prerequisites": [
+        "g4s1u2.acute-obtuse"
+      ]
+    },
+    {
+      "id": "g4s2u2.classify-by-angles",
+      "unit": "g4s2u2",
+      "label": "예각·직각·둔각삼각형",
+      "prerequisites": [
+        "g4s1u2.acute-obtuse"
+      ]
+    },
+    {
+      "id": "g4s2u2.two-criteria",
+      "unit": "g4s2u2",
+      "label": "두 기준을 함께 쓴 분류",
+      "prerequisites": [
+        "g4s2u2.classify-by-sides",
+        "g4s2u2.classify-by-angles"
+      ]
+    },
+    {
+      "id": "g4s2u2.construct-isosceles",
+      "unit": "g4s2u2",
+      "label": "컴퍼스로 이등변·정삼각형 작도",
+      "prerequisites": [
+        "g3s2u3.compass-construct"
+      ]
+    },
+    {
+      "id": "g4s2u3.hundredths-thousandths",
+      "unit": "g4s2u3",
+      "label": "소수 두 자리·세 자리(0.01, 0.001)",
+      "prerequisites": [
+        "g3s1u6.tenths-decimal"
+      ]
+    },
+    {
+      "id": "g4s2u3.compare-decimals",
+      "unit": "g4s2u3",
+      "label": "소수의 크기 비교와 끝자리 0",
+      "prerequisites": [
+        "g4s2u3.hundredths-thousandths"
+      ]
+    },
+    {
+      "id": "g4s2u3.decimal-ten-times",
+      "unit": "g4s2u3",
+      "label": "소수의 10배·1/10 관계",
+      "prerequisites": [
+        "g4s2u3.hundredths-thousandths"
+      ]
+    },
+    {
+      "id": "g4s2u3.decimal-add-sub",
+      "unit": "g4s2u3",
+      "label": "소수점 맞춰 더하고 빼기",
+      "prerequisites": [
+        "g4s2u3.hundredths-thousandths"
+      ]
+    },
+    {
+      "id": "g4s2u4.perpendicular-parallel",
+      "unit": "g4s2u4",
+      "label": "수직과 평행, 평행선 사이 거리",
+      "prerequisites": [
+        "g3s1u2.angle-right-angle"
+      ]
+    },
+    {
+      "id": "g4s2u4.quad-definitions",
+      "unit": "g4s2u4",
+      "label": "사다리꼴·평행사변형·마름모·직사각형·정사각형의 정의와 성질",
+      "prerequisites": [
+        "g4s2u4.perpendicular-parallel"
+      ]
+    },
+    {
+      "id": "g4s2u4.quad-inclusion",
+      "unit": "g4s2u4",
+      "label": "사각형의 포함 관계",
+      "prerequisites": [
+        "g4s2u4.quad-definitions"
+      ]
+    },
+    {
+      "id": "g4s2u5.line-graph-make",
+      "unit": "g4s2u5",
+      "label": "시간 자료를 꺾은선그래프로",
+      "prerequisites": [
+        "g4s1u5"
+      ]
+    },
+    {
+      "id": "g4s2u5.read-change",
+      "unit": "g4s2u5",
+      "label": "선분 기울기로 변화 읽기",
+      "prerequisites": [
+        "g4s2u5.line-graph-make"
+      ]
+    },
+    {
+      "id": "g4s2u5.wavy-line",
+      "unit": "g4s2u5",
+      "label": "물결선으로 눈금 줄이기",
+      "prerequisites": [
+        "g4s1u5.scale-unit"
+      ]
+    },
+    {
+      "id": "g4s2u5.interpolate-predict",
+      "unit": "g4s2u5",
+      "label": "중간 값 어림과 이후 예측",
+      "prerequisites": [
+        "g4s2u5.read-change"
+      ]
+    },
+    {
+      "id": "g4s2u6.polygon-definition",
+      "unit": "g4s2u6",
+      "label": "다각형과 정다각형",
+      "prerequisites": [
+        "g4s2u4.quad-definitions"
+      ]
+    },
+    {
+      "id": "g4s2u6.diagonal",
+      "unit": "g4s2u6",
+      "label": "대각선의 뜻과 개수",
+      "prerequisites": [
+        "g4s2u6.polygon-definition"
+      ]
+    },
+    {
+      "id": "g4s2u6.quad-diagonal-props",
+      "unit": "g4s2u6",
+      "label": "사각형 대각선의 성질",
+      "prerequisites": [
+        "g4s2u6.diagonal",
+        "g4s2u4.quad-inclusion"
+      ]
+    },
+    {
+      "id": "g5s1u1.order-mul-div-first",
+      "unit": "g5s1u1",
+      "label": "곱셈·나눗셈을 덧셈·뺄셈보다 먼저 계산",
+      "prerequisites": [
+        "g4s1u3"
+      ]
+    },
+    {
+      "id": "g5s1u1.parentheses-first",
+      "unit": "g5s1u1",
+      "label": "괄호 안을 먼저 계산",
+      "prerequisites": [
+        "g5s1u1.order-mul-div-first"
+      ]
+    },
+    {
+      "id": "g5s1u1.same-level-left-to-right",
+      "unit": "g5s1u1",
+      "label": "같은 단계 연산은 왼쪽부터",
+      "prerequisites": [
+        "g5s1u1.order-mul-div-first"
+      ]
+    },
+    {
+      "id": "g5s1u1.expression-from-story",
+      "unit": "g5s1u1",
+      "label": "문장 상황을 하나의 식으로 쓰기",
+      "prerequisites": [
+        "g5s1u1.parentheses-first"
+      ]
+    },
+    {
+      "id": "g5s1u2.factor-as-array",
+      "unit": "g5s1u2",
+      "label": "약수 = 직사각형 배열의 한 변",
+      "prerequisites": [
+        "g4s1u3"
+      ]
+    },
+    {
+      "id": "g5s1u2.multiple-as-skip",
+      "unit": "g5s1u2",
+      "label": "배수 = 뛰어 센 수",
+      "prerequisites": [
+        "g4s1u3"
+      ]
+    },
+    {
+      "id": "g5s1u2.common-factor-gcd",
+      "unit": "g5s1u2",
+      "label": "공약수와 최대공약수",
+      "prerequisites": [
+        "g5s1u2.factor-as-array"
+      ]
+    },
+    {
+      "id": "g5s1u2.common-multiple-lcm",
+      "unit": "g5s1u2",
+      "label": "공배수와 최소공배수",
+      "prerequisites": [
+        "g5s1u2.multiple-as-skip"
+      ]
+    },
+    {
+      "id": "g5s1u2.factor-multiple-relation",
+      "unit": "g5s1u2",
+      "label": "약수와 배수의 관계(12는 3의 배수 ↔ 3은 12의 약수)",
+      "prerequisites": [
+        "g5s1u2.factor-as-array",
+        "g5s1u2.multiple-as-skip"
+      ]
+    },
+    {
+      "id": "g5s1u3.covariation",
+      "unit": "g5s1u3",
+      "label": "두 양이 함께 변함을 관찰",
+      "prerequisites": [
+        "g4s1u6"
+      ]
+    },
+    {
+      "id": "g5s1u3.correspondence-table",
+      "unit": "g5s1u3",
+      "label": "대응표로 나타내기",
+      "prerequisites": [
+        "g5s1u3.covariation"
+      ]
+    },
+    {
+      "id": "g5s1u3.rule-expression",
+      "unit": "g5s1u3",
+      "label": "기호(○, □)로 대응 관계식 쓰기",
+      "prerequisites": [
+        "g5s1u3.correspondence-table"
+      ]
+    },
+    {
+      "id": "g5s1u3.rule-check-all-pairs",
+      "unit": "g5s1u3",
+      "label": "관계식이 모든 쌍에서 성립하는지 확인",
+      "prerequisites": [
+        "g5s1u3.rule-expression"
+      ]
+    },
+    {
+      "id": "g5s1u4.equivalent-fraction",
+      "unit": "g5s1u4",
+      "label": "크기가 같은 분수(동치분수)를 그림으로 만들기",
+      "prerequisites": [
+        "g3s2u4",
+        "g4s2u1"
+      ]
+    },
+    {
+      "id": "g5s1u4.multiply-same",
+      "unit": "g5s1u4",
+      "label": "분모·분자에 같은 수를 곱하거나 나누어 동치분수 만들기",
+      "prerequisites": [
+        "g5s1u4.equivalent-fraction"
+      ]
+    },
+    {
+      "id": "g5s1u4.simplify",
+      "unit": "g5s1u4",
+      "label": "약분, 기약분수",
+      "prerequisites": [
+        "g5s1u4.multiply-same",
+        "g5s1u2.common-factor-gcd"
+      ]
+    },
+    {
+      "id": "g5s1u4.common-denominator",
+      "unit": "g5s1u4",
+      "label": "통분(공통분모: 두 분모의 공배수)",
+      "prerequisites": [
+        "g5s1u4.multiply-same",
+        "g5s1u2.common-multiple-lcm"
+      ]
+    },
+    {
+      "id": "g5s1u4.compare-fractions",
+      "unit": "g5s1u4",
+      "label": "분모가 다른 분수·소수의 크기 비교",
+      "prerequisites": [
+        "g5s1u4.common-denominator"
+      ]
+    },
+    {
+      "id": "g5s1u5.add-unlike-proper",
+      "unit": "g5s1u5",
+      "label": "분모가 다른 진분수의 덧셈",
+      "prerequisites": [
+        "g5s1u4.common-denominator"
+      ]
+    },
+    {
+      "id": "g5s1u5.subtract-unlike-proper",
+      "unit": "g5s1u5",
+      "label": "분모가 다른 진분수의 뺄셈",
+      "prerequisites": [
+        "g5s1u4.common-denominator"
+      ]
+    },
+    {
+      "id": "g5s1u5.add-sub-mixed",
+      "unit": "g5s1u5",
+      "label": "분모가 다른 대분수의 덧셈·뺄셈(받아내림 포함)",
+      "prerequisites": [
+        "g5s1u5.add-unlike-proper",
+        "g4s2u1"
+      ]
+    },
+    {
+      "id": "g5s1u5.simplify-result",
+      "unit": "g5s1u5",
+      "label": "계산 결과 약분·대분수로 나타내기",
+      "prerequisites": [
+        "g5s1u4.simplify"
+      ]
+    },
+    {
+      "id": "g5s1u6.perimeter",
+      "unit": "g5s1u6",
+      "label": "다각형의 둘레",
+      "prerequisites": [
+        "g4s2u6"
+      ]
+    },
+    {
+      "id": "g5s1u6.unit-area-rectangle",
+      "unit": "g5s1u6",
+      "label": "단위넓이와 직사각형 넓이 = 가로 × 세로",
+      "prerequisites": [
+        "g3s2u1"
+      ]
+    },
+    {
+      "id": "g5s1u6.area-conservation",
+      "unit": "g5s1u6",
+      "label": "자르고 옮겨도 넓이 보존",
+      "prerequisites": [
+        "g5s1u6.unit-area-rectangle"
+      ]
+    },
+    {
+      "id": "g5s1u6.derive-formulas",
+      "unit": "g5s1u6",
+      "label": "평행사변형·삼각형·사다리꼴·마름모 넓이 공식 유도",
+      "prerequisites": [
+        "g5s1u6.area-conservation"
+      ]
+    },
+    {
+      "id": "g5s1u6.perimeter-vs-area",
+      "unit": "g5s1u6",
+      "label": "둘레가 같아도 넓이는 다를 수 있다",
+      "prerequisites": [
+        "g5s1u6.perimeter",
+        "g5s1u6.unit-area-rectangle"
+      ]
+    },
+    {
+      "id": "g5s2u1.inclusive-bounds",
+      "unit": "g5s2u1",
+      "label": "이상·이하(경계 포함)",
+      "prerequisites": [
+        "g4s1u1"
+      ]
+    },
+    {
+      "id": "g5s2u1.exclusive-bounds",
+      "unit": "g5s2u1",
+      "label": "초과·미만(경계 제외)",
+      "prerequisites": [
+        "g5s2u1.inclusive-bounds"
+      ]
+    },
+    {
+      "id": "g5s2u1.range-combined",
+      "unit": "g5s2u1",
+      "label": "두 조건을 합친 수의 범위(○ 이상 □ 미만)",
+      "prerequisites": [
+        "g5s2u1.exclusive-bounds"
+      ]
+    },
+    {
+      "id": "g5s2u1.round-up-down-half",
+      "unit": "g5s2u1",
+      "label": "올림·버림·반올림",
+      "prerequisites": [
+        "g4s1u1"
+      ]
+    },
+    {
+      "id": "g5s2u1.rounding-decision",
+      "unit": "g5s2u1",
+      "label": "상황에 맞는 어림 방법 고르기",
+      "prerequisites": [
+        "g5s2u1.round-up-down-half"
+      ]
+    },
+    {
+      "id": "g5s2u2.whole-times-fraction",
+      "unit": "g5s2u2",
+      "label": "(분수)×(자연수), (자연수)×(분수)",
+      "prerequisites": [
+        "g5s1u5"
+      ]
+    },
+    {
+      "id": "g5s2u2.fraction-of-fraction",
+      "unit": "g5s2u2",
+      "label": "(분수)×(분수) = 부분의 부분(넓이 교집합)",
+      "prerequisites": [
+        "g5s2u2.whole-times-fraction"
+      ]
+    },
+    {
+      "id": "g5s2u2.scaling-smaller",
+      "unit": "g5s2u2",
+      "label": "진분수를 곱하면 작아진다(곱셈 결과 크기 예측)",
+      "prerequisites": [
+        "g5s2u2.fraction-of-fraction"
+      ]
+    },
+    {
+      "id": "g5s2u2.cross-simplify",
+      "unit": "g5s2u2",
+      "label": "계산 중 약분",
+      "prerequisites": [
+        "g5s1u4.simplify"
+      ]
+    },
+    {
+      "id": "g5s2u2.mixed-multiply",
+      "unit": "g5s2u2",
+      "label": "대분수의 곱셈",
+      "prerequisites": [
+        "g5s2u2.fraction-of-fraction",
+        "g3s2u4"
+      ]
+    },
+    {
+      "id": "g5s2u3.congruence",
+      "unit": "g5s2u3",
+      "label": "합동, 대응점·대응변·대응각",
+      "prerequisites": [
+        "g4s1u4"
+      ]
+    },
+    {
+      "id": "g5s2u3.line-symmetry",
+      "unit": "g5s2u3",
+      "label": "선대칭도형과 대칭축",
+      "prerequisites": [
+        "g5s2u3.congruence"
+      ]
+    },
+    {
+      "id": "g5s2u3.point-symmetry",
+      "unit": "g5s2u3",
+      "label": "점대칭도형과 대칭의 중심",
+      "prerequisites": [
+        "g5s2u3.congruence"
+      ]
+    },
+    {
+      "id": "g5s2u3.draw-symmetric",
+      "unit": "g5s2u3",
+      "label": "대칭도형 완성하기(대응점 거리 같음)",
+      "prerequisites": [
+        "g5s2u3.line-symmetry",
+        "g5s2u3.point-symmetry"
+      ]
+    },
+    {
+      "id": "g5s2u4.decimal-times-whole",
+      "unit": "g5s2u4",
+      "label": "(소수)×(자연수)",
+      "prerequisites": [
+        "g4s2u3"
+      ]
+    },
+    {
+      "id": "g5s2u4.decimal-times-decimal",
+      "unit": "g5s2u4",
+      "label": "(소수)×(소수) 넓이 모델",
+      "prerequisites": [
+        "g5s2u4.decimal-times-whole",
+        "g5s2u2.fraction-of-fraction"
+      ]
+    },
+    {
+      "id": "g5s2u4.place-shift",
+      "unit": "g5s2u4",
+      "label": "×10, ×100, ×0.1, ×0.01에 따른 자릿값 이동",
+      "prerequisites": [
+        "g4s2u3"
+      ]
+    },
+    {
+      "id": "g5s2u4.decimal-point-by-estimate",
+      "unit": "g5s2u4",
+      "label": "어림으로 소수점 위치 확인",
+      "prerequisites": [
+        "g5s2u4.place-shift"
+      ]
+    },
+    {
+      "id": "g5s2u5.cuboid-parts",
+      "unit": "g5s2u5",
+      "label": "직육면체·정육면체의 면·모서리·꼭짓점",
+      "prerequisites": [
+        "g4s2u4"
+      ]
+    },
+    {
+      "id": "g5s2u5.parallel-perpendicular-faces",
+      "unit": "g5s2u5",
+      "label": "평행한 면, 수직인 면",
+      "prerequisites": [
+        "g5s2u5.cuboid-parts"
+      ]
+    },
+    {
+      "id": "g5s2u5.sketch-hidden-edges",
+      "unit": "g5s2u5",
+      "label": "겨냥도(보이지 않는 모서리 점선)",
+      "prerequisites": [
+        "g5s2u5.cuboid-parts"
+      ]
+    },
+    {
+      "id": "g5s2u5.nets",
+      "unit": "g5s2u5",
+      "label": "전개도 그리기와 접히는지 판단",
+      "prerequisites": [
+        "g5s2u5.parallel-perpendicular-faces"
+      ]
+    },
+    {
+      "id": "g5s2u6.mean-as-leveling",
+      "unit": "g5s2u6",
+      "label": "평균 = 고르게 하기",
+      "prerequisites": [
+        "g4s1u5"
+      ]
+    },
+    {
+      "id": "g5s2u6.mean-as-balance",
+      "unit": "g5s2u6",
+      "label": "평균 = 균형점(무게중심)",
+      "prerequisites": [
+        "g5s2u6.mean-as-leveling"
+      ]
+    },
+    {
+      "id": "g5s2u6.mean-compute",
+      "unit": "g5s2u6",
+      "label": "평균 = 자료 값의 합 ÷ 자료 수",
+      "prerequisites": [
+        "g5s2u6.mean-as-leveling"
+      ]
+    },
+    {
+      "id": "g5s2u6.outlier-effect",
+      "unit": "g5s2u6",
+      "label": "극단값이 평균에 주는 영향",
+      "prerequisites": [
+        "g5s2u6.mean-as-balance"
+      ]
+    },
+    {
+      "id": "g5s2u6.likelihood",
+      "unit": "g5s2u6",
+      "label": "가능성을 말과 수로 표현, 많은 시행",
+      "prerequisites": [
+        "g5s2u6.mean-compute"
+      ]
+    },
+    {
+      "id": "g6s1u1.whole-div-as-fraction",
+      "unit": "g6s1u1",
+      "label": "(자연수)÷(자연수)의 몫을 분수로",
+      "prerequisites": [
+        "g3s2u4"
+      ]
+    },
+    {
+      "id": "g6s1u1.fraction-div-whole-share",
+      "unit": "g6s1u1",
+      "label": "(분수)÷(자연수) = 똑같이 나누기",
+      "prerequisites": [
+        "g6s1u1.whole-div-as-fraction"
+      ]
+    },
+    {
+      "id": "g6s1u1.div-n-equals-times-unit",
+      "unit": "g6s1u1",
+      "label": "÷n = ×1/n",
+      "prerequisites": [
+        "g6s1u1.fraction-div-whole-share",
+        "g5s2u2.fraction-of-fraction"
+      ]
+    },
+    {
+      "id": "g6s1u1.mixed-div-whole",
+      "unit": "g6s1u1",
+      "label": "(대분수)÷(자연수)",
+      "prerequisites": [
+        "g6s1u1.div-n-equals-times-unit"
+      ]
+    },
+    {
+      "id": "g6s1u2.prism",
+      "unit": "g6s1u2",
+      "label": "각기둥(밑면·옆면·높이)",
+      "prerequisites": [
+        "g5s2u5"
+      ]
+    },
+    {
+      "id": "g6s1u2.pyramid",
+      "unit": "g6s1u2",
+      "label": "각뿔(밑면·옆면·꼭짓점·높이)",
+      "prerequisites": [
+        "g6s1u2.prism"
+      ]
+    },
+    {
+      "id": "g6s1u2.element-count-rule",
+      "unit": "g6s1u2",
+      "label": "구성 요소 수와 n의 관계",
+      "prerequisites": [
+        "g6s1u2.prism",
+        "g6s1u2.pyramid"
+      ]
+    },
+    {
+      "id": "g6s1u2.prism-net",
+      "unit": "g6s1u2",
+      "label": "각기둥의 전개도",
+      "prerequisites": [
+        "g5s2u5.nets"
+      ]
+    },
+    {
+      "id": "g6s1u3.decimal-div-whole-blocks",
+      "unit": "g6s1u3",
+      "label": "십진 모형을 풀어 똑같이 나누기",
+      "prerequisites": [
+        "g3s2u2"
+      ]
+    },
+    {
+      "id": "g6s1u3.quotient-place-value",
+      "unit": "g6s1u3",
+      "label": "몫의 자릿값과 소수점 위치",
+      "prerequisites": [
+        "g5s2u4.place-shift"
+      ]
+    },
+    {
+      "id": "g6s1u3.quotient-zero",
+      "unit": "g6s1u3",
+      "label": "몫 자리에 0 쓰기(1.02 등)",
+      "prerequisites": [
+        "g6s1u3.quotient-place-value"
+      ]
+    },
+    {
+      "id": "g6s1u3.extend-with-zero",
+      "unit": "g6s1u3",
+      "label": "나누어떨어지지 않으면 0을 내려 계속 나누기",
+      "prerequisites": [
+        "g6s1u3.quotient-zero"
+      ]
+    },
+    {
+      "id": "g6s1u4.difference-vs-ratio",
+      "unit": "g6s1u4",
+      "label": "뺄셈 비교와 나눗셈 비교",
+      "prerequisites": [
+        "g5s1u3"
+      ]
+    },
+    {
+      "id": "g6s1u4.ratio-notation",
+      "unit": "g6s1u4",
+      "label": "비(a : b), 기준량과 비교하는 양",
+      "prerequisites": [
+        "g6s1u4.difference-vs-ratio"
+      ]
+    },
+    {
+      "id": "g6s1u4.ratio-value",
+      "unit": "g6s1u4",
+      "label": "비율(분수·소수)",
+      "prerequisites": [
+        "g6s1u4.ratio-notation",
+        "g5s1u4.equivalent-fraction"
+      ]
+    },
+    {
+      "id": "g6s1u4.percent",
+      "unit": "g6s1u4",
+      "label": "백분율",
+      "prerequisites": [
+        "g6s1u4.ratio-value"
+      ]
+    },
+    {
+      "id": "g6s1u4.rate-in-life",
+      "unit": "g6s1u4",
+      "label": "속력, 인구 밀도 등 생활 속 비율",
+      "prerequisites": [
+        "g6s1u4.ratio-value"
+      ]
+    },
+    {
+      "id": "g6s1u5.band-graph",
+      "unit": "g6s1u5",
+      "label": "띠그래프(백분율)",
+      "prerequisites": [
+        "g6s1u4.percent"
+      ]
+    },
+    {
+      "id": "g6s1u5.circle-graph",
+      "unit": "g6s1u5",
+      "label": "원그래프",
+      "prerequisites": [
+        "g6s1u5.band-graph"
+      ]
+    },
+    {
+      "id": "g6s1u5.choose-graph",
+      "unit": "g6s1u5",
+      "label": "목적에 맞는 그래프 고르기",
+      "prerequisites": [
+        "g4s2u5",
+        "g6s1u5.circle-graph"
+      ]
+    },
+    {
+      "id": "g6s1u5.critical-reading",
+      "unit": "g6s1u5",
+      "label": "그래프 왜곡 찾기",
+      "prerequisites": [
+        "g6s1u5.choose-graph"
+      ]
+    },
+    {
+      "id": "g6s1u6.surface-area",
+      "unit": "g6s1u6",
+      "label": "직육면체·정육면체의 겉넓이",
+      "prerequisites": [
+        "g5s2u5.nets",
+        "g5s1u6.unit-area-rectangle"
+      ]
+    },
+    {
+      "id": "g6s1u6.volume-unit-cube",
+      "unit": "g6s1u6",
+      "label": "부피와 1cm³",
+      "prerequisites": [
+        "g5s2u5.cuboid-parts"
+      ]
+    },
+    {
+      "id": "g6s1u6.volume-formula",
+      "unit": "g6s1u6",
+      "label": "부피 = 가로 × 세로 × 높이",
+      "prerequisites": [
+        "g6s1u6.volume-unit-cube"
+      ]
+    },
+    {
+      "id": "g6s1u6.volume-units",
+      "unit": "g6s1u6",
+      "label": "cm³와 m³의 관계",
+      "prerequisites": [
+        "g6s1u6.volume-formula"
+      ]
+    },
+    {
+      "id": "g6s1u6.surface-vs-volume",
+      "unit": "g6s1u6",
+      "label": "부피가 같아도 겉넓이는 다를 수 있다",
+      "prerequisites": [
+        "g6s1u6.surface-area",
+        "g6s1u6.volume-formula"
+      ]
+    },
+    {
+      "id": "g6s2u1.measure-division",
+      "unit": "g6s2u1",
+      "label": "포함제: 몇 번 들어가는가",
+      "prerequisites": [
+        "g6s1u1.fraction-div-whole-share"
+      ]
+    },
+    {
+      "id": "g6s2u1.same-denominator-div",
+      "unit": "g6s2u1",
+      "label": "분모가 같은 분수의 나눗셈",
+      "prerequisites": [
+        "g6s2u1.measure-division"
+      ]
+    },
+    {
+      "id": "g6s2u1.common-denominator-div",
+      "unit": "g6s2u1",
+      "label": "통분해서 나누기",
+      "prerequisites": [
+        "g6s2u1.same-denominator-div",
+        "g5s1u4.common-denominator"
+      ]
+    },
+    {
+      "id": "g6s2u1.reciprocal-multiply",
+      "unit": "g6s2u1",
+      "label": "÷ c/d = × d/c",
+      "prerequisites": [
+        "g6s2u1.common-denominator-div",
+        "g6s1u1.div-n-equals-times-unit"
+      ]
+    },
+    {
+      "id": "g6s2u1.quotient-bigger",
+      "unit": "g6s2u1",
+      "label": "1보다 작은 수로 나누면 몫이 커진다",
+      "prerequisites": [
+        "g6s2u1.measure-division"
+      ]
+    },
+    {
+      "id": "g6s2u2.scale-both-same-quotient",
+      "unit": "g6s2u2",
+      "label": "두 수에 같은 수를 곱해도 몫은 같다",
+      "prerequisites": [
+        "g5s2u4.place-shift"
+      ]
+    },
+    {
+      "id": "g6s2u2.decimal-div-decimal",
+      "unit": "g6s2u2",
+      "label": "(소수)÷(소수)",
+      "prerequisites": [
+        "g6s2u2.scale-both-same-quotient",
+        "g6s1u3"
+      ]
+    },
+    {
+      "id": "g6s2u2.remainder-original-place",
+      "unit": "g6s2u2",
+      "label": "나머지의 소수점은 원래 위치",
+      "prerequisites": [
+        "g6s2u2.decimal-div-decimal"
+      ]
+    },
+    {
+      "id": "g6s2u2.round-quotient",
+      "unit": "g6s2u2",
+      "label": "몫을 반올림해 나타내기",
+      "prerequisites": [
+        "g6s2u2.decimal-div-decimal",
+        "g5s2u1.round-up-down-half"
+      ]
+    },
+    {
+      "id": "g6s2u3.views-from-directions",
+      "unit": "g6s2u3",
+      "label": "위·앞·옆에서 본 모양",
+      "prerequisites": [
+        "g5s2u5.sketch-hidden-edges"
+      ]
+    },
+    {
+      "id": "g6s2u3.count-cubes",
+      "unit": "g6s2u3",
+      "label": "보이지 않는 쌓기나무까지 개수 세기",
+      "prerequisites": [
+        "g6s2u3.views-from-directions"
+      ]
+    },
+    {
+      "id": "g6s2u3.top-view-numbers",
+      "unit": "g6s2u3",
+      "label": "위에서 본 모양에 수를 써서 나타내기",
+      "prerequisites": [
+        "g6s2u3.count-cubes"
+      ]
+    },
+    {
+      "id": "g6s2u3.layer-views",
+      "unit": "g6s2u3",
+      "label": "층별로 나타낸 그림",
+      "prerequisites": [
+        "g6s2u3.top-view-numbers"
+      ]
+    },
+    {
+      "id": "g6s2u3.reconstruct-from-views",
+      "unit": "g6s2u3",
+      "label": "투영도로 입체 복원, 가능한 개수의 최소·최대",
+      "prerequisites": [
+        "g6s2u3.layer-views"
+      ]
+    },
+    {
+      "id": "g6s2u4.ratio-property",
+      "unit": "g6s2u4",
+      "label": "비의 성질(같은 수 곱하기·나누기), 간단한 자연수 비",
+      "prerequisites": [
+        "g6s1u4.ratio-value"
+      ]
+    },
+    {
+      "id": "g6s2u4.proportion",
+      "unit": "g6s2u4",
+      "label": "비례식",
+      "prerequisites": [
+        "g6s2u4.ratio-property"
+      ]
+    },
+    {
+      "id": "g6s2u4.extremes-means",
+      "unit": "g6s2u4",
+      "label": "외항의 곱 = 내항의 곱",
+      "prerequisites": [
+        "g6s2u4.proportion"
+      ]
+    },
+    {
+      "id": "g6s2u4.proportional-distribution",
+      "unit": "g6s2u4",
+      "label": "비례배분",
+      "prerequisites": [
+        "g6s2u4.ratio-property",
+        "g6s1u4.ratio-notation"
+      ]
+    },
+    {
+      "id": "g6s2u5.circumference-diameter-ratio",
+      "unit": "g6s2u5",
+      "label": "원주와 지름의 관계, 원주율",
+      "prerequisites": [
+        "g3s2u3"
+      ]
+    },
+    {
+      "id": "g6s2u5.circumference-formula",
+      "unit": "g6s2u5",
+      "label": "원주 = 지름 × 원주율",
+      "prerequisites": [
+        "g6s2u5.circumference-diameter-ratio"
+      ]
+    },
+    {
+      "id": "g6s2u5.area-by-rearrange",
+      "unit": "g6s2u5",
+      "label": "원 등분 재배열로 넓이 유도",
+      "prerequisites": [
+        "g5s1u6.area-conservation",
+        "g6s2u5.circumference-formula"
+      ]
+    },
+    {
+      "id": "g6s2u5.area-formula",
+      "unit": "g6s2u5",
+      "label": "원의 넓이 = 반지름 × 반지름 × 원주율",
+      "prerequisites": [
+        "g6s2u5.area-by-rearrange"
+      ]
+    },
+    {
+      "id": "g6s2u6.solids-of-revolution",
+      "unit": "g6s2u6",
+      "label": "회전체로서의 원기둥·원뿔·구",
+      "prerequisites": [
+        "g6s1u2.prism",
+        "g6s1u2.pyramid"
+      ]
+    },
+    {
+      "id": "g6s2u6.parts-of-round-solids",
+      "unit": "g6s2u6",
+      "label": "밑면·옆면·높이·모선·중심·반지름",
+      "prerequisites": [
+        "g6s2u6.solids-of-revolution"
+      ]
+    },
+    {
+      "id": "g6s2u6.cylinder-net",
+      "unit": "g6s2u6",
+      "label": "원기둥 전개도(옆면 가로 = 밑면 원주)",
+      "prerequisites": [
+        "g6s2u5.circumference-formula"
+      ]
+    },
+    {
+      "id": "g6s2u6.compare-prism-cylinder",
+      "unit": "g6s2u6",
+      "label": "각기둥·각뿔과 원기둥·원뿔 비교",
+      "prerequisites": [
+        "g6s2u6.parts-of-round-solids"
+      ]
+    }
+  ]
+}

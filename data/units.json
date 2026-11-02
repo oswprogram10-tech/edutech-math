@@ -1,0 +1,1271 @@
+{
+  "$comment": "단원 메타데이터의 단일 진실 공급원(SSOT). 단원명은 원 계획서 기준이며 3~6학년은 검정 교과서라 출판사별로 다를 수 있음. 교과서 단원명이 다르면 textbookAlias에 적는다. standards는 2022 개정 교육과정 성취기준 코드(예: [4수01-05])를 교육과정 원문에서 확인해 채운다.",
+  "version": 1,
+  "units": [
+    {
+      "id": "g1s1u1",
+      "grade": 1,
+      "semester": 1,
+      "order": 1,
+      "title": "9까지의 수",
+      "domain": "number",
+      "engines": [
+        "E02",
+        "E03"
+      ],
+      "prerequisites": [],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g1s1u2",
+      "grade": 1,
+      "semester": 1,
+      "order": 2,
+      "title": "여러 가지 모양",
+      "domain": "geometry",
+      "engines": [
+        "E12",
+        "E17"
+      ],
+      "prerequisites": [],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g1s1u3",
+      "grade": 1,
+      "semester": 1,
+      "order": 3,
+      "title": "덧셈과 뺄셈",
+      "domain": "number",
+      "engines": [
+        "E02"
+      ],
+      "prerequisites": [
+        "g1s1u1"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g1s1u4",
+      "grade": 1,
+      "semester": 1,
+      "order": 4,
+      "title": "비교하기",
+      "domain": "geometry",
+      "engines": [
+        "E13",
+        "E06"
+      ],
+      "prerequisites": [],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g1s1u5",
+      "grade": 1,
+      "semester": 1,
+      "order": 5,
+      "title": "50까지의 수",
+      "domain": "number",
+      "engines": [
+        "E01",
+        "E02"
+      ],
+      "prerequisites": [
+        "g1s1u1"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g1s2u1",
+      "grade": 1,
+      "semester": 2,
+      "order": 1,
+      "title": "100까지의 수",
+      "domain": "number",
+      "engines": [
+        "E01",
+        "E15",
+        "E02"
+      ],
+      "prerequisites": [
+        "g1s1u5"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g1s2u2",
+      "grade": 1,
+      "semester": 2,
+      "order": 2,
+      "title": "덧셈과 뺄셈(1)",
+      "domain": "number",
+      "engines": [
+        "E01",
+        "E03"
+      ],
+      "prerequisites": [
+        "g1s1u3",
+        "g1s2u1"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g1s2u3",
+      "grade": 1,
+      "semester": 2,
+      "order": 3,
+      "title": "모양과 시각",
+      "domain": "geometry",
+      "engines": [
+        "E11",
+        "E14"
+      ],
+      "prerequisites": [
+        "g1s1u2"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g1s2u4",
+      "grade": 1,
+      "semester": 2,
+      "order": 4,
+      "title": "덧셈과 뺄셈(2)",
+      "domain": "number",
+      "engines": [
+        "E02"
+      ],
+      "prerequisites": [
+        "g1s1u3"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g1s2u5",
+      "grade": 1,
+      "semester": 2,
+      "order": 5,
+      "title": "규칙 찾기",
+      "domain": "change",
+      "engines": [
+        "E15"
+      ],
+      "prerequisites": [],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g1s2u6",
+      "grade": 1,
+      "semester": 2,
+      "order": 6,
+      "title": "덧셈과 뺄셈(3)",
+      "domain": "number",
+      "engines": [
+        "E02"
+      ],
+      "prerequisites": [
+        "g1s2u4"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g2s1u1",
+      "grade": 2,
+      "semester": 1,
+      "order": 1,
+      "title": "세 자리 수",
+      "domain": "number",
+      "engines": [
+        "E01"
+      ],
+      "prerequisites": [
+        "g1s2u1"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g2s1u2",
+      "grade": 2,
+      "semester": 1,
+      "order": 2,
+      "title": "여러 가지 도형",
+      "domain": "geometry",
+      "engines": [
+        "E09",
+        "E12"
+      ],
+      "prerequisites": [
+        "g1s2u3"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g2s1u3",
+      "grade": 2,
+      "semester": 1,
+      "order": 3,
+      "title": "덧셈과 뺄셈",
+      "domain": "number",
+      "engines": [
+        "E01",
+        "E07",
+        "E06"
+      ],
+      "prerequisites": [
+        "g1s2u2",
+        "g1s2u6",
+        "g2s1u1"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g2s1u4",
+      "grade": 2,
+      "semester": 1,
+      "order": 4,
+      "title": "길이 재기",
+      "domain": "geometry",
+      "engines": [
+        "E13"
+      ],
+      "prerequisites": [
+        "g1s1u4"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g2s1u5",
+      "grade": 2,
+      "semester": 1,
+      "order": 5,
+      "title": "분류하기",
+      "domain": "data",
+      "engines": [
+        "E17"
+      ],
+      "prerequisites": [],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g2s1u6",
+      "grade": 2,
+      "semester": 1,
+      "order": 6,
+      "title": "곱셈",
+      "domain": "number",
+      "engines": [
+        "E04",
+        "E02",
+        "E03"
+      ],
+      "prerequisites": [
+        "g2s1u3"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g2s2u1",
+      "grade": 2,
+      "semester": 2,
+      "order": 1,
+      "title": "네 자리 수",
+      "domain": "number",
+      "engines": [
+        "E01",
+        "E03"
+      ],
+      "prerequisites": [
+        "g2s1u1"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g2s2u2",
+      "grade": 2,
+      "semester": 2,
+      "order": 2,
+      "title": "곱셈구구",
+      "domain": "number",
+      "engines": [
+        "E04"
+      ],
+      "prerequisites": [
+        "g2s1u6"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g2s2u3",
+      "grade": 2,
+      "semester": 2,
+      "order": 3,
+      "title": "길이 재기",
+      "domain": "geometry",
+      "engines": [
+        "E13"
+      ],
+      "prerequisites": [
+        "g2s1u4"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g2s2u4",
+      "grade": 2,
+      "semester": 2,
+      "order": 4,
+      "title": "시각과 시간",
+      "domain": "geometry",
+      "engines": [
+        "E14"
+      ],
+      "prerequisites": [
+        "g1s2u3"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g2s2u5",
+      "grade": 2,
+      "semester": 2,
+      "order": 5,
+      "title": "표와 그래프",
+      "domain": "data",
+      "engines": [
+        "E18"
+      ],
+      "prerequisites": [
+        "g2s1u5"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g2s2u6",
+      "grade": 2,
+      "semester": 2,
+      "order": 6,
+      "title": "규칙 찾기",
+      "domain": "change",
+      "engines": [
+        "E15",
+        "E12"
+      ],
+      "prerequisites": [
+        "g1s2u5",
+        "g2s2u2"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g3s1u1",
+      "grade": 3,
+      "semester": 1,
+      "order": 1,
+      "title": "덧셈과 뺄셈",
+      "domain": "number",
+      "engines": [
+        "E01",
+        "E07",
+        "E03"
+      ],
+      "prerequisites": [
+        "g2s1u3",
+        "g2s2u1"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g3s1u2",
+      "grade": 3,
+      "semester": 1,
+      "order": 2,
+      "title": "평면도형",
+      "domain": "geometry",
+      "engines": [
+        "E09"
+      ],
+      "prerequisites": [
+        "g2s1u2"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g3s1u3",
+      "grade": 3,
+      "semester": 1,
+      "order": 3,
+      "title": "나눗셈",
+      "domain": "number",
+      "engines": [
+        "E02",
+        "E04"
+      ],
+      "prerequisites": [
+        "g2s2u2"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g3s1u4",
+      "grade": 3,
+      "semester": 1,
+      "order": 4,
+      "title": "곱셈",
+      "domain": "number",
+      "engines": [
+        "E04",
+        "E07"
+      ],
+      "prerequisites": [
+        "g2s2u2",
+        "g2s2u1"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g3s1u5",
+      "grade": 3,
+      "semester": 1,
+      "order": 5,
+      "title": "길이와 시간",
+      "domain": "geometry",
+      "engines": [
+        "E13",
+        "E14"
+      ],
+      "prerequisites": [
+        "g2s2u3",
+        "g2s2u4"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g3s1u6",
+      "grade": 3,
+      "semester": 1,
+      "order": 6,
+      "title": "분수와 소수",
+      "domain": "number",
+      "engines": [
+        "E05",
+        "E03"
+      ],
+      "prerequisites": [
+        "g3s1u3"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g3s2u1",
+      "grade": 3,
+      "semester": 2,
+      "order": 1,
+      "title": "곱셈",
+      "domain": "number",
+      "engines": [
+        "E04",
+        "E07"
+      ],
+      "prerequisites": [
+        "g3s1u4"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g3s2u2",
+      "grade": 3,
+      "semester": 2,
+      "order": 2,
+      "title": "나눗셈",
+      "domain": "number",
+      "engines": [
+        "E01",
+        "E07"
+      ],
+      "prerequisites": [
+        "g3s1u3",
+        "g3s1u4"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g3s2u3",
+      "grade": 3,
+      "semester": 2,
+      "order": 3,
+      "title": "원",
+      "domain": "geometry",
+      "engines": [
+        "E09"
+      ],
+      "prerequisites": [
+        "g3s1u2"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g3s2u4",
+      "grade": 3,
+      "semester": 2,
+      "order": 4,
+      "title": "분수",
+      "domain": "number",
+      "engines": [
+        "E05",
+        "E03"
+      ],
+      "prerequisites": [
+        "g3s1u6",
+        "g3s1u3"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g3s2u5",
+      "grade": 3,
+      "semester": 2,
+      "order": 5,
+      "title": "들이와 무게",
+      "domain": "geometry",
+      "engines": [
+        "E13"
+      ],
+      "prerequisites": [
+        "g3s1u5"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g3s2u6",
+      "grade": 3,
+      "semester": 2,
+      "order": 6,
+      "title": "그림그래프",
+      "domain": "data",
+      "engines": [
+        "E18"
+      ],
+      "prerequisites": [
+        "g2s2u5"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g4s1u1",
+      "grade": 4,
+      "semester": 1,
+      "order": 1,
+      "title": "큰 수",
+      "domain": "number",
+      "engines": [
+        "E01",
+        "E03"
+      ],
+      "prerequisites": [
+        "g2s2u1"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g4s1u2",
+      "grade": 4,
+      "semester": 1,
+      "order": 2,
+      "title": "각도",
+      "domain": "geometry",
+      "engines": [
+        "E09",
+        "E11"
+      ],
+      "prerequisites": [
+        "g3s1u2"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g4s1u3",
+      "grade": 4,
+      "semester": 1,
+      "order": 3,
+      "title": "곱셈과 나눗셈",
+      "domain": "number",
+      "engines": [
+        "E07",
+        "E04"
+      ],
+      "prerequisites": [
+        "g3s2u1",
+        "g3s2u2"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g4s1u4",
+      "grade": 4,
+      "semester": 1,
+      "order": 4,
+      "title": "평면도형의 이동",
+      "domain": "geometry",
+      "engines": [
+        "E10"
+      ],
+      "prerequisites": [
+        "g3s1u2"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g4s1u5",
+      "grade": 4,
+      "semester": 1,
+      "order": 5,
+      "title": "막대그래프",
+      "domain": "data",
+      "engines": [
+        "E18"
+      ],
+      "prerequisites": [
+        "g3s2u6"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g4s1u6",
+      "grade": 4,
+      "semester": 1,
+      "order": 6,
+      "title": "규칙 찾기",
+      "domain": "change",
+      "engines": [
+        "E15",
+        "E16"
+      ],
+      "prerequisites": [
+        "g2s2u6"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g4s2u1",
+      "grade": 4,
+      "semester": 2,
+      "order": 1,
+      "title": "분수의 덧셈과 뺄셈",
+      "domain": "number",
+      "engines": [
+        "E05",
+        "E03",
+        "E08"
+      ],
+      "prerequisites": [
+        "g3s2u4"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g4s2u2",
+      "grade": 4,
+      "semester": 2,
+      "order": 2,
+      "title": "삼각형",
+      "domain": "geometry",
+      "engines": [
+        "E09",
+        "E17"
+      ],
+      "prerequisites": [
+        "g4s1u2"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g4s2u3",
+      "grade": 4,
+      "semester": 2,
+      "order": 3,
+      "title": "소수의 덧셈과 뺄셈",
+      "domain": "number",
+      "engines": [
+        "E05",
+        "E07",
+        "E03"
+      ],
+      "prerequisites": [
+        "g3s1u6"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g4s2u4",
+      "grade": 4,
+      "semester": 2,
+      "order": 4,
+      "title": "사각형",
+      "domain": "geometry",
+      "engines": [
+        "E09",
+        "E17"
+      ],
+      "prerequisites": [
+        "g4s2u2",
+        "g3s1u2"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g4s2u5",
+      "grade": 4,
+      "semester": 2,
+      "order": 5,
+      "title": "꺾은선그래프",
+      "domain": "data",
+      "engines": [
+        "E18"
+      ],
+      "prerequisites": [
+        "g4s1u5"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g4s2u6",
+      "grade": 4,
+      "semester": 2,
+      "order": 6,
+      "title": "다각형",
+      "domain": "geometry",
+      "engines": [
+        "E09"
+      ],
+      "prerequisites": [
+        "g4s2u4"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g5s1u1",
+      "grade": 5,
+      "semester": 1,
+      "order": 1,
+      "title": "자연수의 혼합 계산",
+      "domain": "number",
+      "engines": [
+        "E08"
+      ],
+      "prerequisites": [
+        "g4s1u3"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g5s1u2",
+      "grade": 5,
+      "semester": 1,
+      "order": 2,
+      "title": "약수와 배수",
+      "domain": "number",
+      "engines": [
+        "E04",
+        "E03",
+        "E15"
+      ],
+      "prerequisites": [
+        "g4s1u3"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g5s1u3",
+      "grade": 5,
+      "semester": 1,
+      "order": 3,
+      "title": "대응 관계",
+      "domain": "change",
+      "engines": [
+        "E16"
+      ],
+      "prerequisites": [
+        "g4s1u6"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g5s1u4",
+      "grade": 5,
+      "semester": 1,
+      "order": 4,
+      "title": "약분과 통분",
+      "domain": "number",
+      "engines": [
+        "E05",
+        "E03"
+      ],
+      "prerequisites": [
+        "g5s1u2",
+        "g4s2u1"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g5s1u5",
+      "grade": 5,
+      "semester": 1,
+      "order": 5,
+      "title": "분수의 덧셈과 뺄셈",
+      "domain": "number",
+      "engines": [
+        "E05",
+        "E08"
+      ],
+      "prerequisites": [
+        "g5s1u4"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g5s1u6",
+      "grade": 5,
+      "semester": 1,
+      "order": 6,
+      "title": "다각형의 둘레와 넓이",
+      "domain": "geometry",
+      "engines": [
+        "E11",
+        "E09",
+        "E04"
+      ],
+      "prerequisites": [
+        "g4s2u6",
+        "g3s2u1"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g5s2u1",
+      "grade": 5,
+      "semester": 2,
+      "order": 1,
+      "title": "수의 범위와 어림하기",
+      "domain": "number",
+      "engines": [
+        "E03"
+      ],
+      "prerequisites": [
+        "g4s1u1"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g5s2u2",
+      "grade": 5,
+      "semester": 2,
+      "order": 2,
+      "title": "분수의 곱셈",
+      "domain": "number",
+      "engines": [
+        "E05",
+        "E04"
+      ],
+      "prerequisites": [
+        "g5s1u5"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g5s2u3",
+      "grade": 5,
+      "semester": 2,
+      "order": 3,
+      "title": "합동과 대칭",
+      "domain": "geometry",
+      "engines": [
+        "E10"
+      ],
+      "prerequisites": [
+        "g4s1u4"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g5s2u4",
+      "grade": 5,
+      "semester": 2,
+      "order": 4,
+      "title": "소수의 곱셈",
+      "domain": "number",
+      "engines": [
+        "E04",
+        "E03",
+        "E07"
+      ],
+      "prerequisites": [
+        "g4s2u3",
+        "g5s2u2"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g5s2u5",
+      "grade": 5,
+      "semester": 2,
+      "order": 5,
+      "title": "직육면체와 정육면체",
+      "domain": "geometry",
+      "engines": [
+        "E12"
+      ],
+      "prerequisites": [
+        "g4s2u4"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g5s2u6",
+      "grade": 5,
+      "semester": 2,
+      "order": 6,
+      "title": "평균과 가능성",
+      "domain": "data",
+      "engines": [
+        "E19"
+      ],
+      "prerequisites": [
+        "g4s1u5"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g6s1u1",
+      "grade": 6,
+      "semester": 1,
+      "order": 1,
+      "title": "분수의 나눗셈",
+      "domain": "number",
+      "engines": [
+        "E05"
+      ],
+      "prerequisites": [
+        "g5s2u2"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g6s1u2",
+      "grade": 6,
+      "semester": 1,
+      "order": 2,
+      "title": "각기둥과 각뿔",
+      "domain": "geometry",
+      "engines": [
+        "E12"
+      ],
+      "prerequisites": [
+        "g5s2u5"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g6s1u3",
+      "grade": 6,
+      "semester": 1,
+      "order": 3,
+      "title": "소수의 나눗셈",
+      "domain": "number",
+      "engines": [
+        "E07",
+        "E01"
+      ],
+      "prerequisites": [
+        "g5s2u4",
+        "g6s1u1"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g6s1u4",
+      "grade": 6,
+      "semester": 1,
+      "order": 4,
+      "title": "비와 비율",
+      "domain": "change",
+      "engines": [
+        "E20"
+      ],
+      "prerequisites": [
+        "g5s1u3",
+        "g5s1u4"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g6s1u5",
+      "grade": 6,
+      "semester": 1,
+      "order": 5,
+      "title": "여러 가지 그래프",
+      "domain": "data",
+      "engines": [
+        "E18"
+      ],
+      "prerequisites": [
+        "g6s1u4",
+        "g4s2u5"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g6s1u6",
+      "grade": 6,
+      "semester": 1,
+      "order": 6,
+      "title": "직육면체의 겉넓이와 부피",
+      "domain": "geometry",
+      "engines": [
+        "E12"
+      ],
+      "prerequisites": [
+        "g5s2u5",
+        "g5s1u6"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g6s2u1",
+      "grade": 6,
+      "semester": 2,
+      "order": 1,
+      "title": "분수의 나눗셈",
+      "domain": "number",
+      "engines": [
+        "E05",
+        "E03"
+      ],
+      "prerequisites": [
+        "g6s1u1"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g6s2u2",
+      "grade": 6,
+      "semester": 2,
+      "order": 2,
+      "title": "소수의 나눗셈",
+      "domain": "number",
+      "engines": [
+        "E07",
+        "E03"
+      ],
+      "prerequisites": [
+        "g6s1u3"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g6s2u3",
+      "grade": 6,
+      "semester": 2,
+      "order": 3,
+      "title": "공간과 입체",
+      "domain": "geometry",
+      "engines": [
+        "E12"
+      ],
+      "prerequisites": [
+        "g5s2u5"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g6s2u4",
+      "grade": 6,
+      "semester": 2,
+      "order": 4,
+      "title": "비례식과 비례배분",
+      "domain": "change",
+      "engines": [
+        "E20",
+        "E06"
+      ],
+      "prerequisites": [
+        "g6s1u4"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g6s2u5",
+      "grade": 6,
+      "semester": 2,
+      "order": 5,
+      "title": "원의 둘레와 넓이",
+      "domain": "geometry",
+      "engines": [
+        "E11",
+        "E13"
+      ],
+      "prerequisites": [
+        "g3s2u3",
+        "g5s1u6"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    },
+    {
+      "id": "g6s2u6",
+      "grade": 6,
+      "semester": 2,
+      "order": 6,
+      "title": "원기둥, 원뿔, 구",
+      "domain": "geometry",
+      "engines": [
+        "E12"
+      ],
+      "prerequisites": [
+        "g6s1u2",
+        "g6s2u5"
+      ],
+      "standards": [],
+      "textbookAlias": null,
+      "status": "spec"
+    }
+  ]
+}
