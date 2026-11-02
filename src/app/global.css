@@ -1,8 +1,25 @@
+@font-face {
+  font-family: 'Pretendard';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/Pretendard-Regular.subset.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Pretendard';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/Pretendard-Bold.subset.woff2') format('woff2');
+}
+
 :root {
   --fg: #1d2330;
   --muted: #5a6475;
   --bg: #ffffff;
   font-family:
+    'Pretendard',
     system-ui,
     -apple-system,
     'Apple SD Gothic Neo',

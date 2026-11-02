@@ -1,0 +1,266 @@
+.screen {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
+  background: #f4f7fc;
+}
+
+.topBar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 0 0 auto;
+  min-height: 64px;
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid #dfe6f5;
+  background: #ffffff;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 48px;
+  padding: 0 0.85rem;
+  border: 2px solid #c8d4ea;
+  border-radius: 12px;
+  color: #1d2330;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.back:hover,
+.back:focus-visible {
+  border-color: #2f6fde;
+}
+
+.title {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  font-size: clamp(1rem, 2.2vw, 1.3rem);
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topActions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  color: #1d2330;
+  font: inherit;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.iconButton:hover,
+.iconButton:focus-visible {
+  border-color: #c8d4ea;
+  background: #f3f7ff;
+}
+
+.menuWrap {
+  position: relative;
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 232px;
+  padding: 0.4rem;
+  border: 1px solid #dfe6f5;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 14px 34px rgba(29, 35, 48, 0.16);
+}
+
+.menuLearner {
+  margin: 0;
+  padding: 0.35rem 0.6rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 48px;
+  padding: 0 0.6rem;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #1d2330;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.menuItem:hover,
+.menuItem:focus-visible {
+  background: #f3f7ff;
+}
+
+.check {
+  width: 1.1rem;
+  color: #2f6fde;
+  font-weight: 800;
+  text-align: center;
+}
+
+.runnerHost {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* 실행기 자체 제목 줄은 앱 상단 바로 대신한다. */
+.runnerHost > main {
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: none;
+  min-height: 0;
+  padding: 0.5rem 0.75rem 0;
+  overflow-y: auto;
+}
+
+.runnerHost > main > header {
+  display: none;
+}
+
+.runnerHost > main > section {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* 실행기의 발문 상자를 말풍선 모양으로 다듬는다. */
+.runnerHost :global([class*='promptBox']) {
+  position: relative;
+  padding: 0.45rem 0.85rem 0.55rem;
+  border: 2px solid #bcd0f5;
+  border-radius: 16px;
+  background: #f3f7ff;
+}
+
+.runnerHost :global([class*='promptBox'])::after {
+  position: absolute;
+  bottom: -9px;
+  left: 28px;
+  width: 14px;
+  height: 14px;
+  border-right: 2px solid #bcd0f5;
+  border-bottom: 2px solid #bcd0f5;
+  background: #f3f7ff;
+  content: '';
+  transform: rotate(45deg);
+}
+
+.runnerHost :global([class*='promptBox']) p:first-child {
+  margin: 0 0 0.1rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.runnerHost :global([class*='promptBox']) h2 {
+  margin: 0;
+  font-size: clamp(1.05rem, 2.2vw, 1.35rem);
+  line-height: 1.35;
+}
+
+.progress {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  flex: 0 0 auto;
+  min-height: 32px;
+  padding: 0.2rem 0.5rem max(0.2rem, env(safe-area-inset-bottom));
+  background: #f4f7fc;
+}
+
+.dots {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border: 2px solid #9eb2d4;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.dot[data-state='done'] {
+  border-color: #2f6fde;
+  background: #2f6fde;
+}
+
+.dot[data-state='current'] {
+  width: 14px;
+  height: 14px;
+  border-color: #2f6fde;
+  background: #ffffff;
+  outline: 3px solid #bcd0f5;
+}
+
+.progressText {
+  margin-left: 0.35rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  min-height: 100dvh;
+  padding: 1rem;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .backText {
+    display: none;
+  }
+
+  .topBar {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    padding: 0.3rem 0.4rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dot,
+  .iconButton,
+  .menu {
+    transition: none;
+  }
+}

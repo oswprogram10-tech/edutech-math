@@ -6,7 +6,7 @@
  * 실패해도 정답·정답 상태는 화면에 내보내지 않는다.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { CPA, EngineId, JsonValue, LoadedEngine } from '../engine-sdk';
+import type { CPA, EngineId, JsonValue, LoadedEngine, TargetSize } from '../engine-sdk';
 import type { LearnerId, Storage, TaskStatus as StorageTaskStatus } from '../storage';
 import { taskProgressId } from '../storage';
 import {
@@ -34,7 +34,7 @@ import styles from './ActivityRunner.module.css';
 
 /** T006 전까지 쓰는 시연·점검용 학습자 ID. */
 export const DEMO_LEARNER: LearnerId = '0';
-const TARGET_SIZE = 48;
+const DEFAULT_TARGET_SIZE: TargetSize = 48;
 
 interface LoadedSlot extends SlotView {
   readonly mode: string;
@@ -102,6 +102,7 @@ interface TaskStageProps {
   readonly links: readonly TaskLinkSpec[];
   readonly storage?: Storage;
   readonly learner: LearnerId;
+  readonly targetSize: TargetSize;
   readonly status: TaskStatus;
   readonly isLast: boolean;
   readonly onResult: (passed: boolean) => void;
@@ -118,6 +119,7 @@ function TaskStage({
   links,
   storage,
   learner,
+  targetSize,
   status,
   isLast,
   onResult,
@@ -275,7 +277,7 @@ function TaskStage({
                 cpa={slot.cpa}
                 mode={slot.mode}
                 readOnly={status === 'passed'}
-                targetSize={TARGET_SIZE}
+                targetSize={targetSize}
               />
             </section>
           );
@@ -337,6 +339,12 @@ export interface ActivityRunnerProps {
   readonly storage?: Storage;
   /** T006 전에는 예약 ID "0". */
   readonly learner?: LearnerId;
+  /** 주어지면 그 활동의 과제만 실행한다. 없으면 단원 전체를 실행한다. */
+  readonly activityId?: string;
+  /** 저학년 모드에서는 64. 기본 48. */
+  readonly targetSize?: TargetSize;
+  /** 과제가 바뀔 때마다 현재 과제를 알린다(TTS·상단 바용). */
+  readonly onTaskChange?: (task: ContentTask) => void;
   /** 첫 화면으로 돌아가기. 없으면 나가기 버튼을 그리지 않는다. */
   readonly onExit?: () => void;
 }
@@ -346,18 +354,27 @@ export function ActivityRunner({
   definitions,
   storage,
   learner = DEMO_LEARNER,
+  activityId,
+  targetSize = DEFAULT_TARGET_SIZE,
+  onTaskChange,
   onExit,
 }: ActivityRunnerProps) {
-  const tasks = useMemo<FlatTask[]>(
-    () =>
-      content.activities.flatMap((activity) => activity.tasks.map((task) => ({ activity, task }))),
-    [content],
-  );
+  const tasks = useMemo<FlatTask[]>(() => {
+    const activities = activityId
+      ? content.activities.filter((activity) => activity.id === activityId)
+      : content.activities;
+    return activities.flatMap((activity) => activity.tasks.map((task) => ({ activity, task })));
+  }, [content, activityId]);
   const [session, setSession] = useState<RunnerSession>(() =>
     startSession(tasks.map((item) => item.task.id)),
   );
 
   const current = tasks[session.index];
+
+  useEffect(() => {
+    if (current) onTaskChange?.(current.task);
+  }, [current, onTaskChange]);
+
   if (!current) {
     return (
       <main className={styles.runner}>
@@ -399,6 +416,7 @@ export function ActivityRunner({
         links={current.task.links ?? []}
         storage={storage}
         learner={learner}
+        targetSize={targetSize}
         status={complete ? 'passed' : session.status}
         isLast={session.index === tasks.length - 1}
         onResult={(passed) =>

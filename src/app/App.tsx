@@ -1,26 +1,21 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
-import type { EngineId } from '../core/engine-sdk';
+import { parseRoute } from './router';
+import type { Route } from './router';
 import { appStrings } from './strings.ko';
+import { installUserGestureTracking } from './user-gesture';
 import styles from './App.module.css';
 
-// 첫 화면 번들에 실행 화면·샌드박스 코드를 넣지 않는다.
+// 화면마다 지연 로딩해 첫 화면 번들(70KB gzip 이하)을 지킨다.
+const StartScreen = lazy(async () => ({ default: (await import('./StartScreen')).StartScreen }));
+const MapScreen = lazy(async () => ({ default: (await import('./MapScreen')).MapScreen }));
+const ActivityScreen = lazy(async () => ({
+  default: (await import('./ActivityScreen')).ActivityScreen,
+}));
+const TeacherScreen = lazy(async () => ({
+  default: (await import('./TeacherScreen')).TeacherScreen,
+}));
 const Runner = lazy(async () => ({ default: (await import('./Runner')).Runner }));
 const Sandbox = lazy(async () => ({ default: (await import('./Sandbox')).Sandbox }));
-
-type Route =
-  | { readonly kind: 'home' }
-  | { readonly kind: 'sandbox'; readonly engineId: EngineId }
-  | { readonly kind: 'run'; readonly unitId: string };
-
-function parseRoute(hash: string): Route {
-  const sandbox = /^#\/sandbox\/(E\d{2})$/.exec(hash);
-  if (sandbox?.[1]) return { kind: 'sandbox', engineId: sandbox[1] as EngineId };
-
-  const run = /^#\/run\/([A-Za-z0-9_-]+)$/.exec(hash);
-  if (run?.[1]) return { kind: 'run', unitId: run[1] };
-
-  return { kind: 'home' };
-}
 
 function Loading() {
   return (
@@ -28,6 +23,23 @@ function Loading() {
       <p role="status">{appStrings.loading}</p>
     </main>
   );
+}
+
+function screenFor(route: Route) {
+  switch (route.kind) {
+    case 'home':
+      return <StartScreen />;
+    case 'map':
+      return <MapScreen />;
+    case 'activity':
+      return <ActivityScreen key={route.activityId} activityId={route.activityId} />;
+    case 'teacher':
+      return <TeacherScreen />;
+    case 'sandbox':
+      return <Sandbox key={route.engineId} engineId={route.engineId} />;
+    case 'run':
+      return <Runner key={route.unitId} unitId={route.unitId} />;
+  }
 }
 
 export function App() {
@@ -39,27 +51,8 @@ export function App() {
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
-  if (route.kind === 'sandbox') {
-    return (
-      <Suspense fallback={<Loading />}>
-        <Sandbox key={route.engineId} engineId={route.engineId} />
-      </Suspense>
-    );
-  }
+  // 아이패드 Safari의 자동 읽기는 사용자 동작 뒤에만 허용된다.
+  useEffect(() => installUserGestureTracking(), []);
 
-  if (route.kind === 'run') {
-    return (
-      <Suspense fallback={<Loading />}>
-        <Runner key={route.unitId} unitId={route.unitId} />
-      </Suspense>
-    );
-  }
-
-  return (
-    <main className={styles.home}>
-      <h1>{appStrings.title}</h1>
-      <p>{appStrings.tagline}</p>
-      <p className={styles.note}>{appStrings.comingSoon}</p>
-    </main>
-  );
+  return <Suspense fallback={<Loading />}>{screenFor(route)}</Suspense>;
 }
