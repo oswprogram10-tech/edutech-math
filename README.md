@@ -52,3 +52,12 @@ npx playwright install chromium webkit   # E2E용 브라우저 (처음 한 번)
 ### 배포
 GitHub에 push하면 Actions(`.github/workflows/ci.yml`)가 lint·test·check:specs·build를 돌리고, `main` 브랜치면 GitHub Pages에 배포한다.
 처음 한 번 저장소의 **Settings → Pages → Source를 'GitHub Actions'**로 바꿔야 한다. 주소는 `https://<사용자>.github.io/<저장소 이름>/`이며, 빌드 경로(`BASE_PATH`)는 저장소 이름에서 자동으로 정해진다.
+
+## 라이선스
+| 대상 | 라이선스 |
+| --- | --- |
+| 소스 코드 | [MIT](LICENSE) |
+| 교육 콘텐츠·명세 (`docs/`, `data/`) | [CC BY 4.0](LICENSE-CONTENT.md) — 저작자 표시: "MathExplorer (oswprogram10-tech), CC BY 4.0" |
+| 글꼴 Pretendard (`public/fonts/`) | [SIL OFL 1.1](public/fonts/LICENSE-Pretendard.txt) |
+
+새 의존성을 추가할 때는 MIT·Apache-2.0·BSD·ISC 같은 허용형 라이선스만 쓴다(GPL 계열은 쓰지 않는다).
