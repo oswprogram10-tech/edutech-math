@@ -1,0 +1,91 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(20, 28, 45, 0.55);
+}
+
+.dialog {
+  width: min(720px, 100%);
+  max-height: calc(100dvh - 2rem);
+  overflow: auto;
+  padding: 1.25rem;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 18px 48px rgba(20, 28, 45, 0.28);
+}
+
+.title {
+  margin: 0;
+  font-size: 1.35rem;
+}
+
+.hint {
+  margin: 0.35rem 0 1rem;
+  color: var(--muted);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.9rem;
+  font-weight: 600;
+}
+
+.input {
+  min-height: 48px;
+  padding: 0.5rem 0.75rem;
+  border: 2px solid #c8d4ea;
+  border-radius: 10px;
+  font: inherit;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85rem;
+  color: #1d2330;
+  background: #f7f9ff;
+}
+
+.qrBox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  border: 1px dashed #c8d4ea;
+  border-radius: 12px;
+  background: #fbfcff;
+}
+
+.qr {
+  width: min(240px, 60vw);
+}
+
+.qr svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.qrNote {
+  margin: 0;
+  color: var(--muted);
+  text-align: center;
+}
+
+.close {
+  min-height: 48px;
+  min-width: 96px;
+  padding: 0 1.25rem;
+  border: 2px solid #2f6fde;
+  border-radius: 12px;
+  background: #2f6fde;
+  color: #ffffff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}

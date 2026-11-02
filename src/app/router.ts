@@ -11,6 +11,7 @@ export type Route =
   | { readonly kind: 'map' }
   | { readonly kind: 'activity'; readonly activityId: string }
   | { readonly kind: 'teacher' }
+  | { readonly kind: 'demo'; readonly code?: string }
   | { readonly kind: 'sandbox'; readonly engineId: EngineId }
   | { readonly kind: 'run'; readonly unitId: string };
 
@@ -25,6 +26,13 @@ export function parseRoute(hash: string): Route {
 
   if (value === '/map') return { kind: 'map' };
   if (value === '/teacher') return { kind: 'teacher' };
+  if (value === '/demo') return { kind: 'demo' };
+
+  // 공유 링크(`#s=<code>`)는 시연 모드를 그 코드로 연다.
+  if (value.startsWith('s=')) {
+    const code = value.slice(2);
+    if (code.length > 0) return { kind: 'demo', code };
+  }
 
   const activity = /^\/activity\/([^/]+)$/.exec(value);
   if (activity?.[1] && ACTIVITY_ID_PATTERN.test(activity[1])) {
@@ -60,6 +68,8 @@ export function routeHash(route: Route): string {
       return `#/activity/${route.activityId}`;
     case 'teacher':
       return '#/teacher';
+    case 'demo':
+      return route.code ? `#s=${route.code}` : '#/demo';
     case 'sandbox':
       return `#/sandbox/${route.engineId}`;
     case 'run':

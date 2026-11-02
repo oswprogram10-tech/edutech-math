@@ -25,4 +25,17 @@ export const runnerStrings = {
     return slot;
   },
   taskList: '과제 목록',
+  show: '보여 주기',
+  shareTitle: '지금 상태 보여 주기',
+  shareHint: '이 코드나 링크를 선생님 기기에서 열면 지금 화면이 그대로 나와요.',
+  shareCodeLabel: '공유 코드',
+  shareLinkLabel: '링크',
+  shareQrLabel: 'QR',
+  shareClose: '닫기',
+  shareTooLong: '상태가 너무 커서 짧은 코드로 만들 수 없어요.',
+  shareInvalid: '공유 코드를 읽을 수 없어요.',
+  shareFailed: '공유 코드를 만들지 못했어요.',
+  shareQrFailed: 'QR을 만들지 못했어요.',
+  shareQrLoading: 'QR을 만드는 중이에요.',
+  shareQrTooLarge: 'QR로 담기에는 상태가 너무 커요. 코드나 링크를 써 주세요.',
 } as const;
