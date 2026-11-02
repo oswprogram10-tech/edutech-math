@@ -146,6 +146,33 @@ describe('E03 점프', () => {
   });
 });
 
+describe('E03 처음 보이는 구간', () => {
+  it('integer 0~20은 전체 0~20이 보인다', () => {
+    const state = make({ mode: 'integer', min: '0', max: '20' });
+    expect([state.viewMin, state.viewMax]).toEqual(['0', '20']);
+  });
+
+  it('fraction 0~1, 12등분은 전체와 눈금 13개가 보인다', () => {
+    const state = make({ mode: 'fraction', min: '0', max: '1', subdivisions: 12 });
+    expect([state.viewMin, state.viewMax]).toEqual(['0', '1']);
+    const values = visibleValues(state);
+    expect(values).toHaveLength(13);
+    expect([values[0], values[values.length - 1]]).toEqual(['0', '1']);
+    expect(values).toContain('11/12');
+  });
+
+  it('fraction 0~3, 4등분은 전체 0~3이 보인다', () => {
+    const state = make({ mode: 'fraction', min: '0', max: '3', subdivisions: 4 });
+    expect([state.viewMin, state.viewMax]).toEqual(['0', '3']);
+  });
+
+  it('decimal 0~3은 확대 전에 전체 0~3이 보인다', () => {
+    const state = make({ mode: 'decimal', min: '0', max: '3' });
+    expect(state.zoomLevel).toBe(0);
+    expect([state.viewMin, state.viewMax]).toEqual(['0', '3']);
+  });
+});
+
 describe('E03 줌', () => {
   it('zoom.from이 1/10이면 0~1에서는 처음부터 전체가 보인다', () => {
     const state = decimal({ zoom: { from: '1/10', to: '1/100' } });

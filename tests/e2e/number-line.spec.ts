@@ -19,8 +19,9 @@ interface ObservationRecord {
   readonly [key: string]: unknown;
 }
 
-async function openNumberLine(page: Page) {
-  await page.goto('/#/sandbox/E03');
+async function openNumberLine(page: Page, config?: Record<string, unknown>) {
+  const query = config ? `/?config=${encodeURIComponent(JSON.stringify(config))}` : '';
+  await page.goto(`${query}#/sandbox/E03`);
   await expect(page.getByRole('heading', { name: '수직선' })).toBeVisible();
   const canvas = page.getByTestId('number-line-canvas');
   await expect(canvas).toBeVisible();
@@ -74,6 +75,31 @@ test('분수 수직선 3/4 자리를 누르면 3/4 점이 찍힌다', async ({ p
   const observation = await readObservation(page);
   expect(observation.points?.[0]?.value).toBe('3/4');
   expect(observation.pointValues).toEqual(['3/4']);
+});
+
+test('12등분 분수 수직선에서 1과 11/12 자리를 누르면 그 값이 찍힌다', async ({ page }) => {
+  const { at } = await openNumberLine(page, { subdivisions: 12 });
+  await selectMode(page, 'fraction');
+  await pollObservation(
+    page,
+    (observation) =>
+      observation.tick === '1/12' && observation.viewMin === '0' && observation.viewMax === '1',
+  );
+
+  const ticks = page.locator('[data-testid="number-line-canvas"] [data-tick-value]');
+  await expect(ticks).toHaveCount(13);
+
+  await tapAt(page, at, 900, 300);
+  await pollObservation(
+    page,
+    (observation) => observation.points?.length === 1 && observation.points[0]?.value === '1',
+  );
+
+  await tapAt(page, at, 100 + (11 / 12) * 800, 300);
+  await pollObservation(page, (observation) => observation.points?.length === 2);
+
+  const observation = await readObservation(page);
+  expect(observation.points?.map((point) => point.value)).toEqual(['11/12', '1']);
 });
 
 test('decimal에서 눈금 11개가 보이고, 이동해 0.73과 0.81을 찍는다', async ({ page }) => {

@@ -88,15 +88,9 @@ export function createInitialState(config: NumberLineConfig): NumberLineState {
   for (const card of cards) cardValues[card] = null;
 
   const minText = min.toJSON();
-  const initialRow = buildRows({
-    mode,
-    unit: safeUnit.toJSON(),
-    subdivisions,
-    zoomLevel: range.min,
-  })[0];
-  const initialTick = initialRow?.step ?? safeUnit;
-  const initialWidth = viewWidth(max.sub(min), initialTick);
-  const initialView = centeredView(min, max, initialWidth, min, initialTick);
+  // 첫 단계(zoomMin)는 모드와 상관없이 전체 min~max를 보여 준다.
+  // 10칸 창은 decimal에서 실제로 더 확대했을 때만 적용한다.
+  const initialView = { min, max };
   return {
     mode,
     min: minText,
@@ -313,7 +307,9 @@ export function reduce(state: NumberLineState, action: NumberLineAction): Number
           subdivisions: state.subdivisions,
           zoomLevel: clamped,
         })[0]?.step ?? ONE;
-      const width = viewWidth(max.sub(originMin), nextTick);
+      // decimal에서 첫 단계를 넘어 더 확대했을 때만 눈금 10칸 창을 쓴다.
+      const zoomed = state.mode === 'decimal' && clamped > state.zoomMin;
+      const width = zoomed ? viewWidth(max.sub(originMin), nextTick) : max.sub(originMin);
       const window = centeredView(originMin, max, width, center, nextTick);
       const next = {
         ...state,

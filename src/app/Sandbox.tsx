@@ -13,9 +13,27 @@ interface EngineSandboxProps {
   definition: LoadedEngine;
 }
 
+/**
+ * 샌드박스 전용 설정. `/?config={"subdivisions":12}#/sandbox/E03`처럼
+ * 주소에 엔진 설정을 넘겨 E2E·교사 시연에서 특정 단원 설정을 재현한다.
+ */
+function configFromUrl(): Record<string, unknown> {
+  if (typeof window === 'undefined') return {};
+  const raw = new URLSearchParams(window.location.search).get('config');
+  if (!raw) return {};
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
+    return parsed as Record<string, unknown>;
+  } catch {
+    return {};
+  }
+}
+
 function EngineSandbox({ definition }: EngineSandboxProps) {
   const [mode, setMode] = useState(definition.modes[0] ?? 'default');
-  const config = useMemo(() => ({ mode }) as never, [mode]);
+  const baseConfig = useMemo(() => configFromUrl(), []);
+  const config = useMemo(() => ({ ...baseConfig, mode }) as never, [baseConfig, mode]);
   const initial = useMemo(() => definition.createInitialState(config), [definition, config]);
   const { state, dispatch, undo, redo, reset, canUndo, canRedo } = useHistory(
     definition.reduce,
