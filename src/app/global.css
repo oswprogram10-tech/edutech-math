@@ -1,0 +1,27 @@
+:root {
+  --fg: #1d2330;
+  --muted: #5a6475;
+  --bg: #ffffff;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Apple SD Gothic Neo',
+    'Malgun Gothic',
+    'Noto Sans KR',
+    sans-serif;
+  color: var(--fg);
+  background: var(--bg);
+  -webkit-text-size-adjust: 100%;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  /* 교구 조작 중 브라우저 당겨서 새로고침·튕김이 끼어들지 않게 한다 */
+  overscroll-behavior: none;
+}

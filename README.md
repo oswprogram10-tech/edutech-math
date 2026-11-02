@@ -31,4 +31,24 @@
 4. 에이전트에게: `tasks/T001.md를 수행해 줘.`
 
 ## 개발 시작 (에이전트)
-`AGENTS.md`를 먼저 읽는다. (T001이 끝나면 이 절에 명령 설명이 추가된다.)
+`AGENTS.md`를 먼저 읽는다. Node.js 24를 쓴다.
+
+```
+npm install
+npx playwright install chromium webkit   # E2E용 브라우저 (처음 한 번)
+```
+
+| 명령 | 하는 일 |
+| --- | --- |
+| `npm run dev` | 개발 서버. `--host`가 켜져 있어 같은 와이파이의 태블릿에서 터미널에 찍힌 `Network:` 주소로 접속한다 |
+| `npm test` | Vitest 단위 테스트 (`src/**/*.test.ts(x)`, `eslint/**/*.test.js`) |
+| `npm run test:e2e` | Playwright. 프로젝트 3개: `ipad`(768×1024 WebKit 터치), `chromebook`(1366×768), `board`(1920×1080). 빌드본으로 오프라인 새로고침도 검사한다 |
+| `npm run lint` | ESLint + Prettier 검사. 엔진 폴더끼리 import하면 `mathexplorer/no-cross-engine-imports` 오류 |
+| `npm run format` | Prettier로 코드 정리 (`docs/`, `data/`, `tasks/`, `*.md`는 건드리지 않음) |
+| `npm run check:specs` | `docs/04-units`와 `data/units.json` 일치 검사 |
+| `npm run build` | 타입 검사 + 배포용 빌드(`dist/`, PWA 서비스 워커 포함) |
+| `npm run preview` | 빌드 결과를 로컬에서 띄워 본다 (오프라인 동작 확인용) |
+
+### 배포
+GitHub에 push하면 Actions(`.github/workflows/ci.yml`)가 lint·test·check:specs·build를 돌리고, `main` 브랜치면 GitHub Pages에 배포한다.
+처음 한 번 저장소의 **Settings → Pages → Source를 'GitHub Actions'**로 바꿔야 한다. 주소는 `https://<사용자>.github.io/<저장소 이름>/`이며, 빌드 경로(`BASE_PATH`)는 저장소 이름에서 자동으로 정해진다.
