@@ -1,0 +1,130 @@
+.wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.button,
+.ungroup {
+  min-height: 48px;
+  min-width: 48px;
+  padding: 0 1rem;
+  border: 2px solid #2f6fde;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #1d2330;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.wrap[data-target-size='64'] .button,
+.wrap[data-target-size='64'] .ungroup {
+  min-height: 64px;
+  min-width: 64px;
+  font-size: 1.1rem;
+}
+
+.button:disabled,
+.ungroup:disabled {
+  border-color: #aab4c6;
+  color: #7a8497;
+  cursor: not-allowed;
+}
+
+.hint,
+.instructions {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.canvas {
+  display: block;
+  width: 100%;
+  aspect-ratio: 5 / 3;
+  border-radius: 14px;
+  background: #f7f9ff;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.gridLine {
+  stroke: #dfe6f5;
+  stroke-width: 1;
+}
+
+.canvasEdge {
+  stroke: #c8d4ea;
+  stroke-width: 2;
+}
+
+.counter {
+  cursor: grab;
+  outline: none;
+}
+
+.counterBody {
+  fill: #2f6fde;
+  stroke: #ffffff;
+  stroke-width: 3;
+}
+
+.counter[aria-pressed='true'] .counterBody {
+  fill: #e08a1e;
+}
+
+.counter:focus-visible .counterBody {
+  stroke: #101828;
+  stroke-width: 6;
+}
+
+.counterNumber {
+  fill: #ffffff;
+  font-size: 30px;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.groupOutline {
+  fill: rgba(47, 111, 222, 0.08);
+  stroke: #2f6fde;
+  stroke-width: 3;
+  stroke-dasharray: 12 8;
+}
+
+.lasso {
+  fill: rgba(47, 111, 222, 0.15);
+  stroke: #2f6fde;
+  stroke-width: 2.5;
+  stroke-dasharray: 10 7;
+}
+
+.groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.groupItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #dfe6f5;
+  border-radius: 12px;
+}

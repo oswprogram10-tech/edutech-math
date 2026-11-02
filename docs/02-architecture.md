@@ -73,6 +73,14 @@ MathExplorer/
 export type UnitId = string;        // 예: "g5s1u4" (5학년 1학기 4단원)
 export type EngineId = `E${string}`; // 예: "E05"
 export type CPA = 'C' | 'P' | 'A';  // 구체물 / 반구체 그림 / 기호
+export type TargetSize = 48 | 64;   // 조작 요소 최소 터치 영역(저학년 64)
+
+/** Observation에는 JSON 값만 넣는다. Rational은 toJSON() 문자열로 넣는다. */
+export type JsonValue =
+  | string | number | boolean | null
+  | JsonValue[]
+  | { readonly [key: string]: JsonValue };
+export type Observation = Readonly<Record<string, JsonValue>>;
 
 /** 엔진 정의: 엔진 폴더의 index.ts가 default export 한다 */
 export interface EngineDefinition<Config, State, Action> {
@@ -86,6 +94,8 @@ export interface EngineDefinition<Config, State, Action> {
   observe(state: State, config: Config): Observation;
   /** 다른 엔진·러너가 구독하는 이벤트 (예: 'group-formed', 'regrouped', 'step-entered') */
   events: readonly string[];
+  /** 힌트 ② 시각적 반례 레이어. HintRule.show.overlay가 이름으로 가리킨다 */
+  overlays?: Readonly<Record<string, React.ComponentType<OverlayProps<Config, State>>>>;
 }
 
 export interface EngineViewProps<Config, State, Action> {
@@ -93,8 +103,17 @@ export interface EngineViewProps<Config, State, Action> {
   state: State;
   dispatch(action: Action): void;
   cpa: CPA;                 // 같은 엔진이 C/P/A 단계에 따라 다르게 그린다
+  mode: string;             // EngineDefinition.modes 중 하나
   readOnly?: boolean;       // 교사 미러링·익명 비교 화면
   scale?: number;           // 전자칠판 확대
+  targetSize: TargetSize;   // 48 | 64(저학년). 모든 조작 요소가 이 값 이상
+}
+
+export interface OverlayProps<Config, State> {
+  config: Config;
+  state: State;
+  args?: unknown;
+  scale?: number;
 }
 
 /** 과제 = 엔진 설정 + 목표 + 판정 규칙 */
@@ -110,11 +129,20 @@ export interface Task {
   concepts: string[];          // 지식 그래프 개념 ID
 }
 
+/** hint 규칙: 오개념 코드 → 발문 템플릿 (05-learning-engine.md §4) */
+export interface HintRule {
+  when: GoalSpec | { misconception: string };
+  level: 1 | 2 | 3;
+  say?: string;                // ① 발문 (템플릿 변수: {a}, {b}, {student})
+  show?: { engine: EngineId; overlay: string; args?: JsonValue };
+  backtrack?: string;          // ③ 개념 ID 또는 단원 ID
+}
+
 /** 판정은 "정답 문자열 비교"가 아니라 Observation에 대한 조건식으로 한다 */
 export type GoalSpec =
-  | { kind: 'equals'; path: string; value: unknown }
+  | { kind: 'equals'; path: string; value: JsonValue }
   | { kind: 'equivalent-expr'; path: string; expr: string }  // 수식 동치
-  | { kind: 'predicate'; name: string; args?: unknown }      // 엔진이 제공하는 이름 있는 판정
+  | { kind: 'predicate'; name: string; args?: JsonValue }     // 엔진이 제공하는 이름 있는 판정
   | { kind: 'all'; of: GoalSpec[] } | { kind: 'any'; of: GoalSpec[] };
 ```
 
