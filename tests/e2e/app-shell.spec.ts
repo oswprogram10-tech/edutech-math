@@ -100,8 +100,14 @@ test('번호를 고르고 활동을 한 뒤 새로고침해도 같은 학생이�
 
 test('저학년 단원은 큰 버튼이 기본이고, ⋯ 메뉴에서 바꿀 수 있다', async ({ page }) => {
   await page.goto('/');
+  await expect(page.getByRole('heading', { name: '몇 번이에요?' })).toBeVisible();
   await page.getByRole('button', { name: '3번', exact: true }).click();
   await page.getByRole('button', { name: '건너뛰기' }).click();
+
+  // 건너뛰기의 저장이 끝나고 지도로 이동하기 전에 다음 주소로 넘어가면
+  // 늦게 도착한 #/map 이동이 #/activity를 덮어써 간헐적으로 실패한다.
+  await expect(page).toHaveURL(/#\/map$/);
+  await expect(page.getByRole('heading', { name: '활동', exact: true })).toBeVisible();
 
   // g1 단원 콘텐츠가 아직 없으므로 단원 판별 단위 테스트로 확인하고,
   // 화면에서는 설정 메뉴의 "큰 버튼" 항목이 동작하는지만 본다.
