@@ -26,6 +26,13 @@ describe('parseRoute', () => {
     expect(parseRoute('#/run/demo')).toEqual({ kind: 'run', unitId: 'demo' });
   });
 
+  it('시연 모드는 #/demo와 공유 해시 #s=로 연다', () => {
+    expect(parseRoute('#/demo')).toEqual({ kind: 'demo' });
+    expect(parseRoute('#s=abc_123')).toEqual({ kind: 'demo', code: 'abc_123' });
+    expect(routeHash({ kind: 'demo' })).toBe('#/demo');
+    expect(routeHash({ kind: 'demo', code: 'abc_123' })).toBe('#s=abc_123');
+  });
+
   it('알 수 없는 주소는 시작 화면으로 돌린다', () => {
     expect(parseRoute('#/activity')).toEqual({ kind: 'home' });
     expect(parseRoute('#/activity/..%2Fsecret')).toEqual({ kind: 'home' });

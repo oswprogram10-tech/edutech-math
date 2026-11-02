@@ -182,6 +182,16 @@ export function TeacherScreen() {
           </p>
         ) : null}
 
+        <section className={styles.section} aria-labelledby="demo-heading">
+          <h2 id="demo-heading" className={styles.sectionTitle}>
+            {teacherStrings.demoHeading}
+          </h2>
+          <p className={styles.status}>{teacherStrings.demoHint}</p>
+          <a className={styles.primary} href="#/demo">
+            {teacherStrings.demoOpen}
+          </a>
+        </section>
+
         <section className={styles.section} aria-labelledby="sandbox-heading">
           <h2 id="sandbox-heading" className={styles.sectionTitle}>
             {teacherStrings.sandboxHeading}

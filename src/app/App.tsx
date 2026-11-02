@@ -14,6 +14,7 @@ const ActivityScreen = lazy(async () => ({
 const TeacherScreen = lazy(async () => ({
   default: (await import('./TeacherScreen')).TeacherScreen,
 }));
+const DemoScreen = lazy(async () => ({ default: (await import('./DemoScreen')).DemoScreen }));
 const Runner = lazy(async () => ({ default: (await import('./Runner')).Runner }));
 const Sandbox = lazy(async () => ({ default: (await import('./Sandbox')).Sandbox }));
 
@@ -35,6 +36,8 @@ function screenFor(route: Route) {
       return <ActivityScreen key={route.activityId} activityId={route.activityId} />;
     case 'teacher':
       return <TeacherScreen />;
+    case 'demo':
+      return <DemoScreen key={route.code ?? 'demo'} code={route.code} />;
     case 'sandbox':
       return <Sandbox key={route.engineId} engineId={route.engineId} />;
     case 'run':

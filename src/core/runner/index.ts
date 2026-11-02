@@ -84,6 +84,18 @@ export { MAIN_SLOT, ReplayError, replaySlots, replayTask } from './replay';
 export type { TaskReplayResult } from './replay';
 
 export {
+  appendShareAction,
+  createSharePayload,
+  decodeSharePayload,
+  encodeSharePayload,
+  filterShareActions,
+  parseSharePayload,
+  replayShare,
+} from './share';
+export type { ShareAction, ShareLink, SharePayload, SharePayloadResult, ShareView } from './share';
+export { ShareDialog } from './ShareDialog';
+
+export {
   advanceSession,
   currentTaskId,
   failureCount,

@@ -44,6 +44,11 @@ import {
   startSession,
 } from './session';
 import { applyActionWithLinks, applyControl, createSlotHistories, observationsOf } from './links';
+import { createSharePayload, encodeSharePayload, filterShareActions } from './share';
+import type { ShareAction, ShareView } from './share';
+import { ShareDialog } from './ShareDialog';
+import { toJsonValue } from './json';
+import { shareHash } from '../storage';
 import { evaluateGoal, resolveObservationPath } from './goal';
 import { RESPONSE_SLOT, judgeObservation as mergeJudgeObservation } from './response';
 import { TaskRecorder } from './recorder';
@@ -166,6 +171,9 @@ function TaskStage({
 }: TaskStageProps) {
   const [histories, setHistories] = useState<SlotHistories>(() => createSlotHistories(slots));
   const [hint, setHint] = useState<HintSelection | null>(null);
+  const [share, setShare] = useState<{ readonly code: string; readonly link: string } | null>(null);
+  const [shareError, setShareError] = useState<string | null>(null);
+  const shareActionsRef = useRef<ShareAction[]>([]);
   const taskRef = useRef<HTMLElement>(null);
   const historiesRef = useRef(histories);
   const startedRef = useRef(false);
@@ -327,6 +335,9 @@ function TaskStage({
     groupRef.current += 1;
     const group = `g${groupRef.current}`;
     for (const item of result.applied) void recorder.acted(item.slot, item.action, group);
+    for (const item of result.applied) {
+      shareActionsRef.current = [...shareActionsRef.current, { ...item, group }];
+    }
 
     if (task.submit === 'auto' && judge(result.histories)) markPassed(true);
   };
@@ -338,10 +349,50 @@ function TaskStage({
       const next = applyControl(historiesRef.current, control);
       if (next === historiesRef.current) return;
       commit(next);
+      shareActionsRef.current = [...shareActionsRef.current, { control }];
       void recorder.control(control);
     },
     [paused, status, onEdit, commit, recorder],
   );
+
+  const openShare = useCallback(() => {
+    setShareError(null);
+    const sharedSlots = new Set<string>();
+    const views: ShareView[] = [];
+    for (const slot of slots) {
+      if (slot.slot === RESPONSE_SLOT) continue;
+      sharedSlots.add(slot.slot);
+      views.push({
+        slot: slot.slot,
+        engine: slot.definition.id,
+        mode: slot.mode,
+        cpa: slot.cpa,
+        config: toJsonValue(slot.config),
+      });
+    }
+
+    if (views.length === 0) {
+      setShareError(runnerStrings.shareFailed);
+      return;
+    }
+
+    const sharedLinks = links.filter(
+      (link) => sharedSlots.has(link.from) && sharedSlots.has(link.to),
+    );
+    // 응답 슬롯 Action과, 응답만 든 묶음을 가리키는 되돌리기·다시하기를 함께 뺀다.
+    const actions = filterShareActions(shareActionsRef.current, sharedSlots);
+    const payload = createSharePayload(views, sharedLinks, actions);
+    const encoded = encodeSharePayload(payload);
+    if (!encoded.ok) {
+      setShareError(
+        encoded.error === 'TOO_LONG' ? runnerStrings.shareTooLong : runnerStrings.shareFailed,
+      );
+      return;
+    }
+
+    const base = window.location.href.split('#')[0] ?? window.location.href;
+    setShare({ code: encoded.code, link: `${base}${shareHash(encoded.code)}` });
+  }, [slots, links]);
 
   const handleSubmit = () => {
     if (paused || status === 'passed') return;
@@ -439,6 +490,9 @@ function TaskStage({
       </div>
 
       <div className={styles.controls} role="toolbar" aria-label={runnerStrings.controls}>
+        <button type="button" onClick={openShare}>
+          {runnerStrings.show}
+        </button>
         <button type="button" onClick={() => handleControl('undo')} disabled={!canUndo}>
           {runnerStrings.undo}
         </button>
@@ -446,6 +500,12 @@ function TaskStage({
           {runnerStrings.redo}
         </button>
       </div>
+
+      {shareError ? (
+        <p className={styles.failed} role="alert">
+          {shareError}
+        </p>
+      ) : null}
 
       <div className={styles.feedback} aria-live="polite">
         {status === 'failed' ? (
@@ -513,6 +573,10 @@ function TaskStage({
             {runnerStrings.submit}
           </button>
         </div>
+      ) : null}
+
+      {share ? (
+        <ShareDialog code={share.code} link={share.link} onClose={() => setShare(null)} />
       ) : null}
     </section>
   );
