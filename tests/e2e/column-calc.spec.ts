@@ -1,0 +1,122 @@
+import { expect, test } from '@playwright/test';
+import type { Page } from '@playwright/test';
+
+/**
+ * E07 세로셈 격자 샌드박스 E2E.
+ * 아이패드(WebKit)·크롬북(Chromium)·전자칠판 뷰포트에서 모두 돈다.
+ */
+
+interface ObservationRecord {
+  readonly mode?: string;
+  readonly aligned?: boolean;
+  readonly alignment?: string | null;
+  readonly complete?: boolean;
+  readonly result?: string | null;
+  readonly resultRaw?: string | null;
+  readonly wrongColumns?: readonly number[];
+  readonly misconceptions?: readonly string[];
+  readonly [key: string]: unknown;
+}
+
+async function openColumnCalc(page: Page, config: Record<string, unknown>) {
+  const query = `?config=${encodeURIComponent(JSON.stringify(config))}`;
+  await page.goto(`${query}#/sandbox/E07`);
+  await expect(page.getByRole('heading', { name: '세로셈 격자' })).toBeVisible();
+  await expect(page.getByTestId('column-grid')).toBeVisible();
+}
+
+async function readObservation(page: Page): Promise<ObservationRecord> {
+  const text = await page.getByTestId('observation').textContent();
+  return JSON.parse(text ?? '{}') as ObservationRecord;
+}
+
+async function pollObservation(
+  page: Page,
+  check: (observation: ObservationRecord) => boolean,
+): Promise<void> {
+  await expect.poll(async () => check(await readObservation(page))).toBe(true);
+}
+
+async function selectMode(page: Page, mode: string): Promise<void> {
+  await page.getByLabel('모드').selectOption(mode);
+  await pollObservation(page, (observation) => observation.mode === mode);
+}
+
+function topCell(page: Page, column: number) {
+  return page.locator(`[data-testid="column-grid"] [data-row="top"][data-column="${column}"]`);
+}
+
+async function placeCard(page: Page, card: 'a' | 'b', column: number): Promise<void> {
+  await page.getByTestId(`card-${card}`).click();
+  await topCell(page, column).click();
+}
+
+async function typeResult(page: Page, digits: readonly string[]): Promise<void> {
+  for (const digit of digits) {
+    await page.getByRole('button', { name: `${digit} 쓰기` }).click();
+  }
+}
+
+test('소수점 자석을 켜고 3.5 + 1.27 = 4.77을 쓴다', async ({ page }) => {
+  await openColumnCalc(page, { a: '3.5', b: '1.27', magnetAlign: 'C-P' });
+  await selectMode(page, 'decimal');
+
+  // 카드를 소수점 자리에 놓으면 자석이 두 소수점을 맞춘다.
+  await placeCard(page, 'a', 0);
+  await placeCard(page, 'b', 0);
+  await pollObservation(page, (observation) => observation.alignment === 'point');
+
+  const placed = await readObservation(page);
+  expect(placed.aligned).toBe(true);
+
+  // 결과는 오른쪽(소수 둘째)부터 왼쪽으로 채운다.
+  await typeResult(page, ['7', '7', '4']);
+  await pollObservation(page, (observation) => observation.complete === true);
+
+  const observation = await readObservation(page);
+  expect(observation.resultRaw).toBe('4.77');
+  expect(observation.result).toBe('4.77');
+  expect(observation.wrongColumns).toEqual([]);
+  expect(observation.misconceptions).toEqual([]);
+});
+
+test('자석을 끄고 오른쪽 끝을 맞추면 MC-DEC-ALIGN-RIGHT가 나온다', async ({ page }) => {
+  await openColumnCalc(page, { a: '3.5', b: '1.27', magnetAlign: false });
+  await selectMode(page, 'decimal');
+
+  // 3.5 카드를 한 칸 오른쪽에 놓아 두 소수점을 어긋나게 한다.
+  await placeCard(page, 'a', -1);
+  await placeCard(page, 'b', 0);
+  await pollObservation(page, (observation) => observation.alignment === 'right-edge');
+
+  const placed = await readObservation(page);
+  expect(placed.aligned).toBe(false);
+
+  await typeResult(page, ['7', '7', '4']);
+  await pollObservation(page, (observation) =>
+    (observation.misconceptions ?? []).includes('MC-DEC-ALIGN-RIGHT'),
+  );
+
+  const observation = await readObservation(page);
+  expect(observation.aligned).toBe(false);
+  expect(observation.wrongColumns?.length).toBeGreaterThan(0);
+  expect(observation.misconceptions).toContain('MC-DEC-ALIGN-RIGHT');
+});
+
+test('키보드만으로 52 − 17 = 35를 쓴다', async ({ page }) => {
+  await openColumnCalc(page, { a: '52', b: '17', op: 'sub' });
+  await selectMode(page, 'sub');
+
+  // 격자에 초점을 주고 오른쪽 칸부터 숫자를 친다.
+  await page.getByTestId('column-grid').focus();
+  await page.keyboard.press('5');
+  await pollObservation(page, (observation) => observation.mode === 'sub');
+  await page.keyboard.press('3');
+  await pollObservation(page, (observation) => observation.complete === true);
+
+  const observation = await readObservation(page);
+  expect(observation.result).toBe('35');
+  expect(observation.resultRaw).toBe('35');
+  expect(observation.wrongColumns).toEqual([]);
+  expect(observation.misconceptions).toEqual([]);
+});
