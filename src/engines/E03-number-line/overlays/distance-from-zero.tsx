@@ -23,10 +23,18 @@ export function DistanceFromZeroOverlay({
 }: OverlayProps<NumberLineConfig, NumberLineState>) {
   const min = parseValue(state.min) ?? Rational.of(0);
   const max = parseValue(state.max) ?? min.add(Rational.of(1));
+  const viewMin = parseValue(state.viewMin) ?? min;
+  const viewMax = parseValue(state.viewMax) ?? max;
   const zero = Rational.of(0);
-  const startValue = zero.compareTo(min) < 0 ? min : zero;
+  const zeroOrMin = zero.compareTo(min) < 0 ? min : zero;
+  const startValue =
+    zeroOrMin.compareTo(viewMin) < 0
+      ? viewMin
+      : zeroOrMin.compareTo(viewMax) > 0
+        ? viewMax
+        : zeroOrMin;
   const rows = rowsOf(state);
-  const startX = xOfValue(startValue, min, max);
+  const startX = xOfValue(startValue, viewMin, viewMax);
 
   return (
     <svg
@@ -39,9 +47,10 @@ export function DistanceFromZeroOverlay({
       {state.points.map((point, index) => {
         const value = parseValue(point.value);
         if (!value) return null;
+        if (value.compareTo(viewMin) < 0 || value.compareTo(viewMax) > 0) return null;
         const distance = value.sub(zero).abs();
         if (distance.isZero()) return null;
-        const x = xOfValue(value, min, max);
+        const x = xOfValue(value, viewMin, viewMax);
         const baseY = rows[0]?.y ?? 300;
         const y = baseY - 52 - index * 26;
         const left = Math.min(startX, x);

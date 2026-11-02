@@ -47,6 +47,12 @@ export function roundRational(value: Rational): bigint {
   return floorRational(value.add(Rational.of(1, 2)));
 }
 
+/** 부동소수 없이 올림. 분모는 항상 양수다. */
+export function ceilRational(value: Rational): bigint {
+  if (value.n >= 0n) return (value.n + value.d - 1n) / value.d;
+  return -(-value.n / value.d);
+}
+
 export function clampNumber(value: number, min: number, max: number): number {
   if (value < min) return min;
   if (value > max) return max;
@@ -58,6 +64,35 @@ export function tenTo(level: number): Rational {
   let result = ONE;
   for (let index = 0; index < safe; index += 1) result = result.mul(TEN);
   return result;
+}
+
+/** level 단계에서 보이는 범위 폭 = 전체 폭 / 10^level. */
+export function viewWidth(fullSpan: Rational, level: number): Rational {
+  return fullSpan.div(tenTo(level));
+}
+
+/** `width` 폭의 창을 `center` 가운데 두고 `[min, max]` 안으로 밀어 넣는다. */
+export function centeredView(
+  min: Rational,
+  max: Rational,
+  width: Rational,
+  center: Rational,
+): { readonly min: Rational; readonly max: Rational } {
+  const full = max.sub(min);
+  if (width.compareTo(full) >= 0 || width.isZero() || width.isNegative()) {
+    return { min, max };
+  }
+  let low = center.sub(width.div(Rational.of(2)));
+  let high = low.add(width);
+  if (low.compareTo(min) < 0) {
+    low = min;
+    high = min.add(width);
+  }
+  if (high.compareTo(max) > 0) {
+    high = max;
+    low = max.sub(width);
+  }
+  return { min: low, max: high };
 }
 
 /** `unit / tick`이 10의 거듭제곱이면 그 지수를 돌려준다. */
@@ -220,40 +255,59 @@ export function valueOfX(x: number, min: Rational, max: Rational): Rational {
 }
 
 /**
- * 화면 위치를 가장 가까운 눈금으로 스냅한다.
+ * 화면 위치를 가장 가까운 **보이는** 눈금으로 스냅한다.
  * 줄이 여러 개면 y에 가장 가까운 줄을 고른다(T011 구현 결정 3).
+ * 보기 범위 밖의 눈금은 쓰지 않는다(요구 6).
  */
 export function snapFromPosition(
   point: Point,
-  min: Rational,
-  max: Rational,
+  originMin: Rational,
+  viewMin: Rational,
+  viewMax: Rational,
   rows: readonly TickRow[],
 ): SnapResult {
   const rowIndex = rowForY(point.y, rows);
   const row = rows[rowIndex] ?? rows[0];
   if (!row) {
-    return { index: 0, row: 0, value: min, x: LINE_LEFT };
+    return { index: 0, row: 0, value: viewMin, x: LINE_LEFT };
   }
-  const value = valueOfX(point.x, min, max);
-  const snapped = nearestTick(min, max, row.step, rowIndex, value);
+  const value = valueOfX(point.x, viewMin, viewMax);
+  const snapped = nearestVisibleTick(row, originMin, viewMin, viewMax, value);
+  if (!snapped) {
+    return { index: 0, row: rowIndex, value: viewMin, x: LINE_LEFT };
+  }
   return {
     index: snapped.index,
     row: rowIndex,
     value: snapped.value,
-    x: xOfValue(snapped.value, min, max),
+    x: snapped.x,
   };
 }
 
-/** 키보드·버튼으로 한 눈금(또는 여러 눈금) 옮긴 값. */
+/** 키보드·버튼으로 보이는 눈금 한 칸(또는 여러 칸) 옮긴 값. */
 export function moveValue(
   value: Rational,
   steps: number,
   row: TickRow,
-  min: Rational,
-  max: Rational,
+  originMin: Rational,
+  viewMin: Rational,
+  viewMax: Rational,
 ): Rational {
-  return nearestTick(min, max, row.step, row.index, value.add(row.step.mul(Rational.of(steps))))
-    .value;
+  const ticks = visibleTicks(row, originMin, viewMin, viewMax);
+  if (ticks.length === 0) {
+    return nearestTick(originMin, viewMax, row.step, row.index, value).value;
+  }
+  let position = 0;
+  let bestDistance: Rational | null = null;
+  ticks.forEach((tick, index) => {
+    const distance = tick.value.sub(value).abs();
+    if (bestDistance === null || distance.compareTo(bestDistance) < 0) {
+      bestDistance = distance;
+      position = index;
+    }
+  });
+  const target = clampNumber(position + Math.trunc(steps), 0, ticks.length - 1);
+  return ticks[target]?.value ?? value;
 }
 
 /** 점프 크기. `to - from`. */
@@ -307,17 +361,90 @@ export function ticksInRow(row: TickRow, min: Rational, max: Rational): Tick[] {
   return ticks;
 }
 
+/** 보기 범위 안에 들어가는 눈금의 첫 인덱스(전체 min 기준). */
+export function firstTickIndexInView(
+  originMin: Rational,
+  step: Rational,
+  viewMin: Rational,
+): number {
+  if (step.isZero() || step.isNegative()) return 0;
+  return Math.max(0, Number(ceilRational(viewMin.sub(originMin).div(step))));
+}
+
+/** 보기 범위 안에 들어가는 눈금의 마지막 인덱스(전체 min 기준). */
+export function lastTickIndexInView(
+  originMin: Rational,
+  step: Rational,
+  viewMax: Rational,
+): number {
+  if (step.isZero() || step.isNegative()) return 0;
+  return Math.max(0, Number(floorRational(viewMax.sub(originMin).div(step))));
+}
+
+/**
+ * 보기 범위 안의 눈금만 만든다. 눈금 인덱스는 항상 전체 `min`을 기준으로 센다.
+ * 화면 x는 보기 범위에 맞춰 계산한다.
+ */
+export function ticksInView(
+  row: TickRow,
+  originMin: Rational,
+  viewMin: Rational,
+  viewMax: Rational,
+): Tick[] {
+  const first = firstTickIndexInView(originMin, row.step, viewMin);
+  const last = lastTickIndexInView(originMin, row.step, viewMax);
+  if (last < first) return [];
+  const ticks: Tick[] = [];
+  for (let index = first; index <= last; index += 1) {
+    const value = tickAt(originMin, row.step, index);
+    ticks.push({ index, value, row: row.index, x: xOfValue(value, viewMin, viewMax) });
+  }
+  return ticks;
+}
+
 /**
  * 화면에 그릴 눈금만 고른다. 간격이 너무 좁으면 10개마다 하나만 그린다.
- * 스냅 자체는 모든 눈금을 쓴다.
+ * 스냅도 **그려진 눈금**만 쓴다(요구 6).
  */
-export function visibleTicks(row: TickRow, min: Rational, max: Rational): Tick[] {
-  const all = ticksInRow(row, min, max);
+export function visibleTicks(
+  row: TickRow,
+  originMin: Rational,
+  viewMin: Rational,
+  viewMax: Rational,
+): Tick[] {
+  const all = ticksInView(row, originMin, viewMin, viewMax);
   if (all.length <= 1) return all;
   const spacing = Math.abs((all[1]?.x ?? LINE_LEFT) - (all[0]?.x ?? LINE_LEFT));
   if (spacing >= 7) return all;
   const every = Math.max(1, Math.ceil(7 / Math.max(spacing, 0.01)));
-  return all.filter((tick) => tick.index % every === 0);
+  const filtered = all.filter((tick) => tick.index % every === 0);
+  return filtered.length > 0 ? filtered : all.slice(0, 1);
+}
+
+/** 보이는 눈금 중 값과 가장 가까운 것. 정중앙은 큰 쪽으로 보낸다. */
+export function nearestVisibleTick(
+  row: TickRow,
+  originMin: Rational,
+  viewMin: Rational,
+  viewMax: Rational,
+  value: Rational,
+): Tick | null {
+  const ticks = visibleTicks(row, originMin, viewMin, viewMax);
+  let best: Tick | null = null;
+  let bestDistance: Rational | null = null;
+  for (const tick of ticks) {
+    const distance = tick.value.sub(value).abs();
+    if (
+      best === null ||
+      bestDistance === null ||
+      distance.compareTo(bestDistance) < 0 ||
+      (distance.equals(bestDistance) && tick.value.compareTo(best.value) > 0)
+    ) {
+      best = tick;
+      bestDistance = distance;
+    }
+  }
+  return best;
 }
 
 /** 두 값이 같은 수인지. 문자열 표기가 달라도(`3/4`, `0.75`) 같은 값이면 참. */

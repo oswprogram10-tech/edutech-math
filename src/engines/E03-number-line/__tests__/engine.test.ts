@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { assertSerializable } from '../../../core/engine-sdk';
 import { receive } from '../events';
 import { observe } from '../observe';
-import { createInitialState, reduce, snapValue } from '../reduce';
+import { createInitialState, reduce, snapValue, viewSpanOf } from '../reduce';
 import { pinchLevel, sameValue, zoomDeltaForPinch } from '../ticks';
 import type { NumberLineAction, NumberLineConfig, NumberLineState } from '../types';
 
@@ -137,25 +137,111 @@ describe('E03 점프', () => {
 });
 
 describe('E03 줌', () => {
+  it('zoom.from이 1/10이면 처음부터 보기 범위가 1/10이다', () => {
+    const state = decimal({ zoom: { from: '1/10', to: '1/100' } });
+    expect(state.zoomLevel).toBe(1);
+    expect(viewSpanOf(state).toJSON()).toBe('1/10');
+    expect([state.viewMin, state.viewMax]).toEqual(['0', '1/10']);
+  });
+
   it('decimal은 1 → 1/10 → 1/100 → 1/1000 단계로 간다', () => {
     let state = decimal({ zoom: { from: '1', to: '1/1000' } });
     expect(observe(state)['tick']).toBe('1');
-    state = reduce(state, { type: 'zoom', level: 1 });
+    state = reduce(state, { type: 'zoom', level: 1, center: '0' });
     expect(observe(state)['tick']).toBe('1/10');
-    state = reduce(state, { type: 'zoom', level: 2 });
+    state = reduce(state, { type: 'zoom', level: 2, center: '0' });
     expect(observe(state)['tick']).toBe('1/100');
-    state = reduce(state, { type: 'zoom', level: 3 });
+    state = reduce(state, { type: 'zoom', level: 3, center: '0' });
     expect(observe(state)['tick']).toBe('1/1000');
+  });
+
+  it('줌 단계마다 보이는 범위 폭이 1/10로 줄어든다', () => {
+    const widthOf = (state: NumberLineState): string => viewSpanOf(state).toJSON();
+    let state = decimal({ zoom: { from: '1', to: '1/1000' } });
+    expect(widthOf(state)).toBe('1');
+    state = reduce(state, { type: 'zoom', level: 1, center: '1/2' });
+    expect(widthOf(state)).toBe('1/10');
+    state = reduce(state, { type: 'zoom', level: 2, center: '1/2' });
+    expect(widthOf(state)).toBe('1/100');
+    state = reduce(state, { type: 'zoom', level: 3, center: '1/2' });
+    expect(widthOf(state)).toBe('1/1000');
+    const observed = observe(state);
+    expect(observed['viewMin']).toBe(state.viewMin);
+    expect(observed['viewMax']).toBe(state.viewMax);
+  });
+
+  it('줌은 요청한 중심을 가운데 두고 min·max 밖으로 나가지 않는다', () => {
+    const base = decimal({ zoom: { from: '1', to: '1/100' } });
+    const middle = reduce(base, { type: 'zoom', level: 1, center: '3/4' });
+    expect([middle.viewMin, middle.viewMax]).toEqual(['7/10', '4/5']);
+
+    const low = reduce(base, { type: 'zoom', level: 1, center: '0' });
+    expect([low.viewMin, low.viewMax]).toEqual(['0', '1/10']);
+
+    const high = reduce(base, { type: 'zoom', level: 1, center: '1' });
+    expect([high.viewMin, high.viewMax]).toEqual(['9/10', '1']);
+  });
+
+  it('이동은 보기 범위를 min·max 밖으로 내보내지 않는다', () => {
+    const base = reduce(decimal({ zoom: { from: '1', to: '1/100' } }), {
+      type: 'zoom',
+      level: 1,
+      center: '0',
+    });
+    expect([base.viewMin, base.viewMax]).toEqual(['0', '1/10']);
+
+    const right = reduce(base, { type: 'pan', delta: '1/10' });
+    expect([right.viewMin, right.viewMax]).toEqual(['1/10', '1/5']);
+
+    const back = reduce(right, { type: 'pan', delta: '-1/10' });
+    expect([back.viewMin, back.viewMax]).toEqual(['0', '1/10']);
+
+    // 왼쪽 경계에서는 더 왼쪽으로 가지 않는다(같은 상태를 돌려준다).
+    expect(reduce(back, { type: 'pan', delta: '-1' })).toBe(back);
+
+    const atRight = reduce(decimal({ zoom: { from: '1', to: '1/100' } }), {
+      type: 'zoom',
+      level: 1,
+      center: '1',
+    });
+    expect([atRight.viewMin, atRight.viewMax]).toEqual(['9/10', '1']);
+    expect(reduce(atRight, { type: 'pan', delta: '1' })).toBe(atRight);
+  });
+
+  it('확대하면 보이는 눈금에만 스냅한다', () => {
+    const state = reduce(decimal({ zoom: { from: '1', to: '1/100' } }), {
+      type: 'zoom',
+      level: 2,
+      center: '0',
+    });
+    expect([state.viewMin, state.viewMax]).toEqual(['0', '1/100']);
+    expect(snapValue(state, '0.004')?.toJSON()).toBe('0');
+    expect(snapValue(state, '0.007')?.toJSON()).toBe('1/100');
+    // 보기 밖 값은 보이는 경계 눈금으로 당긴다.
+    expect(snapValue(state, '0.99')?.toJSON()).toBe('1/100');
+  });
+
+  it('이동한 뒤 0.75 자리에 점을 찍을 수 있다', () => {
+    let state = reduce(decimal({ zoom: { from: '1', to: '1/100' } }), {
+      type: 'zoom',
+      level: 2,
+      center: '0',
+    });
+    state = reduce(state, { type: 'pan', delta: '37/50' });
+    expect([state.viewMin, state.viewMax]).toEqual(['37/50', '3/4']);
+    state = reduce(state, { type: 'place-point', value: '0.75' });
+    expect(state.points[0]?.value).toBe('3/4');
   });
 
   it('줌 범위를 넘으면 경계에서 멈춘다', () => {
     const state = decimal({ zoom: { from: '1', to: '1/100' } });
-    const high = reduce(state, { type: 'zoom', level: 99 });
+    const high = reduce(state, { type: 'zoom', level: 99, center: '1/2' });
     expect(high.zoomLevel).toBe(2);
     expect(observe(high)['tick']).toBe('1/100');
-    const low = reduce(high, { type: 'zoom', level: -99 });
+    const low = reduce(high, { type: 'zoom', level: -99, center: '1/2' });
     expect(low.zoomLevel).toBe(0);
     expect(observe(low)['tick']).toBe('1');
+    expect([low.viewMin, low.viewMax]).toEqual(['0', '1']);
   });
 
   it('핀치 배율을 눈금 단계로 바꾸고 범위를 지킨다', () => {
@@ -194,8 +280,10 @@ describe('E03 직렬화', () => {
       { type: 'move-point', id: 'p1', value: '1/2' },
       { type: 'select-point', id: 'p1' },
       { type: 'add-jump', from: '0', to: '3/4' },
-      { type: 'zoom', level: 1 },
-      { type: 'zoom', level: 0 },
+      { type: 'zoom', level: 1, center: '1/2' },
+      { type: 'pan', delta: '1/10' },
+      { type: 'pan', delta: '-1/10' },
+      { type: 'zoom', level: 0, center: '1/2' },
       { type: 'remove-point', id: 'p1' },
     ];
     let state = decimal();

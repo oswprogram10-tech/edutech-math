@@ -25,6 +25,7 @@ import {
   nearestTick,
   parseValue,
   snapFromPosition,
+  valueOfX,
   visibleTicks,
   xOfValue,
   zoomDeltaForPinch,
@@ -60,6 +61,24 @@ type Press =
   | (PressBase & { readonly kind: 'point'; readonly id: string })
   | (PressBase & { readonly kind: 'card'; readonly card: string })
   | (PressBase & { readonly kind: 'line' });
+
+interface TwoFingerSession {
+  readonly start: Point;
+  last: Point;
+  zoomed: boolean;
+  /** 핀치 중심 값(절대 수). 첫 두 손가락이 닿은 순간 정한다. */
+  readonly center: string;
+}
+
+function midpointOf(points: readonly { readonly clientX: number; readonly clientY: number }[]): {
+  clientX: number;
+  clientY: number;
+} | null {
+  const a = points[0];
+  const b = points[1];
+  if (!a || !b) return null;
+  return { clientX: (a.clientX + b.clientX) / 2, clientY: (a.clientY + b.clientY) / 2 };
+}
 
 function cardLayout(cards: readonly string[], minHeight: number): CardRect[] {
   if (cards.length === 0) return [];
@@ -127,6 +146,11 @@ export function NumberLineView({
   const rows = rowsOf(state);
   const min = parseValue(state.min) ?? Rational.of(0);
   const max = parseValue(state.max) ?? min.add(Rational.of(1));
+  const viewMin = parseValue(state.viewMin) ?? min;
+  const viewMax = parseValue(state.viewMax) ?? max;
+  const viewSpan = viewMax.sub(viewMin);
+  const fullSpan = max.sub(min);
+  const zoomed = viewSpan.compareTo(fullSpan) < 0;
   const hitRadius = Math.max(18, Math.ceil(minTouchRadius(targetSize, renderedSize, LOGICAL)));
   const pointRadius = Math.max(12, Math.min(22, Math.ceil(hitRadius * 0.55)));
   const touchDiameter = Math.max(
@@ -138,12 +162,14 @@ export function NumberLineView({
 
   const [press, setPress] = useState<Press | null>(null);
   const [focused, setFocused] = useState(false);
-  const pointers = useRef(new Set<number>());
+  const pointers = useRef(new Map<number, { clientX: number; clientY: number }>());
   const pinchBaseScale = useRef(1);
   const pinchBaseLevel = useRef(state.zoomLevel);
   const levelRef = useRef(state.zoomLevel);
   const boundsRef = useRef({ min: state.zoomMin, max: state.zoomMax });
   const readOnlyRef = useRef(readOnly);
+  const centerRef = useRef(state.cursor);
+  const twoFingerRef = useRef<TwoFingerSession | null>(null);
   useEffect(() => {
     levelRef.current = state.zoomLevel;
   }, [state.zoomLevel]);
@@ -153,15 +179,29 @@ export function NumberLineView({
   useEffect(() => {
     readOnlyRef.current = readOnly;
   }, [readOnly]);
+  useEffect(() => {
+    const selected = state.points.find((point) => point.id === state.selectedPointId);
+    centerRef.current = selected?.value ?? state.cursor;
+  }, [state.points, state.selectedPointId, state.cursor]);
 
   const zoomBy = useCallback(
     (delta: number) => {
       if (readOnly) return;
       const level = clamp(state.zoomLevel + delta, state.zoomMin, state.zoomMax);
-      if (level !== state.zoomLevel) dispatch({ type: 'zoom', level });
+      if (level !== state.zoomLevel) {
+        dispatch({ type: 'zoom', level, center: centerRef.current });
+      }
     },
     [dispatch, readOnly, state.zoomLevel, state.zoomMin, state.zoomMax],
   );
+
+  const panBy = (direction: 1 | -1) => {
+    if (readOnly) return;
+    const span = viewSpan;
+    if (span.isZero()) return;
+    const delta = direction > 0 ? span : span.mul(Rational.of(-1));
+    dispatch({ type: 'pan', delta: delta.toJSON() });
+  };
 
   const pinch = usePinch({
     initialScale: 1,
@@ -177,7 +217,12 @@ export function NumberLineView({
         bounds.max,
       );
       if (target !== levelRef.current) {
-        dispatch({ type: 'zoom', level: target });
+        if (twoFingerRef.current) twoFingerRef.current.zoomed = true;
+        dispatch({
+          type: 'zoom',
+          level: target,
+          center: twoFingerRef.current?.center ?? centerRef.current,
+        });
       }
     },
   });
@@ -197,7 +242,7 @@ export function NumberLineView({
       const min = Number(element.dataset.zoomMin ?? '0');
       const max = Number(element.dataset.zoomMax ?? '0');
       const next = clamp(current + (event.deltaY < 0 ? 1 : -1), min, max);
-      if (next !== current) dispatch({ type: 'zoom', level: next });
+      if (next !== current) dispatch({ type: 'zoom', level: next, center: centerRef.current });
     };
     element.addEventListener('wheel', onWheel, { passive: false });
     return () => element.removeEventListener('wheel', onWheel);
@@ -206,17 +251,22 @@ export function NumberLineView({
   const toPoint = (event: { readonly clientX: number; readonly clientY: number }): Point =>
     pointerToLogical(event, svgRef.current, LOGICAL);
 
-  const snapped = (point: Point) => snapFromPosition(point, min, max, rows);
+  const snapped = (point: Point) => snapFromPosition(point, min, viewMin, viewMax, rows);
+
+  const inView = (value: Rational): boolean =>
+    value.compareTo(viewMin) >= 0 && value.compareTo(viewMax) <= 0;
 
   const pointPosition = (value: string): { x: number; y: number } => {
     const parsed = parseValue(value) ?? min;
     const row = rows[rowForValue(value, rows, min, max)] ?? rows[0];
-    return { x: xOfValue(parsed, min, max), y: row?.y ?? 300 };
+    return { x: xOfValue(parsed, viewMin, viewMax), y: row?.y ?? 300 };
   };
 
   const findPoint = (point: Point, exclude: string | null = null) => {
     for (const candidate of state.points) {
       if (candidate.id === exclude) continue;
+      const parsed = parseValue(candidate.value);
+      if (!parsed || !inView(parsed)) continue;
       const position = pointPosition(candidate.value);
       if (Math.abs(position.x - point.x) <= hitRadius && Math.abs(position.y - point.y) <= 72) {
         return candidate;
@@ -265,7 +315,7 @@ export function NumberLineView({
     dispatch({
       type: 'move-point',
       id,
-      value: moveValue(value, steps, row, min, max).toJSON(),
+      value: moveValue(value, steps, row, min, viewMin, viewMax).toJSON(),
     });
   };
 
@@ -306,10 +356,11 @@ export function NumberLineView({
 
   const onPointerDown = (event: ReactPointerEvent<SVGSVGElement>) => {
     event.stopPropagation();
-    pointers.current.add(event.pointerId);
+    pointers.current.set(event.pointerId, { clientX: event.clientX, clientY: event.clientY });
     pinch.handlers.onPointerDown(event);
     if (readOnly) return;
     if (pointers.current.size === 1) {
+      twoFingerRef.current = null;
       pinchBaseScale.current = pinch.scale;
       pinchBaseLevel.current = levelRef.current;
       const point = toPoint(event);
@@ -319,14 +370,35 @@ export function NumberLineView({
       if (hitPoint) setPress({ ...base, kind: 'point', id: hitPoint.id });
       else if (hitCard) setPress({ ...base, kind: 'card', card: hitCard.card });
       else setPress({ ...base, kind: 'line' });
-    } else {
-      setPress(null);
+      return;
     }
+    setPress(null);
+    if (pointers.current.size === 2) {
+      const middle = midpointOf([...pointers.current.values()]);
+      if (!middle) return;
+      const logical = toPoint(middle);
+      const center = valueOfX(logical.x, viewMin, viewMax);
+      twoFingerRef.current = {
+        start: logical,
+        last: logical,
+        zoomed: false,
+        center: center.toJSON(),
+      };
+      return;
+    }
+    twoFingerRef.current = null;
   };
 
   const onPointerMove = (event: ReactPointerEvent<SVGSVGElement>) => {
     event.stopPropagation();
+    if (pointers.current.has(event.pointerId)) {
+      pointers.current.set(event.pointerId, { clientX: event.clientX, clientY: event.clientY });
+    }
     pinch.handlers.onPointerMove(event);
+    if (twoFingerRef.current && pointers.current.size >= 2) {
+      const middle = midpointOf([...pointers.current.values()]);
+      if (middle) twoFingerRef.current.last = toPoint(middle);
+    }
     if (!press || press.pointerId !== event.pointerId || pointers.current.size !== 1) return;
     const point = toPoint(event);
     const moved =
@@ -336,8 +408,22 @@ export function NumberLineView({
 
   const finishPointer = (event: ReactPointerEvent<SVGSVGElement>, cancelled: boolean) => {
     event.stopPropagation();
+    const wasTwoFinger = pointers.current.size >= 2;
     pinch.handlers.onPointerUp(event);
     pointers.current.delete(event.pointerId);
+    if (wasTwoFinger && pointers.current.size < 2) {
+      const gesture = twoFingerRef.current;
+      twoFingerRef.current = null;
+      if (gesture && !gesture.zoomed && !readOnlyRef.current && !cancelled) {
+        const logicalDx = gesture.last.x - gesture.start.x;
+        if (Math.abs(logicalDx) >= 8) {
+          const ratio = clamp(logicalDx / (LINE_RIGHT - LINE_LEFT), -1, 1);
+          // 손가락을 왼쪽으로 끌면(음수) 보이는 창은 오른쪽으로 간다.
+          const delta = viewSpan.mul(Rational.of(-Math.round(ratio * 1_000_000), 1_000_000));
+          if (!delta.isZero()) dispatch({ type: 'pan', delta: delta.toJSON() });
+        }
+      }
+    }
     if (!press || press.pointerId !== event.pointerId) return;
     const current = toPoint(event);
     const moved =
@@ -361,6 +447,24 @@ export function NumberLineView({
       zoomBy(-1);
       return;
     }
+    if (
+      event.key === 'PageUp' ||
+      (event.shiftKey && (event.code === 'BracketLeft' || event.key === '[' || event.key === '{'))
+    ) {
+      event.preventDefault();
+      event.stopPropagation();
+      panBy(-1);
+      return;
+    }
+    if (
+      event.key === 'PageDown' ||
+      (event.shiftKey && (event.code === 'BracketRight' || event.key === ']' || event.key === '}'))
+    ) {
+      event.preventDefault();
+      event.stopPropagation();
+      panBy(1);
+      return;
+    }
     const step = event.shiftKey ? 5 : 1;
     if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
       event.preventDefault();
@@ -373,7 +477,10 @@ export function NumberLineView({
       const row = rows[0];
       const cursor = parseValue(state.cursor);
       if (!row || !cursor) return;
-      dispatch({ type: 'set-cursor', value: moveValue(cursor, delta, row, min, max).toJSON() });
+      dispatch({
+        type: 'set-cursor',
+        value: moveValue(cursor, delta, row, min, viewMin, viewMax).toJSON(),
+      });
       return;
     }
     if (event.key === 'Enter') {
@@ -452,9 +559,9 @@ export function NumberLineView({
   const zoomTick = rows[0] ? formatValue(rows[0].step, mode) : '1';
   const selectedPoint = state.points.find((point) => point.id === state.selectedPointId) ?? null;
   const cursorValue = parseValue(state.cursor);
-  const cursorX = cursorValue ? xOfValue(cursorValue, min, max) : 100;
+  const cursorX = cursorValue ? xOfValue(cursorValue, viewMin, viewMax) : 100;
   const rowCount = rows.length;
-  const laserGroups = findSameGroups(state, min, max);
+  const laserGroups = findSameGroups(state, viewMin, viewMax);
 
   const dragPreview =
     press && press.moved
@@ -471,6 +578,28 @@ export function NumberLineView({
       style={{ width: `${100 * scale}%` }}
     >
       <div className={styles.toolbar}>
+        {zoomed ? (
+          <>
+            <button
+              type="button"
+              className={styles.button}
+              aria-label={numberLineStrings.panLeftLabel}
+              onClick={() => panBy(-1)}
+              disabled={readOnly || viewMin.compareTo(min) <= 0}
+            >
+              ◀
+            </button>
+            <button
+              type="button"
+              className={styles.button}
+              aria-label={numberLineStrings.panRightLabel}
+              onClick={() => panBy(1)}
+              disabled={readOnly || viewMax.compareTo(max) >= 0}
+            >
+              ▶
+            </button>
+          </>
+        ) : null}
         {state.zoomMax > state.zoomMin ? (
           <>
             <button
@@ -533,6 +662,8 @@ export function NumberLineView({
         data-zoom-level={state.zoomLevel}
         data-zoom-min={state.zoomMin}
         data-zoom-max={state.zoomMax}
+        data-view-min={state.viewMin}
+        data-view-max={state.viewMax}
         tabIndex={readOnly ? -1 : 0}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -621,7 +752,7 @@ export function NumberLineView({
         })}
 
         {rows.map((row, rowIndex) => {
-          const rowTicks = visibleTicks(row, min, max);
+          const rowTicks = visibleTicks(row, min, viewMin, viewMax);
           return (
             <g key={`row-${rowIndex}`} data-row={rowIndex}>
               <line
@@ -634,12 +765,18 @@ export function NumberLineView({
               />
               {rowTicks.map((tick) => {
                 const major = tick.value.isInteger();
-                const labelEvery = labelInterval(row, min, max);
+                const labelEvery = labelInterval(row, viewMin, viewMax);
                 const showLabel =
                   config.labels !== 'none' &&
                   (config.labels === 'partial' ? major : tick.index % labelEvery === 0);
                 return (
-                  <g key={`tick-${rowIndex}-${tick.index}`} pointerEvents="none">
+                  <g
+                    key={`tick-${rowIndex}-${tick.index}`}
+                    pointerEvents="none"
+                    data-tick-index={tick.index}
+                    data-tick-value={tick.value.toJSON()}
+                    data-tick-x={tick.x}
+                  >
                     <line
                       x1={tick.x}
                       y1={row.y - (major ? 12 : 7)}
@@ -675,7 +812,13 @@ export function NumberLineView({
         })}
 
         {state.linkedValue ? (
-          <LinkedPoint value={state.linkedValue} state={state} min={min} max={max} rows={rows} />
+          <LinkedPoint
+            value={state.linkedValue}
+            state={state}
+            min={viewMin}
+            max={viewMax}
+            rows={rows}
+          />
         ) : null}
 
         {config.laser ? <SamePointLasers groups={laserGroups} rows={rows} /> : null}
@@ -687,14 +830,16 @@ export function NumberLineView({
                 key={`jump-${index}-${jump.from}-${jump.to}`}
                 jump={jump}
                 mode={mode}
-                min={min}
-                max={max}
+                min={viewMin}
+                max={viewMax}
                 rows={rows}
                 index={index}
               />
             ))}
 
         {state.points.map((point) => {
+          const parsed = parseValue(point.value);
+          if (!parsed || !inView(parsed)) return null;
           const position = pointPosition(point.value);
           const selected = point.id === state.selectedPointId;
           return (
@@ -766,8 +911,8 @@ export function NumberLineView({
           <CardGhost
             card={state.selectedCard}
             value={state.cardCursor}
-            min={min}
-            max={max}
+            min={viewMin}
+            max={viewMax}
             rows={rows}
             mode={mode}
           />
@@ -803,8 +948,8 @@ export function NumberLineView({
           <JumpPreview
             from={state.points.find((point) => point.id === press.id)?.value ?? null}
             to={press.moved ? snapped(press.current).value.toJSON() : null}
-            min={min}
-            max={max}
+            min={viewMin}
+            max={viewMax}
             rows={rows}
           />
         ) : null}
@@ -835,6 +980,7 @@ function findSameGroups(state: NumberLineState, min: Rational, max: Rational): S
   const add = (value: string) => {
     const parsed = parseValue(value);
     if (!parsed) return;
+    if (parsed.compareTo(min) < 0 || parsed.compareTo(max) > 0) return;
     const key = parsed.toJSON();
     seen.set(key, (seen.get(key) ?? 0) + 1);
   };
@@ -892,6 +1038,7 @@ function LinkedPoint({
 }) {
   const parsed = parseValue(value);
   if (!parsed) return null;
+  if (parsed.compareTo(min) < 0 || parsed.compareTo(max) > 0) return null;
   const row = rows[rowForValue(value, rows, min, max)] ?? rows[0];
   const x = xOfValue(parsed, min, max);
   const y = row?.y ?? 300;
@@ -932,6 +1079,14 @@ function JumpArrow({
   const from = parseValue(jump.from);
   const to = parseValue(jump.to);
   if (!from || !to) return null;
+  if (
+    from.compareTo(min) < 0 ||
+    from.compareTo(max) > 0 ||
+    to.compareTo(min) < 0 ||
+    to.compareTo(max) > 0
+  ) {
+    return null;
+  }
   const x1 = xOfValue(from, min, max);
   const x2 = xOfValue(to, min, max);
   if (Math.abs(x1 - x2) < 1) return null;
@@ -970,6 +1125,14 @@ function JumpPreview({
   const start = parseValue(from);
   const end = parseValue(to);
   if (!start || !end || start.equals(end)) return null;
+  if (
+    start.compareTo(min) < 0 ||
+    start.compareTo(max) > 0 ||
+    end.compareTo(min) < 0 ||
+    end.compareTo(max) > 0
+  ) {
+    return null;
+  }
   const x1 = xOfValue(start, min, max);
   const x2 = xOfValue(end, min, max);
   const row = rows[rowForValue(to, rows, min, max)] ?? rows[0];
@@ -1003,6 +1166,7 @@ function CardGhost({
 }) {
   const parsed = parseValue(value);
   if (!parsed) return null;
+  if (parsed.compareTo(min) < 0 || parsed.compareTo(max) > 0) return null;
   const row = rows[rowForValue(value, rows, min, max)] ?? rows[0];
   const x = xOfValue(parsed, min, max);
   const y = row?.y ?? 300;

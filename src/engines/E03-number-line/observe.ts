@@ -137,6 +137,8 @@ export function observe(state: NumberLineState): Observation {
     zoomLevel: state.zoomLevel,
     zoomMin: state.zoomMin,
     zoomMax: state.zoomMax,
+    viewMin: state.viewMin,
+    viewMax: state.viewMax,
     points: pointsJson,
     pointValues: pointViews.map((point) => point.value),
     cards: cardsState,

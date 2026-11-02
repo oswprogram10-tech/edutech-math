@@ -25,6 +25,14 @@ function pairFromArgs(
   const a = typeof record['a'] === 'string' ? parseValue(record['a']) : null;
   const b = typeof record['b'] === 'string' ? parseValue(record['b']) : null;
   if (!a || !b || !min || !max) return null;
+  if (
+    a.compareTo(min) < 0 ||
+    a.compareTo(max) > 0 ||
+    b.compareTo(min) < 0 ||
+    b.compareTo(max) > 0
+  ) {
+    return null;
+  }
   const x = xOfValue(a, min, max);
   const other = xOfValue(b, min, max);
   return { key: `${a.toJSON()}-${b.toJSON()}`, x, same: Math.abs(x - other) < 0.5 };
@@ -39,6 +47,7 @@ function duplicatePairs(
   const add = (value: string) => {
     const parsed = parseValue(value);
     if (!parsed) return;
+    if (parsed.compareTo(min) < 0 || parsed.compareTo(max) > 0) return;
     seen.set(parsed.toJSON(), (seen.get(parsed.toJSON()) ?? 0) + 1);
   };
   for (const point of state.points) add(point.value);
@@ -57,8 +66,8 @@ function duplicatePairs(
 }
 
 export function SamePointOverlay({ state, args }: OverlayProps<NumberLineConfig, NumberLineState>) {
-  const min = parseValue(state.min);
-  const max = parseValue(state.max);
+  const min = parseValue(state.viewMin) ?? parseValue(state.min);
+  const max = parseValue(state.viewMax) ?? parseValue(state.max);
   if (!min || !max) return null;
   const rows = rowsOf(state);
   const top = Math.min(...rows.map((row) => row.y)) - 58;

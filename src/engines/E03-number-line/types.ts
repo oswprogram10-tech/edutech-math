@@ -84,6 +84,9 @@ export interface NumberLineState {
   readonly zoomLevel: number;
   readonly zoomMin: number;
   readonly zoomMax: number;
+  /** 지금 화면에 보이는 수 범위(전체 min·max의 부분 창). */
+  readonly viewMin: string;
+  readonly viewMax: string;
   readonly points: readonly NumberLinePoint[];
   readonly jumps: readonly NumberLineJump[];
   readonly selectedPointId: string | null;
@@ -114,7 +117,8 @@ export type NumberLineAction =
   | { readonly type: 'set-cursor'; readonly value: string }
   | { readonly type: 'set-card-cursor'; readonly value: string }
   | { readonly type: 'place-card'; readonly card: string; readonly value: string }
-  | { readonly type: 'zoom'; readonly level: number }
+  | { readonly type: 'zoom'; readonly level: number; readonly center: string }
+  | { readonly type: 'pan'; readonly delta: string }
   | { readonly type: 'set-linked'; readonly value: string };
 
 export const LOGICAL_WIDTH = 1000;

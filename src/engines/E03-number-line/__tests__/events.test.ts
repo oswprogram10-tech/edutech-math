@@ -59,15 +59,15 @@ describe('E03 emit', () => {
 
   it('줌은 zoomed에 단계와 눈금을 담는다', () => {
     const prev = createInitialState({ mode: 'decimal', min: '0', max: '1' });
-    const next = reduce(prev, { type: 'zoom', level: 2 });
-    expect(emit(prev, next, { type: 'zoom', level: 2 })).toEqual([
+    const next = reduce(prev, { type: 'zoom', level: 2, center: '1/2' });
+    expect(emit(prev, next, { type: 'zoom', level: 2, center: '1/2' })).toEqual([
       { name: 'zoomed', payload: { level: 2, tick: '1/100' } },
     ]);
   });
 
   it('바뀐 것이 없으면 이벤트를 내지 않는다', () => {
     const state = fraction();
-    expect(emit(state, state, { type: 'zoom', level: 1 })).toEqual([]);
+    expect(emit(state, state, { type: 'zoom', level: 1, center: '0' })).toEqual([]);
   });
 });
 

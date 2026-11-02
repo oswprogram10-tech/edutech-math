@@ -13,6 +13,8 @@ export const numberLineStrings = {
   zoomIn: '확대',
   zoomOutLabel: '수직선 축소',
   zoomInLabel: '수직선 확대',
+  panLeftLabel: '수직선 왼쪽으로',
+  panRightLabel: '수직선 오른쪽으로',
   zoomTick: (tick: string) => `눈금 ${tick}`,
   jumpMode: '점프 그리기',
   jumpModeOn: '점프 그리기 켜짐',

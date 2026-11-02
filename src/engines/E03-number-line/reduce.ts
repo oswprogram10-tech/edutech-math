@@ -5,7 +5,17 @@
  * 수 값은 `Rational`로 계산한 뒤 `toJSON()` 문자열로 저장한다.
  */
 import { Rational } from '../../core/math/rational';
-import { buildRows, lastIndex, nearestTick, parseValue, rowForY, tickAt, zoomRange } from './ticks';
+import {
+  buildRows,
+  centeredView,
+  lastIndex,
+  nearestVisibleTick,
+  parseValue,
+  rowForY,
+  tickAt,
+  viewWidth,
+  zoomRange,
+} from './ticks';
 import type { TickRow } from './ticks';
 import { bumpCounts, EMPTY_COUNTS, LOGICAL_HEIGHT, LOGICAL_WIDTH } from './types';
 import type {
@@ -67,12 +77,19 @@ export function createInitialState(config: NumberLineConfig): NumberLineState {
   if (max.compareTo(min) <= 0) max = min.add(safeUnit);
 
   const subdivisions = normalizeSubdivisions(mode, config.subdivisions);
-  const range = zoomRange(safeUnit, config.zoom?.from, config.zoom?.to);
+  // 줌으로 보기 범위를 좁히는 것은 decimal에서만 한다(정수·분수는 눈금이 굵어
+  // 범위를 좁히면 눈금 하나만 남는다). 요구 4·7의 E2E도 decimal만 본다.
+  const range =
+    mode === 'decimal'
+      ? zoomRange(safeUnit, config.zoom?.from, config.zoom?.to)
+      : { min: 0, max: 0 };
   const cards = normalizeCards(config.cards);
   const cardValues: Record<string, string | null> = {};
   for (const card of cards) cardValues[card] = null;
 
   const minText = min.toJSON();
+  const initialWidth = viewWidth(max.sub(min), range.min);
+  const initialView = centeredView(min, max, initialWidth, min);
   return {
     mode,
     min: minText,
@@ -82,6 +99,8 @@ export function createInitialState(config: NumberLineConfig): NumberLineState {
     zoomLevel: range.min,
     zoomMin: range.min,
     zoomMax: range.max,
+    viewMin: initialView.min.toJSON(),
+    viewMax: initialView.max.toJSON(),
     points: [],
     jumps: [],
     selectedPointId: null,
@@ -97,36 +116,51 @@ export function createInitialState(config: NumberLineConfig): NumberLineState {
   };
 }
 
-/** 값 하나를 이 수직선의 눈금에 맞춘다. 줄이 여럿이면 값이 가장 가까운 눈금. */
+/** 보기 범위 안에서 그려진 눈금에 맞춘 값. 범위 밖 값은 가장 가까운 경계 눈금이 된다. */
 export function snapValue(state: NumberLineState, text: string): Rational | null {
   const value = parseValue(text);
   if (!value) return null;
-  const min = parseValue(state.min) ?? Rational.of(0);
-  const max = parseValue(state.max) ?? min.add(ONE);
+  const originMin = parseValue(state.min) ?? Rational.of(0);
+  const max = parseValue(state.max) ?? originMin.add(ONE);
+  const viewMin = parseValue(state.viewMin) ?? originMin;
+  const viewMax = parseValue(state.viewMax) ?? max;
   const rows = rowsOf(state);
   let best: Rational | null = null;
   let bestDistance: Rational | null = null;
   for (const row of rows) {
-    const tick = nearestTick(min, max, row.step, row.index, value);
+    const tick = nearestVisibleTick(row, originMin, viewMin, viewMax, value);
+    if (!tick) continue;
     const distance = tick.value.sub(value).abs();
     if (best === null || bestDistance === null || distance.compareTo(bestDistance) < 0) {
       best = tick.value;
       bestDistance = distance;
     }
   }
-  return best ?? min;
+  return best ?? viewMin;
 }
 
-/** 화면 y에 가장 가까운 줄의 눈금으로 맞춘 값. View가 줄을 고를 때 쓴다. */
+/** 화면 y에 가장 가까운 줄의 보이는 눈금으로 맞춘 값. View가 줄을 고를 때 쓴다. */
 export function snapValueNearY(state: NumberLineState, text: string, y: number): string | null {
   const value = parseValue(text);
   if (!value) return null;
-  const min = parseValue(state.min) ?? Rational.of(0);
-  const max = parseValue(state.max) ?? min.add(ONE);
+  const originMin = parseValue(state.min) ?? Rational.of(0);
+  const max = parseValue(state.max) ?? originMin.add(ONE);
+  const viewMin = parseValue(state.viewMin) ?? originMin;
+  const viewMax = parseValue(state.viewMax) ?? max;
   const rows = rowsOf(state);
   const row = rows[rowForY(y, rows)] ?? rows[0];
-  if (!row) return min.toJSON();
-  return nearestTick(min, max, row.step, row.index, value).value.toJSON();
+  if (!row) return viewMin.toJSON();
+  const tick = nearestVisibleTick(row, originMin, viewMin, viewMax, value);
+  return (tick?.value ?? viewMin).toJSON();
+}
+
+/** 지금 보이는 범위의 폭. */
+export function viewSpanOf(state: NumberLineState): Rational {
+  const originMin = parseValue(state.min) ?? Rational.of(0);
+  const max = parseValue(state.max) ?? originMin.add(ONE);
+  const viewMin = parseValue(state.viewMin) ?? originMin;
+  const viewMax = parseValue(state.viewMax) ?? max;
+  return viewMax.sub(viewMin);
 }
 
 function replacePoint(
@@ -262,7 +296,17 @@ export function reduce(state: NumberLineState, action: NumberLineAction): Number
       if (!Number.isFinite(level)) return state;
       const clamped = Math.min(Math.max(level, state.zoomMin), state.zoomMax);
       if (clamped === state.zoomLevel) return state;
-      const next = { ...state, zoomLevel: clamped };
+      const originMin = parseValue(state.min) ?? Rational.of(0);
+      const max = parseValue(state.max) ?? originMin.add(ONE);
+      const center = parseValue(action.center) ?? parseValue(state.cursor) ?? originMin;
+      const width = viewWidth(max.sub(originMin), clamped);
+      const window = centeredView(originMin, max, width, center);
+      const next = {
+        ...state,
+        zoomLevel: clamped,
+        viewMin: window.min.toJSON(),
+        viewMax: window.max.toJSON(),
+      };
       const cursor = snapValue(next, state.cursor);
       const cardCursor = state.cardCursor === null ? null : snapValue(next, state.cardCursor);
       return {
@@ -270,6 +314,36 @@ export function reduce(state: NumberLineState, action: NumberLineAction): Number
         cursor: cursor ? cursor.toJSON() : state.cursor,
         cardCursor: cardCursor ? cardCursor.toJSON() : state.cardCursor,
         counts: bumpCounts(state.counts, 'zoomed'),
+      };
+    }
+
+    case 'pan': {
+      const delta = parseValue(action.delta);
+      if (!delta || delta.isZero()) return state;
+      const originMin = parseValue(state.min) ?? Rational.of(0);
+      const max = parseValue(state.max) ?? originMin.add(ONE);
+      const currentMin = parseValue(state.viewMin) ?? originMin;
+      const currentMax = parseValue(state.viewMax) ?? max;
+      const span = currentMax.sub(currentMin);
+      if (span.isZero() || span.compareTo(max.sub(originMin)) >= 0) return state;
+      let low = currentMin.add(delta);
+      let high = currentMax.add(delta);
+      if (low.compareTo(originMin) < 0) {
+        low = originMin;
+        high = originMin.add(span);
+      }
+      if (high.compareTo(max) > 0) {
+        high = max;
+        low = max.sub(span);
+      }
+      if (low.equals(currentMin) && high.equals(currentMax)) return state;
+      const next = { ...state, viewMin: low.toJSON(), viewMax: high.toJSON() };
+      const cursor = snapValue(next, state.cursor);
+      const cardCursor = state.cardCursor === null ? null : snapValue(next, state.cardCursor);
+      return {
+        ...next,
+        cursor: cursor ? cursor.toJSON() : state.cursor,
+        cardCursor: cardCursor ? cardCursor.toJSON() : state.cardCursor,
       };
     }
 
