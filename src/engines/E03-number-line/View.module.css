@@ -1,0 +1,283 @@
+.wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.button {
+  min-height: 48px;
+  min-width: 48px;
+  padding: 0 0.9rem;
+  border: 2px solid #2f6fde;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #1d2330;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.wrap[data-target-size='64'] .button {
+  min-height: 64px;
+  min-width: 64px;
+  font-size: 1.1rem;
+}
+
+.button:disabled {
+  border-color: #aab4c6;
+  color: #7a8497;
+  cursor: not-allowed;
+}
+
+.zoomLabel,
+.badge {
+  min-width: 4.5rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 10px;
+  background: #eef3ff;
+  color: #1d2330;
+  font-weight: 700;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.badge {
+  background: #fff4e2;
+}
+
+.canvas {
+  display: block;
+  width: 100%;
+  aspect-ratio: 5 / 3;
+  border-radius: 16px;
+  background: #f7f9ff;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  outline: none;
+}
+
+.canvas:focus-visible {
+  box-shadow: 0 0 0 4px #101828 inset;
+}
+
+.background {
+  fill: #f7f9ff;
+}
+
+.edge {
+  stroke: #c8d4ea;
+  stroke-width: 3;
+}
+
+.trayLabel {
+  fill: #3c4658;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.cardBody {
+  fill: #ffffff;
+  stroke: #2f6fde;
+  stroke-width: 3;
+}
+
+.cardBody[data-selected='true'] {
+  fill: #fff4e2;
+  stroke: #101828;
+  stroke-width: 5;
+}
+
+.cardBody[data-placed='true'] {
+  fill: #eaf1ff;
+}
+
+.cardText {
+  fill: #1d2330;
+  font-size: 22px;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.cardPlacedDot {
+  fill: #0f7b6c;
+  stroke: #ffffff;
+  stroke-width: 2;
+}
+
+.canvas g[role='button'] {
+  cursor: grab;
+  outline: none;
+}
+
+.canvas g[role='button']:focus-visible .cardBody,
+.canvas g[role='button']:focus-visible .pointBody {
+  stroke: #101828;
+  stroke-width: 6;
+  stroke-dasharray: 10 5;
+}
+
+.line {
+  stroke: #1d2330;
+  stroke-width: 4;
+}
+
+.tick {
+  stroke: #7a8497;
+  stroke-width: 2;
+}
+
+.majorTick {
+  stroke: #1d2330;
+  stroke-width: 3;
+}
+
+.tickLabel {
+  fill: #5a6478;
+  font-size: 17px;
+  text-anchor: middle;
+}
+
+.majorTickLabel {
+  fill: #1d2330;
+  font-size: 20px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.rowLabel {
+  fill: #7a8497;
+  font-size: 16px;
+}
+
+.pointBody {
+  fill: #2f6fde;
+  stroke: #ffffff;
+  stroke-width: 3;
+}
+
+.pointBody[data-selected='true'] {
+  fill: #e08a1e;
+  stroke: #101828;
+  stroke-width: 6;
+}
+
+.pointCenter {
+  fill: #ffffff;
+}
+
+.pointHit {
+  fill: transparent;
+}
+
+.pointLabel {
+  fill: #1d2330;
+  font-size: 21px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.pointPreview {
+  fill: rgba(224, 138, 30, 0.18);
+  stroke: #e08a1e;
+  stroke-width: 4;
+  stroke-dasharray: 8 6;
+}
+
+.linkedBody {
+  fill: rgba(138, 59, 216, 0.16);
+  stroke: #8a3bd8;
+  stroke-width: 3;
+  stroke-dasharray: 6 4;
+}
+
+.linkedLabel {
+  fill: #6b2bb0;
+  font-size: 18px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.laser {
+  stroke: #d64545;
+  stroke-width: 2.5;
+  stroke-dasharray: 8 6;
+}
+
+.laserLabel {
+  fill: #a52a2a;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.arrowHead {
+  fill: #0f7b6c;
+}
+
+.jump {
+  stroke: #0f7b6c;
+  stroke-width: 3.5;
+}
+
+.jumpLabel {
+  fill: #0f5f55;
+  font-size: 19px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.jumpPreview {
+  stroke: #0f7b6c;
+  stroke-width: 2.5;
+  stroke-dasharray: 7 6;
+}
+
+.cursor {
+  fill: none;
+  stroke: #2f6fde;
+  stroke-width: 3;
+  stroke-dasharray: 7 5;
+}
+
+.cursorLabel {
+  fill: #2f6fde;
+  font-size: 17px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.cardGhost {
+  fill: rgba(255, 255, 255, 0.94);
+  stroke: #2f6fde;
+  stroke-width: 3;
+  stroke-dasharray: 9 6;
+}
+
+.cardGhostText {
+  fill: #1d2330;
+  font-size: 20px;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.instructions,
+.hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.hint {
+  font-weight: 600;
+}
