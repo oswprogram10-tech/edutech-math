@@ -88,6 +88,7 @@ export {
   createSharePayload,
   decodeSharePayload,
   encodeSharePayload,
+  filterShareActions,
   parseSharePayload,
   replayShare,
 } from './share';

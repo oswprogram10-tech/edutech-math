@@ -44,7 +44,7 @@ import {
   startSession,
 } from './session';
 import { applyActionWithLinks, applyControl, createSlotHistories, observationsOf } from './links';
-import { createSharePayload, encodeSharePayload } from './share';
+import { createSharePayload, encodeSharePayload, filterShareActions } from './share';
 import type { ShareAction, ShareView } from './share';
 import { ShareDialog } from './ShareDialog';
 import { toJsonValue } from './json';
@@ -379,10 +379,8 @@ function TaskStage({
     const sharedLinks = links.filter(
       (link) => sharedSlots.has(link.from) && sharedSlots.has(link.to),
     );
-    // 응답 슬롯 Action은 엔진 상태가 아니므로 빼고, 남은 슬롯 Action만 보낸다.
-    const actions = shareActionsRef.current.filter(
-      (action) => !('slot' in action) || sharedSlots.has(action.slot),
-    );
+    // 응답 슬롯 Action과, 응답만 든 묶음을 가리키는 되돌리기·다시하기를 함께 뺀다.
+    const actions = filterShareActions(shareActionsRef.current, sharedSlots);
     const payload = createSharePayload(views, sharedLinks, actions);
     const encoded = encodeSharePayload(payload);
     if (!encoded.ok) {

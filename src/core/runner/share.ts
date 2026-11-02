@@ -251,3 +251,76 @@ export function appendShareAction(
   const at = Math.max(0, Math.min(cursor, actions.length));
   return [...actions.slice(0, at), entry];
 }
+
+/**
+ * 공유 코드에 엔진 슬롯 Action만 남긴다.
+ *
+ * 실행기의 되돌리기는 슬롯을 가리지 않고 '사용자 조작 한 묶음'을 하나씩 되돌린다.
+ * 그래서 응답 슬롯 Action을 빼기만 하면, 응답 입력을 되돌린 control이 남아
+ * 교사 화면에서 엔진 조작 하나를 되돌리는 것으로 재생된다.
+ *
+ * 여기서는 전체 기록을 실행기와 같은 규칙(묶음 = History 한 칸, undo/redo =
+ * 마지막 칸 이동)으로 따라가며, 엔진 Action이 하나라도 든 묶음을 가리키는
+ * control만 남긴다. 응답만 든 묶음을 가리키는 control은 함께 버린다.
+ */
+export function filterShareActions(
+  actions: readonly ShareAction[],
+  engineSlots: ReadonlySet<string>,
+): readonly ShareAction[] {
+  const kept: ShareAction[] = [];
+  // past/future에는 묶음마다 '공유 코드에 남는 묶음인가'만 쌓는다.
+  const past: boolean[] = [];
+  const future: boolean[] = [];
+
+  let index = 0;
+  while (index < actions.length) {
+    const entry = actions[index];
+    if (!entry) {
+      index += 1;
+      continue;
+    }
+
+    if ('control' in entry) {
+      if (entry.control === 'undo') {
+        const target = past.pop();
+        if (target === undefined) {
+          index += 1;
+          continue;
+        }
+        future.push(target);
+        if (target) kept.push(entry);
+      } else {
+        const target = future.pop();
+        if (target === undefined) {
+          index += 1;
+          continue;
+        }
+        past.push(target);
+        if (target) kept.push(entry);
+      }
+      index += 1;
+      continue;
+    }
+
+    // 같은 group이 이어지는 구간이 되돌리기 한 단위다(재생과 같은 규칙).
+    const groupKey = entry.group ?? `__single-${index}`;
+    const engineActions: ShareAction[] = [];
+    let cursor = index;
+    while (cursor < actions.length) {
+      const item = actions[cursor];
+      if (!item || 'control' in item) break;
+      if ((item.group ?? `__single-${cursor}`) !== groupKey) break;
+      if (engineSlots.has(item.slot)) engineActions.push(item);
+      cursor += 1;
+    }
+
+    const groupKept = engineActions.length > 0;
+    past.push(groupKept);
+    // 새 조작은 다시하기 기록을 버린다(실행기의 History와 같다).
+    future.length = 0;
+    if (groupKept) kept.push(...engineActions);
+    index = cursor;
+  }
+
+  return kept;
+}
