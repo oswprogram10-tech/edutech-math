@@ -35,5 +35,16 @@ export default defineConfig({
   ],
   test: {
     include: ['src/**/*.test.{ts,tsx}', 'eslint/**/*.test.js'],
+    coverage: {
+      provider: 'v8',
+      include: ['src/core/math/**/*.ts'],
+      exclude: ['src/core/math/**/__tests__/**'],
+      thresholds: {
+        lines: 95,
+        functions: 95,
+        branches: 95,
+        statements: 95,
+      },
+    },
   },
 });
