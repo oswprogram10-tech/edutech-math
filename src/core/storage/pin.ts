@@ -20,6 +20,19 @@ export class PinFormatError extends Error {
   }
 }
 
+/**
+ * `crypto.subtle`을 쓸 수 없는 환경(HTTPS가 아닌 http로 접속한 같은 와이파이 기기 등)에서
+ * PIN 해시를 시도하면 던진다. 화면 안내는 T006에서 붙인다.
+ */
+export class PinUnavailableError extends Error {
+  readonly code = 'PIN_UNAVAILABLE';
+
+  constructor() {
+    super('이 환경에서는 PIN을 안전하게 해시할 수 없습니다. HTTPS로 접속해 주세요.');
+    this.name = 'PinUnavailableError';
+  }
+}
+
 function toHex(bytes: Uint8Array): string {
   return [...bytes].map((byte) => byte.toString(16).padStart(2, '0')).join('');
 }
@@ -41,20 +54,34 @@ function constantTimeEqual(a: string, b: string): boolean {
   return diff === 0;
 }
 
-/** salt를 생략하면 새 난수를 만든다. 테스트에서는 고정 salt를 넘긴다. */
-export async function hashPin(pin: string, salt = randomSalt()): Promise<TeacherPinRecord> {
+/**
+ * salt를 생략하면 새 난수를 만든다. 테스트에서는 고정 salt를 넘긴다.
+ *
+ * `crypto.subtle`은 보안 컨텍스트(HTTPS·localhost)에서만 제공된다.
+ * http로 접속한 같은 와이파이 기기에서는 `PinUnavailableError`(code: `PIN_UNAVAILABLE`)를 던진다.
+ */
+export async function hashPin(pin: string, salt?: string): Promise<TeacherPinRecord> {
   if (!isValidPin(pin)) throw new PinFormatError(pin);
-  if (salt.length === 0) throw new Error('salt가 비어 있습니다.');
 
-  const data = new TextEncoder().encode(`${salt}:${pin}`);
-  const digest = await globalThis.crypto.subtle.digest('SHA-256', data);
+  const subtle = globalThis.crypto?.subtle;
+  if (typeof subtle?.digest !== 'function') throw new PinUnavailableError();
+
+  const actualSalt = salt ?? randomSalt();
+  if (actualSalt.length === 0) throw new Error('salt가 비어 있습니다.');
+
+  const data = new TextEncoder().encode(`${actualSalt}:${pin}`);
+  const digest = await subtle.digest('SHA-256', data);
   return {
     algorithm: 'SHA-256',
-    salt,
+    salt: actualSalt,
     hash: toHex(new Uint8Array(digest)),
   };
 }
 
+/**
+ * PIN이 맞는지 확인한다.
+ * `crypto.subtle`이 없으면 hashPin과 같이 `PinUnavailableError`를 던진다.
+ */
 export async function verifyPin(pin: string, record: TeacherPinRecord): Promise<boolean> {
   if (!isValidPin(pin)) return false;
   const candidate = await hashPin(pin, record.salt);

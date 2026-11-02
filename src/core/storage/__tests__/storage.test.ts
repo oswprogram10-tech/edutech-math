@@ -2,7 +2,8 @@ import 'fake-indexeddb/auto';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MemoryStorage } from '../backend';
 import { openStorage } from '../storage';
-import type { Learner, LearningEvent, Storage, TaskProgress } from '../types';
+import type { Learner, LearningEvent, MasteryRecord, Storage, TaskProgress } from '../types';
+import { masteryId } from '../types';
 
 let sequence = 0;
 
@@ -37,6 +38,10 @@ function progress(id: string, updatedAt = 1): TaskProgress {
     status: 'in-progress',
     updatedAt,
   };
+}
+
+function mastery(learner: string, conceptId: string, p: number, updatedAt = 1): MasteryRecord {
+  return { id: masteryId(learner, conceptId), learner, conceptId, p, updatedAt };
 }
 
 const backends = [
@@ -101,8 +106,8 @@ describe.each(backends)('$name', ({ backend, create }) => {
 
   it('숙달도와 과제 진행을 저장한다', async () => {
     const storage = await open();
-    await storage.putMastery({ conceptId: 'g5s1u4.common-denominator', p: 0.5, updatedAt: 3 });
-    await storage.putMastery({ conceptId: 'g5s1u4.add', p: 0.25, updatedAt: 2 });
+    await storage.putMastery(mastery('1', 'g5s1u4.common-denominator', 0.5, 3));
+    await storage.putMastery(mastery('1', 'g5s1u4.add', 0.25, 2));
     await storage.putTaskProgress(progress('g5s1u4.A1'));
 
     expect((await storage.listMastery()).map((item) => item.conceptId)).toEqual([
@@ -110,6 +115,24 @@ describe.each(backends)('$name', ({ backend, create }) => {
       'g5s1u4.common-denominator',
     ]);
     expect(await storage.listTaskProgress()).toEqual([progress('g5s1u4.A1')]);
+  });
+
+  it('같은 기기에서 학생 두 명의 같은 개념 숙달도를 따로 남긴다', async () => {
+    const storage = await open();
+    await storage.putMastery(mastery('1', 'g5s1u4.common-denominator', 0.2, 3));
+    await storage.putMastery(mastery('2', 'g5s1u4.common-denominator', 0.8, 4));
+
+    expect(await storage.listMastery()).toEqual([
+      mastery('1', 'g5s1u4.common-denominator', 0.2, 3),
+      mastery('2', 'g5s1u4.common-denominator', 0.8, 4),
+    ]);
+
+    // 같은 학생의 같은 개념은 덮어쓴다.
+    await storage.putMastery(mastery('1', 'g5s1u4.common-denominator', 0.6, 5));
+    expect(await storage.listMastery()).toEqual([
+      mastery('1', 'g5s1u4.common-denominator', 0.6, 5),
+      mastery('2', 'g5s1u4.common-denominator', 0.8, 4),
+    ]);
   });
 
   it('설정 값을 JSON으로 저장하고 읽는다', async () => {

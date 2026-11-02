@@ -34,6 +34,7 @@ export {
   LEARNING_VERBS,
   SCREEN_COORDINATE_KEYS,
   SETTINGS_KEYS,
+  masteryId,
   taskProgressId,
 } from './types';
 
@@ -57,7 +58,7 @@ export {
   verifyTeacherPin,
 } from './settings';
 
-export { hashPin, isValidPin, PinFormatError, verifyPin } from './pin';
+export { hashPin, isValidPin, PinFormatError, PinUnavailableError, verifyPin } from './pin';
 
 export {
   decodeShareCode,

@@ -100,11 +100,21 @@ export interface LearningEvent extends LearningEventBase {
   readonly data?: JsonObject;
 }
 
+/**
+ * 개념 숙달도. 같은 개념이라도 학생마다 따로 저장한다.
+ * id는 `${learner}:${conceptId}`로 만든다. 합치기에서 이 id를 기준으로 최신 값을 고른다.
+ */
 export interface MasteryRecord {
+  readonly id: string;
+  readonly learner: LearnerId;
   readonly conceptId: string;
   /** 숙달 확률 0~1 */
   readonly p: number;
   readonly updatedAt: number;
+}
+
+export function masteryId(learner: LearnerId, conceptId: string): string {
+  return `${learner}:${conceptId}`;
 }
 
 export type TaskStatus = 'in-progress' | 'completed';

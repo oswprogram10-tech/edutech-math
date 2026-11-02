@@ -32,6 +32,11 @@ function byEventTime(a: LearningEvent, b: LearningEvent): number {
   return a.t !== b.t ? a.t - b.t : a.id.localeCompare(b.id);
 }
 
+function byMastery(a: MasteryRecord, b: MasteryRecord): number {
+  const diff = Number(a.learner) - Number(b.learner);
+  return diff !== 0 ? diff : a.conceptId.localeCompare(b.conceptId);
+}
+
 class MathExplorerDatabase extends Dexie {
   learners!: Table<Learner, string>;
   events!: Table<LearningEvent, string>;
@@ -44,7 +49,7 @@ class MathExplorerDatabase extends Dexie {
     this.version(DATABASE_VERSION).stores({
       learners: '&number, updatedAt',
       events: '&id, t, learner, unit, task, engine, verb',
-      mastery: '&conceptId, updatedAt',
+      mastery: '&id, learner, conceptId, updatedAt',
       taskProgress: '&id, learner, taskId, unit, updatedAt',
       settings: '&key',
     });
@@ -125,7 +130,7 @@ export class DexieStorage implements Storage {
 
   async listMastery(): Promise<MasteryRecord[]> {
     const records = await this.db.mastery.toArray();
-    return records.sort((a, b) => a.conceptId.localeCompare(b.conceptId));
+    return records.sort(byMastery);
   }
 
   async putTaskProgress(progress: TaskProgress): Promise<void> {
@@ -203,15 +208,15 @@ export class MemoryStorage implements Storage {
   }
 
   async putMastery(record: MasteryRecord): Promise<void> {
-    this.mastery.set(record.conceptId, record);
+    this.mastery.set(record.id, record);
   }
 
   async putMasteryRecords(records: readonly MasteryRecord[]): Promise<void> {
-    for (const record of records) this.mastery.set(record.conceptId, record);
+    for (const record of records) this.mastery.set(record.id, record);
   }
 
   async listMastery(): Promise<MasteryRecord[]> {
-    return [...this.mastery.values()].sort((a, b) => a.conceptId.localeCompare(b.conceptId));
+    return [...this.mastery.values()].sort(byMastery);
   }
 
   async putTaskProgress(progress: TaskProgress): Promise<void> {

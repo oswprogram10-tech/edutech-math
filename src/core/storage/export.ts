@@ -21,7 +21,14 @@ import type {
   Storage,
   TaskProgress,
 } from './types';
-import { EXPORT_FORMAT, EXPORT_VERSION, INTERESTS, LEARNING_VERBS, taskProgressId } from './types';
+import {
+  EXPORT_FORMAT,
+  EXPORT_VERSION,
+  INTERESTS,
+  LEARNING_VERBS,
+  masteryId,
+  taskProgressId,
+} from './types';
 
 /** QR로 담을 수 있는 압축 코드의 최대 길이(문자 수). */
 export const QR_MAX_LENGTH = 2000;
@@ -214,6 +221,9 @@ function parseEvent(value: unknown): LearningEvent {
 
 function parseMastery(value: unknown): MasteryRecord {
   if (!isRecord(value)) throw new ShapeError('mastery');
+  if (typeof value['learner'] !== 'string' || value['learner'].length === 0) {
+    throw new ShapeError('mastery.learner');
+  }
   if (typeof value['conceptId'] !== 'string' || value['conceptId'].length === 0) {
     throw new ShapeError('mastery.conceptId');
   }
@@ -221,7 +231,14 @@ function parseMastery(value: unknown): MasteryRecord {
     throw new ShapeError('mastery.p');
   }
   if (!isFiniteNumber(value['updatedAt'])) throw new ShapeError('mastery.updatedAt');
-  return { conceptId: value['conceptId'], p: value['p'], updatedAt: value['updatedAt'] };
+  // 파일에 id가 있어도 learner·conceptId로 다시 만든다. 키가 어긋나면 합치기가 틀어진다.
+  return {
+    id: masteryId(value['learner'], value['conceptId']),
+    learner: value['learner'],
+    conceptId: value['conceptId'],
+    p: value['p'],
+    updatedAt: value['updatedAt'],
+  };
 }
 
 function parseTaskProgress(value: unknown): TaskProgress {
@@ -367,7 +384,7 @@ export async function importExportFiles(
 
   const existingMastery = new Map<string, MasteryRecord>();
   for (const record of await storage.listMastery()) {
-    existingMastery.set(record.conceptId, record);
+    existingMastery.set(record.id, record);
   }
 
   const existingTaskProgress = new Map<string, TaskProgress>();
@@ -391,7 +408,7 @@ export async function importExportFiles(
       if (!current || event.t > current.t) eventById.set(event.id, event);
     }
     for (const record of file.mastery) {
-      existingMastery.set(record.conceptId, newer(existingMastery.get(record.conceptId), record));
+      existingMastery.set(record.id, newer(existingMastery.get(record.id), record));
     }
     for (const record of file.taskProgress) {
       existingTaskProgress.set(record.id, newer(existingTaskProgress.get(record.id), record));

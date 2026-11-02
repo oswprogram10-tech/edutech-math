@@ -11,7 +11,7 @@ import {
 } from '../export';
 import { saveTeacherPin } from '../settings';
 import type { ExportFile, Learner, LearningEvent, MasteryRecord, TaskProgress } from '../types';
-import { EXPORT_FORMAT, EXPORT_VERSION, taskProgressId } from '../types';
+import { EXPORT_FORMAT, EXPORT_VERSION, masteryId, taskProgressId } from '../types';
 
 function learner(number: string, interests: Learner['interests'], updatedAt = 1): Learner {
   return { number, interests, updatedAt };
@@ -31,6 +31,10 @@ function event(id: string, t: number, extra: Partial<LearningEvent> = {}): Learn
   };
 }
 
+function mastery(learner: string, conceptId: string, p: number, updatedAt = 1): MasteryRecord {
+  return { id: masteryId(learner, conceptId), learner, conceptId, p, updatedAt };
+}
+
 function file(overrides: Partial<ExportFile> = {}): ExportFile {
   return {
     format: EXPORT_FORMAT,
@@ -39,7 +43,7 @@ function file(overrides: Partial<ExportFile> = {}): ExportFile {
     exportedAt: 1_700_000_000_000,
     learners: [learner('1', ['space'])],
     events: [event('e1', 10)],
-    mastery: [{ conceptId: 'c1', p: 0.2, updatedAt: 2 }],
+    mastery: [mastery('1', 'c1', 0.2, 2)],
     taskProgress: [],
     ...overrides,
   };
@@ -50,7 +54,7 @@ describe('createExport', () => {
     const storage = new MemoryStorage();
     await storage.putLearner(learner('1', ['space'], 5));
     await storage.putEvent(event('e1', 10));
-    await storage.putMastery({ conceptId: 'c1', p: 0.3, updatedAt: 2 });
+    await storage.putMastery(mastery('1', 'c1', 0.3, 2));
     await storage.putTaskProgress({
       id: taskProgressId('1', 'g5s1u4.A1'),
       learner: '1',
@@ -159,7 +163,17 @@ describe('parseExportFile', () => {
       ok: false,
       reason: 'invalid-shape',
     });
-    expect(parseExportFile({ ...file(), mastery: [{ conceptId: 'c1', p: 1.5 }] })).toMatchObject({
+    expect(
+      parseExportFile({
+        ...file(),
+        mastery: [{ learner: '1', conceptId: 'c1', p: 1.5, updatedAt: 1 }],
+      }),
+    ).toMatchObject({
+      ok: false,
+      reason: 'invalid-shape',
+    });
+    // 학생 구분이 없는 예전 숙달도 기록은 어느 학생 것인지 알 수 없어 건너뛴다.
+    expect(parseExportFile({ ...file(), mastery: [{ conceptId: 'c1', p: 0.5 }] })).toMatchObject({
       ok: false,
       reason: 'invalid-shape',
     });
@@ -183,7 +197,7 @@ describe('importExportFiles', () => {
     const storage = new MemoryStorage();
     await storage.putLearner(learner('1', ['space'], 5));
     await storage.putEvent(event('e1', 10, { verb: 'started' }));
-    await storage.putMastery({ conceptId: 'c1', p: 0.4, updatedAt: 10 });
+    await storage.putMastery(mastery('1', 'c1', 0.4, 10));
     await storage.putTaskProgress({
       id: taskProgressId('1', 't1'),
       learner: '1',
@@ -200,10 +214,7 @@ describe('importExportFiles', () => {
     const incoming = file({
       learners: [learner('1', ['game'], 10), learner('2', ['cooking'], 1)],
       events: [event('e1', 10), event('e2', 20)],
-      mastery: [
-        { conceptId: 'c1', p: 0.2, updatedAt: 5 },
-        { conceptId: 'c2', p: 0.3, updatedAt: 1 },
-      ],
+      mastery: [mastery('1', 'c1', 0.2, 5), mastery('1', 'c2', 0.3, 1)],
       taskProgress: [
         {
           id: taskProgressId('1', 't1'),
@@ -248,8 +259,8 @@ describe('importExportFiles', () => {
     // 같은 id의 기존 이벤트는 그대로 둔다.
     expect(events[0]?.verb).toBe('started');
     expect(await storage.listMastery()).toEqual([
-      { conceptId: 'c1', p: 0.4, updatedAt: 10 },
-      { conceptId: 'c2', p: 0.3, updatedAt: 1 },
+      mastery('1', 'c1', 0.4, 10),
+      mastery('1', 'c2', 0.3, 1),
     ]);
     const progress = await storage.listTaskProgress();
     expect(progress).toEqual([
@@ -274,7 +285,7 @@ describe('importExportFiles', () => {
 
   it('더 최신 기록이 이긴다', async () => {
     const storage = await seededStorage();
-    const newer: MasteryRecord = { conceptId: 'c1', p: 0.6, updatedAt: 20 };
+    const newer: MasteryRecord = mastery('1', 'c1', 0.6, 20);
     const newerProgress: TaskProgress = {
       id: taskProgressId('1', 't1'),
       learner: '1',
@@ -291,6 +302,31 @@ describe('importExportFiles', () => {
     expect(summary.added.mastery).toBe(0);
     expect(await storage.listMastery()).toEqual([newer]);
     expect(await storage.listTaskProgress()).toEqual([newerProgress]);
+  });
+
+  it('학생 두 명의 내보내기 파일을 합치면 두 학생 숙달도가 모두 남는다', async () => {
+    const storage = new MemoryStorage();
+    const conceptId = 'g5s1u4.common-denominator';
+    const fromStudent1 = file({
+      learners: [learner('1', ['space'])],
+      events: [],
+      mastery: [mastery('1', conceptId, 0.2, 5)],
+    });
+    const fromStudent2 = file({
+      learners: [learner('2', ['game'])],
+      events: [],
+      mastery: [mastery('2', conceptId, 0.8, 6)],
+    });
+
+    const summary = await importExportFiles(storage, [fromStudent1, JSON.stringify(fromStudent2)]);
+
+    expect(summary.imported).toBe(2);
+    expect(summary.skipped).toEqual([]);
+    expect(summary.added.mastery).toBe(2);
+    expect(await storage.listMastery()).toEqual([
+      mastery('1', conceptId, 0.2, 5),
+      mastery('2', conceptId, 0.8, 6),
+    ]);
   });
 
   it('같은 파일 안의 같은 이벤트 id는 더 늦은 t를 남긴다', async () => {

@@ -1,8 +1,12 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MemoryStorage } from '../backend';
-import { hashPin, isValidPin, PinFormatError, verifyPin } from '../pin';
+import { hashPin, isValidPin, PinFormatError, PinUnavailableError, verifyPin } from '../pin';
 import { saveTeacherPin, verifyTeacherPin } from '../settings';
 import type { JsonObject } from '../types';
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 describe('PIN 형식', () => {
   it('숫자 4~6자리만 받는다', () => {
@@ -43,6 +47,20 @@ describe('PIN 해시', () => {
     expect(await verifyPin('4821', record)).toBe(true);
     expect(await verifyPin('4822', record)).toBe(false);
     expect(await verifyPin('12', record)).toBe(false);
+  });
+
+  it('crypto.subtle이 없으면 PinUnavailableError를 던진다', async () => {
+    // http로 접속한 같은 와이파이 기기처럼 보안 컨텍스트가 아닌 환경.
+    vi.stubGlobal('crypto', {});
+
+    await expect(hashPin('1234')).rejects.toBeInstanceOf(PinUnavailableError);
+    await expect(hashPin('1234', 'salt')).rejects.toMatchObject({
+      name: 'PinUnavailableError',
+      code: 'PIN_UNAVAILABLE',
+    });
+    await expect(
+      verifyPin('1234', { algorithm: 'SHA-256', salt: 'salt', hash: '0'.repeat(64) }),
+    ).rejects.toBeInstanceOf(PinUnavailableError);
   });
 });
 
