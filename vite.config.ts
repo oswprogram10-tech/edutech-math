@@ -9,6 +9,11 @@ const base = process.env.BASE_PATH ?? '/';
 
 export default defineConfig({
   base,
+  // E2E가 저장소 모듈을 직접 import한다. 첫 요청 때 의존성 최적화가 일어나
+  // 페이지가 다시 로드되면 테스트가 흔들리므로 미리 묶어 둔다.
+  optimizeDeps: {
+    include: ['dexie', 'lz-string', 'qrcode-generator'],
+  },
   plugins: [
     react(),
     VitePWA({
