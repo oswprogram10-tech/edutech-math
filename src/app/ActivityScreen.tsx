@@ -52,6 +52,7 @@ export function ActivityScreen({ activityId }: ActivityScreenProps) {
   const [loaded, setLoaded] = useState<LoadedActivity | null>(null);
   const [error, setError] = useState<'load' | 'notfound' | null>(null);
   const [currentTask, setCurrentTask] = useState<ContentTask | null>(null);
+  const [hintText, setHintText] = useState<string | null>(null);
   const [autoRead, setAutoRead] = useState(false);
   const [largeTarget, setLargeTarget] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -104,6 +105,10 @@ export function ActivityScreen({ activityId }: ActivityScreenProps) {
 
   const onTaskChange = useCallback((task: ContentTask) => {
     setCurrentTask(task);
+  }, []);
+
+  const onHint = useCallback((text: string | null) => {
+    setHintText(text);
   }, []);
 
   const prompt = currentTask?.prompt ?? '';
@@ -202,6 +207,16 @@ export function ActivityScreen({ activityId }: ActivityScreenProps) {
         </a>
         <h1 className={styles.title}>{loaded.activity.title}</h1>
         <div className={styles.topActions}>
+          {ttsAvailable && hintText ? (
+            <button
+              type="button"
+              className={styles.iconButton}
+              aria-label={activityStrings.readHint}
+              onClick={() => speak(hintText)}
+            >
+              <SpeakerIcon />
+            </button>
+          ) : null}
           {ttsAvailable ? (
             <button
               type="button"
@@ -277,6 +292,7 @@ export function ActivityScreen({ activityId }: ActivityScreenProps) {
           activityId={loaded.activity.id}
           targetSize={targetSize}
           onTaskChange={onTaskChange}
+          onHint={onHint}
           onExit={goToMap}
         />
       </div>

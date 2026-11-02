@@ -89,4 +89,18 @@ export class TaskRecorder {
   failed(): Promise<LearningEvent | undefined> {
     return this.record('failed');
   }
+
+  /** 힌트를 보여 줬을 때. `rule`은 hints 배열 위치 또는 "default". */
+  hinted(
+    level: number,
+    rule: number | 'default',
+    misconceptions: readonly string[],
+  ): Promise<LearningEvent | undefined> {
+    return this.record('hinted', { level, rule, misconceptions: [...misconceptions] });
+  }
+
+  /** ③ 역추적 요청. 대상이 없으면 빈 data로 남긴다. */
+  backtracked(target: string | undefined): Promise<LearningEvent | undefined> {
+    return this.record('backtracked', target === undefined ? {} : { target });
+  }
 }

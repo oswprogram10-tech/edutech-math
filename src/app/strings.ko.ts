@@ -68,6 +68,7 @@ export const mapStrings = {
 export const activityStrings = {
   back: '활동 목록으로',
   readPrompt: '발문 읽기',
+  readHint: '힌트 읽어 주기',
   settings: '설정',
   settingsMenu: '활동 설정',
   autoRead: '발문 자동 읽기',

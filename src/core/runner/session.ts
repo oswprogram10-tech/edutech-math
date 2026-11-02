@@ -6,7 +6,7 @@ export function startSession(taskIds: readonly string[]): RunnerSession {
   if (new Set(taskIds).size !== taskIds.length) {
     throw new Error('과제 ID가 중복됩니다.');
   }
-  return { taskIds: [...taskIds], index: 0, status: 'active', failures: {} };
+  return { taskIds: [...taskIds], index: 0, status: 'active', failures: {}, hintLevels: {} };
 }
 
 export function currentTaskId(session: RunnerSession): string | undefined {
@@ -21,16 +21,28 @@ export function isSessionComplete(session: RunnerSession): boolean {
   return session.status === 'passed' && !hasNextTask(session);
 }
 
-/** 제출 결과를 반영한다. 틀리면 그 과제의 실패 횟수가 하나 늘어난다. */
+/**
+ * 제출 결과를 반영한다. 틀리면 그 과제의 실패 횟수가 하나 늘어난다.
+ * `hintLevel`은 이번 제출에서 보여 준 힌트 단계(0이면 없음)다.
+ * 과제별 최고 단계는 통과한 뒤에도 남긴다(T013 숙달 계산).
+ */
 export function sessionAfterSubmit(
   session: RunnerSession,
   taskId: string,
   passed: boolean,
+  hintLevel = 0,
 ): RunnerSession {
   if (taskId !== currentTaskId(session)) return session;
-  if (passed) return { ...session, status: 'passed' };
+  const previousLevel = session.hintLevels[taskId] ?? 0;
+  const nextLevel = Math.max(previousLevel, Math.min(Math.max(hintLevel, 0), 3));
+  const withHint =
+    nextLevel === previousLevel
+      ? session
+      : { ...session, hintLevels: { ...session.hintLevels, [taskId]: nextLevel } };
+
+  if (passed) return { ...withHint, status: 'passed' };
   return {
-    ...session,
+    ...withHint,
     status: 'failed',
     failures: {
       ...session.failures,
@@ -51,4 +63,9 @@ export function advanceSession(session: RunnerSession): RunnerSession {
 
 export function failureCount(session: RunnerSession, taskId: string): number {
   return session.failures[taskId] ?? 0;
+}
+
+/** 그 과제에서 지금까지 보여 준 가장 높은 힌트 단계(0~3). */
+export function shownHintLevel(session: RunnerSession, taskId: string): number {
+  return session.hintLevels[taskId] ?? 0;
 }

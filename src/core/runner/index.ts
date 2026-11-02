@@ -1,8 +1,10 @@
 // T005 활동 실행기 공개 API. 앱은 이 파일만 import한다.
 // zod 콘텐츠 스키마는 check:specs 테스트에서만 쓰고 여기서는 공개하지 않는다.
 export type {
+  BacktrackRequest,
   ContentActivity,
   ContentTask,
+  DiagnoseSpec,
   RunnerSession,
   SlotAction,
   SlotControl,
@@ -89,6 +91,7 @@ export {
   isSessionComplete,
   sessionAfterEdit,
   sessionAfterSubmit,
+  shownHintLevel,
   startSession,
 } from './session';
 

@@ -1,24 +1,34 @@
 /**
  * 활동 실행기 화면.
  *
- * 콘텐츠 한 단원을 과제 순서대로 보여 주고, 조작·채점·기록을 맡는다.
+ * 콘텐츠 한 단원을 과제 순서대로 보여 주고, 조작·채점·기록·힌트를 맡는다.
  * 앱은 라우트와 로딩 화면만 두고 이 컴포넌트를 재사용한다.
  * 실패해도 정답·정답 상태는 화면에 내보내지 않는다.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ComponentType } from 'react';
-import type { EngineId, LoadedEngine, TargetSize } from '../engine-sdk';
+import { OverlayLayer } from '../engine-sdk';
+import type { EngineId, LoadedEngine, Observation, TargetSize } from '../engine-sdk';
 import type { LearnerId, Storage, TaskStatus as StorageTaskStatus } from '../storage';
 import { taskProgressId } from '../storage';
 import {
+  backtrackTarget,
+  diagnoseObservation,
+  feedbackStrings,
+  hintLevelFor,
+  selectHint,
+} from '../feedback';
+import type { HintSelection } from '../feedback';
+import {
   advanceSession,
+  failureCount,
   isSessionComplete,
   sessionAfterEdit,
   sessionAfterSubmit,
   startSession,
 } from './session';
 import { applyActionWithLinks, applyControl, createSlotHistories, observationsOf } from './links';
-import { evaluateGoal } from './goal';
+import { evaluateGoal, resolveObservationPath } from './goal';
 import { RESPONSE_SLOT, judgeObservation as mergeJudgeObservation } from './response';
 import { TaskRecorder } from './recorder';
 import { runnerStrings } from './strings.ko';
@@ -26,6 +36,7 @@ import { taskSlotViews } from './views';
 import type { SlotHistories } from './links';
 import type { TaskSlotView } from './views';
 import type {
+  BacktrackRequest,
   ContentActivity,
   ContentTask,
   RunnerSession,
@@ -47,6 +58,18 @@ interface FlatTask {
   readonly task: ContentTask;
 }
 
+/**
+ * `LoadedEngine`은 타입을 지운 정의라 오버레이 props가 `never`다.
+ * 실행기는 이미 슬롯 상태를 `unknown`으로 들고 다니므로 여기서만 좁힌 모양으로 바꾼다.
+ */
+const Overlay = OverlayLayer as unknown as ComponentType<{
+  definition: LoadedEngine;
+  overlay: string;
+  config: unknown;
+  state: unknown;
+  args?: unknown;
+}>;
+
 function putProgress(
   storage: Storage | undefined,
   learner: LearnerId,
@@ -67,6 +90,14 @@ function putProgress(
     .catch((error: unknown) => console.warn('[runner] 과제 진행을 저장하지 못했습니다.', error));
 }
 
+/** 첫 수 응답 필드의 학생 표기. 힌트 `{student}`에 쓴다. */
+function studentRawOf(task: ContentTask, observation: Observation): string | undefined {
+  const field = task.response?.fields.find((item) => item.kind === 'number');
+  if (!field) return undefined;
+  const found = resolveObservationPath(observation, `response.${field.id}.raw`);
+  return found.found && typeof found.value === 'string' ? found.value : undefined;
+}
+
 interface TaskStageProps {
   readonly content: UnitContent;
   readonly activity: ContentActivity;
@@ -79,10 +110,14 @@ interface TaskStageProps {
   readonly targetSize: TargetSize;
   readonly status: TaskStatus;
   readonly isLast: boolean;
-  readonly onResult: (passed: boolean) => void;
+  /** 이 과제에서 이미 틀린 횟수(힌트 단계의 시작점). */
+  readonly initialFailures: number;
+  readonly onResult: (passed: boolean, hintLevel?: number) => void;
   readonly onEdit: () => void;
   readonly onNext: () => void;
   readonly onFinish?: () => void;
+  readonly onHint?: (text: string | null) => void;
+  readonly onBacktrack?: (request: BacktrackRequest) => void;
 }
 
 function TaskStage({
@@ -97,16 +132,31 @@ function TaskStage({
   targetSize,
   status,
   isLast,
+  initialFailures,
   onResult,
   onEdit,
   onNext,
   onFinish,
+  onHint,
+  onBacktrack,
 }: TaskStageProps) {
   const [histories, setHistories] = useState<SlotHistories>(() => createSlotHistories(slots));
+  const [hint, setHint] = useState<HintSelection | null>(null);
   const historiesRef = useRef(histories);
   const startedRef = useRef(false);
   const passedRef = useRef(false);
   const groupRef = useRef(0);
+  const failureRef = useRef(initialFailures);
+  const onHintRef = useRef(onHint);
+  const onBacktrackRef = useRef(onBacktrack);
+
+  useEffect(() => {
+    onHintRef.current = onHint;
+    onBacktrackRef.current = onBacktrack;
+  }, [onHint, onBacktrack]);
+
+  // 과제가 바뀌면(TaskStage가 다시 만들어지면) 읽어 주기 문장을 지운다.
+  useEffect(() => () => onHintRef.current?.(null), []);
 
   const recorder = useMemo(
     () =>
@@ -145,6 +195,8 @@ function TaskStage({
     (recordSubmission: boolean) => {
       if (passedRef.current) return;
       passedRef.current = true;
+      setHint(null);
+      onHintRef.current?.(null);
       if (recordSubmission) void recorder.submitted();
       void recorder.passed();
       putProgress(storage, learner, content, task.id, 'completed');
@@ -164,6 +216,46 @@ function TaskStage({
     },
     [judgeView, slots, task.goal, task.response],
   );
+
+  /** 틀린 제출에 힌트 사다리를 한 칸 올린다. 힌트는 제출이 틀렸을 때만 나온다. */
+  const showHint = useCallback(() => {
+    failureRef.current += 1;
+    const level = hintLevelFor(failureRef.current);
+
+    const observations = observationsOf(slots, historiesRef.current);
+    const observation =
+      mergeJudgeObservation(
+        judgeView ? observations[judgeView.slot] : undefined,
+        task.response ? observations[RESPONSE_SLOT] : undefined,
+      ) ?? {};
+    const misconceptions = diagnoseObservation(task, observation);
+    const selection = selectHint({
+      hints: task.hints,
+      observation,
+      misconceptions,
+      level,
+      engine: judgeView?.definition,
+      vars: task.hintVars,
+      student: studentRawOf(task, observation),
+    });
+
+    setHint(selection);
+    onHintRef.current?.(selection.text);
+    void recorder.hinted(
+      level,
+      selection.kind === 'rule' ? selection.index : 'default',
+      misconceptions,
+    );
+
+    if (level === 3) {
+      const target = backtrackTarget(
+        selection.kind === 'rule' ? selection.rule.backtrack : undefined,
+        misconceptions,
+      );
+      void recorder.backtracked(target);
+      onBacktrackRef.current?.({ taskId: task.id, target, misconceptions });
+    }
+  }, [judgeView, recorder, slots, task]);
 
   const handleAction = (slot: string, action: unknown) => {
     if (status === 'passed') return;
@@ -200,7 +292,8 @@ function TaskStage({
       return;
     }
     void recorder.failed();
-    onResult(false);
+    showHint();
+    onResult(false, hintLevelFor(failureRef.current));
   };
 
   useEffect(() => {
@@ -229,6 +322,13 @@ function TaskStage({
 
   const canUndo = histories.past.length > 0 && status !== 'passed';
   const canRedo = histories.future.length > 0 && status !== 'passed';
+
+  const show = hint?.kind === 'rule' ? hint.rule.show : undefined;
+  const overlayTarget = show ? slots.find((slot) => slot.definition.id === show.engine) : undefined;
+  const overlayVisible =
+    show !== undefined &&
+    overlayTarget !== undefined &&
+    displaySlots.some((slot) => slot.slot === overlayTarget.slot);
 
   return (
     <section className={styles.task}>
@@ -264,6 +364,15 @@ function TaskStage({
                   definitions,
                 } satisfies Record<string, unknown>)}
               />
+              {show && overlayVisible && overlayTarget?.slot === slot.slot ? (
+                <Overlay
+                  definition={overlayTarget.definition}
+                  overlay={show.overlay}
+                  config={overlayTarget.config}
+                  state={histories.present[overlayTarget.slot]}
+                  args={show.args}
+                />
+              ) : null}
             </section>
           );
         })}
@@ -283,6 +392,37 @@ function TaskStage({
           <p className={styles.failed} role="alert">
             {runnerStrings.failed}
           </p>
+        ) : null}
+        {hint && status !== 'passed' ? (
+          <section
+            className={styles.hint}
+            data-testid="hint"
+            data-hint-level={hint.level}
+            aria-label={runnerStrings.hint}
+          >
+            {hint.text ? (
+              <p className={styles.hintText} data-testid="hint-text">
+                {hint.text}
+              </p>
+            ) : null}
+            {show && !overlayVisible && overlayTarget ? (
+              <div className={styles.hintVisual} data-testid="hint-overlay">
+                <Overlay
+                  definition={overlayTarget.definition}
+                  overlay={show.overlay}
+                  config={overlayTarget.config}
+                  state={histories.present[overlayTarget.slot]}
+                  args={show.args}
+                />
+              </div>
+            ) : null}
+            {hint.level === 3 && !onBacktrack ? (
+              <div className={styles.helpCard} data-testid="hint-help" role="status">
+                <p className={styles.helpTitle}>{feedbackStrings.helpTitle}</p>
+                <p className={styles.helpBody}>{feedbackStrings.helpBody}</p>
+              </div>
+            ) : null}
+          </section>
         ) : null}
         {status === 'passed' ? (
           <>
@@ -332,6 +472,10 @@ export interface ActivityRunnerProps {
   readonly onTaskChange?: (task: ContentTask) => void;
   /** 첫 화면으로 돌아가기. 없으면 나가기 버튼을 그리지 않는다. */
   readonly onExit?: () => void;
+  /** 힌트 문장이 바뀔 때 알린다. 없으면 화면에만 보인다. */
+  readonly onHint?: (text: string | null) => void;
+  /** ③ 역추적 요청. 없으면 실행기가 '선생님께 도움을 요청해요' 카드를 보여 준다. */
+  readonly onBacktrack?: (request: BacktrackRequest) => void;
 }
 
 export function ActivityRunner({
@@ -343,6 +487,8 @@ export function ActivityRunner({
   targetSize = DEFAULT_TARGET_SIZE,
   onTaskChange,
   onExit,
+  onHint,
+  onBacktrack,
 }: ActivityRunnerProps) {
   const tasks = useMemo<FlatTask[]>(() => {
     const activities = activityId
@@ -405,12 +551,15 @@ export function ActivityRunner({
         targetSize={targetSize}
         status={complete ? 'passed' : session.status}
         isLast={session.index === tasks.length - 1}
-        onResult={(passed) =>
-          setSession((value) => sessionAfterSubmit(value, current.task.id, passed))
+        initialFailures={failureCount(session, current.task.id)}
+        onResult={(passed, hintLevel = 0) =>
+          setSession((value) => sessionAfterSubmit(value, current.task.id, passed, hintLevel))
         }
         onEdit={() => setSession(sessionAfterEdit)}
         onNext={() => setSession(advanceSession)}
         onFinish={onExit}
+        onHint={onHint}
+        onBacktrack={onBacktrack}
       />
     </main>
   );
