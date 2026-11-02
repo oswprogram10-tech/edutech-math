@@ -36,6 +36,7 @@ import type {
   OverlayState,
   PartitionState,
   ShadeState,
+  ShowValue,
 } from './types';
 import styles from './View.module.css';
 
@@ -97,6 +98,11 @@ function mixedTextOf(value: Rational): string {
   if (numerator === 0) return String(whole);
   if (whole === 0) return `${numerator}/${denominator}`;
   return `${whole} ${numerator}/${denominator}`;
+}
+
+/** 화면 수치 문구 수준. 기본은 숨김(정답 노출 금지). */
+function showValueOf(config: FractionModelConfig): ShowValue {
+  return config.showValue ?? 'none';
 }
 
 function fillFor(cpa: 'C' | 'P' | 'A', selected: boolean): string {
@@ -506,6 +512,7 @@ function ShadeView({ config, state, dispatch, cpa, readOnly, targetSize }: ModeP
   const outline = useMemo(() => outlineFor(state.shape), [state.shape]);
   const raw = `${state.shaded.length}/${state.parts}`;
   const reduced = Rational.of(state.shaded.length, state.parts).toString();
+  const showValue = showValueOf(config);
   const refineFactors = (config.refine ?? []).filter((factor) => factor === 2 || factor === 3);
   const coarsenFactors = config.coarsen
     ? [2, 3, 5].filter((factor) => state.parts % factor === 0)
@@ -582,7 +589,11 @@ function ShadeView({ config, state, dispatch, cpa, readOnly, targetSize }: ModeP
       </CanvasFrame>
 
       <div className={styles.readoutRow}>
-        <p className={styles.readout}>{S.currentFraction(raw, reduced)}</p>
+        {showValue !== 'none' ? (
+          <p className={styles.readout}>
+            {S.currentFraction(raw, showValue === 'raw-and-reduced' ? reduced : raw)}
+          </p>
+        ) : null}
         {readOnly ? <p className={styles.instructions}>{S.readOnlyHint}</p> : null}
       </div>
       <p className={styles.instructions}>
@@ -596,9 +607,17 @@ function ShadeView({ config, state, dispatch, cpa, readOnly, targetSize }: ModeP
 // compare
 // ─────────────────────────────────────────────────────────────
 
-function CompareView({ state, dispatch, cpa, readOnly, targetSize }: ModeProps<CompareState>) {
+function CompareView({
+  state,
+  config,
+  dispatch,
+  cpa,
+  readOnly,
+  targetSize,
+}: ModeProps<CompareState>) {
   const svgRef = useRef<SVGSVGElement>(null);
   const rowHeight = Math.min(110, 380 / Math.max(1, state.bars.length));
+  const showValue = showValueOf(config);
   const top = 90;
   return (
     <div className={styles.wrap} data-target-size={targetSize} data-cpa={cpa}>
@@ -668,12 +687,16 @@ function CompareView({ state, dispatch, cpa, readOnly, targetSize }: ModeProps<C
                   </g>
                 );
               })}
-              <text x={820} y={y + rowHeight / 2 + 8} fill={INK} fontSize={22}>
-                {S.barValue(
-                  `${bar.shaded.length}/${bar.parts}`,
-                  Rational.of(bar.shaded.length, bar.parts).toString(),
-                )}
-              </text>
+              {showValue !== 'none' ? (
+                <text x={820} y={y + rowHeight / 2 + 8} fill={INK} fontSize={22}>
+                  {S.barValue(
+                    `${bar.shaded.length}/${bar.parts}`,
+                    showValue === 'raw-and-reduced'
+                      ? Rational.of(bar.shaded.length, bar.parts).toString()
+                      : `${bar.shaded.length}/${bar.parts}`,
+                  )}
+                </text>
+              ) : null}
             </g>
           );
         })}
@@ -689,8 +712,16 @@ function CompareView({ state, dispatch, cpa, readOnly, targetSize }: ModeProps<C
 // overlay-slicer
 // ─────────────────────────────────────────────────────────────
 
-function OverlayView({ state, dispatch, cpa, readOnly, targetSize }: ModeProps<OverlayState>) {
+function OverlayView({
+  state,
+  config,
+  dispatch,
+  cpa,
+  readOnly,
+  targetSize,
+}: ModeProps<OverlayState>) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const showValue = showValueOf(config);
   const a = parseFraction(state.a, '1/2');
   const b = parseFraction(state.b, '1/3');
   const denA = denominatorNumber(a) ?? 2;
@@ -801,31 +832,39 @@ function OverlayView({ state, dispatch, cpa, readOnly, targetSize }: ModeProps<O
                 />
               );
             })}
-            <text
-              x={square.x + square.size / 2}
-              y={square.y + square.size + 46}
-              textAnchor="middle"
-              fill={INK}
-              fontSize={22}
-              fontWeight={700}
-            >
-              {S.commonGrid(grid)}
-            </text>
-            <text
-              x={square.x + square.size / 2}
-              y={square.y + square.size + 82}
-              textAnchor="middle"
-              fill={INK}
-              fontSize={20}
-            >
-              {S.aCells(aCells)} · {S.bCells(bCells)}
-            </text>
+            {showValue !== 'none' ? (
+              <>
+                <text
+                  x={square.x + square.size / 2}
+                  y={square.y + square.size + 46}
+                  textAnchor="middle"
+                  fill={INK}
+                  fontSize={22}
+                  fontWeight={700}
+                >
+                  {S.commonGrid(grid)}
+                </text>
+                <text
+                  x={square.x + square.size / 2}
+                  y={square.y + square.size + 82}
+                  textAnchor="middle"
+                  fill={INK}
+                  fontSize={20}
+                >
+                  {S.aCells(aCells)} · {S.bCells(bCells)}
+                </text>
+              </>
+            ) : null}
           </>
         )}
       </CanvasFrame>
       <p className={styles.instructions}>
-        {readOnly ? S.readOnlyHint : S.instructions.overlay}{' '}
-        {state.overlaid ? S.commonGrid(grid) : S.commonGridNone}
+        {readOnly ? S.readOnlyHint : S.instructions.overlay}
+        {state.overlaid
+          ? showValue !== 'none'
+            ? ` ${S.commonGrid(grid)}`
+            : null
+          : ` ${S.commonGridNone}`}
       </p>
     </div>
   );
@@ -915,6 +954,7 @@ function DiscreteView({
   targetSize,
 }: ModeProps<DiscreteState>) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const showValue = showValueOf(config);
   const groups = Math.max(1, Math.floor(state.items / state.groupSize));
   const options = (config.groupSizeOptions ?? [2, 3, 4, 6]).filter(
     (size) => size > 0 && state.items % size === 0,
@@ -995,14 +1035,18 @@ function DiscreteView({
           );
         })}
       </CanvasFrame>
-      <p className={styles.readout}>
-        {S.fractionOf(
-          state.items,
-          state.selectedGroups.length,
-          groups,
-          state.selectedGroups.length * state.groupSize,
-        )}
-      </p>
+      {showValue !== 'none' ? (
+        <p className={styles.readout}>
+          {showValue === 'raw-and-reduced'
+            ? S.fractionOf(
+                state.items,
+                state.selectedGroups.length,
+                groups,
+                state.selectedGroups.length * state.groupSize,
+              )
+            : S.fractionOfRaw(state.items, state.selectedGroups.length, groups)}
+        </p>
+      ) : null}
       <p className={styles.instructions}>
         {readOnly ? S.readOnlyHint : S.instructions.discrete} {S.keyboardHint}
       </p>
@@ -1069,11 +1113,16 @@ function ItemIcon({
 // mixed
 // ─────────────────────────────────────────────────────────────
 
-function MixedView({ state, dispatch, cpa, readOnly, targetSize }: ModeProps<MixedState>) {
+function MixedView({ state, config, dispatch, cpa, readOnly, targetSize }: ModeProps<MixedState>) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const showValue = showValueOf(config);
   if (state.kind === 'problem') {
     const a = parseFraction(state.a ?? undefined, '1/2');
     const b = parseFraction(state.b ?? undefined, '1/3');
+    const broken = state.borrowed && state.naturalPart !== null && state.pieceCount !== null;
+    const naturalPart = Math.min(state.naturalPart ?? 0, 8);
+    const pieceCount = Math.min(state.pieceCount ?? 0, 42);
+    const pieceColumns = 10;
     return (
       <div className={styles.wrap} data-target-size={targetSize} data-cpa={cpa}>
         <div className={styles.toolbar} role="toolbar" aria-label={S.canvasLabel}>
@@ -1083,25 +1132,78 @@ function MixedView({ state, dispatch, cpa, readOnly, targetSize }: ModeProps<Mix
           >
             {state.op === '-' ? S.subtract : S.combine}
           </ToolbarButton>
+          {state.allowBreakWhole ? (
+            <ToolbarButton
+              onClick={() => dispatch({ type: 'break-whole' })}
+              disabled={readOnly || state.borrowed || state.wholes <= 0}
+              pressed={state.borrowed}
+            >
+              {S.breakWhole}
+            </ToolbarButton>
+          ) : null}
         </div>
         <CanvasFrame svgRef={svgRef} label={S.canvasLabel}>
-          <ValueBars
-            value={a}
-            cells={Math.max(1, denominatorNumber(a) ?? 2)}
-            y={120}
-            label={state.a ?? ''}
-            cpa={cpa}
-          />
-          <ValueBars
-            value={b}
-            cells={Math.max(1, denominatorNumber(b) ?? 2)}
-            y={310}
-            label={state.b ?? ''}
-            cpa={cpa}
-          />
-          {state.result ? (
+          {broken ? (
+            <>
+              {Array.from({ length: naturalPart }, (_, index) => (
+                <WholeBox
+                  key={`broken-whole-${index}`}
+                  x={120 + index * 92}
+                  y={70}
+                  size={72}
+                  shape={state.shape}
+                  cpa={cpa}
+                />
+              ))}
+              {Array.from({ length: pieceCount }, (_, index) => {
+                const column = index % pieceColumns;
+                const row = Math.floor(index / pieceColumns);
+                return (
+                  <circle
+                    key={`broken-piece-${index}`}
+                    cx={150 + column * 64}
+                    cy={230 + row * 50}
+                    r={18}
+                    fill={fillFor(cpa, true)}
+                    stroke={INK}
+                    strokeWidth={2}
+                  />
+                );
+              })}
+              <ValueBars
+                value={b}
+                cells={Math.max(1, denominatorNumber(b) ?? 2)}
+                y={390}
+                label={state.b ?? ''}
+                cpa={cpa}
+                tone={ORANGE}
+              />
+            </>
+          ) : (
+            <>
+              <ValueBars
+                value={a}
+                cells={Math.max(1, denominatorNumber(a) ?? 2)}
+                y={120}
+                label={state.a ?? ''}
+                cpa={cpa}
+              />
+              <ValueBars
+                value={b}
+                cells={Math.max(1, denominatorNumber(b) ?? 2)}
+                y={310}
+                label={state.b ?? ''}
+                cpa={cpa}
+              />
+            </>
+          )}
+          {showValue !== 'none' && state.result ? (
             <text x={500} y={560} textAnchor="middle" fill={INK} fontSize={26} fontWeight={700}>
-              {S.resultLabel(state.result)}
+              {S.resultLabel(
+                showValue === 'raw-and-reduced'
+                  ? mixedTextOf(Rational.parse(state.result))
+                  : state.result,
+              )}
             </text>
           ) : null}
         </CanvasFrame>
@@ -1113,10 +1215,17 @@ function MixedView({ state, dispatch, cpa, readOnly, targetSize }: ModeProps<Mix
   const total = state.wholes * state.denominator + state.pieces;
   const value = Rational.of(total, state.denominator);
   const mixedText = mixedTextOf(value);
+  const improper = `${total}/${state.denominator}`;
   const canFuse = state.pieces >= state.denominator;
   const canBreak = state.allowBreakWhole && state.wholes > 0;
   const wholeBoxes = Math.min(state.wholes, 8);
   const pieceRadius = state.denominator > 12 ? 12 : 20;
+  const conversionText =
+    showValue === 'none'
+      ? null
+      : showValue === 'raw'
+        ? S.improperOnly(improper)
+        : S.mixedConversion(improper, mixedText);
 
   return (
     <div className={styles.wrap} data-target-size={targetSize} data-cpa={cpa}>
@@ -1142,9 +1251,11 @@ function MixedView({ state, dispatch, cpa, readOnly, targetSize }: ModeProps<Mix
             cpa={cpa}
           />
         ))}
-        <text x={500} y={70} textAnchor="middle" fill={INK} fontSize={22} fontWeight={700}>
-          {S.mixedConversion(`${total}/${state.denominator}`, mixedText)}
-        </text>
+        {conversionText !== null ? (
+          <text x={500} y={70} textAnchor="middle" fill={INK} fontSize={22} fontWeight={700}>
+            {conversionText}
+          </text>
+        ) : null}
         {Array.from({ length: Math.min(state.pieces, 60) }, (_, index) => {
           const columns = Math.min(10, Math.max(1, state.pieces));
           const column = index % columns;
@@ -1165,9 +1276,7 @@ function MixedView({ state, dispatch, cpa, readOnly, targetSize }: ModeProps<Mix
           {S.remainingPieces(state.pieces)}
         </text>
       </CanvasFrame>
-      <p className={styles.readout}>
-        {S.mixedConversion(`${total}/${state.denominator}`, mixedText)}
-      </p>
+      {conversionText !== null ? <p className={styles.readout}>{conversionText}</p> : null}
       <p className={styles.instructions}>{readOnly ? S.readOnlyHint : S.instructions.mixed}</p>
     </div>
   );
@@ -1217,6 +1326,7 @@ function AddSubView({
   targetSize,
 }: ModeProps<AddSubState>) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const showValue = showValueOf(config);
   const a = parseFraction(state.a, '0');
   const b = parseFraction(state.b, '0');
   const denA = Math.max(1, denominatorNumber(a) ?? 1);
@@ -1288,13 +1398,17 @@ function AddSubView({
               value={result}
               cells={Math.max(1, denominatorNumber(result) ?? 4)}
               y={430}
-              label={state.result ?? ''}
+              label={showValue === 'none' ? '' : (state.result ?? '')}
               cpa={cpa}
               tone={GREEN}
             />
-            <text x={880} y={470} textAnchor="end" fill={INK} fontSize={22} fontWeight={700}>
-              {S.resultLabel(result ? mixedTextOf(result) : (state.result ?? ''))}
-            </text>
+            {showValue !== 'none' ? (
+              <text x={880} y={470} textAnchor="end" fill={INK} fontSize={22} fontWeight={700}>
+                {S.resultLabel(
+                  showValue === 'raw-and-reduced' ? mixedTextOf(result) : result.toString(),
+                )}
+              </text>
+            ) : null}
           </>
         ) : null}
         {!canCombine ? (
@@ -1387,12 +1501,14 @@ function ValueBars({
 
 function DecimalGridView({
   state,
+  config,
   dispatch,
   cpa,
   readOnly,
   targetSize,
 }: ModeProps<DecimalGridState>) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const showValue = showValueOf(config);
   const total = state.size * state.size;
   const layerStart = state.layer * total;
   const square = 480;
@@ -1507,12 +1623,16 @@ function DecimalGridView({
           />
         </g>
       </CanvasFrame>
-      <p className={styles.readout}>
-        {S.decimalValue(
-          value.toString(),
-          value.isTerminatingDecimal() ? value.toDecimalString() : null,
-        )}
-      </p>
+      {showValue !== 'none' ? (
+        <p className={styles.readout}>
+          {S.decimalValue(
+            value.toString(),
+            showValue === 'raw-and-reduced' && value.isTerminatingDecimal()
+              ? value.toDecimalString()
+              : null,
+          )}
+        </p>
+      ) : null}
       <p className={styles.instructions}>
         {readOnly ? S.readOnlyHint : S.instructions.decimal} {S.keyboardHint}
       </p>

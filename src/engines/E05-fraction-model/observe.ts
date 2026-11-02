@@ -221,6 +221,14 @@ export function observe(state: FractionModelState, config: FractionModelConfig):
           combined: state.combined,
           result: state.result,
           resultMixed: state.result !== null ? mixedLabel(Rational.parse(state.result)) : null,
+          borrowed: state.borrowed,
+          naturalPart: state.naturalPart,
+          pieceCount: state.pieceCount,
+          pieceDenominator: state.pieceDenominator,
+          pieceValue:
+            state.pieceCount !== null && state.pieceDenominator !== null
+              ? `${state.pieceCount}/${state.pieceDenominator}`
+              : null,
           equal: true,
           irreducible:
             state.result !== null ? isIrreducibleFraction(Rational.parse(state.result)) : false,

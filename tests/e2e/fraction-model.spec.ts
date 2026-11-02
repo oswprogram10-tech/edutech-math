@@ -101,7 +101,8 @@ test('1/2과 1/3 타일을 겹치면 6칸 공통 격자가 생긴다', async ({ 
   expect(current['aCells']).toBe(3);
   expect(current['bCells']).toBe(2);
   await expect(observation).toContainText('"commonGrid":6');
-  await expect(page.getByTestId('fraction-canvas')).toContainText('공통 격자 6칸');
+  // 기본 showValue='none'에서는 수치 문구를 화면에 내지 않는다(정답 노출 금지).
+  await expect(page.getByTestId('fraction-canvas')).not.toContainText('공통 격자 6칸');
 });
 
 test('키보드로 조각을 색칠하고 되돌릴 수 있다', async ({ page }) => {

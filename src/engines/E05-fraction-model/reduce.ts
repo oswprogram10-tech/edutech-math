@@ -312,13 +312,15 @@ function createMixed(config: FractionModelConfig): MixedState {
   if (isProblem) {
     const a = parseFraction(config.a, '1/2');
     const b = parseFraction(config.b, '1/3');
+    const wholePart = Number(a.integerPart());
+    const fractionPart = a.sub(Rational.of(a.integerPart()));
     return {
       mode: 'mixed',
       kind: 'problem',
       shape: config.wholeShape ?? 'bar',
       denominator: denominatorNumber(a) ?? 2,
-      wholes: Number(a.integerPart()),
-      pieces: numeratorNumber(a) ?? 1,
+      wholes: wholePart,
+      pieces: numeratorNumber(fractionPart) ?? 0,
       allowBreakWhole: config.allowBreakWhole ?? config.breakWhole ?? false,
       a: a.toString(),
       b: b.toString(),
@@ -326,6 +328,10 @@ function createMixed(config: FractionModelConfig): MixedState {
       commonGrid: config.commonGrid ?? null,
       combined: false,
       result: null,
+      borrowed: false,
+      naturalPart: null,
+      pieceCount: null,
+      pieceDenominator: null,
       counters: EMPTY_COUNTS,
     };
   }
@@ -349,6 +355,10 @@ function createMixed(config: FractionModelConfig): MixedState {
       commonGrid: null,
       combined: false,
       result: null,
+      borrowed: false,
+      naturalPart: null,
+      pieceCount: null,
+      pieceDenominator: null,
       counters: EMPTY_COUNTS,
     };
   }
@@ -368,6 +378,10 @@ function createMixed(config: FractionModelConfig): MixedState {
     commonGrid: null,
     combined: false,
     result: null,
+    borrowed: false,
+    naturalPart: null,
+    pieceCount: null,
+    pieceDenominator: null,
     counters: EMPTY_COUNTS,
   };
 }
@@ -716,6 +730,31 @@ function reduceMixedConvert(state: MixedState, action: FractionModelAction): Mix
 }
 
 function reduceMixedProblem(state: MixedState, action: FractionModelAction): MixedState {
+  if (action.type === 'break-whole') {
+    if (!state.allowBreakWhole || state.borrowed || state.wholes <= 0) return state;
+    const a = parseFraction(state.a ?? undefined, '1/2');
+    const b = parseFraction(state.b ?? undefined, '1/3');
+    const grid =
+      state.commonGrid !== null && state.commonGrid > 0
+        ? state.commonGrid
+        : lcm(denominatorNumber(a) ?? 1, denominatorNumber(b) ?? 1);
+    if (grid <= 0) return state;
+    const fractionPart = a.sub(Rational.of(a.integerPart()));
+    const scaled = fractionPart.mul(Rational.of(grid));
+    const fractionDen = denominatorNumber(scaled);
+    const fractionNum = numeratorNumber(scaled);
+    if (fractionDen !== 1 || fractionNum === null || fractionNum < 0) return state;
+    const fractionPieces = fractionNum;
+    return {
+      ...state,
+      commonGrid: grid,
+      borrowed: true,
+      naturalPart: state.wholes - 1,
+      pieceCount: grid + fractionPieces,
+      pieceDenominator: grid,
+      counters: bumpCounts(bumpCounts(state.counters, 'brokeWhole'), 'valueChanged'),
+    };
+  }
   if (action.type !== 'combine') return state;
   const a = parseFraction(state.a ?? undefined, '1/2');
   const b = parseFraction(state.b ?? undefined, '1/3');
@@ -871,7 +910,7 @@ export function simplifyView(state: PartitionState): {
 } {
   const simplify = state.simplify;
   if (!simplify) {
-    const parts = Math.max(1, state.cuts.length + 1);
+    const parts = Math.max(1, piecesOf(state).length);
     return {
       groupSize: null,
       groupCount: 0,

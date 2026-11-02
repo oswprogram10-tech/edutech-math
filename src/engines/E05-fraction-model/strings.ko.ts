@@ -48,6 +48,8 @@ export const fractionModelStrings = {
   groupSelected: (index: number, count: number) => `${index + 1}번째 묶음 선택됨, ${count}개`,
   fractionOf: (items: number, selected: number, groups: number, count: number) =>
     `${items}의 ${selected}/${groups} = ${count}`,
+  fractionOfRaw: (items: number, selected: number, groups: number) =>
+    `${items}의 ${selected}/${groups}`,
   fuse: '1로 융합',
   breakWhole: '자연수 1 풀기',
   wholeBox: (index: number) => `전체 ${index + 1}`,

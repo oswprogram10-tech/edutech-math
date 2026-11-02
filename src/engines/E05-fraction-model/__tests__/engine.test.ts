@@ -122,6 +122,32 @@ describe('E05 partition (넓이 기반 등분)', () => {
     const wholes = observation['wholes'] as Array<Record<string, unknown>>;
     expect(wholes[0]).toMatchObject({ parts: 4, equal: true });
   });
+
+  it('교차하는 칼선 2개는 4조각이고 실제 조각 수로 기약 여부를 판정한다', () => {
+    let state = partition();
+    state = apply(state, {
+      type: 'cut',
+      tool: 'line',
+      points: [
+        { x: 150, y: 300 },
+        { x: 850, y: 300 },
+      ],
+    }) as PartitionState;
+    state = apply(state, verticalCut(500)) as PartitionState;
+
+    let observation = observe(state, { mode: 'partition' });
+    let wholes = observation['wholes'] as Array<Record<string, unknown>>;
+    expect(wholes[0]).toMatchObject({ parts: 4 });
+
+    // 2/4는 약분되지 않았으므로 irreducible=false여야 한다.
+    // cuts.length + 1(=3)로 계산하면 gcd(2, 3)=1이 되어 잘못 true가 된다.
+    state = apply(state, { type: 'shade-piece', index: 0 }) as PartitionState;
+    state = apply(state, { type: 'shade-piece', index: 1 }) as PartitionState;
+    observation = observe(state, { mode: 'partition' });
+    wholes = observation['wholes'] as Array<Record<string, unknown>>;
+    expect(wholes[0]).toMatchObject({ parts: 4, shaded: 2, raw: '2/4', value: '1/2' });
+    expect(observation['irreducible']).toBe(false);
+  });
 });
 
 describe('E05 shade (동치분수·경계값)', () => {
@@ -262,6 +288,43 @@ describe('E05 mixed (가분수·대분수)', () => {
     let state = mixed({ direction: 'improper-to-mixed', value: '5/5' });
     state = apply(state, { type: 'fuse' }) as MixedState;
     expect(observe(state, { mode: 'mixed' })['mixedLabel']).toBe('1');
+  });
+
+  it('3 1/6에서 자연수 막대 하나를 풀면 자연수 2, 조각 14/12다 (A3 과제 1)', () => {
+    let state = mixed({
+      mode: 'mixed',
+      op: '-',
+      a: '3 1/6',
+      b: '1 3/4',
+      breakWhole: true,
+      commonGrid: 12,
+    });
+    expect(state.borrowed).toBe(false);
+
+    state = apply(state, { type: 'break-whole' }) as MixedState;
+    expect(state).toMatchObject({
+      borrowed: true,
+      naturalPart: 2,
+      pieceCount: 14,
+      pieceDenominator: 12,
+      commonGrid: 12,
+    });
+
+    const observation = observe(state, { mode: 'mixed' });
+    expect(observation).toMatchObject({
+      naturalPart: 2,
+      pieceCount: 14,
+      pieceDenominator: 12,
+      pieceValue: '14/12',
+      brokeWhole: 1,
+    });
+
+    // 과제 1 판정: Observation의 자연수 부분과 raw 조각 값만으로 확인할 수 있다.
+    const task1Passed = observation['naturalPart'] === 2 && observation['pieceValue'] === '14/12';
+    expect(task1Passed).toBe(true);
+
+    // 막대 하나만 풀 수 있으므로 두 번째 요청은 상태를 바꾸지 않는다.
+    expect(apply(state, { type: 'break-whole' })).toBe(state);
   });
 });
 

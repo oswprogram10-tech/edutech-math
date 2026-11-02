@@ -26,6 +26,13 @@ export type CutTool = 'line' | 'radial' | 'free-line';
 
 export type FractionOp = '+' | '-' | 'add' | 'sub';
 
+/**
+ * 화면에 수치 문구를 어디까지 보여 줄지.
+ * 기본 `'none'`은 정답 노출 금지(AGENTS 절대 규칙 3)에 따라 수치를 숨긴다.
+ * `'raw'`는 약분 전 표기만, `'raw-and-reduced'`는 약분·변환된 값까지 보여 준다.
+ */
+export type ShowValue = 'none' | 'raw' | 'raw-and-reduced';
+
 export interface ShadeWholeConfig {
   /** 막대·직사각형·정사각형·원. */
   readonly shape?: FractionShape;
@@ -56,6 +63,11 @@ export interface OverlayOrientation {
 export interface FractionModelConfig {
   /** 모드. 없으면 설정 키를 보고 추론한다. */
   readonly mode?: FractionMode;
+  /**
+   * 화면 수치 문구 표시 수준. 기본 `'none'`(숨김).
+   * Observation·판정 값은 이 설정과 무관하게 그대로 낸다.
+   */
+  readonly showValue?: ShowValue;
 
   // ── partition ──────────────────────────────────────────────
   readonly shape?: FractionShape;
@@ -244,6 +256,14 @@ export interface MixedState {
   readonly commonGrid: number | null;
   readonly combined: boolean;
   readonly result: string | null;
+  /** problem: 자연수 막대 하나를 조각으로 풀었는지. */
+  readonly borrowed: boolean;
+  /** problem: 막대 하나를 푼 뒤의 자연수 부분(예: 3 1/6 → 2). 아직 안 풀었으면 null. */
+  readonly naturalPart: number | null;
+  /** problem: 푼 뒤 commonGrid 단위 조각 수(예: 14). */
+  readonly pieceCount: number | null;
+  /** problem: 푼 조각 한 칸의 분모(commonGrid, 예: 12). */
+  readonly pieceDenominator: number | null;
   readonly counters: EventCounts;
 }
 
