@@ -526,6 +526,34 @@ export function cutSignature(cuts: readonly Cut[]): string {
   return parts.sort().join(';');
 }
 
+/**
+ * 칼선의 방향을 0°(가로)·45°·90°(세로)·135° 네 묶음으로 센다.
+ *
+ * 방향은 선분의 양 끝을 바꿔도 같으므로 0°~180°로 접어서 본다.
+ * 아주 짧은 칼선은 방향을 정할 수 없어 세지 않는다.
+ */
+export function cutDirectionBucket(cut: Cut): 0 | 1 | 2 | 3 | null {
+  const [from, to] = cut.points;
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  if (Math.abs(dx) < EPS && Math.abs(dy) < EPS) return null;
+  const degrees = ((((Math.atan2(dy, dx) * 180) / Math.PI) % 180) + 180) % 180;
+  if (degrees < 22.5 || degrees >= 157.5) return 0;
+  if (degrees < 67.5) return 1;
+  if (degrees < 112.5) return 2;
+  return 3;
+}
+
+/** 칼선 방향 묶음이 몇 가지인지. */
+export function cutDirectionCount(cuts: readonly Cut[]): number {
+  const buckets = new Set<number>();
+  for (const cut of cuts) {
+    const bucket = cutDirectionBucket(cut);
+    if (bucket !== null) buckets.add(bucket);
+  }
+  return buckets.size;
+}
+
 /** 조각의 대표점(색칠·힌트 위치). */
 export function pieceCentroid(piece: Piece): Point {
   return piece.centroid;

@@ -151,6 +151,20 @@ export const hasPointAt: EnginePredicate = (
   return observationPointValues(observation).some((point) => point.equals(expected));
 };
 
+/** args `{ value }`인 점이 정확히 하나뿐인가. 눈금마다 점을 찍어 통과하는 것을 막는다. */
+export const onlyPointAt: EnginePredicate = (
+  observation: Observation,
+  args: JsonValue | undefined,
+): boolean => {
+  const record = payloadRecord(args);
+  if (!record) return false;
+  const value = stringField(record, 'value');
+  const expected = parseValue(value ?? undefined);
+  if (!expected) return false;
+  const points = observationPointValues(observation);
+  return points.length === 1 && (points[0]?.equals(expected) ?? false);
+};
+
 /** 카드가 모두 자기 값과 같은 위치에 꽂혔는가. 카드가 없으면 거짓. */
 export const cardsCorrect: EnginePredicate = (observation: Observation): boolean =>
   observation['cardsCorrect'] === true;
@@ -182,6 +196,7 @@ export const jumpTotalIs: EnginePredicate = (
 
 export const predicates: Readonly<Record<string, EnginePredicate>> = {
   hasPointAt,
+  onlyPointAt,
   cardsCorrect,
   samePoint,
   jumpTotalIs,

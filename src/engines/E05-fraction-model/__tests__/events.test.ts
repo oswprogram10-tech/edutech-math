@@ -209,6 +209,63 @@ describe('E05 predicates', () => {
     expect(predicates['isEqualPartition']?.(observed, { parts: 4 })).toBe(true);
     expect(predicates['isEqualPartition']?.(observed, { parts: 3 })).toBe(false);
   });
+
+  it('presetCuts로 가로·세로 칼선을 미리 그리면 4등분이고 방향이 두 가지다', () => {
+    const config: FractionModelConfig = {
+      mode: 'partition',
+      shape: 'rect',
+      presetCuts: [
+        {
+          points: [
+            { x: 500, y: 150 },
+            { x: 500, y: 450 },
+          ],
+        },
+        {
+          points: [
+            { x: 150, y: 300 },
+            { x: 850, y: 300 },
+          ],
+        },
+      ],
+    };
+    const observed = observe(createInitialState(config), config);
+    const wholes = observed['wholes'] as Array<Record<string, unknown>>;
+    expect(wholes[0]).toMatchObject({ parts: 4, equal: true });
+    expect(observed['cutDirections']).toBe(2);
+    expect(predicates['cutDirectionsAtLeast']?.(observed, { count: 2 })).toBe(true);
+    expect(predicates['cutDirectionsAtLeast']?.(observed, { count: 3 })).toBe(false);
+  });
+
+  it('같은 방향 칼선만 있으면 방향 묶음은 하나다', () => {
+    const config: FractionModelConfig = {
+      mode: 'partition',
+      shape: 'rect',
+      presetCuts: [
+        {
+          points: [
+            { x: 300, y: 150 },
+            { x: 300, y: 450 },
+          ],
+        },
+        {
+          points: [
+            { x: 500, y: 150 },
+            { x: 500, y: 450 },
+          ],
+        },
+        {
+          points: [
+            { x: 700, y: 150 },
+            { x: 700, y: 450 },
+          ],
+        },
+      ],
+    };
+    const observed = observe(createInitialState(config), config);
+    expect(observed['cutDirections']).toBe(1);
+    expect(predicates['cutDirectionsAtLeast']?.(observed, { count: 2 })).toBe(false);
+  });
 });
 
 describe('E05 engine definition', () => {

@@ -56,6 +56,13 @@ export interface OverlayOrientation {
   readonly b?: 'horizontal' | 'vertical';
 }
 
+/** `presetCuts`의 칼선 하나. 논리 좌표(1000×600) 두 점. */
+export interface PresetCutConfig {
+  readonly points: readonly [Point, Point];
+  /** 기본은 직선 칼선. 원에서는 `'radial'`을 쓴다. */
+  readonly tool?: 'line' | 'radial';
+}
+
 /**
  * 단원 명세의 E05 설정 키를 모두 받는다(T010 구현 결정 4).
  * `numberLine`·`linkedNumberLine`·`then`처럼 다른 엔진·다음 단계 설정은 받지 않는다.
@@ -78,6 +85,11 @@ export interface FractionModelConfig {
   readonly areaTolerance?: number;
   /** 미리 n등분된 막대를 보여 준다. */
   readonly fixedParts?: number;
+  /**
+   * 미리 그려 둘 칼선 목록. 있으면 `fixedParts` 자동 칼선 대신 쓴다.
+   * 읽기 전용 그림(선택지)과 과제 시작 상태에 모두 쓸 수 있다.
+   */
+  readonly presetCuts?: readonly PresetCutConfig[];
   readonly label?: string;
   /** 약분 탐정용: "18/24"처럼 색칠된 분수를 미리 보여 준다. */
   readonly fraction?: string;

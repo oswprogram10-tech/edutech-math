@@ -43,6 +43,7 @@ import type {
   MixedState,
   OverlayState,
   PartitionState,
+  PresetCutConfig,
   ShadeState,
   SimplifyState,
 } from './types';
@@ -141,7 +142,7 @@ function verticalSpan(outline: readonly Point[], x: number): [number, number] | 
 }
 
 /** `fixedParts`용 미리 n등분된 칼선. 원은 방사형, 나머지는 세로 칼선. */
-function presetCuts(shape: FractionShape, outline: readonly Point[], parts: number): Cut[] {
+function autoPresetCuts(shape: FractionShape, outline: readonly Point[], parts: number): Cut[] {
   if (parts <= 1) return [];
   if (shape === 'circle') {
     const cuts: Cut[] = [];
@@ -179,6 +180,28 @@ function presetCuts(shape: FractionShape, outline: readonly Point[], parts: numb
   return cuts;
 }
 
+/** 콘텐츠가 정한 칼선 목록. 좌표가 깨진 칼선은 조용히 건너뛴다. */
+function cutsFromPreset(presets: readonly PresetCutConfig[]): Cut[] {
+  const cuts: Cut[] = [];
+  presets.forEach((preset, index) => {
+    const [from, to] = preset.points;
+    if (
+      !Number.isFinite(from.x) ||
+      !Number.isFinite(from.y) ||
+      !Number.isFinite(to.x) ||
+      !Number.isFinite(to.y)
+    ) {
+      return;
+    }
+    cuts.push({
+      id: `preset-${index + 1}`,
+      tool: preset.tool ?? 'line',
+      points: [{ ...from }, { ...to }],
+    });
+  });
+  return cuts;
+}
+
 function simplifyFrom(config: FractionModelConfig): SimplifyState | null {
   if (config.fraction === undefined) return null;
   // 약분 탐정은 "18/24"의 표기 그대로 24칸 막대를 보여 줘야 하므로
@@ -212,7 +235,12 @@ function createPartition(config: FractionModelConfig): PartitionState {
     : config.fixedParts !== undefined && config.fixedParts > 1
       ? partsOf(config.fixedParts, 1)
       : null;
-  const cuts = fixedParts !== null ? presetCuts(shape, outline, fixedParts) : [];
+  const cuts =
+    config.presetCuts !== undefined
+      ? cutsFromPreset(config.presetCuts)
+      : fixedParts !== null
+        ? autoPresetCuts(shape, outline, fixedParts)
+        : [];
   const totalPieces = fixedParts ?? 1;
   const shaded = simplify ? validShaded(range(simplify.numerator), totalPieces) : [];
   return {
