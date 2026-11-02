@@ -14,17 +14,29 @@ interface EngineSandboxProps {
 }
 
 function EngineSandbox({ definition }: EngineSandboxProps) {
-  const config = useMemo(() => ({}) as never, []);
+  const [mode, setMode] = useState(definition.modes[0] ?? 'default');
+  const config = useMemo(() => ({ mode }) as never, [mode]);
   const initial = useMemo(() => definition.createInitialState(config), [definition, config]);
-  const { state, dispatch, undo, redo, canUndo, canRedo } = useHistory(definition.reduce, initial);
+  const { state, dispatch, undo, redo, reset, canUndo, canRedo } = useHistory(
+    definition.reduce,
+    initial,
+  );
   const pinch = usePinch({ initialScale: 1, min: 1, max: 2, step: 0.25 });
   const [targetSize, setTargetSize] = useState<TargetSize>(48);
   const [readOnly, setReadOnly] = useState(false);
   const [overlay, setOverlay] = useState<string | null>(null);
 
+  // 모드를 바꾸면 그 모드의 초기 상태로 새로 시작한다(기록도 비운다).
+  useEffect(() => {
+    reset(definition.createInitialState(config));
+  }, [definition, config, reset]);
+
   const overlayNames = Object.keys(definition.overlays ?? {});
-  const mode = definition.modes[0] ?? 'default';
-  const observation = definition.observe(state, config);
+  const stateMode = (state as { readonly mode?: string }).mode;
+  // `mode`가 없는 엔진(E00 등)은 상태를 그대로 보여 준다. 모드가 있는 엔진은
+  // 모드 전환 직후 effect가 상태를 새로 만들기 전까지 초기 상태를 보여 준다.
+  const activeState = stateMode === undefined || stateMode === mode ? state : initial;
+  const observation = definition.observe(activeState, config);
   const View = definition.View;
 
   useEffect(() => {
@@ -72,6 +84,23 @@ function EngineSandbox({ definition }: EngineSandboxProps) {
       </header>
 
       <div className={styles.controls} role="toolbar" aria-label={sandboxStrings.controls}>
+        <label className={styles.modeSelect}>
+          <span>{sandboxStrings.modeLabel}</span>
+          <select
+            value={mode}
+            aria-label={sandboxStrings.modeLabel}
+            onChange={(event) => {
+              setOverlay(null);
+              setMode(event.target.value);
+            }}
+          >
+            {definition.modes.map((candidate) => (
+              <option key={candidate} value={candidate}>
+                {candidate}
+              </option>
+            ))}
+          </select>
+        </label>
         <button type="button" onClick={undo} disabled={!canUndo}>
           {sandboxStrings.undo}
         </button>
@@ -115,7 +144,7 @@ function EngineSandbox({ definition }: EngineSandboxProps) {
       <div className={styles.stage} {...pinch.handlers}>
         <View
           config={config}
-          state={state}
+          state={activeState}
           dispatch={dispatch}
           cpa="C"
           mode={mode}
@@ -128,7 +157,7 @@ function EngineSandbox({ definition }: EngineSandboxProps) {
             definition={definition}
             overlay={overlay}
             config={config}
-            state={state}
+            state={activeState}
             scale={pinch.scale}
           />
         ) : null}
