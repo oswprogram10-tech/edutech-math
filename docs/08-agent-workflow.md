@@ -3,7 +3,7 @@
 Claude(Claude Code), Codex, OpenCode 세 에이전트를 함께 쓰는 운영 규칙이다. 핵심은 **한 번에 한 작업 카드, 서로 다른 폴더, 다른 에이전트가 리뷰**다.
 
 ## 1. 처음 한 번 준비 (Windows)
-1. Node.js LTS, Git, VS Code 설치. GitHub 계정에 비공개 저장소 `MathExplorer` 생성.
+1. Node.js LTS, Git, VS Code 설치. GitHub 계정에 **공개** 저장소 생성(실제: `oswprogram10-tech/edutech-math`). 무료 계정은 비공개 저장소에서 GitHub Pages를 쓸 수 없어서 공개로 정했다(2026-11-02). 공개이므로 학생 정보·API 키·개인 이메일은 절대 커밋하지 않는다. 커밋 작성자 이메일은 GitHub noreply 주소를 쓴다.
 2. **저장소 위치:** 경로에 한글·공백이 있으면 일부 개발 도구가 오작동할 수 있다. 가능하면 `C:\dev\MathExplorer`처럼 영문 경로에 두고, 바탕화면의 `수학 에듀테크` 폴더에는 바로가기를 둔다. (지금 문서는 `수학 에듀테크\MathExplorer`에 있으니 그대로 옮기면 된다.)
 3. 이 폴더를 저장소 첫 커밋으로 올린다.
 4. 첫 작업: 에이전트에게 `tasks/T001.md를 수행해 줘`.
