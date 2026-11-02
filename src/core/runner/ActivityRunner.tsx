@@ -128,6 +128,8 @@ interface TaskStageProps {
   readonly targetSize: TargetSize;
   readonly status: TaskStatus;
   readonly isLast: boolean;
+  /** 부스터 모달이 덮고 있는 동안에는 입력·단축키를 받지 않는다. */
+  readonly paused?: boolean;
   /** 이 과제에서 이미 틀린 횟수(힌트 단계의 시작점). */
   readonly initialFailures: number;
   readonly onResult: (passed: boolean, hintLevel?: number) => void;
@@ -152,6 +154,7 @@ function TaskStage({
   targetSize,
   status,
   isLast,
+  paused = false,
   initialFailures,
   onResult,
   onEdit,
@@ -163,6 +166,7 @@ function TaskStage({
 }: TaskStageProps) {
   const [histories, setHistories] = useState<SlotHistories>(() => createSlotHistories(slots));
   const [hint, setHint] = useState<HintSelection | null>(null);
+  const taskRef = useRef<HTMLElement>(null);
   const historiesRef = useRef(histories);
   const startedRef = useRef(false);
   const passedRef = useRef(false);
@@ -190,6 +194,26 @@ function TaskStage({
 
   // 과제가 바뀌면(TaskStage가 다시 만들어지면) 읽어 주기 문장을 지운다.
   useEffect(() => () => onHintRef.current?.(null), []);
+
+  // 부스터 모달이 덮는 동안 원래 과제는 포커스·클릭을 받지 않는다.
+  // inert를 쓰는 브라우저는 그대로, 못 쓰는 브라우저는 aria-hidden + 포인터 차단으로 대신한다.
+  useEffect(() => {
+    const node = taskRef.current;
+    if (!node || !paused) return;
+    // `inert` 속성을 실제로 지원하는지 확인한다(구형 Safari 대비).
+    const hasInert = (node as unknown as { inert?: unknown }).inert !== undefined;
+    if (hasInert) {
+      node.setAttribute('inert', '');
+    } else {
+      node.setAttribute('aria-hidden', 'true');
+      node.style.pointerEvents = 'none';
+    }
+    return () => {
+      node.removeAttribute('inert');
+      node.removeAttribute('aria-hidden');
+      node.style.removeProperty('pointer-events');
+    };
+  }, [paused]);
 
   const recorder = useMemo(
     () =>
@@ -293,7 +317,7 @@ function TaskStage({
   }, [judgeView, recorder, slots, task]);
 
   const handleAction = (slot: string, action: unknown) => {
-    if (status === 'passed') return;
+    if (paused || status === 'passed') return;
     if (status === 'failed') onEdit();
 
     const result = applyActionWithLinks(slots, links, historiesRef.current, slot, action);
@@ -309,18 +333,18 @@ function TaskStage({
 
   const handleControl = useCallback(
     (control: SlotControl) => {
-      if (status === 'passed') return;
+      if (paused || status === 'passed') return;
       if (status === 'failed') onEdit();
       const next = applyControl(historiesRef.current, control);
       if (next === historiesRef.current) return;
       commit(next);
       void recorder.control(control);
     },
-    [status, onEdit, commit, recorder],
+    [paused, status, onEdit, commit, recorder],
   );
 
   const handleSubmit = () => {
-    if (status === 'passed') return;
+    if (paused || status === 'passed') return;
     void recorder.submitted();
     if (judge(historiesRef.current)) {
       markPassed(false);
@@ -332,6 +356,7 @@ function TaskStage({
   };
 
   useEffect(() => {
+    if (paused) return;
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target;
       if (
@@ -353,7 +378,7 @@ function TaskStage({
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [handleControl]);
+  }, [handleControl, paused]);
 
   const canUndo = histories.past.length > 0 && status !== 'passed';
   const canRedo = histories.future.length > 0 && status !== 'passed';
@@ -366,7 +391,7 @@ function TaskStage({
     displaySlots.some((slot) => slot.slot === overlayTarget.slot);
 
   return (
-    <section className={styles.task}>
+    <section ref={taskRef} className={styles.task} data-paused={paused ? 'true' : undefined}>
       <div className={styles.promptBox}>
         <p className={styles.activity}>{activity.title}</p>
         <h2 className={styles.prompt}>{task.prompt}</h2>
@@ -984,6 +1009,7 @@ export function ActivityRunner({
         targetSize={targetSize}
         status={complete ? 'passed' : session.status}
         isLast={session.index === tasks.length - 1}
+        paused={booster !== null}
         initialFailures={failureCount(session, current.task.id)}
         onResult={(passed, hintLevel = 0) => {
           applyMasteryResult(current.task, passed, hintLevel);

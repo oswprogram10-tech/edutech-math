@@ -60,6 +60,39 @@ describe('역추적 부스터 시나리오', () => {
     expect(dialog.textContent).not.toMatch(/학년/);
     expect(dialog.textContent).not.toContain('g3s1u6');
 
+    // 모달이 덮는 동안 원래 과제는 일시 정지된다(키보드·포커스 차단).
+    const originalSection = original.closest('section[data-paused]');
+    expect(originalSection?.getAttribute('data-paused')).toBe('true');
+    expect(
+      originalSection?.hasAttribute('inert') ||
+        originalSection?.getAttribute('aria-hidden') === 'true',
+    ).toBe(true);
+
+    // 모달 안에서 입력하다가 Ctrl+Z를 눌러도 모달 입력만 되돌아가고
+    // 원래 과제의 2/5는 그대로 남는다.
+    const modalResponse = within(dialog).getByTestId('runner-slot-response');
+    fireEvent.click(within(modalResponse).getByRole('button', { name: '1' }));
+    fireEvent.click(within(modalResponse).getByRole('button', { name: '2' }));
+    expect(within(modalResponse).getByRole('button', { name: '자연수 부분: 12' })).toBeTruthy();
+
+    // 일시 정지 중에는 aria-hidden으로 접근성 트리에서도 빠지므로 hidden: true로 확인한다.
+    const originalFraction = () => {
+      expect(within(original).getByRole('button', { name: '분자: 2', hidden: true })).toBeTruthy();
+      expect(within(original).getByRole('button', { name: '분모: 5', hidden: true })).toBeTruthy();
+    };
+
+    fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
+    expect(within(modalResponse).getByRole('button', { name: '자연수 부분: 1' })).toBeTruthy();
+    originalFraction();
+
+    // Ctrl+Shift+Z(다시 하기)도 모달 입력에만 적용된다.
+    fireEvent.keyDown(window, { key: 'z', ctrlKey: true, shiftKey: true });
+    expect(within(modalResponse).getByRole('button', { name: '자연수 부분: 12' })).toBeTruthy();
+    originalFraction();
+
+    // 확인용으로 넣은 12를 지우고 부스터 과제를 처음부터 푼다.
+    fireEvent.click(within(modalResponse).getByRole('button', { name: '모두 지우기' }));
+
     // 부스터 과제 3개를 통과한다. 정답 값은 테스트 픽스처에만 있다.
     for (const answer of ['1', '2', '3']) {
       const response = within(dialog).getByTestId('runner-slot-response');
@@ -77,6 +110,10 @@ describe('역추적 부스터 시나리오', () => {
     const restored = screen.getByTestId('runner-slot-response');
     expect(within(restored).getByRole('button', { name: '분자: 2' })).toBeTruthy();
     expect(within(restored).getByRole('button', { name: '분모: 5' })).toBeTruthy();
+    // 모달이 닫히면 일시 정지도 풀린다.
+    expect(restored.closest('[data-paused]')).toBeNull();
+    expect(restored.closest('[inert]')).toBeNull();
+    expect(restored.closest('[aria-hidden="true"]')).toBeNull();
     expect(screen.queryByTestId('hint')).toBeNull();
     expect(screen.queryByRole('alert')).toBeNull();
 
