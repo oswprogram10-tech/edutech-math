@@ -19,8 +19,9 @@ import {
   useRenderedSize,
 } from '../../core/engine-sdk';
 import type { EngineViewProps, Point } from '../../core/engine-sdk';
+import { gridSizeOf, nextCounterPoint } from './layout';
 import { demoStrings } from './strings.ko';
-import { DEMO_ORIGIN, DEFAULT_GRID_SIZE, LOGICAL_HEIGHT, LOGICAL_WIDTH } from './types';
+import { DEMO_ORIGIN, LOGICAL_HEIGHT, LOGICAL_WIDTH } from './types';
 import type { DemoAction, DemoConfig, DemoState } from './types';
 import styles from './View.module.css';
 
@@ -60,7 +61,7 @@ export function DemoView({
 }: EngineViewProps<DemoConfig, DemoState, DemoAction>) {
   const svgRef = useRef<SVGSVGElement>(null);
   const renderedSize = useRenderedSize(svgRef);
-  const gridSize = config.gridSize && config.gridSize > 0 ? config.gridSize : DEFAULT_GRID_SIZE;
+  const gridSize = gridSizeOf(config);
   const measuredRadius = minTouchRadius(targetSize, renderedSize, LOGICAL);
   const radius = Math.ceil(Math.max(BASE_RADIUS, measuredRadius));
 
@@ -172,12 +173,8 @@ export function DemoView({
   };
 
   const addAtCenter = () => {
-    const offset = (state.counters.length % 5) * gridSize;
-    dispatch({
-      type: 'add',
-      x: clamp(DEMO_ORIGIN.x + offset, 0, LOGICAL_WIDTH),
-      y: DEMO_ORIGIN.y,
-    });
+    const point = nextCounterPoint(state, config);
+    dispatch({ type: 'add', x: point.x, y: point.y });
   };
 
   const lassoPoints = lasso.path.map((point) => `${point.x},${point.y}`).join(' ');

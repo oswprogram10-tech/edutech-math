@@ -1,0 +1,71 @@
+{
+  "unit": "demo",
+  "title": "셈돌로 만나는 첫 과제",
+  "activities": [
+    {
+      "id": "demo.A1",
+      "title": "셈돌 놓기",
+      "tasks": [
+        {
+          "id": "demo.A1.T1",
+          "prompt": "셈돌을 5개 놓아 보세요.",
+          "engine": "E00",
+          "mode": "free",
+          "cpa": "C",
+          "config": { "gridSize": 100 },
+          "goal": { "kind": "equals", "path": "count", "value": 5 },
+          "hints": [],
+          "concepts": [],
+          "submit": "auto"
+        },
+        {
+          "id": "demo.A1.T2",
+          "prompt": "셈돌 3개를 한 묶음으로 묶어 보세요.",
+          "engine": "E00",
+          "mode": "free",
+          "cpa": "C",
+          "config": { "gridSize": 100 },
+          "goal": { "kind": "predicate", "name": "has-group-of", "args": { "size": 3 } },
+          "hints": [],
+          "concepts": [],
+          "submit": "button"
+        }
+      ]
+    },
+    {
+      "id": "demo.A2",
+      "title": "두 판 잇기",
+      "tasks": [
+        {
+          "id": "demo.A2.T1",
+          "prompt": "왼쪽 판에 셈돌을 놓으면 오른쪽 판에도 놓여요. 오른쪽 판이 4개가 되면 통과해요.",
+          "engine": "E00",
+          "mode": "free",
+          "cpa": "C",
+          "config": { "gridSize": 100 },
+          "goal": { "kind": "equals", "path": "count", "value": 4 },
+          "hints": [],
+          "concepts": [],
+          "submit": "auto",
+          "views": [
+            {
+              "slot": "right",
+              "engine": "E00",
+              "mode": "free",
+              "cpa": "C",
+              "config": { "gridSize": 100 }
+            },
+            {
+              "slot": "left",
+              "engine": "E00",
+              "mode": "free",
+              "cpa": "C",
+              "config": { "gridSize": 100 }
+            }
+          ],
+          "links": [{ "from": "left", "event": "counter-added", "to": "right" }]
+        }
+      ]
+    }
+  ]
+}

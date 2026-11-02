@@ -82,6 +82,10 @@ export type JsonValue =
   | { readonly [key: string]: JsonValue };
 export type Observation = Readonly<Record<string, JsonValue>>;
 
+/** 다른 엔진·러너에게 알리는 사건. name은 엔진의 events 목록 중 하나다. */
+export interface EngineEvent { name: string; payload?: JsonValue }
+export type EnginePredicate = (observation: Observation, args: JsonValue | undefined) => boolean;
+
 /** 엔진 정의: 엔진 폴더의 index.ts가 default export 한다 */
 export interface EngineDefinition<Config, State, Action> {
   id: EngineId;
@@ -96,6 +100,12 @@ export interface EngineDefinition<Config, State, Action> {
   events: readonly string[];
   /** 힌트 ② 시각적 반례 레이어. HintRule.show.overlay가 이름으로 가리킨다 */
   overlays?: Readonly<Record<string, React.ComponentType<OverlayProps<Config, State>>>>;
+  /** reduce 직후 러너가 호출한다. 순수 함수. name은 events 중 하나여야 한다 */
+  emit?(prev: State, next: State, action: Action): EngineEvent[];
+  /** 다른 엔진의 이벤트를 이 엔진의 Action으로 바꾼다. null이면 무시 */
+  receive?(state: State, event: EngineEvent, config: Config): Action | null;
+  /** GoalSpec predicate가 이름으로 찾는 판정 함수 */
+  predicates?: Readonly<Record<string, EnginePredicate>>;
 }
 
 export interface EngineViewProps<Config, State, Action> {

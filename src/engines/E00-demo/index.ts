@@ -3,6 +3,7 @@
  * 다른 엔진을 만들 때 이 폴더를 본보기로 삼는다.
  */
 import type { EngineDefinition } from '../../core/engine-sdk';
+import { emit, predicates, receive } from './events';
 import { observe } from './observe';
 import { createInitialState, reduce } from './reduce';
 import { demoStrings } from './strings.ko';
@@ -19,6 +20,9 @@ const definition: EngineDefinition<DemoConfig, DemoState, DemoAction> = {
   View: DemoView,
   observe,
   events: ['counter-added', 'counter-moved', 'grouped', 'ungrouped'],
+  emit,
+  receive,
+  predicates,
   overlays: {
     'lasso-guide': LassoGuideOverlay,
   },

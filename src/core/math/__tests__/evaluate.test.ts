@@ -83,10 +83,12 @@ describe('solveForBox', () => {
     expect(solve('12 ÷ □', '5/2')).toBe('24/5');
   });
 
-  it('나눗셈 결과가 0이면 NO_SOLUTION', () => {
+  it('나눗셈 결과가 0이면 분자에 따라 구분한다', () => {
     expect(codeOf(() => solve('12 ÷ □', '0'))).toBe('NO_SOLUTION');
     expect(codeOf(() => solve('12 ÷ (□ + 1)', '0'))).toBe('NO_SOLUTION');
-    expect(codeOf(() => solve('0 ÷ □', '0'))).toBe('NO_SOLUTION');
+    expect(codeOf(() => solve('5 ÷ □', '0'))).toBe('NO_SOLUTION');
+    expect(codeOf(() => solve('0 ÷ □', '0'))).toBe('INFINITE_SOLUTIONS');
+    expect(codeOf(() => solve('0 ÷ (□ + 1)', '0'))).toBe('INFINITE_SOLUTIONS');
     expect(codeOf(() => solve('0 ÷ □', '1'))).toBe('NO_SOLUTION');
   });
 

@@ -2,7 +2,9 @@
 export type {
   CPA,
   EngineDefinition,
+  EngineEvent,
   EngineId,
+  EnginePredicate,
   EngineViewProps,
   GoalSpec,
   HintRule,

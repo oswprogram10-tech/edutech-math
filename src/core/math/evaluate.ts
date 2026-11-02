@@ -199,8 +199,11 @@ export function solveForBox(ast: Ast, rhs: Rational): Rational {
   if (boxes === 0) throw new MathError('NO_BOX', '식을 풀 □가 없습니다.');
   if (boxes > 1) throw new MathError('MULTIPLE_BOX', '□가 여러 개 있습니다.');
 
-  // 나누는 수에 □가 있는 식의 결과가 0이면 해가 없다.
+  // 나누는 수에 □가 있고 결과가 0이면, 분자가 0일 때만 모든 0 아닌 □가 해다.
   if (rhs.isZero() && polyHasX(form.den)) {
+    if (polyIsZero(form.num)) {
+      throw new MathError('INFINITE_SOLUTIONS', '□가 0이 아닌 어떤 값이어도 참입니다.');
+    }
     throw new MathError('NO_SOLUTION', '나눗셈의 결과가 0이 되는 해는 없습니다.');
   }
 

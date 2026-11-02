@@ -29,6 +29,15 @@ export type JsonValue =
 /** 엔진이 현재 상태에서 뽑아낸, 판정 가능한 수학적 사실. */
 export type Observation = Readonly<Record<string, JsonValue>>;
 
+/** 다른 엔진·러너에게 알리는 사건. `name`은 엔진의 `events` 목록 중 하나다. */
+export interface EngineEvent {
+  readonly name: string;
+  readonly payload?: JsonValue;
+}
+
+/** GoalSpec `predicate`가 이름으로 찾는 엔진 판정 함수. */
+export type EnginePredicate = (observation: Observation, args: JsonValue | undefined) => boolean;
+
 // ─────────────────────────────────────────────────────────────
 // 과제·목표·힌트
 // ─────────────────────────────────────────────────────────────
@@ -107,6 +116,18 @@ export interface EngineDefinition<Config, State, Action> {
   events: readonly string[];
   /** 이름 → 힌트 ② 레이어. HintRule.show.overlay가 이 이름을 가리킨다. */
   overlays?: Readonly<Record<string, OverlayComponent<Config, State>>>;
+  /**
+   * reduce 직후 러너가 호출한다. 순수 함수여야 한다.
+   * 돌려준 `name`은 반드시 `events`에 있어야 한다(개발 모드에서 검사).
+   */
+  emit?(prev: State, next: State, action: Action): EngineEvent[];
+  /**
+   * 다른 엔진의 이벤트를 이 엔진의 Action으로 바꾼다.
+   * null이면 무시한다. 러너만 호출하며 엔진끼리 직접 import하지 않는다.
+   */
+  receive?(state: State, event: EngineEvent, config: Config): Action | null;
+  /** GoalSpec `predicate`가 이름으로 찾는 판정 함수. */
+  predicates?: Readonly<Record<string, EnginePredicate>>;
 }
 
 /** 모든 엔진 View가 받는 props. */
