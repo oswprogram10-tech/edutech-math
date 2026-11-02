@@ -74,19 +74,47 @@
   outline: none;
 }
 
+/* 키보드 포커스: 셈돌 바깥의 점선 링. 선택 표시(두꺼운 실선 + 체크)와 모양이 다르다. */
+.focusRing {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 4;
+}
+
+.counter:focus-visible .focusRing {
+  stroke: #101828;
+  stroke-width: 4;
+  stroke-dasharray: 10 6;
+}
+
 .counterBody {
   fill: #2f6fde;
   stroke: #ffffff;
   stroke-width: 3;
 }
 
+/* 선택: 색만 바꾸지 않고 두꺼운 테두리와 체크 배지로도 구분한다. */
 .counter[aria-pressed='true'] .counterBody {
   fill: #e08a1e;
+  stroke: #101828;
+  stroke-width: 8;
 }
 
-.counter:focus-visible .counterBody {
+.checkBadge {
+  pointer-events: none;
+}
+
+.checkCircle {
+  fill: #ffffff;
   stroke: #101828;
-  stroke-width: 6;
+  stroke-width: 3;
+}
+
+.checkMark {
+  fill: #101828;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: central;
 }
 
 .counterNumber {

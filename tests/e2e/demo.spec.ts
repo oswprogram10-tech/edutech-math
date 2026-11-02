@@ -95,3 +95,42 @@ test('키보드만으로 셈돌을 놓고 선택하고 옮긴다', async ({ page
 
   await expect(page.getByTestId('observation')).toHaveText('{"count":1,"groups":[]}');
 });
+
+test('선택한 셈돌은 aria-pressed와 체크 표시로 보인다', async ({ page }) => {
+  await openDemo(page);
+  await page.getByRole('button', { name: '셈돌 놓기' }).click();
+
+  const counter = page.getByRole('button', { name: '셈돌 1' });
+  await expect(counter).toHaveAttribute('aria-pressed', 'false');
+  await expect(counter.locator('[data-selected-check]')).toHaveCount(0);
+
+  await counter.click();
+  await expect(counter).toHaveAttribute('aria-pressed', 'true');
+  await expect(counter.locator('[data-selected-check="c1"]')).toBeVisible();
+
+  // 같은 셈돌을 다시 누르면 선택이 풀리고 체크도 사라진다.
+  await counter.click();
+  await expect(counter).toHaveAttribute('aria-pressed', 'false');
+  await expect(counter.locator('[data-selected-check]')).toHaveCount(0);
+});
+
+test.describe('좁은 화면', () => {
+  test.use({ viewport: { width: 400, height: 800 } });
+
+  test('폭 400px에서도 셈돌 지름이 48px 이상이다', async ({ page }) => {
+    await openDemo(page);
+    await page.getByRole('button', { name: '셈돌 놓기' }).click();
+
+    const body = page.locator('[data-counter-id="c1"] [data-part="body"]');
+    await expect(body).toBeVisible();
+
+    // ResizeObserver로 실제 SVG 크기를 잰 뒤 반지름이 커지므로 잠깐 기다린다.
+    await expect
+      .poll(async () => (await body.boundingBox())?.width ?? 0)
+      .toBeGreaterThanOrEqual(48);
+
+    const box = await body.boundingBox();
+    expect(box?.width ?? 0).toBeGreaterThanOrEqual(48);
+    expect(box?.height ?? 0).toBeGreaterThanOrEqual(48);
+  });
+});

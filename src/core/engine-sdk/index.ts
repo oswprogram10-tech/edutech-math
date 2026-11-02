@@ -25,6 +25,8 @@ export type { LogicalSize, Point, RectLike } from './coordinates';
 export { nearestPointOnRect, snapPoint, snapToEdges, snapToGrid, snapToPoints } from './snap';
 export type { SnapEdgeRect, SnapGrid, SnapKind, SnapResult, SnapTargets } from './snap';
 
+export { minTouchRadius, screenPixelsToLogical, svgScaleFactor, useRenderedSize } from './sizing';
+
 export {
   canRedo,
   canUndo,

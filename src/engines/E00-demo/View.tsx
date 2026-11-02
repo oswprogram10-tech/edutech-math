@@ -10,11 +10,13 @@ import { useRef, useState } from 'react';
 import type { KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent } from 'react';
 import {
   clamp,
+  minTouchRadius,
   pointerToLogical,
   selectInside,
   snapPoint,
   useDrag,
   useLasso,
+  useRenderedSize,
 } from '../../core/engine-sdk';
 import type { EngineViewProps, Point } from '../../core/engine-sdk';
 import { demoStrings } from './strings.ko';
@@ -25,10 +27,8 @@ import styles from './View.module.css';
 const LOGICAL = { width: LOGICAL_WIDTH, height: LOGICAL_HEIGHT };
 /** 이보다 적게 움직였으면 드래그가 아니라 탭(선택)으로 본다. */
 const TAP_SLOP = 4;
-
-function counterRadius(targetSize: 48 | 64): number {
-  return targetSize === 64 ? 44 : 34;
-}
+/** 화면이 아주 클 때도 셈돌이 너무 작아 보이지 않게 하는 기본 반지름. */
+const BASE_RADIUS = 34;
 
 function groupBounds(
   counterIds: readonly string[],
@@ -59,8 +59,10 @@ export function DemoView({
   targetSize,
 }: EngineViewProps<DemoConfig, DemoState, DemoAction>) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const renderedSize = useRenderedSize(svgRef);
   const gridSize = config.gridSize && config.gridSize > 0 ? config.gridSize : DEFAULT_GRID_SIZE;
-  const radius = counterRadius(targetSize);
+  const measuredRadius = minTouchRadius(targetSize, renderedSize, LOGICAL);
+  const radius = Math.ceil(Math.max(BASE_RADIUS, measuredRadius));
 
   const [selected, setSelected] = useState<readonly string[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -180,6 +182,13 @@ export function DemoView({
 
   const lassoPoints = lasso.path.map((point) => `${point.x},${point.y}`).join(' ');
 
+  // 드래그 중인 셈돌은 미리보기 좌표로 그린다. 묶음 테두리도 같은 좌표를 써서 같이 움직인다.
+  const displayCounters = state.counters.map((counter) =>
+    activeId === counter.id && drag.current
+      ? { ...counter, x: drag.current.x, y: drag.current.y }
+      : counter,
+  );
+
   return (
     <div className={styles.wrap} data-target-size={targetSize} style={{ width: `${100 * scale}%` }}>
       <div className={styles.toolbar}>
@@ -216,7 +225,7 @@ export function DemoView({
         />
 
         {state.groups.map((group) => {
-          const bounds = groupBounds(group.counterIds, state.counters, radius);
+          const bounds = groupBounds(group.counterIds, displayCounters, radius);
           if (!bounds) return null;
           return (
             <rect
@@ -232,9 +241,7 @@ export function DemoView({
           );
         })}
 
-        {state.counters.map((counter, index) => {
-          const dragging = activeId === counter.id && drag.current !== null;
-          const point = dragging && drag.current ? drag.current : counter;
+        {displayCounters.map((counter, index) => {
           const isSelected = selected.includes(counter.id);
           return (
             <g
@@ -263,10 +270,51 @@ export function DemoView({
               }}
               onKeyDown={(event) => onCounterKeyDown(counter.id, event)}
             >
-              <circle cx={point.x} cy={point.y} r={radius} className={styles.counterBody} />
-              <text x={point.x} y={point.y} className={styles.counterNumber} pointerEvents="none">
+              <circle
+                cx={counter.x}
+                cy={counter.y}
+                r={radius + 8}
+                className={styles.focusRing}
+                data-part="focus-ring"
+                pointerEvents="none"
+              />
+              <circle
+                cx={counter.x}
+                cy={counter.y}
+                r={radius}
+                className={styles.counterBody}
+                data-part="body"
+              />
+              <text
+                x={counter.x}
+                y={counter.y}
+                className={styles.counterNumber}
+                pointerEvents="none"
+              >
                 {index + 1}
               </text>
+              {isSelected ? (
+                <g
+                  data-selected-check={counter.id}
+                  className={styles.checkBadge}
+                  pointerEvents="none"
+                >
+                  <circle
+                    cx={counter.x + radius * 0.62}
+                    cy={counter.y - radius * 0.62}
+                    r={Math.max(12, radius * 0.3)}
+                    className={styles.checkCircle}
+                  />
+                  <text
+                    x={counter.x + radius * 0.62}
+                    y={counter.y - radius * 0.62}
+                    className={styles.checkMark}
+                    fontSize={Math.max(16, radius * 0.42)}
+                  >
+                    ✓
+                  </text>
+                </g>
+              ) : null}
             </g>
           );
         })}
