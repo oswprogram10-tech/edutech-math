@@ -18,6 +18,7 @@ export const runnerStrings = {
   slotLabel: (slot: string) => {
     if (slot === 'left') return '왼쪽 판';
     if (slot === 'right') return '오른쪽 판';
+    if (slot === 'response') return '내 답';
     return slot;
   },
   taskList: '과제 목록',

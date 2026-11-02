@@ -7,7 +7,7 @@
 import { useEffect, useState } from 'react';
 import { loadEngine } from '../core/engine-sdk';
 import type { EngineId, LoadedEngine } from '../core/engine-sdk';
-import { ActivityRunner, loadUnitContent, runnerStrings } from '../core/runner';
+import { ActivityRunner, engineIdsOfContent, loadUnitContent, runnerStrings } from '../core/runner';
 import type { UnitContent } from '../core/runner';
 import { getStorage } from '../core/storage';
 import type { Storage } from '../core/storage';
@@ -36,15 +36,9 @@ export function Runner({ unitId }: RunnerProps) {
     const load = async () => {
       try {
         const content = await loadUnitContent(unitId);
-        const engineIds = new Set<EngineId>();
-        for (const activity of content.activities) {
-          for (const task of activity.tasks) {
-            engineIds.add(task.engine);
-            for (const view of task.views ?? []) engineIds.add(view.engine);
-          }
-        }
+        const engineIds = engineIdsOfContent(content);
         const entries = await Promise.all(
-          [...engineIds].map(async (id) => [id, await loadEngine(id)] as const),
+          engineIds.map(async (id) => [id, await loadEngine(id)] as const),
         );
         const storage = await getStorage().catch(() => undefined);
         if (!cancelled) {

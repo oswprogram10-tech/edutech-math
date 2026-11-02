@@ -27,6 +27,44 @@ export type { ActivityRunnerProps } from './ActivityRunner';
 export { evaluateGoal, jsonEqual, resolveObservationPath } from './goal';
 export type { GoalEngine } from './goal';
 
+export { engineIdsOfContent, taskSlotViews } from './views';
+export type { TaskSlotView } from './views';
+
+export {
+  RESPONSE_SLOT,
+  createInitialState as createResponseState,
+  judgeObservation,
+  observe as observeResponse,
+  reduce as reduceResponse,
+  responseStrings,
+} from './response';
+export type {
+  ChoiceField,
+  ChoiceFieldState,
+  ChoiceOption,
+  CompareField,
+  CompareFieldState,
+  CompareSymbol,
+  NumberField,
+  NumberFieldState,
+  NumberForm,
+  NumberPart,
+  OrderField,
+  OrderFieldState,
+  OrderItem,
+  ResponseAction,
+  ResponseConfig,
+  ResponseField,
+  ResponseFieldState,
+  ResponseFigure,
+  ResponseSpec,
+  ResponseState,
+  SortBin,
+  SortCard,
+  SortField,
+  SortFieldState,
+} from './response';
+
 export {
   applyActionWithLinks,
   applyControl,

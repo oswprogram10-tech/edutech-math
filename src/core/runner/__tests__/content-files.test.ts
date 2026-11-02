@@ -102,6 +102,27 @@ describe('data/content 파일', () => {
           const engine = await definitionOf(task.engine);
           check(engine.modes.includes(task.mode), `${task.id}: 없는 모드입니다: ${task.mode}`);
 
+          for (const field of task.response?.fields ?? []) {
+            const figures =
+              field.kind === 'choice'
+                ? field.options.flatMap((option) => (option.figure ? [option.figure] : []))
+                : field.kind === 'order'
+                  ? field.items.flatMap((item) => (item.figure ? [item.figure] : []))
+                  : [];
+            for (const figure of figures) {
+              check(
+                engineIds.has(figure.engine),
+                `${task.id}: 없는 그림 엔진입니다: ${figure.engine}`,
+              );
+              if (!engineIds.has(figure.engine)) continue;
+              const figureEngine = await definitionOf(figure.engine);
+              check(
+                figureEngine.modes.includes(figure.mode),
+                `${task.id}: 그림 엔진 ${figure.engine}에 없는 모드입니다: ${figure.mode}`,
+              );
+            }
+          }
+
           if (content.unit !== 'demo') {
             for (const concept of task.concepts) {
               check(

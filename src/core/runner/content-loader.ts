@@ -61,12 +61,45 @@ function checkTask(task: unknown, path: string): void {
   if (!isRecord(goal) || typeof goal['kind'] !== 'string' || !GOAL_KINDS.has(goal['kind'])) {
     fail(`${path}.goal: 알 수 없는 목표입니다.`);
   }
+  if (task['showEngine'] !== undefined && typeof task['showEngine'] !== 'boolean') {
+    fail(`${path}.showEngine: 참·거짓이 아닙니다.`);
+  }
+  if (task['response'] !== undefined) checkResponse(task['response'], task['submit'], path);
   if (task['views'] !== undefined && !Array.isArray(task['views'])) {
     fail(`${path}.views: 배열이 아닙니다.`);
+  }
+  if (Array.isArray(task['views'])) {
+    task['views'].forEach((view, index) => {
+      if (isRecord(view) && view['slot'] === 'response') {
+        fail(`${path}.views.${index}.slot: response는 예약 슬롯입니다.`);
+      }
+    });
   }
   if (task['links'] !== undefined && !Array.isArray(task['links'])) {
     fail(`${path}.links: 배열이 아닙니다.`);
   }
+}
+
+const RESPONSE_KINDS = new Set(['number', 'choice', 'order', 'compare', 'sort']);
+
+function checkResponse(response: unknown, submit: unknown, path: string): void {
+  if (!isRecord(response)) fail(`${path}.response: 객체가 아닙니다.`);
+  if (submit !== 'button') fail(`${path}.submit: response가 있으면 button이어야 합니다.`);
+  const fields = response['fields'];
+  if (!Array.isArray(fields) || fields.length === 0) {
+    fail(`${path}.response.fields: 비어 있거나 배열이 아닙니다.`);
+  }
+  const ids = new Set<string>();
+  fields.forEach((field, index) => {
+    const fieldPath = `${path}.response.fields.${index}`;
+    if (!isRecord(field)) fail(`${fieldPath}: 객체가 아닙니다.`);
+    if (!isNonEmptyString(field['id'])) fail(`${fieldPath}.id: 문자열이 아닙니다.`);
+    if (ids.has(field['id'])) fail(`${fieldPath}.id: 응답 필드 id가 중복됩니다.`);
+    ids.add(field['id']);
+    if (typeof field['kind'] !== 'string' || !RESPONSE_KINDS.has(field['kind'])) {
+      fail(`${fieldPath}.kind: 알 수 없는 응답 종류입니다.`);
+    }
+  });
 }
 
 /**

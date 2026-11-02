@@ -66,6 +66,204 @@
           "links": [{ "from": "left", "event": "counter-added", "to": "right" }]
         }
       ]
+    },
+    {
+      "id": "demo.A3",
+      "title": "답을 직접 써 보기",
+      "tasks": [
+        {
+          "id": "demo.A3.T1",
+          "prompt": "1/2 + 1/3을 한 번에 나타낸 수를 분수로 써 보세요.",
+          "engine": "E00",
+          "mode": "free",
+          "cpa": "A",
+          "config": { "gridSize": 100 },
+          "goal": { "kind": "equals", "path": "response.ans.value", "value": "5/6" },
+          "hints": [],
+          "concepts": [],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "ans",
+                "label": "합",
+                "forms": ["fraction", "mixed"]
+              }
+            ]
+          },
+          "showEngine": false
+        },
+        {
+          "id": "demo.A3.T2",
+          "prompt": "1/2만큼 색칠한 그림을 고르세요.",
+          "engine": "E00",
+          "mode": "free",
+          "cpa": "P",
+          "config": {},
+          "goal": { "kind": "equals", "path": "response.pick.selected", "value": ["a"] },
+          "hints": [],
+          "concepts": [],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "pick",
+                "label": "그림",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "a",
+                    "label": "가",
+                    "figure": {
+                      "engine": "E05",
+                      "mode": "shade",
+                      "cpa": "P",
+                      "config": {
+                        "mode": "shade",
+                        "shape": "bar",
+                        "whole": { "shape": "bar", "partsX": 2, "shaded": [0] }
+                      }
+                    }
+                  },
+                  {
+                    "id": "b",
+                    "label": "나",
+                    "figure": {
+                      "engine": "E05",
+                      "mode": "shade",
+                      "cpa": "P",
+                      "config": {
+                        "mode": "shade",
+                        "shape": "bar",
+                        "whole": { "shape": "bar", "partsX": 3, "shaded": [0, 1] }
+                      }
+                    }
+                  },
+                  {
+                    "id": "c",
+                    "label": "다",
+                    "figure": {
+                      "engine": "E05",
+                      "mode": "shade",
+                      "cpa": "P",
+                      "config": {
+                        "mode": "shade",
+                        "shape": "bar",
+                        "whole": { "shape": "bar", "partsX": 4, "shaded": [0] }
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "showEngine": false
+        },
+        {
+          "id": "demo.A3.T3",
+          "prompt": "1/2, 2/3, 3/4을 작은 수부터 차례대로 놓으세요.",
+          "engine": "E00",
+          "mode": "free",
+          "cpa": "A",
+          "config": {},
+          "goal": {
+            "kind": "equals",
+            "path": "response.seq.order",
+            "value": ["a", "b", "c"]
+          },
+          "hints": [],
+          "concepts": [],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "order",
+                "id": "seq",
+                "label": "차례",
+                "items": [
+                  { "id": "b", "label": "2/3" },
+                  { "id": "c", "label": "3/4" },
+                  { "id": "a", "label": "1/2" }
+                ]
+              }
+            ]
+          },
+          "showEngine": false
+        },
+        {
+          "id": "demo.A3.T4",
+          "prompt": "3/5와 2/3 사이에 알맞은 부등호를 고르세요.",
+          "engine": "E00",
+          "mode": "free",
+          "cpa": "A",
+          "config": {},
+          "goal": { "kind": "equals", "path": "response.cmp.symbol", "value": "<" },
+          "hints": [],
+          "concepts": [],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "compare",
+                "id": "cmp",
+                "label": "부등호",
+                "left": "3/5",
+                "right": "2/3"
+              }
+            ]
+          },
+          "showEngine": false
+        },
+        {
+          "id": "demo.A3.T5",
+          "prompt": "수를 1보다 작은 것과 1보다 큰 것으로 나누세요.",
+          "engine": "E00",
+          "mode": "free",
+          "cpa": "A",
+          "config": {},
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "equals",
+                "path": "response.sort.bins.small",
+                "value": ["a", "c"]
+              },
+              {
+                "kind": "equals",
+                "path": "response.sort.bins.large",
+                "value": ["b", "d"]
+              },
+              { "kind": "equals", "path": "response.sort.unsorted", "value": [] }
+            ]
+          },
+          "hints": [],
+          "concepts": [],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "sort",
+                "id": "sort",
+                "label": "카드",
+                "cards": [
+                  { "id": "a", "label": "3/4" },
+                  { "id": "b", "label": "5/4" },
+                  { "id": "c", "label": "0.6" },
+                  { "id": "d", "label": "1.2" }
+                ],
+                "bins": [
+                  { "id": "small", "label": "1보다 작아요" },
+                  { "id": "large", "label": "1보다 커요" }
+                ]
+              }
+            ]
+          },
+          "showEngine": false
+        }
+      ]
     }
   ]
 }

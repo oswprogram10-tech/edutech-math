@@ -1,5 +1,6 @@
 /** T005 활동 실행기의 공개 타입. */
 import type { CPA, EngineId, JsonValue, Observation, Task, UnitId } from '../engine-sdk';
+import type { ResponseSpec } from './response/types';
 
 export type SubmitMode = 'auto' | 'button';
 
@@ -28,6 +29,10 @@ export interface ContentTask extends Task {
   readonly submit: SubmitMode;
   readonly views?: readonly TaskViewSpec[];
   readonly links?: readonly TaskLinkSpec[];
+  /** 실행기의 특별 슬롯 `response`에 그릴 응답 필드. 있으면 submit은 button이다. */
+  readonly response?: ResponseSpec;
+  /** false면 엔진 패널을 그리지 않는다. 엔진 상태는 판정·재생을 위해 그대로 만든다. */
+  readonly showEngine?: boolean;
 }
 
 export interface ContentActivity {
