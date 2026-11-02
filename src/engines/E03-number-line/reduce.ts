@@ -88,8 +88,15 @@ export function createInitialState(config: NumberLineConfig): NumberLineState {
   for (const card of cards) cardValues[card] = null;
 
   const minText = min.toJSON();
-  const initialWidth = viewWidth(max.sub(min), range.min);
-  const initialView = centeredView(min, max, initialWidth, min);
+  const initialRow = buildRows({
+    mode,
+    unit: safeUnit.toJSON(),
+    subdivisions,
+    zoomLevel: range.min,
+  })[0];
+  const initialTick = initialRow?.step ?? safeUnit;
+  const initialWidth = viewWidth(max.sub(min), initialTick);
+  const initialView = centeredView(min, max, initialWidth, min, initialTick);
   return {
     mode,
     min: minText,
@@ -299,8 +306,15 @@ export function reduce(state: NumberLineState, action: NumberLineAction): Number
       const originMin = parseValue(state.min) ?? Rational.of(0);
       const max = parseValue(state.max) ?? originMin.add(ONE);
       const center = parseValue(action.center) ?? parseValue(state.cursor) ?? originMin;
-      const width = viewWidth(max.sub(originMin), clamped);
-      const window = centeredView(originMin, max, width, center);
+      const nextTick =
+        buildRows({
+          mode: state.mode,
+          unit: state.unit,
+          subdivisions: state.subdivisions,
+          zoomLevel: clamped,
+        })[0]?.step ?? ONE;
+      const width = viewWidth(max.sub(originMin), nextTick);
+      const window = centeredView(originMin, max, width, center, nextTick);
       const next = {
         ...state,
         zoomLevel: clamped,

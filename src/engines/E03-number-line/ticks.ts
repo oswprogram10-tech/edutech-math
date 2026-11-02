@@ -66,17 +66,27 @@ export function tenTo(level: number): Rational {
   return result;
 }
 
-/** level 단계에서 보이는 범위 폭 = 전체 폭 / 10^level. */
-export function viewWidth(fullSpan: Rational, level: number): Rational {
-  return fullSpan.div(tenTo(level));
+/**
+ * 그 단계에서 눈금 10칸이 보이도록 창 폭을 정한다.
+ * 전체 폭이 10칸보다 좁으면 전체를 보여 준다.
+ */
+export function viewWidth(fullSpan: Rational, tick: Rational): Rational {
+  if (tick.isZero() || tick.isNegative()) return fullSpan;
+  const tenTicks = tick.mul(TEN);
+  return tenTicks.compareTo(fullSpan) < 0 ? tenTicks : fullSpan;
 }
 
-/** `width` 폭의 창을 `center` 가운데 두고 `[min, max]` 안으로 밀어 넣는다. */
+/**
+ * `width` 폭의 창을 `center` 가운데 두고 `[min, max]` 안으로 밀어 넣는다.
+ * `step`을 주면 창의 왼쪽 끝을 눈금에 맞춰, 창 안에 눈금 11개(10칸)가
+ * 들어가게 한다. 눈금 격자에 맞출 수 없으면 그냥 가운데 둔다.
+ */
 export function centeredView(
   min: Rational,
   max: Rational,
   width: Rational,
   center: Rational,
+  step?: Rational,
 ): { readonly min: Rational; readonly max: Rational } {
   const full = max.sub(min);
   if (width.compareTo(full) >= 0 || width.isZero() || width.isNegative()) {
@@ -84,6 +94,11 @@ export function centeredView(
   }
   let low = center.sub(width.div(Rational.of(2)));
   let high = low.add(width);
+  if (step && !step.isZero() && !step.isNegative()) {
+    const tickIndex = roundRational(low.sub(min).div(step));
+    low = min.add(step.mul(Rational.of(tickIndex)));
+    high = low.add(width);
+  }
   if (low.compareTo(min) < 0) {
     low = min;
     high = min.add(width);
