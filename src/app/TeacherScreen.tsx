@@ -14,9 +14,17 @@ import {
   PinUnavailableError,
   saveTeacherPin,
   SETTINGS_KEYS,
+  setEnabledUnits,
   verifyTeacherPin,
 } from '../core/storage';
 import type { Storage, StorageStatus } from '../core/storage';
+import {
+  constellationUnitIds,
+  loadUnitSummaries,
+  readEnabledUnitSetting,
+  resolveEnabledUnitIds,
+} from './content-units';
+import type { UnitSummary } from './content-units';
 import { teacherStrings } from './strings.ko';
 import styles from './TeacherScreen.module.css';
 
@@ -45,6 +53,137 @@ function errorText(code: ErrorCode): string {
 
 function onlyDigits(value: string): string {
   return value.replace(/\D/g, '').slice(0, 4);
+}
+
+function sortUnits(units: readonly UnitSummary[]): UnitSummary[] {
+  return [...units].sort(
+    (a, b) =>
+      a.grade - b.grade || a.semester - b.semester || a.order - b.order || a.id.localeCompare(b.id),
+  );
+}
+
+/**
+ * 교사가 켠 단원만 학생 별자리에서 또렷하게 보인다.
+ * 목록은 콘텐츠가 있는 단원(`demo` 제외)만 보여 준다.
+ */
+function UnitToggles({ storage }: { readonly storage: Storage }) {
+  const [units, setUnits] = useState<readonly UnitSummary[] | null>(null);
+  const [enabled, setEnabled] = useState<ReadonlySet<string>>(() => new Set());
+  const [error, setError] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const ids = constellationUnitIds();
+        const [all, raw] = await Promise.all([
+          loadUnitSummaries(),
+          readEnabledUnitSetting(storage),
+        ]);
+        if (cancelled) return;
+        const byId = new Map(all.map((unit) => [unit.id, unit]));
+        const list = sortUnits(
+          ids.flatMap((id) => {
+            const unit = byId.get(id);
+            return unit ? [unit] : [];
+          }),
+        );
+        setUnits(list);
+        setEnabled(resolveEnabledUnitIds(raw, ids));
+      } catch (reason) {
+        console.warn('[app] 단원 목록을 불러오지 못했습니다.', reason);
+        if (!cancelled) setError(true);
+      }
+    };
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [storage]);
+
+  const save = async (next: ReadonlySet<string>) => {
+    setBusy(true);
+    setError(false);
+    setEnabled(next);
+    try {
+      await setEnabledUnits(storage, [...next]);
+    } catch (reason) {
+      console.warn('[app] 단원 설정을 저장하지 못했습니다.', reason);
+      setError(true);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const toggle = (unitId: string, on: boolean) => {
+    const next = new Set(enabled);
+    if (on) next.add(unitId);
+    else next.delete(unitId);
+    void save(next);
+  };
+
+  return (
+    <section className={styles.section} aria-labelledby="units-heading">
+      <h2 id="units-heading" className={styles.sectionTitle}>
+        {teacherStrings.unitsHeading}
+      </h2>
+      <p className={styles.status}>{teacherStrings.unitsHint}</p>
+
+      {error ? (
+        <p className={styles.error} role="alert">
+          {teacherStrings.unitsError}
+        </p>
+      ) : null}
+
+      {units === null ? (
+        <p className={styles.status} role="status">
+          {teacherStrings.unitsLoading}
+        </p>
+      ) : (
+        <>
+          <div className={styles.unitActions}>
+            <button
+              type="button"
+              className={styles.link}
+              disabled={busy}
+              onClick={() => void save(new Set(units.map((unit) => unit.id)))}
+            >
+              {teacherStrings.enableAll}
+            </button>
+            <button
+              type="button"
+              className={styles.link}
+              disabled={busy}
+              onClick={() => void save(new Set())}
+            >
+              {teacherStrings.disableAll}
+            </button>
+          </div>
+
+          <ul className={styles.unitList}>
+            {units.map((unit) => (
+              <li key={unit.id}>
+                <label className={styles.unitRow}>
+                  <input
+                    type="checkbox"
+                    className={styles.unitCheck}
+                    checked={enabled.has(unit.id)}
+                    disabled={busy}
+                    onChange={(event) => toggle(unit.id, event.currentTarget.checked)}
+                  />
+                  <span className={styles.unitTitle}>{unit.title}</span>
+                  <span className={styles.unitMeta}>
+                    {teacherStrings.unitGrade(unit.grade, unit.semester)}
+                  </span>
+                </label>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </section>
+  );
 }
 
 export function TeacherScreen() {
@@ -191,6 +330,8 @@ export function TeacherScreen() {
             {teacherStrings.demoOpen}
           </a>
         </section>
+
+        <UnitToggles storage={data.storage} />
 
         <section className={styles.section} aria-labelledby="sandbox-heading">
           <h2 id="sandbox-heading" className={styles.sectionTitle}>

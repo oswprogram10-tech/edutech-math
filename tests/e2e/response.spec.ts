@@ -100,8 +100,17 @@ test('응답 과제 다섯 가지를 틀렸다가 고쳐서 통과한다', async
 
   await failThenNext(page);
   await expect(hint).toHaveAttribute('data-hint-level', '3');
-  await expect(page.getByTestId('hint-help')).toBeVisible();
   await expectNoAnswerLeak(page, ['5/6']);
+
+  // ③ 단계는 지난 개념 부스터를 연다. 부스터를 불러오는 동안에는 도움 카드가 보이고,
+  // 준비가 끝나면 대화 상자로 바뀐다. 둘 중 하나는 반드시 있어야 한다(로딩 속도에 따라 갈린다).
+  await expect
+    .poll(async () => {
+      const helpCards = await page.getByTestId('hint-help').count();
+      const dialogs = await page.getByTestId('booster-dialog').count();
+      return helpCards + dialogs;
+    })
+    .toBeGreaterThan(0);
   await finishBooster(page);
 
   // 지우고 5/6으로 고쳐 쓴다.
