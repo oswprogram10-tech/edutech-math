@@ -1,0 +1,82 @@
+.wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.button {
+  min-height: 48px;
+  min-width: 48px;
+  padding: 0 1rem;
+  border: 2px solid #2f6fde;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #1d2330;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.wrap[data-target-size='64'] .button {
+  min-height: 64px;
+  min-width: 64px;
+  font-size: 1.1rem;
+}
+
+.button[aria-pressed='true'] {
+  background: #dbe7ff;
+  border-color: #1d4fa8;
+}
+
+.button:disabled {
+  border-color: #aab4c6;
+  color: #7a8497;
+  cursor: not-allowed;
+}
+
+.canvas {
+  display: block;
+  width: 100%;
+  aspect-ratio: 5 / 3;
+  border-radius: 16px;
+  background: #fbfaf6;
+  border: 1px solid #d7deea;
+  touch-action: none;
+  user-select: none;
+}
+
+.canvas [role='button']:focus-visible,
+.button:focus-visible {
+  outline: 3px solid #e8872e;
+  outline-offset: 3px;
+}
+
+.readoutRow {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.readout {
+  margin: 0;
+  color: #1d2330;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.instructions {
+  margin: 0;
+  color: var(--muted, #5b6577);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
