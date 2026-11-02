@@ -7,10 +7,15 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ComponentType } from 'react';
-import { OverlayLayer } from '../engine-sdk';
+import { OverlayLayer, loadEngine } from '../engine-sdk';
 import type { EngineId, LoadedEngine, Observation, TargetSize } from '../engine-sdk';
-import type { LearnerId, Storage, TaskStatus as StorageTaskStatus } from '../storage';
-import { taskProgressId } from '../storage';
+import type {
+  LearnerId,
+  MasteryRecord,
+  Storage,
+  TaskStatus as StorageTaskStatus,
+} from '../storage';
+import { masteryId, taskProgressId } from '../storage';
 import {
   backtrackTarget,
   diagnoseObservation,
@@ -20,9 +25,20 @@ import {
 } from '../feedback';
 import type { HintSelection } from '../feedback';
 import {
+  boosterPlanFor,
+  findBacktrackCandidates,
+  initialProbabilityFor,
+  loadKnowledgeGraph,
+  masteryAfterResult,
+  masteryParams,
+} from '../knowledge';
+import type { BoosterPlan, KnowledgeGraph } from '../knowledge';
+import {
   advanceSession,
   failureCount,
+  hasNextTask,
   isSessionComplete,
+  resetTaskFailures,
   sessionAfterEdit,
   sessionAfterSubmit,
   startSession,
@@ -31,8 +47,10 @@ import { applyActionWithLinks, applyControl, createSlotHistories, observationsOf
 import { evaluateGoal, resolveObservationPath } from './goal';
 import { RESPONSE_SLOT, judgeObservation as mergeJudgeObservation } from './response';
 import { TaskRecorder } from './recorder';
+import type { BacktrackEvent } from './recorder';
+import { loadUnitContent } from './content-loader';
 import { runnerStrings } from './strings.ko';
-import { taskSlotViews } from './views';
+import { engineIdsOfContent, taskSlotViews } from './views';
 import type { SlotHistories } from './links';
 import type { TaskSlotView } from './views';
 import type {
@@ -118,6 +136,8 @@ interface TaskStageProps {
   readonly onFinish?: () => void;
   readonly onHint?: (text: string | null) => void;
   readonly onBacktrack?: (request: BacktrackRequest) => void;
+  /** ③에서 '선생님께 도움 요청' 카드를 보여 줄지. 기본은 onBacktrack이 없을 때. */
+  readonly showHelpCard?: boolean;
 }
 
 function TaskStage({
@@ -139,6 +159,7 @@ function TaskStage({
   onFinish,
   onHint,
   onBacktrack,
+  showHelpCard,
 }: TaskStageProps) {
   const [histories, setHistories] = useState<SlotHistories>(() => createSlotHistories(slots));
   const [hint, setHint] = useState<HintSelection | null>(null);
@@ -147,8 +168,20 @@ function TaskStage({
   const passedRef = useRef(false);
   const groupRef = useRef(0);
   const failureRef = useRef(initialFailures);
+  const previousFailuresRef = useRef(initialFailures);
   const onHintRef = useRef(onHint);
   const onBacktrackRef = useRef(onBacktrack);
+
+  // 부스터를 통과해 실패 횟수가 0으로 돌아오면 힌트 ①부터 다시 시작한다.
+  // 과제가 바뀌면 TaskStage 자체가 새로 만들어지므로 여기서는 같은 과제의 초기화만 다룬다.
+  useEffect(() => {
+    if (initialFailures < previousFailuresRef.current) {
+      failureRef.current = initialFailures;
+      setHint(null);
+      onHintRef.current?.(null);
+    }
+    previousFailuresRef.current = initialFailures;
+  }, [initialFailures]);
 
   useEffect(() => {
     onHintRef.current = onHint;
@@ -200,7 +233,10 @@ function TaskStage({
       if (recordSubmission) void recorder.submitted();
       void recorder.passed();
       putProgress(storage, learner, content, task.id, 'completed');
-      onResult(true);
+      // 힌트를 보고 맞혔으면 그 단계만큼만 숙달도를 올린다(docs/05 §2).
+      // 틀린 적이 없으면(failureRef 0) 힌트 없음으로 본다.
+      const shownLevel = failureRef.current > 0 ? hintLevelFor(failureRef.current) : 0;
+      onResult(true, shownLevel);
     },
     [recorder, storage, learner, content, task.id, onResult],
   );
@@ -252,7 +288,6 @@ function TaskStage({
         selection.kind === 'rule' ? selection.rule.backtrack : undefined,
         misconceptions,
       );
-      void recorder.backtracked(target);
       onBacktrackRef.current?.({ taskId: task.id, target, misconceptions });
     }
   }, [judgeView, recorder, slots, task]);
@@ -416,7 +451,7 @@ function TaskStage({
                 />
               </div>
             ) : null}
-            {hint.level === 3 && !onBacktrack ? (
+            {hint.level === 3 && (showHelpCard ?? !onBacktrack) ? (
               <div className={styles.helpCard} data-testid="hint-help" role="status">
                 <p className={styles.helpTitle}>{feedbackStrings.helpTitle}</p>
                 <p className={styles.helpBody}>{feedbackStrings.helpBody}</p>
@@ -458,6 +493,138 @@ function TaskStage({
   );
 }
 
+interface BoosterRunnerProps {
+  readonly plan: BoosterPlan;
+  readonly content: UnitContent;
+  readonly definitions: ReadonlyMap<EngineId, LoadedEngine>;
+  readonly storage?: Storage;
+  readonly learner: LearnerId;
+  readonly targetSize: TargetSize;
+  readonly onTaskResult: (task: ContentTask, passed: boolean, hintLevel: number) => void;
+  readonly onPassed: () => void;
+  readonly onFailed: () => void;
+}
+
+/**
+ * 부스터 모달. 원래 과제 화면은 실행기가 뒤에 그대로 두므로
+ * 여기서는 부스터 과제만 진행하고, 끝나면 실행기에 알린다.
+ * 학년·단원 ID는 보여 주지 않고 활동 제목만 쓴다.
+ */
+function BoosterRunner({
+  plan,
+  content,
+  definitions,
+  storage,
+  learner,
+  targetSize,
+  onTaskResult,
+  onPassed,
+  onFailed,
+}: BoosterRunnerProps) {
+  const [session, setSession] = useState<RunnerSession>(() =>
+    startSession(plan.tasks.map((task) => task.id)),
+  );
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const passedNotifiedRef = useRef(false);
+  const current = plan.tasks[session.index];
+
+  useEffect(() => {
+    if (session.status !== 'passed' || hasNextTask(session) || passedNotifiedRef.current) return;
+    passedNotifiedRef.current = true;
+    onPassed();
+  }, [session, onPassed]);
+
+  // 포커스는 모달 안에만 둔다. 닫히면 열기 전 자리로 돌아간다.
+  useEffect(() => {
+    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const dialog = dialogRef.current;
+    const focusables = (): HTMLElement[] => {
+      if (!dialog) return [];
+      return Array.from(
+        dialog.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      );
+    };
+
+    focusables()[0]?.focus();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab') return;
+      const items = focusables();
+      if (items.length === 0) {
+        event.preventDefault();
+        return;
+      }
+      const first = items[0] as HTMLElement;
+      const last = items[items.length - 1] as HTMLElement;
+      const active = document.activeElement;
+      const inside = active instanceof HTMLElement && dialog?.contains(active) === true;
+      if (event.shiftKey && (!inside || active === first)) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (!inside || active === last)) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      if (previous?.isConnected) previous.focus();
+    };
+  }, []);
+
+  if (!current) return null;
+
+  const slots = taskSlotViews(current, definitions);
+
+  return (
+    <div className={styles.modalBackdrop} data-testid="booster-backdrop">
+      <div
+        ref={dialogRef}
+        className={styles.modal}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="booster-title"
+        data-testid="booster-dialog"
+      >
+        <h2 id="booster-title" className={styles.modalTitle}>
+          {runnerStrings.boosterTitle}
+        </h2>
+        <p className={styles.modalActivity}>{plan.activity.title}</p>
+        <TaskStage
+          key={current.id}
+          content={content}
+          activity={plan.activity}
+          task={current}
+          slots={slots}
+          links={current.links ?? []}
+          definitions={definitions}
+          storage={storage}
+          learner={learner}
+          targetSize={targetSize}
+          status={isSessionComplete(session) ? 'passed' : session.status}
+          isLast={session.index === plan.tasks.length - 1}
+          initialFailures={failureCount(session, current.id)}
+          onResult={(passed, hintLevel = 0) => {
+            onTaskResult(current, passed, hintLevel);
+            // 부스터 안에서는 다시 부스터를 열지 않는다. 실행기가 깊이를 센다.
+            if (!passed && hintLevel >= 3) {
+              onFailed();
+              return;
+            }
+            setSession((value) => sessionAfterSubmit(value, current.id, passed, hintLevel));
+          }}
+          onEdit={() => setSession(sessionAfterEdit)}
+          onNext={() => setSession(advanceSession)}
+          onBacktrack={() => undefined}
+          showHelpCard={false}
+        />
+      </div>
+    </div>
+  );
+}
+
 export interface ActivityRunnerProps {
   readonly content: UnitContent;
   readonly definitions: ReadonlyMap<EngineId, LoadedEngine>;
@@ -474,8 +641,20 @@ export interface ActivityRunnerProps {
   readonly onExit?: () => void;
   /** 힌트 문장이 바뀔 때 알린다. 없으면 화면에만 보인다. */
   readonly onHint?: (text: string | null) => void;
-  /** ③ 역추적 요청. 없으면 실행기가 '선생님께 도움을 요청해요' 카드를 보여 준다. */
+  /**
+   * ③ 역추적 요청 알림. 실행기는 이 콜백과 별개로 지식 그래프를 보고
+   * 부스터 모달을 직접 연다. 후보가 없으면 '선생님께 도움 요청' 카드를 남긴다.
+   */
   readonly onBacktrack?: (request: BacktrackRequest) => void;
+  /** 부스터 콘텐츠 로더. 테스트에서 가짜 콘텐츠를 넣을 때 바꾼다. */
+  readonly loadContent?: (unitId: string) => Promise<UnitContent>;
+}
+
+interface BoosterSession {
+  readonly plan: BoosterPlan;
+  readonly content: UnitContent;
+  readonly definitions: ReadonlyMap<EngineId, LoadedEngine>;
+  readonly request: BacktrackRequest;
 }
 
 export function ActivityRunner({
@@ -489,6 +668,7 @@ export function ActivityRunner({
   onExit,
   onHint,
   onBacktrack,
+  loadContent = loadUnitContent,
 }: ActivityRunnerProps) {
   const tasks = useMemo<FlatTask[]>(() => {
     const activities = activityId
@@ -499,12 +679,262 @@ export function ActivityRunner({
   const [session, setSession] = useState<RunnerSession>(() =>
     startSession(tasks.map((item) => item.task.id)),
   );
+  const [booster, setBooster] = useState<BoosterSession | null>(null);
+  // 도움 카드를 띄운 과제 ID. 과제가 바뀌면 자동으로 숨는다(상태 초기화 효과 없이).
+  const [helpTaskId, setHelpTaskId] = useState<string | null>(null);
+
+  const graphRef = useRef<KnowledgeGraph | null>(null);
+  const masteryRef = useRef<Map<string, MasteryRecord>>(new Map());
+  const knowledgeReadyRef = useRef<Promise<void>>(Promise.resolve());
+  const masteryQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const backtrackingRef = useRef(false);
+  const boosterDepthRef = useRef(0);
 
   const current = tasks[session.index];
+  const taskById = useMemo(
+    () => new Map(tasks.map((item) => [item.task.id, item.task] as const)),
+    [tasks],
+  );
 
   useEffect(() => {
     if (current) onTaskChange?.(current.task);
   }, [current, onTaskChange]);
+
+  // 그래프와 이 학습자의 숙달 기록을 한 번 불러온다. 실패해도 수업은 계속된다.
+  useEffect(() => {
+    let cancelled = false;
+    knowledgeReadyRef.current = (async () => {
+      let graph: KnowledgeGraph | null = null;
+      try {
+        graph = await loadKnowledgeGraph();
+      } catch (error) {
+        console.warn('[runner] 지식 그래프를 불러오지 못했습니다.', error);
+      }
+
+      let records: MasteryRecord[] = [];
+      if (storage) {
+        try {
+          records = await storage.listMastery();
+        } catch (error) {
+          console.warn('[runner] 숙달 기록을 불러오지 못했습니다.', error);
+        }
+      }
+      if (cancelled) return;
+      if (graph) graphRef.current = graph;
+      const mine = new Map<string, MasteryRecord>();
+      for (const record of records) {
+        if (record.learner === learner) mine.set(record.conceptId, record);
+      }
+      masteryRef.current = mine;
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [storage, learner]);
+
+  /**
+   * 과제 결과를 숙달도에 반영한다. 과제마다 개념 전부를 갱신하고 저장한다.
+   * 여러 제출이 겹쳐도 앞 결과를 덮어쓰지 않도록 한 줄로 세운다.
+   */
+  const applyMasteryResult = useCallback(
+    (task: ContentTask, passed: boolean, hintLevel: number) => {
+      if (task.concepts.length === 0) return;
+      const run = async (): Promise<void> => {
+        await knowledgeReadyRef.current;
+        let graph = graphRef.current;
+        if (!graph) {
+          try {
+            graph = await loadKnowledgeGraph();
+            graphRef.current = graph;
+          } catch (error) {
+            console.warn('[runner] 숙달 확률을 계산할 그래프가 없습니다.', error);
+          }
+        }
+
+        const records = new Map(masteryRef.current);
+        const changed: MasteryRecord[] = [];
+        for (const conceptId of task.concepts) {
+          const previous = records.get(conceptId);
+          const initialP = graph
+            ? initialProbabilityFor(graph, records, conceptId)
+            : masteryParams.initialP;
+          const next = masteryAfterResult(previous, passed, hintLevel, task.id, initialP);
+          const record: MasteryRecord = {
+            id: masteryId(learner, conceptId),
+            learner,
+            conceptId,
+            p: next.p,
+            passedTasks: next.passedTasks,
+            updatedAt: Date.now(),
+          };
+          records.set(conceptId, record);
+          changed.push(record);
+        }
+        masteryRef.current = records;
+
+        if (storage) {
+          try {
+            await storage.putMasteryRecords(changed);
+          } catch (error) {
+            console.warn('[runner] 숙달 기록을 저장하지 못했습니다.', error);
+          }
+        }
+      };
+
+      masteryQueueRef.current = masteryQueueRef.current.then(run).catch((error: unknown) => {
+        console.warn('[runner] 숙달 기록을 갱신하지 못했습니다.', error);
+      });
+    },
+    [learner, storage],
+  );
+
+  const recordBacktrack = useCallback(
+    (event: BacktrackEvent) => {
+      const source = taskById.get(event.from) ?? current?.task;
+      if (!source) return;
+      const recorder = new TaskRecorder({
+        sink: storage,
+        learner,
+        unit: content.unit,
+        task: source.id,
+        engine: source.engine,
+      });
+      void recorder.backtracked(event);
+    },
+    [storage, learner, content.unit, taskById, current?.task],
+  );
+
+  const definitionsFor = useCallback(
+    async (
+      boosterContent: UnitContent,
+    ): Promise<ReadonlyMap<EngineId, LoadedEngine> | undefined> => {
+      const result = new Map(definitions);
+      try {
+        await Promise.all(
+          engineIdsOfContent(boosterContent).map(async (id) => {
+            if (result.has(id)) return;
+            result.set(id, await loadEngine(id));
+          }),
+        );
+      } catch (error) {
+        console.warn('[runner] 부스터 엔진을 불러오지 못했습니다.', error);
+        return undefined;
+      }
+      return result;
+    },
+    [definitions],
+  );
+
+  const openBooster = useCallback(
+    async (request: BacktrackRequest, minDepth: number): Promise<void> => {
+      if (backtrackingRef.current) return;
+      backtrackingRef.current = true;
+      setHelpTaskId(request.taskId);
+      try {
+        await knowledgeReadyRef.current;
+        let graph = graphRef.current;
+        if (!graph) {
+          try {
+            graph = await loadKnowledgeGraph();
+            graphRef.current = graph;
+          } catch (error) {
+            console.warn('[runner] 역추적할 지식 그래프가 없습니다.', error);
+            return;
+          }
+        }
+
+        const sourceTask = taskById.get(request.taskId) ?? current?.task;
+        if (!sourceTask) return;
+
+        const candidates = findBacktrackCandidates(graph, masteryRef.current, {
+          taskConcepts: sourceTask.concepts,
+          ...(request.target === undefined ? {} : { target: request.target }),
+          minDepth,
+        });
+
+        for (const candidate of candidates) {
+          const concept = graph.concepts.get(candidate.conceptId);
+          if (!concept) continue;
+          let loaded: UnitContent | undefined;
+          try {
+            loaded = await loadContent(concept.unit);
+          } catch {
+            // 아직 콘텐츠가 없는 단원은 다음 후보로 넘어간다.
+            continue;
+          }
+          const plan = boosterPlanFor(candidate.conceptId, loaded);
+          if (!plan) continue;
+          const loadedDefinitions = await definitionsFor(loaded);
+          if (!loadedDefinitions) continue;
+
+          boosterDepthRef.current = candidate.depth;
+          recordBacktrack({
+            from: request.taskId,
+            to: candidate.conceptId,
+            depth: candidate.depth,
+            outcome: 'opened',
+          });
+          setBooster({
+            plan,
+            content: loaded,
+            definitions: loadedDefinitions,
+            request,
+          });
+          setHelpTaskId(null);
+          return;
+        }
+
+        recordBacktrack({ from: request.taskId, depth: minDepth, outcome: 'no-booster' });
+      } finally {
+        backtrackingRef.current = false;
+      }
+    },
+    [taskById, current?.task, loadContent, definitionsFor, recordBacktrack],
+  );
+
+  const handleBacktrack = useCallback(
+    (request: BacktrackRequest) => {
+      onBacktrack?.(request);
+      if (booster) return;
+      void openBooster(request, 0);
+    },
+    [onBacktrack, booster, openBooster],
+  );
+
+  const handleBoosterPassed = useCallback(() => {
+    const active = booster;
+    if (!active) return;
+    recordBacktrack({
+      from: active.request.taskId,
+      to: active.plan.conceptId,
+      depth: boosterDepthRef.current,
+      outcome: 'passed',
+    });
+    setSession((value) => resetTaskFailures(value, active.request.taskId));
+    setBooster(null);
+    setHelpTaskId(null);
+  }, [booster, recordBacktrack]);
+
+  const handleBoosterFailed = useCallback(() => {
+    const active = booster;
+    if (!active) return;
+    const depth = boosterDepthRef.current;
+    recordBacktrack({
+      from: active.request.taskId,
+      to: active.plan.conceptId,
+      depth,
+      outcome: 'failed',
+    });
+    setBooster(null);
+
+    const nextDepth = depth + 1;
+    if (nextDepth > masteryParams.maxBacktrackDepth) {
+      recordBacktrack({ from: active.request.taskId, depth, outcome: 'no-booster' });
+      setHelpTaskId(active.request.taskId);
+      return;
+    }
+    void openBooster(active.request, nextDepth);
+  }, [booster, recordBacktrack, openBooster]);
 
   if (!current) {
     return (
@@ -521,6 +951,9 @@ export function ActivityRunner({
 
   const slots = taskSlotViews(current.task, definitions);
   const complete = isSessionComplete(session);
+  const boosterKey = booster
+    ? `${booster.plan.conceptId}:${booster.plan.tasks.map((task) => task.id).join(',')}`
+    : '';
 
   return (
     <main className={styles.runner}>
@@ -552,15 +985,32 @@ export function ActivityRunner({
         status={complete ? 'passed' : session.status}
         isLast={session.index === tasks.length - 1}
         initialFailures={failureCount(session, current.task.id)}
-        onResult={(passed, hintLevel = 0) =>
-          setSession((value) => sessionAfterSubmit(value, current.task.id, passed, hintLevel))
-        }
+        onResult={(passed, hintLevel = 0) => {
+          applyMasteryResult(current.task, passed, hintLevel);
+          setSession((value) => sessionAfterSubmit(value, current.task.id, passed, hintLevel));
+        }}
         onEdit={() => setSession(sessionAfterEdit)}
         onNext={() => setSession(advanceSession)}
         onFinish={onExit}
         onHint={onHint}
-        onBacktrack={onBacktrack}
+        onBacktrack={handleBacktrack}
+        showHelpCard={helpTaskId === current.task.id}
       />
+
+      {booster ? (
+        <BoosterRunner
+          key={boosterKey}
+          plan={booster.plan}
+          content={booster.content}
+          definitions={booster.definitions}
+          storage={storage}
+          learner={learner}
+          targetSize={targetSize}
+          onTaskResult={applyMasteryResult}
+          onPassed={handleBoosterPassed}
+          onFailed={handleBoosterFailed}
+        />
+      ) : null}
     </main>
   );
 }

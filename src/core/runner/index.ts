@@ -89,6 +89,7 @@ export {
   failureCount,
   hasNextTask,
   isSessionComplete,
+  resetTaskFailures,
   sessionAfterEdit,
   sessionAfterSubmit,
   shownHintLevel,
@@ -96,6 +97,6 @@ export {
 } from './session';
 
 export { TaskRecorder } from './recorder';
-export type { TaskRecorderOptions } from './recorder';
+export type { BacktrackEvent, TaskRecorderOptions } from './recorder';
 
 export { runnerStrings } from './strings.ko';

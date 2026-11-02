@@ -100,7 +100,20 @@ export class TaskRecorder {
   }
 
   /** ③ 역추적 요청. 대상이 없으면 빈 data로 남긴다. */
-  backtracked(target: string | undefined): Promise<LearningEvent | undefined> {
-    return this.record('backtracked', target === undefined ? {} : { target });
+  backtracked(event: BacktrackEvent): Promise<LearningEvent | undefined> {
+    return this.record('backtracked', {
+      from: event.from,
+      ...(event.to === undefined ? {} : { to: event.to }),
+      depth: event.depth,
+      outcome: event.outcome,
+    });
   }
+}
+
+/** 부스터를 열고 닫은 결과. `outcome`은 docs/05 §3의 네 가지다. */
+export interface BacktrackEvent {
+  readonly from: string;
+  readonly to?: string;
+  readonly depth: number;
+  readonly outcome: 'opened' | 'passed' | 'failed' | 'no-booster';
 }

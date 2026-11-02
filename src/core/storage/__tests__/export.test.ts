@@ -31,8 +31,21 @@ function event(id: string, t: number, extra: Partial<LearningEvent> = {}): Learn
   };
 }
 
-function mastery(learner: string, conceptId: string, p: number, updatedAt = 1): MasteryRecord {
-  return { id: masteryId(learner, conceptId), learner, conceptId, p, updatedAt };
+function mastery(
+  learner: string,
+  conceptId: string,
+  p: number,
+  updatedAt = 1,
+  passedTasks?: readonly string[],
+): MasteryRecord {
+  return {
+    id: masteryId(learner, conceptId),
+    learner,
+    conceptId,
+    p,
+    ...(passedTasks === undefined ? {} : { passedTasks }),
+    updatedAt,
+  };
 }
 
 function file(overrides: Partial<ExportFile> = {}): ExportFile {
@@ -190,6 +203,51 @@ describe('parseExportFile', () => {
 
     expect(parseExportFile(unsafe)).toMatchObject({ ok: false, reason: 'unsafe-data' });
   });
+
+  it('passedTasks가 없는 예전 파일도 읽고, 있으면 중복을 지운다', () => {
+    const old = parseExportFile(file({ mastery: [mastery('1', 'c1', 0.2, 2)] }));
+    expect(old).toEqual({ ok: true, file: file({ mastery: [mastery('1', 'c1', 0.2, 2)] }) });
+    if (old.ok) expect(old.file.mastery[0]).not.toHaveProperty('passedTasks');
+
+    const parsed = parseExportFile(
+      file({ mastery: [mastery('1', 'c1', 0.5, 3, ['t1', 't1', 't2'])] }),
+    );
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+    expect(parsed.file.mastery).toEqual([mastery('1', 'c1', 0.5, 3, ['t1', 't2'])]);
+  });
+
+  it('passedTasks 모양이 틀리면 invalid-shape', () => {
+    expect(
+      parseExportFile({
+        ...file(),
+        mastery: [
+          {
+            learner: '1',
+            conceptId: 'c1',
+            p: 0.5,
+            passedTasks: 't1',
+            updatedAt: 1,
+          },
+        ],
+      }),
+    ).toMatchObject({ ok: false, reason: 'invalid-shape' });
+
+    expect(
+      parseExportFile({
+        ...file(),
+        mastery: [
+          {
+            learner: '1',
+            conceptId: 'c1',
+            p: 0.5,
+            passedTasks: ['t1', 2],
+            updatedAt: 1,
+          },
+        ],
+      }),
+    ).toMatchObject({ ok: false, reason: 'invalid-shape' });
+  });
 });
 
 describe('importExportFiles', () => {
@@ -281,6 +339,27 @@ describe('importExportFiles', () => {
         updatedAt: 2,
       },
     ]);
+  });
+
+  it('passedTasks가 없는 예전 기록과 있는 새 기록을 함께 가져온다', async () => {
+    const storage = new MemoryStorage();
+    await storage.putMastery(mastery('1', 'c1', 0.4, 10, ['t1', 't2']));
+
+    const summary = await importExportFiles(storage, [
+      file({ mastery: [mastery('1', 'c2', 0.3, 5)] }),
+    ]);
+
+    expect(summary.added.mastery).toBe(1);
+    expect(await storage.listMastery()).toEqual([
+      mastery('1', 'c1', 0.4, 10, ['t1', 't2']),
+      mastery('1', 'c2', 0.3, 5),
+    ]);
+
+    const newer = mastery('1', 'c1', 0.6, 20, ['t1', 't2', 't3']);
+    const merged = await importExportFiles(storage, [file({ mastery: [newer] })]);
+
+    expect(merged.added.mastery).toBe(0);
+    expect(await storage.listMastery()).toEqual([newer, mastery('1', 'c2', 0.3, 5)]);
   });
 
   it('더 최신 기록이 이긴다', async () => {
