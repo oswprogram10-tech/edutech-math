@@ -86,14 +86,16 @@ test('세 과제를 차례로 풀고, 실패해도 정답·판정 상태를 노�
   await page.getByRole('button', { name: '다음 과제' }).click();
 
   // 과제 3: 연결된 두 판. 왼쪽에 놓으면 오른쪽에도 놓인다.
-  await expect(page.getByText('과제 3 / 3')).toBeVisible();
+  await expect(page.getByText('과제 3 / 8')).toBeVisible();
   await expect(panel(page, 'left')).toBeVisible();
   await expect(panel(page, 'right')).toBeVisible();
 
   await addCounters(page, 'left', 4);
   await expect(panel(page, 'right').locator('[data-counter-id]')).toHaveCount(4);
   await expect(page.getByText('좋아요, 통과했어요!')).toBeVisible();
-  await expect(page.getByText('모든 과제를 마쳤어요.')).toBeVisible();
+  // demo.A3(응답 과제)가 뒤에 더 있으므로 아직 전체 완료는 아니다.
+  await expect(page.getByRole('button', { name: '다음 과제' })).toBeVisible();
+  await expect(page.getByText('모든 과제를 마쳤어요.')).toHaveCount(0);
 });
 
 test('키보드와 되돌리기로도 과제를 진행할 수 있다', async ({ page }) => {

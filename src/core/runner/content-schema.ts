@@ -13,6 +13,7 @@ import type {
   TaskViewSpec,
   UnitContent,
 } from './types';
+import type { ResponseField, ResponseFigure, ResponseSpec } from './response/types';
 
 const engineIdSchema = z
   .string()
@@ -84,6 +85,93 @@ export const linkSchema: z.ZodType<TaskLinkSpec> = z
   })
   .strict();
 
+const numberFormSchema = z.enum(['integer', 'fraction', 'mixed', 'decimal']);
+
+const figureSchema: z.ZodType<ResponseFigure> = z
+  .object({
+    engine: engineIdSchema,
+    mode: z.string().min(1),
+    cpa: cpaSchema,
+    config: jsonValueSchema,
+  })
+  .strict();
+
+const responseFieldSchema: z.ZodType<ResponseField> = z.lazy(() =>
+  z.discriminatedUnion('kind', [
+    z
+      .object({
+        kind: z.literal('number'),
+        id: z.string().min(1),
+        label: z.string().min(1).optional(),
+        forms: z.array(numberFormSchema).min(1),
+      })
+      .strict(),
+    z
+      .object({
+        kind: z.literal('choice'),
+        id: z.string().min(1),
+        label: z.string().min(1).optional(),
+        options: z
+          .array(
+            z
+              .object({
+                id: z.string().min(1),
+                label: z.string().min(1).optional(),
+                figure: figureSchema.optional(),
+              })
+              .strict(),
+          )
+          .min(1),
+        multiple: z.boolean(),
+      })
+      .strict(),
+    z
+      .object({
+        kind: z.literal('order'),
+        id: z.string().min(1),
+        label: z.string().min(1).optional(),
+        items: z
+          .array(
+            z
+              .object({
+                id: z.string().min(1),
+                label: z.string().min(1).optional(),
+                figure: figureSchema.optional(),
+              })
+              .strict(),
+          )
+          .min(1),
+      })
+      .strict(),
+    z
+      .object({
+        kind: z.literal('compare'),
+        id: z.string().min(1),
+        label: z.string().min(1).optional(),
+        left: z.string().min(1),
+        right: z.string().min(1),
+      })
+      .strict(),
+    z
+      .object({
+        kind: z.literal('sort'),
+        id: z.string().min(1),
+        label: z.string().min(1).optional(),
+        cards: z
+          .array(z.object({ id: z.string().min(1), label: z.string().min(1) }).strict())
+          .min(1),
+        bins: z
+          .array(z.object({ id: z.string().min(1), label: z.string().min(1) }).strict())
+          .min(1),
+      })
+      .strict(),
+  ]),
+);
+
+export const responseSchema: z.ZodType<ResponseSpec> = z
+  .object({ fields: z.array(responseFieldSchema).min(1) })
+  .strict();
+
 export const taskSchema: z.ZodType<ContentTask> = z
   .object({
     id: z.string().regex(/^.+\.T[1-9]\d*$/, '과제 ID는 <활동ID>.T<n> 형식이어야 합니다.'),
@@ -98,9 +186,32 @@ export const taskSchema: z.ZodType<ContentTask> = z
     submit: z.enum(['auto', 'button']),
     views: z.array(viewSchema).min(1).optional(),
     links: z.array(linkSchema).optional(),
+    response: responseSchema.optional(),
+    showEngine: z.boolean().optional(),
   })
   .strict()
   .superRefine((task, ctx) => {
+    if (task.response) {
+      if (task.submit !== 'button') {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['submit'],
+          message: 'response가 있으면 submit은 button이어야 합니다.',
+        });
+      }
+      const fieldIds = new Set<string>();
+      task.response.fields.forEach((field, index) => {
+        if (fieldIds.has(field.id)) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['response', 'fields', index, 'id'],
+            message: `응답 필드 id가 중복됩니다: ${field.id}`,
+          });
+        }
+        fieldIds.add(field.id);
+      });
+    }
+
     const views = task.views;
     const links = task.links ?? [];
     if (!views) {
@@ -116,6 +227,13 @@ export const taskSchema: z.ZodType<ContentTask> = z
 
     const slots = new Set<string>();
     views.forEach((view, index) => {
+      if (view.slot === 'response') {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['views', index, 'slot'],
+          message: 'response는 실행기 예약 슬롯이라 views에 쓸 수 없습니다.',
+        });
+      }
       if (slots.has(view.slot)) {
         ctx.addIssue({
           code: 'custom',

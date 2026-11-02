@@ -7,7 +7,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { loadEngine } from '../core/engine-sdk';
 import type { EngineId, LoadedEngine, TargetSize } from '../core/engine-sdk';
-import { ActivityRunner, loadUnitContent } from '../core/runner';
+import { ActivityRunner, engineIdsOfContent, loadUnitContent } from '../core/runner';
 import type { ContentActivity, ContentTask, UnitContent } from '../core/runner';
 import { isLowerGradeUnit, readPreferences, savePreference } from './preferences';
 import { navigate, unitIdOfActivity } from './router';
@@ -81,13 +81,9 @@ export function ActivityScreen({ activityId }: ActivityScreenProps) {
           return;
         }
 
-        const engineIds = new Set<EngineId>();
-        for (const task of activity.tasks) {
-          engineIds.add(task.engine);
-          for (const view of task.views ?? []) engineIds.add(view.engine);
-        }
+        const engineIds = engineIdsOfContent(content);
         const entries = await Promise.all(
-          [...engineIds].map(async (id) => [id, await loadEngine(id)] as const),
+          engineIds.map(async (id) => [id, await loadEngine(id)] as const),
         );
         if (cancelled) return;
 

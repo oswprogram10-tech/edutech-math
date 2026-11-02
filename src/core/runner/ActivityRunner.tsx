@@ -6,7 +6,8 @@
  * 실패해도 정답·정답 상태는 화면에 내보내지 않는다.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { CPA, EngineId, JsonValue, LoadedEngine, TargetSize } from '../engine-sdk';
+import type { ComponentType } from 'react';
+import type { EngineId, LoadedEngine, TargetSize } from '../engine-sdk';
 import type { LearnerId, Storage, TaskStatus as StorageTaskStatus } from '../storage';
 import { taskProgressId } from '../storage';
 import {
@@ -18,9 +19,12 @@ import {
 } from './session';
 import { applyActionWithLinks, applyControl, createSlotHistories, observationsOf } from './links';
 import { evaluateGoal } from './goal';
+import { RESPONSE_SLOT, judgeObservation as mergeJudgeObservation } from './response';
 import { TaskRecorder } from './recorder';
 import { runnerStrings } from './strings.ko';
-import type { SlotHistories, SlotView } from './links';
+import { taskSlotViews } from './views';
+import type { SlotHistories } from './links';
+import type { TaskSlotView } from './views';
 import type {
   ContentActivity,
   ContentTask,
@@ -36,42 +40,11 @@ import styles from './ActivityRunner.module.css';
 export const DEMO_LEARNER: LearnerId = '0';
 const DEFAULT_TARGET_SIZE: TargetSize = 48;
 
-interface LoadedSlot extends SlotView {
-  readonly mode: string;
-  readonly cpa: CPA;
-}
+type LoadedSlot = TaskSlotView;
 
 interface FlatTask {
   readonly activity: ContentActivity;
   readonly task: ContentTask;
-}
-
-function slotsForTask(
-  task: ContentTask,
-  definitions: ReadonlyMap<EngineId, LoadedEngine>,
-): LoadedSlot[] {
-  const specs = task.views ?? [
-    {
-      slot: 'main',
-      engine: task.engine,
-      mode: task.mode,
-      cpa: task.cpa,
-      config: task.config as JsonValue,
-    },
-  ];
-
-  return specs.map((spec) => {
-    const definition = definitions.get(spec.engine);
-    if (!definition) throw new Error(`엔진을 불러오지 못했습니다: ${spec.engine}`);
-    return {
-      slot: spec.slot,
-      engine: spec.engine,
-      mode: spec.mode,
-      cpa: spec.cpa,
-      config: spec.config,
-      definition,
-    };
-  });
 }
 
 function putProgress(
@@ -100,6 +73,7 @@ interface TaskStageProps {
   readonly task: ContentTask;
   readonly slots: readonly LoadedSlot[];
   readonly links: readonly TaskLinkSpec[];
+  readonly definitions: ReadonlyMap<EngineId, LoadedEngine>;
   readonly storage?: Storage;
   readonly learner: LearnerId;
   readonly targetSize: TargetSize;
@@ -117,6 +91,7 @@ function TaskStage({
   task,
   slots,
   links,
+  definitions,
   storage,
   learner,
   targetSize,
@@ -147,8 +122,11 @@ function TaskStage({
 
   const judgeView = slots[0];
   const displaySlots = useMemo(
-    () => [...slots].sort((a, b) => a.slot.localeCompare(b.slot)),
-    [slots],
+    () =>
+      [...slots]
+        .filter((slot) => task.showEngine !== false || slot.slot === RESPONSE_SLOT)
+        .sort((a, b) => a.slot.localeCompare(b.slot)),
+    [slots, task.showEngine],
   );
 
   const commit = useCallback((next: SlotHistories) => {
@@ -178,10 +156,13 @@ function TaskStage({
   const judge = useCallback(
     (current: SlotHistories): boolean => {
       if (!judgeView) return false;
-      const observation = observationsOf(slots, current)[judgeView.slot];
+      const observations = observationsOf(slots, current);
+      const judgeResult = observations[judgeView.slot];
+      const responseResult = task.response ? observations[RESPONSE_SLOT] : undefined;
+      const observation = mergeJudgeObservation(judgeResult, responseResult);
       return observation ? evaluateGoal(task.goal, observation, judgeView.definition) : false;
     },
-    [judgeView, slots, task.goal],
+    [judgeView, slots, task.goal, task.response],
   );
 
   const handleAction = (slot: string, action: unknown) => {
@@ -259,7 +240,8 @@ function TaskStage({
       <div className={styles.panels} data-panel-count={displaySlots.length}>
         {displaySlots.map((slot) => {
           const state = histories.present[slot.slot];
-          const View = slot.definition.View;
+          // 엔진 View는 자기 props만 쓰고, 응답 View만 definitions를 읽는다.
+          const View = slot.definition.View as unknown as ComponentType<Record<string, unknown>>;
           return (
             <section
               key={slot.slot}
@@ -271,13 +253,16 @@ function TaskStage({
                 <h3 className={styles.slotTitle}>{runnerStrings.slotLabel(slot.slot)}</h3>
               ) : null}
               <View
-                config={slot.config as never}
-                state={state as never}
-                dispatch={(action) => handleAction(slot.slot, action)}
-                cpa={slot.cpa}
-                mode={slot.mode}
-                readOnly={status === 'passed'}
-                targetSize={targetSize}
+                {...({
+                  config: slot.config,
+                  state,
+                  dispatch: (action: unknown) => handleAction(slot.slot, action),
+                  cpa: slot.cpa,
+                  mode: slot.mode,
+                  readOnly: status === 'passed',
+                  targetSize,
+                  definitions,
+                } satisfies Record<string, unknown>)}
               />
             </section>
           );
@@ -388,7 +373,7 @@ export function ActivityRunner({
     );
   }
 
-  const slots = slotsForTask(current.task, definitions);
+  const slots = taskSlotViews(current.task, definitions);
   const complete = isSessionComplete(session);
 
   return (
@@ -414,6 +399,7 @@ export function ActivityRunner({
         task={current.task}
         slots={slots}
         links={current.task.links ?? []}
+        definitions={definitions}
         storage={storage}
         learner={learner}
         targetSize={targetSize}
