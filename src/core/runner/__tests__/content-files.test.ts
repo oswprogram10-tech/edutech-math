@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { EngineId, GoalSpec, HintRule, LoadedEngine } from '../../engine-sdk';
 import { hasEngine, listEngineIds, loadEngine } from '../../engine-sdk';
+import { diagnoseDetectorOf, misconceptionOf } from '../../feedback';
 import { parseUnitContent } from '../content-schema';
 import type { UnitContent } from '../types';
 
@@ -143,6 +144,21 @@ describe('data/content 파일', () => {
           }
 
           for (const hint of task.hints) {
+            if ('misconception' in hint.when) {
+              check(
+                misconceptionOf(hint.when.misconception) !== undefined,
+                `${task.id}: 등록되지 않은 오개념입니다: ${hint.when.misconception}`,
+              );
+            }
+            if (hint.say) {
+              for (const match of hint.say.matchAll(/\{([a-zA-Z0-9_-]+)\}/g)) {
+                const name = match[1] as string;
+                check(
+                  name === 'student' || task.hintVars?.[name] !== undefined,
+                  `${task.id}: hintVars에 없는 변수입니다: {${name}}`,
+                );
+              }
+            }
             if (hint.backtrack) {
               check(
                 unitIds.has(hint.backtrack) ||
@@ -160,6 +176,17 @@ describe('data/content 파일', () => {
                 `${task.id}: ${show.engine}에 없는 overlay입니다: ${show.overlay}`,
               );
             }
+          }
+
+          for (const spec of task.diagnose ?? []) {
+            check(
+              misconceptionOf(spec.code) !== undefined,
+              `${task.id}: 등록되지 않은 오개념입니다: ${spec.code}`,
+            );
+            check(
+              diagnoseDetectorOf(spec.code) !== undefined,
+              `${task.id}: 감지 함수가 없는 오개념입니다: ${spec.code}`,
+            );
           }
 
           const views = task.views;

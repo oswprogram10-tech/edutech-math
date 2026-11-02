@@ -73,6 +73,7 @@
 }
 
 .panel {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -143,6 +144,46 @@
 
 .completed {
   color: var(--muted);
+}
+
+.hint {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e08a1e;
+  border-radius: 12px;
+  background: #fffaf0;
+  color: #6b4408;
+}
+
+.hintText {
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+/* 엔진 패널을 숨긴 과제에서도 힌트 ②를 보여 줄 자리. */
+.hintVisual {
+  position: relative;
+  height: 220px;
+  border-radius: 10px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.helpCard {
+  padding: 0.75rem;
+  border: 2px dashed #8a5a10;
+  border-radius: 10px;
+  background: #fff3d6;
+}
+
+.helpTitle {
+  font-weight: 700;
+}
+
+.helpBody {
+  margin-top: 0.25rem;
 }
 
 .primary {

@@ -20,6 +20,13 @@ export interface TaskLinkSpec {
   readonly to: string;
 }
 
+/** 콘텐츠에서 켜는 오개념 감지. `path` 기본은 첫 수 응답 필드의 `value`. */
+export interface DiagnoseSpec {
+  readonly code: string;
+  readonly args?: JsonValue;
+  readonly path?: string;
+}
+
 /**
  * 콘텐츠의 과제 하나.
  * engine-sdk의 Task에 제출 방식과 여러 엔진 화면(views/links)을 더했다.
@@ -33,6 +40,10 @@ export interface ContentTask extends Task {
   readonly response?: ResponseSpec;
   /** false면 엔진 패널을 그리지 않는다. 엔진 상태는 판정·재생을 위해 그대로 만든다. */
   readonly showEngine?: boolean;
+  /** 힌트 발문 템플릿의 `{a}`, `{b}` 값. */
+  readonly hintVars?: Readonly<Record<string, string>>;
+  /** 응답 값으로 감지할 오개념 목록. */
+  readonly diagnose?: readonly DiagnoseSpec[];
 }
 
 export interface ContentActivity {
@@ -63,6 +74,16 @@ export interface RunnerSession {
   readonly index: number;
   readonly status: TaskStatus;
   readonly failures: Readonly<Record<string, number>>;
+  /** 과제별로 학생에게 보여 준 가장 높은 힌트 단계(0~3). T013 숙달 계산이 읽는다. */
+  readonly hintLevels: Readonly<Record<string, number>>;
+}
+
+/** ③ 역추적 요청. 앱이 선수 활동으로 이동한다(T013). */
+export interface BacktrackRequest {
+  readonly taskId: string;
+  /** 이동할 개념 ID 또는 단원 ID. 없으면 앱이 안내만 한다. */
+  readonly target?: string;
+  readonly misconceptions: readonly string[];
 }
 
 /** 여러 슬롯을 재생한 결과. */

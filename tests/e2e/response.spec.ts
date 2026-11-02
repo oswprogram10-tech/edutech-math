@@ -44,22 +44,38 @@ test('응답 과제 다섯 가지를 틀렸다가 고쳐서 통과한다', async
   await expect(page.getByTestId('runner-slot-main')).toHaveCount(0);
   await expect(panel(page)).toBeVisible();
 
-  // T1 — 분수 쓰기. 키보드만으로 5/7을 쓴다.
+  // T1 — 분수 쓰기. 분모끼리 더한 2/5를 써서 오개념 힌트를 받는다.
   const response = panel(page);
+  await response.getByRole('button', { name: '분자: 빈칸' }).click();
+  await page.keyboard.press('2');
+  await page.keyboard.press('/');
+  await page.keyboard.press('5');
+  await expect(response.getByRole('button', { name: '분자: 2' })).toBeVisible();
+  await expect(response.getByRole('button', { name: '분모: 5' })).toBeVisible();
+
+  await failThenNext(page);
+  const hint = page.getByTestId('hint');
+  await expect(hint).toHaveAttribute('data-hint-level', '1');
+  await expect(page.getByTestId('hint-text')).toContainText('2/5');
+  await expect(page.getByTestId('hint-overlay')).toHaveCount(0);
+  await expectNoAnswerLeak(page, ['5/6']);
+
+  // 같은 답으로 한 번 더 틀리면 ② 시각적 반례, 또 틀리면 ③ 도움 카드.
+  await failThenNext(page);
+  await expect(hint).toHaveAttribute('data-hint-level', '2');
+  await expect(page.getByTestId('hint-overlay')).toBeVisible();
+  await expectNoAnswerLeak(page, ['5/6']);
+
+  await failThenNext(page);
+  await expect(hint).toHaveAttribute('data-hint-level', '3');
+  await expect(page.getByTestId('hint-help')).toBeVisible();
+  await expectNoAnswerLeak(page, ['5/6']);
+
+  // 지우고 5/6으로 고쳐 쓴다.
+  await response.getByRole('button', { name: '모두 지우기' }).click();
   await response.getByRole('button', { name: '분자: 빈칸' }).click();
   await page.keyboard.press('5');
   await page.keyboard.press('/');
-  await page.keyboard.press('7');
-  await expect(response.getByRole('button', { name: '분자: 5' })).toBeVisible();
-  await expect(response.getByRole('button', { name: '분모: 7' })).toBeVisible();
-
-  await failThenNext(page);
-  await expectNoAnswerLeak(page, ['5/6']);
-
-  // 되돌리기 한 번으로 마지막 숫자만 지운다.
-  await page.getByRole('button', { name: '되돌리기' }).click();
-  await expect(response.getByRole('button', { name: '분모: 빈칸' })).toBeVisible();
-  await response.getByRole('button', { name: '분모: 빈칸' }).click();
   await page.keyboard.press('6');
   await passThenNext(page);
   await expect(

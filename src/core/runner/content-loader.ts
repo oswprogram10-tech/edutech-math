@@ -64,6 +64,27 @@ function checkTask(task: unknown, path: string): void {
   if (task['showEngine'] !== undefined && typeof task['showEngine'] !== 'boolean') {
     fail(`${path}.showEngine: 참·거짓이 아닙니다.`);
   }
+  if (task['hintVars'] !== undefined) {
+    const vars = task['hintVars'];
+    if (!isRecord(vars)) fail(`${path}.hintVars: 객체가 아닙니다.`);
+    for (const [key, value] of Object.entries(vars)) {
+      if (!isNonEmptyString(value)) fail(`${path}.hintVars.${key}: 문자열이 아닙니다.`);
+    }
+  }
+  if (task['diagnose'] !== undefined) {
+    const diagnose = task['diagnose'];
+    if (!Array.isArray(diagnose) || diagnose.length === 0) {
+      fail(`${path}.diagnose: 비어 있거나 배열이 아닙니다.`);
+    }
+    diagnose.forEach((spec, index) => {
+      const specPath = `${path}.diagnose.${index}`;
+      if (!isRecord(spec)) fail(`${specPath}: 객체가 아닙니다.`);
+      if (!isNonEmptyString(spec['code'])) fail(`${specPath}.code: 문자열이 아닙니다.`);
+      if (spec['path'] !== undefined && !isNonEmptyString(spec['path'])) {
+        fail(`${specPath}.path: 문자열이 아닙니다.`);
+      }
+    });
+  }
   if (task['response'] !== undefined) checkResponse(task['response'], task['submit'], path);
   if (task['views'] !== undefined && !Array.isArray(task['views'])) {
     fail(`${path}.views: 배열이 아닙니다.`);

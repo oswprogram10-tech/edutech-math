@@ -7,6 +7,7 @@ import {
   isSessionComplete,
   sessionAfterEdit,
   sessionAfterSubmit,
+  shownHintLevel,
   startSession,
 } from '../session';
 
@@ -42,6 +43,28 @@ describe('RunnerSession', () => {
     // 다른 과제의 제출은 현재 과제에 영향을 주지 않는다.
     expect(sessionAfterSubmit(session, 't2', true)).toBe(session);
     expect(failureCount(session, 't2')).toBe(0);
+  });
+
+  it('과제별로 보여 준 가장 높은 힌트 단계를 남긴다', () => {
+    let session = startSession(['t1', 't2']);
+    expect(shownHintLevel(session, 't1')).toBe(0);
+
+    session = sessionAfterSubmit(session, 't1', false, 1);
+    expect(shownHintLevel(session, 't1')).toBe(1);
+
+    session = sessionAfterEdit(session);
+    session = sessionAfterSubmit(session, 't1', false, 2);
+    expect(shownHintLevel(session, 't1')).toBe(2);
+
+    // 낮은 단계가 다시 와도 최고 단계를 낮추지 않는다.
+    session = sessionAfterEdit(session);
+    session = sessionAfterSubmit(session, 't1', false, 1);
+    expect(shownHintLevel(session, 't1')).toBe(2);
+
+    session = sessionAfterEdit(session);
+    session = sessionAfterSubmit(session, 't1', true, 3);
+    expect(shownHintLevel(session, 't1')).toBe(3);
+    expect(shownHintLevel(session, 't2')).toBe(0);
   });
 
   it('빈 과제 목록과 중복 ID는 거부한다', () => {

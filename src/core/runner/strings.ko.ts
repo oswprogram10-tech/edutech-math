@@ -15,6 +15,8 @@ export const runnerStrings = {
   undo: '되돌리기',
   redo: '다시하기',
   controls: '과제 조작 도구',
+  hint: '힌트',
+  hintRead: '힌트 읽어 주기',
   slotLabel: (slot: string) => {
     if (slot === 'left') return '왼쪽 판';
     if (slot === 'right') return '오른쪽 판';

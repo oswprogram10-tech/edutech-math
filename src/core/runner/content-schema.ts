@@ -9,6 +9,7 @@ import type { EngineId, GoalSpec, HintRule } from '../engine-sdk';
 import type {
   ContentActivity,
   ContentTask,
+  DiagnoseSpec,
   TaskLinkSpec,
   TaskViewSpec,
   UnitContent,
@@ -172,6 +173,16 @@ export const responseSchema: z.ZodType<ResponseSpec> = z
   .object({ fields: z.array(responseFieldSchema).min(1) })
   .strict();
 
+const diagnoseSchema: z.ZodType<DiagnoseSpec> = z
+  .object({
+    code: z.string().regex(/^MC-[A-Z0-9-]+$/, '오개념 코드는 MC-... 형식이어야 합니다.'),
+    args: jsonValueSchema.optional(),
+    path: z.string().min(1).optional(),
+  })
+  .strict();
+
+const hintVarsSchema = z.record(z.string().min(1), z.string().min(1));
+
 export const taskSchema: z.ZodType<ContentTask> = z
   .object({
     id: z.string().regex(/^.+\.T[1-9]\d*$/, '과제 ID는 <활동ID>.T<n> 형식이어야 합니다.'),
@@ -188,6 +199,8 @@ export const taskSchema: z.ZodType<ContentTask> = z
     links: z.array(linkSchema).optional(),
     response: responseSchema.optional(),
     showEngine: z.boolean().optional(),
+    hintVars: hintVarsSchema.optional(),
+    diagnose: z.array(diagnoseSchema).min(1).optional(),
   })
   .strict()
   .superRefine((task, ctx) => {
