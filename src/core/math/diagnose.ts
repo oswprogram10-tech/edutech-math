@@ -225,6 +225,42 @@ const wholeMinus: DiagnoseDetector = (input) => {
   return matched && !student.equals(correct);
 };
 
+/**
+ * MC-SUB-SMALLER-FROM-LARGER: 대분수 뺄셈에서 분수 부분을 거꾸로 뺌.
+ *
+ * `3 1/4 − 1 3/4`에서 (자연수 부분의 차) + (빼는 수의 분수 − 빼지는 수의 분수)
+ * = 2 + 2/4로 계산한 경우다. 두 분수 부분의 크기가 같거나 빼지는 수가 크면
+ * 이 오개념이 만들어지지 않으므로 감지하지 않는다.
+ */
+const subSmallerFromLarger: DiagnoseDetector = (input) => {
+  const minuend = fractionPartsOf(textOf(input.args, 'minuend') ?? '');
+  const subtrahendText = textOf(input.args, 'subtrahend');
+  const student = studentValue(input);
+  if (!minuend || subtrahendText === null || !student) return false;
+
+  const subtrahend = parseRaw(subtrahendText);
+  if (!subtrahend) return false;
+
+  const minuendFraction = Rational.of(minuend.num as bigint, minuend.den as bigint);
+  const subtrahendWhole = subtrahend.kind === 'mixed' ? (subtrahend.whole as bigint) : ZERO;
+  const subtrahendFraction =
+    subtrahend.kind === 'mixed'
+      ? Rational.of(subtrahend.num as bigint, subtrahend.den as bigint)
+      : Rational.of(subtrahend.n, subtrahend.d);
+  // 빼는 수의 분수 부분은 1보다 작아야 '분수 부분'으로 볼 수 있다.
+  if (subtrahendFraction.compareTo(Rational.of(ONE)) >= 0) return false;
+  if (minuendFraction.compareTo(subtrahendFraction) >= 0) return false;
+
+  const minuendWhole = minuend.whole as bigint;
+  const wrong = Rational.of(minuendWhole - subtrahendWhole).add(
+    subtrahendFraction.sub(minuendFraction),
+  );
+  const correct = Rational.of(minuendWhole)
+    .add(minuendFraction)
+    .sub(Rational.of(subtrahendWhole).add(subtrahendFraction));
+  return student.equals(wrong) && !student.equals(correct);
+};
+
 // ─────────────────────────────────────────────────────────────
 // 분수 크기·동치·약분
 // ─────────────────────────────────────────────────────────────
@@ -457,4 +493,5 @@ export const diagnoseDetectors: Readonly<Record<string, DiagnoseDetector>> = {
   'MC-FRAC-SEPARATE-PARTS': separateParts,
   'MC-FRAC-WHOLE-MINUS': wholeMinus,
   'MC-SIMPLIFY-PARTIAL': simplifyPartial,
+  'MC-SUB-SMALLER-FROM-LARGER': subSmallerFromLarger,
 };

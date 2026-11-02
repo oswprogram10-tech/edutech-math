@@ -15,6 +15,7 @@ import type { Diagnosis, LineAnalysis } from './analyze';
 import { firstField } from './expression';
 import { operatorAction, reduce } from './reduce';
 import { stepSolverStrings as S } from './strings.ko';
+import { counterexampleMessage } from './counterexample';
 import type {
   OperatorKind,
   StepLine,
@@ -448,22 +449,7 @@ function Counterexample({
   const previousRatio = barRatio(previous, maximum);
   const studentRatio = barRatio(student, maximum);
 
-  const message = (() => {
-    switch (diagnosis.code) {
-      case 'MC-FRAC-ADD-DENOM':
-        return S.messageAddDenom(diagnosis.studentExpr, diagnosis.leftText);
-      case 'MC-FRAC-ADD-DENOM-HALF':
-        return S.messageAddDenomHalf(diagnosis.studentExpr, diagnosis.leftText);
-      case 'MC-FRAC-ADD-NO-CONVERT-NUM':
-        return S.messageNoConvert(diagnosis.studentExpr, diagnosis.leftText);
-      case 'MC-FRAC-BORROW-AS-TEN':
-        return S.messageBorrowAsTen(diagnosis.studentExpr);
-      case 'MC-FRAC-WHOLE-MINUS':
-        return S.messageWholeMinus(diagnosis.studentExpr);
-      default:
-        return S.messageGeneric(diagnosis.studentExpr);
-    }
-  })();
+  const message = counterexampleMessage(diagnosis);
 
   return (
     <div className={styles.counterexample} data-testid="counterexample" role="note">

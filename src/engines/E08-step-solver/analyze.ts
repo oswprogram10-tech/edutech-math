@@ -43,6 +43,12 @@ export interface Diagnosis {
   readonly studentExpr: string;
   /** 앞 줄의 왼쪽 항(예: "1/2"). */
   readonly leftText: string;
+  /** 앞 줄의 오른쪽 항(예: "1/3"). */
+  readonly rightText: string;
+  /** 덧셈에서 두 항 중 큰 값의 표기. 뺄셈이면 null. */
+  readonly bigText: string | null;
+  /** `bigText`의 Rational 문자열. 뺄셈이면 null. */
+  readonly bigValue: string | null;
   readonly op: 'add' | 'sub';
 }
 
@@ -172,7 +178,16 @@ function diagnosisAt(previous: StepLine, current: LineAnalysis, line: number): D
           'MC-COMMON-DENOM-ONLY-PRODUCT',
           'MC-FRAC-MIXED-CONVERT',
         ]
-      : ['MC-FRAC-BORROW-AS-TEN', 'MC-FRAC-WHOLE-MINUS', 'MC-FRAC-MIXED-CONVERT'];
+      : [
+          'MC-SUB-SMALLER-FROM-LARGER',
+          'MC-FRAC-BORROW-AS-TEN',
+          'MC-FRAC-WHOLE-MINUS',
+          'MC-FRAC-MIXED-CONVERT',
+        ];
+
+  // 덧셈 반례 문장은 '더한 두 수 중 큰 수'와 비교한다. 큰 수는 값으로 고른다.
+  const bigger =
+    operands.left.value.compareTo(operands.right.value) >= 0 ? operands.left : operands.right;
 
   for (const code of codes) {
     const detector = diagnoseDetectors[code];
@@ -184,6 +199,9 @@ function diagnosisAt(previous: StepLine, current: LineAnalysis, line: number): D
         studentValue: current.value.toString(),
         studentExpr: current.expr,
         leftText: operands.left.text,
+        rightText: operands.right.text,
+        bigText: operands.op === 'add' ? bigger.text : null,
+        bigValue: operands.op === 'add' ? bigger.value.toString() : null,
         op: operands.op,
       };
     }

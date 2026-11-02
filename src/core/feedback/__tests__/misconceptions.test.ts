@@ -84,8 +84,10 @@ describe('W1 오개념 레지스트리', () => {
   });
 
   it('감지 방식에 맞는 감지 함수가 있다', () => {
+    // E08 대분수 뺄셈처럼 엔진 Observation과 응답 값 양쪽에서 잡는 코드가 있다.
+    const dualDetect = new Set(['MC-SUB-SMALLER-FROM-LARGER']);
     for (const item of MISCONCEPTIONS) {
-      if (item.detect === 'diagnose') {
+      if (item.detect === 'diagnose' || dualDetect.has(item.code)) {
         expect(diagnoseDetectorOf(item.code), item.code).toBeTypeOf('function');
       } else {
         expect(diagnoseDetectorOf(item.code), item.code).toBeUndefined();

@@ -126,14 +126,15 @@ describe('E08 줄 판정', () => {
     expect(diagnosis?.leftText).toBe('1/2');
   });
 
-  it('3 1/4 − 1 3/4 = 2 2/4는 깨진 줄이지만 core에 감지기가 없어 코드가 없다', () => {
+  it('3 1/4 − 1 3/4 = 2 2/4는 첫 오류 줄이고 MC-SUB-SMALLER-FROM-LARGER를 찾는다', () => {
     let state = createInitialState({ mode: 'lines', start: '3 1/4 - 1 3/4' });
     state = withLineText(state, 1, '2 2/4');
     const observation = observe(state);
     expect(observation['firstBrokenLine']).toBe(1);
     expect(observation['allEquivalent']).toBe(false);
-    // MC-SUB-SMALLER-FROM-LARGER 감지기는 diagnose.ts에 아직 없다(카드 메모 참고).
-    expect(observation['misconceptions']).toEqual([]);
+    expect(observation['misconceptions']).toEqual([
+      { line: 1, code: 'MC-SUB-SMALLER-FROM-LARGER' },
+    ]);
   });
 
   it('미완성 줄은 중립이고 첫 오류 줄로 세지 않는다', () => {

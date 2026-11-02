@@ -67,12 +67,14 @@ export const stepSolverStrings = {
   sampleSelected: (line: number) => `${line + 1}번째 줄을 골랐어요`,
   correctionTitle: '고친 줄',
   counterexampleTitle: '한번 살펴보세요',
-  messageAddDenom: (student: string, a: string) =>
-    `학생이 쓴 ${student}, 더하기 전 ${a}보다 작아졌어요. 더했는데 왜 작아졌을까요?`,
-  messageAddDenomHalf: (student: string, a: string) =>
-    `분모를 2배로 만들면 한 조각이 작아져요. ${student}, 더하기 전 ${a}보다 작아졌어요.`,
-  messageNoConvert: (student: string, a: string) =>
-    `분모만 바꾸고 분자는 그대로 두었어요. ${student}, 더하기 전 ${a}보다 작아졌어요.`,
+  messageAddShrunk: (student: string, big: string) =>
+    `${student}는 더한 수 ${big}보다 작아요. 더했는데 왜 작아졌을까요?`,
+  messageAddShrunkHalf: (student: string, big: string) =>
+    `분모를 2배로 만들면 한 조각이 작아져요. ${student}는 더한 수 ${big}보다 작아요.`,
+  messageAddShrunkNoConvert: (student: string, big: string) =>
+    `분모만 바꾸고 분자는 그대로 두었어요. ${student}는 더한 수 ${big}보다 작아요.`,
+  messageAddQuestion: (a: string, b: string, student: string) =>
+    `두 수 ${a}, ${b}를 더했는데 ${student}가 됐어요. 더한 두 수보다 커졌나요?`,
   messageBorrowAsTen: (student: string) =>
     `받아내림한 1을 10/분모로 바꾸면 조각 수가 달라져요. ${student}를 다시 살펴보세요.`,
   messageWholeMinus: (student: string) =>
