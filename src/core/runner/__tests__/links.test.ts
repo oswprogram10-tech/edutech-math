@@ -106,7 +106,7 @@ describe('linkedViews', () => {
     });
   });
 
-  it('되돌리기·다시하기는 그 슬롯의 스냅숏만 움직인다', () => {
+  it('왼쪽에 놓기 → 되돌리기 → 두 판 모두 0개, 다시하기 → 두 판 모두 1개', () => {
     const views: SlotView[] = [
       { slot: 'left', definition: demoLoaded, config: demoConfig },
       { slot: 'right', definition: demoLoaded, config: demoConfig },
@@ -120,16 +120,47 @@ describe('linkedViews', () => {
       { type: 'add', x: 100, y: 100 },
     ).histories;
 
-    histories = applyControl(histories, 'left', 'undo');
+    histories = applyControl(histories, 'undo');
     expect(observationsOf(views, histories)).toEqual({
       left: { count: 0, groups: [] },
-      right: { count: 1, groups: [] },
+      right: { count: 0, groups: [] },
     });
 
-    histories = applyControl(histories, 'left', 'redo');
+    histories = applyControl(histories, 'redo');
     expect(observationsOf(views, histories)).toEqual({
       left: { count: 1, groups: [] },
       right: { count: 1, groups: [] },
+    });
+  });
+
+  it('사용자 Action 두 번 뒤 되돌리기는 마지막 묶음만 되돌린다', () => {
+    const views: SlotView[] = [
+      { slot: 'left', definition: demoLoaded, config: demoConfig },
+      { slot: 'right', definition: demoLoaded, config: demoConfig },
+    ];
+    const links = [{ from: 'left', event: 'counter-added', to: 'right' }] as const;
+    let histories = createSlotHistories(views);
+    histories = applyActionWithLinks(views, links, histories, 'left', {
+      type: 'add',
+      x: 100,
+      y: 100,
+    }).histories;
+    histories = applyActionWithLinks(views, links, histories, 'left', {
+      type: 'add',
+      x: 200,
+      y: 100,
+    }).histories;
+
+    histories = applyControl(histories, 'undo');
+    expect(observationsOf(views, histories)).toEqual({
+      left: { count: 1, groups: [] },
+      right: { count: 1, groups: [] },
+    });
+
+    histories = applyControl(histories, 'undo');
+    expect(observationsOf(views, histories)).toEqual({
+      left: { count: 0, groups: [] },
+      right: { count: 0, groups: [] },
     });
   });
 });

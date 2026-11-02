@@ -104,8 +104,8 @@ describe('exportFileName', () => {
 });
 
 describe('createExportQr', () => {
-  it('작은 내보내기는 압축 QR SVG로 만든다', () => {
-    const result = createExportQr(file());
+  it('작은 내보내기는 압축 QR SVG로 만든다', async () => {
+    const result = await createExportQr(file());
 
     expect(result.ok).toBe(true);
     if (!result.ok) return;
@@ -114,13 +114,13 @@ describe('createExportQr', () => {
     expect(result.svg).toContain('<path');
   });
 
-  it('2,000자를 넘으면 파일 내보내기를 안내한다', () => {
+  it('2,000자를 넘으면 파일 내보내기를 안내한다', async () => {
     const events = Array.from({ length: 400 }, (_, index) =>
       event(`e-${index}-${crypto.randomUUID()}`, index, {
         data: { type: 'move', id: crypto.randomUUID(), x: index, y: index * 2 },
       }),
     );
-    const result = createExportQr(file({ events }));
+    const result = await createExportQr(file({ events }));
 
     expect(result.ok).toBe(false);
     if (result.ok) return;

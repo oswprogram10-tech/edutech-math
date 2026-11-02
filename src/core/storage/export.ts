@@ -5,7 +5,6 @@
  * 파일에는 settings(교사 PIN 포함)를 넣지 않는다. 학습자 번호·관심사·이벤트·
  * 숙달도·과제 진행만 담는다.
  */
-import qrcode from 'qrcode-generator';
 import { compressToEncodedURIComponent } from 'lz-string';
 import { assertSafeEventData, UnsafeEventDataError } from './event';
 import { storageStrings } from './strings.ko';
@@ -124,8 +123,10 @@ export type ExportQrResult =
 /**
  * 내보내기 JSON을 압축해 QR SVG로 만든다.
  * 2,000자를 넘으면 QR을 만들지 않고 파일 내보내기를 안내한다.
+ *
+ * qrcode-generator는 무거우므로 실제로 QR을 만들 때만 동적 import 한다.
  */
-export function createExportQr(file: ExportFile): ExportQrResult {
+export async function createExportQr(file: ExportFile): Promise<ExportQrResult> {
   const code = compressToEncodedURIComponent(JSON.stringify(file));
   if (code.length > QR_MAX_LENGTH) {
     return {
@@ -136,6 +137,7 @@ export function createExportQr(file: ExportFile): ExportQrResult {
     };
   }
 
+  const { default: qrcode } = await import('qrcode-generator');
   // typeNumber 0 = 데이터 양에 맞춰 자동 선택. 오류 정정 M은 화면·인쇄 모두 무난하다.
   const qr = qrcode(0, 'M');
   qr.addData(code);

@@ -2,6 +2,7 @@ export const appStrings = {
   title: 'MathExplorer',
   tagline: '손으로 만지며 수학 원리를 발견해요',
   comingSoon: '교구를 준비하고 있어요.',
+  loading: '화면을 불러오는 중이에요.',
 } as const;
 
 /** 엔진 샌드박스(E2E·교사 시연용) 문구. 학생 메뉴에는 나오지 않는다. */

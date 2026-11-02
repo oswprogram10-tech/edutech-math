@@ -25,12 +25,22 @@ function acted(slot: string, data: JsonObject, id: string): LearningEvent {
   };
 }
 
-function actionEvent(slot: string, action: DemoAction, id: string): LearningEvent {
-  return acted(slot, { action: toJsonValue(action) }, id);
+function actionEvent(slot: string, action: DemoAction, id: string, group?: string): LearningEvent {
+  return acted(slot, { action: toJsonValue(action), ...(group ? { group } : {}) }, id);
 }
 
-function controlEvent(slot: string, control: 'undo' | 'redo', id: string): LearningEvent {
-  return acted(slot, { control }, id);
+/** 되돌리기·다시하기 기록에는 슬롯이 없다. */
+function controlEvent(control: 'undo' | 'redo', id: string): LearningEvent {
+  return {
+    id,
+    t: Number(id.replace(/\D/g, '')) || 1,
+    learner: '0',
+    unit: 'demo',
+    task: 'demo.A1.T1',
+    engine: 'E00',
+    verb: 'acted',
+    data: { control },
+  };
 }
 
 describe('replayTask', () => {
@@ -43,11 +53,11 @@ describe('replayTask', () => {
       history = pushHistory(history, demoDefinition.reduce(history.present, action));
     };
     const undo = () => {
-      events.push(controlEvent('main', 'undo', `a${events.length + 1}`));
+      events.push(controlEvent('undo', `a${events.length + 1}`));
       history = undoHistory(history);
     };
     const redo = () => {
-      events.push(controlEvent('main', 'redo', `a${events.length + 1}`));
+      events.push(controlEvent('redo', `a${events.length + 1}`));
       history = redoHistory(history);
     };
 
@@ -85,43 +95,74 @@ describe('replayTask', () => {
 });
 
 describe('replaySlots', () => {
-  it('연결로 생긴 Action까지 기록만으로 재생한다', () => {
-    const views: SlotView[] = [
-      { slot: 'right', definition: demoLoaded, config },
-      { slot: 'left', definition: demoLoaded, config },
-    ];
+  const views: SlotView[] = [
+    { slot: 'right', definition: demoLoaded, config },
+    { slot: 'left', definition: demoLoaded, config },
+  ];
+  const links = [{ from: 'left', event: 'counter-added', to: 'right' }] as const;
+
+  it('왼쪽에 놓기 → 되돌리기 → 두 판 모두 0개로 재생한다', () => {
+    let histories = createSlotHistories(views);
+    const events: LearningEvent[] = [];
+
+    const result = applyActionWithLinks(views, links, histories, 'left', {
+      type: 'add',
+      x: 200,
+      y: 200,
+    });
+    histories = result.histories;
+    for (const item of result.applied) {
+      events.push(
+        actionEvent(item.slot, item.action as unknown as DemoAction, `a${events.length + 1}`, 'g1'),
+      );
+    }
+
+    histories = applyControl(histories, 'undo');
+    events.push(controlEvent('undo', `a${events.length + 1}`));
+
+    const replayed = replaySlots(views, events);
+    expect(replayed.observations).toEqual(observationsOf(views, histories));
+    expect(replayed.observations['right']).toEqual({ count: 0, groups: [] });
+    expect(replayed.observations['left']).toEqual({ count: 0, groups: [] });
+  });
+
+  it('연결로 생긴 Action까지 같은 묶음으로 재생한다', () => {
     let histories = createSlotHistories(views);
     const events: LearningEvent[] = [];
 
     for (const x of [200, 300, 400, 500]) {
-      const result = applyActionWithLinks(
-        views,
-        [{ from: 'left', event: 'counter-added', to: 'right' }],
-        histories,
-        'left',
-        { type: 'add', x, y: 200 },
-      );
+      const result = applyActionWithLinks(views, links, histories, 'left', {
+        type: 'add',
+        x,
+        y: 200,
+      });
       histories = result.histories;
+      const group = `g${x}`;
       for (const item of result.applied) {
         events.push(
-          actionEvent(item.slot, item.action as unknown as DemoAction, `a${events.length + 1}`),
+          actionEvent(
+            item.slot,
+            item.action as unknown as DemoAction,
+            `a${events.length + 1}`,
+            group,
+          ),
         );
       }
     }
 
-    histories = applyControl(histories, 'left', 'undo');
-    events.push(controlEvent('left', 'undo', `a${events.length + 1}`));
+    histories = applyControl(histories, 'undo');
+    events.push(controlEvent('undo', `a${events.length + 1}`));
 
     const replayed = replaySlots(views, events);
     expect(replayed.observations).toEqual(observationsOf(views, histories));
-    expect(replayed.observations['right']).toEqual({ count: 4, groups: [] });
+    expect(replayed.observations['right']).toEqual({ count: 3, groups: [] });
     expect(replayed.observations['left']).toEqual({ count: 3, groups: [] });
   });
 
   it('기록에 없는 슬롯이면 ReplayError다', () => {
-    const views: SlotView[] = [{ slot: 'main', definition: demoLoaded, config }];
+    const single: SlotView[] = [{ slot: 'main', definition: demoLoaded, config }];
     expect(() =>
-      replaySlots(views, [actionEvent('ghost', { type: 'add', x: 1, y: 1 }, 'a1')]),
+      replaySlots(single, [actionEvent('ghost', { type: 'add', x: 1, y: 1 }, 'a1')]),
     ).toThrow(ReplayError);
   });
 });

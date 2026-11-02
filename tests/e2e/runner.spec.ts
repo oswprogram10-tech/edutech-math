@@ -106,7 +106,9 @@ test('키보드와 되돌리기로도 과제를 진행할 수 있다', async ({ 
   await expect(page.getByText('좋아요, 통과했어요!')).toBeVisible();
 
   // 통과 뒤에는 조작 도구가 잠긴다.
-  await expect(panel(page, 'main').getByRole('button', { name: '되돌리기' })).toBeDisabled();
+  await expect(
+    page.getByRole('toolbar', { name: '과제 조작 도구' }).getByRole('button', { name: '되돌리기' }),
+  ).toBeDisabled();
   await page.getByRole('button', { name: '다음 과제' }).click();
 
   // 과제 2: 셈돌 3개를 놓고, 하나를 골라 묶은 뒤 확인한다.

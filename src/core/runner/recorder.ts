@@ -10,6 +10,16 @@ import type { LearningEvent, LearnerId, LearningVerb, EventSink, JsonObject } fr
 import { toJsonValue } from './json';
 import type { SlotControl } from './types';
 
+export interface TaskRecorderOptions {
+  /** 없으면 기록을 건너뛴다(저장소를 못 연 경우). */
+  readonly sink?: EventSink;
+  readonly learner: LearnerId;
+  readonly unit: UnitId;
+  readonly task: string;
+  readonly engine: EngineId;
+  readonly onError?: (error: unknown) => void;
+}
+
 /**
  * 같은 밀리초에 여러 기록이 생겨도 저장 순서가 뒤섞이지 않게 t를 단조 증가시킨다.
  * T004 저장소는 t→id 순으로 정렬하므로, 재생이 Action 순서를 지키려면 필요하다.
@@ -19,16 +29,6 @@ let lastEventTime = 0;
 function nextEventTime(): number {
   lastEventTime = Math.max(Date.now(), lastEventTime + 1);
   return lastEventTime;
-}
-
-export interface TaskRecorderOptions {
-  /** 없으면 기록을 건너뛴다(저장소를 못 연 경우). */
-  readonly sink?: EventSink;
-  readonly learner: LearnerId;
-  readonly unit: UnitId;
-  readonly task: string;
-  readonly engine: EngineId;
-  readonly onError?: (error: unknown) => void;
 }
 
 export class TaskRecorder {
@@ -61,12 +61,21 @@ export class TaskRecorder {
     return this.record('started');
   }
 
-  acted(slot: string, action: unknown): Promise<LearningEvent | undefined> {
-    return this.record('acted', { slot, action: toJsonValue(action) });
+  /**
+   * `group`은 사용자 Action 하나와 그 연결로 생긴 Action들을 묶는 이름이다.
+   * 재생할 때 같은 group은 되돌리기 한 단위로 취급한다.
+   */
+  acted(slot: string, action: unknown, group?: string): Promise<LearningEvent | undefined> {
+    return this.record('acted', {
+      slot,
+      action: toJsonValue(action),
+      ...(group === undefined ? {} : { group }),
+    });
   }
 
-  control(slot: string, control: SlotControl): Promise<LearningEvent | undefined> {
-    return this.record('acted', { slot, control });
+  /** 되돌리기·다시하기는 모든 슬롯을 함께 움직이므로 슬롯을 남기지 않는다. */
+  control(control: SlotControl): Promise<LearningEvent | undefined> {
+    return this.record('acted', { control });
   }
 
   submitted(): Promise<LearningEvent | undefined> {

@@ -4,10 +4,12 @@
  * 엔진끼리 직접 import하지 않는다. 러너가 A의 emit 결과를 B의 receive에 넘기고,
  * B가 돌려준 Action을 B 슬롯에 dispatch한다. 연결이 순환해도 같은 Action 처리
  * 안에서 같은 연결선은 한 번만 지나간다.
+ *
+ * 되돌리기 단위는 '사용자의 Action 하나 + 그 연결로 생긴 Action들'이다.
+ * 따라서 슬롯별 History가 아니라 모든 슬롯 상태를 한 스냅숏으로 쌓는다.
  */
 import { createHistory, pushHistory, redoHistory, undoHistory } from '../engine-sdk';
-import type { EngineEvent, JsonValue, LoadedEngine, Observation } from '../engine-sdk';
-import type { History } from '../engine-sdk';
+import type { EngineEvent, History, JsonValue, LoadedEngine, Observation } from '../engine-sdk';
 import { toJsonValue } from './json';
 import type { SlotAction, SlotControl, TaskLinkSpec } from './types';
 
@@ -17,7 +19,11 @@ export interface SlotView {
   readonly config: unknown;
 }
 
-export type SlotHistories = Readonly<Record<string, History<unknown>>>;
+/** 한 시점의 모든 슬롯 상태. */
+export type SlotStates = Readonly<Record<string, unknown>>;
+
+/** 모든 슬롯을 함께 되돌리는 하나의 History. */
+export type SlotHistories = History<SlotStates>;
 
 type RuntimeCreate = (config: unknown) => unknown;
 type RuntimeReduce = (state: unknown, action: unknown) => unknown;
@@ -45,18 +51,18 @@ export function observeEngine(
 }
 
 export function createSlotHistories(views: readonly SlotView[]): SlotHistories {
-  const histories: Record<string, History<unknown>> = {};
+  const states: Record<string, unknown> = {};
   for (const view of views) {
-    if (histories[view.slot]) throw new Error(`슬롯 이름이 중복됩니다: ${view.slot}`);
-    histories[view.slot] = createHistory(createEngineState(view));
+    if (Object.prototype.hasOwnProperty.call(states, view.slot)) {
+      throw new Error(`슬롯 이름이 중복됩니다: ${view.slot}`);
+    }
+    states[view.slot] = createEngineState(view);
   }
-  return histories;
+  return createHistory(states);
 }
 
-export function statesOf(histories: SlotHistories): Readonly<Record<string, unknown>> {
-  const states: Record<string, unknown> = {};
-  for (const [slot, history] of Object.entries(histories)) states[slot] = history.present;
-  return states;
+export function statesOf(histories: SlotHistories): SlotStates {
+  return histories.present;
 }
 
 export function observationsOf(
@@ -65,8 +71,8 @@ export function observationsOf(
 ): Readonly<Record<string, Observation>> {
   const observations: Record<string, Observation> = {};
   for (const view of views) {
-    const history = histories[view.slot];
-    if (history) observations[view.slot] = observeEngine(view, history.present);
+    const state = histories.present[view.slot];
+    if (state !== undefined) observations[view.slot] = observeEngine(view, state);
   }
   return observations;
 }
@@ -97,6 +103,7 @@ export interface ApplyActionResult {
 
 /**
  * 한 슬롯의 Action을 적용하고, 연결된 슬롯으로 이벤트를 전달한다.
+ * 사용자 Action 하나와 연결로 생긴 Action 전체가 History 한 칸이 된다.
  * 돌려주는 applied에는 연결로 생긴 Action도 순서대로 들어 있다(이것도 기록한다).
  */
 export function applyActionWithLinks(
@@ -107,22 +114,24 @@ export function applyActionWithLinks(
   action: unknown,
 ): ApplyActionResult {
   const viewBySlot = new Map(views.map((view) => [view.slot, view]));
-  const root = viewBySlot.get(slot);
-  if (!root) throw new Error(`없는 슬롯입니다: ${slot}`);
+  if (!viewBySlot.has(slot)) throw new Error(`없는 슬롯입니다: ${slot}`);
 
-  let current = histories;
+  let states = histories.present;
+  let changed = false;
   const applied: SlotAction[] = [];
   const visitedLinks = new Set<string>();
 
   const apply = (targetSlot: string, targetAction: unknown): void => {
     const view = viewBySlot.get(targetSlot);
     if (!view) throw new Error(`없는 슬롯입니다: ${targetSlot}`);
-    const before = current[targetSlot];
-    if (!before) throw new Error(`슬롯 상태가 없습니다: ${targetSlot}`);
+    if (!Object.prototype.hasOwnProperty.call(states, targetSlot)) {
+      throw new Error(`슬롯 상태가 없습니다: ${targetSlot}`);
+    }
 
-    const prev = before.present;
+    const prev = states[targetSlot];
     const next = reduceEngine(view, prev, targetAction);
-    current = { ...current, [targetSlot]: pushHistory(before, next) };
+    if (!Object.is(prev, next)) changed = true;
+    states = { ...states, [targetSlot]: next };
     applied.push({ slot: targetSlot, action: toJsonValue(targetAction) });
 
     for (const event of emitFrom(view, prev, next, targetAction)) {
@@ -134,32 +143,55 @@ export function applyActionWithLinks(
 
         const receiver = viewBySlot.get(link.to);
         if (!receiver) throw new Error(`연결 대상 슬롯이 없습니다: ${link.to}`);
-        const receiverHistory = current[link.to];
-        if (!receiverHistory) throw new Error(`슬롯 상태가 없습니다: ${link.to}`);
+        if (!Object.prototype.hasOwnProperty.call(states, link.to)) {
+          throw new Error(`슬롯 상태가 없습니다: ${link.to}`);
+        }
 
-        const received = receiveFrom(receiver, receiverHistory.present, event);
+        const received = receiveFrom(receiver, states[link.to], event);
         if (received !== null) apply(link.to, received);
       }
     }
   };
 
   apply(slot, action);
-  return { histories: current, applied };
+  return {
+    histories: changed ? pushHistory(histories, states) : histories,
+    applied,
+  };
 }
 
-/** 되돌리기·다시하기는 한 슬롯의 스냅숏만 움직인다. 연결은 다시 발동하지 않는다. */
-export function applyControl(
+/** 기록에 남은 Action 묶음 하나를 슬롯 상태 전체에 적용하고 History 한 칸으로 쌓는다. */
+export function applyRecordedActions(
+  views: readonly SlotView[],
   histories: SlotHistories,
-  slot: string,
-  control: SlotControl,
+  actions: readonly SlotAction[],
 ): SlotHistories {
-  const history = histories[slot];
-  if (!history) throw new Error(`없는 슬롯입니다: ${slot}`);
-  const next = control === 'undo' ? undoHistory(history) : redoHistory(history);
-  return next === history ? histories : { ...histories, [slot]: next };
+  if (actions.length === 0) return histories;
+  const viewBySlot = new Map(views.map((view) => [view.slot, view]));
+  let states = histories.present;
+  let changed = false;
+
+  for (const item of actions) {
+    const view = viewBySlot.get(item.slot);
+    if (!view) throw new Error(`기록에 없는 슬롯입니다: ${item.slot}`);
+    if (!Object.prototype.hasOwnProperty.call(states, item.slot)) {
+      throw new Error(`슬롯 상태가 없습니다: ${item.slot}`);
+    }
+    const prev = states[item.slot];
+    const next = reduceEngine(view, prev, item.action);
+    if (!Object.is(prev, next)) changed = true;
+    states = { ...states, [item.slot]: next };
+  }
+
+  return changed ? pushHistory(histories, states) : histories;
 }
 
-/** 기록 재생에 쓰는 Action 변환. 러너 화면과 같은 reduce를 쓴다. */
+/** 되돌리기·다시하기는 모든 슬롯을 함께 움직인다. */
+export function applyControl(histories: SlotHistories, control: SlotControl): SlotHistories {
+  return control === 'undo' ? undoHistory(histories) : redoHistory(histories);
+}
+
+/** 엔진 하나짜리 기록 재생에 쓰는 Action 변환. 러너 화면과 같은 reduce를 쓴다. */
 export function applyRecordedAction(
   view: SlotView,
   history: History<unknown>,

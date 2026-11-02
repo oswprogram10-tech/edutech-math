@@ -1,23 +1,29 @@
 /**
  * 기록 재생.
  *
- * 저장된 `acted` 이벤트(Action + undo/redo control)만으로 최종 상태를 다시 만든다.
+ * 저장된 `acted` 이벤트만으로 최종 상태를 다시 만든다.
+ * - `{ slot, action, group? }`: 사용자 Action과 연결로 생긴 Action. 같은 group은
+ *   되돌리기 한 단위이므로 한 번에 적용하고 History 한 칸으로 쌓는다.
+ * - `{ control: 'undo'|'redo' }`: 모든 슬롯을 함께 되돌리거나 다시 한다(슬롯 없음).
+ *
  * 연결(links)은 기록할 때 이미 각 슬롯의 Action으로 남았으므로 재생에서는
  * 다시 발동하지 않는다. 그래야 같은 Action이 두 번 적용되지 않는다.
  */
-import { createHistory } from '../engine-sdk';
+import { createHistory, redoHistory, undoHistory } from '../engine-sdk';
 import type { History, LoadedEngine, Observation } from '../engine-sdk';
 import type { JsonObject, LearningEvent } from '../storage';
 import {
   applyControl,
   applyRecordedAction,
+  applyRecordedActions,
   createSlotHistories,
   observeEngine,
   observationsOf,
   statesOf,
 } from './links';
-import { toJsonValue } from './json';
+import type { SlotAction } from './types';
 import type { SlotView } from './links';
+import { toJsonValue } from './json';
 import type { SlotReplayResult } from './types';
 
 export const MAIN_SLOT = 'main';
@@ -44,6 +50,11 @@ function controlOf(data: JsonObject): 'undo' | 'redo' | null {
   return control === 'undo' || control === 'redo' ? control : null;
 }
 
+function groupOf(data: JsonObject): string | null {
+  const group = data['group'];
+  return typeof group === 'string' && group.length > 0 ? group : null;
+}
+
 function actionOf(data: JsonObject): unknown {
   if (!Object.prototype.hasOwnProperty.call(data, 'action')) {
     throw new ReplayError('acted 이벤트에 action이나 control이 없습니다.');
@@ -51,34 +62,54 @@ function actionOf(data: JsonObject): unknown {
   return data['action'];
 }
 
-/** 여러 슬롯 과제의 기록을 재생한다. views[0]이 슬롯이 없는 기록의 기본값이다. */
+/** 여러 슬롯 과제의 기록을 재생한다. views[0]이 슬롯이 없는 Action 기록의 기본값이다. */
 export function replaySlots(
   views: readonly SlotView[],
   events: readonly LearningEvent[],
 ): SlotReplayResult {
   const fallback = views[0]?.slot;
   if (!fallback) throw new ReplayError('재생할 엔진 화면이 없습니다.');
-  const viewBySlot = new Map(views.map((view) => [view.slot, view]));
   let histories = createSlotHistories(views);
+
+  let pendingGroup: string | null = null;
+  let pendingActions: SlotAction[] = [];
+  let singles = 0;
+
+  const flush = () => {
+    if (pendingActions.length === 0) return;
+    try {
+      histories = applyRecordedActions(views, histories, pendingActions);
+    } catch (error) {
+      throw error instanceof ReplayError
+        ? error
+        : new ReplayError(error instanceof Error ? error.message : '기록을 재생하지 못했습니다.');
+    }
+    pendingActions = [];
+    pendingGroup = null;
+  };
 
   for (const event of events) {
     if (event.verb !== 'acted') continue;
     const data = actedData(event);
-    const slot = slotOf(data, fallback);
-    const view = viewBySlot.get(slot);
-    const history = histories[slot];
-    if (!view || !history) throw new ReplayError(`기록에 없는 슬롯입니다: ${slot}`);
 
+    // 되돌리기·다시하기는 슬롯 구분 없이 지금까지 쌓은 모든 슬롯을 함께 움직인다.
     const control = controlOf(data);
     if (control) {
-      histories = applyControl(histories, slot, control);
+      flush();
+      histories = applyControl(histories, control);
       continue;
     }
-    histories = {
-      ...histories,
-      [slot]: applyRecordedAction(view, history, toJsonValue(actionOf(data))),
-    };
+
+    const group = groupOf(data);
+    const key = group ?? `__single-${singles++}`;
+    if (pendingGroup !== null && pendingGroup !== key) flush();
+    pendingGroup = key;
+    pendingActions.push({
+      slot: slotOf(data, fallback),
+      action: toJsonValue(actionOf(data)),
+    });
   }
+  flush();
 
   return { states: statesOf(histories), observations: observationsOf(views, histories) };
 }
@@ -108,9 +139,7 @@ export function replayTask(
     const data = actedData(event);
     const control = controlOf(data);
     if (control) {
-      const nextHistories = applyControl({ [MAIN_SLOT]: history }, MAIN_SLOT, control);
-      const next = nextHistories[MAIN_SLOT];
-      if (next) history = next;
+      history = control === 'undo' ? undoHistory(history) : redoHistory(history);
       continue;
     }
     history = applyRecordedAction(view, history, toJsonValue(actionOf(data)));

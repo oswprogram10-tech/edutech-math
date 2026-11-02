@@ -16,7 +16,7 @@ describe('TaskRecorder', () => {
 
     await recorder.started();
     await recorder.acted('left', { type: 'add', x: 200, y: 300 });
-    await recorder.control('left', 'undo');
+    await recorder.control('undo');
     await recorder.submitted();
     await recorder.failed();
     await recorder.passed();
@@ -31,7 +31,7 @@ describe('TaskRecorder', () => {
       'passed',
     ]);
     expect(events[1]?.data).toEqual({ slot: 'left', action: { type: 'add', x: 200, y: 300 } });
-    expect(events[2]?.data).toEqual({ slot: 'left', control: 'undo' });
+    expect(events[2]?.data).toEqual({ control: 'undo' });
     expect(events[0]).toMatchObject({
       learner: '0',
       unit: 'demo',

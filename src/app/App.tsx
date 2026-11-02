@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import type { EngineId } from '../core/engine-sdk';
-import { Runner } from './Runner';
-import { Sandbox } from './Sandbox';
 import { appStrings } from './strings.ko';
 import styles from './App.module.css';
+
+// 첫 화면 번들에 실행 화면·샌드박스 코드를 넣지 않는다.
+const Runner = lazy(async () => ({ default: (await import('./Runner')).Runner }));
+const Sandbox = lazy(async () => ({ default: (await import('./Sandbox')).Sandbox }));
 
 type Route =
   | { readonly kind: 'home' }
@@ -20,6 +22,14 @@ function parseRoute(hash: string): Route {
   return { kind: 'home' };
 }
 
+function Loading() {
+  return (
+    <main className={styles.home}>
+      <p role="status">{appStrings.loading}</p>
+    </main>
+  );
+}
+
 export function App() {
   const [route, setRoute] = useState<Route>(() => parseRoute(window.location.hash));
 
@@ -30,11 +40,19 @@ export function App() {
   }, []);
 
   if (route.kind === 'sandbox') {
-    return <Sandbox key={route.engineId} engineId={route.engineId} />;
+    return (
+      <Suspense fallback={<Loading />}>
+        <Sandbox key={route.engineId} engineId={route.engineId} />
+      </Suspense>
+    );
   }
 
   if (route.kind === 'run') {
-    return <Runner key={route.unitId} unitId={route.unitId} />;
+    return (
+      <Suspense fallback={<Loading />}>
+        <Runner key={route.unitId} unitId={route.unitId} />
+      </Suspense>
+    );
   }
 
   return (
