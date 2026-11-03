@@ -13,6 +13,7 @@ import {
   blockValuesForNumber,
   defaultDropPoint,
   fanPoints,
+  findFreePoint,
   inRect,
   regionFor,
   scatteredPoint,
@@ -419,6 +420,7 @@ function performGroup(
   value: BlockValue,
 ): BaseTenState {
   const ids = new Set(found.map((block) => block.id));
+  const remaining = state.blocks.filter((block) => !ids.has(block.id));
   const zones = new Set(
     found.map((block) => block.zone).filter((zone): zone is Zone => zone !== undefined),
   );
@@ -433,9 +435,16 @@ function performGroup(
     const region = regionFor(state, zone);
     const band = bandsFor(region).find((candidate) => candidate.column === columnOf(higher));
     if (band) {
-      point = slotPoint(band, higher, slotIndexInBand(state.blocks, band, higher));
+      point = slotPoint(band, higher, slotIndexInBand(remaining, band, higher));
     }
   }
+  // 같은 값 블록과 겹치지 않는 가장 가까운 자리로 밀어 낸다(무게중심은 그대로 출발점).
+  point = findFreePoint(
+    remaining,
+    higher,
+    point,
+    zone === undefined ? {} : { bounds: regionFor(state, zone) },
+  );
 
   const merged: BaseTenBlock = {
     id: `b${state.nextId}`,
@@ -445,7 +454,7 @@ function performGroup(
     ...(zone === undefined ? {} : { zone }),
   };
 
-  return withBlocks(state, [...state.blocks.filter((block) => !ids.has(block.id)), merged], {
+  return withBlocks(state, [...remaining, merged], {
     nextId: state.nextId + 1,
     log: [...state.log, { kind: 'group', from: value }],
     lastAttempt: null,
@@ -458,21 +467,30 @@ function breakBlock(state: BaseTenState, id: string): BaseTenState {
   if (state.mode === 'add-sub' && !state.settings.regroupAllowed) return state;
 
   const lower = (block.value / 10) as BlockValue;
-  const points = fanPoints({ x: block.x, y: block.y }, lower);
+  const remaining = state.blocks.filter((item) => item.id !== block.id);
+  const bounds = block.zone === undefined ? undefined : regionFor(state, block.zone);
+  const desired = fanPoints({ x: block.x, y: block.y }, lower);
   let nextId = state.nextId;
-  const created = points.map((point) => {
-    const piece: BaseTenBlock = {
+  const created: BaseTenBlock[] = [];
+  for (const point of desired) {
+    // 이미 놓인 블록과 앞서 만든 조각 모두와 겹치지 않는 자리를 고른다.
+    const free = findFreePoint(
+      [...remaining, ...created],
+      lower,
+      point,
+      bounds === undefined ? {} : { bounds },
+    );
+    created.push({
       id: `b${nextId}`,
       value: lower,
-      x: point.x,
-      y: point.y,
+      x: free.x,
+      y: free.y,
       ...(block.zone === undefined ? {} : { zone: block.zone }),
-    };
+    });
     nextId += 1;
-    return piece;
-  });
+  }
 
-  return withBlocks(state, [...state.blocks.filter((item) => item.id !== block.id), ...created], {
+  return withBlocks(state, [...remaining, ...created], {
     nextId,
     log: [...state.log, { kind: 'break', from: block.value }],
     lastAttempt: null,

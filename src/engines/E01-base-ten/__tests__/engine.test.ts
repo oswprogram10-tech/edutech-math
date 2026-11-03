@@ -5,7 +5,7 @@ import { observe } from '../observe';
 import { canGroupTens, createInitialState, reduce, seededRandom } from '../reduce';
 import type { BaseTenConfig, BaseTenState, BlockValue } from '../types';
 import { countsOf, digitAt, placeValueOf, valueOf } from '../value';
-import { ADD_SUM, SUB_TAKE } from '../layout';
+import { ADD_SUM, SUB_TAKE, blockRect, rectsOverlap } from '../layout';
 
 function stateOf(config: BaseTenConfig): BaseTenState {
   return createInitialState(config);
@@ -117,6 +117,60 @@ describe('E01 "10개 묶기" 버튼', () => {
     const grouped = reduce(state, { type: 'group-tens' });
     expect(countsOf(grouped)).toEqual({ thousands: 0, hundreds: 0, tens: 11, ones: 0 });
     expect(grouped.log).toEqual([{ kind: 'group', from: 1 }]);
+  });
+});
+
+describe('E01 새 블록은 기존 블록과 겹치지 않는다', () => {
+  it('낱개 34개를 세 번 묶으면 십 막대 3개가 서로 겹치지 않는다', () => {
+    let state = stateOf({ mode: 'count', start: { ones: 34 } });
+    for (let index = 0; index < 3; index += 1) {
+      state = reduce(state, { type: 'group-tens' });
+    }
+    const rods = state.blocks.filter((block) => block.value === 10);
+    expect(rods).toHaveLength(3);
+    for (let first = 0; first < rods.length; first += 1) {
+      for (let second = first + 1; second < rods.length; second += 1) {
+        const a = rods[first];
+        const b = rods[second];
+        if (!a || !b) throw new Error('십 막대가 없다');
+        expect(rectsOverlap(blockRect(a), blockRect(b))).toBe(false);
+      }
+    }
+    // 남은 낱개와도 겹치지 않는다.
+    const ones = state.blocks.filter((block) => block.value === 1);
+    expect(ones).toHaveLength(4);
+    for (const rod of rods) {
+      for (const one of ones) {
+        expect(rectsOverlap(blockRect(rod), blockRect(one))).toBe(false);
+      }
+    }
+  });
+
+  it('풀기로 생긴 낱개 10개는 기존 블록·서로와 겹치지 않는다', () => {
+    let state = stateOf({ mode: 'count', start: { ones: 34 } });
+    for (let index = 0; index < 3; index += 1) {
+      state = reduce(state, { type: 'group-tens' });
+    }
+    const before = state.blocks;
+    const rod = before.find((block) => block.value === 10);
+    if (!rod) throw new Error('십 막대가 없다');
+
+    const after = reduce(state, { type: 'break', id: rod.id });
+    const created = after.blocks.filter((block) => !before.some((old) => old.id === block.id));
+    const existing = after.blocks.filter((block) => !created.some((item) => item.id === block.id));
+    expect(created).toHaveLength(10);
+    expect(created.every((block) => block.value === 1)).toBe(true);
+    expect(existing.length).toBeGreaterThan(0);
+
+    for (const piece of created) {
+      for (const other of existing) {
+        expect(rectsOverlap(blockRect(piece), blockRect(other))).toBe(false);
+      }
+      for (const sibling of created) {
+        if (sibling.id === piece.id) continue;
+        expect(rectsOverlap(blockRect(piece), blockRect(sibling))).toBe(false);
+      }
+    }
   });
 });
 

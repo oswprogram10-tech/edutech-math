@@ -223,6 +223,88 @@ export function defaultDropPoint(state: BaseTenState, value: BlockValue): Point 
   return slotPoint(band, value, slotIndexInBand(state.blocks, band, value));
 }
 
+/**
+ * 두 사각형이 `margin`보다 가까이 있는가(즉 margin만큼의 틈도 확보하지 못했는가).
+ * margin 0이면 실제로 겹치는지만 본다.
+ */
+export function rectsOverlap(a: Rect, b: Rect, margin = 0): boolean {
+  return (
+    a.x < b.x + b.width + margin &&
+    a.x + a.width + margin > b.x &&
+    a.y < b.y + b.height + margin &&
+    a.y + a.height + margin > b.y
+  );
+}
+
+/** value 블록을 point에 놓았을 때의 사각형. */
+function rectAt(value: BlockValue, point: Point): Rect {
+  const size = blockSize(value);
+  return {
+    x: point.x - size.width / 2,
+    y: point.y - size.height / 2,
+    width: size.width,
+    height: size.height,
+  };
+}
+
+/**
+ * 새 블록을 `desired`(무게중심 등)에서 가장 가까우면서 이미 있는 블록과 겹치지 않는 자리에 놓는다.
+ * 같은 값 블록이 옆으로 나란히 놓이도록 가로 칸을 먼저 살핀다. 항상 캔버스(또는 bounds) 안이다.
+ */
+export function findFreePoint(
+  blocks: readonly BaseTenBlock[],
+  value: BlockValue,
+  desired: Point,
+  options: { readonly margin?: number; readonly bounds?: Rect } = {},
+): Point {
+  const margin = options.margin ?? 4;
+  const bounds = options.bounds ?? {
+    x: 0,
+    y: 0,
+    width: LOGICAL_WIDTH,
+    height: LOGICAL_HEIGHT,
+  };
+  const size = blockSize(value);
+  const clampX = (x: number): number =>
+    Math.round(
+      Math.max(bounds.x + size.width / 2, Math.min(bounds.x + bounds.width - size.width / 2, x)),
+    );
+  const clampY = (y: number): number =>
+    Math.round(
+      Math.max(bounds.y + size.height / 2, Math.min(bounds.y + bounds.height - size.height / 2, y)),
+    );
+
+  const stepX = size.width + margin;
+  const stepY = size.height + margin;
+  const offsets: { readonly ix: number; readonly iy: number }[] = [{ ix: 0, iy: 0 }];
+  const maxRing = 24;
+  for (let ring = 1; ring <= maxRing; ring += 1) {
+    for (let ix = -ring; ix <= ring; ix += 1) {
+      for (let iy = -ring; iy <= ring; iy += 1) {
+        if (Math.max(Math.abs(ix), Math.abs(iy)) !== ring) continue;
+        offsets.push({ ix, iy });
+      }
+    }
+  }
+  offsets.sort(
+    (a, b) =>
+      a.ix * a.ix + a.iy * a.iy - (b.ix * b.ix + b.iy * b.iy) ||
+      Math.abs(a.iy) - Math.abs(b.iy) ||
+      a.ix - b.ix,
+  );
+
+  for (const offset of offsets) {
+    const point = {
+      x: clampX(desired.x + offset.ix * stepX),
+      y: clampY(desired.y + offset.iy * stepY),
+    };
+    const rect = rectAt(value, point);
+    const clash = blocks.some((block) => rectsOverlap(rect, blockRect(block), margin));
+    if (!clash) return point;
+  }
+  return { x: clampX(desired.x), y: clampY(desired.y) };
+}
+
 /** 풀린 블록 10개를 원래 블록 둘레에 부채꼴로 놓는다. */
 export function fanPoints(center: Point, value: BlockValue): Point[] {
   const size = blockSize(value);
