@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 import { PREVIEW_URL } from '../../../playwright.config';
+import { logicalToScreen } from '../canvas-point';
 
 /**
  * T020 g3s1u6 「분수와 소수」 단원 E2E.
@@ -56,10 +57,7 @@ async function canvasOf(page: Page, name: string, testId: string): Promise<Canva
       );
       const fresh = await canvas.boundingBox();
       if (!fresh) throw new Error(`그림 상자를 다시 찾을 수 없습니다: ${name}`);
-      return {
-        x: fresh.x + (x / 1000) * fresh.width,
-        y: fresh.y + (y / 600) * fresh.height,
-      };
+      return logicalToScreen(fresh, x, y);
     },
   };
 }

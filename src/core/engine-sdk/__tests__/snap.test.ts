@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { distance, clientToLogical } from '../coordinates';
+import { distance, clientToLogical, pointerToLogical } from '../coordinates';
 import { nearestPointOnRect, snapPoint } from '../snap';
 
 describe('coordinates', () => {
@@ -21,6 +21,37 @@ describe('coordinates', () => {
       { width: 1000, height: 600 },
     );
     expect(point).toEqual({ x: 0, y: 0 });
+  });
+
+  it('상자가 논리 크기보다 넓으면 가운데 놓인 그림 기준으로 바꾼다', () => {
+    // 1000×600 그림이 1200×300 상자에 들어가면 배율 0.5, 좌우 여백 각 350px.
+    const rect = { left: 0, top: 0, width: 1200, height: 300 };
+    const logical = { width: 1000, height: 600 };
+    expect(clientToLogical(350, 0, rect, logical)).toEqual({ x: 0, y: 0 });
+    expect(clientToLogical(600, 150, rect, logical)).toEqual({ x: 500, y: 300 });
+    expect(clientToLogical(850, 300, rect, logical)).toEqual({ x: 1000, y: 600 });
+    expect(clientToLogical(100, 150, rect, logical)).toEqual({ x: 0, y: 300 });
+  });
+
+  it('상자가 논리 크기보다 높으면 위아래 여백을 뺀다', () => {
+    const rect = { left: 10, top: 20, width: 500, height: 500 };
+    const logical = { width: 1000, height: 600 };
+    // 배율 0.5, 그림 높이 300, 위아래 여백 각 100px.
+    expect(clientToLogical(260, 270, rect, logical)).toEqual({ x: 500, y: 300 });
+    expect(clientToLogical(10, 120, rect, logical)).toEqual({ x: 0, y: 0 });
+  });
+
+  it('SVG가 알려 주는 화면 변환이 있으면 그것을 거꾸로 적용한다', () => {
+    const element = {
+      getScreenCTM: () => ({ a: 0.5, b: 0, c: 0, d: 0.5, e: 381, f: 1 }),
+      getBoundingClientRect: () => ({ left: 0, top: 0, width: 1317, height: 334 }),
+    } as unknown as Element;
+    expect(
+      pointerToLogical({ clientX: 631, clientY: 151 }, element, { width: 1000, height: 600 }),
+    ).toEqual({
+      x: 500,
+      y: 300,
+    });
   });
 
   it('거리를 계산한다', () => {

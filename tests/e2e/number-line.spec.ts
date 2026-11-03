@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
+import { canvasScale, logicalToScreen } from './canvas-point';
 
 /**
  * E03 수직선 샌드박스 E2E.
@@ -30,10 +31,7 @@ async function openNumberLine(page: Page, config?: Record<string, unknown>) {
   return {
     canvas,
     observation: page.getByTestId('observation'),
-    at: (x: number, y: number) => ({
-      x: box.x + (x / 1000) * box.width,
-      y: box.y + (y / 600) * box.height,
-    }),
+    at: (x: number, y: number) => logicalToScreen(box, x, y),
     box,
   };
 }
@@ -145,7 +143,7 @@ test('decimal에서 눈금 11개가 보이고, 이동해 0.73과 0.81을 찍는�
     nodes.map((node) => Number(node.getAttribute('data-tick-x'))),
   );
   const sorted = [...tickXs].sort((a, b) => a - b);
-  const spacingPx = (((sorted[1] ?? 0) - (sorted[0] ?? 0)) / 1000) * box.width;
+  const spacingPx = ((sorted[1] ?? 0) - (sorted[0] ?? 0)) * canvasScale(box);
   expect(spacingPx).toBeGreaterThanOrEqual(48);
 
   // 0.70~0.80까지 옮긴 뒤 0.73 자리를 누른다.

@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
+import { logicalToScreen } from './canvas-point';
 
 /**
  * E00-demo 샌드박스 조작 E2E.
@@ -16,10 +17,7 @@ async function openDemo(page: Page) {
   return {
     canvas,
     observation: page.getByTestId('observation'),
-    at: (x: number, y: number) => ({
-      x: box.x + (x / 1000) * box.width,
-      y: box.y + (y / 600) * box.height,
-    }),
+    at: (x: number, y: number) => logicalToScreen(box, x, y),
   };
 }
 

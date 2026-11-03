@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
+import { logicalToScreen } from './canvas-point';
 
 /**
  * T005 활동 실행기 E2E.
@@ -21,10 +22,7 @@ async function canvasAt(page: Page, slot: string) {
   await expect(canvas).toBeVisible();
   const box = await canvas.boundingBox();
   if (!box) throw new Error(`${slot} 판의 캔버스 크기를 알 수 없습니다.`);
-  return (x: number, y: number) => ({
-    x: box.x + (x / 1000) * box.width,
-    y: box.y + (y / 600) * box.height,
-  });
+  return (x: number, y: number) => logicalToScreen(box, x, y);
 }
 
 async function addCounters(page: Page, slot: string, count: number) {
