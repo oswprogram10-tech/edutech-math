@@ -20,7 +20,7 @@ import {
 } from './geometry';
 import type { Piece } from './geometry';
 import { denominatorNumber, gcd, numeratorNumber, parseFraction } from './fractions';
-import { piecesOf } from './reduce';
+import { piecesOf, simplifyView } from './reduce';
 import { fractionModelStrings as S } from './strings.ko';
 import { CIRCLE_CENTER, CIRCLE_RADIUS, LOGICAL_HEIGHT, LOGICAL_WIDTH } from './types';
 import type {
@@ -242,6 +242,65 @@ function PartitionView({
   );
   const box = useMemo(() => boxOf(state.outline), [state.outline]);
 
+  // 약분 탐정: 상태의 simplify만 보고 묶음 화면을 만든다.
+  // 정답(기약분수)은 showValue가 허용할 때만 수치로 적는다.
+  const showValue = showValueOf(config);
+  const simplify = state.simplify;
+  const simplifyInfo = useMemo(() => simplifyView(state), [state]);
+  const groupChoices = useMemo(() => {
+    const denominator = simplify?.denominator ?? 0;
+    return Array.from(new Set((config.groupChoices ?? []).map((size) => Math.trunc(size))))
+      .filter((size) => size > 1 && size <= denominator)
+      .sort((a, b) => a - b);
+  }, [config.groupChoices, simplify?.denominator]);
+
+  const denominator = simplify?.denominator ?? 0;
+  const numerator = simplify?.numerator ?? 0;
+  const selectedGroup =
+    simplifyInfo.groupSize !== null && simplifyInfo.groupSize > 1 ? simplifyInfo.groupSize : null;
+  const rectangular = state.shape === 'bar' || state.shape === 'rect' || state.shape === 'square';
+  const denominatorFits =
+    selectedGroup !== null && denominator > 0 && denominator % selectedGroup === 0;
+  const numeratorFits = selectedGroup !== null && numerator % selectedGroup === 0;
+  const groupConfirmed = selectedGroup !== null && denominatorFits && numeratorFits;
+  const groupWidth =
+    selectedGroup !== null && denominator > 0
+      ? ((box.maxX - box.minX) / denominator) * selectedGroup
+      : 0;
+  const groupCount =
+    selectedGroup !== null && denominator > 0 ? Math.ceil(denominator / selectedGroup) : 0;
+  const shadingBoundaryX =
+    denominator > 0 ? box.minX + ((box.maxX - box.minX) * numerator) / denominator : box.minX;
+
+  let simplifyStatus: string | null = null;
+  if (selectedGroup !== null && simplify) {
+    if (groupConfirmed) {
+      const raw = `${numerator}/${denominator}`;
+      if (showValue === 'raw-and-reduced') {
+        simplifyStatus = S.groupConfirmedValue(
+          raw,
+          `${numerator / selectedGroup}/${denominator / selectedGroup}`,
+        );
+      } else if (showValue === 'raw') {
+        simplifyStatus = S.groupConfirmedRaw(raw);
+      } else {
+        simplifyStatus = S.groupConfirmed;
+      }
+    } else {
+      const notes: string[] = [];
+      if (!denominatorFits) notes.push(S.groupOverflow);
+      if (!numeratorFits) notes.push(S.groupCrossing);
+      simplifyStatus = notes.join(' ');
+    }
+  }
+
+  const greatestCommon = simplify ? gcd(simplify.numerator, simplify.denominator) : 1;
+  const showGcdStamp =
+    config.showGcdShortcut === true &&
+    selectedGroup !== null &&
+    selectedGroup === greatestCommon &&
+    greatestCommon > 1;
+
   const toPoint = (event: { readonly clientX: number; readonly clientY: number }): Point =>
     pointerToLogical(event, svgRef.current, LOGICAL);
   const snap = (point: Point): Point =>
@@ -328,6 +387,21 @@ function PartitionView({
         </div>
       )}
 
+      {/* 약분 탐정은 미리 나뉜 막대라 칼선 도구가 없다. 대신 묶음 크기를 고른다. */}
+      {state.simplify && !readOnly && groupChoices.length > 0 ? (
+        <div className={styles.toolbar} role="toolbar" aria-label={S.groupToolbarLabel}>
+          {groupChoices.map((size) => (
+            <ToolbarButton
+              key={`simplify-size-${size}`}
+              pressed={state.simplify?.groupSize === size}
+              onClick={() => dispatch({ type: 'set-group-size', size })}
+            >
+              {S.groupByCells(size)}
+            </ToolbarButton>
+          ))}
+        </div>
+      ) : null}
+
       <CanvasFrame
         svgRef={svgRef}
         handlers={drag.handlers}
@@ -393,6 +467,54 @@ function PartitionView({
           />
         ) : null}
 
+        {/* 묶음 테두리는 칠 경계를 가로지르거나 막대 끝을 넘어갈 수 있도록
+            자르기 클립 밖에 그린다. 나누어떨어지지 않으면 주황 점선,
+            확정되면 초록 실선이 된다. */}
+        {selectedGroup !== null && rectangular ? (
+          <g data-testid="simplify-groups" pointerEvents="none">
+            {Array.from({ length: groupCount }, (_, index) => (
+              <rect
+                key={`simplify-group-${index}`}
+                x={box.minX + index * groupWidth}
+                y={box.minY}
+                width={groupWidth}
+                height={box.maxY - box.minY}
+                fill="none"
+                stroke={groupConfirmed ? GREEN : ORANGE}
+                strokeWidth={6}
+                strokeDasharray={groupConfirmed ? undefined : '14 9'}
+                rx={8}
+              />
+            ))}
+            {numeratorFits ? null : (
+              <line
+                x1={shadingBoundaryX}
+                y1={box.minY - 14}
+                x2={shadingBoundaryX}
+                y2={box.maxY + 14}
+                stroke="#d04545"
+                strokeWidth={5}
+                strokeDasharray="8 6"
+                strokeLinecap="round"
+              />
+            )}
+          </g>
+        ) : null}
+
+        {showGcdStamp ? (
+          <text
+            data-testid="gcd-stamp"
+            x={(box.minX + box.maxX) / 2}
+            y={Math.max(24, box.minY - 18)}
+            textAnchor="middle"
+            fill={GREEN}
+            fontSize={28}
+            fontWeight={800}
+          >
+            {S.gcdShortcut}
+          </text>
+        ) : null}
+
         {readOnly ? null : (
           <>
             <AreaBars pieces={pieces} />
@@ -416,8 +538,17 @@ function PartitionView({
         )}
       </CanvasFrame>
 
+      {simplifyStatus ? <p className={styles.readout}>{simplifyStatus}</p> : null}
+
       <p className={styles.instructions}>
-        {readOnly ? S.readOnlyHint : state.preset ? S.presetHint : S.cutHint} {S.keyboardHint}
+        {readOnly
+          ? S.readOnlyHint
+          : state.simplify
+            ? S.groupHint
+            : state.preset
+              ? S.presetHint
+              : S.cutHint}{' '}
+        {state.simplify ? S.groupKeyboardHint : S.keyboardHint}
       </p>
     </div>
   );
@@ -1022,20 +1153,24 @@ function DiscreteView({
                   }
                 }}
               />
-              {Array.from({ length: state.groupSize }, (_, columnIndex) => {
-                const itemIndex = groupIndex * state.groupSize + columnIndex;
-                if (itemIndex >= state.items) return null;
-                return (
-                  <ItemIcon
-                    key={`item-${itemIndex}`}
-                    icon={state.icon}
-                    x={startX + columnIndex * cell + cell / 2}
-                    y={y + cell / 2}
-                    radius={Math.min(24, cell * 0.32)}
-                    selected={selected}
-                  />
-                );
-              })}
+              {/* 아이콘은 장식이다. 탭은 아래 묶음 사각형이 받도록
+                  pointer-events를 끈다. */}
+              <g pointerEvents="none">
+                {Array.from({ length: state.groupSize }, (_, columnIndex) => {
+                  const itemIndex = groupIndex * state.groupSize + columnIndex;
+                  if (itemIndex >= state.items) return null;
+                  return (
+                    <ItemIcon
+                      key={`item-${itemIndex}`}
+                      icon={state.icon}
+                      x={startX + columnIndex * cell + cell / 2}
+                      y={y + cell / 2}
+                      radius={Math.min(24, cell * 0.32)}
+                      selected={selected}
+                    />
+                  );
+                })}
+              </g>
             </g>
           );
         })}

@@ -130,7 +130,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "fraction" },
               "level": 2,
-              "say": "2/3을 분모 9인 분수로 나타내면 몇 칸째인가요? 4/5는 0과 1 사이를 다섯 칸으로 나눈 것과 어떻게 다른가요?"
+              "say": "분모가 9인 눈금에서는 0과 1 사이가 몇 칸으로 나뉘나요? 2/3만큼 가려면 그중 몇 칸을 세어야 하나요? 4/5는 눈금 수가 어떻게 다른가요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "fraction" },
@@ -634,7 +634,7 @@
             {
               "when": { "kind": "equals", "path": "response.cmp.symbol", "value": ">" },
               "level": 2,
-              "say": "0.7은 0.1이 7개예요. 3/5은 0.1이 몇 개인지 세어 볼까요? 6개와 7개 중 어느 쪽이 더 많나요?"
+              "say": "0.7은 0.1이 몇 개인지, 3/5은 0.1이 몇 개인지 각각 세어 볼까요? 두 수를 같은 0.1 단위로 나타낸 뒤 어느 쪽이 더 많은지 비교해 보세요."
             },
             {
               "when": { "kind": "equals", "path": "response.cmp.symbol", "value": ">" },
@@ -671,21 +671,15 @@
       "tasks": [
         {
           "id": "g5s1u4.A3.T1",
-          "prompt": "18/24을 약분할 수 있는 묶음 크기를 모두 고르세요.",
+          "prompt": "막대를 여러 크기로 묶어 보며 18/24을 약분할 수 있는 묶음 크기를 모두 고르세요.",
           "engine": "E05",
-          "mode": "shade",
+          "mode": "partition",
           "cpa": "P",
           "config": {
-            "mode": "shade",
-            "shape": "bar",
-            "whole": {
-              "shape": "bar",
-              "partsX": 24,
-              "shaded": [
-                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
-                12, 13, 14, 15, 16, 17
-              ]
-            }
+            "mode": "partition",
+            "fraction": "18/24",
+            "groupChoices": [2, 3, 4, 5, 6, 8],
+            "showGcdShortcut": true
           },
           "goal": {
             "kind": "equals",
@@ -699,17 +693,17 @@
               "say": "24칸을 4칸씩 묶으면 몇 묶음이 되나요? 18칸은 4칸씩 묶었을 때 남김없이 묶이나요?"
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "shade" },
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
               "level": 1,
               "say": "24칸을 몇 칸씩 묶을 때 18칸이 남김없이 묶이나요? 24와 18을 모두 나누어떨어지게 하는 수를 찾아보세요."
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "shade" },
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
               "level": 2,
               "say": "18은 4로 나누어떨어지나요? 24는 4로 나누어떨어지나요? 둘 다 나누어떨어져야 묶음이 딱 맞아요."
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "shade" },
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
               "level": 3,
               "backtrack": "g5s1u2.common-factor-gcd"
             }
@@ -737,27 +731,21 @@
         },
         {
           "id": "g5s1u4.A3.T2",
-          "prompt": "18/24을 기약분수로 나타내세요.",
+          "prompt": "막대를 묶어 18/24을 기약분수로 나타내세요.",
           "engine": "E05",
-          "mode": "shade",
+          "mode": "partition",
           "cpa": "P",
           "config": {
-            "mode": "shade",
-            "shape": "bar",
-            "whole": {
-              "shape": "bar",
-              "partsX": 24,
-              "shaded": [
-                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
-                12, 13, 14, 15, 16, 17
-              ]
-            },
-            "coarsen": true
+            "mode": "partition",
+            "fraction": "18/24",
+            "groupChoices": [2, 3, 4, 5, 6, 8],
+            "showGcdShortcut": true
           },
           "goal": {
             "kind": "all",
             "of": [
-              { "kind": "predicate", "name": "shadedEquals", "args": { "value": "3/4" } },
+              { "kind": "equals", "path": "simplify.groupedNumerator", "value": 3 },
+              { "kind": "equals", "path": "simplify.groupedDenominator", "value": 4 },
               { "kind": "predicate", "name": "isIrreducible" },
               { "kind": "equals", "path": "response.ans.value", "value": "3/4" },
               { "kind": "equals", "path": "response.ans.irreducible", "value": true }
@@ -770,17 +758,17 @@
               "say": "한 번 묶은 뒤에도 색칠한 칸과 전체 칸을 또 나눌 수 있나요? 더 이상 나눌 수 없을 때까지 묶어 볼까요?"
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "shade" },
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
               "level": 1,
               "say": "18과 24를 모두 나누어떨어지게 하는 가장 큰 수는 무엇인가요? 그 수로 나누면 분모와 분자가 각각 얼마가 되나요?"
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "shade" },
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
               "level": 2,
-              "say": "색칠한 18칸과 전체 24칸을 똑같이 나눌 수 있는 가장 적은 묶음 수는 얼마인가요? 그때 한 묶음은 몇 칸이 되나요?"
+              "say": "색칠한 18칸과 전체 24칸을 똑같이 나눌 수 있는 가장 큰 묶음 수는 얼마인가요? 그때 한 묶음은 몇 칸이 되나요?"
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "shade" },
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
               "level": 3,
               "backtrack": "g5s1u2.common-factor-gcd"
             }
@@ -807,73 +795,45 @@
         },
         {
           "id": "g5s1u4.A3.T3",
-          "prompt": "18/24을 한 번에 기약분수로 만드는 묶음 크기를 고르고, 실제로 그 크기로 묶어 보세요.",
+          "prompt": "18/24을 한 번에 기약분수로 만드는 묶음 크기를 골라 막대를 묶어 보세요.",
           "engine": "E05",
-          "mode": "shade",
+          "mode": "partition",
           "cpa": "P",
           "config": {
-            "mode": "shade",
-            "shape": "bar",
-            "whole": {
-              "shape": "bar",
-              "partsX": 24,
-              "shaded": [
-                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
-                12, 13, 14, 15, 16, 17
-              ]
-            },
-            "coarsen": true
+            "mode": "partition",
+            "fraction": "18/24",
+            "groupChoices": [2, 3, 4, 5, 6, 8],
+            "showGcdShortcut": true
           },
           "goal": {
-            "kind": "all",
-            "of": [
-              { "kind": "equals", "path": "response.g.selected", "value": ["c"] },
-              { "kind": "equals", "path": "parts", "value": 4 },
-              { "kind": "predicate", "name": "shadedEquals", "args": { "value": "3/4" } },
-              { "kind": "predicate", "name": "isIrreducible" },
-              { "kind": "predicate", "name": "eventAtLeast", "args": { "name": "coarsened", "count": 2 } }
-            ]
+            "kind": "equals",
+            "path": "simplify.groupSize",
+            "value": 6
           },
           "hints": [
             {
-              "when": { "kind": "equals", "path": "response.g.selected", "value": ["d"] },
+              "when": { "kind": "equals", "path": "simplify.groupSize", "value": 8 },
               "level": 1,
               "say": "8칸씩 묶으면 18칸이 남김없이 묶이나요? 24와 18을 한 번에 나눌 수 있는 수 중 가장 큰 것은 무엇인가요?"
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "shade" },
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
               "level": 1,
               "say": "24와 18의 공약수 중 가장 큰 수는 무엇인가요? 그 수로 한 번에 나누면 분모와 분자가 어떻게 되나요?"
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "shade" },
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
               "level": 2,
-              "say": "화면의 묶기 단추에 가장 큰 묶음 크기가 없어도, 그 수를 만드는 두 수로 차례로 나누면 같은 결과가 될까요?"
+              "say": "묶음 테두리가 색칠 경계와 막대 끝에 동시에 딱 맞는 크기를 찾아보세요. 그때 몇 묶음이 되나요?"
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "shade" },
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
               "level": 3,
               "backtrack": "g5s1u2.common-factor-gcd"
             }
           ],
           "concepts": ["g5s1u4.simplify"],
-          "submit": "button",
-          "response": {
-            "fields": [
-              {
-                "kind": "choice",
-                "id": "g",
-                "label": "한 번에 묶는 크기",
-                "multiple": false,
-                "options": [
-                  { "id": "a", "label": "2칸씩" },
-                  { "id": "b", "label": "4칸씩" },
-                  { "id": "c", "label": "6칸씩" },
-                  { "id": "d", "label": "8칸씩" }
-                ]
-              }
-            ]
-          }
+          "submit": "button"
         },
         {
           "id": "g5s1u4.A3.T4",

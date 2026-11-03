@@ -1,6 +1,6 @@
 /** @vitest-environment jsdom */
-import { cleanup, render } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { cleanup, fireEvent, render } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fractionModelStrings as S } from '../strings.ko';
 import { createInitialState, reduce } from '../reduce';
 import type { FractionModelConfig, FractionModelState, MixedState } from '../types';
@@ -245,5 +245,98 @@ describe('E05 showValue 단계', () => {
 
     const full = textOf({ ...config, showValue: 'raw-and-reduced' }, state);
     expect(full).toContain(S.mixedConversion('11/4', '2 3/4'));
+  });
+});
+
+describe('E05 약분 탐정 partition (묶음 조작)', () => {
+  const config: FractionModelConfig = {
+    mode: 'partition',
+    fraction: '18/24',
+    groupChoices: [1, 2, 3, 4, 5, 6, 8],
+    showGcdShortcut: true,
+  };
+
+  function groupedState(size: number): FractionModelState {
+    return reduce(createInitialState(config), { type: 'set-group-size', size });
+  }
+
+  it('1은 빼고 groupChoices마다 묶기 버튼을 만든다', () => {
+    const view = renderView(config, createInitialState(config));
+    for (const size of [2, 3, 4, 5, 6, 8]) {
+      expect(view.getByRole('button', { name: S.groupByCells(size) })).toBeTruthy();
+    }
+    expect(view.queryByRole('button', { name: S.groupByCells(1) })).toBeNull();
+  });
+
+  it('고른 크기의 버튼만 눌린 상태가 된다', () => {
+    const view = renderView(config, groupedState(6));
+    expect(view.getByRole('button', { name: S.groupByCells(6) }).getAttribute('aria-pressed')).toBe(
+      'true',
+    );
+    expect(view.getByRole('button', { name: S.groupByCells(2) }).getAttribute('aria-pressed')).toBe(
+      'false',
+    );
+  });
+
+  it('묶기 버튼을 누르면 set-group-size를 보낸다', () => {
+    const dispatch = vi.fn();
+    const view = render(
+      <FractionModelView
+        config={config}
+        state={createInitialState(config)}
+        dispatch={dispatch}
+        cpa="P"
+        mode="partition"
+        targetSize={48}
+      />,
+    );
+    fireEvent.click(view.getByRole('button', { name: S.groupByCells(6) }));
+    expect(dispatch).toHaveBeenCalledWith({ type: 'set-group-size', size: 6 });
+  });
+
+  it('나누어떨어지면 확정 문구를 보여 주고 showValue none에서는 수치를 쓰지 않는다', () => {
+    const text = textOf(config, groupedState(6));
+    expect(text).toContain(S.groupConfirmed);
+    expect(text).not.toContain('3/4');
+  });
+
+  it("'raw-and-reduced'면 확정된 새 이름 수치를 보여 준다", () => {
+    const text = textOf({ ...config, showValue: 'raw-and-reduced' }, groupedState(6));
+    expect(text).toContain(S.groupConfirmedValue('18/24', '3/4'));
+  });
+
+  it('최대공약수로 묶을 때만 한 번에! 도장을 보여 준다', () => {
+    const gcdView = renderView(config, groupedState(6));
+    expect(gcdView.getByTestId('gcd-stamp').textContent).toBe(S.gcdShortcut);
+    const otherView = renderView(config, groupedState(3));
+    expect(otherView.container.querySelector('[data-testid="gcd-stamp"]')).toBeNull();
+  });
+
+  it('막대 끝을 넘거나 색칠 경계를 가로지르면 그 까닭을 알려 준다', () => {
+    expect(textOf(config, groupedState(5))).toContain(S.groupOverflow);
+    const crossing = textOf(config, groupedState(4));
+    expect(crossing).toContain(S.groupCrossing);
+    expect(crossing).not.toContain(S.groupConfirmed);
+  });
+
+  it('묶음 테두리 개수는 전체 칸을 크기로 나눈 올림이다', () => {
+    const view = renderView(config, groupedState(5));
+    const overlay = view.getByTestId('simplify-groups');
+    expect(overlay.querySelectorAll('rect')).toHaveLength(5);
+  });
+
+  it('읽기 전용이면 묶기 도구를 숨긴다', () => {
+    const view = render(
+      <FractionModelView
+        config={config}
+        state={createInitialState(config)}
+        dispatch={() => {}}
+        cpa="P"
+        mode="partition"
+        readOnly
+        targetSize={48}
+      />,
+    );
+    expect(view.queryByRole('button', { name: S.groupByCells(6) })).toBeNull();
   });
 });

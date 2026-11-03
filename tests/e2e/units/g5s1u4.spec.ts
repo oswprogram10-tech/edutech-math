@@ -99,6 +99,11 @@ async function coarsen(page: Page, factor: number): Promise<void> {
   await target.getByRole('button', { name: `÷${factor} 더 굵게` }).click();
 }
 
+async function groupBy(page: Page, size: number): Promise<void> {
+  const target = (await slot(page, 'left').count()) > 0 ? slot(page, 'left') : slot(page, 'main');
+  await target.getByRole('button', { name: `${size}칸씩 묶기` }).click();
+}
+
 async function overlay(page: Page): Promise<void> {
   await slot(page, 'main').getByRole('button', { name: '겹치기', exact: true }).click();
 }
@@ -295,24 +300,25 @@ test('A3 약분 탐정 — 대표 오답 뒤 고쳐서 네 과제를 통과한�
   await submit(page);
   await expectPassed(page);
 
-  // T2 — 한 번만 약분한 9/12로 틀린 뒤 ÷3·÷2로 묶고 3/4로 고친다.
+  // T2 — 한 번만 약분한 9/12로 틀린 뒤 6칸씩 묶고 3/4로 고친다.
   await typeNumber(page, 'ans', ['9', '/', '1', '2']);
   await submit(page);
   await expectFailedWithHint(page, '한 번 묶은 뒤에도');
   await clearNumber(page, 'ans');
-  await coarsen(page, 3);
-  await coarsen(page, 2);
+  await groupBy(page, 6);
+  // 기본 showValue='none'에서는 새 이름의 수치를 화면에 쓰지 않는다.
+  await expect(page.getByText('묶음이 딱 맞아 새 이름이 정해졌어요.')).toBeVisible();
+  await expect(slot(page, 'main').getByTestId('fraction-canvas')).not.toContainText('3/4');
   await typeNumber(page, 'ans', ['3', '/', '4']);
   await submit(page);
   await expectPassed(page);
 
-  // T3 — 8칸씩 골라 틀린 뒤 6칸씩을 고르고 두 번 묶어 3/4로 만든다.
-  await toggleChoice(page, 'g', '8칸씩');
+  // T3 — 8칸씩 골라 틀린 뒤 6칸씩으로 고른다. 최대공약수라 '한 번에!'가 뜬다.
+  await groupBy(page, 8);
   await submit(page);
   await expectFailedWithHint(page, '8칸씩 묶으면 18칸이');
-  await toggleChoice(page, 'g', '6칸씩');
-  await coarsen(page, 3);
-  await coarsen(page, 2);
+  await groupBy(page, 6);
+  await expect(slot(page, 'main').getByTestId('gcd-stamp')).toBeVisible();
   await submit(page);
   await expectPassed(page);
 
