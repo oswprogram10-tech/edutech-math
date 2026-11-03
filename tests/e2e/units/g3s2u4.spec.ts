@@ -143,9 +143,9 @@ async function submit(page: Page): Promise<void> {
   await page.getByRole('button', { name: '확인하기' }).click();
 }
 
-async function expectFailedWithHint(page: Page, text: string): Promise<void> {
+async function expectFailedWithHint(page: Page, text: string, level = 1): Promise<void> {
   await expect(page.getByRole('alert')).toBeVisible();
-  await expect(page.getByTestId('hint')).toHaveAttribute('data-hint-level', '1');
+  await expect(page.getByTestId('hint')).toHaveAttribute('data-hint-level', String(level));
   await expect(page.getByTestId('hint-text')).toContainText(text);
 }
 
@@ -185,12 +185,16 @@ test('A1 사탕 묶음 스튜디오 — 대표 오답 뒤 고쳐서 다섯 과�
   await submit(page);
   await expectPassed(page);
 
-  // T2 — 3개씩 묶고 세 묶음을 고른 뒤 사탕 수를 3으로 잘못 써서 틀린다.
+  // T2 — 3개씩 묶고 세 묶음을 고른 뒤 사탕 수를 3, 4로 연달아 잘못 써서 틀린다.
   await setGroupSize(page, 3);
   for (let index = 0; index < 3; index += 1) await toggleGroup(page, index, 3);
   await typeNumber(page, 'ans', ['3']);
   await submit(page);
-  await expectFailedWithHint(page, '분모 4는 사탕을 몇 개씩 묶으라는 뜻인가요');
+  await expectFailedWithHint(page, '3은 고른 묶음 수인가요');
+  await clearNumber(page, 'ans');
+  await typeNumber(page, 'ans', ['4']);
+  await submit(page);
+  await expectFailedWithHint(page, '4는 분모예요', 2);
   await clearNumber(page, 'ans');
   await typeNumber(page, 'ans', ['9']);
   await submit(page);
@@ -307,7 +311,10 @@ test('A3 수직선 매칭 — 대표 오답 뒤 고쳐서 다섯 과제를 통�
   await submit(page);
   await expectPassed(page);
 
-  // T3 — 1을 지난 두 수를 크다로 잘못 고른 뒤 작다로 고친다.
+  // T3 — 두 카드를 수직선의 같은 자리에 꽂은 뒤 크다로 잘못 고르고 작다로 고친다.
+  const t3 = await canvasOf(page, 'main', 'number-line-canvas');
+  await placeCard(page, t3, '7/3', 722.2);
+  await placeCard(page, t3, '2 2/3', 722.2);
   await chooseCompare(page, 'cmp', '크다');
   await submit(page);
   await expectFailedWithHint(page, '두 카드가 수직선에서 어디에 꽂혔는지 볼까요');

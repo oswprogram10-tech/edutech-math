@@ -83,14 +83,24 @@
           },
           "hints": [
             {
+              "when": { "kind": "equals", "path": "response.ans.value", "value": "4" },
+              "level": 1,
+              "say": "4는 분모예요. 사탕 12개를 몇 개씩 묶으라는 뜻인지, 3/4은 그 묶음 중 몇 개를 고르라는 뜻인지 다시 읽어 보세요."
+            },
+            {
               "when": { "kind": "equals", "path": "response.ans.value", "value": "3" },
               "level": 1,
-              "say": "분모 4는 사탕을 몇 개씩 묶으라는 뜻인가요? 3/4은 묶음 4개 중 몇 개를 고르라는 뜻인가요?"
+              "say": "3은 고른 묶음 수인가요, 사탕 수인가요? 고른 묶음마다 사탕이 몇 개씩 들어 있는지 세어 보세요."
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "discrete" },
               "level": 1,
               "say": "사탕을 3개씩 묶으면 상자가 모두 몇 개인가요? 그중 3/4만큼은 상자 몇 개인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.ans.value", "value": "4" },
+              "level": 2,
+              "say": "4는 분모예요. 사탕 12개를 몇 개씩 묶으라는 뜻인지, 3/4은 그 묶음 중 몇 개를 고르라는 뜻인지 다시 읽어 보세요."
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "discrete" },
@@ -266,12 +276,27 @@
               "say": "분모 5는 20개를 몇 개씩 묶으라는 뜻인가요? 3/5은 묶음 5개 중 몇 개를 고르라는 뜻인가요?"
             },
             {
+              "when": { "kind": "equals", "path": "response.ans.valid", "value": true },
+              "level": 1,
+              "say": "분모 5는 20을 똑같이 몇 묶음으로 나누라는 뜻인가요? 그중 3/5은 몇 묶음을 고르라는 뜻인가요?"
+            },
+            {
               "when": { "kind": "equals", "path": "response.ans.value", "value": "5" },
               "level": 2,
               "say": "점 20개를 5개씩 묶는 그림을 떠올려 볼까요? 3/5만큼은 점이 몇 개인가요?"
             },
             {
+              "when": { "kind": "equals", "path": "response.ans.valid", "value": true },
+              "level": 2,
+              "say": "20개를 5묶음으로 똑같이 나누면 한 묶음은 몇 개인가요? 3묶음을 고르면 점이 모두 몇 개인가요?"
+            },
+            {
               "when": { "kind": "equals", "path": "response.ans.value", "value": "5" },
+              "level": 3,
+              "backtrack": "g3s2u4.fraction-of-quantity"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.ans.valid", "value": true },
               "level": 3,
               "backtrack": "g3s2u4.fraction-of-quantity"
             }
@@ -645,7 +670,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "fraction" },
               "level": 2,
-              "say": "5/4와 9/4을 수직선에 꽂으면 같은 점에 놓이나요? 두 카드의 높이를 견주어 보세요."
+              "say": "두 카드를 수직선에 꽂으면 같은 점에 놓이나요? 두 카드가 0에서 몇 칸 떨어진 곳에 놓이는지 견주어 보세요."
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "fraction" },
@@ -693,6 +718,7 @@
             "min": "0",
             "max": "3",
             "subdivisions": 3,
+            "cards": ["7/3", "2 2/3"],
             "labels": "partial"
           },
           "goal": {
@@ -762,7 +788,7 @@
             {
               "when": { "kind": "equals", "path": "response.cmp.symbol", "value": ">" },
               "level": 1,
-              "say": "두 분모가 같으면 한 칸의 크기가 같아요. 색칠한 칸 수가 많은 쪽은 어느 쪽인가요?"
+              "say": "두 분모가 같으면 한 칸의 크기가 같아요. 0에서 몇 칸 떨어진 곳인지 분자로 견주어 보세요."
             },
             {
               "when": { "kind": "equals", "path": "response.cmp.symbol", "value": ">" },
