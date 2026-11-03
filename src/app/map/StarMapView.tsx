@@ -478,28 +478,31 @@ export function StarMapView({
 
           <rect width={MAP_WIDTH} height={MAP_HEIGHT} fill="url(#starmap-sky)" />
 
-          {layout.zones.map((zone) => (
-            <g key={zone.domain}>
-              <rect
-                className={styles.zone}
-                x={zone.x + 10}
-                y={zone.y + 10}
-                width={zone.width - 20}
-                height={zone.height - 20}
-                rx={26}
-              />
-              <text
-                className={styles.zoneLabel}
-                x={zone.labelX}
-                y={zone.labelY}
-                textAnchor={zone.labelAnchor}
-              >
-                {zoneLabel(zone.domain)}
-              </text>
-            </g>
-          ))}
-
           <g ref={transformRef} data-testid="map-transform">
+            {/* 구역 배경·이름도 별과 같은 변환을 따른다. 확대해도 경계와 별자리가 어긋나지 않는다. */}
+            <g>
+              {layout.zones.map((zone) => (
+                <g key={zone.domain}>
+                  <rect
+                    className={styles.zone}
+                    x={zone.x + 10}
+                    y={zone.y + 10}
+                    width={zone.width - 20}
+                    height={zone.height - 20}
+                    rx={26}
+                    vectorEffect="non-scaling-stroke"
+                  />
+                  <text
+                    className={styles.zoneLabel}
+                    x={zone.labelX}
+                    y={zone.labelY}
+                    textAnchor={zone.labelAnchor}
+                  >
+                    {zoneLabel(zone.domain)}
+                  </text>
+                </g>
+              ))}
+            </g>
             <g className={styles.links}>{linkLayer}</g>
             {starLayer}
           </g>

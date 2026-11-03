@@ -357,7 +357,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "partition" },
               "level": 1,
-              "say": "색칠한 조각과 색칠하지 않은 조각을 견주어 보세요. 색칠한 조각 수를 전체 조각 수와 견주어 분수로 어떻게 쓸 수 있을까요?"
+              "say": "원 전체는 몇 조각으로 나뉘었나요? 그중 몇 조각을 색칠했나요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "partition" },
@@ -684,7 +684,8 @@
             "mode": "fraction",
             "min": "0",
             "max": "1",
-            "subdivisions": [4]
+            "subdivisions": [4],
+            "labels": "partial"
           },
           "goal": {
             "kind": "predicate",
@@ -999,7 +1000,8 @@
             "min": "0",
             "max": "3",
             "unit": "1",
-            "zoom": { "from": "1", "to": "1/10" }
+            "zoom": { "from": "1", "to": "1/10" },
+            "labels": "partial"
           },
           "goal": {
             "kind": "predicate",
@@ -1037,7 +1039,8 @@
             "min": "0",
             "max": "3",
             "unit": "1",
-            "zoom": { "from": "1", "to": "1/10" }
+            "zoom": { "from": "1", "to": "1/10" },
+            "labels": "partial"
           },
           "goal": {
             "kind": "predicate",
@@ -1172,7 +1175,8 @@
             "min": "0",
             "max": "3",
             "unit": "1",
-            "zoom": { "from": "1", "to": "1/10" }
+            "zoom": { "from": "1", "to": "1/10" },
+            "labels": "partial"
           },
           "goal": {
             "kind": "equals",

@@ -255,6 +255,8 @@ test('A2 단위분수 크기 비교 — 대표 오답 뒤 고쳐서 다섯 과�
 
   // T3 — 점을 하나만 찍어야 하는데 1/2에 찍어 틀린 뒤 1/4로 고친다.
   const t3 = await canvasOf(page, 'main', 'number-line-canvas');
+  // 눈금 이름표가 정답인 1/4을 미리 알려 주지 않는다(정수 눈금만 이름표).
+  await expect(t3.panel.getByTestId('number-line-canvas')).not.toContainText('1/4');
   await tapLine(page, t3, 500);
   await expect(t3.panel.locator('[data-point-id]')).toHaveCount(1);
   await submit(page);
@@ -305,6 +307,8 @@ test('A3 1/10 확대경 — 대표 오답 뒤 고쳐서 다섯 과제를 통과�
   const t2 = await canvasOf(page, 'main', 'number-line-canvas');
   await t2.panel.getByRole('button', { name: '수직선 확대' }).click();
   await expect(t2.panel.locator('[data-tick-value="1/10"]')).toHaveCount(1);
+  // 0.1 단계로 확대해도 눈금 이름표에 정답 0.7이 없다(정수 눈금만 이름표).
+  await expect(t2.panel.getByTestId('number-line-canvas')).not.toContainText('0.7');
   await tapLine(page, t2, 500);
   await submit(page);
   await expectFailedWithHint(page, '10칸으로 나눈 눈금');
@@ -320,6 +324,8 @@ test('A3 1/10 확대경 — 대표 오답 뒤 고쳐서 다섯 과제를 통과�
   await expect(t3.panel.locator('[data-tick-value="1/10"]')).toHaveCount(1);
   await t3.panel.getByRole('button', { name: '수직선 오른쪽으로' }).click();
   await expect(t3.panel.locator('[data-tick-value="2"]')).toHaveCount(1);
+  // 확대·이동한 뒤에도 이름표에 정답 1.3이 없다.
+  await expect(t3.panel.getByTestId('number-line-canvas')).not.toContainText('1.3');
   await tapLine(page, t3, 660);
   await submit(page);
   await expectFailedWithHint(page, '1과 2 사이를 10칸');

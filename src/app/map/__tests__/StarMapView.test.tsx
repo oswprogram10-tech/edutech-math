@@ -149,6 +149,32 @@ describe('StarMapView', () => {
     });
   });
 
+  it('구역 배경과 이름도 별과 같은 변환 안에 있어 확대·이동을 따른다', () => {
+    const zoned: StarMapLayout = {
+      ...smallLayout(),
+      zones: [
+        {
+          domain: 'number',
+          x: 0,
+          y: 0,
+          width: 500,
+          height: 500,
+          labelX: 18,
+          labelY: 28,
+          labelAnchor: 'start',
+        },
+      ],
+    };
+    renderView({ layout: zoned });
+
+    const transform = screen.getByTestId('map-transform');
+    // 구역 이름이 변환 그룹 안에 있으면 별과 같은 배율·이동을 따른다.
+    expect(within(transform).getByText('수와 연산')).toBeTruthy();
+    expect(transform.querySelector('rect')?.getAttribute('vector-effect')).toBe(
+      'non-scaling-stroke',
+    );
+  });
+
   it('학생 화면 DOM에 학년과 단원 ID를 쓰지 않는다', async () => {
     const [units, graph] = await Promise.all([loadUnitSummaries(), loadKnowledgeGraph()]);
     const concepts: LayoutConcept[] = [];
