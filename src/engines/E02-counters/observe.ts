@@ -4,10 +4,18 @@
  */
 import type { Observation } from '../../core/engine-sdk';
 import {
+  bridgeSumOf,
+  bubbleAllHitTarget,
+  bubbleValuesOf,
   distinctSplitsOf,
   frameFillOf,
   isFull,
+  measureOutLooseOf,
+  pairingLeftoverOf,
+  pairingPairsOf,
   platesOf,
+  rekenrekTotalOf,
+  shareEqualOf,
   subtractStrategyOf,
   totalOf,
   unpairedOf,
@@ -40,6 +48,30 @@ export function observe(state: CountersState, config: CountersConfig): Observati
     }
 
     case 'part-whole': {
+      if ('variant' in state) {
+        if (state.variant === 'bridge') {
+          const sum = bridgeSumOf(state);
+          return {
+            ...base,
+            placed: [...state.placed],
+            sum,
+            gap: state.gap,
+            fits: sum === state.gap,
+            recorded: state.recorded.map((entry) => [...entry]),
+            distinctBridges: state.recorded.length,
+          };
+        }
+        return {
+          ...base,
+          pops: state.pops.map((values) => [...values]),
+          popCount: state.pops.length,
+          allPopsHitTarget: bubbleAllHitTarget(state),
+          streak: state.streak,
+          bestStreak: state.bestStreak,
+          misses: state.misses,
+          remaining: bubbleValuesOf(state),
+        };
+      }
       const plates = platesOf(state);
       return {
         ...base,
@@ -57,6 +89,45 @@ export function observe(state: CountersState, config: CountersConfig): Observati
         phase: state.phase,
         shown: state.shown,
         layout: state.layout,
+      };
+
+    case 'rekenrek':
+      return {
+        ...base,
+        rows: [...state.left],
+        total: rekenrekTotalOf(state),
+        history: [...state.history],
+        reached: [...state.reached],
+        fullRowPushes: state.fullRowPushes,
+        moves: state.moves,
+      };
+
+    case 'pairing':
+      return {
+        ...base,
+        phase: state.phase,
+        prediction: state.prediction,
+        paired: state.phase === 'paired',
+        pairs: pairingPairsOf(state),
+        leftover: pairingLeftoverOf(state),
+      };
+
+    case 'share':
+      return {
+        ...base,
+        plates: [...state.plates],
+        pile: state.pile,
+        equal: shareEqualOf(state),
+        rounds: state.rounds,
+      };
+
+    case 'measure-out':
+      return {
+        ...base,
+        groupSize: state.groupSize,
+        bags: state.bagCount,
+        loose: measureOutLooseOf(state),
+        lastAttempt: state.lastAttempt ? { ...state.lastAttempt } : null,
       };
   }
 }

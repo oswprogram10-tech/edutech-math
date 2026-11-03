@@ -182,6 +182,27 @@ export function CounterIconShape({ icon, color, x, y, r }: CounterIconProps) {
         />
       );
       break;
+    case 'child':
+      shape = (
+        <g>
+          <circle
+            cx={x}
+            cy={y - r * 0.5}
+            r={r * 0.42}
+            fill={fill}
+            stroke={dark}
+            strokeWidth={r * 0.08}
+          />
+          <path
+            d={`M ${x} ${y - r * 0.02} L ${x} ${y + r * 0.38} M ${x - r * 0.55} ${y + r * 0.12} L ${x + r * 0.55} ${y + r * 0.12} M ${x} ${y + r * 0.38} L ${x - r * 0.4} ${y + r * 0.88} M ${x} ${y + r * 0.38} L ${x + r * 0.4} ${y + r * 0.88}`}
+            fill="none"
+            stroke={fill}
+            strokeWidth={r * 0.16}
+            strokeLinecap="round"
+          />
+        </g>
+      );
+      break;
     case 'dot':
     default:
       shape = (

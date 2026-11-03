@@ -10,6 +10,8 @@ import type { Point } from '../../core/engine-sdk';
 import { summonPoint } from './layout';
 import { FRAME_COLS, FRAME_ROWS, LOGICAL_HEIGHT, LOGICAL_WIDTH, splitKey } from './types';
 import type {
+  BridgeState,
+  BubblePairsState,
   CounterColor,
   CountersAction,
   CountersConfig,
@@ -17,8 +19,13 @@ import type {
   CounterMode,
   FlashState,
   FrameCounter,
+  MeasureOutCounter,
+  MeasureOutState,
+  PairingState,
   PartWholeState,
   PlateCounter,
+  RekenrekState,
+  ShareState,
   SummonState,
   TenFrameState,
 } from './types';
@@ -32,6 +39,35 @@ function integer(value: number | undefined, fallback: number, min: number, max: 
 
 export function inferMode(config: CountersConfig): CounterMode {
   if (config.mode !== undefined) return config.mode;
+  if (
+    config.variant !== undefined ||
+    config.bubbles !== undefined ||
+    config.gap !== undefined ||
+    config.target !== undefined ||
+    config.rods !== undefined ||
+    config.maxRods !== undefined ||
+    config.tenMarker !== undefined
+  ) {
+    return 'part-whole';
+  }
+  if (config.rows !== undefined || config.skipBy !== undefined || config.colorBreak !== undefined) {
+    return 'rekenrek';
+  }
+  if (
+    config.predictFirst !== undefined ||
+    config.labels !== undefined ||
+    config.groupSize !== undefined ||
+    config.groupSizeChoices !== undefined ||
+    config.showRemainder !== undefined ||
+    config.sentenceTemplate !== undefined
+  ) {
+    return config.groupSize !== undefined ||
+      config.groupSizeChoices !== undefined ||
+      config.showRemainder !== undefined ||
+      config.sentenceTemplate !== undefined
+      ? 'measure-out'
+      : 'pairing';
+  }
   if (
     config.count !== undefined ||
     config.range !== undefined ||
@@ -52,9 +88,10 @@ export function inferMode(config: CountersConfig): CounterMode {
   ) {
     return 'ten-frame';
   }
+  if (typeof config.groups === 'number') return 'share';
   if (
     config.total !== undefined ||
-    config.groups !== undefined ||
+    Array.isArray(config.groups) ||
     config.parts !== undefined ||
     config.gesture !== undefined ||
     config.scene !== undefined ||
@@ -150,7 +187,7 @@ function createPartWhole(config: CountersConfig): PartWholeState {
   if (scene && scene.kind === 'compare') {
     counts[0] = Math.max(0, Math.trunc(scene.numbers[0]));
     if (plates > 1) counts[1] = Math.max(0, Math.trunc(scene.numbers[1]));
-  } else if (config.groups !== undefined) {
+  } else if (Array.isArray(config.groups)) {
     config.groups.slice(0, plates).forEach((value, index) => {
       counts[index] = Math.max(0, Math.trunc(value));
     });
@@ -260,7 +297,151 @@ function flashPosition(layout: 'dice' | 'ten-frame' | 'fingers' | 'random', inde
   return { x: 110 + (index % 10) * 66, y: 190 + Math.floor(index / 10) * 92 };
 }
 
+function createRekenrek(config: CountersConfig): RekenrekState {
+  const rows = integer(config.rows, 2, 1, 10);
+  return {
+    mode: 'rekenrek',
+    rows,
+    left: Array.from({ length: rows }, () => 0),
+    history: [],
+    reached: [],
+    fullRowPushes: 0,
+    moves: 0,
+  };
+}
+
+function createPairing(config: CountersConfig): PairingState {
+  const count = integer(config.count, 12, 1, 20);
+  const predictFirst = config.predictFirst !== false;
+  return {
+    mode: 'pairing',
+    count,
+    predictFirst,
+    phase: predictFirst ? 'predict' : 'ready',
+    prediction: null,
+  };
+}
+
+function createShare(config: CountersConfig): ShareState {
+  const groups = integer(typeof config.groups === 'number' ? config.groups : undefined, 2, 2, 6);
+  const total = integer(config.total, 12, 0, 100);
+  return {
+    mode: 'share',
+    groups,
+    pile: total,
+    plates: Array.from({ length: groups }, () => 0),
+    rounds: 0,
+  };
+}
+
+function measureOutPoint(index: number): Point {
+  const column = index % 20;
+  const row = Math.floor(index / 20);
+  return { x: 66 + column * 44, y: 150 + row * 58 };
+}
+
+function createMeasureOut(config: CountersConfig): MeasureOutState {
+  const raw = Array.isArray(config.groupSizeChoices)
+    ? config.groupSizeChoices
+        .filter((size) => Number.isFinite(size) && size >= 1 && size <= 10)
+        .map((size) => Math.trunc(size))
+    : [];
+  const choices = [...new Set(raw)].sort((a, b) => a - b);
+  const fixed = integer(config.groupSize, 2, 1, 10);
+  const groupSize = choices.length > 0 ? null : fixed;
+  const total = integer(config.total, 12, 0, 100);
+  const random = seededRandom(integer(config.seed, 1, 0, 2_147_483_647));
+  const counters: MeasureOutCounter[] = Array.from({ length: total }, (_, index) => {
+    const point = measureOutPoint(index);
+    return {
+      id: `m${index + 1}`,
+      x: point.x + Math.round((random() - 0.5) * 12),
+      y: point.y + Math.round((random() - 0.5) * 10),
+      bag: null,
+    };
+  });
+  return {
+    mode: 'measure-out',
+    groupSize,
+    choices,
+    counters,
+    bagCount: 0,
+    lastAttempt: null,
+  };
+}
+
+const DEFAULT_BUBBLES: readonly number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 3, 7, 5];
+
+function createBubblePairs(config: CountersConfig): BubblePairsState {
+  const target = integer(config.target, 10, 2, 20);
+  const pickUpTo = config.pickUpTo === 3 ? 3 : 2;
+  const source = (config.bubbles ?? DEFAULT_BUBBLES)
+    .filter((value) => Number.isFinite(value) && value >= 1 && value <= 9)
+    .slice(0, 24);
+  const random = seededRandom(integer(config.seed, 1, 0, 2_147_483_647));
+  const shuffled = [...source];
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swap = Math.floor(random() * (index + 1));
+    const current = shuffled[index];
+    const other = shuffled[swap];
+    if (current === undefined || other === undefined) continue;
+    shuffled[index] = other;
+    shuffled[swap] = current;
+  }
+  const bubbles = shuffled.map((value, index) => ({
+    id: `b${index + 1}`,
+    value: Math.trunc(value),
+    popped: false,
+  }));
+  return {
+    mode: 'part-whole',
+    variant: 'bubble-pairs',
+    target,
+    pickUpTo,
+    bubbles,
+    selected: [],
+    lastMiss: null,
+    pops: [],
+    streak: 0,
+    bestStreak: 0,
+    misses: 0,
+  };
+}
+
+function createBridge(config: CountersConfig): BridgeState {
+  const gap = integer(config.gap, 10, 2, 20);
+  const rawRods = Array.isArray(config.rods)
+    ? config.rods.filter((length) => Number.isFinite(length) && length >= 1 && length <= 9)
+    : [];
+  const rods =
+    rawRods.length > 0
+      ? rawRods.map((length) => Math.trunc(length)).sort((a, b) => a - b)
+      : [1, 2, 3, 4, 5, 6, 7, 8, 9];
+  const maxRods = integer(config.maxRods, 2, 1, 5);
+  const preset = (config.preset ?? [])
+    .filter((length) => rods.includes(length))
+    .slice(0, maxRods)
+    .map((length) => Math.trunc(length));
+  return {
+    mode: 'part-whole',
+    variant: 'bridge',
+    gap,
+    rods,
+    maxRods,
+    presetCount: preset.length,
+    presetLocked: config.presetLocked === true,
+    placed: preset,
+    recorded: [],
+  };
+}
+
 export function createInitialState(config: CountersConfig): CountersState {
+  if (inferMode(config) === 'part-whole' && config.variant === 'bubble-pairs') {
+    return createBubblePairs(config);
+  }
+  if (inferMode(config) === 'part-whole' && config.variant === 'bridge') {
+    return createBridge(config);
+  }
   switch (inferMode(config)) {
     case 'summon':
       return createSummon(config);
@@ -270,6 +451,14 @@ export function createInitialState(config: CountersConfig): CountersState {
       return createPartWhole(config);
     case 'flash':
       return createFlash(config);
+    case 'rekenrek':
+      return createRekenrek(config);
+    case 'pairing':
+      return createPairing(config);
+    case 'share':
+      return createShare(config);
+    case 'measure-out':
+      return createMeasureOut(config);
   }
 }
 
@@ -284,10 +473,62 @@ export function totalOf(state: CountersState): number {
     case 'ten-frame':
       return state.counters.filter((counter) => counter.frame !== null).length;
     case 'part-whole':
+      if ('variant' in state) {
+        return state.variant === 'bridge'
+          ? state.placed.reduce((sum, length) => sum + length, 0)
+          : state.bubbles.filter((bubble) => !bubble.popped).length;
+      }
       return state.counters.length;
     case 'flash':
       return state.phase === 'ready' ? 0 : state.chosen;
+    case 'rekenrek':
+      return state.left.reduce((sum, count) => sum + count, 0);
+    case 'pairing':
+      return state.count;
+    case 'share':
+      return state.pile + state.plates.reduce((sum, count) => sum + count, 0);
+    case 'measure-out':
+      return state.counters.length;
   }
+}
+
+// ─────────────────────────────────────────────────────────────
+// 새 모드의 관찰용 계산
+// ─────────────────────────────────────────────────────────────
+
+export function rekenrekTotalOf(state: RekenrekState): number {
+  return state.left.reduce((sum, count) => sum + count, 0);
+}
+
+export function pairingPairsOf(state: PairingState): number | null {
+  return state.phase === 'paired' ? Math.floor(state.count / 2) : null;
+}
+
+export function pairingLeftoverOf(state: PairingState): number | null {
+  return state.phase === 'paired' ? state.count % 2 : null;
+}
+
+export function shareEqualOf(state: ShareState): boolean {
+  return state.plates.every((count) => count === state.plates[0]);
+}
+
+export function measureOutLooseOf(state: MeasureOutState): number {
+  return state.counters.filter((counter) => counter.bag === null).length;
+}
+
+export function bubbleValuesOf(state: BubblePairsState): number[] {
+  return state.bubbles.filter((bubble) => !bubble.popped).map((bubble) => bubble.value);
+}
+
+export function bubbleAllHitTarget(state: BubblePairsState): boolean {
+  return (
+    state.pops.length > 0 &&
+    state.pops.every((values) => values.reduce((a, b) => a + b, 0) === state.target)
+  );
+}
+
+export function bridgeSumOf(state: BridgeState): number {
+  return state.placed.reduce((sum, length) => sum + length, 0);
 }
 
 export function frameFillOf(state: TenFrameState): number[] {
@@ -348,9 +589,22 @@ export function reduce(state: CountersState, action: CountersAction): CountersSt
     case 'ten-frame':
       return reduceTenFrame(state, action);
     case 'part-whole':
+      if ('variant' in state) {
+        return state.variant === 'bridge'
+          ? reduceBridge(state, action)
+          : reduceBubble(state, action);
+      }
       return reducePartWhole(state, action);
     case 'flash':
       return reduceFlash(state, action);
+    case 'rekenrek':
+      return reduceRekenrek(state, action);
+    case 'pairing':
+      return reducePairing(state, action);
+    case 'share':
+      return reduceShare(state, action);
+    case 'measure-out':
+      return reduceMeasureOut(state, action);
   }
 }
 
@@ -587,4 +841,222 @@ function reduceFlash(state: FlashState, action: CountersAction): CountersState {
     return { ...state, phase: 'hidden' };
   }
   return state;
+}
+
+function reduceRekenrek(state: RekenrekState, action: CountersAction): CountersState {
+  if (action.type !== 'push' && action.type !== 'pull') return state;
+  const current = state.left[action.row];
+  if (current === undefined) return state;
+  const count = Math.max(0, Math.trunc(action.count));
+  if (count === 0) return state;
+  const next =
+    action.type === 'push' ? Math.min(10, current + count) : Math.max(0, current - count);
+  if (next === current) return state;
+  const left = state.left.map((value, row) => (row === action.row ? next : value));
+  const total = left.reduce((sum, value) => sum + value, 0);
+  const moved = Math.abs(next - current);
+  return {
+    ...state,
+    left,
+    history: [...state.history, total],
+    reached: state.reached.includes(total) ? state.reached : [...state.reached, total],
+    fullRowPushes: state.fullRowPushes + (action.type === 'push' && moved === 10 ? 1 : 0),
+    moves: state.moves + 1,
+  };
+}
+
+function reducePairing(state: PairingState, action: CountersAction): CountersState {
+  switch (action.type) {
+    case 'predict': {
+      if (state.phase !== 'predict') return state;
+      if (action.choice !== 0 && action.choice !== 1) return state;
+      return { ...state, prediction: action.choice, phase: 'ready' };
+    }
+    case 'make-pairs':
+      return state.phase === 'ready' ? { ...state, phase: 'paired' } : state;
+    case 'reset-pairs':
+      return state.phase === 'paired' || state.phase === 'predict'
+        ? { ...state, phase: 'ready' }
+        : state;
+    default:
+      return state;
+  }
+}
+
+function reduceShare(state: ShareState, action: CountersAction): CountersState {
+  switch (action.type) {
+    case 'deal': {
+      if (action.plate < 0 || action.plate >= state.groups) return state;
+      if (state.pile <= 0) return state;
+      return {
+        ...state,
+        pile: state.pile - 1,
+        plates: state.plates.map((count, plate) => (plate === action.plate ? count + 1 : count)),
+      };
+    }
+    case 'take-back': {
+      if (action.plate < 0 || action.plate >= state.groups) return state;
+      if ((state.plates[action.plate] ?? 0) <= 0) return state;
+      return {
+        ...state,
+        pile: state.pile + 1,
+        plates: state.plates.map((count, plate) => (plate === action.plate ? count - 1 : count)),
+      };
+    }
+    case 'deal-round': {
+      if (state.pile < state.groups) return state;
+      return {
+        ...state,
+        pile: state.pile - state.groups,
+        plates: state.plates.map((count) => count + 1),
+        rounds: state.rounds + 1,
+      };
+    }
+    default:
+      return state;
+  }
+}
+
+function reduceMeasureOut(state: MeasureOutState, action: CountersAction): CountersState {
+  switch (action.type) {
+    case 'choose-size': {
+      if (!state.choices.includes(action.size)) return state;
+      if (state.groupSize === action.size) return state;
+      return {
+        ...state,
+        groupSize: action.size,
+        bagCount: 0,
+        lastAttempt: null,
+        counters: state.counters.map((counter) => ({ ...counter, bag: null })),
+      };
+    }
+    case 'bag': {
+      if (state.groupSize === null) return state;
+      const ids = new Set(action.ids);
+      const eligible = state.counters.filter(
+        (counter) => counter.bag === null && ids.has(counter.id),
+      );
+      if (eligible.length === 0) return state;
+      if (eligible.length !== state.groupSize) {
+        return { ...state, lastAttempt: { count: eligible.length, ok: false } };
+      }
+      const bag = state.bagCount;
+      const picked = new Set(eligible.map((counter) => counter.id));
+      return {
+        ...state,
+        bagCount: bag + 1,
+        lastAttempt: null,
+        counters: state.counters.map((counter) =>
+          picked.has(counter.id) ? { ...counter, bag } : counter,
+        ),
+      };
+    }
+    case 'bag-next': {
+      if (state.groupSize === null) return state;
+      const loose = state.counters.filter((counter) => counter.bag === null);
+      if (loose.length < state.groupSize) return state;
+      const picked = new Set(loose.slice(0, state.groupSize).map((counter) => counter.id));
+      const bag = state.bagCount;
+      return {
+        ...state,
+        bagCount: bag + 1,
+        lastAttempt: null,
+        counters: state.counters.map((counter) =>
+          picked.has(counter.id) ? { ...counter, bag } : counter,
+        ),
+      };
+    }
+    case 'unbag': {
+      if (action.bag < 0 || action.bag >= state.bagCount) return state;
+      if (!state.counters.some((counter) => counter.bag === action.bag)) return state;
+      return {
+        ...state,
+        bagCount: state.bagCount - 1,
+        lastAttempt: null,
+        counters: state.counters.map((counter) => {
+          if (counter.bag === action.bag) return { ...counter, bag: null };
+          if (counter.bag !== null && counter.bag > action.bag) {
+            return { ...counter, bag: counter.bag - 1 };
+          }
+          return counter;
+        }),
+      };
+    }
+    default:
+      return state;
+  }
+}
+
+function reduceBubble(state: BubblePairsState, action: CountersAction): CountersState {
+  switch (action.type) {
+    case 'pick': {
+      const bubble = state.bubbles.find((item) => item.id === action.id);
+      if (!bubble || bubble.popped) return state;
+      if (state.selected.includes(action.id)) return state;
+      const selected = [...state.selected, action.id];
+      const chosen = selected
+        .map((id) => state.bubbles.find((item) => item.id === id))
+        .filter((item): item is NonNullable<typeof item> => item !== undefined);
+      const sum = chosen.reduce((total, item) => total + item.value, 0);
+      if (sum === state.target) {
+        const ids = new Set(selected);
+        const streak = state.streak + 1;
+        return {
+          ...state,
+          bubbles: state.bubbles.map((item) =>
+            ids.has(item.id) ? { ...item, popped: true } : item,
+          ),
+          selected: [],
+          lastMiss: null,
+          pops: [...state.pops, chosen.map((item) => item.value)],
+          streak,
+          bestStreak: Math.max(state.bestStreak, streak),
+        };
+      }
+      if (sum > state.target || selected.length >= state.pickUpTo) {
+        return {
+          ...state,
+          selected: [],
+          lastMiss: { ids: selected, sum },
+          streak: 0,
+          misses: state.misses + 1,
+        };
+      }
+      return { ...state, selected, lastMiss: null };
+    }
+    case 'unpick': {
+      if (!state.selected.includes(action.id)) return state;
+      return { ...state, selected: state.selected.filter((id) => id !== action.id) };
+    }
+    default:
+      return state;
+  }
+}
+
+function reduceBridge(state: BridgeState, action: CountersAction): CountersState {
+  switch (action.type) {
+    case 'place-rod': {
+      if (!state.rods.includes(action.length)) return state;
+      if (state.placed.length >= state.maxRods) return state;
+      const total = state.rods.filter((length) => length === action.length).length;
+      const used = state.placed.filter((length) => length === action.length).length;
+      if (used >= total) return state;
+      return { ...state, placed: [...state.placed, action.length] };
+    }
+    case 'remove-rod': {
+      if (action.index < 0 || action.index >= state.placed.length) return state;
+      if (state.presetLocked && action.index < state.presetCount) return state;
+      return { ...state, placed: state.placed.filter((_, index) => index !== action.index) };
+    }
+    case 'record-bridge': {
+      const sum = state.placed.reduce((total, length) => total + length, 0);
+      if (sum !== state.gap) return state;
+      const sorted = [...state.placed].sort((a, b) => a - b);
+      const key = sorted.join(',');
+      if (state.recorded.some((entry) => entry.join(',') === key)) return state;
+      return { ...state, recorded: [...state.recorded, sorted] };
+    }
+    default:
+      return state;
+  }
 }

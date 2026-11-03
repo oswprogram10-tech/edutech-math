@@ -13,6 +13,14 @@ export const countersStrings = {
       '셈돌을 눌러 고른 뒤 접시를 눌러 옮겨 보세요. 가른 방법은 기록하기로 모을 수 있어요.',
     flash:
       '보기 단추를 누르면 셈돌이 잠깐 나타났다가 사라져요. 몇 개였는지 마음속으로 세어 보세요.',
+    rekenrek:
+      '오른쪽 구슬을 누르면 그 구슬과 왼쪽 구슬이 함께 밀려요. 버튼과 키보드로도 밀 수 있어요.',
+    pairing: '짝이 맞을지 먼저 생각해 보고, 짝 만들기로 하나씩 짝지어 보세요.',
+    share: '무더기의 셈돌을 접시에 하나씩 나누어 보세요. 한 바퀴씩 나누기 버튼도 쓸 수 있어요.',
+    measureOut:
+      '같은 수씩 덜어 내어 봉지에 담아 보세요. 올가미로 감싸거나 덜어 내기 버튼을 눌러요.',
+    bubblePairs: '합이 목표 수가 되는 방울을 골라 터뜨려 보세요.',
+    bridge: '막대를 이어서 틈을 정확히 채워 보세요.',
   },
   addOne: '하나 놓기',
   addCount: (count: number) => `${count}개 놓기`,
@@ -33,6 +41,7 @@ export const countersStrings = {
     candy: '사탕',
     strawberry: '딸기',
     star: '별',
+    child: '어린이',
     dot: '점',
   } satisfies Record<CounterIcon, string>,
 
@@ -87,4 +96,46 @@ export const countersStrings = {
   overlayFrameGaps: '빈칸 표시',
   overlayBondTree: '가르기 나무',
   overlayPairLines: '짝 없는 셈돌',
+  overlayBeadGroups: '구슬 묶음 윤곽',
+  overlayPairMarch: '짝짓기 다시 보기',
+  overlayPlateBars: '접시별 막대',
+  overlayBubbleFrame: '방울 텐프레임',
+  overlayTenGap: '10칸 표시',
+
+  rekenrekRow: (row: number) => `${row + 1}번 줄`,
+  rekenrekHint: '오른쪽 구슬을 누르면 그 구슬과 왼쪽 구슬이 함께 밀려요.',
+  rekenrekPush: (count: number) => `${count}개 밀기`,
+  rekenrekPull: '하나 되밀기',
+
+  pairLabels: ['짝수', '홀수'] as const,
+  pairingPrompt: '짝이 모두 맞을까요?',
+  makePairs: '짝 만들기',
+  resetPairs: '다시',
+  pairedHint: '짝을 지어 보았어요. 남는 사람이 있는지 살펴보세요.',
+  leftoverFlag: '짝이 없는 사람',
+
+  pile: '무더기',
+  dealRound: '한 바퀴씩 나누기',
+  takeBack: (plate: number) => `${plate + 1}번 접시에서 하나 되돌리기`,
+  shareHint: '접시마다 같은 수가 되도록 나누어 보세요.',
+
+  measureChoose: '몇 개씩 덜어 낼까요?',
+  bagNext: (size: number) => `${size}개 덜어 내기`,
+  bagName: (index: number) => `${index + 1}번 봉지`,
+  unbag: (index: number) => `${index + 1}번 봉지 풀기`,
+  remainder: '남은 것',
+  measureHint: '같은 수를 올가미로 감싸면 봉지가 돼요.',
+  measureMiss: (count: number) => `${count}개를 감쌌어요. 봉지 크기만큼 다시 감싸 보세요.`,
+  bagCount: (count: number) => `봉지 ${count}개`,
+
+  bubbleHint: '합이 목표 수가 되는 방울을 골라 터뜨려 보세요.',
+  bubbleMiss: (sum: number) => `고른 방울의 합은 ${sum}이에요.`,
+  bubbleFace: '방울',
+
+  bridgeHint: '막대를 이어서 틈을 정확히 채워 보세요.',
+  recordBridge: '다리 기록하기',
+  bridgeRecorded: '기록한 다리',
+  bridgeNone: '아직 기록한 다리가 없어요.',
+  removeRod: (length: number) => `${length}짜리 막대 빼기`,
+  rodLabel: (length: number) => `${length}칸 막대`,
 } as const;

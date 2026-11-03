@@ -5,6 +5,7 @@ import type { CountersConfig, CountersState } from '../types';
 
 export function PairLinesOverlay({ state }: OverlayProps<CountersConfig, CountersState>) {
   if (state.mode !== 'part-whole') return null;
+  if ('variant' in state) return null;
   const paired = new Set(state.pairs.flat());
   const unpaired = state.counters.filter((counter) => !paired.has(counter.id));
   if (unpaired.length === 0) return null;

@@ -141,3 +141,116 @@
   color: #1d2330;
   font-size: 0.95rem;
 }
+
+/* ── T041 새 모드·변형 ─────────────────────────────────────── */
+
+.pairLink {
+  opacity: 0;
+  animation: pair-draw 0.45s ease-out forwards;
+}
+
+.bubble {
+  cursor: pointer;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: bubble-float 4.2s ease-in-out infinite;
+}
+
+.bubblePicked {
+  animation: none;
+}
+
+.bubbleMiss {
+  animation: bubble-shake 0.35s ease-in-out 4;
+}
+
+.missBadge {
+  margin: 0;
+  padding: 0.35rem 0.7rem;
+  border: 2px solid #d64545;
+  border-radius: 999px;
+  background: #fdecec;
+  color: #8f1f1f;
+  font-weight: 700;
+  font-size: 0.95rem;
+  animation: miss-fade 1.5s ease-out forwards;
+}
+
+.bag {
+  cursor: pointer;
+}
+
+.rod {
+  cursor: pointer;
+}
+
+.bridgeWalk {
+  animation: bridge-walk 2.4s ease-in-out infinite;
+}
+
+@keyframes pair-draw {
+  from {
+    opacity: 0;
+    stroke-dashoffset: 120;
+    stroke-dasharray: 120;
+  }
+  to {
+    opacity: 0.55;
+    stroke-dashoffset: 0;
+    stroke-dasharray: 120;
+  }
+}
+
+@keyframes bubble-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes bubble-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-7px);
+  }
+  75% {
+    transform: translateX(7px);
+  }
+}
+
+@keyframes bridge-walk {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(160px);
+  }
+}
+
+@keyframes miss-fade {
+  0%,
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pairLink,
+  .bubble,
+  .bubblePicked,
+  .bubbleMiss,
+  .bridgeWalk,
+  .missBadge {
+    animation: none;
+    opacity: 1;
+  }
+}

@@ -30,6 +30,19 @@ function fullFrames(state: CountersState): boolean[] {
   return frameFillOf(state).map((count) => count >= 10);
 }
 
+/** `value-changed`는 '학생이 만든 수'가 있는 모드에서만 낸다(방울·다리 변형 제외). */
+function emitsValue(state: CountersState): boolean {
+  if (state.mode === 'flash') return false;
+  if (state.mode === 'part-whole') return !('variant' in state);
+  return true;
+}
+
+function isBubble(
+  state: CountersState,
+): state is Extract<CountersState, { variant: 'bubble-pairs' }> {
+  return state.mode === 'part-whole' && 'variant' in state && state.variant === 'bubble-pairs';
+}
+
 export function emit(
   prev: CountersState,
   next: CountersState,
@@ -38,7 +51,7 @@ export function emit(
   if (prev === next) return [];
   const events: EngineEvent[] = [];
 
-  if (next.mode === 'part-whole' && action.type === 'record-split') {
+  if (next.mode === 'part-whole' && !('variant' in next) && action.type === 'record-split') {
     const last = next.recorded[next.recorded.length - 1];
     if (last) events.push({ name: 'split-recorded', payload: { a: last[0], b: last[1] } });
   }
@@ -51,7 +64,19 @@ export function emit(
     });
   }
 
-  if (prev.mode !== 'flash' && next.mode !== 'flash') {
+  if (isBubble(prev) && isBubble(next) && next.pops.length > prev.pops.length) {
+    const last = next.pops[next.pops.length - 1];
+    if (last) events.push({ name: 'bubble-popped', payload: { values: [...last] } });
+  }
+
+  if (prev.mode === 'measure-out' && next.mode === 'measure-out' && next.bagCount > prev.bagCount) {
+    events.push({
+      name: 'bagged',
+      payload: { size: next.groupSize ?? 0, bags: next.bagCount },
+    });
+  }
+
+  if (emitsValue(prev) && emitsValue(next)) {
     const before = totalOf(prev);
     const after = totalOf(next);
     if (before !== after) events.push({ name: 'value-changed', payload: { value: after } });
@@ -110,5 +135,93 @@ export const predicates: Readonly<Record<string, EnginePredicate>> = {
   unpairedIs: (observation: Observation, args) => {
     const value = numberArg(argsRecord(args), 'value');
     return value !== null && observation['unpaired'] === value;
+  },
+
+  historyIncludesInOrder: (observation: Observation, args) => {
+    const values = arrayArg(argsRecord(args), 'values');
+    const history = observation['history'];
+    if (values === null || !Array.isArray(history)) return false;
+    let index = 0;
+    for (const item of history) {
+      if (typeof item === 'number' && item === values[index]) index += 1;
+      if (index >= values.length) return true;
+    }
+    return values.length === 0;
+  },
+
+  reachedAll: (observation: Observation, args) => {
+    const values = arrayArg(argsRecord(args), 'values');
+    const reached = observation['reached'];
+    if (values === null || !Array.isArray(reached)) return false;
+    return values.every((value) => reached.includes(value));
+  },
+
+  predictionIs: (observation: Observation, args) => {
+    const value = numberArg(argsRecord(args), 'value');
+    return value !== null && observation['prediction'] === value;
+  },
+
+  pairedDone: (observation: Observation) => observation['paired'] === true,
+
+  pileIs: (observation: Observation, args) => {
+    const value = numberArg(argsRecord(args), 'value');
+    return value !== null && observation['pile'] === value;
+  },
+
+  allPlatesEqual: (observation: Observation) => observation['equal'] === true,
+
+  bagsIs: (observation: Observation, args) => {
+    const value = numberArg(argsRecord(args), 'value');
+    return value !== null && observation['bags'] === value;
+  },
+
+  looseIs: (observation: Observation, args) => {
+    const value = numberArg(argsRecord(args), 'value');
+    return value !== null && observation['loose'] === value;
+  },
+
+  groupSizeIs: (observation: Observation, args) => {
+    const value = numberArg(argsRecord(args), 'value');
+    return value !== null && observation['groupSize'] === value;
+  },
+
+  popsAtLeast: (observation: Observation, args) => {
+    const count = numberArg(argsRecord(args), 'count');
+    const pops = observation['popCount'];
+    return count !== null && typeof pops === 'number' && pops >= count;
+  },
+
+  poppedWith: (observation: Observation, args) => {
+    const size = numberArg(argsRecord(args), 'size');
+    const pops = observation['pops'];
+    if (size === null || !Array.isArray(pops)) return false;
+    return pops.some(
+      (values) =>
+        Array.isArray(values) &&
+        values.every((value) => typeof value === 'number') &&
+        values.reduce<number>((sum, value) => sum + (typeof value === 'number' ? value : 0), 0) ===
+          size,
+    );
+  },
+
+  streakAtLeast: (observation: Observation, args) => {
+    const count = numberArg(argsRecord(args), 'count');
+    const streak = observation['streak'];
+    return count !== null && typeof streak === 'number' && streak >= count;
+  },
+
+  bridgeFits: (observation: Observation) => observation['fits'] === true,
+
+  placedInclude: (observation: Observation, args) => {
+    const length = numberArg(argsRecord(args), 'length');
+    const placed = observation['placed'];
+    if (length === null || !Array.isArray(placed)) return false;
+    return placed.includes(length);
+  },
+
+  distinctBridgesAtLeast: (observation: Observation, args) => {
+    const count = numberArg(argsRecord(args), 'count');
+    const distinct = observation['distinctBridges'];
+    return count !== null && typeof distinct === 'number' && distinct >= count;
   },
 };

@@ -112,3 +112,107 @@ test('키보드만으로 6을 (2, 4)로 가르고 기록한다', async ({ page }
   expect(observation.plates).toEqual([2, 4]);
   expect(observation.recorded).toEqual([[2, 4]]);
 });
+
+test('rekenrek에서 키보드 +10 세 줄과 +2로 32를 만든다', async ({ page }) => {
+  await openCounters(page, { mode: 'rekenrek', rows: 5, skipBy: [1, 2, 5, 10] });
+  await page.getByLabel('모드').selectOption('rekenrek');
+  await pollObservation(page, (current) => current.mode === 'rekenrek');
+
+  for (let row = 1; row <= 3; row += 1) {
+    const line = page.getByRole('button', { name: `${row}번 줄`, exact: true });
+    await line.focus();
+    await page.keyboard.press('0');
+  }
+  const fourth = page.getByRole('button', { name: '4번 줄', exact: true });
+  await fourth.focus();
+  await page.keyboard.press('2');
+
+  await pollObservation(page, (current) => current.total === 32);
+  const observation = await readObservation(page);
+  expect(observation['rows']).toEqual([10, 10, 10, 2, 0]);
+  expect(observation['history']).toEqual([10, 20, 30, 32]);
+  await expect(page.getByTestId('counter-total')).toHaveCount(0);
+});
+
+test('share에서 한 바퀴씩 네 번 나누면 접시가 [4,4,4]가 된다', async ({ page }) => {
+  await openCounters(page, { mode: 'share', total: 12, groups: 3 });
+  await page.getByLabel('모드').selectOption('share');
+  await pollObservation(page, (current) => current.mode === 'share');
+
+  const button = page.getByRole('button', { name: '한 바퀴씩 나누기' });
+  for (let round = 0; round < 4; round += 1) {
+    await button.click();
+  }
+
+  await pollObservation(page, (current) => {
+    const plates = current.plates as number[] | undefined;
+    return Array.isArray(plates) && plates.join(',') === '4,4,4';
+  });
+  const observation = await readObservation(page);
+  expect(observation['pile']).toBe(0);
+  expect(observation['equal']).toBe(true);
+  await expect(page.getByTestId('counter-total')).toHaveCount(0);
+});
+
+test('measure-out에서 3개씩 네 번 덜어 내면 봉지 4개다', async ({ page }) => {
+  await openCounters(page, { mode: 'measure-out', total: 12, groupSize: 3 });
+  await page.getByLabel('모드').selectOption('measure-out');
+  await pollObservation(page, (current) => current.mode === 'measure-out');
+
+  const button = page.getByRole('button', { name: '3개 덜어 내기' });
+  for (let bag = 0; bag < 4; bag += 1) {
+    await button.click();
+  }
+
+  await pollObservation(page, (current) => current['bags'] === 4);
+  const observation = await readObservation(page);
+  expect(observation['loose']).toBe(0);
+  await expect(page.getByTestId('counter-total')).toHaveCount(0);
+});
+
+test('bubble-pairs에서 키보드로 3과 7을 골라 터뜨린다', async ({ page }) => {
+  await openCounters(page, {
+    mode: 'part-whole',
+    variant: 'bubble-pairs',
+    target: 10,
+    bubbles: [3, 7, 2, 8],
+  });
+  await page.getByLabel('모드').selectOption('part-whole');
+  await pollObservation(page, (current) => current.mode === 'part-whole');
+
+  for (const value of [3, 7]) {
+    const bubble = page.getByRole('button', { name: `방울 ${value}` });
+    await bubble.focus();
+    await page.keyboard.press('Enter');
+  }
+
+  await pollObservation(page, (current) => current['popCount'] === 1);
+  const observation = await readObservation(page);
+  expect(observation['pops']).toEqual([[3, 7]]);
+  expect(observation['allPopsHitTarget']).toBe(true);
+  await expect(page.getByTestId('counter-total')).toHaveCount(0);
+});
+
+test('bridge에서 9와 4를 놓아 틈 13을 채우고 기록한다', async ({ page }) => {
+  await openCounters(page, {
+    mode: 'part-whole',
+    variant: 'bridge',
+    gap: 13,
+    rods: [9, 4],
+    maxRods: 2,
+  });
+  await page.getByLabel('모드').selectOption('part-whole');
+  await pollObservation(page, (current) => current.mode === 'part-whole');
+
+  await page.getByRole('button', { name: '9칸 막대' }).click();
+  await page.getByRole('button', { name: '4칸 막대' }).click();
+  await pollObservation(page, (current) => current['fits'] === true);
+
+  await page.getByRole('button', { name: '다리 기록하기' }).click();
+  await pollObservation(page, (current) => current['distinctBridges'] === 1);
+
+  const observation = await readObservation(page);
+  expect(observation['placed']).toEqual([9, 4]);
+  expect(observation['sum']).toBe(13);
+  await expect(page.getByTestId('counter-total')).toHaveCount(0);
+});

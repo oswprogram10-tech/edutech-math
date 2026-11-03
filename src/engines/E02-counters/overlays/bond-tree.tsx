@@ -6,6 +6,7 @@ import type { CountersConfig, CountersState } from '../types';
 
 export function BondTreeOverlay({ state }: OverlayProps<CountersConfig, CountersState>) {
   if (state.mode !== 'part-whole') return null;
+  if ('variant' in state) return null;
   const plates = platesOf(state);
   const total = state.counters.length;
   const width = 760;

@@ -52,8 +52,15 @@ import type {
   CounterIcon,
   FrameCounter,
   PartWholeBond,
+  PartWholeState,
 } from './types';
 import styles from './View.module.css';
+import { BubblePairsView } from './views/BubblePairsView';
+import { BridgeView } from './views/BridgeView';
+import { MeasureOutView } from './views/MeasureOutView';
+import { PairingView } from './views/PairingView';
+import { RekenrekView } from './views/RekenrekView';
+import { ShareView } from './views/ShareView';
 
 const LOGICAL = { width: LOGICAL_WIDTH, height: LOGICAL_HEIGHT };
 const TAP_SLOP = 10;
@@ -76,6 +83,38 @@ type Target =
 
 type CountersViewProps = EngineViewProps<CountersConfig, CountersState, CountersAction>;
 
+/**
+ * 기존 4개 모드의 화면 상태. 10번째 구현 결정에 따라 part-whole 변형은
+ * Legacy로 넘어오지 않으므로 여기서는 변형 없는 PartWholeState만 다룬다.
+ */
+type LegacyState =
+  | Extract<CountersState, { mode: 'summon' }>
+  | Extract<CountersState, { mode: 'ten-frame' }>
+  | PartWholeState
+  | Extract<CountersState, { mode: 'flash' }>;
+
+type LegacyViewProps = Omit<CountersViewProps, 'state'> & { readonly state: LegacyState };
+
+/** 모드·변형에 따라 새 화면과 기존 화면을 고르기만 한다. 훅은 각 화면 안에 있다. */
+export function CountersView(props: CountersViewProps) {
+  const { state } = props;
+  if (state.mode === 'part-whole' && 'variant' in state) {
+    return state.variant === 'bridge' ? <BridgeView {...props} /> : <BubblePairsView {...props} />;
+  }
+  switch (state.mode) {
+    case 'rekenrek':
+      return <RekenrekView {...props} />;
+    case 'pairing':
+      return <PairingView {...props} />;
+    case 'share':
+      return <ShareView {...props} />;
+    case 'measure-out':
+      return <MeasureOutView {...props} />;
+    default:
+      return <LegacyCountersView {...props} state={state as LegacyState} />;
+  }
+}
+
 function clampPoint(x: number, y: number): Point {
   return {
     x: Math.max(0, Math.min(LOGICAL_WIDTH, Math.round(x))),
@@ -93,7 +132,7 @@ function placedCounters(state: Extract<CountersState, { mode: 'ten-frame' }>): F
   return state.counters.filter((counter) => counter.frame !== null);
 }
 
-export function CountersView({
+function LegacyCountersView({
   config,
   state,
   dispatch,
@@ -101,7 +140,7 @@ export function CountersView({
   readOnly = false,
   scale = 1,
   targetSize,
-}: CountersViewProps) {
+}: LegacyViewProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const rendered = useRenderedSize(svgRef);
   const measured = minTouchRadius(targetSize, rendered, LOGICAL);
@@ -1031,7 +1070,7 @@ function BondTree({ plates, total, display }: BondTreeProps) {
 }
 
 interface PartWholeSceneProps {
-  readonly state: Extract<CountersState, { mode: 'part-whole' }>;
+  readonly state: PartWholeState;
   readonly icon: CounterIcon;
   readonly radius: number;
   readonly readOnly: boolean;
