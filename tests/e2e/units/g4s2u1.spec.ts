@@ -314,7 +314,12 @@ test('A2 대분수 막대 쪼개기 — 대표 오답 뒤 고쳐서 다섯 과�
   await clearNumber(page, 'ans');
   await typeMixed(page, 'ans', '3', '0', '4');
   await submit(page);
-  await expectFailedWithHint(page, '막대 하나에 1/4 조각이 몇 개', ['1 2/4', '1 1/2', '3/2'], 2);
+  await expectFailedWithHint(
+    page,
+    '막대 하나를 쪼갠 조각 수는 무엇으로 정해지나요',
+    ['1 2/4', '1 1/2', '3/2', '10개', '4개'],
+    2,
+  );
   await clearNumber(page, 'ans');
   await typeMixed(page, 'ans', '1', '2', '4');
   await submit(page);
@@ -372,12 +377,20 @@ test('A3 줄 단위 풀이 진단 — 대표 오답 뒤 고쳐서 다섯 과제�
   await submit(page);
   await expectPassed(page);
 
-  // T5 — 1 3/9와 값이 다른 5/9을 써서 틀린 뒤 4/3으로 고쳐 서로 다른 식 두 개를 만든다.
+  // T5 — 1 3/9와 값이 다른 5/9을 써서 틀린 뒤 4/3으로 고친다.
+  // 시작 줄도 서로 다른 식에 세므로, 학생이 쓴 식이 하나뿐이면 아직 통과하지 못한다.
   await typeStepFraction(page, 1, 0, '5', '9');
   await submit(page);
   await expectFailedWithHint(page, '1 3/9을 1/9 조각만으로 나타내면', ['12/9', '4/3']);
   await retypeStepField(page, 1, 0, 'num', '4', 1);
   await retypeStepField(page, 1, 0, 'den', '3', 1);
+  await submit(page);
+  await expect(page.getByRole('alert')).toBeVisible();
+  await expect(page.getByText('좋아요, 통과했어요!')).toHaveCount(0);
+
+  // + 줄로 서로 다른 식을 하나 더 써서 시작 줄까지 세어 세 가지를 만든다.
+  await page.getByTestId('key-add-line').click();
+  await typeStepFraction(page, 2, 0, '8', '6');
   await submit(page);
   await expectPassed(page, true);
 });

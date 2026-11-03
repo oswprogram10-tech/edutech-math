@@ -613,7 +613,7 @@
             {
               "when": { "misconception": "MC-FRAC-BORROW-AS-TEN" },
               "level": 2,
-              "say": "막대 하나에 1/4 조각이 몇 개 그려져 있나요? 10개인가요, 4개인가요? 그림에서 하나씩 세어 보세요."
+              "say": "막대 하나를 쪼갠 조각 수는 무엇으로 정해지나요? 분모를 보세요."
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "add-sub" },
@@ -754,7 +754,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "lines" },
               "level": 1,
-              "say": "2/7 조각 2개와 3개를 합치면 1/7 조각이 몇 개인가요? 분모는 그대로인가요?"
+              "say": "1/7 조각 2개와 3개를 합치면 1/7 조각이 몇 개인가요? 분모는 그대로인가요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "lines" },
@@ -908,7 +908,7 @@
           "goal": {
             "kind": "predicate",
             "name": "differentExpressions",
-            "args": { "value": "12/9", "count": 2 }
+            "args": { "value": "12/9", "count": 3 }
           },
           "hints": [
             {
