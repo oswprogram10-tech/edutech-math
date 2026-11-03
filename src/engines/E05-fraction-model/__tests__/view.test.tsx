@@ -160,6 +160,29 @@ describe('E05 decimal-grid 층 이름', () => {
   });
 });
 
+describe('E05 decimal-grid 한 층짜리 모눈', () => {
+  const config: FractionModelConfig = { mode: 'decimal-grid', size: 10, layers: 1 };
+
+  it('층 버튼을 보여 주지 않는다', () => {
+    const view = renderView(config, createInitialState(config));
+    expect(view.queryByRole('button', { name: S.layerName(0) })).toBeNull();
+    expect(view.getByRole('button', { name: S.clearCells })).toBeTruthy();
+  });
+
+  it('층을 바꾸라는 안내 대신 한 층용 안내를 보여 준다', () => {
+    const text = renderView(config, createInitialState(config)).container.textContent ?? '';
+    expect(text).toContain(S.instructions.decimalSingle);
+    expect(text).not.toContain(S.instructions.decimal);
+  });
+
+  it('두 층 이상이면 층 버튼과 층 안내를 그대로 보여 준다', () => {
+    const two: FractionModelConfig = { mode: 'decimal-grid', size: 10, layers: 2 };
+    const view = renderView(two, createInitialState(two));
+    expect(view.getByRole('button', { name: S.layerName(0) })).toBeTruthy();
+    expect(view.container.textContent ?? '').toContain(S.instructions.decimal);
+  });
+});
+
 describe('E05 decimal-grid 다른 층 겹쳐 보기', () => {
   const config: FractionModelConfig = {
     mode: 'decimal-grid',

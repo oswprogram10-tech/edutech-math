@@ -1708,7 +1708,8 @@ function DecimalGridView({
   return (
     <div className={styles.wrap} data-target-size={targetSize} data-cpa={cpa}>
       <div className={styles.toolbar} role="toolbar" aria-label={S.canvasLabel}>
-        {Array.from({ length: state.layers }, (_, layer) => (
+        {/* 한 층짜리 모눈에는 바꿀 층이 없으므로 층 버튼을 두지 않는다. */}
+        {Array.from({ length: state.layers >= 2 ? state.layers : 0 }, (_, layer) => (
           <ToolbarButton
             key={`layer-${layer}`}
             pressed={state.layer === layer}
@@ -1844,7 +1845,12 @@ function DecimalGridView({
         </p>
       ) : null}
       <p className={styles.instructions}>
-        {readOnly ? S.readOnlyHint : S.instructions.decimal} {S.keyboardHint}
+        {readOnly
+          ? S.readOnlyHint
+          : state.layers >= 2
+            ? S.instructions.decimal
+            : S.instructions.decimalSingle}{' '}
+        {S.keyboardHint}
       </p>
     </div>
   );

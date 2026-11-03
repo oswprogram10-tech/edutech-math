@@ -551,7 +551,8 @@ function LineRow({
           ×
         </button>
       ) : null}
-      {showLabel && state.stepLabels.length > 0 ? (
+      {/* 주어진 첫 줄은 풀이 단계가 아니므로 이름표를 붙이지 않는다. */}
+      {showLabel && !line.fixed && state.stepLabels.length > 0 ? (
         <label className={styles.labelPick}>
           <span className={styles.labelCaption}>{S.stepLabelTitle}</span>
           <select

@@ -12,6 +12,7 @@ export const fractionModelStrings = {
     mixed: '조각을 채워 1을 만들거나, 자연수 1을 조각으로 풀어 보세요.',
     addSub: '조각 크기를 먼저 맞춘 뒤 합치거나 덜어 내세요.',
     decimal: '칸을 눌러 색칠하고, 층을 바꾸어 0.1과 0.01을 살펴보세요.',
+    decimalSingle: '칸을 눌러 색칠하세요. 왼쪽 단추를 누르면 한 줄이 한꺼번에 색칠돼요.',
   },
   toolLine: '직선 칼선',
   toolRadial: '중심 칼선',
