@@ -4,11 +4,12 @@
  * 한 과제에 여러 필드가 있을 수 있다(예: 분수와 소수를 따로 쓰기). 필드 순서는
  * 콘텐츠에 적힌 순서 그대로다. 제출 전에도 제출 뒤에도 맞고 틀림을 표시하지 않는다.
  */
+import { useState } from 'react';
 import type { EngineId, EngineViewProps, LoadedEngine } from '../../engine-sdk';
 import type { ResponseAction, ResponseConfig, ResponseState } from './types';
 import { ChoiceWidget } from './widgets/ChoiceWidget';
 import { CompareWidget } from './widgets/CompareWidget';
-import { NumberWidget } from './widgets/NumberWidget';
+import { NumberKeypad, NumberWidget } from './widgets/NumberWidget';
 import { OrderWidget } from './widgets/OrderWidget';
 import { SortWidget } from './widgets/SortWidget';
 import { responseStrings as S } from './strings.ko';
@@ -27,8 +28,23 @@ export function ResponseView({
   targetSize,
   definitions,
 }: ResponseViewProps) {
+  // 수 필드가 둘 이상이면 키패드를 하나만 두고, 마지막으로 누른 필드에 입력한다.
+  // 필드마다 키패드를 붙이면 작은 판에서 아래 필드가 잘린다.
+  const numberIds = config.fields
+    .filter((field) => field.kind === 'number')
+    .map((field) => field.id);
+  const multiNumber = numberIds.length > 1;
+  const [activeNumber, setActiveNumber] = useState<string | null>(null);
+  const keypadTarget =
+    activeNumber !== null && numberIds.includes(activeNumber) ? activeNumber : numberIds[0];
+
   return (
-    <div className={styles.response} data-testid="response" aria-label={S.name}>
+    <div
+      className={styles.response}
+      data-testid="response"
+      data-multi-number={multiNumber ? 'true' : undefined}
+      aria-label={S.name}
+    >
       {config.fields.map((field, index) => {
         const fieldState = state.fields[field.id];
         if (!fieldState) return null;
@@ -45,6 +61,8 @@ export function ResponseView({
                   readOnly={readOnly}
                   targetSize={targetSize}
                   definitions={definitions}
+                  showKeypad={!multiNumber}
+                  onActivate={() => setActiveNumber(field.id)}
                 />
               );
             }
@@ -111,6 +129,14 @@ export function ResponseView({
           </section>
         );
       })}
+      {multiNumber && keypadTarget ? (
+        <NumberKeypad
+          fieldId={keypadTarget}
+          dispatch={dispatch}
+          readOnly={readOnly}
+          targetSize={targetSize}
+        />
+      ) : null}
     </div>
   );
 }

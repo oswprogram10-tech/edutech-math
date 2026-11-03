@@ -194,6 +194,8 @@ export interface PartitionState {
   readonly shaded: readonly number[];
   readonly nextCutId: number;
   readonly fixedParts: number | null;
+  /** `fixedParts`·`presetCuts`로 미리 나뉜 도형인지. 참이면 자르기 도구를 쓰지 않는다. */
+  readonly preset: boolean;
   readonly simplify: SimplifyState | null;
   readonly tolerance: number;
   readonly counters: EventCounts;

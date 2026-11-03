@@ -105,7 +105,9 @@ async function typeNumber(page: Page, id: string, keys: readonly string[]): Prom
 }
 
 async function clearNumber(page: Page, id: string): Promise<void> {
-  await field(page, id).getByRole('button', { name: '모두 지우기' }).click();
+  // 입력 대상 필드를 먼저 고른 뒤, 필드 밖에 하나뿐인 키패드의 지우기를 누른다.
+  await field(page, id).getByRole('button').first().click();
+  await responseSlot(page).getByRole('button', { name: '모두 지우기' }).click();
 }
 
 async function chooseCompare(
@@ -177,7 +179,7 @@ test('A1 등분 레이저 커터 — 대표 오답 뒤 고쳐서 다섯 과제�
   const t2 = await canvasOf(page, 'main', 'fraction-canvas');
   for (const x of [325, 500, 675]) await verticalCut(page, t2, x);
   await submit(page);
-  await expectFailedWithHint(page, '가로 칼선과 세로 칼선');
+  await expectFailedWithHint(page, '칼선은 어느 방향인가요');
   await t2.panel.getByRole('button', { name: '칼선 지우기' }).click();
   await verticalCut(page, t2, 500);
   await horizontalCut(page, t2, 300);
@@ -253,6 +255,8 @@ test('A2 단위분수 크기 비교 — 대표 오답 뒤 고쳐서 다섯 과�
 
   // T3 — 점을 하나만 찍어야 하는데 1/2에 찍어 틀린 뒤 1/4로 고친다.
   const t3 = await canvasOf(page, 'main', 'number-line-canvas');
+  // 눈금 이름표가 정답인 1/4을 미리 알려 주지 않는다(정수 눈금만 이름표).
+  await expect(t3.panel.getByTestId('number-line-canvas')).not.toContainText('1/4');
   await tapLine(page, t3, 500);
   await expect(t3.panel.locator('[data-point-id]')).toHaveCount(1);
   await submit(page);
@@ -303,6 +307,8 @@ test('A3 1/10 확대경 — 대표 오답 뒤 고쳐서 다섯 과제를 통과�
   const t2 = await canvasOf(page, 'main', 'number-line-canvas');
   await t2.panel.getByRole('button', { name: '수직선 확대' }).click();
   await expect(t2.panel.locator('[data-tick-value="1/10"]')).toHaveCount(1);
+  // 0.1 단계로 확대해도 눈금 이름표에 정답 0.7이 없다(정수 눈금만 이름표).
+  await expect(t2.panel.getByTestId('number-line-canvas')).not.toContainText('0.7');
   await tapLine(page, t2, 500);
   await submit(page);
   await expectFailedWithHint(page, '10칸으로 나눈 눈금');
@@ -318,6 +324,8 @@ test('A3 1/10 확대경 — 대표 오답 뒤 고쳐서 다섯 과제를 통과�
   await expect(t3.panel.locator('[data-tick-value="1/10"]')).toHaveCount(1);
   await t3.panel.getByRole('button', { name: '수직선 오른쪽으로' }).click();
   await expect(t3.panel.locator('[data-tick-value="2"]')).toHaveCount(1);
+  // 확대·이동한 뒤에도 이름표에 정답 1.3이 없다.
+  await expect(t3.panel.getByTestId('number-line-canvas')).not.toContainText('1.3');
   await tapLine(page, t3, 660);
   await submit(page);
   await expectFailedWithHint(page, '1과 2 사이를 10칸');
@@ -345,6 +353,30 @@ test('A3 1/10 확대경 — 대표 오답 뒤 고쳐서 다섯 과제를 통과�
   await typeNumber(page, 'ans', ['2', '.', '3']);
   await submit(page);
   await expectPassed(page, true);
+});
+
+test('크롬북·전자칠판 첫 화면에 응답 칸과 확인하기가 들어온다', async ({ page }, testInfo) => {
+  test.skip(
+    testInfo.project.name === 'ipad',
+    '아이패드는 판을 위아래로 두어 짧은 스크롤을 허용한다',
+  );
+
+  const cases = [
+    { id: 'g3s1u6.A1', title: '등분 레이저 커터', response: false },
+    { id: 'g3s1u6.A2', title: '단위분수 크기 비교', response: true },
+    { id: 'g3s1u6.A3', title: '1/10 확대경', response: true },
+  ] as const;
+
+  for (const item of cases) {
+    await openActivity(page, item.id, item.title);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await expect(page.getByRole('button', { name: '확인하기' })).toBeInViewport({ ratio: 1 });
+    if (item.response) {
+      await expect(responseSlot(page)).toBeInViewport({ ratio: 1 });
+    } else {
+      await expect(slot(page, 'main')).toBeInViewport({ ratio: 1 });
+    }
+  }
 });
 
 test('오프라인에서도 g3s1u6.A1 활동이 열린다', async ({ page, context }) => {

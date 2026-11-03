@@ -303,8 +303,9 @@ function PartitionView({
   return (
     <div className={styles.wrap} data-target-size={targetSize} data-cpa={cpa}>
       {/* 선택지 그림처럼 읽기 전용일 때는 도구 막대를 그리지 않는다.
-          바깥 선택지 <button> 안에 <button>이 들어가는 잘못된 중첩을 막는다. */}
-      {readOnly ? null : (
+          바깥 선택지 <button> 안에 <button>이 들어가는 잘못된 중첩을 막는다.
+          미리 나뉜 도형은 자를 것이 없으므로 칼선 도구도 숨긴다. */}
+      {readOnly || state.preset ? null : (
         <div className={styles.toolbar} role="toolbar" aria-label={S.canvasLabel}>
           <ToolbarButton pressed={tool === 'line'} onClick={() => setTool('line')}>
             {S.toolLine}
@@ -396,13 +397,13 @@ function PartitionView({
           <>
             <AreaBars pieces={pieces} />
             {pieces.length === 1 ? (
-              <text x={500} y={552} textAnchor="middle" fill={INK} fontSize={22}>
+              <text x={500} y={584} textAnchor="middle" fill={INK} fontSize={22}>
                 {S.instructions.partition}
               </text>
             ) : (
               <text
                 x={500}
-                y={556}
+                y={588}
                 textAnchor="middle"
                 fill={equal ? GREEN : '#a34a1f'}
                 fontSize={26}
@@ -416,7 +417,7 @@ function PartitionView({
       </CanvasFrame>
 
       <p className={styles.instructions}>
-        {readOnly ? S.readOnlyHint : S.cutHint} {S.keyboardHint}
+        {readOnly ? S.readOnlyHint : state.preset ? S.presetHint : S.cutHint} {S.keyboardHint}
       </p>
     </div>
   );

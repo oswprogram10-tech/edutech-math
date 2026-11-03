@@ -27,6 +27,20 @@ interface NumberWidgetProps {
   readonly readOnly: boolean;
   readonly targetSize: TargetSize;
   readonly definitions?: ReadonlyMap<EngineId, LoadedEngine>;
+  /**
+   * 필드마다 키패드를 붙일지. 한 과제에 수 필드가 둘 이상이면
+   * 실행기가 키패드 하나를 아래에 따로 두고 여기서는 틀만 그린다.
+   */
+  readonly showKeypad?: boolean;
+  /** 이 필드의 틀을 눌러 입력 대상이 되었을 때. */
+  readonly onActivate?: () => void;
+}
+
+interface NumberKeypadProps {
+  readonly fieldId: string;
+  readonly dispatch: (action: ResponseAction) => void;
+  readonly readOnly: boolean;
+  readonly targetSize: TargetSize;
 }
 
 const PART_LABEL: Record<NumberPart, string> = {
@@ -38,10 +52,19 @@ const PART_LABEL: Record<NumberPart, string> = {
 
 const KEYPAD = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0'] as const;
 
-export function NumberWidget({ field, state, dispatch, readOnly, targetSize }: NumberWidgetProps) {
+export function NumberWidget({
+  field,
+  state,
+  dispatch,
+  readOnly,
+  targetSize,
+  showKeypad = true,
+  onActivate,
+}: NumberWidgetProps) {
   const rootRef = useRef<HTMLDivElement>(null);
 
   const focusPart = (part: NumberPart) => {
+    onActivate?.();
     dispatch({ type: 'number-focus', field: field.id, part });
   };
 
@@ -138,7 +161,10 @@ export function NumberWidget({ field, state, dispatch, readOnly, targetSize }: N
       role="group"
       aria-label={S.numberInput}
       tabIndex={readOnly ? -1 : 0}
-      onClick={() => rootRef.current?.focus()}
+      onClick={() => {
+        onActivate?.();
+        rootRef.current?.focus();
+      }}
       onKeyDown={onKeyDown}
     >
       {field.forms.length > 1 ? (
@@ -164,7 +190,23 @@ export function NumberWidget({ field, state, dispatch, readOnly, targetSize }: N
         </div>
       </div>
 
-      <div className={styles.keypad} role="group" aria-label={S.keypad}>
+      {showKeypad ? (
+        <NumberKeypad
+          fieldId={field.id}
+          dispatch={dispatch}
+          readOnly={readOnly}
+          targetSize={targetSize}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+/** 화면 키패드 하나. 여러 수 필드가 있으면 실행기가 입력 대상 필드를 골라 붙인다. */
+export function NumberKeypad({ fieldId, dispatch, readOnly, targetSize }: NumberKeypadProps) {
+  return (
+    <div className={styles.keypadPanel}>
+      <div className={styles.keypad} role="group" aria-label={S.keypad} data-keypad-for={fieldId}>
         {KEYPAD.map((key) => (
           <button
             key={key}
@@ -172,7 +214,7 @@ export function NumberWidget({ field, state, dispatch, readOnly, targetSize }: N
             className={styles.key}
             style={{ minWidth: targetSize, minHeight: targetSize }}
             disabled={readOnly}
-            onClick={() => dispatch({ type: 'number-key', field: field.id, key })}
+            onClick={() => dispatch({ type: 'number-key', field: fieldId, key })}
           >
             {key}
           </button>
@@ -183,7 +225,7 @@ export function NumberWidget({ field, state, dispatch, readOnly, targetSize }: N
           style={{ minWidth: targetSize, minHeight: targetSize }}
           aria-label={S.backspace}
           disabled={readOnly}
-          onClick={() => dispatch({ type: 'number-key', field: field.id, key: 'backspace' })}
+          onClick={() => dispatch({ type: 'number-key', field: fieldId, key: 'backspace' })}
         >
           <span aria-hidden="true">⌫</span>
         </button>
@@ -192,7 +234,7 @@ export function NumberWidget({ field, state, dispatch, readOnly, targetSize }: N
           className={`${styles.key} ${styles.clearKey}`}
           style={{ minHeight: targetSize }}
           disabled={readOnly}
-          onClick={() => dispatch({ type: 'number-clear', field: field.id })}
+          onClick={() => dispatch({ type: 'number-clear', field: fieldId })}
         >
           {S.clear}
         </button>

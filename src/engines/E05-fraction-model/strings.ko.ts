@@ -72,5 +72,6 @@ export const fractionModelStrings = {
   clearCells: '색칠 지우기',
   readOnlyHint: '지금은 보기만 할 수 있어요.',
   cutHint: '칼선을 끌거나 아래 버튼을 쓰세요.',
+  presetHint: '이미 나뉘어 있어요. 조각을 눌러 색칠해 보세요.',
   keyboardHint: '키보드: Tab으로 조각을 고르고 Enter나 Space로 색칠해요.',
 } as const;

@@ -52,16 +52,40 @@ export const startStrings = {
   memoryNotice: '이 기기에서는 기록이 저장되지 않아요(사생활 보호 모드 등).',
 } as const;
 
-/** S2 자리(`#/map`). 별자리는 T008에서 만든다. */
-export const mapStrings = {
-  heading: '활동',
-  constellationSoon: '나의 수학 별자리는 다음 카드에서 만나요.',
-  activitiesHeading: '할 수 있는 활동',
-  empty: '아직 열린 활동이 없어요.',
-  loading: '활동 목록을 불러오는 중이에요.',
-  loadError: '활동 목록을 불러오지 못했어요.',
-  back: '시작 화면으로',
+/** S2 별자리(`#/map`). 별 = 개념, 선 = 선수 관계. */
+export const starMapStrings = {
+  heading: '나의 수학 별자리',
+  mapLabel: '나의 수학 별자리',
+  loading: '별자리를 불러오는 중이에요.',
+  loadError: '별자리를 불러오지 못했어요.',
+  home: '시작 화면으로',
   learnerLabel: (number: string) => `${number}번`,
+  zones: {
+    number: '수와 연산',
+    change: '변화와 관계',
+    geometry: '도형과 측정',
+    data: '자료와 가능성',
+  },
+  brightness: {
+    missing: '아직',
+    practicing: '연습 중',
+    mastered: '숙달',
+  },
+  brightnessHeading: '별 밝기',
+  /** 별 버튼의 이름. 색만으로 밝기를 구분하지 않도록 문구를 함께 읽는다. */
+  starLabel: (concept: string, brightness: string) => `${concept}, ${brightness}`,
+  controls: '별자리 확대와 이동',
+  zoomIn: '확대',
+  zoomOut: '축소',
+  reset: '처음 보기',
+  zoomLevel: (percent: number) => `${percent}%`,
+  detailLabel: '고른 별',
+  close: '닫기',
+  activitiesLoading: '활동을 불러오는 중이에요.',
+  activitiesError: '활동을 불러오지 못했어요.',
+  noActivities: '이 별에 연결된 활동이 아직 없어요.',
+  taskCount: (count: number) => `${count}개 과제`,
+  sparkleNote: '부스터로 다시 해 내고 빛나는 별이에요.',
 } as const;
 
 /** S3 활동 화면 상단 바·설정 메뉴. */
@@ -101,6 +125,13 @@ export const teacherStrings = {
   homeHint: '교사 시연 도구와 관리는 다음 카드에서 이어져요.',
   sandboxHeading: '엔진 샌드박스',
   storageHeading: '기기 저장소',
+  unitsHeading: '단원 켜기·끄기',
+  unitsHint: '켠 단원의 별만 학생 별자리에서 또렷하게 보여요.',
+  unitsLoading: '단원 목록을 불러오는 중이에요.',
+  unitsError: '단원 목록을 불러오지 못했어요.',
+  enableAll: '모두 켜기',
+  disableAll: '모두 끄기',
+  unitGrade: (grade: number, semester: number) => `${grade}학년 ${semester}학기`,
   demoHeading: '교사 시연 모드',
   demoHint: '전자칠판에서 교구를 바로 열고, 펜으로 쓰고, 두 상태를 나란히 비교해요.',
   demoOpen: '시연 모드 열기',

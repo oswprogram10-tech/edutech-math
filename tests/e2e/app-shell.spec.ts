@@ -48,14 +48,11 @@ test('번호를 고르고 활동을 한 뒤 새로고침해도 같은 학생이�
   await expect(page.getByRole('heading', { name: '관심사를 골라 보세요.' })).toBeVisible();
   await page.getByRole('button', { name: '건너뛰기' }).click();
   await expect(page).toHaveURL(/#\/map$/);
-  await expect(page.getByRole('heading', { name: '활동', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '나의 수학 별자리' })).toBeVisible();
+  await expect(page.getByTestId('map-canvas')).toBeVisible();
 
-  // 활동 목록에서 첫 활동을 연다.
-  await page
-    .getByRole('link', { name: /셈돌 놓기/ })
-    .first()
-    .click();
-  await expect(page).toHaveURL(/#\/activity\/demo\.A1$/);
+  // 앱 셸 흐름은 데모 활동으로 이어진다(별 → 활동 목록은 star-map.spec에서 확인한다).
+  await page.goto('/#/activity/demo.A1');
   await expect(page.getByRole('heading', { name: '셈돌 놓기' })).toBeVisible();
   await expect(page.getByRole('heading', { name: '셈돌을 5개 놓아 보세요.' })).toBeVisible();
 
@@ -107,7 +104,7 @@ test('저학년 단원은 큰 버튼이 기본이고, ⋯ 메뉴에서 바꿀 �
   // 건너뛰기의 저장이 끝나고 지도로 이동하기 전에 다음 주소로 넘어가면
   // 늦게 도착한 #/map 이동이 #/activity를 덮어써 간헐적으로 실패한다.
   await expect(page).toHaveURL(/#\/map$/);
-  await expect(page.getByRole('heading', { name: '활동', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '나의 수학 별자리' })).toBeVisible();
 
   // g1 단원 콘텐츠가 아직 없으므로 단원 판별 단위 테스트로 확인하고,
   // 화면에서는 설정 메뉴의 "큰 버튼" 항목이 동작하는지만 본다.

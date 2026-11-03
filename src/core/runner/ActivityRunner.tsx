@@ -457,24 +457,27 @@ function TaskStage({
             <section
               key={slot.slot}
               className={styles.panel}
+              data-slot={slot.slot}
               data-testid={`runner-slot-${slot.slot}`}
               aria-label={runnerStrings.slotLabel(slot.slot)}
             >
               {displaySlots.length > 1 ? (
                 <h3 className={styles.slotTitle}>{runnerStrings.slotLabel(slot.slot)}</h3>
               ) : null}
-              <View
-                {...({
-                  config: slot.config,
-                  state,
-                  dispatch: (action: unknown) => handleAction(slot.slot, action),
-                  cpa: slot.cpa,
-                  mode: slot.mode,
-                  readOnly: status === 'passed',
-                  targetSize,
-                  definitions,
-                } satisfies Record<string, unknown>)}
-              />
+              <div className={styles.viewport}>
+                <View
+                  {...({
+                    config: slot.config,
+                    state,
+                    dispatch: (action: unknown) => handleAction(slot.slot, action),
+                    cpa: slot.cpa,
+                    mode: slot.mode,
+                    readOnly: status === 'passed',
+                    targetSize,
+                    definitions,
+                  } satisfies Record<string, unknown>)}
+                />
+              </div>
               {show && overlayVisible && overlayTarget?.slot === slot.slot ? (
                 <Overlay
                   definition={overlayTarget.definition}

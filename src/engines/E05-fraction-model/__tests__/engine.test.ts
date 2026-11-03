@@ -148,6 +148,69 @@ describe('E05 partition (넓이 기반 등분)', () => {
     expect(wholes[0]).toMatchObject({ parts: 4, shaded: 2, raw: '2/4', value: '1/2' });
     expect(observation['irreducible']).toBe(false);
   });
+
+  it('fixedParts로 미리 나눈 10칸은 cut·clear-cuts를 무시하고 색칠만 바꾼다', () => {
+    let state = partition({ shape: 'bar', fixedParts: 10 });
+    expect(state.preset).toBe(true);
+    expect(state.cuts).toHaveLength(9);
+    expect(observe(state, { mode: 'partition' })['wholes']).toMatchObject([{ parts: 10 }]);
+
+    state = apply(state, verticalCut(500, 230, 370)) as PartitionState;
+    expect(state.cuts).toHaveLength(9);
+    expect(observe(state, { mode: 'partition' })['wholes']).toMatchObject([{ parts: 10 }]);
+
+    state = apply(state, { type: 'shade-piece', index: 0 }) as PartitionState;
+    state = apply(state, { type: 'clear-cuts' }) as PartitionState;
+    expect(state.cuts).toHaveLength(9);
+    expect(state.shaded).toEqual([0]);
+    expect(observe(state, { mode: 'partition' })['wholes']).toMatchObject([
+      { parts: 10, shaded: 1 },
+    ]);
+  });
+
+  it('presetCuts로 미리 나눈 도형도 자르기 도구를 쓰지 않는다', () => {
+    let state = partition({
+      shape: 'rect',
+      presetCuts: [
+        {
+          points: [
+            { x: 300, y: 150 },
+            { x: 300, y: 450 },
+          ],
+        },
+        {
+          points: [
+            { x: 500, y: 150 },
+            { x: 500, y: 450 },
+          ],
+        },
+        {
+          points: [
+            { x: 700, y: 150 },
+            { x: 700, y: 450 },
+          ],
+        },
+      ],
+    });
+    expect(state.preset).toBe(true);
+    expect(state.cuts).toHaveLength(3);
+    expect(state.fixedParts).toBeNull();
+
+    state = apply(state, verticalCut(400)) as PartitionState;
+    expect(state.cuts).toHaveLength(3);
+    state = apply(state, { type: 'clear-cuts' }) as PartitionState;
+    expect(state.cuts).toHaveLength(3);
+    expect(observe(state, { mode: 'partition' })['wholes']).toMatchObject([{ parts: 4 }]);
+  });
+
+  it('미리 나누지 않은 도형은 그대로 자르고 지울 수 있다', () => {
+    let state = partition();
+    expect(state.preset).toBe(false);
+    state = apply(state, verticalCut(500)) as PartitionState;
+    expect(state.cuts).toHaveLength(1);
+    state = apply(state, { type: 'clear-cuts' }) as PartitionState;
+    expect(state.cuts).toHaveLength(0);
+  });
 });
 
 describe('E05 shade (동치분수·경계값)', () => {

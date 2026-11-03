@@ -196,6 +196,25 @@ describe('E05 읽기 전용 partition (선택지 그림)', () => {
   });
 });
 
+describe('E05 미리 나뉜 partition (자를 수 없음)', () => {
+  it('fixedParts로 미리 나뉘면 칼선 도구를 숨기고 색칠 안내를 보여 준다', () => {
+    const config: FractionModelConfig = { mode: 'partition', shape: 'bar', fixedParts: 10 };
+    const view = renderView(config, createInitialState(config));
+    expect(view.queryByRole('button', { name: S.clearCuts })).toBeNull();
+    expect(view.queryByRole('button', { name: S.centerCut })).toBeNull();
+    expect(view.queryByRole('button', { name: S.toolLine })).toBeNull();
+    expect(view.container.textContent).toContain(S.presetHint);
+    expect(view.container.textContent).not.toContain(S.cutHint);
+  });
+
+  it('미리 나누지 않은 partition은 칼선 도구를 그대로 보여 준다', () => {
+    const config: FractionModelConfig = { mode: 'partition', shape: 'rect' };
+    const view = renderView(config, createInitialState(config));
+    expect(view.getByRole('button', { name: S.clearCuts })).toBeTruthy();
+    expect(view.container.textContent).toContain(S.cutHint);
+  });
+});
+
 describe('E05 showValue 단계', () => {
   it("'raw'는 약분 전 표기만, 'raw-and-reduced'는 약분된 값까지 보여 준다", () => {
     const config: FractionModelConfig = {

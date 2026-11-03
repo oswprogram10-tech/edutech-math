@@ -87,7 +87,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "partition" },
               "level": 1,
-              "say": "가로 칼선과 세로 칼선을 함께 써 보세요. 한 방향으로만 자르면 조각이 길쭉해져요."
+              "say": "지금 그은 칼선은 어느 방향인가요? 조각의 넓이를 모두 같게 만들려면 칼선을 어떻게 더 그어야 할까요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "partition" },
@@ -357,7 +357,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "partition" },
               "level": 1,
-              "say": "색칠한 조각 수와 전체 조각 수를 각각 세어 분수로 써 보세요."
+              "say": "원 전체는 몇 조각으로 나뉘었나요? 그중 몇 조각을 색칠했나요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "partition" },
@@ -436,7 +436,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "shade" },
               "level": 1,
-              "say": "색칠한 칸 수를 위에, 전체 칸 수를 아래에 써 보세요."
+              "say": "지금 색칠한 칸은 몇 칸인가요? 전체 칸 수와 견주어 분수로 어떻게 나타낼까요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "shade" },
@@ -684,7 +684,8 @@
             "mode": "fraction",
             "min": "0",
             "max": "1",
-            "subdivisions": [4]
+            "subdivisions": [4],
+            "labels": "partial"
           },
           "goal": {
             "kind": "predicate",
@@ -921,7 +922,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "partition" },
               "level": 1,
-              "say": "색칠한 칸 수를 분수로 쓰고, 그 분수를 0.1이 몇 개인지로 바꾸어 소수로 써 보세요."
+              "say": "지금 색칠한 칸은 몇 칸인가요? 그 칸 수를 0.1이 몇 개인지로 세어 보면 소수로 어떻게 쓸 수 있을까요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "partition" },
@@ -999,7 +1000,8 @@
             "min": "0",
             "max": "3",
             "unit": "1",
-            "zoom": { "from": "1", "to": "1/10" }
+            "zoom": { "from": "1", "to": "1/10" },
+            "labels": "partial"
           },
           "goal": {
             "kind": "predicate",
@@ -1037,7 +1039,8 @@
             "min": "0",
             "max": "3",
             "unit": "1",
-            "zoom": { "from": "1", "to": "1/10" }
+            "zoom": { "from": "1", "to": "1/10" },
+            "labels": "partial"
           },
           "goal": {
             "kind": "predicate",
@@ -1172,7 +1175,8 @@
             "min": "0",
             "max": "3",
             "unit": "1",
-            "zoom": { "from": "1", "to": "1/10" }
+            "zoom": { "from": "1", "to": "1/10" },
+            "labels": "partial"
           },
           "goal": {
             "kind": "equals",
@@ -1191,7 +1195,7 @@
               "show": {
                 "engine": "E03",
                 "overlay": "same-point",
-                "args": { "a": "0.1", "b": "1" }
+                "args": { "a": "1", "b": "10/10" }
               }
             },
             {
@@ -1202,7 +1206,7 @@
           ],
           "concepts": ["g3s1u6.tenths-decimal"],
           "submit": "button",
-          "showEngine": false,
+          "showEngine": true,
           "response": {
             "fields": [
               {
