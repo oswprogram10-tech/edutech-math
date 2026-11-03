@@ -145,19 +145,21 @@ test('확대·이동하고 처음 보기로 돌아온다', async ({ page }) => {
 
   const canvas = page.getByTestId('map-canvas');
   const transform = page.getByTestId('map-transform');
+  const zoom = page.getByTestId('map-zoom');
   // 처음 보기는 켜진 단원 별이 화면 가운데 크게 보이도록 맞춘 배율이다.
-  await expect(page.getByTestId('map-zoom')).toHaveText('400%');
+  // 콘텐츠 단원이 늘면 맞춤 배율이 달라지므로 값을 박지 않고 처음 값을 기준으로 되돌아오는지 본다.
+  const initialZoom = await zoom.innerText();
   const initialTransform = await transform.getAttribute('transform');
-  expect(initialTransform).toContain('scale(4)');
+  expect(initialTransform).toContain('scale(');
 
   await page.getByRole('button', { name: '축소' }).click();
-  await expect(page.getByTestId('map-zoom')).toHaveText('375%');
-  await expect.poll(async () => transform.getAttribute('transform')).toContain('scale(3.75)');
+  await expect(zoom).not.toHaveText(initialZoom);
+  await expect.poll(async () => transform.getAttribute('transform')).not.toBe(initialTransform);
 
   // 키보드 + 로 다시 확대한다.
   await canvas.focus();
   await page.keyboard.press('+');
-  await expect(page.getByTestId('map-zoom')).toHaveText('400%');
+  await expect(zoom).toHaveText(initialZoom);
   await page.keyboard.press('0');
   await expect.poll(async () => transform.getAttribute('transform')).toBe(initialTransform);
 
@@ -171,7 +173,7 @@ test('확대·이동하고 처음 보기로 돌아온다', async ({ page }) => {
   await expect.poll(async () => transform.getAttribute('transform')).not.toBe(initialTransform);
 
   await page.getByRole('button', { name: '처음 보기' }).click();
-  await expect(page.getByTestId('map-zoom')).toHaveText('400%');
+  await expect(zoom).toHaveText(initialZoom);
   await expect.poll(async () => transform.getAttribute('transform')).toBe(initialTransform);
 });
 
@@ -193,12 +195,14 @@ test('크롬북 첫 화면에 범례가 들어오고 처음 보기에 켜진 별
   );
   expect(scrollable).toBeLessThanOrEqual(1);
 
-  // 처음 보기에서 켜진 g3s1u6 개념 별 5개가 지도 영역 안에 있다.
+  // 처음 보기에서 켜진 개념 별이 모두 지도 영역 안에 있다.
+  // 콘텐츠 단원이 늘면 별 개수가 달라지므로 개수를 박지 않고 실제 별을 모두 확인한다.
   const stars = canvas.locator('[data-enabled="true"]');
-  await expect(stars).toHaveCount(5);
+  const starCount = await stars.count();
+  expect(starCount).toBeGreaterThan(0);
   const mapBox = await canvas.boundingBox();
   if (!mapBox) throw new Error('별자리 영역을 찾지 못했습니다.');
-  for (let index = 0; index < 5; index += 1) {
+  for (let index = 0; index < starCount; index += 1) {
     const starBox = await stars.nth(index).boundingBox();
     if (!starBox) throw new Error(`별 ${index + 1}의 자리를 찾지 못했습니다.`);
     expect(starBox.x).toBeGreaterThanOrEqual(mapBox.x);
