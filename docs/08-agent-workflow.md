@@ -70,6 +70,29 @@ docs/04-units/g5s1.md 의 g5s1u4 명세를 보고 data/content/g5s1u4.json 을 �
 **명세가 이상할 때**
 에이전트가 "명세대로는 구현이 어렵다"고 하면, 억지로 진행시키지 말고 이유를 들은 뒤 `docs/`를 먼저 고치게 한다. 명세와 코드가 어긋나기 시작하면 다음 에이전트가 헷갈린다.
 
+## 4-1. Claude Code의 두 가지 개발 방식 (2026-11-04)
+Claude Code 세션(Opus)에서 아래 명령으로 쓴다. 명령 정의는 저장소가 아니라 선생님 계정의 Claude Code 사용자 설정(`~/.claude/skills/`, `~/.claude/agents/`)에 있어 모든 프로젝트에서 같이 쓴다. 이 저장소에만 해당하는 규칙은 아래 '이 저장소의 정해진 값'에 둔다.
+
+| 방식 | 명령 | 기획·검수 | 구현 |
+| --- | --- | --- | --- |
+| A | `/plan-sonnet T0xx` | Opus | 소넷 서브에이전트 `card-implementer`(브랜치 `task/Txxx-sonnet`) |
+| B | `/plan-handoff T0xx` | Opus | 선생님이 프롬프트를 붙여 넣은 다른 LLM(브랜치 `task/Txxx-<agent>`, 기본 OpenCode) |
+| 공통 검수 | `/review-task` | Opus | — |
+
+두 방식 모두 Opus가 카드의 '구현 결정'을 먼저 채우고, 구현 쪽은 푸시·main 병합을 하지 않는다. 병합·푸시는 선생님 승인 뒤 Opus가 한다.
+
+### 이 저장소의 정해진 값
+- **작업 카드:** `tasks/Txxx.md`(`tasks/_TEMPLATE.md` 형식). 선행 관계는 `tasks/README.md`, 진행 상황은 `docs/00-handoff.md`. 다음 웨이브 카드가 없으면 `docs/07-roadmap.md`에서 만든다.
+- **작업 폴더:** `수학 에듀테크\MathExplorer-Txxx-<agent>`(저장소 폴더 옆), 브랜치 `task/Txxx-<agent>`.
+- **검사:** `npm test`, `npm run test:e2e`, `npm run lint`, `npm run check:specs`, `npm run build`. 화면 비교는 허용 오차(0.02)가 있어 낡은 기준 이미지로도 통과할 수 있으니, 기준 이미지가 바뀐 카드는 실제 이미지를 본다.
+- **검수 기기 크기:** 아이패드 768×1024, 크롬북 1366×768, 전자칠판 1920×1080. 브라우저 확인은 `.claude/launch.json`의 `dev` 서버로 한다.
+- **규칙 대조:** `AGENTS.md` 절대 규칙 1~11과 카드의 '건드리지 말 것'(특히 `src/core/`, `data/units.json`).
+- **단원 콘텐츠 카드 추가 검수:** 명세(`docs/04-units/`)의 활동·과제·힌트가 모두 있는가, goal이 정답 조작에서만 통과하는가, 대표 오답이 의도한 오개념 코드로 진단되는가, 힌트가 정답을 말하지 않는가, 선택지 정답 위치 편향, 오탈자.
+- **커밋 이메일:** noreply 주소(`252700324+oswprogram10-tech@users.noreply.github.com`)만. 공개 저장소이므로 개인 이메일을 커밋하지 않는다.
+- **병합 뒤:** 병합한 main에서 검사를 다시 모두 돌리고, 카드 상태를 `done`으로, `docs/00-handoff.md` 진행 상황을 갱신한다.
+- **CI 확인(gh CLI 없음):** `curl -s "https://api.github.com/repos/oswprogram10-tech/edutech-math/actions/runs?head_sha=<sha>"`
+- **프롬프트에 넣지 않을 것:** 학생 실명·실데이터, API 키. DeepSeek는 중계 사이트를 거친다.
+
 ## 5. 선생님만 할 수 있는 일
 - 수학적으로 맞는지, 발문이 아이 눈높이인지 확인
 - 실제 태블릿에서 손으로 조작해 보기(특히 1~2학년 터치)
