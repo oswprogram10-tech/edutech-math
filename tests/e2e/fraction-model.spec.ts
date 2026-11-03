@@ -105,6 +105,31 @@ test('1/2과 1/3 타일을 겹치면 6칸 공통 격자가 생긴다', async ({ 
   await expect(page.getByTestId('fraction-canvas')).not.toContainText('공통 격자 6칸');
 });
 
+test('사탕 아이콘 위를 탭해도 그 묶음이 선택된다', async ({ page }) => {
+  const { observation } = await openFractions(page);
+  await page.getByLabel('모드').selectOption('discrete');
+  await pollObservation(page, (current) => current.mode === 'discrete');
+
+  // 기본은 12개를 2개씩 묶는다. 첫 묶음의 왼쪽 사탕 위(묶음 사각형 안)를 탭한다.
+  const group = page.getByRole('button', { name: '1번째 묶음, 2개' });
+  const box = await group.boundingBox();
+  if (!box) throw new Error('묶음 위치를 알 수 없습니다.');
+  await page.mouse.click(box.x + box.width * 0.25, box.y + box.height / 2);
+  await pollObservation(
+    page,
+    (current) => Array.isArray(current['selectedGroups']) && current['selectedGroups'].length === 1,
+  );
+  expect(await readObservation(page)).toMatchObject({ selectedGroups: [0], selectedCount: 2 });
+  await expect(observation).toContainText('"selectedGroups":[0]');
+
+  // 같은 사탕을 다시 탭하면 선택이 풀린다.
+  await page.mouse.click(box.x + box.width * 0.25, box.y + box.height / 2);
+  await pollObservation(
+    page,
+    (current) => Array.isArray(current['selectedGroups']) && current['selectedGroups'].length === 0,
+  );
+});
+
 test('키보드로 조각을 색칠하고 되돌릴 수 있다', async ({ page }) => {
   const { observation } = await openFractions(page);
   await page.getByLabel('모드').selectOption('shade');

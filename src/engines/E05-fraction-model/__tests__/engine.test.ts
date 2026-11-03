@@ -103,6 +103,53 @@ describe('E05 partition (넓이 기반 등분)', () => {
     });
   });
 
+  it('약분 탐정: 나누어떨어지지 않는 크기(5)는 새 이름을 확정하지 않는다', () => {
+    let state = partition({ fraction: '18/24', groupChoices: [2, 3, 4, 5, 6, 8] });
+    state = apply(state, { type: 'set-group-size', size: 5 }) as PartitionState;
+    const observation = observe(state, { mode: 'partition' });
+    expect(observation['simplify']).toMatchObject({
+      groupSize: 5,
+      groupedNumerator: null,
+      groupedDenominator: null,
+      irreducible: false,
+    });
+    expect(observation['irreducible']).toBe(false);
+  });
+
+  it('약분 탐정: 2칸씩 묶으면 9/12이고 아직 기약이 아니다', () => {
+    let state = partition({ fraction: '18/24', groupChoices: [2, 3, 4, 5, 6, 8] });
+    state = apply(state, { type: 'set-group-size', size: 2 }) as PartitionState;
+    const observation = observe(state, { mode: 'partition' });
+    expect(observation['simplify']).toMatchObject({
+      groupSize: 2,
+      groupedNumerator: 9,
+      groupedDenominator: 12,
+      irreducible: false,
+    });
+    expect(observation['irreducible']).toBe(false);
+  });
+
+  it('약분 탐정: 1칸씩은 묶지 않은 것으로 보고 확정하지 않는다', () => {
+    let state = partition({ fraction: '18/24', groupChoices: [1, 2, 6] });
+    state = apply(state, { type: 'set-group-size', size: 1 }) as PartitionState;
+    const observation = observe(state, { mode: 'partition' });
+    expect(observation['simplify']).toMatchObject({
+      groupSize: 1,
+      groupedNumerator: null,
+      groupedDenominator: null,
+      irreducible: false,
+    });
+  });
+
+  it('약분 탐정: 최대공약수 6으로 묶을 때만 기약이 된다', () => {
+    const results = [2, 3, 4, 6, 8].map((size) => {
+      let state = partition({ fraction: '18/24', groupChoices: [2, 3, 4, 5, 6, 8] });
+      state = apply(state, { type: 'set-group-size', size }) as PartitionState;
+      return observe(state, { mode: 'partition' })['irreducible'];
+    });
+    expect(results).toEqual([false, false, false, true, false]);
+  });
+
   it('원을 방사형으로 4등분하면 부채꼴 넓이가 같다', () => {
     let state = partition({ shape: 'circle' });
     for (const angle of [0, Math.PI / 2, Math.PI, (Math.PI * 3) / 2]) {

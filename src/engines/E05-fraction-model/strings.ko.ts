@@ -26,6 +26,17 @@ export const fractionModelStrings = {
   pieceSelected: (index: number) => `조각 ${index + 1} 색칠됨`,
   cellLabel: (index: number) => `${index + 1}번째 칸`,
   cellSelected: (index: number) => `${index + 1}번째 칸 색칠됨`,
+  groupToolbarLabel: '묶음 크기 고르기',
+  groupByCells: (size: number) => `${size}칸씩 묶기`,
+  groupHint: '같은 수씩 묶어 분수를 더 간단한 이름으로 바꿔 보세요.',
+  groupKeyboardHint: '키보드: Tab으로 묶음 크기를 고르고 Enter나 Space로 정해요.',
+  groupConfirmed: '묶음이 딱 맞아 새 이름이 정해졌어요.',
+  groupConfirmedRaw: (raw: string) => `${raw} 묶음이 딱 맞아 새 이름이 정해졌어요.`,
+  groupConfirmedValue: (raw: string, reduced: string) =>
+    `${raw} = ${reduced}, 새 이름이 정해졌어요.`,
+  groupOverflow: '묶음 테두리가 막대 끝을 넘어가요.',
+  groupCrossing: '묶음 테두리가 색칠 경계를 가로질러요.',
+  gcdShortcut: '한 번에!',
   refine: (factor: number) => `×${factor} 더 잘게`,
   coarsen: (factor: number) => `÷${factor} 더 굵게`,
   currentFraction: (raw: string, reduced: string) =>

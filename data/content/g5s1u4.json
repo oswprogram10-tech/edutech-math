@@ -1,0 +1,916 @@
+{
+  "unit": "g5s1u4",
+  "title": "약분과 통분",
+  "activities": [
+    {
+      "id": "g5s1u4.A1",
+      "title": "같은 양, 다른 이름",
+      "tasks": [
+        {
+          "id": "g5s1u4.A1.T1",
+          "prompt": "3/4이 색칠된 막대를 더 잘게 나누어, 3/4과 크기가 같은 분수 두 가지를 만들어 보세요.",
+          "engine": "E05",
+          "mode": "shade",
+          "cpa": "C",
+          "config": {
+            "mode": "shade",
+            "shape": "bar",
+            "whole": { "shape": "bar", "partsX": 4, "shaded": [0, 1, 2] },
+            "refine": [2, 3],
+            "coarsen": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "shadedEquals", "args": { "value": "3/4" } },
+              { "kind": "predicate", "name": "eventAtLeast", "args": { "name": "refined", "count": 1 } },
+              { "kind": "equals", "path": "response.x2.raw", "value": "6/8" },
+              { "kind": "equals", "path": "response.x3.raw", "value": "9/12" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "shade" },
+              "level": 1,
+              "say": "막대를 ×2로 자르면 색칠한 부분과 전체가 각각 몇 칸이 되나요? ×3으로 자르면 또 어떻게 달라지나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "shade" },
+              "level": 2,
+              "say": "칸 수는 늘었는데 색칠한 넓이는 그대로인가요? 아래 수직선에서 표시된 점이 움직이나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "shade" },
+              "level": 3,
+              "backtrack": "g5s1u4.equivalent-fraction"
+            }
+          ],
+          "concepts": ["g5s1u4.equivalent-fraction"],
+          "submit": "button",
+          "views": [
+            {
+              "slot": "left",
+              "engine": "E05",
+              "mode": "shade",
+              "cpa": "C",
+              "config": {
+                "mode": "shade",
+                "shape": "bar",
+                "whole": { "shape": "bar", "partsX": 4, "shaded": [0, 1, 2] },
+                "refine": [2, 3],
+                "coarsen": true
+              }
+            },
+            {
+              "slot": "right",
+              "engine": "E03",
+              "mode": "fraction",
+              "cpa": "P",
+              "config": {
+                "mode": "fraction",
+                "min": "0",
+                "max": "1",
+                "subdivisions": [4, 8, 12],
+                "laser": true,
+                "labels": "partial"
+              }
+            }
+          ],
+          "links": [{ "from": "left", "event": "value-changed", "to": "right" }],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "x2",
+                "label": "×2 했을 때 이름",
+                "forms": ["fraction"]
+              },
+              {
+                "kind": "number",
+                "id": "x3",
+                "label": "×3 했을 때 이름",
+                "forms": ["fraction"]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g5s1u4.A1.T2",
+          "prompt": "수직선에 세 분수 카드를 제자리에 꽂고, 2/3과 같은 점에 오는 카드를 모두 고르세요.",
+          "engine": "E03",
+          "mode": "fraction",
+          "cpa": "C",
+          "config": {
+            "mode": "fraction",
+            "min": "0",
+            "max": "1",
+            "subdivisions": [9, 5],
+            "cards": ["4/6", "6/9", "4/5"],
+            "snap": "tick",
+            "labels": "partial"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "cardsCorrect" },
+              { "kind": "equals", "path": "response.sel.selected", "value": ["a", "b"] }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "response.sel.selected", "value": ["c"] },
+              "level": 1,
+              "say": "4/5를 수직선에 꽂으면 2/3과 같은 자리에 오나요? 4/6과 6/9는 각각 어느 자리에 놓였나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction" },
+              "level": 1,
+              "say": "분모가 다르면 한 칸의 크기도 달라요. 두 카드가 같은 점에 오려면 0에서 몇 칸 떨어진 곳에 놓여야 하나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction" },
+              "level": 2,
+              "say": "분모가 9인 눈금에서는 0과 1 사이가 몇 칸으로 나뉘나요? 2/3만큼 가려면 그중 몇 칸을 세어야 하나요? 4/5는 눈금 수가 어떻게 다른가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction" },
+              "level": 3,
+              "backtrack": "g5s1u4.equivalent-fraction"
+            }
+          ],
+          "concepts": ["g5s1u4.equivalent-fraction"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "sel",
+                "label": "2/3과 같은 점의 카드",
+                "multiple": true,
+                "options": [
+                  { "id": "a", "label": "4/6" },
+                  { "id": "b", "label": "6/9" },
+                  { "id": "c", "label": "4/5" }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g5s1u4.A1.T3",
+          "prompt": "8/12을 더 굵게 묶어 가장 간단한 이름으로 나타내세요.",
+          "engine": "E05",
+          "mode": "shade",
+          "cpa": "P",
+          "config": {
+            "mode": "shade",
+            "shape": "bar",
+            "whole": {
+              "shape": "bar",
+              "partsX": 12,
+              "shaded": [0, 1, 2, 3, 4, 5, 6, 7]
+            },
+            "coarsen": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "parts", "value": 3 },
+              { "kind": "predicate", "name": "shadedEquals", "args": { "value": "2/3" } },
+              { "kind": "predicate", "name": "isIrreducible" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "shade" },
+              "level": 1,
+              "say": "8/12에서 색칠한 칸과 전체 칸을 같은 수로 묶으면 각각 몇 묶음이 되나요? 더 묶을 수 없을 때까지 묶어 볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "shade" },
+              "level": 2,
+              "say": "묶음이 막대 끝을 넘지 않으려면 어떤 크기로 묶어야 하나요? 색칠한 칸과 빈 칸이 모두 같은 묶음으로 나뉘나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "shade" },
+              "level": 3,
+              "backtrack": "g5s1u4.simplify"
+            }
+          ],
+          "concepts": ["g5s1u4.multiply-same", "g5s1u4.simplify"],
+          "submit": "button"
+        },
+        {
+          "id": "g5s1u4.A1.T4",
+          "prompt": "3/4을 6/8로, 8/12을 2/3으로 바꿀 때 분모와 분자에 어떤 일이 일어났는지 고르세요.",
+          "engine": "E05",
+          "mode": "shade",
+          "cpa": "P",
+          "config": {
+            "mode": "shade",
+            "shape": "bar",
+            "whole": { "shape": "bar", "partsX": 4, "shaded": [0, 1, 2] }
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "response.mul.selected", "value": ["a"] },
+              { "kind": "equals", "path": "response.div.selected", "value": ["a"] }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  { "kind": "equals", "path": "response.mul.selected", "value": ["b"] },
+                  { "kind": "equals", "path": "response.div.selected", "value": ["b"] }
+                ]
+              },
+              "level": 1,
+              "say": "3/4에 분모와 분자만큼 같은 수를 더하면 6/8이 되나요? 8/12에서 같은 수를 빼면 2/3이 되나요? 색칠한 넓이도 그대로인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "shade" },
+              "level": 1,
+              "say": "3/4이 6/8이 되려면 3과 4가 각각 어떻게 달라졌나요? 8/12이 2/3이 되려면 8과 12는 각각 어떻게 달라졌나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "shade" },
+              "level": 2,
+              "say": "두 경우 모두 분모와 분자에 똑같은 수를 곱하거나 나누었나요? 더하거나 뺀 것은 아닌가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "shade" },
+              "level": 3,
+              "backtrack": "g5s1u4.multiply-same"
+            }
+          ],
+          "concepts": ["g5s1u4.multiply-same"],
+          "submit": "button",
+          "showEngine": false,
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "mul",
+                "label": "3/4 → 6/8",
+                "multiple": false,
+                "options": [
+                  { "id": "a", "label": "분모와 분자에 같은 수를 곱했어요" },
+                  { "id": "b", "label": "분모와 분자에 같은 수를 더했어요" },
+                  { "id": "c", "label": "분모와 분자에 다른 수를 곱했어요" }
+                ]
+              },
+              {
+                "kind": "choice",
+                "id": "div",
+                "label": "8/12 → 2/3",
+                "multiple": false,
+                "options": [
+                  { "id": "a", "label": "분모와 분자에서 같은 수를 나누었어요" },
+                  { "id": "b", "label": "분모와 분자에서 같은 수를 뺐어요" },
+                  { "id": "c", "label": "분모와 분자에서 다른 수를 나누었어요" }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g5s1u4.A1.T5",
+          "prompt": "3/4과 크기가 같고 분모가 20인 분수를 쓰세요.",
+          "engine": "E05",
+          "mode": "shade",
+          "cpa": "A",
+          "config": {
+            "mode": "shade",
+            "shape": "bar",
+            "whole": { "shape": "bar", "partsX": 4, "shaded": [0, 1, 2] },
+            "refine": [2, 3, 5]
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.ans.raw",
+            "value": "15/20"
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-FRAC-EQUIV-ADD-SAME" },
+              "level": 1,
+              "say": "3/4의 분모 4를 20으로 만들려면 4에 몇을 곱해야 하나요? 분자 3에는 그만큼 무엇을 해야 하나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "shade" },
+              "level": 1,
+              "say": "분모 4가 20이 되려면 4를 몇 배로 만들어야 하나요? 그때 분자 3은 어떻게 달라져야 하나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "shade" },
+              "level": 2,
+              "say": "3/4 막대를 20칸으로 더 잘게 나누면 색칠한 칸은 몇 칸이 되나요? 4칸 중 3칸과 같은 넓이는 20칸 중 몇 칸인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "shade" },
+              "level": 3,
+              "backtrack": "g5s1u4.equivalent-fraction"
+            }
+          ],
+          "concepts": ["g5s1u4.equivalent-fraction", "g5s1u4.multiply-same"],
+          "submit": "button",
+          "showEngine": false,
+          "diagnose": [
+            {
+              "code": "MC-FRAC-EQUIV-ADD-SAME",
+              "args": { "from": "3/4", "added": "16" },
+              "path": "response.ans.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "ans",
+                "label": "분모가 20인 분수",
+                "forms": ["fraction"]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "g5s1u4.A2",
+      "title": "투명 분수 타일 겹치기",
+      "tasks": [
+        {
+          "id": "g5s1u4.A2.T1",
+          "prompt": "2/3과 3/4 중 어느 쪽이 더 큰가요? 타일을 겹쳐 확인하고, 3/4과 5/8도 비교해 보세요.",
+          "engine": "E05",
+          "mode": "overlay-slicer",
+          "cpa": "C",
+          "config": {
+            "mode": "overlay-slicer",
+            "a": "2/3",
+            "b": "3/4",
+            "shape": "square",
+            "orientation": { "a": "horizontal", "b": "vertical" },
+            "challenge": "compare"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "eventAtLeast", "args": { "name": "overlaid", "count": 1 } },
+              { "kind": "equals", "path": "response.c1.symbol", "value": "<" },
+              { "kind": "equals", "path": "response.c2.symbol", "value": ">" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-FRAC-BIGGER-DENOM" },
+              "level": 1,
+              "say": "분모 8은 전체를 8조각으로 나눈 것이고 4는 4조각으로 나눈 것이에요. 조각 수가 많을수록 한 조각은 커지나요, 작아지나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.c1.symbol", "value": ">" },
+              "level": 1,
+              "say": "두 타일을 겹치면 파랑과 주황이 각각 몇 칸이 되나요? 두 타일의 한 칸 크기가 같나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "overlay-slicer" },
+              "level": 1,
+              "say": "타일을 겹치면 두 칸선이 합쳐져요. 겹친 뒤 파랑과 주황이 몇 칸씩 칠해지는지 세어 볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "overlay-slicer" },
+              "level": 2,
+              "show": { "engine": "E05", "overlay": "grid-reveal" }
+            },
+            {
+              "when": { "misconception": "MC-FRAC-BIGGER-DENOM" },
+              "level": 3,
+              "backtrack": "g3s2u4"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "overlay-slicer" },
+              "level": 3,
+              "backtrack": "g5s1u4.common-denominator"
+            }
+          ],
+          "concepts": ["g5s1u4.common-denominator", "g5s1u4.compare-fractions"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-FRAC-BIGGER-DENOM",
+              "args": { "left": "3/4", "right": "5/8" },
+              "path": "response.c2.symbol"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "compare",
+                "id": "c1",
+                "label": "2/3와 3/4",
+                "left": "2/3",
+                "right": "3/4"
+              },
+              {
+                "kind": "compare",
+                "id": "c2",
+                "label": "3/4과 5/8",
+                "left": "3/4",
+                "right": "5/8"
+              }
+            ]
+          }
+        },
+        {
+          "id": "g5s1u4.A2.T2",
+          "prompt": "겹친 타일에서 파랑과 주황이 각각 몇 칸인지 분수로 쓰세요.",
+          "engine": "E05",
+          "mode": "overlay-slicer",
+          "cpa": "C",
+          "config": {
+            "mode": "overlay-slicer",
+            "a": "2/3",
+            "b": "3/4",
+            "shape": "square",
+            "orientation": { "a": "horizontal", "b": "vertical" },
+            "challenge": "compare"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "eventAtLeast", "args": { "name": "overlaid", "count": 1 } },
+              { "kind": "equals", "path": "response.f1.raw", "value": "8/12" },
+              { "kind": "equals", "path": "response.f2.raw", "value": "9/12" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "overlay-slicer" },
+              "level": 1,
+              "say": "겹치기 전 {a} 타일과 {b} 타일은 각각 몇 칸으로 나뉘어 있었나요? 겹친 뒤에는 두 타일 모두 몇 칸으로 나뉘나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "overlay-slicer" },
+              "level": 2,
+              "say": "파랑 타일은 처음에 몇 칸 중 몇 칸이었나요? 겹친 뒤 칸선이 몇 칸으로 나뉘는지 세어 보고, 그 두 칸이 각각 몇 칸으로 늘어나는지 확인해 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "overlay-slicer" },
+              "level": 3,
+              "backtrack": "g5s1u4.common-denominator"
+            }
+          ],
+          "concepts": ["g5s1u4.common-denominator"],
+          "submit": "button",
+          "hintVars": { "a": "2/3", "b": "3/4" },
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "f1",
+                "label": "파랑이 차지한 칸",
+                "forms": ["fraction"]
+              },
+              {
+                "kind": "number",
+                "id": "f2",
+                "label": "주황이 차지한 칸",
+                "forms": ["fraction"]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g5s1u4.A2.T3",
+          "prompt": "5/6과 3/4을 겹쳐서, 24칸보다 더 적은 칸으로도 두 조각을 맞출 수 있는지 확인하세요.",
+          "engine": "E05",
+          "mode": "overlay-slicer",
+          "cpa": "P",
+          "config": {
+            "mode": "overlay-slicer",
+            "a": "5/6",
+            "b": "3/4",
+            "shape": "square",
+            "orientation": { "a": "horizontal", "b": "vertical" },
+            "challenge": "common-grid"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "eventAtLeast", "args": { "name": "overlaid", "count": 1 } },
+              { "kind": "predicate", "name": "commonGridIs", "args": { "size": 12 } },
+              { "kind": "equals", "path": "response.den.value", "value": "12" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "commonGrid", "value": 24 },
+              "level": 1,
+              "say": "5/6과 3/4의 분모 6과 4는 어떤 수를 함께 갖고 있나요? 두 칸 수를 모두 맞추는 가장 작은 수는 얼마인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "overlay-slicer" },
+              "level": 1,
+              "say": "격자를 줄여도 파랑과 주황의 칸선이 모두 정확히 맞나요? 두 분모를 모두 나누어떨어지게 하는 수를 찾아보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "overlay-slicer" },
+              "level": 2,
+              "show": { "engine": "E05", "overlay": "grid-reveal" }
+            },
+            {
+              "when": { "kind": "equals", "path": "commonGrid", "value": 24 },
+              "level": 3,
+              "backtrack": "g5s1u2.common-multiple-lcm"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "overlay-slicer" },
+              "level": 3,
+              "backtrack": "g5s1u4.common-denominator"
+            }
+          ],
+          "concepts": ["g5s1u4.common-denominator"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "den",
+                "label": "공통분모",
+                "forms": ["integer"]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g5s1u4.A2.T4",
+          "prompt": "그림 없이 5/6과 7/8을 통분할 때, 두 분모를 곱한 공통분모와 가장 작은 공통분모를 각각 쓰세요.",
+          "engine": "E05",
+          "mode": "overlay-slicer",
+          "cpa": "A",
+          "config": {
+            "mode": "overlay-slicer",
+            "a": "5/6",
+            "b": "7/8",
+            "shape": "square"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "response.d1.value", "value": "48" },
+              { "kind": "equals", "path": "response.d2.value", "value": "24" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "response.d2.value", "value": "48" },
+              "level": 1,
+              "say": "6과 8의 공배수를 작은 것부터 차례로 늘어놓으면 무엇이 있나요? 그중 가장 작은 수는 얼마인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "overlay-slicer" },
+              "level": 1,
+              "say": "6과 8이 공통으로 가진 수를 한 번만 세면 두 분모의 곱보다 작은 공배수를 찾을 수 있을까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "overlay-slicer" },
+              "level": 2,
+              "say": "6의 배수와 8의 배수를 나란히 적어 보고, 두 줄에 모두 나오는 수를 찾아볼까요? 가장 먼저 만나는 수는 무엇인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "overlay-slicer" },
+              "level": 3,
+              "backtrack": "g5s1u2"
+            }
+          ],
+          "concepts": ["g5s1u4.common-denominator"],
+          "submit": "button",
+          "showEngine": false,
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "d1",
+                "label": "두 분모를 곱한 공통분모",
+                "forms": ["integer"]
+              },
+              {
+                "kind": "number",
+                "id": "d2",
+                "label": "가장 작은 공통분모",
+                "forms": ["integer"]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g5s1u4.A2.T5",
+          "prompt": "3/5과 0.7을 비교하고, 3/5을 분모가 10인 분수로 나타내세요.",
+          "engine": "E05",
+          "mode": "overlay-slicer",
+          "cpa": "A",
+          "config": {
+            "mode": "overlay-slicer",
+            "a": "3/5",
+            "b": "7/10",
+            "shape": "square"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "response.cmp.symbol", "value": "<" },
+              { "kind": "equals", "path": "response.tenths.raw", "value": "6/10" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "response.cmp.symbol", "value": ">" },
+              "level": 1,
+              "say": "두 수를 같은 분모로 나타내려면 분모를 무엇으로 맞추면 좋을까요? 3/5의 분모 5를 10으로 만들면 분자는 어떻게 되나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.cmp.symbol", "value": ">" },
+              "level": 2,
+              "say": "0.7은 0.1이 몇 개인지, 3/5은 0.1이 몇 개인지 각각 세어 볼까요? 두 수를 같은 0.1 단위로 나타낸 뒤 어느 쪽이 더 많은지 비교해 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "response.cmp.symbol", "value": ">" },
+              "level": 3,
+              "backtrack": "g5s1u4.compare-fractions"
+            }
+          ],
+          "concepts": ["g5s1u4.compare-fractions"],
+          "submit": "button",
+          "showEngine": false,
+          "response": {
+            "fields": [
+              {
+                "kind": "compare",
+                "id": "cmp",
+                "label": "3/5과 0.7",
+                "left": "3/5",
+                "right": "0.7"
+              },
+              {
+                "kind": "number",
+                "id": "tenths",
+                "label": "분모가 10인 분수",
+                "forms": ["fraction"]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "g5s1u4.A3",
+      "title": "약분 탐정",
+      "tasks": [
+        {
+          "id": "g5s1u4.A3.T1",
+          "prompt": "막대를 여러 크기로 묶어 보며 18/24을 약분할 수 있는 묶음 크기를 모두 고르세요.",
+          "engine": "E05",
+          "mode": "partition",
+          "cpa": "P",
+          "config": {
+            "mode": "partition",
+            "fraction": "18/24",
+            "groupChoices": [2, 3, 4, 5, 6, 8],
+            "showGcdShortcut": true
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.g.selected",
+            "value": ["a", "b", "e"]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "response.g.selected", "value": ["c"] },
+              "level": 1,
+              "say": "24칸을 4칸씩 묶으면 몇 묶음이 되나요? 18칸은 4칸씩 묶었을 때 남김없이 묶이나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 1,
+              "say": "24칸을 몇 칸씩 묶을 때 18칸이 남김없이 묶이나요? 24와 18을 모두 나누어떨어지게 하는 수를 찾아보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 2,
+              "say": "18은 4로 나누어떨어지나요? 24는 4로 나누어떨어지나요? 둘 다 나누어떨어져야 묶음이 딱 맞아요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 3,
+              "backtrack": "g5s1u2.common-factor-gcd"
+            }
+          ],
+          "concepts": ["g5s1u4.simplify"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "g",
+                "label": "묶음 크기",
+                "multiple": true,
+                "options": [
+                  { "id": "a", "label": "2칸씩" },
+                  { "id": "b", "label": "3칸씩" },
+                  { "id": "c", "label": "4칸씩" },
+                  { "id": "d", "label": "5칸씩" },
+                  { "id": "e", "label": "6칸씩" },
+                  { "id": "f", "label": "8칸씩" }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g5s1u4.A3.T2",
+          "prompt": "막대를 묶어 18/24을 기약분수로 나타내세요.",
+          "engine": "E05",
+          "mode": "partition",
+          "cpa": "P",
+          "config": {
+            "mode": "partition",
+            "fraction": "18/24",
+            "groupChoices": [2, 3, 4, 5, 6, 8],
+            "showGcdShortcut": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "simplify.groupedNumerator", "value": 3 },
+              { "kind": "equals", "path": "simplify.groupedDenominator", "value": 4 },
+              { "kind": "predicate", "name": "isIrreducible" },
+              { "kind": "equals", "path": "response.ans.value", "value": "3/4" },
+              { "kind": "equals", "path": "response.ans.irreducible", "value": true }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-SIMPLIFY-PARTIAL" },
+              "level": 1,
+              "say": "한 번 묶은 뒤에도 색칠한 칸과 전체 칸을 또 나눌 수 있나요? 더 이상 나눌 수 없을 때까지 묶어 볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 1,
+              "say": "18과 24를 모두 나누어떨어지게 하는 가장 큰 수는 무엇인가요? 그 수로 나누면 분모와 분자가 각각 얼마가 되나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 2,
+              "say": "색칠한 18칸과 전체 24칸을 똑같이 나눌 수 있는 가장 큰 묶음 수는 얼마인가요? 그때 한 묶음은 몇 칸이 되나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 3,
+              "backtrack": "g5s1u2.common-factor-gcd"
+            }
+          ],
+          "concepts": ["g5s1u4.simplify"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-SIMPLIFY-PARTIAL",
+              "args": { "unsimplified": "18/24" },
+              "path": "response.ans.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "ans",
+                "label": "기약분수",
+                "forms": ["fraction"]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g5s1u4.A3.T3",
+          "prompt": "18/24을 한 번에 기약분수로 만드는 묶음 크기를 골라 막대를 묶어 보세요.",
+          "engine": "E05",
+          "mode": "partition",
+          "cpa": "P",
+          "config": {
+            "mode": "partition",
+            "fraction": "18/24",
+            "groupChoices": [2, 3, 4, 5, 6, 8],
+            "showGcdShortcut": true
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "simplify.groupSize",
+            "value": 6
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "simplify.groupSize", "value": 8 },
+              "level": 1,
+              "say": "8칸씩 묶으면 18칸이 남김없이 묶이나요? 24와 18을 한 번에 나눌 수 있는 수 중 가장 큰 것은 무엇인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 1,
+              "say": "24와 18의 공약수 중 가장 큰 수는 무엇인가요? 그 수로 한 번에 나누면 분모와 분자가 어떻게 되나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 2,
+              "say": "묶음 테두리가 색칠 경계와 막대 끝에 동시에 딱 맞는 크기를 찾아보세요. 그때 몇 묶음이 되나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 3,
+              "backtrack": "g5s1u2.common-factor-gcd"
+            }
+          ],
+          "concepts": ["g5s1u4.simplify"],
+          "submit": "button"
+        },
+        {
+          "id": "g5s1u4.A3.T4",
+          "prompt": "36/48과 15/35을 각각 기약분수로 나타내세요.",
+          "engine": "E05",
+          "mode": "shade",
+          "cpa": "A",
+          "config": {
+            "mode": "shade",
+            "shape": "bar",
+            "whole": { "shape": "bar", "partsX": 12, "shaded": [0, 1, 2, 3] },
+            "coarsen": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "response.f1.value", "value": "3/4" },
+              { "kind": "equals", "path": "response.f1.irreducible", "value": true },
+              { "kind": "equals", "path": "response.f2.value", "value": "3/7" },
+              { "kind": "equals", "path": "response.f2.irreducible", "value": true }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-SIMPLIFY-PARTIAL" },
+              "level": 1,
+              "say": "36/48을 한 번 약분한 뒤에도 두 수를 또 나눌 수 있나요? 15와 35를 한 번에 나누는 가장 큰 수는 무엇인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "shade" },
+              "level": 1,
+              "say": "36과 48의 공약수 중 가장 큰 수는 무엇인가요? 15와 35를 한 번에 나누는 가장 큰 수는 무엇인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "shade" },
+              "level": 2,
+              "say": "한 번 나눈 뒤에도 분자와 분모가 같은 수로 나누어지나요? 더 나눌 수 없을 때까지 확인해 볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "shade" },
+              "level": 3,
+              "backtrack": "g5s1u2.common-factor-gcd"
+            }
+          ],
+          "concepts": ["g5s1u4.simplify"],
+          "submit": "button",
+          "showEngine": false,
+          "diagnose": [
+            {
+              "code": "MC-SIMPLIFY-PARTIAL",
+              "args": { "unsimplified": "36/48" },
+              "path": "response.f1.value"
+            },
+            {
+              "code": "MC-SIMPLIFY-PARTIAL",
+              "args": { "unsimplified": "15/35" },
+              "path": "response.f2.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "f1",
+                "label": "36/48",
+                "forms": ["fraction"]
+              },
+              {
+                "kind": "number",
+                "id": "f2",
+                "label": "15/35",
+                "forms": ["fraction"]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
