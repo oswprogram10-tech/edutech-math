@@ -63,7 +63,7 @@ describe('StarMapView 렌더 횟수', () => {
     fireEvent.keyDown(canvas, { key: 'ArrowUp' });
     fireEvent.click(screen.getByRole('button', { name: '처음 보기' }));
 
-    expect(screen.getByTestId('map-zoom').textContent).toBe('100%');
+    expect(screen.getByTestId('map-zoom').textContent).toBe('400%');
     expect(renderState.count).toBe(0);
   });
 });

@@ -105,7 +105,9 @@ async function typeNumber(page: Page, id: string, keys: readonly string[]): Prom
 }
 
 async function clearNumber(page: Page, id: string): Promise<void> {
-  await field(page, id).getByRole('button', { name: '모두 지우기' }).click();
+  // 입력 대상 필드를 먼저 고른 뒤, 필드 밖에 하나뿐인 키패드의 지우기를 누른다.
+  await field(page, id).getByRole('button').first().click();
+  await responseSlot(page).getByRole('button', { name: '모두 지우기' }).click();
 }
 
 async function chooseCompare(
@@ -177,7 +179,7 @@ test('A1 등분 레이저 커터 — 대표 오답 뒤 고쳐서 다섯 과제�
   const t2 = await canvasOf(page, 'main', 'fraction-canvas');
   for (const x of [325, 500, 675]) await verticalCut(page, t2, x);
   await submit(page);
-  await expectFailedWithHint(page, '가로 칼선과 세로 칼선');
+  await expectFailedWithHint(page, '칼선은 어느 방향인가요');
   await t2.panel.getByRole('button', { name: '칼선 지우기' }).click();
   await verticalCut(page, t2, 500);
   await horizontalCut(page, t2, 300);
@@ -345,6 +347,30 @@ test('A3 1/10 확대경 — 대표 오답 뒤 고쳐서 다섯 과제를 통과�
   await typeNumber(page, 'ans', ['2', '.', '3']);
   await submit(page);
   await expectPassed(page, true);
+});
+
+test('크롬북·전자칠판 첫 화면에 응답 칸과 확인하기가 들어온다', async ({ page }, testInfo) => {
+  test.skip(
+    testInfo.project.name === 'ipad',
+    '아이패드는 판을 위아래로 두어 짧은 스크롤을 허용한다',
+  );
+
+  const cases = [
+    { id: 'g3s1u6.A1', title: '등분 레이저 커터', response: false },
+    { id: 'g3s1u6.A2', title: '단위분수 크기 비교', response: true },
+    { id: 'g3s1u6.A3', title: '1/10 확대경', response: true },
+  ] as const;
+
+  for (const item of cases) {
+    await openActivity(page, item.id, item.title);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await expect(page.getByRole('button', { name: '확인하기' })).toBeInViewport({ ratio: 1 });
+    if (item.response) {
+      await expect(responseSlot(page)).toBeInViewport({ ratio: 1 });
+    } else {
+      await expect(slot(page, 'main')).toBeInViewport({ ratio: 1 });
+    }
+  }
 });
 
 test('오프라인에서도 g3s1u6.A1 활동이 열린다', async ({ page, context }) => {

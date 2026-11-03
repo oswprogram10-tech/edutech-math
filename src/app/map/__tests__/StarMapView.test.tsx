@@ -68,6 +68,8 @@ describe('StarMapView', () => {
     expect(disabled.getAttribute('data-enabled')).toBe('false');
     expect(disabled.getAttribute('aria-disabled')).toBe('true');
     expect(disabled.hasAttribute('tabindex')).toBe(false);
+    expect(disabled.querySelector('path')).toBeNull();
+    expect(disabled.querySelectorAll('circle')).toHaveLength(1);
 
     fireEvent.click(disabled);
     expect(screen.queryByTestId('star-detail')).toBeNull();
@@ -96,6 +98,23 @@ describe('StarMapView', () => {
     expect(onOpen).toHaveBeenCalledWith('u1.A1');
   });
 
+  it('켜진 단원 개념끼리 잇는 선만 그린다', () => {
+    const layout = smallLayout();
+    const linked: StarMapLayout = {
+      ...layout,
+      links: [
+        { from: 'c1', to: 'c2' },
+        { from: 'c2', to: 'c1' },
+      ],
+    };
+    const { container, unmount } = renderView({ layout: linked, enabledUnits: new Set(['u1']) });
+    expect(container.querySelectorAll('line')).toHaveLength(0);
+    unmount();
+
+    const both = renderView({ layout: linked, enabledUnits: new Set(['u1', 'u2']) });
+    expect(both.container.querySelectorAll('line').length).toBeGreaterThan(0);
+  });
+
   it('활동이 없는 별은 빈 활동 문구를 보여 준다', () => {
     renderView({ enabledUnits: new Set(['u2']) });
     fireEvent.click(screen.getByRole('button', { name: '개념 둘, 아직' }));
@@ -106,12 +125,13 @@ describe('StarMapView', () => {
     renderView();
     const canvas = screen.getByTestId('map-canvas');
     const transform = screen.getByTestId('map-transform');
+    const initial = transform.getAttribute('transform');
 
-    expect(screen.getByTestId('map-zoom').textContent).toBe('100%');
-    fireEvent.click(screen.getByRole('button', { name: '확대' }));
-    expect(screen.getByTestId('map-zoom').textContent).toBe('125%');
+    expect(screen.getByTestId('map-zoom').textContent).toBe('400%');
+    fireEvent.click(screen.getByRole('button', { name: '축소' }));
+    expect(screen.getByTestId('map-zoom').textContent).toBe('375%');
     await waitFor(() => {
-      expect(transform.getAttribute('transform')).toContain('scale(1.25)');
+      expect(transform.getAttribute('transform')).toContain('scale(3.75)');
     });
 
     const before = transform.getAttribute('transform');
@@ -119,11 +139,13 @@ describe('StarMapView', () => {
     await waitFor(() => {
       expect(transform.getAttribute('transform')).not.toBe(before);
     });
+    fireEvent.keyDown(canvas, { key: '+' });
+    expect(screen.getByTestId('map-zoom').textContent).toBe('400%');
 
     fireEvent.click(screen.getByRole('button', { name: '처음 보기' }));
-    expect(screen.getByTestId('map-zoom').textContent).toBe('100%');
+    expect(screen.getByTestId('map-zoom').textContent).toBe('400%');
     await waitFor(() => {
-      expect(transform.getAttribute('transform')).toBe('translate(0 0) scale(1)');
+      expect(transform.getAttribute('transform')).toBe(initial);
     });
   });
 

@@ -145,34 +145,72 @@ test('확대·이동하고 처음 보기로 돌아온다', async ({ page }) => {
 
   const canvas = page.getByTestId('map-canvas');
   const transform = page.getByTestId('map-transform');
-  await expect(page.getByTestId('map-zoom')).toHaveText('100%');
+  // 처음 보기는 켜진 단원 별이 화면 가운데 크게 보이도록 맞춘 배율이다.
+  await expect(page.getByTestId('map-zoom')).toHaveText('400%');
+  const initialTransform = await transform.getAttribute('transform');
+  expect(initialTransform).toContain('scale(4)');
 
-  await page.getByRole('button', { name: '확대' }).click();
-  await expect(page.getByTestId('map-zoom')).toHaveText('125%');
-  await expect.poll(async () => transform.getAttribute('transform')).toContain('scale(1.25)');
+  await page.getByRole('button', { name: '축소' }).click();
+  await expect(page.getByTestId('map-zoom')).toHaveText('375%');
+  await expect.poll(async () => transform.getAttribute('transform')).toContain('scale(3.75)');
 
-  // 키보드 + 로도 확대한다.
+  // 키보드 + 로 다시 확대한다.
   await canvas.focus();
   await page.keyboard.press('+');
-  await expect(page.getByTestId('map-zoom')).toHaveText('150%');
+  await expect(page.getByTestId('map-zoom')).toHaveText('400%');
   await page.keyboard.press('0');
-  await expect(page.getByTestId('map-zoom')).toHaveText('100%');
+  await expect.poll(async () => transform.getAttribute('transform')).toBe(initialTransform);
 
   // 한 손가락 끌기로 이동한다.
   const box = await canvas.boundingBox();
   if (!box) throw new Error('별자리 영역을 찾지 못했습니다.');
-  const before = await transform.getAttribute('transform');
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await page.mouse.down();
   await page.mouse.move(box.x + box.width / 2 + 90, box.y + box.height / 2 + 50, { steps: 6 });
   await page.mouse.up();
-  await expect.poll(async () => transform.getAttribute('transform')).not.toBe(before);
+  await expect.poll(async () => transform.getAttribute('transform')).not.toBe(initialTransform);
 
   await page.getByRole('button', { name: '처음 보기' }).click();
-  await expect(page.getByTestId('map-zoom')).toHaveText('100%');
-  await expect
-    .poll(async () => transform.getAttribute('transform'))
-    .toBe('translate(0 0) scale(1)');
+  await expect(page.getByTestId('map-zoom')).toHaveText('400%');
+  await expect.poll(async () => transform.getAttribute('transform')).toBe(initialTransform);
+});
+
+test('크롬북 첫 화면에 범례가 들어오고 처음 보기에 켜진 별이 지도 안에 있다', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromebook', '크롬북 뷰포트 전용 확인');
+  await enterAsStudent(page, '7');
+
+  const canvas = page.getByTestId('map-canvas');
+  await expect(canvas).toBeInViewport({ ratio: 1 });
+  await expect(page.getByTestId('legend-missing')).toBeInViewport({ ratio: 1 });
+  await expect(page.getByTestId('legend-practicing')).toBeInViewport({ ratio: 1 });
+  await expect(page.getByTestId('legend-mastered')).toBeInViewport({ ratio: 1 });
+
+  // 페이지 전체가 첫 화면 안에 들어와 스크롤이 없다.
+  const scrollable = await page.evaluate(
+    () => document.documentElement.scrollHeight - window.innerHeight,
+  );
+  expect(scrollable).toBeLessThanOrEqual(1);
+
+  // 처음 보기에서 켜진 g3s1u6 개념 별 5개가 지도 영역 안에 있다.
+  const stars = canvas.locator('[data-enabled="true"]');
+  await expect(stars).toHaveCount(5);
+  const mapBox = await canvas.boundingBox();
+  if (!mapBox) throw new Error('별자리 영역을 찾지 못했습니다.');
+  for (let index = 0; index < 5; index += 1) {
+    const starBox = await stars.nth(index).boundingBox();
+    if (!starBox) throw new Error(`별 ${index + 1}의 자리를 찾지 못했습니다.`);
+    expect(starBox.x).toBeGreaterThanOrEqual(mapBox.x);
+    expect(starBox.y).toBeGreaterThanOrEqual(mapBox.y);
+    expect(starBox.x + starBox.width).toBeLessThanOrEqual(mapBox.x + mapBox.width);
+    expect(starBox.y + starBox.height).toBeLessThanOrEqual(mapBox.y + mapBox.height);
+  }
+
+  // 꺼진 단원 개념은 별 모양이 아니라 작은 점으로 그린다.
+  const disabled = canvas.locator('[data-enabled="false"]').first();
+  await expect(disabled.locator('circle')).toHaveCount(1);
+  await expect(disabled.locator('path')).toHaveCount(0);
 });
 
 test('교사가 단원을 끄면 별이 흐려지고 누를 수 없다', async ({ page }) => {

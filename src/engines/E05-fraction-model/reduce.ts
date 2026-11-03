@@ -241,6 +241,7 @@ function createPartition(config: FractionModelConfig): PartitionState {
       : fixedParts !== null
         ? autoPresetCuts(shape, outline, fixedParts)
         : [];
+  const preset = config.presetCuts !== undefined || fixedParts !== null;
   const totalPieces = fixedParts ?? 1;
   const shaded = simplify ? validShaded(range(simplify.numerator), totalPieces) : [];
   return {
@@ -251,6 +252,7 @@ function createPartition(config: FractionModelConfig): PartitionState {
     shaded,
     nextCutId: cuts.length + 1,
     fixedParts,
+    preset,
     simplify,
     tolerance:
       config.areaTolerance !== undefined && config.areaTolerance > 0
@@ -490,6 +492,10 @@ export function piecesOf(state: PartitionState): Piece[] {
 }
 
 function reducePartition(state: PartitionState, action: FractionModelAction): PartitionState {
+  if (state.preset && (action.type === 'cut' || action.type === 'clear-cuts')) {
+    // 미리 나뉜 도형은 자르기 도구가 없다. 색칠만 바꿀 수 있다.
+    return state;
+  }
   if (state.simplify) {
     if (action.type === 'set-group-size') {
       const size = Math.max(1, Math.trunc(action.size));

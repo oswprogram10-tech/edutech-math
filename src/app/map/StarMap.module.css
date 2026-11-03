@@ -59,7 +59,7 @@
 
 .canvas {
   position: relative;
-  width: min(100%, 82vh);
+  width: min(100%, calc(100dvh - 17rem));
   aspect-ratio: 1 / 1;
   margin: 0 auto;
   overflow: hidden;
@@ -100,8 +100,8 @@
 }
 
 .link {
-  stroke: rgba(150, 180, 255, 0.16);
-  stroke-width: 1;
+  stroke: rgba(160, 195, 255, 0.32);
+  stroke-width: 1.2;
   /* 선은 장식이라 별 누르기를 가로채지 않는다. */
   pointer-events: none;
 }
@@ -116,9 +116,14 @@
 }
 
 .starOff {
-  opacity: 0.22;
   cursor: default;
   pointer-events: none;
+}
+
+/* 꺼진 단원의 개념은 별이 아니라 작은 흐린 점이다. */
+.dot {
+  fill: #8ea2c8;
+  opacity: 0.35;
 }
 
 .shape {

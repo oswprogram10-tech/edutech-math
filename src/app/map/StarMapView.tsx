@@ -19,13 +19,46 @@ import styles from './StarMap.module.css';
 const MIN_SCALE = 0.5;
 const MAX_SCALE = 4;
 const ZOOM_STEP = 0.25;
-const RESET_SCALE = 1;
 const TAP_SLOP = 8;
 const KEY_PAN = 44;
+/** 처음 보기에서 켜진 별 무리가 지도 안에서 차지하는 비율. */
+const FIT_RATIO = 0.78;
 
 interface ViewPoint {
   readonly x: number;
   readonly y: number;
+}
+
+interface FitView {
+  readonly scale: number;
+  readonly x: number;
+  readonly y: number;
+}
+
+function fitToEnabled(layout: StarMapLayout, enabledUnits: ReadonlySet<string>): FitView {
+  const enabled = layout.stars.filter((star) => enabledUnits.has(star.unitId));
+  const stars = enabled.length > 0 ? enabled : layout.stars;
+  if (stars.length === 0) return { scale: 1, x: 0, y: 0 };
+
+  const pad = STAR_RADIUS * 3;
+  const xs = stars.map((star) => star.x);
+  const ys = stars.map((star) => star.y);
+  const minX = Math.min(...xs) - pad;
+  const maxX = Math.max(...xs) + pad;
+  const minY = Math.min(...ys) - pad;
+  const maxY = Math.max(...ys) + pad;
+  const width = Math.max(maxX - minX, 1);
+  const height = Math.max(maxY - minY, 1);
+  const raw = Math.min((MAP_WIDTH * FIT_RATIO) / width, (MAP_HEIGHT * FIT_RATIO) / height);
+  // 0.25 단위로 맞춰 두면 '처음 보기'가 확대·축소 버튼만으로 정확히 돌아온다.
+  const scale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, Math.floor(raw / ZOOM_STEP) * ZOOM_STEP));
+  const centerX = (minX + maxX) / 2;
+  const centerY = (minY + maxY) / 2;
+  return {
+    scale,
+    x: MAP_WIDTH / 2 - centerX * scale,
+    y: MAP_HEIGHT / 2 - centerY * scale,
+  };
 }
 
 interface DragState {
@@ -73,10 +106,11 @@ export function StarMapView({
 }: StarMapViewProps) {
   const canvasRef = useRef<HTMLDivElement | null>(null);
   const transformRef = useRef<SVGGElement | null>(null);
-  const panRef = useRef<ViewPoint>({ x: 0, y: 0 });
-  const scaleRef = useRef(RESET_SCALE);
+  const fit = useMemo(() => fitToEnabled(layout, enabledUnits), [enabledUnits, layout]);
+  const panRef = useRef<ViewPoint>({ x: fit.x, y: fit.y });
+  const scaleRef = useRef(fit.scale);
   /** 마지막으로 화면에 적용한 배율. 앵커 보정은 이 값과 새 배율의 차이로 한다. */
-  const appliedScaleRef = useRef(RESET_SCALE);
+  const appliedScaleRef = useRef(fit.scale);
   const zoomAnchorRef = useRef<ViewPoint>({ x: MAP_WIDTH / 2, y: MAP_HEIGHT / 2 });
   const frameRef = useRef(0);
   const pointersRef = useRef(new Map<number, ViewPoint>());
@@ -84,7 +118,7 @@ export function StarMapView({
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const pinch = usePinch({
-    initialScale: RESET_SCALE,
+    initialScale: fit.scale,
     min: MIN_SCALE,
     max: MAX_SCALE,
     step: ZOOM_STEP,
@@ -190,23 +224,24 @@ export function StarMapView({
 
   const reset = useCallback(() => {
     zoomAnchorRef.current = { x: MAP_WIDTH / 2, y: MAP_HEIGHT / 2 };
-    panRef.current = { x: 0, y: 0 };
-    // usePinch에는 배율 지정 API가 없어서 한 단계씩 1배로 되돌린다(상태는 한 번만 커밋된다).
+    panRef.current = { x: fit.x, y: fit.y };
+    // usePinch에는 배율 지정 API가 없어서 한 단계씩 '처음 보기' 배율로 되돌린다
+    // (상태는 한 번만 커밋된다).
     let guard = 0;
-    while (scaleRef.current > RESET_SCALE + 0.0001 && guard < 40) {
+    while (scaleRef.current > fit.scale + 0.0001 && guard < 40) {
       pinchZoomOut();
       guard += 1;
     }
-    while (scaleRef.current < RESET_SCALE - 0.0001 && guard < 40) {
+    while (scaleRef.current < fit.scale - 0.0001 && guard < 40) {
       pinchZoomIn();
       guard += 1;
     }
-    if (scaleRef.current !== RESET_SCALE) {
-      scaleRef.current = RESET_SCALE;
+    if (scaleRef.current !== fit.scale) {
+      scaleRef.current = fit.scale;
     }
-    appliedScaleRef.current = RESET_SCALE;
+    appliedScaleRef.current = fit.scale;
     scheduleTransform();
-  }, [pinchZoomIn, pinchZoomOut, scheduleTransform]);
+  }, [fit, pinchZoomIn, pinchZoomOut, scheduleTransform]);
 
   // 휠은 Ctrl 없이도 확대·이동에 쓴다. passive 리스너를 피하려고 직접 단다.
   useEffect(() => {
@@ -333,12 +368,12 @@ export function StarMapView({
 
   const linkLayer = useMemo(() => {
     const starById = new Map(layout.stars.map((star) => [star.conceptId, star]));
-    const unitById = new Map(layout.units.map((unit) => [unit.unitId, unit]));
     return layout.links.flatMap((link) => {
       const from = starById.get(link.from);
-      if (!from) return [];
-      const to = starById.get(link.to) ?? unitById.get(link.to);
-      if (!to) return [];
+      const to = starById.get(link.to);
+      // 켜진 단원의 개념끼리 잇는 선만 그린다. 꺼진 단원·단원 중심으로 가는 선은 뺀다.
+      if (!from || !to) return [];
+      if (!enabledUnits.has(from.unitId) || !enabledUnits.has(to.unitId)) return [];
       return [
         <line
           key={`${link.from}-${link.to}`}
@@ -351,7 +386,7 @@ export function StarMapView({
         />,
       ];
     });
-  }, [layout]);
+  }, [enabledUnits, layout]);
 
   const starLayer = useMemo(
     () => (

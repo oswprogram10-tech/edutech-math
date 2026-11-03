@@ -75,19 +75,26 @@ export const ConceptStar = memo(function ConceptStar({
       onClick={activate}
       onKeyDown={onKeyDown}
     >
-      <circle className={styles.hit} r={STAR_RADIUS + 6} />
-      <circle className={styles.focusRing} r={STAR_RADIUS + 6} />
-      <path
-        className={`${styles.shape} ${brightnessClass(brightness)}`}
-        d={STAR_PATH}
-        vectorEffect="non-scaling-stroke"
-      />
-      {sparkle ? (
-        <g className={styles.sparkle} aria-hidden="true">
-          <circle cx={STAR_RADIUS + 3} cy={-STAR_RADIUS - 1} r={1.8} />
-          <path d="M10,-14 L11,-11 L14,-10 L11,-9 L10,-6 L9,-9 L6,-10 L9,-11 Z" />
-        </g>
-      ) : null}
+      {enabled ? (
+        <>
+          <circle className={styles.hit} r={STAR_RADIUS + 6} />
+          <circle className={styles.focusRing} r={STAR_RADIUS + 6} />
+          <path
+            className={`${styles.shape} ${brightnessClass(brightness)}`}
+            d={STAR_PATH}
+            vectorEffect="non-scaling-stroke"
+          />
+          {sparkle ? (
+            <g className={styles.sparkle} aria-hidden="true">
+              <circle cx={STAR_RADIUS + 3} cy={-STAR_RADIUS - 1} r={1.8} />
+              <path d="M10,-14 L11,-11 L14,-10 L11,-9 L10,-6 L9,-9 L6,-10 L9,-11 Z" />
+            </g>
+          ) : null}
+        </>
+      ) : (
+        // 꺼진 단원의 개념은 별이 아니라 작은 흐린 점으로만 보여 준다(docs/06 S2).
+        <circle className={styles.dot} r={3.4} />
+      )}
     </g>
   );
 });
