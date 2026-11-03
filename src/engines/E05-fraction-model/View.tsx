@@ -114,6 +114,11 @@ function fillFor(cpa: 'C' | 'P' | 'A', selected: boolean): string {
   return cpa === 'C' ? '#f4ecdb' : '#ffffff';
 }
 
+/** 다른 층의 칸을 겹쳐 그릴 때 쓰는 빗금. 층마다 방향이 달라 색만으로 구분하지 않는다. */
+function overlayPatternFor(layer: number): string {
+  return `url(#e05-overlay-${layer % 3})`;
+}
+
 function ShapeDefs({ outline }: { outline?: readonly Point[] }) {
   return (
     <defs>
@@ -145,6 +150,28 @@ function ShapeDefs({ outline }: { outline?: readonly Point[] }) {
       <pattern id="e05-selected" width="14" height="14" patternUnits="userSpaceOnUse">
         <rect width="14" height="14" fill="#cfe0ff" />
         <circle cx="7" cy="7" r="2" fill="#2f6fde" />
+      </pattern>
+      {/* 다른 층의 칠한 칸을 같은 모눈 위에 겹쳐 그릴 때 쓰는 빗금. 방향으로 층을 구분한다. */}
+      <pattern
+        id="e05-overlay-0"
+        width="12"
+        height="12"
+        patternUnits="userSpaceOnUse"
+        patternTransform="rotate(45)"
+      >
+        <line x1="0" y1="0" x2="0" y2="12" stroke="#33415c" strokeWidth="2" />
+      </pattern>
+      <pattern
+        id="e05-overlay-1"
+        width="12"
+        height="12"
+        patternUnits="userSpaceOnUse"
+        patternTransform="rotate(-45)"
+      >
+        <line x1="0" y1="0" x2="0" y2="12" stroke="#a85d13" strokeWidth="2" />
+      </pattern>
+      <pattern id="e05-overlay-2" width="10" height="10" patternUnits="userSpaceOnUse">
+        <line x1="0" y1="5" x2="10" y2="5" stroke="#33415c" strokeWidth="2" />
       </pattern>
       {outline ? (
         <clipPath id="e05-clip">
@@ -1659,6 +1686,13 @@ function DecimalGridView({
     (index) => index >= layerStart && index < layerStart + total,
   ).length;
   const value = Rational.of(layerValue, total);
+  // 읽기 전용과 한 층짜리 모눈은 지금 모습 그대로 둔다.
+  const overlayLayers =
+    !readOnly && state.layers >= 2
+      ? Array.from({ length: state.layers }, (_, layer) => layer).filter(
+          (layer) => layer !== state.layer,
+        )
+      : [];
 
   return (
     <div className={styles.wrap} data-target-size={targetSize} data-cpa={cpa}>
@@ -1752,6 +1786,31 @@ function DecimalGridView({
               />
             );
           })}
+          {overlayLayers.flatMap((layer) =>
+            Array.from({ length: total }, (_, local) => {
+              const index = layer * total + local;
+              if (!state.shaded.includes(index)) return null;
+              const row = Math.floor(local / state.size);
+              const column = local % state.size;
+              return (
+                <rect
+                  key={`decimal-overlay-${layer}-${index}`}
+                  x={startX + column * cell}
+                  y={startY + row * cell}
+                  width={cell}
+                  height={cell}
+                  fill={overlayPatternFor(layer)}
+                  fillOpacity={state.overlayAlpha}
+                  stroke="none"
+                  pointerEvents="none"
+                  aria-hidden="true"
+                  data-testid="decimal-overlay"
+                  data-overlay-layer={layer}
+                  data-cell={index}
+                />
+              );
+            }),
+          )}
           <rect
             x={startX}
             y={startY}

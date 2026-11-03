@@ -307,6 +307,25 @@ test('A2 소수점 자석 세로셈 — 대표 오답 뒤 고쳐서 다섯 과�
   await expectPassed(page, true);
 });
 
+test('세 뷰포트에서 세로셈 판의 결과 줄 칸이 화면 안에 보인다', async ({ page }) => {
+  await openActivity(page, 'g4s2u3.A2', '소수점 자석 정렬 세로셈');
+  await page.evaluate(() => window.scrollTo(0, 0));
+
+  const panel = slot(page, 'main');
+  const resultCells = panel.locator('[data-row="result"][data-column]');
+  expect(await resultCells.count()).toBeGreaterThan(0);
+  for (const cell of await resultCells.all()) {
+    await expect(cell).toBeInViewport({ ratio: 1 });
+  }
+
+  // 판이 엔진 상자 안에서 따로 세로 스크롤되어 잘리지 않는다.
+  const gridScroll = panel.getByTestId('column-grid').locator('..');
+  const clipped = await gridScroll.evaluate(
+    (element) => element.scrollHeight - element.clientHeight,
+  );
+  expect(clipped).toBeLessThanOrEqual(1);
+});
+
 test('크롬북·전자칠판 첫 화면에 엔진 입력과 확인하기가 들어온다', async ({ page }, testInfo) => {
   test.skip(
     testInfo.project.name === 'ipad',
