@@ -39,82 +39,16 @@ async function passThenNext(page: Page) {
 
 /**
  * ③ 힌트 뒤에는 지난 개념 부스터가 열린다. 역추적 대상은 지식 그래프의 선수
- * 개념이라 콘텐츠 단원이 늘면 부스터 활동도 바뀔 수 있다. 이 테스트는 응답
- * 위젯 흐름을 보는 것이므로, 열린 부스터의 활동을 알아보고 대표 정답으로
- * 통과시키고 원래 과제로 돌아온다.
+ * 개념이라 콘텐츠 단원이 늘면 부스터 활동도 바뀐다. 이 테스트는 응답 위젯
+ * 흐름을 보는 것이므로 부스터 내용은 풀지 않고, 대화 상자가 열린 것만 확인한
+ * 뒤 새로 고침으로 닫는다(부스터에는 닫기 버튼이 없다). 새로 고침하면 이 활동이
+ * 첫 과제부터 다시 시작하므로 같은 답을 다시 넣어 통과시키면 된다.
  */
-async function finishBooster(page: Page) {
+async function dismissBooster(page: Page) {
   const dialog = page.getByTestId('booster-dialog');
   await expect(dialog).toBeVisible();
-
-  if (await dialog.getByText('가분수·대분수 컨베이어').first().isVisible()) {
-    await finishMixedBooster(page, dialog);
-  } else {
-    await finishUnitFractionBooster(page, dialog);
-  }
-
-  await expect(dialog).toHaveCount(0);
-}
-
-/** g3s1u6.A2(단위분수) 부스터: 비교 → 순서 → 수직선. */
-async function finishUnitFractionBooster(page: Page, dialog: Locator) {
-  // 1/3 > 1/5
-  await dialog.getByRole('button', { name: '크다' }).click();
-  await dialog.getByRole('button', { name: '확인하기' }).click();
-  await dialog.getByRole('button', { name: '다음 과제' }).click();
-
-  // 1/2, 1/4, 1/8을 큰 수부터
-  await dialog.getByRole('button', { name: '1/2 위로' }).click();
-  await dialog.getByRole('button', { name: '1/2 위로' }).click();
-  await dialog.getByRole('button', { name: '1/4 위로' }).click();
-  await dialog.getByRole('button', { name: '확인하기' }).click();
-  await dialog.getByRole('button', { name: '다음 과제' }).click();
-
-  // 수직선에 1/4
-  const canvas = dialog.getByTestId('number-line-canvas');
-  await canvas.scrollIntoViewIfNeeded();
-  const box = await canvas.boundingBox();
-  if (!box) throw new Error('부스터 수직선 크기를 알 수 없습니다.');
-  await page.mouse.click(box.x + 0.3 * box.width, box.y + 0.5 * box.height);
-  await dialog.getByRole('button', { name: '확인하기' }).click();
-}
-
-/** g3s2u4.A2(가분수·대분수) 부스터: 분류 → 가분수→대분수 → 대분수→가분수. */
-async function finishMixedBooster(page: Page, dialog: Locator) {
-  // 진분수·가분수·대분수 분류
-  await dialog.getByRole('button', { name: '3/5 옮길 카드로 고르기' }).click();
-  await dialog.getByRole('button', { name: '진분수 여기에 놓기' }).click();
-  await dialog.getByRole('button', { name: '7/5 옮길 카드로 고르기' }).click();
-  await dialog.getByRole('button', { name: '가분수 여기에 놓기' }).click();
-  await dialog.getByRole('button', { name: '1 2/5 옮길 카드로 고르기' }).click();
-  await dialog.getByRole('button', { name: '대분수 여기에 놓기' }).click();
-  await dialog.getByRole('button', { name: '5/5 옮길 카드로 고르기' }).click();
-  await dialog.getByRole('button', { name: '가분수 여기에 놓기' }).click();
-  await dialog.getByRole('button', { name: '확인하기' }).click();
-  await dialog.getByRole('button', { name: '다음 과제' }).click();
-
-  // 11/4을 원판 두 번 융합해 2 3/4로
-  await dialog.getByRole('button', { name: '1로 융합' }).click();
-  await dialog.getByRole('button', { name: '1로 융합' }).click();
-  const mixed = dialog.locator('[data-response-field="ans"]');
-  await mixed.locator('[data-part="whole"]').click();
-  await page.keyboard.press('2');
-  await page.keyboard.press('Space');
-  await page.keyboard.press('3');
-  await page.keyboard.press('/');
-  await page.keyboard.press('4');
-  await dialog.getByRole('button', { name: '확인하기' }).click();
-  await dialog.getByRole('button', { name: '다음 과제' }).click();
-
-  // 2 1/3을 자연수 두 번 풀어 7/3으로
-  await dialog.getByRole('button', { name: '자연수 1 풀기' }).click();
-  await dialog.getByRole('button', { name: '자연수 1 풀기' }).click();
-  const improper = dialog.locator('[data-response-field="ans"]');
-  await improper.getByRole('button', { name: /빈칸$/ }).first().click();
-  await page.keyboard.press('7');
-  await page.keyboard.press('/');
-  await page.keyboard.press('3');
-  await dialog.getByRole('button', { name: '확인하기' }).click();
+  await page.reload();
+  await expect(page.getByTestId('runner-slot-response')).toBeVisible();
 }
 
 test('응답 과제 다섯 가지를 틀렸다가 고쳐서 통과한다', async ({ page }) => {
@@ -159,7 +93,7 @@ test('응답 과제 다섯 가지를 틀렸다가 고쳐서 통과한다', async
       return helpCards + dialogs;
     })
     .toBeGreaterThan(0);
-  await finishBooster(page);
+  await dismissBooster(page);
 
   // 지우고 5/6으로 고쳐 쓴다.
   await response.getByRole('button', { name: '모두 지우기' }).click();

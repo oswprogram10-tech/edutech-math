@@ -1,0 +1,936 @@
+{
+  "unit": "g4s2u1",
+  "title": "분수의 덧셈과 뺄셈",
+  "activities": [
+    {
+      "id": "g4s2u1.A1",
+      "title": "조각 세기 덧셈·뺄셈",
+      "tasks": [
+        {
+          "id": "g4s2u1.A1.T1",
+          "prompt": "2/7 + 3/7을 조각 막대에서 합쳐 보고, 합한 양을 분수로 써 보세요.",
+          "engine": "E05",
+          "mode": "add-sub",
+          "cpa": "C",
+          "config": {
+            "mode": "add-sub",
+            "op": "add",
+            "a": "2/7",
+            "b": "3/7",
+            "shape": "bar"
+          },
+          "views": [
+            {
+              "slot": "left",
+              "engine": "E05",
+              "mode": "add-sub",
+              "cpa": "C",
+              "config": {
+                "mode": "add-sub",
+                "op": "add",
+                "a": "2/7",
+                "b": "3/7",
+                "shape": "bar"
+              }
+            },
+            {
+              "slot": "right",
+              "engine": "E03",
+              "mode": "fraction",
+              "cpa": "C",
+              "config": {
+                "mode": "fraction",
+                "min": "0",
+                "max": "2",
+                "subdivisions": 7,
+                "showJumps": true,
+                "labels": "partial"
+              }
+            }
+          ],
+          "links": [{ "from": "left", "event": "value-changed", "to": "right" }],
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "combined", "value": true },
+              { "kind": "equals", "path": "response.ans.value", "value": "5/7" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-FRAC-ADD-DENOM" },
+              "level": 1,
+              "say": "1/7 조각을 더했는데 조각의 크기가 달라졌나요? 수직선에서 눈금 한 칸이 몇 개 늘었는지 세어 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "add-sub" },
+              "level": 1,
+              "say": "1/7 조각이 몇 개 모였나요? 모으는 동안 조각 하나의 크기는 그대로인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "add-sub" },
+              "level": 2,
+              "say": "수직선에서 0에서 2/7만큼 간 뒤 3/7만큼 더 가면 어느 눈금에 닿나요? 눈금 한 칸은 얼마인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "add-sub" },
+              "level": 3,
+              "backtrack": "g4s2u1.unit-fraction-count"
+            }
+          ],
+          "concepts": ["g4s2u1.unit-fraction-count", "g4s2u1.add-same-denom"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-FRAC-ADD-DENOM",
+              "args": { "a": "2/7", "b": "3/7" },
+              "path": "response.ans.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "ans", "label": "합한 양", "forms": ["fraction"] }
+            ]
+          }
+        },
+        {
+          "id": "g4s2u1.A1.T2",
+          "prompt": "2/5 + 4/5를 조각 막대에서 합쳐 보세요. 조각이 한 막대를 넘으면 어떻게 나타내야 할까요?",
+          "engine": "E05",
+          "mode": "add-sub",
+          "cpa": "C",
+          "config": {
+            "mode": "add-sub",
+            "op": "add",
+            "a": "2/5",
+            "b": "4/5",
+            "shape": "bar",
+            "fuseWhole": true
+          },
+          "views": [
+            {
+              "slot": "left",
+              "engine": "E05",
+              "mode": "add-sub",
+              "cpa": "C",
+              "config": {
+                "mode": "add-sub",
+                "op": "add",
+                "a": "2/5",
+                "b": "4/5",
+                "shape": "bar",
+                "fuseWhole": true
+              }
+            },
+            {
+              "slot": "right",
+              "engine": "E03",
+              "mode": "fraction",
+              "cpa": "C",
+              "config": {
+                "mode": "fraction",
+                "min": "0",
+                "max": "2",
+                "subdivisions": 5,
+                "showJumps": true,
+                "labels": "partial"
+              }
+            }
+          ],
+          "links": [{ "from": "left", "event": "value-changed", "to": "right" }],
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "combined", "value": true },
+              { "kind": "equals", "path": "response.ans.value", "value": "6/5" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-FRAC-ADD-DENOM-HALF" },
+              "level": 1,
+              "say": "1/5 조각 2개와 4개를 합치면 1/5 조각이 몇 개인가요? 조각의 크기가 1/10로 바뀌었나요?"
+            },
+            {
+              "when": { "misconception": "MC-FRAC-MIXED-CONVERT" },
+              "level": 1,
+              "say": "5/5는 얼마였나요? 꽉 찬 막대와 남은 조각을 따로 세어 대분수로 나타내 볼까요?"
+            },
+            {
+              "when": { "misconception": "MC-FRAC-MIXED-CONVERT" },
+              "level": 2,
+              "say": "꽉 찬 막대 1개와 남은 1/5 조각을 합치면 1과 얼마인가요? 분수 부분이 5/5만큼 차면 자연수 하나로 올려 볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "add-sub" },
+              "level": 1,
+              "say": "조각을 모두 모으면 꽉 찬 막대가 몇 개 나오고, 남는 조각은 몇 개인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "add-sub" },
+              "level": 2,
+              "say": "수직선에서 0에서 2/5만큼 간 뒤 4/5만큼 더 가면 1을 지나 어느 눈금에 닿나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "add-sub" },
+              "level": 3,
+              "backtrack": "g4s2u1.unit-fraction-count"
+            }
+          ],
+          "concepts": ["g4s2u1.unit-fraction-count", "g4s2u1.add-same-denom"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-FRAC-ADD-DENOM-HALF",
+              "args": { "a": "2/5", "b": "4/5" },
+              "path": "response.ans.value"
+            },
+            {
+              "code": "MC-FRAC-MIXED-CONVERT",
+              "args": { "improper": "6/5" },
+              "path": "response.ans.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "ans", "label": "합한 양", "forms": ["fraction", "mixed"] }
+            ]
+          }
+        },
+        {
+          "id": "g4s2u1.A1.T3",
+          "prompt": "5/6 − 2/6을 빼기 접시로 덜어 내고, 남은 양을 분수로 써 보세요.",
+          "engine": "E05",
+          "mode": "add-sub",
+          "cpa": "P",
+          "config": {
+            "mode": "add-sub",
+            "op": "sub",
+            "a": "5/6",
+            "b": "2/6",
+            "shape": "bar"
+          },
+          "views": [
+            {
+              "slot": "left",
+              "engine": "E05",
+              "mode": "add-sub",
+              "cpa": "P",
+              "config": {
+                "mode": "add-sub",
+                "op": "sub",
+                "a": "5/6",
+                "b": "2/6",
+                "shape": "bar"
+              }
+            },
+            {
+              "slot": "right",
+              "engine": "E03",
+              "mode": "fraction",
+              "cpa": "P",
+              "config": {
+                "mode": "fraction",
+                "min": "0",
+                "max": "2",
+                "subdivisions": 6,
+                "showJumps": true,
+                "labels": "partial"
+              }
+            }
+          ],
+          "links": [{ "from": "left", "event": "value-changed", "to": "right" }],
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "combined", "value": true },
+              { "kind": "equals", "path": "response.ans.value", "value": "1/2" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "add-sub" },
+              "level": 1,
+              "say": "1/6 조각 5개에서 2개를 덜어 내면 몇 개 남나요? 조각 하나의 크기는 바뀌나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "add-sub" },
+              "level": 2,
+              "say": "수직선에서 5/6에서 왼쪽으로 2/6만큼 가면 어느 눈금인가요? 두 점 사이가 몇 칸인지 세어 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "add-sub" },
+              "level": 3,
+              "backtrack": "g4s2u1.unit-fraction-count"
+            }
+          ],
+          "concepts": ["g4s2u1.unit-fraction-count", "g4s2u1.sub-same-denom"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "ans", "label": "남은 양", "forms": ["fraction"] }
+            ]
+          }
+        },
+        {
+          "id": "g4s2u1.A1.T4",
+          "prompt": "1에서 3/8을 덜어 내려면 자연수 1을 어떻게 나타내야 할까요? 남은 양을 분수로 써 보세요.",
+          "engine": "E05",
+          "mode": "add-sub",
+          "cpa": "P",
+          "config": {
+            "mode": "add-sub",
+            "op": "sub",
+            "a": "1",
+            "b": "3/8",
+            "shape": "bar",
+            "allowBreakWhole": true
+          },
+          "views": [
+            {
+              "slot": "left",
+              "engine": "E05",
+              "mode": "add-sub",
+              "cpa": "P",
+              "config": {
+                "mode": "add-sub",
+                "op": "sub",
+                "a": "1",
+                "b": "3/8",
+                "shape": "bar",
+                "allowBreakWhole": true
+              }
+            },
+            {
+              "slot": "right",
+              "engine": "E03",
+              "mode": "fraction",
+              "cpa": "P",
+              "config": {
+                "mode": "fraction",
+                "min": "0",
+                "max": "1",
+                "subdivisions": 8,
+                "showJumps": true,
+                "labels": "partial"
+              }
+            }
+          ],
+          "links": [{ "from": "left", "event": "value-changed", "to": "right" }],
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "eventAtLeast",
+                "args": { "name": "broke-whole", "count": 1 }
+              },
+              { "kind": "equals", "path": "response.ans.value", "value": "5/8" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-FRAC-WHOLE-MINUS" },
+              "level": 1,
+              "say": "1을 1/8 조각으로 나타내면 몇 조각인가요? 그중 3조각을 덜어 내면 몇 조각 남나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "add-sub" },
+              "level": 1,
+              "say": "막대 하나를 똑같이 8조각으로 나누면 1은 1/8 조각 몇 개와 같나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "add-sub" },
+              "level": 2,
+              "say": "수직선에서 1에서 왼쪽으로 3/8만큼 가면 어느 눈금인가요? 1은 8/8과 같은 자리인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "add-sub" },
+              "level": 3,
+              "backtrack": "g4s2u1.sub-same-denom"
+            }
+          ],
+          "concepts": ["g4s2u1.sub-same-denom", "g4s2u1.unit-fraction-count"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-FRAC-WHOLE-MINUS",
+              "args": { "whole": "1", "subtrahend": "3/8" },
+              "path": "response.ans.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "ans", "label": "남은 양", "forms": ["fraction"] }
+            ]
+          }
+        },
+        {
+          "id": "g4s2u1.A1.T5",
+          "prompt": "수직선에서 4/9에서 7/9만큼 더 가 볼까요? 도착한 자리를 분수로 써 보세요.",
+          "engine": "E03",
+          "mode": "fraction",
+          "cpa": "A",
+          "config": {
+            "mode": "fraction",
+            "min": "0",
+            "max": "2",
+            "subdivisions": 9,
+            "showJumps": true,
+            "labels": "partial"
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.ans.value",
+            "value": "11/9"
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction" },
+              "level": 1,
+              "say": "0에서 4/9만큼 간 자리에서 7/9만큼 더 가면 1을 지나 몇 칸 더 가나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction" },
+              "level": 2,
+              "say": "9/9가 모이면 1이 됩니다. 두 수의 조각을 모두 세어 9개씩 묶으면 1이 몇 개이고 몇 조각이 남나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction" },
+              "level": 3,
+              "backtrack": "g4s2u1.add-same-denom"
+            }
+          ],
+          "concepts": ["g4s2u1.add-same-denom", "g4s2u1.unit-fraction-count"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "ans", "label": "도착한 자리", "forms": ["fraction", "mixed"] }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "g4s2u1.A2",
+      "title": "대분수 막대 쪼개기",
+      "tasks": [
+        {
+          "id": "g4s2u1.A2.T1",
+          "prompt": "2 3/8 + 1 4/8을 계산해 대분수로 써 보세요.",
+          "engine": "E05",
+          "mode": "add-sub",
+          "cpa": "C",
+          "config": {
+            "mode": "add-sub",
+            "op": "add",
+            "a": "2 3/8",
+            "b": "1 4/8",
+            "shape": "bar",
+            "fuseWhole": true,
+            "strategyChoice": ["separate", "improper"]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "combined", "value": true },
+              { "kind": "equals", "path": "response.ans.value", "value": "31/8" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "add-sub" },
+              "level": 1,
+              "say": "자연수 부분끼리, 분수 부분끼리 각각 얼마인지 세어 볼까요? 분수 부분의 분모는 그대로인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "add-sub" },
+              "level": 2,
+              "say": "막대 그림에서 꽉 찬 막대가 모두 몇 개인지, 남는 조각이 몇 개인지 세어 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "add-sub" },
+              "level": 3,
+              "backtrack": "g4s2u1.mixed-add-sub"
+            }
+          ],
+          "concepts": ["g4s2u1.mixed-add-sub"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "ans", "label": "계산 결과", "forms": ["mixed"] }
+            ]
+          }
+        },
+        {
+          "id": "g4s2u1.A2.T2",
+          "prompt": "1 4/5 + 2 3/5을 계산해 대분수로 써 보세요. 분수 부분을 더하면 1을 넘습니다.",
+          "engine": "E05",
+          "mode": "add-sub",
+          "cpa": "C",
+          "config": {
+            "mode": "add-sub",
+            "op": "add",
+            "a": "1 4/5",
+            "b": "2 3/5",
+            "shape": "bar",
+            "fuseWhole": true,
+            "strategyChoice": ["separate", "improper"]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "eventAtLeast",
+                "args": { "name": "fused", "count": 1 }
+              },
+              { "kind": "equals", "path": "combined", "value": true },
+              { "kind": "equals", "path": "response.ans.value", "value": "22/5" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-FRAC-SEPARATE-PARTS" },
+              "level": 1,
+              "say": "분수 부분 7/5에 꽉 찬 막대가 숨어 있지 않나요? 7/5를 대분수로 나타내면 꽉 찬 막대가 몇 개인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "add-sub" },
+              "level": 1,
+              "say": "분수 부분 4/5와 3/5을 합치면 1을 넘나요? 넘으면 자연수 쪽으로 무엇을 옮겨야 할까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "add-sub" },
+              "level": 2,
+              "say": "5/5 조각이 모이면 자연수 1이 됩니다. 분수 부분에서 5/5를 덜어 자연수 쪽에 더하면 남는 조각은 몇 개인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "add-sub" },
+              "level": 3,
+              "backtrack": "g4s2u1.mixed-add-sub"
+            }
+          ],
+          "concepts": ["g4s2u1.mixed-add-sub"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-FRAC-SEPARATE-PARTS",
+              "args": {},
+              "path": "response.ans.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "ans", "label": "계산 결과", "forms": ["mixed"] }
+            ]
+          }
+        },
+        {
+          "id": "g4s2u1.A2.T3",
+          "prompt": "4 5/7 − 2 2/7을 계산해 대분수로 써 보세요.",
+          "engine": "E05",
+          "mode": "add-sub",
+          "cpa": "P",
+          "config": {
+            "mode": "add-sub",
+            "op": "sub",
+            "a": "4 5/7",
+            "b": "2 2/7",
+            "shape": "bar",
+            "strategyChoice": ["separate", "improper"]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "combined", "value": true },
+              { "kind": "equals", "path": "response.ans.value", "value": "17/7" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "add-sub" },
+              "level": 1,
+              "say": "자연수 부분끼리, 분수 부분끼리 각각 얼마씩 덜어 내나요? 분수 부분의 분모는 그대로인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "add-sub" },
+              "level": 2,
+              "say": "막대 그림에서 꽉 찬 막대가 몇 개 남는지, 조각이 몇 개 남는지 세어 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "add-sub" },
+              "level": 3,
+              "backtrack": "g4s2u1.mixed-add-sub"
+            }
+          ],
+          "concepts": ["g4s2u1.mixed-add-sub"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "ans", "label": "계산 결과", "forms": ["mixed"] }
+            ]
+          }
+        },
+        {
+          "id": "g4s2u1.A2.T4",
+          "prompt": "3 1/4 − 1 3/4을 계산해 대분수로 써 보세요. 분수 부분에서 3/4을 덜 수 없을 때는 어떻게 해야 할까요?",
+          "engine": "E05",
+          "mode": "add-sub",
+          "cpa": "P",
+          "config": {
+            "mode": "add-sub",
+            "op": "sub",
+            "a": "3 1/4",
+            "b": "1 3/4",
+            "shape": "bar",
+            "allowBreakWhole": true,
+            "fuseWhole": true,
+            "strategyChoice": ["separate", "improper"]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "eventAtLeast",
+                "args": { "name": "broke-whole", "count": 1 }
+              },
+              { "kind": "equals", "path": "response.ans.value", "value": "3/2" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-SUB-SMALLER-FROM-LARGER" },
+              "level": 1,
+              "say": "1/4에서 3/4을 덜어 낼 수 있나요? 덜어 낼 수 없다면 꽉 찬 막대 하나를 어떻게 바꿔야 할까요?"
+            },
+            {
+              "when": { "misconception": "MC-FRAC-BORROW-AS-TEN" },
+              "level": 1,
+              "say": "막대 하나를 1/4 조각으로 쪼개면 몇 조각이 나오나요? 막대에 그려진 조각을 하나씩 세어 보세요."
+            },
+            {
+              "when": { "misconception": "MC-FRAC-BORROW-AS-TEN" },
+              "level": 2,
+              "say": "막대 하나에 1/4 조각이 몇 개 그려져 있나요? 10개인가요, 4개인가요? 그림에서 하나씩 세어 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "add-sub" },
+              "level": 1,
+              "say": "3 1/4에서 꽉 찬 막대 하나를 풀면 자연수 부분과 조각 수가 각각 어떻게 바뀌나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "add-sub" },
+              "level": 2,
+              "say": "3 1/4에서 꽉 찬 막대 하나를 1/4 조각으로 풀면 몇과 몇/4가 되나요? 거기서 1 3/4을 덜면 자연수와 조각이 각각 얼마 남나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "add-sub" },
+              "level": 3,
+              "backtrack": "g4s2u1.mixed-borrow"
+            }
+          ],
+          "concepts": ["g4s2u1.mixed-borrow", "g4s2u1.mixed-add-sub"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-SUB-SMALLER-FROM-LARGER",
+              "args": { "minuend": "3 1/4", "subtrahend": "1 3/4" },
+              "path": "response.ans.value"
+            },
+            {
+              "code": "MC-FRAC-BORROW-AS-TEN",
+              "args": { "minuend": "3 1/4", "subtrahend": "1 3/4" },
+              "path": "response.ans.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "ans", "label": "계산 결과", "forms": ["mixed"] }
+            ]
+          }
+        },
+        {
+          "id": "g4s2u1.A2.T5",
+          "prompt": "5 − 2 2/3을 계산해 대분수로 써 보세요. 자연수 5에서 분수를 덜어 내려면 어떻게 해야 할까요?",
+          "engine": "E05",
+          "mode": "add-sub",
+          "cpa": "A",
+          "config": {
+            "mode": "add-sub",
+            "op": "sub",
+            "a": "5",
+            "b": "2 2/3",
+            "shape": "bar",
+            "allowBreakWhole": true,
+            "strategyChoice": ["separate", "improper"]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "eventAtLeast",
+                "args": { "name": "broke-whole", "count": 1 }
+              },
+              { "kind": "equals", "path": "response.ans.value", "value": "7/3" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-FRAC-WHOLE-MINUS" },
+              "level": 1,
+              "say": "5를 1/3 조각으로 모두 나타내면 몇 조각인가요? 그중 2 2/3만큼을 덜어 내면 몇 조각 남나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "add-sub" },
+              "level": 1,
+              "say": "자연수 5에서 2 2/3을 덜어 내려면 5를 1/3 조각으로 바꾸어야 합니다. 몇 조각인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "add-sub" },
+              "level": 2,
+              "say": "5를 꽉 찬 막대 4개와 1/3 조각 3개로 생각해 볼까요? 거기서 2 2/3을 덜면 자연수와 조각이 각각 얼마 남나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "add-sub" },
+              "level": 3,
+              "backtrack": "g4s2u1.sub-same-denom"
+            }
+          ],
+          "concepts": ["g4s2u1.mixed-borrow", "g4s2u1.sub-same-denom"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-FRAC-WHOLE-MINUS",
+              "args": { "whole": "5", "subtrahend": "2 2/3" },
+              "path": "response.ans.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "ans", "label": "계산 결과", "forms": ["mixed"] }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "g4s2u1.A3",
+      "title": "줄 단위 풀이 진단",
+      "tasks": [
+        {
+          "id": "g4s2u1.A3.T1",
+          "prompt": "2/7 + 3/7을 두 줄 이상으로 풀어 보세요. 첫 줄은 주어져 있습니다.",
+          "engine": "E08",
+          "mode": "lines",
+          "cpa": "P",
+          "config": {
+            "mode": "lines",
+            "start": "2/7 + 3/7",
+            "keypad": ["digits", "fraction", "add", "sub", "add-line", "remove-line"],
+            "checkEachLine": true,
+            "stepLabels": []
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "allEquivalent", "value": true },
+              { "kind": "predicate", "name": "finalValueIs", "args": { "value": "5/7" } },
+              { "kind": "predicate", "name": "lineCountAtLeast", "args": { "n": 2 } }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": { "code": "MC-FRAC-ADD-DENOM" }
+              },
+              "level": 1,
+              "say": "1/7 조각을 더했는데 조각의 크기가 바뀌었나요? 첫 줄과 둘째 줄의 값이 같은지 견주어 볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "lines" },
+              "level": 1,
+              "say": "2/7 조각 2개와 3개를 합치면 1/7 조각이 몇 개인가요? 분모는 그대로인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "lines" },
+              "level": 2,
+              "say": "둘째 줄에 쓴 수가 첫 줄보다 작아지지 않았나요? 첫 줄과 둘째 줄이 같은 양을 나타내는지 확인해 보세요.",
+              "show": { "engine": "E08", "overlay": "bar-check" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "lines" },
+              "level": 3,
+              "backtrack": "g4s2u1.unit-fraction-count"
+            }
+          ],
+          "concepts": ["g4s2u1.add-same-denom", "g4s2u1.unit-fraction-count"],
+          "submit": "button"
+        },
+        {
+          "id": "g4s2u1.A3.T2",
+          "prompt": "친구가 2/5 + 1/5을 3/10이라고 썼습니다. 틀린 줄을 찾아 고쳐 보세요.",
+          "engine": "E08",
+          "mode": "debug",
+          "cpa": "P",
+          "config": {
+            "mode": "debug",
+            "keypad": ["digits", "fraction"],
+            "checkEachLine": true,
+            "debugSamples": [{ "lines": ["2/5 + 1/5", "3/10"] }]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "selectedLineIs", "args": { "line": 1 } },
+              { "kind": "predicate", "name": "finalValueIs", "args": { "value": "3/5" } }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "debug" },
+              "level": 1,
+              "say": "친구가 쓴 둘째 줄의 값이 첫 줄보다 작아졌나요? 더했는데 결과가 작아질 수 있나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "debug" },
+              "level": 2,
+              "say": "2/5와 1/5은 조각 크기가 같은가요? 조각이 몇 개 모였는지 수직선에서 세어 보세요.",
+              "show": { "engine": "E08", "overlay": "bar-check" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "debug" },
+              "level": 3,
+              "backtrack": "g4s2u1.unit-fraction-count"
+            }
+          ],
+          "concepts": ["g4s2u1.add-same-denom", "g4s2u1.unit-fraction-count"],
+          "submit": "button"
+        },
+        {
+          "id": "g4s2u1.A3.T3",
+          "prompt": "친구가 3 1/4 − 1 3/4을 2 2/4라고 썼습니다. 틀린 줄을 찾아 고쳐 보세요.",
+          "engine": "E08",
+          "mode": "debug",
+          "cpa": "P",
+          "config": {
+            "mode": "debug",
+            "keypad": ["digits", "fraction", "mixed"],
+            "checkEachLine": true,
+            "debugSamples": [{ "lines": ["3 1/4 - 1 3/4", "2 2/4"] }]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "selectedLineIs", "args": { "line": 1 } },
+              { "kind": "predicate", "name": "finalValueIs", "args": { "value": "3/2" } }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "debug" },
+              "level": 1,
+              "say": "1/4에서 3/4을 덜어 낼 수 있나요? 친구는 어느 쪽에서 어느 쪽을 뺐나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "debug" },
+              "level": 2,
+              "say": "3 1/4에서 꽉 찬 막대 하나를 1/4 조각으로 풀면 몇과 몇/4가 되나요? 거기서 1 3/4을 덜면 얼마가 남나요?",
+              "show": { "engine": "E08", "overlay": "bar-check" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "debug" },
+              "level": 3,
+              "backtrack": "g4s2u1.mixed-borrow"
+            }
+          ],
+          "concepts": ["g4s2u1.mixed-borrow", "g4s2u1.mixed-add-sub"],
+          "submit": "button"
+        },
+        {
+          "id": "g4s2u1.A3.T4",
+          "prompt": "2 1/6 − 5/6을 자연수 1을 푸는 단계부터 두 줄 이상으로 계산하고, 마지막 줄을 한 수로 정리하세요.",
+          "engine": "E08",
+          "mode": "fraction-steps",
+          "cpa": "A",
+          "config": {
+            "mode": "fraction-steps",
+            "start": "2 1/6 - 5/6",
+            "keypad": ["digits", "fraction", "mixed", "add", "sub", "add-line", "remove-line"],
+            "checkEachLine": true,
+            "stepLabels": ["자연수 1 풀기", "계산", "정리"]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "allEquivalent", "value": true },
+              { "kind": "predicate", "name": "finalValueIs", "args": { "value": "4/3" } }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction-steps" },
+              "level": 1,
+              "say": "2 1/6에서 5/6을 덜어 낼 수 있나요? 꽉 찬 막대 하나를 1/6 조각으로 풀면 몇 조각이 되나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction-steps" },
+              "level": 2,
+              "say": "자연수 1을 1/6 조각으로 풀면 조각이 모두 몇 개가 되나요? 거기서 5/6만큼 덜면 몇 조각이 남나요?",
+              "show": { "engine": "E08", "overlay": "bar-check" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction-steps" },
+              "level": 3,
+              "backtrack": "g4s2u1.mixed-borrow"
+            }
+          ],
+          "concepts": ["g4s2u1.mixed-borrow"],
+          "submit": "button"
+        },
+        {
+          "id": "g4s2u1.A3.T5",
+          "prompt": "1 3/9와 값이 같은 식을 서로 다르게 두 가지 이상 써 보세요. 분수 하나로 나타내거나 조각을 더한 식으로 나타낼 수 있습니다.",
+          "engine": "E08",
+          "mode": "lines",
+          "cpa": "A",
+          "config": {
+            "mode": "lines",
+            "start": "1 3/9",
+            "keypad": ["digits", "fraction", "mixed", "add", "sub", "add-line", "remove-line"],
+            "checkEachLine": true,
+            "stepLabels": []
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "differentExpressions",
+            "args": { "value": "12/9", "count": 2 }
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "lines" },
+              "level": 1,
+              "say": "1 3/9을 1/9 조각만으로 나타내면 몇 조각인가요? 그 수를 다른 모양의 식으로도 써 볼 수 있나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "lines" },
+              "level": 2,
+              "say": "이미 첫 줄이 한 가지 식입니다. 값이 첫 줄과 같은 다른 식을 하나 더 만들어 보세요. 9/9가 모이면 무엇이 되나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "lines" },
+              "level": 3,
+              "backtrack": "g3s2u4.improper-mixed"
+            }
+          ],
+          "concepts": ["g4s2u1.unit-fraction-count", "g4s2u1.mixed-add-sub"],
+          "submit": "button"
+        }
+      ]
+    }
+  ]
+}
