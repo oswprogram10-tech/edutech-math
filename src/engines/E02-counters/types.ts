@@ -28,6 +28,9 @@ export type SummonInput = 'multitouch' | 'tap' | 'buttons';
 
 export type ShowNumeral = 'never' | 'always';
 
+/** part-whole 본 화면의 가르기 나무 표시. 기본은 구조만(`structure`). */
+export type PartWholeBond = 'none' | 'structure' | 'numbers';
+
 export interface CounterScene {
   readonly icon: CounterIcon;
   readonly kind: 'join' | 'remove' | 'compare';
@@ -54,7 +57,8 @@ export interface CountersConfig {
   readonly fillColor?: CounterColor;
   readonly trayCount?: number;
   readonly swipeFill?: boolean;
-  readonly showBond?: 'never' | 'after-move';
+  /** ten-frame: `never` / `after-move`. part-whole: `none` / `structure` / `numbers`. */
+  readonly showBond?: 'never' | 'after-move' | 'none' | 'structure' | 'numbers';
   readonly removable?: boolean;
 
   // ── part-whole ────────────────────────────────────────────

@@ -5,7 +5,7 @@
  * - 동시 터치는 `useMultiTouchCount`로 세고, 버튼·키보드 대체 입력을 항상 둔다.
  * - 기본 설정에서는 개수·정답 숫자를 화면에 쓰지 않는다.
  */
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent } from 'react';
 import {
   distance,
@@ -14,11 +14,13 @@ import {
   snapToPoints,
   useDrag,
   useMultiTouchCount,
+  usePinch,
   useRenderedSize,
 } from '../../core/engine-sdk';
 import type { EngineViewProps, Point } from '../../core/engine-sdk';
 import { CounterIconShape } from './icons';
 import {
+  bondTreeLayout,
   frameBounds,
   frameCellPoint,
   inRect,
@@ -32,14 +34,13 @@ import {
   TRAY_TOP,
 } from './layout';
 import { frameFillOf, platesOf, totalOf } from './reduce';
+import { pinchMergeTarget } from './gestures';
 import { countersStrings as S } from './strings.ko';
 import {
   FRAME_CELL,
   FRAME_COLS,
   FRAME_GAP,
-  FRAME_HEIGHT,
   FRAME_ROWS,
-  FRAME_WIDTH,
   LOGICAL_HEIGHT,
   LOGICAL_WIDTH,
   TRASH_RECT,
@@ -50,6 +51,7 @@ import type {
   CountersState,
   CounterIcon,
   FrameCounter,
+  PartWholeBond,
 } from './types';
 import styles from './View.module.css';
 
@@ -119,6 +121,30 @@ export function CountersView({
   const allowTap = input.includes('tap');
   const allowButtons = input.includes('buttons');
   const icon: CounterIcon = config.icon ?? 'dot';
+  const gesture = config.gesture ?? ['pinch', 'drag', 'divider-button'];
+  const allowPinch = state.mode === 'part-whole' && gesture.includes('pinch');
+
+  // 핀치 합치기: 두 손가락이 각각 다른 접시 위에서 시작했을 때만 쌍을 잡는다.
+  const pinchPair = useRef<{ readonly a: number; readonly b: number; fired: boolean } | null>(null);
+  const pinchPointers = useRef(new Map<number, number | null>());
+  const onPinchScale = useCallback(
+    (next: number) => {
+      const pair = pinchPair.current;
+      if (!pair || pair.fired) return;
+      const target = pinchMergeTarget(pair.a, pair.b, next);
+      if (!target) return;
+      pinchPair.current = { ...pair, fired: true };
+      dispatch({ type: 'merge', from: target.from, to: target.to });
+    },
+    [dispatch],
+  );
+  const pinch = usePinch({
+    initialScale: 1,
+    min: 0.3,
+    max: 1,
+    step: 0.25,
+    onChange: onPinchScale,
+  });
 
   const toPoint = (event: { readonly clientX: number; readonly clientY: number }): Point =>
     pointerToLogical(event, svgRef.current, LOGICAL);
@@ -185,6 +211,17 @@ export function CountersView({
     return null;
   };
 
+  /** 핀치: 그 점이 어느 접시 위인지(셈돌 위면 그 셈돌의 접시). */
+  const plateAtPoint = (point: Point): number | null => {
+    if (state.mode !== 'part-whole') return null;
+    const target = targetAt(point);
+    if (target?.kind === 'plate') return target.plate;
+    if (target?.kind === 'plate-counter') {
+      return state.counters.find((item) => item.id === target.id)?.plate ?? null;
+    }
+    return null;
+  };
+
   const firstEmptyCell = (frame: number): number | null => {
     if (state.mode !== 'ten-frame') return null;
     const used = new Set(
@@ -220,6 +257,11 @@ export function CountersView({
       dragTarget.current = targetAt(info.start);
     },
     onEnd: (info) => {
+      // 두 손가락 제스처(핀치) 중에는 끌기 결과를 적용하지 않는다.
+      if (allowPinch && pinchPointers.current.size >= 2) {
+        dragTarget.current = null;
+        return;
+      }
       const target = dragTarget.current;
       dragTarget.current = null;
       if (!target) return;
@@ -300,6 +342,22 @@ export function CountersView({
   const handlePointerDown = (event: ReactPointerEvent<SVGSVGElement>) => {
     if (readOnly) return;
     const point = toPoint(event);
+    if (allowPinch) {
+      pinch.handlers.onPointerDown(event);
+      pinchPointers.current.set(event.pointerId, plateAtPoint(point));
+      if (pinchPointers.current.size === 2) {
+        const [first, second] = [...pinchPointers.current.values()];
+        if (
+          first !== undefined &&
+          second !== undefined &&
+          first !== null &&
+          second !== null &&
+          first !== second
+        ) {
+          pinchPair.current = { a: first, b: second, fired: false };
+        }
+      }
+    }
     if (state.mode === 'summon') {
       pointers.current.add(event.pointerId);
       maxPointers.current = Math.max(maxPointers.current, pointers.current.size);
@@ -311,11 +369,21 @@ export function CountersView({
   };
 
   const handlePointerMove = (event: ReactPointerEvent<SVGSVGElement>) => {
+    if (allowPinch) pinch.handlers.onPointerMove(event);
     drag.handlers.onPointerMove(event);
   };
 
   const handlePointerUp = (event: ReactPointerEvent<SVGSVGElement>) => {
     drag.handlers.onPointerUp(event);
+    if (allowPinch) {
+      pinch.handlers.onPointerUp(event);
+      pinchPointers.current.delete(event.pointerId);
+      if (pinchPointers.current.size < 2) pinchPair.current = null;
+      if (pinchPointers.current.size === 0) {
+        // 다음 핀치를 다시 줄일 수 있도록 배율을 1로 되돌린다.
+        for (let index = 0; index < 4; index += 1) pinch.zoomIn();
+      }
+    }
     if (state.mode === 'summon') {
       mt.handlers.onPointerUp(event);
       pointers.current.delete(event.pointerId);
@@ -333,6 +401,14 @@ export function CountersView({
 
   const handlePointerCancel = (event: ReactPointerEvent<SVGSVGElement>) => {
     drag.handlers.onPointerCancel(event);
+    if (allowPinch) {
+      pinch.handlers.onPointerCancel(event);
+      pinchPointers.current.delete(event.pointerId);
+      if (pinchPointers.current.size < 2) pinchPair.current = null;
+      if (pinchPointers.current.size === 0) {
+        for (let index = 0; index < 4; index += 1) pinch.zoomIn();
+      }
+    }
     if (state.mode === 'summon') {
       mt.handlers.onPointerCancel(event);
       pointers.current.delete(event.pointerId);
@@ -366,7 +442,12 @@ export function CountersView({
     dispatch({ type: 'move', id, x: next.x, y: next.y });
   };
 
-  const showTotal = config.showNumeral === 'always';
+  const showNumeral = config.showNumeral === 'always';
+  const showTotal = showNumeral;
+  const partWholeBond: PartWholeBond =
+    config.showBond === 'none' || config.showBond === 'structure' || config.showBond === 'numbers'
+      ? config.showBond
+      : 'structure';
 
   return (
     <div className={styles.wrap} data-target-size={targetSize} style={{ width: `${100 * scale}%` }}>
@@ -523,6 +604,8 @@ export function CountersView({
             readOnly={readOnly}
             scene={config.scene}
             selected={selected}
+            showNumeral={showNumeral}
+            bond={partWholeBond}
             onCounterKey={(event, id) => {
               if (event.key === 'ArrowLeft') {
                 event.preventDefault();
@@ -563,7 +646,9 @@ export function CountersView({
             return (
               <div key={plate} className={styles.plateControl}>
                 <span className={styles.plateName}>
-                  {S.plateLabel(plate)} · {S.plateCount(count)}
+                  {showNumeral
+                    ? `${S.plateLabel(plate)} · ${S.plateCount(count)}`
+                    : S.plateLabel(plate)}
                 </span>
                 <div className={styles.buttonRow}>
                   <button
@@ -622,9 +707,13 @@ export function CountersView({
               ? S.flashShowing
               : S.flashHidden
           : state.mode === 'part-whole'
-            ? `${S.pairs(state.pairs.length)} · ${S.unpaired(
-                Math.max(0, state.counters.length - state.pairs.length * 2),
-              )}`
+            ? showNumeral
+              ? `${S.pairs(state.pairs.length)} · ${S.unpaired(
+                  Math.max(0, state.counters.length - state.pairs.length * 2),
+                )}`
+              : config.scene?.kind === 'compare'
+                ? S.pairHint
+                : ''
             : state.mode === 'ten-frame'
               ? S.moves(state.moves)
               : ''}
@@ -752,14 +841,6 @@ function TenFrameScene({
               stroke="#1d2330"
               strokeWidth={3}
             />
-            <line
-              x1={bounds.x + FRAME_WIDTH / 2}
-              y1={bounds.y}
-              x2={bounds.x + FRAME_WIDTH / 2}
-              y2={bounds.y + FRAME_HEIGHT}
-              stroke="#1d2330"
-              strokeWidth={3}
-            />
             {Array.from({ length: FRAME_COLS * FRAME_ROWS }, (_, cell) => {
               const point = frameCellPoint(state.frames, frame, cell);
               return (
@@ -878,6 +959,77 @@ function TenFrameScene({
   );
 }
 
+interface BondTreeProps {
+  readonly plates: readonly number[];
+  readonly total: number;
+  readonly display: Exclude<PartWholeBond, 'none'>;
+}
+
+/** 본 화면의 가르기 나무. `structure`는 구조만, `numbers`는 전체 수·접시 수를 쓴다. */
+function BondTree({ plates, total, display }: BondTreeProps) {
+  const layout = bondTreeLayout(plates.length);
+  const showNumbers = display === 'numbers';
+  return (
+    <g pointerEvents="none" data-testid="bond-tree" data-display={display}>
+      {layout.children.map((child, index) => (
+        <line
+          key={`bond-line-${index}`}
+          x1={layout.whole.x}
+          y1={layout.whole.y + layout.wholeRadius}
+          x2={child.x}
+          y2={child.y - layout.childRadius}
+          stroke={INK}
+          strokeWidth={2.5}
+        />
+      ))}
+      <circle
+        cx={layout.whole.x}
+        cy={layout.whole.y}
+        r={layout.wholeRadius}
+        fill="#ffffff"
+        stroke={INK}
+        strokeWidth={2.5}
+      />
+      {showNumbers ? (
+        <text
+          x={layout.whole.x}
+          y={layout.whole.y + 7}
+          textAnchor="middle"
+          fontSize={20}
+          fontWeight={700}
+          fill={INK}
+        >
+          {total}
+        </text>
+      ) : null}
+      {layout.children.map((child, index) => (
+        <g key={`bond-child-${index}`}>
+          <circle
+            cx={child.x}
+            cy={child.y}
+            r={layout.childRadius}
+            fill="#ffffff"
+            stroke={INK}
+            strokeWidth={2.5}
+          />
+          {showNumbers ? (
+            <text
+              x={child.x}
+              y={child.y + 6}
+              textAnchor="middle"
+              fontSize={16}
+              fontWeight={700}
+              fill={INK}
+            >
+              {plates[index] ?? 0}
+            </text>
+          ) : null}
+        </g>
+      ))}
+    </g>
+  );
+}
+
 interface PartWholeSceneProps {
   readonly state: Extract<CountersState, { mode: 'part-whole' }>;
   readonly icon: CounterIcon;
@@ -885,6 +1037,8 @@ interface PartWholeSceneProps {
   readonly readOnly: boolean;
   readonly selected: string | null;
   readonly scene: CountersConfig['scene'];
+  readonly showNumeral: boolean;
+  readonly bond: PartWholeBond;
   readonly onCounterKey: (event: ReactKeyboardEvent<SVGGElement>, id: string) => void;
   readonly onPlateKey: (event: ReactKeyboardEvent<SVGGElement>, plate: number) => void;
 }
@@ -896,6 +1050,8 @@ function PartWholeScene({
   readOnly,
   selected,
   scene,
+  showNumeral,
+  bond,
   onCounterKey,
   onPlateKey,
 }: PartWholeSceneProps) {
@@ -941,6 +1097,10 @@ function PartWholeScene({
         </g>
       ) : null}
 
+      {bond !== 'none' ? (
+        <BondTree plates={plateList} total={state.counters.length} display={bond} />
+      ) : null}
+
       {Array.from({ length: state.plates }, (_, plate) => {
         const bounds = plateBounds(state.plates, plate);
         return (
@@ -949,7 +1109,11 @@ function PartWholeScene({
             className={styles.plate}
             role="button"
             tabIndex={readOnly ? -1 : 0}
-            aria-label={`${S.plateLabel(plate)} ${S.plateCount(plateList[plate] ?? 0)}`}
+            aria-label={
+              showNumeral
+                ? `${S.plateLabel(plate)} ${S.plateCount(plateList[plate] ?? 0)}`
+                : S.plateLabel(plate)
+            }
             data-plate={plate}
             onKeyDown={(event) => onPlateKey(event, plate)}
           >

@@ -108,6 +108,31 @@ export function sceneIconPoint(index: number, row: number): Point {
   return { x: 250 + column * 42, y: 64 + row * 46 };
 }
 
+/**
+ * part-whole 본 화면의 가르기 나무 자리.
+ * 이야기 그림(왼쪽 위)·접시(아래)와 겹치지 않도록 오른쪽 위에 둔다.
+ */
+export function bondTreeLayout(parts: number): {
+  readonly whole: Point;
+  readonly wholeRadius: number;
+  readonly childRadius: number;
+  readonly children: Point[];
+} {
+  const count = Math.max(1, parts);
+  const whole: Point = { x: 760, y: 64 };
+  const step = count > 1 ? Math.min(80, 340 / (count - 1)) : 0;
+  const start = whole.x - (step * (count - 1)) / 2;
+  return {
+    whole,
+    wholeRadius: 24,
+    childRadius: 18,
+    children: Array.from({ length: count }, (_, index) => ({
+      x: Math.round(start + index * step),
+      y: 142,
+    })),
+  };
+}
+
 export function inRect(
   point: Point,
   rect: { readonly x: number; readonly y: number; readonly width: number; readonly height: number },

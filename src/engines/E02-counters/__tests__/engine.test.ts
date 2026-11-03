@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { assertSerializable } from '../../../core/engine-sdk';
 import { emit, predicates } from '../events';
+import { PINCH_MERGE_SCALE, pinchMergeTarget } from '../gestures';
 import { observe } from '../observe';
 import {
   createInitialState,
   distinctSplitsOf,
   frameFillOf,
+  inferMode,
   platesOf,
   reduce,
   subtractStrategyOf,
@@ -172,6 +174,16 @@ describe('E02 part-whole', () => {
     let state = asPartWhole(createInitialState({ mode: 'part-whole', groups: [3, 2], parts: 2 }));
     state = asPartWhole(reduce(state, { type: 'merge', from: 1, to: 0 }));
     expect(platesOf(state)).toEqual([5, 0]);
+    // 기존 셈돌 뒤에 이어 붙고, 옮겨진 셈돌은 모두 0번 접시가 된다.
+    const slots = state.counters.map((counter) => counter.slot).sort((a, b) => a - b);
+    expect(slots).toEqual([0, 1, 2, 3, 4]);
+    expect(state.counters.every((counter) => counter.plate === 0)).toBe(true);
+  });
+
+  it('빈 접시를 합치거나 같은 접시를 합치면 상태를 바꾸지 않는다', () => {
+    const state = asPartWhole(createInitialState({ mode: 'part-whole', groups: [3, 0], parts: 2 }));
+    expect(reduce(state, { type: 'merge', from: 1, to: 0 })).toBe(state);
+    expect(reduce(state, { type: 'merge', from: 0, to: 0 })).toBe(state);
   });
 
   it('compare에서 다른 접시의 셈돌끼리만 짝지을 수 있다', () => {
@@ -188,6 +200,30 @@ describe('E02 part-whole', () => {
     state = asPartWhole(reduce(state, { type: 'pair', a: first.id, b: second.id }));
     expect(state.pairs).toHaveLength(1);
     expect(observe(state, { mode: 'part-whole' })['unpaired']).toBe(3);
+  });
+});
+
+describe('E02 핀치 합치기 판정', () => {
+  it('서로 다른 접시에서 시작해 충분히 가까워지면 큰 번호에서 작은 번호로 합친다', () => {
+    expect(pinchMergeTarget(0, 1, PINCH_MERGE_SCALE)).toEqual({ from: 1, to: 0 });
+    expect(pinchMergeTarget(2, 0, 0.4)).toEqual({ from: 2, to: 0 });
+    expect(pinchMergeTarget(0, 2, 0.4)).toEqual({ from: 2, to: 0 });
+  });
+
+  it('같은 접시·빈 손가락·충분히 가까워지지 않은 경우는 합치지 않는다', () => {
+    expect(pinchMergeTarget(1, 1, 0.3)).toBeNull();
+    expect(pinchMergeTarget(null, 1, 0.3)).toBeNull();
+    expect(pinchMergeTarget(0, null, 0.3)).toBeNull();
+    expect(pinchMergeTarget(0, 1, PINCH_MERGE_SCALE + 0.01)).toBeNull();
+    expect(pinchMergeTarget(0, 1, Number.NaN)).toBeNull();
+  });
+
+  it('showBond 값으로 ten-frame과 part-whole을 구분한다', () => {
+    expect(inferMode({ showBond: 'after-move' })).toBe('ten-frame');
+    expect(inferMode({ showBond: 'never' })).toBe('ten-frame');
+    expect(inferMode({ showBond: 'structure' })).toBe('part-whole');
+    expect(inferMode({ showBond: 'numbers' })).toBe('part-whole');
+    expect(inferMode({ showBond: 'none' })).toBe('part-whole');
   });
 });
 

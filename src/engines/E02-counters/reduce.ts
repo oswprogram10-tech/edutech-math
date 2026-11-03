@@ -47,7 +47,8 @@ export function inferMode(config: CountersConfig): CounterMode {
     config.right !== undefined ||
     config.trayCount !== undefined ||
     config.swipeFill !== undefined ||
-    config.showBond !== undefined
+    config.showBond === 'never' ||
+    config.showBond === 'after-move'
   ) {
     return 'ten-frame';
   }
@@ -56,7 +57,10 @@ export function inferMode(config: CountersConfig): CounterMode {
     config.groups !== undefined ||
     config.parts !== undefined ||
     config.gesture !== undefined ||
-    config.scene !== undefined
+    config.scene !== undefined ||
+    config.showBond === 'none' ||
+    config.showBond === 'structure' ||
+    config.showBond === 'numbers'
   ) {
     return 'part-whole';
   }
