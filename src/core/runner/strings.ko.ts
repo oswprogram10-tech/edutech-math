@@ -22,7 +22,8 @@ export const runnerStrings = {
     if (slot === 'left') return '왼쪽 판';
     if (slot === 'right') return '오른쪽 판';
     if (slot === 'response') return '내 답';
-    return slot;
+    // 'main' 같은 내부 이름은 학생에게 보이지 않게 한다.
+    return '교구';
   },
   taskList: '과제 목록',
   show: '보여 주기',

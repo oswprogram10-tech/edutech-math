@@ -280,6 +280,12 @@
     height: min(46dvh, 440px);
   }
 
+  /* 판이 하나뿐이면(응답 칸 없음) 높이를 묶지 않고 내용만큼 쓴다.
+     세로셈판·줄 풀이처럼 줄어들 수 없는 교구가 판 안에서 잘리지 않게 한다. */
+  .panels[data-panel-count='1'] .panel .viewport {
+    height: auto;
+  }
+
   /* 엔진 판이 둘 이상이면 한 판씩 더 낮춰 전체 스크롤을 줄인다. */
   .panels[data-panel-count='3'] .panel:not([data-slot='response']) .viewport,
   .panels[data-panel-count='4'] .panel:not([data-slot='response']) .viewport {
