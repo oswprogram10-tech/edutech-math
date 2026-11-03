@@ -1,0 +1,93 @@
+/** E04 배열판의 학생 문구. 화면에 하드코딩하지 않는다. */
+import type { ArrayIcon, SplitOrientation } from './types';
+
+export const arrayAreaStrings = {
+  name: '배열판',
+  canvasLabel: '배열과 넓이를 그리는 판',
+  instructions: {
+    'dot-array':
+      '점을 늘어놓아 배열을 만들어 보세요. 오른쪽 아래 손잡이를 끌거나 줄·칸 단추로 수를 바꿀 수 있어요.',
+    split: '분할선을 끌어 배열을 둘로 나누어 보세요. 나뉜 조각마다 크기와 곱이 보여요.',
+    'area-model': '가로·세로를 자릿값 경계에서 나누어 조각의 곱을 확인해 보세요.',
+    'times-table': '곱셈표의 빈칸을 눌러 값을 써 보세요. 같은 값의 칸을 찾아 색칠할 수 있어요.',
+  } as const,
+
+  rows: '줄',
+  cols: '칸',
+  rowCount: (rows: number) => `${rows}줄`,
+  colCount: (cols: number) => `${cols}칸`,
+  addRow: '줄 하나 늘리기',
+  removeRow: '줄 하나 줄이기',
+  addCol: '칸 하나 늘리기',
+  removeCol: '칸 하나 줄이기',
+  handle: '행·열 손잡이',
+  handleHint: '끌어서 줄과 칸 수를 정해요. 방향키로도 바꿀 수 있어요.',
+  rotate: '돌리기',
+  rotateHint: '배열을 90° 돌려도 점의 수는 같아요.',
+  record: '기록하기',
+  recordArrangement: '배열 기록하기',
+  recorded: (count: number) => `${count}가지 배열을 기록했어요.`,
+  sentence: (rows: number, cols: number) => `${rows}줄 ${cols}개씩`,
+  factTitle: '곱셈 삼각형',
+  factProduct: '곱',
+  factRows: '줄',
+  factCols: '칸',
+  hidden: '?',
+
+  splits: '분할선',
+  addSplit: (orientation: SplitOrientation) =>
+    orientation === 'rows' ? '가로 분할선 놓기' : '세로 분할선 놓기',
+  removeSplit: '분할선 지우기',
+  splitLine: (orientation: SplitOrientation, at: number) =>
+    `${orientation === 'rows' ? '가로' : '세로'} 분할선 ${at}번째 자리`,
+  splitHint: '분할선을 골라 방향키로 옮기고 Delete로 지워요.',
+  recordSplit: '분할 기록하기',
+  recordedSplits: (count: number) => `${count}가지 분할을 기록했어요.`,
+  extend: '한 줄 늘이기',
+  shrink: '늘인 줄 줄이기',
+  extended: (rows: number) => `${rows}줄을 뺄 조각으로 표시했어요.`,
+  pieceDims: (rows: number, cols: number) => `${rows}×${cols}`,
+  pieceNegative: (rows: number, cols: number) => `−${rows}×${cols}`,
+
+  areaWidth: '가로',
+  areaHeight: '세로',
+  addAreaSplitA: '가로를 나누는 선 놓기',
+  addAreaSplitB: '세로를 나누는 선 놓기',
+  areaSplitLine: (side: 'a' | 'b', at: number) =>
+    `${side === 'a' ? '가로' : '세로'} ${at} 자리 분할선`,
+  removeAreaSplit: '분할선 지우기',
+  gridHidden: '조각이 많아 모눈 대신 굵은 선으로 보여 줘요.',
+  thinPiece: '조각이 얇아 길이 숫자로 보여 줘요.',
+
+  table: '곱셈표',
+  tableCell: (r: number, c: number) => `${r} 곱하기 ${c} 칸`,
+  tableKeypad: '숫자 넣기',
+  tableDigit: (digit: number) => `${digit}`,
+  tableConfirm: '확인',
+  tableClear: '지우기',
+  tableClose: '닫기',
+  tableInput: (text: string) => `${text} 쓰는 중`,
+  selectMode: '칸 고르기',
+  selecting: '칸 고르는 중',
+  paintMode: '색칠',
+  paintColor: (index: number) => `${index + 1}번 색`,
+  eraseColor: '색 지우기',
+  fold: '접어 보기',
+  unfold: '펴기',
+  folded: '대각선으로 접었어요. 접힌 칸은 보이지 않아요.',
+  symmetryFlash: '대칭인 칸이 반짝였어요.',
+  zeroHeader: '0',
+
+  iconNames: {
+    dot: '점',
+    tree: '나무',
+    candy: '사탕',
+    strawberry: '딸기',
+  } as Readonly<Record<ArrayIcon, string>>,
+  cellIcon: (icon: ArrayIcon) => `${arrayAreaStrings.iconNames[icon]} 모양`,
+
+  overlayRowCount: '줄 번호',
+  overlayKnownFact: '고른 조각 강조',
+  overlayFoldDiagonal: '대각선',
+  overlayMissingStrip: '빠뜨린 조각 자리',
+} as const;
