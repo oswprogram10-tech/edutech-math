@@ -100,6 +100,17 @@ function mixedTextOf(value: Rational): string {
   return `${whole} ${numerator}/${denominator}`;
 }
 
+const MIXED_INPUT = /^\s*\d+\s+\d+\s*\/\s*\d+\s*$/;
+
+/**
+ * config에 대분수로 적힌 피연산자는 대분수 표기 그대로 보여 준다.
+ * 엔진 상태는 값을 가분수 문자열로 들고 있어서 그대로 쓰면 19/6처럼 보인다.
+ */
+function operandLabel(configText: string | undefined, stateText: string | null): string {
+  if (configText !== undefined && MIXED_INPUT.test(configText)) return configText.trim();
+  return stateText ?? '';
+}
+
 /** 화면 수치 문구 수준. 기본은 숨김(정답 노출 금지). */
 function showValueOf(config: FractionModelConfig): ShowValue {
   return config.showValue ?? 'none';
@@ -1341,7 +1352,7 @@ function MixedView({ state, config, dispatch, cpa, readOnly, targetSize }: ModeP
                 value={b}
                 cells={Math.max(1, denominatorNumber(b) ?? 2)}
                 y={390}
-                label={state.b ?? ''}
+                label={operandLabel(config.b, state.b)}
                 cpa={cpa}
                 tone={ORANGE}
               />
@@ -1352,14 +1363,14 @@ function MixedView({ state, config, dispatch, cpa, readOnly, targetSize }: ModeP
                 value={a}
                 cells={Math.max(1, denominatorNumber(a) ?? 2)}
                 y={120}
-                label={state.a ?? ''}
+                label={operandLabel(config.a, state.a)}
                 cpa={cpa}
               />
               <ValueBars
                 value={b}
                 cells={Math.max(1, denominatorNumber(b) ?? 2)}
                 y={310}
-                label={state.b ?? ''}
+                label={operandLabel(config.b, state.b)}
                 cpa={cpa}
               />
             </>

@@ -29,6 +29,27 @@
   gap: 0.5rem;
 }
 
+/* 단계 이름표가 있는 줄 풀이: 줄 목록만 스크롤하고 키패드는 늘 보이게 한다. */
+.root[data-step-labels='true'] {
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.root[data-step-labels='true'] > .instructions,
+.root[data-step-labels='true'] > .keypad,
+.root[data-step-labels='true'] > .keyboardHint {
+  flex: 0 0 auto;
+}
+
+.root[data-step-labels='true'] > .lines {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-padding-bottom: 0.25rem;
+}
+
 .line {
   display: flex;
   align-items: flex-start;
