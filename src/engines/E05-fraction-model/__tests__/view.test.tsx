@@ -126,6 +126,39 @@ describe('E05 기본 showValue=none (정답 노출 금지)', () => {
   });
 });
 
+describe('E05 decimal-grid 층 이름', () => {
+  it('config.layerLabels가 있으면 그 이름을 층 버튼에 쓴다', () => {
+    const config: FractionModelConfig = {
+      mode: 'decimal-grid',
+      size: 10,
+      layers: 2,
+      layerLabels: ['0.3', '0.25'],
+    };
+    const view = renderView(config, createInitialState(config));
+    expect(view.getByRole('button', { name: '0.3' })).toBeTruthy();
+    expect(view.getByRole('button', { name: '0.25' })).toBeTruthy();
+  });
+
+  it('config.layerLabels가 없으면 기본 층 이름을 쓴다', () => {
+    const config: FractionModelConfig = { mode: 'decimal-grid', size: 10, layers: 2 };
+    const view = renderView(config, createInitialState(config));
+    expect(view.getByRole('button', { name: S.layerName(0) })).toBeTruthy();
+    expect(view.getByRole('button', { name: S.layerName(1) })).toBeTruthy();
+  });
+
+  it('layerLabels가 모자라면 남은 층은 기본 이름을 쓴다', () => {
+    const config: FractionModelConfig = {
+      mode: 'decimal-grid',
+      size: 10,
+      layers: 2,
+      layerLabels: ['0.3'],
+    };
+    const view = renderView(config, createInitialState(config));
+    expect(view.getByRole('button', { name: '0.3' })).toBeTruthy();
+    expect(view.getByRole('button', { name: S.layerName(1) })).toBeTruthy();
+  });
+});
+
 describe('E05 읽기 전용 partition (선택지 그림)', () => {
   it('넓이 막대와 등분 도장을 숨겨 정답을 알려 주지 않는다', () => {
     const equalConfig: FractionModelConfig = { mode: 'partition', fixedParts: 4 };

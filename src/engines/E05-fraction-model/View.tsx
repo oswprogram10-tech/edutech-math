@@ -1670,7 +1670,7 @@ function DecimalGridView({
             onClick={() => dispatch({ type: 'set-layer', layer })}
             disabled={readOnly}
           >
-            {S.layerName(layer)}
+            {config.layerLabels?.[layer] ?? S.layerName(layer)}
           </ToolbarButton>
         ))}
         <ToolbarButton
