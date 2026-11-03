@@ -1,0 +1,568 @@
+{
+  "unit": "g4s2u3",
+  "title": "소수의 덧셈과 뺄셈",
+  "activities": [
+    {
+      "id": "g4s2u3.A1",
+      "title": "10×10 모눈 중첩 색칠기",
+      "tasks": [
+        {
+          "id": "g4s2u3.A1.T1",
+          "prompt": "1을 100칸으로 나눈 모눈에 0.47만큼 색칠해 보세요.",
+          "engine": "E05",
+          "mode": "decimal-grid",
+          "cpa": "C",
+          "config": {
+            "mode": "decimal-grid",
+            "size": 10,
+            "layers": 1
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "layers.0.cells",
+            "value": 47
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal-grid" },
+              "level": 1,
+              "say": "한 줄을 다 칠하면 몇 칸일까요? 지금 칠한 칸을 한 줄씩 묶어 보면 몇 줄과 몇 칸이 남나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal-grid" },
+              "level": 2,
+              "say": "0.1은 몇 칸이고 0.01은 몇 칸인가요? 0.47을 0.1과 0.01로 나누어 보면 각각 몇 개인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal-grid" },
+              "level": 3,
+              "backtrack": "g4s2u3.hundredths-thousandths"
+            }
+          ],
+          "concepts": ["g4s2u3.hundredths-thousandths"],
+          "submit": "button"
+        },
+        {
+          "id": "g4s2u3.A1.T2",
+          "prompt": "모눈의 한 층에 0.3, 다른 층에 0.25를 칠하고 두 수의 크기를 부등호로 나타내세요.",
+          "engine": "E05",
+          "mode": "decimal-grid",
+          "cpa": "C",
+          "config": {
+            "mode": "decimal-grid",
+            "size": 10,
+            "layers": 2,
+            "layerLabels": ["0.3", "0.25"],
+            "overlayAlpha": 0.5
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "layers.0.cells", "value": 30 },
+              { "kind": "equals", "path": "layers.1.cells", "value": 25 },
+              { "kind": "equals", "path": "response.cmp.symbol", "value": ">" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-DEC-LONGER-BIGGER" },
+              "level": 1,
+              "say": "모눈에서 어느 쪽이 더 넓게 칠해졌나요? 자릿수가 많은 쪽이 꼭 더 큰 수일까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal-grid" },
+              "level": 1,
+              "say": "두 층을 번갈아 보며 겹치는 칸과 남는 칸을 찾아보세요. 어느 층의 색칠이 더 넓나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal-grid" },
+              "level": 2,
+              "say": "0.3을 0.01이 몇 개인 수로 바꾸면 0.25와 같은 단위로 비교할 수 있을까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal-grid" },
+              "level": 3,
+              "backtrack": "g4s2u3.compare-decimals"
+            }
+          ],
+          "concepts": ["g4s2u3.compare-decimals", "g4s2u3.hundredths-thousandths"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-DEC-LONGER-BIGGER",
+              "args": { "left": "0.3", "right": "0.25" },
+              "path": "response.cmp.symbol"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "compare",
+                "id": "cmp",
+                "label": "0.3과 0.25 비교",
+                "left": "0.3",
+                "right": "0.25"
+              }
+            ]
+          }
+        },
+        {
+          "id": "g4s2u3.A1.T3",
+          "prompt": "모눈의 한 층에 0.3, 다른 층에 0.30을 칠하고 두 수의 크기를 부등호로 나타내세요.",
+          "engine": "E05",
+          "mode": "decimal-grid",
+          "cpa": "C",
+          "config": {
+            "mode": "decimal-grid",
+            "size": 10,
+            "layers": 2,
+            "layerLabels": ["0.3", "0.30"],
+            "overlayAlpha": 0.5
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "layers.0.cells", "value": 30 },
+              { "kind": "equals", "path": "layers.1.cells", "value": 30 },
+              { "kind": "equals", "path": "response.cmp.symbol", "value": "=" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-DEC-TRAILING-ZERO" },
+              "level": 1,
+              "say": "0.30을 모눈에 칠하면 0.3과 다른 칸이 있나요? 끝에 0을 붙이면 칠하는 칸 수가 달라지나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal-grid" },
+              "level": 1,
+              "say": "두 층에 칠한 칸을 하나씩 겹쳐 보세요. 한쪽에만 칠해진 칸이 있나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal-grid" },
+              "level": 2,
+              "say": "끝자리 0은 어떤 자리의 수를 나타내나요? 그 자리에 0이 있으면 값이 더 커지나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal-grid" },
+              "level": 3,
+              "backtrack": "g4s2u3.compare-decimals"
+            }
+          ],
+          "concepts": ["g4s2u3.compare-decimals", "g4s2u3.hundredths-thousandths"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-DEC-TRAILING-ZERO",
+              "args": { "left": "0.3", "right": "0.30" },
+              "path": "response.cmp.symbol"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "compare",
+                "id": "cmp",
+                "label": "0.3과 0.30 비교",
+                "left": "0.3",
+                "right": "0.30"
+              }
+            ]
+          }
+        },
+        {
+          "id": "g4s2u3.A1.T4",
+          "prompt": "수직선을 0.01 눈금까지 확대해 0.68 자리에 점을 하나만 찍으세요.",
+          "engine": "E03",
+          "mode": "decimal",
+          "cpa": "P",
+          "config": {
+            "mode": "decimal",
+            "min": "0",
+            "max": "1",
+            "unit": "1",
+            "zoom": { "from": "1/10", "to": "1/100" },
+            "labels": "partial"
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "onlyPointAt",
+            "args": { "value": "0.68" }
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal" },
+              "level": 1,
+              "say": "0과 1 사이를 10칸으로 나눈 눈금에서 0.6을 먼저 찾아보세요. 더 확대하면 0.68은 0.6에서 몇 칸 더 간 곳일까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal" },
+              "level": 2,
+              "show": { "engine": "E03", "overlay": "distance-from-zero" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal" },
+              "level": 3,
+              "backtrack": "g4s2u3.hundredths-thousandths"
+            }
+          ],
+          "concepts": ["g4s2u3.hundredths-thousandths"],
+          "submit": "button"
+        },
+        {
+          "id": "g4s2u3.A1.T5",
+          "prompt": "1.207에서 숫자 7이 나타내는 크기를 소수로 쓰세요.",
+          "engine": "E05",
+          "mode": "decimal-grid",
+          "cpa": "A",
+          "config": {
+            "mode": "decimal-grid",
+            "size": 10,
+            "layers": 3
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.ans.value",
+            "value": "7/1000"
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal-grid" },
+              "level": 1,
+              "say": "1.207에서 7은 소수점 아래 몇 번째 자리에 있나요? 그 자리 하나의 크기는 얼마일까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal-grid" },
+              "level": 2,
+              "say": "1을 1000칸으로 나누면 한 칸은 얼마인가요? 7은 그 칸을 몇 개 나타내나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal-grid" },
+              "level": 3,
+              "backtrack": "g4s2u3.hundredths-thousandths"
+            }
+          ],
+          "concepts": ["g4s2u3.hundredths-thousandths"],
+          "submit": "button",
+          "showEngine": false,
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "ans",
+                "label": "7이 나타내는 수",
+                "forms": ["decimal"]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "g4s2u3.A2",
+      "title": "소수점 자석 정렬 세로셈",
+      "tasks": [
+        {
+          "id": "g4s2u3.A2.T1",
+          "prompt": "3.5 + 1.27을 세로셈으로 계산하세요. 두 수의 소수점을 같은 세로줄에 놓고 결과를 쓰세요.",
+          "engine": "E07",
+          "mode": "decimal",
+          "cpa": "P",
+          "config": {
+            "mode": "decimal",
+            "op": "add",
+            "a": "3.5",
+            "b": "1.27",
+            "magnetAlign": "C-P",
+            "padZeros": "optional"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "alignedByPoint" },
+              { "kind": "predicate", "name": "resultIs", "args": { "value": "4.77" } }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DEC-ALIGN-RIGHT" } },
+              "level": 1,
+              "say": "5는 어느 자리 숫자이고 7은 어느 자리 숫자인가요? 두 수의 소수점이 같은 세로줄에 있나요?"
+            },
+            {
+              "when": { "misconception": "MC-DEC-POINT-SEPARATOR" },
+              "level": 1,
+              "say": "0.5와 0.27을 각각 0.01이 몇 개인 수로 바꾸면 얼마인가요? 소수점 아래를 따로 자연수처럼 더한 결과와 무엇이 다른가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal" },
+              "level": 1,
+              "say": "두 수의 소수점이 같은 세로줄에 오도록 카드를 놓았나요? 빈 자리는 0으로 채우면 계산이 어떻게 달라지나요?"
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DEC-ALIGN-RIGHT" } },
+              "level": 2,
+              "show": { "engine": "E07", "overlay": "place-value" }
+            },
+            {
+              "when": { "misconception": "MC-DEC-POINT-SEPARATOR" },
+              "level": 2,
+              "show": { "engine": "E07", "overlay": "column-sum", "args": { "column": -1 } }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal" },
+              "level": 2,
+              "show": { "engine": "E07", "overlay": "place-value" }
+            },
+            {
+              "when": { "misconception": "MC-DEC-POINT-SEPARATOR" },
+              "level": 3,
+              "backtrack": "g3s1u6.tenths-decimal"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal" },
+              "level": 3,
+              "backtrack": "g4s2u3.decimal-add-sub"
+            }
+          ],
+          "concepts": ["g4s2u3.decimal-add-sub", "g4s2u3.hundredths-thousandths"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-DEC-POINT-SEPARATOR",
+              "args": { "a": "3.5", "b": "1.27" },
+              "path": "result"
+            }
+          ]
+        },
+        {
+          "id": "g4s2u3.A2.T2",
+          "prompt": "6.4 − 2.75를 세로셈으로 계산하세요. 받아내림이 필요한 뺄셈이에요.",
+          "engine": "E07",
+          "mode": "decimal",
+          "cpa": "P",
+          "config": {
+            "mode": "decimal",
+            "op": "sub",
+            "a": "6.4",
+            "b": "2.75",
+            "magnetAlign": "C-P",
+            "padZeros": "optional"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "alignedByPoint" },
+              { "kind": "predicate", "name": "resultIs", "args": { "value": "3.65" } }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-PV-BORROW-NO-DECREMENT" } },
+              "level": 1,
+              "say": "0.1 하나를 낱칸으로 풀었을 때, 그 자리에는 몇이 남나요? 빌려 준 자리와 빌려 온 자리를 차례로 살펴볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal" },
+              "level": 1,
+              "say": "윗수의 빈 자리를 0으로 채웠나요? 어느 자리에서 빌려 와야 하는지 오른쪽부터 살펴보세요."
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-PV-BORROW-NO-DECREMENT" } },
+              "level": 2,
+              "show": { "engine": "E07", "overlay": "column-sum", "args": { "column": -1 } }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal" },
+              "level": 2,
+              "show": { "engine": "E07", "overlay": "column-sum", "args": { "column": -1 } }
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-PV-BORROW-NO-DECREMENT" } },
+              "level": 3,
+              "backtrack": "g3s1u1.sub-regroup-3digit"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal" },
+              "level": 3,
+              "backtrack": "g4s2u3.decimal-add-sub"
+            }
+          ],
+          "concepts": ["g4s2u3.decimal-add-sub", "g4s2u3.hundredths-thousandths"],
+          "submit": "button"
+        },
+        {
+          "id": "g4s2u3.A2.T3",
+          "prompt": "12.08 + 0.9를 세로셈으로 계산하세요. 자릿수가 다른 두 수를 더해요.",
+          "engine": "E07",
+          "mode": "decimal",
+          "cpa": "P",
+          "config": {
+            "mode": "decimal",
+            "op": "add",
+            "a": "12.08",
+            "b": "0.9",
+            "magnetAlign": "C-P",
+            "padZeros": "optional"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "alignedByPoint" },
+              { "kind": "predicate", "name": "resultIs", "args": { "value": "12.98" } }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DEC-ALIGN-RIGHT" } },
+              "level": 1,
+              "say": "0.9의 9는 어느 자리 숫자이고 8은 어느 자리 숫자인가요? 두 수의 소수점이 같은 세로줄에 있나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal" },
+              "level": 1,
+              "say": "자릿수가 다른 두 수의 소수점을 어디에 맞추었나요? 빈 자리는 0으로 채워 볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal" },
+              "level": 2,
+              "show": { "engine": "E07", "overlay": "place-value" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal" },
+              "level": 3,
+              "backtrack": "g4s2u3.decimal-add-sub"
+            }
+          ],
+          "concepts": ["g4s2u3.decimal-add-sub", "g4s2u3.hundredths-thousandths"],
+          "submit": "button"
+        },
+        {
+          "id": "g4s2u3.A2.T4",
+          "prompt": "5 − 1.36을 세로셈으로 계산하세요. 자석 없이 두 수의 자리를 직접 정해 보세요.",
+          "engine": "E07",
+          "mode": "decimal",
+          "cpa": "A",
+          "config": {
+            "mode": "decimal",
+            "op": "sub",
+            "a": "5",
+            "b": "1.36",
+            "magnetAlign": false,
+            "padZeros": "optional"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "alignedByPoint" },
+              { "kind": "predicate", "name": "resultIs", "args": { "value": "3.64" } }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DEC-ALIGN-RIGHT" } },
+              "level": 1,
+              "say": "5는 어느 자리 숫자이고 6은 어느 자리 숫자인가요? 두 수의 소수점을 어디에 맞추어야 할까요?"
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-PV-BORROW-NO-DECREMENT" } },
+              "level": 1,
+              "say": "5에서 1을 빌려 줄 때, 빌려 준 자리에는 몇이 남나요? 빌려 온 자리는 몇이 되었나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal" },
+              "level": 1,
+              "say": "5도 소수점이 있다고 생각하고 5와 1.36의 소수점을 같은 세로줄에 놓아 볼까요?"
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DEC-ALIGN-RIGHT" } },
+              "level": 2,
+              "show": { "engine": "E07", "overlay": "place-value" }
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-PV-BORROW-NO-DECREMENT" } },
+              "level": 2,
+              "show": { "engine": "E07", "overlay": "column-sum", "args": { "column": -1 } }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal" },
+              "level": 2,
+              "show": { "engine": "E07", "overlay": "place-value" }
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DEC-ALIGN-RIGHT" } },
+              "level": 3,
+              "backtrack": "g4s2u3.hundredths-thousandths"
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-PV-BORROW-NO-DECREMENT" } },
+              "level": 3,
+              "backtrack": "g3s1u1.sub-regroup-3digit"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal" },
+              "level": 3,
+              "backtrack": "g4s2u3.decimal-add-sub"
+            }
+          ],
+          "concepts": ["g4s2u3.decimal-add-sub", "g4s2u3.hundredths-thousandths"],
+          "submit": "button"
+        },
+        {
+          "id": "g4s2u3.A2.T5",
+          "prompt": "7.9 + 2.15의 합은 약 10이라고 어림할 수 있나요?",
+          "engine": "E07",
+          "mode": "decimal",
+          "cpa": "A",
+          "config": {
+            "mode": "decimal",
+            "op": "add",
+            "a": "7.9",
+            "b": "2.15",
+            "magnetAlign": false,
+            "padZeros": "optional"
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.est.selected",
+            "value": ["yes"]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal" },
+              "level": 1,
+              "say": "7.9와 2.15를 각각 몇쯤으로 어림할 수 있나요? 어림한 두 수를 더하면 10에 가까운가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal" },
+              "level": 2,
+              "say": "7.9는 8보다 크나요 작나요? 2.15는 2보다 크나요 작나요? 둘을 합하면 10보다 클까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal" },
+              "level": 3,
+              "backtrack": "g4s2u3.decimal-add-sub"
+            }
+          ],
+          "concepts": ["g4s2u3.decimal-add-sub"],
+          "submit": "button",
+          "showEngine": false,
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "est",
+                "label": "약 10일까요?",
+                "options": [
+                  { "id": "yes", "label": "예" },
+                  { "id": "no", "label": "아니요" }
+                ],
+                "multiple": false
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

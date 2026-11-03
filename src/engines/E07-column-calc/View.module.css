@@ -81,6 +81,8 @@
 }
 
 .gridScroll {
+  /* 실행기 판이 좁아도 판 전체가 줄어들지 않게 한다. 넘치면 실행기 판이 스크롤된다. */
+  flex: 0 0 auto;
   overflow-x: auto;
   padding-bottom: 0.25rem;
 }

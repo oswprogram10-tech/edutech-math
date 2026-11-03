@@ -8,7 +8,7 @@ import { FractionModelView } from '../View';
 
 afterEach(cleanup);
 
-function renderView(config: FractionModelConfig, state: FractionModelState) {
+function renderView(config: FractionModelConfig, state: FractionModelState, readOnly = false) {
   return render(
     <FractionModelView
       config={config}
@@ -16,6 +16,7 @@ function renderView(config: FractionModelConfig, state: FractionModelState) {
       dispatch={() => {}}
       cpa="P"
       mode={state.mode}
+      readOnly={readOnly}
       targetSize={48}
     />,
   );
@@ -123,6 +124,87 @@ describe('E05 기본 showValue=none (정답 노출 금지)', () => {
     const text = textOf(config, state);
     expect(text).not.toContain(S.decimalValue('1/10', '0.1'));
     expect(text).not.toContain('값 ');
+  });
+});
+
+describe('E05 decimal-grid 층 이름', () => {
+  it('config.layerLabels가 있으면 그 이름을 층 버튼에 쓴다', () => {
+    const config: FractionModelConfig = {
+      mode: 'decimal-grid',
+      size: 10,
+      layers: 2,
+      layerLabels: ['0.3', '0.25'],
+    };
+    const view = renderView(config, createInitialState(config));
+    expect(view.getByRole('button', { name: '0.3' })).toBeTruthy();
+    expect(view.getByRole('button', { name: '0.25' })).toBeTruthy();
+  });
+
+  it('config.layerLabels가 없으면 기본 층 이름을 쓴다', () => {
+    const config: FractionModelConfig = { mode: 'decimal-grid', size: 10, layers: 2 };
+    const view = renderView(config, createInitialState(config));
+    expect(view.getByRole('button', { name: S.layerName(0) })).toBeTruthy();
+    expect(view.getByRole('button', { name: S.layerName(1) })).toBeTruthy();
+  });
+
+  it('layerLabels가 모자라면 남은 층은 기본 이름을 쓴다', () => {
+    const config: FractionModelConfig = {
+      mode: 'decimal-grid',
+      size: 10,
+      layers: 2,
+      layerLabels: ['0.3'],
+    };
+    const view = renderView(config, createInitialState(config));
+    expect(view.getByRole('button', { name: '0.3' })).toBeTruthy();
+    expect(view.getByRole('button', { name: S.layerName(1) })).toBeTruthy();
+  });
+});
+
+describe('E05 decimal-grid 다른 층 겹쳐 보기', () => {
+  const config: FractionModelConfig = {
+    mode: 'decimal-grid',
+    size: 10,
+    layers: 2,
+    overlayAlpha: 0.4,
+  };
+
+  function twoLayerState(): FractionModelState {
+    let state = createInitialState(config);
+    state = reduce(state, { type: 'shade-row', row: 0 });
+    return reduce(state, { type: 'set-layer', layer: 1 });
+  }
+
+  it('고르지 않은 층의 칠한 칸을 반투명 빗금으로 겹쳐 그린다', () => {
+    const state = twoLayerState();
+    const view = renderView(config, state);
+    const overlays = Array.from(view.container.querySelectorAll('[data-testid="decimal-overlay"]'));
+    expect(overlays).toHaveLength(10);
+    for (const overlay of overlays) {
+      expect(overlay.getAttribute('data-overlay-layer')).toBe('0');
+      expect(overlay.getAttribute('fill')).toBe('url(#e05-overlay-0)');
+      expect(overlay.getAttribute('fill-opacity')).toBe('0.4');
+      expect(overlay.getAttribute('pointer-events')).toBe('none');
+      expect(overlay.getAttribute('aria-hidden')).toBe('true');
+    }
+  });
+
+  it('칠하지 않은 다른 층은 겹쳐 그리지 않는다', () => {
+    const state = reduce(createInitialState(config), { type: 'set-layer', layer: 1 });
+    const view = renderView(config, state);
+    expect(view.container.querySelectorAll('[data-testid="decimal-overlay"]')).toHaveLength(0);
+  });
+
+  it('layers 1에서는 겹쳐 그리지 않는다', () => {
+    const single: FractionModelConfig = { mode: 'decimal-grid', size: 10, layers: 1 };
+    let state = createInitialState(single);
+    state = reduce(state, { type: 'shade-row', row: 0 });
+    const view = renderView(single, state);
+    expect(view.container.querySelectorAll('[data-testid="decimal-overlay"]')).toHaveLength(0);
+  });
+
+  it('읽기 전용에서는 겹쳐 그리지 않는다', () => {
+    const view = renderView(config, twoLayerState(), true);
+    expect(view.container.querySelectorAll('[data-testid="decimal-overlay"]')).toHaveLength(0);
   });
 });
 

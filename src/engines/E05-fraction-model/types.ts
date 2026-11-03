@@ -142,6 +142,11 @@ export interface FractionModelConfig {
   readonly size?: number;
   /** 표시할 층 수(0.1층·0.01층). 기본 2. */
   readonly layers?: number;
+  /**
+   * 층 버튼에 쓸 이름. 없으면 기본 `0.1 층`·`0.01 층`을 쓴다.
+   * 두 소수를 겹쳐 보는 과제처럼 층마다 다른 수를 칠할 때만 지정한다.
+   */
+  readonly layerLabels?: readonly string[];
   readonly overlayAlpha?: number;
 }
 
