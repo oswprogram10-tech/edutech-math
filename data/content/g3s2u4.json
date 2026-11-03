@@ -1,0 +1,880 @@
+{
+  "unit": "g3s2u4",
+  "title": "분수",
+  "activities": [
+    {
+      "id": "g3s2u4.A1",
+      "title": "사탕 묶음 스튜디오",
+      "tasks": [
+        {
+          "id": "g3s2u4.A1.T1",
+          "prompt": "사탕 12개를 3개씩 묶으면 한 묶음은 12의 얼마인가요?",
+          "engine": "E05",
+          "mode": "discrete",
+          "cpa": "C",
+          "config": {
+            "mode": "discrete",
+            "items": 12,
+            "itemIcon": "candy",
+            "groupSizeOptions": [2, 3, 4, 6],
+            "grouping": "dial-or-lasso",
+            "showFractionOf": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "groupSize", "value": 3 },
+              { "kind": "equals", "path": "groups", "value": 4 },
+              { "kind": "equals", "path": "response.ans.value", "value": "1/4" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "discrete" },
+              "level": 1,
+              "say": "한 묶음에 사탕이 몇 개 있나요? 전체 12개를 몇 묶음으로 나누었나요? 한 묶음은 그중 몇 묶음인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "discrete" },
+              "level": 2,
+              "say": "사탕은 잠시 감추고 묶음 상자만 세어 볼까요? 상자는 모두 몇 개이고, 그중 몇 개를 가리키고 있나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "discrete" },
+              "level": 3,
+              "backtrack": "g3s2u4.fraction-of-set"
+            }
+          ],
+          "concepts": ["g3s2u4.fraction-of-set"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "ans",
+                "label": "12의 얼마",
+                "forms": ["fraction"]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s2u4.A1.T2",
+          "prompt": "사탕 12개를 3개씩 묶었습니다. 그중 3/4만큼은 사탕 몇 개인가요?",
+          "engine": "E05",
+          "mode": "discrete",
+          "cpa": "C",
+          "config": {
+            "mode": "discrete",
+            "items": 12,
+            "itemIcon": "candy",
+            "groupSizeOptions": [2, 3, 4, 6],
+            "grouping": "dial-or-lasso",
+            "showFractionOf": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "groupSize", "value": 3 },
+              { "kind": "equals", "path": "groups", "value": 4 },
+              { "kind": "equals", "path": "selectedGroups", "value": [0, 1, 2] },
+              { "kind": "equals", "path": "response.ans.value", "value": "9" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "response.ans.value", "value": "4" },
+              "level": 1,
+              "say": "4는 분모예요. 사탕 12개를 몇 개씩 묶으라는 뜻인지, 3/4은 그 묶음 중 몇 개를 고르라는 뜻인지 다시 읽어 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "response.ans.value", "value": "3" },
+              "level": 1,
+              "say": "3은 고른 묶음 수인가요, 사탕 수인가요? 고른 묶음마다 사탕이 몇 개씩 들어 있는지 세어 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "discrete" },
+              "level": 1,
+              "say": "사탕을 3개씩 묶으면 상자가 모두 몇 개인가요? 그중 3/4만큼은 상자 몇 개인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.ans.value", "value": "4" },
+              "level": 2,
+              "say": "4는 분모예요. 사탕 12개를 몇 개씩 묶으라는 뜻인지, 3/4은 그 묶음 중 몇 개를 고르라는 뜻인지 다시 읽어 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "discrete" },
+              "level": 2,
+              "say": "상자 하나에 사탕이 몇 개 들어 있나요? 고른 상자마다 같은 수가 들어 있다면 모두 몇 개인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "discrete" },
+              "level": 3,
+              "backtrack": "g3s2u4.fraction-of-set"
+            }
+          ],
+          "concepts": ["g3s2u4.fraction-of-set"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "ans",
+                "label": "사탕 수",
+                "forms": ["integer"]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s2u4.A1.T3",
+          "prompt": "사탕 4개는 12의 얼마인가요? 4개씩 묶을 때와 2개씩 묶을 때로 각각 나타내 보세요.",
+          "engine": "E05",
+          "mode": "discrete",
+          "cpa": "P",
+          "config": {
+            "mode": "discrete",
+            "items": 12,
+            "itemIcon": "dot",
+            "groupSizeOptions": [2, 3, 4, 6],
+            "grouping": "dial-or-lasso",
+            "showFractionOf": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "response.f1.raw", "value": "1/3" },
+              { "kind": "equals", "path": "response.f2.raw", "value": "2/6" }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  { "kind": "equals", "path": "response.f1.raw", "value": "4/12" },
+                  { "kind": "equals", "path": "response.f2.raw", "value": "4/12" }
+                ]
+              },
+              "level": 1,
+              "say": "이번에는 '전체'가 몇 묶음인가요? 사탕 4개는 그 묶음 중 몇 묶음인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "discrete" },
+              "level": 1,
+              "say": "4개씩 묶을 때와 2개씩 묶을 때, 전체 묶음 수가 각각 몇 개인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "discrete" },
+              "level": 2,
+              "say": "4개씩 묶으면 상자가 몇 개이고, 그중 사탕 4개는 상자 몇 개인가요? 2개씩 묶으면 또 어떻게 달라지나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "discrete" },
+              "level": 3,
+              "backtrack": "g3s2u4.fraction-of-set"
+            }
+          ],
+          "concepts": ["g3s2u4.fraction-of-set"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "f1",
+                "label": "4개씩 묶으면",
+                "forms": ["fraction"]
+              },
+              {
+                "kind": "number",
+                "id": "f2",
+                "label": "2개씩 묶으면",
+                "forms": ["fraction"]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s2u4.A1.T4",
+          "prompt": "사탕 18개 중 2/3은 몇 개인가요?",
+          "engine": "E05",
+          "mode": "discrete",
+          "cpa": "P",
+          "config": {
+            "mode": "discrete",
+            "items": 18,
+            "itemIcon": "dot",
+            "groupSizeOptions": [2, 3, 6, 9],
+            "grouping": "dial-or-lasso",
+            "showFractionOf": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "selectedCount", "value": 12 },
+              { "kind": "equals", "path": "response.ans.value", "value": "12" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "response.ans.value", "value": "3" },
+              "level": 1,
+              "say": "분모 3은 사탕 18개를 몇 개씩 묶으라는 뜻인가요? 2/3은 그 묶음 중 몇 개를 고르라는 뜻인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "discrete" },
+              "level": 1,
+              "say": "18개를 똑같이 3묶음으로 나누면 한 묶음은 몇 개인가요? 그런 묶음 2개를 모으면 몇 개인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "discrete" },
+              "level": 2,
+              "say": "18개를 3개씩 묶은 상자가 모두 몇 개인가요? 그중 2/3만큼은 상자 몇 개인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "discrete" },
+              "level": 3,
+              "backtrack": "g3s2u4.fraction-of-quantity"
+            }
+          ],
+          "concepts": ["g3s2u4.fraction-of-quantity"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "ans",
+                "label": "사탕 수",
+                "forms": ["integer"]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s2u4.A1.T5",
+          "prompt": "20의 3/5은 얼마인가요?",
+          "engine": "E05",
+          "mode": "discrete",
+          "cpa": "A",
+          "config": {
+            "mode": "discrete",
+            "items": 20,
+            "itemIcon": "dot",
+            "groupSizeOptions": [2, 4, 5, 10],
+            "grouping": "dial-or-lasso",
+            "showFractionOf": true
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.ans.value",
+            "value": "12"
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "response.ans.value", "value": "5" },
+              "level": 1,
+              "say": "분모 5는 20개를 몇 개씩 묶으라는 뜻인가요? 3/5은 묶음 5개 중 몇 개를 고르라는 뜻인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.ans.valid", "value": true },
+              "level": 1,
+              "say": "분모 5는 20을 똑같이 몇 묶음으로 나누라는 뜻인가요? 그중 3/5은 몇 묶음을 고르라는 뜻인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.ans.value", "value": "5" },
+              "level": 2,
+              "say": "점 20개를 5개씩 묶는 그림을 떠올려 볼까요? 3/5만큼은 점이 몇 개인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.ans.valid", "value": true },
+              "level": 2,
+              "say": "20개를 5묶음으로 똑같이 나누면 한 묶음은 몇 개인가요? 3묶음을 고르면 점이 모두 몇 개인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.ans.value", "value": "5" },
+              "level": 3,
+              "backtrack": "g3s2u4.fraction-of-quantity"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.ans.valid", "value": true },
+              "level": 3,
+              "backtrack": "g3s2u4.fraction-of-quantity"
+            }
+          ],
+          "concepts": ["g3s2u4.fraction-of-quantity"],
+          "submit": "button",
+          "showEngine": false,
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "ans",
+                "label": "20의 3/5",
+                "forms": ["integer"]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "g3s2u4.A2",
+      "title": "가분수·대분수 컨베이어",
+      "tasks": [
+        {
+          "id": "g3s2u4.A2.T1",
+          "prompt": "분수 카드를 진분수, 가분수, 대분수로 나누세요. 어디에도 맞지 않으면 '분수가 아니에요'에 놓으세요.",
+          "engine": "E05",
+          "mode": "mixed",
+          "cpa": "C",
+          "config": {
+            "mode": "mixed",
+            "direction": "improper-to-mixed",
+            "value": "11/4",
+            "wholeShape": "circle"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "response.sort.bins.proper", "value": ["a"] },
+              { "kind": "equals", "path": "response.sort.bins.improper", "value": ["b", "d"] },
+              { "kind": "equals", "path": "response.sort.bins.mixed", "value": ["c"] },
+              { "kind": "equals", "path": "response.sort.bins.none", "value": [] },
+              { "kind": "equals", "path": "response.sort.unsorted", "value": [] }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  { "kind": "equals", "path": "response.sort.bins.none", "value": ["b"] },
+                  { "kind": "equals", "path": "response.sort.bins.none", "value": ["d"] },
+                  { "kind": "equals", "path": "response.sort.bins.none", "value": ["b", "d"] }
+                ]
+              },
+              "level": 1,
+              "say": "가분수 카드를 1/4 조각이 몇 개 모인 것으로 생각해 볼까요? 조각이 원판 하나를 넘으면 어떻게 될까요?"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  { "kind": "equals", "path": "response.sort.bins.none", "value": ["b"] },
+                  { "kind": "equals", "path": "response.sort.bins.none", "value": ["d"] },
+                  { "kind": "equals", "path": "response.sort.bins.none", "value": ["b", "d"] }
+                ]
+              },
+              "level": 2,
+              "say": "1/4 조각 5개를 원판에 채우면 원판 하나가 가득 차고 조각이 남나요? 남는 조각까지 분수로 나타낼 수 있을까요?"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  { "kind": "equals", "path": "response.sort.bins.none", "value": ["b"] },
+                  { "kind": "equals", "path": "response.sort.bins.none", "value": ["d"] },
+                  { "kind": "equals", "path": "response.sort.bins.none", "value": ["b", "d"] }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g3s1u6.unit-fraction"
+            }
+          ],
+          "concepts": ["g3s2u4.improper-mixed"],
+          "submit": "button",
+          "showEngine": false,
+          "response": {
+            "fields": [
+              {
+                "kind": "sort",
+                "id": "sort",
+                "label": "분수 카드",
+                "cards": [
+                  { "id": "a", "label": "3/5" },
+                  { "id": "b", "label": "7/5" },
+                  { "id": "c", "label": "1 2/5" },
+                  { "id": "d", "label": "5/5" }
+                ],
+                "bins": [
+                  { "id": "proper", "label": "진분수" },
+                  { "id": "improper", "label": "가분수" },
+                  { "id": "mixed", "label": "대분수" },
+                  { "id": "none", "label": "분수가 아니에요" }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s2u4.A2.T2",
+          "prompt": "1/4 조각 11개를 원판에 채워 대분수로 나타내세요.",
+          "engine": "E05",
+          "mode": "mixed",
+          "cpa": "C",
+          "config": {
+            "mode": "mixed",
+            "direction": "improper-to-mixed",
+            "value": "11/4",
+            "wholeShape": "circle"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "eventAtLeast", "args": { "name": "fused", "count": 2 } },
+              { "kind": "equals", "path": "response.ans.raw", "value": "2 3/4" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "response.ans.raw", "value": "1 7/4" },
+              "level": 1,
+              "say": "남은 조각이 원판 하나보다 많지 않나요? 가득 찬 원판은 자연수로 옮기면 남는 조각은 얼마인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "mixed" },
+              "level": 1,
+              "say": "원판 하나에 1/4 조각이 몇 개 들어가나요? 조각 11개로 원판을 몇 개 만들 수 있나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "mixed" },
+              "level": 2,
+              "say": "가득 찬 원판과 아직 채우지 못한 조각을 따로 세어 볼까요? 남은 조각은 원판 하나의 얼마인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "mixed" },
+              "level": 3,
+              "backtrack": "g3s2u4.improper-mixed"
+            }
+          ],
+          "concepts": ["g3s2u4.improper-mixed"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "ans",
+                "label": "대분수",
+                "forms": ["mixed"]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s2u4.A2.T3",
+          "prompt": "2 1/3을 가분수로 나타내세요.",
+          "engine": "E05",
+          "mode": "mixed",
+          "cpa": "P",
+          "config": {
+            "mode": "mixed",
+            "direction": "mixed-to-improper",
+            "value": "2 1/3",
+            "wholeShape": "circle",
+            "allowBreakWhole": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "eventAtLeast",
+                "args": { "name": "broke-whole", "count": 2 }
+              },
+              { "kind": "equals", "path": "response.ans.value", "value": "7/3" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-FRAC-MIXED-CONVERT" },
+              "level": 1,
+              "say": "자연수 2는 1/3 조각 몇 개로 바꿀 수 있나요? 거기에 1/3 조각 하나를 더하면 모두 몇 조각인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "mixed" },
+              "level": 1,
+              "say": "자연수 2를 1/3 조각으로 모두 풀면 몇 조각인가요? 남은 1/3은 어떻게 더할 수 있나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "mixed" },
+              "level": 2,
+              "say": "자연수 상자 2개를 열어 1/3 조각을 모두 쏟으면 조각이 몇 개인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "mixed" },
+              "level": 3,
+              "backtrack": "g3s2u4.improper-mixed"
+            }
+          ],
+          "concepts": ["g3s2u4.improper-mixed"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-FRAC-MIXED-CONVERT",
+              "args": { "mixed": "2 1/3" },
+              "path": "response.ans.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "ans",
+                "label": "가분수",
+                "forms": ["fraction"]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s2u4.A2.T4",
+          "prompt": "13/5를 대분수로, 3 2/7을 가분수로 나타내세요.",
+          "engine": "E05",
+          "mode": "mixed",
+          "cpa": "A",
+          "config": {
+            "mode": "mixed",
+            "direction": "improper-to-mixed",
+            "value": "13/5",
+            "wholeShape": "bar"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "response.m1.raw", "value": "2 3/5" },
+              { "kind": "equals", "path": "response.m2.value", "value": "23/7" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-FRAC-MIXED-CONVERT" },
+              "level": 1,
+              "say": "13/5에는 5/5가 몇 번 들어가나요? 3 2/7에서 자연수 3은 1/7 조각 몇 개인가요?"
+            },
+            {
+              "when": { "misconception": "MC-FRAC-MIXED-CONVERT" },
+              "level": 2,
+              "say": "5/5가 모이면 자연수 1이 되고, 1/7 조각 7개가 모이면 자연수 1이 됩니다. 두 방향으로 각각 세어 볼까요?"
+            },
+            {
+              "when": { "misconception": "MC-FRAC-MIXED-CONVERT" },
+              "level": 3,
+              "backtrack": "g3s2u4.improper-mixed"
+            }
+          ],
+          "concepts": ["g3s2u4.improper-mixed"],
+          "submit": "button",
+          "showEngine": false,
+          "diagnose": [
+            {
+              "code": "MC-FRAC-MIXED-CONVERT",
+              "args": { "improper": "13/5" },
+              "path": "response.m1.value"
+            },
+            {
+              "code": "MC-FRAC-MIXED-CONVERT",
+              "args": { "mixed": "3 2/7" },
+              "path": "response.m2.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "m1",
+                "label": "13/5를 대분수로",
+                "forms": ["mixed"]
+              },
+              {
+                "kind": "number",
+                "id": "m2",
+                "label": "3 2/7을 가분수로",
+                "forms": ["fraction"]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "g3s2u4.A3",
+      "title": "수직선 매칭",
+      "tasks": [
+        {
+          "id": "g3s2u4.A3.T1",
+          "prompt": "분수 카드 6장을 수직선의 알맞은 자리에 꽂으세요.",
+          "engine": "E03",
+          "mode": "fraction",
+          "cpa": "P",
+          "config": {
+            "mode": "fraction",
+            "min": "0",
+            "max": "3",
+            "subdivisions": 4,
+            "cards": ["5/4", "1 1/4", "9/4", "2 3/4", "11/4", "3/4"],
+            "snap": "tick",
+            "labels": "partial"
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "cardsCorrect"
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction" },
+              "level": 1,
+              "say": "카드마다 분모가 몇 조각으로 나눈 것인지 보고, 0에서 몇 칸 떨어진 곳인지 세어 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction" },
+              "level": 2,
+              "say": "1보다 큰 카드는 1을 지나 몇 칸 더 가는지 세어 볼까요? 2보다 큰 카드도 같은 방법으로 찾아보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction" },
+              "level": 3,
+              "backtrack": "g3s2u4.compare-beyond-one"
+            }
+          ],
+          "concepts": ["g3s2u4.improper-mixed", "g3s2u4.compare-beyond-one"],
+          "submit": "button"
+        },
+        {
+          "id": "g3s2u4.A3.T2",
+          "prompt": "5/4와 11/4 각각 같은 수를 나타내는 카드를 고르세요.",
+          "engine": "E03",
+          "mode": "fraction",
+          "cpa": "P",
+          "config": {
+            "mode": "fraction",
+            "min": "0",
+            "max": "3",
+            "subdivisions": 4,
+            "cards": ["5/4", "1 1/4", "9/4", "2 3/4", "11/4", "3/4"],
+            "snap": "tick",
+            "labels": "partial"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "response.pair1.selected", "value": ["a"] },
+              { "kind": "equals", "path": "response.pair2.selected", "value": ["a"] }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction" },
+              "level": 1,
+              "say": "분모가 같은 카드끼리 분자만 견주어 보세요. 자연수 부분이 있는 카드는 가분수로 바꾸면 몇 조각인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction" },
+              "level": 2,
+              "say": "두 카드를 수직선에 꽂으면 같은 점에 놓이나요? 두 카드가 0에서 몇 칸 떨어진 곳에 놓이는지 견주어 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction" },
+              "level": 3,
+              "backtrack": "g3s2u4.compare-beyond-one"
+            }
+          ],
+          "concepts": ["g3s2u4.improper-mixed", "g3s2u4.compare-beyond-one"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "pair1",
+                "label": "5/4와 같은 점의 카드",
+                "multiple": false,
+                "options": [
+                  { "id": "a", "label": "1 1/4" },
+                  { "id": "b", "label": "9/4" },
+                  { "id": "c", "label": "3/4" }
+                ]
+              },
+              {
+                "kind": "choice",
+                "id": "pair2",
+                "label": "11/4와 같은 점의 카드",
+                "multiple": false,
+                "options": [
+                  { "id": "a", "label": "2 3/4" },
+                  { "id": "b", "label": "9/4" },
+                  { "id": "c", "label": "5/4" }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s2u4.A3.T3",
+          "prompt": "7/3과 2 2/3을 비교해 알맞은 부등호를 고르세요.",
+          "engine": "E03",
+          "mode": "fraction",
+          "cpa": "P",
+          "config": {
+            "mode": "fraction",
+            "min": "0",
+            "max": "3",
+            "subdivisions": 3,
+            "cards": ["7/3", "2 2/3"],
+            "labels": "partial"
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.cmp.symbol",
+            "value": "<"
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "response.cmp.symbol", "value": ">" },
+              "level": 1,
+              "say": "두 카드가 수직선에서 어디에 꽂혔는지 볼까요? 0에서 얼마나 떨어져 있는지 세어 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction" },
+              "level": 1,
+              "say": "분모가 같으면 한 칸의 크기가 같아요. 두 수가 각각 1을 몇 개 지나 몇 칸 더 가는지 세어 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction" },
+              "level": 2,
+              "show": {
+                "engine": "E03",
+                "overlay": "same-point",
+                "args": { "a": "7/3", "b": "2 2/3" }
+              }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction" },
+              "level": 3,
+              "backtrack": "g3s1u6.unit-fraction"
+            }
+          ],
+          "concepts": ["g3s2u4.compare-beyond-one"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "compare",
+                "id": "cmp",
+                "label": "부등호",
+                "left": "7/3",
+                "right": "2 2/3"
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s2u4.A3.T4",
+          "prompt": "9/5와 12/5를 비교해 알맞은 부등호를 고르세요.",
+          "engine": "E03",
+          "mode": "fraction",
+          "cpa": "A",
+          "config": {
+            "mode": "fraction",
+            "min": "0",
+            "max": "3",
+            "subdivisions": 5,
+            "labels": "partial"
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.cmp.symbol",
+            "value": "<"
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "response.cmp.symbol", "value": ">" },
+              "level": 1,
+              "say": "두 분모가 같으면 한 칸의 크기가 같아요. 0에서 몇 칸 떨어진 곳인지 분자로 견주어 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "response.cmp.symbol", "value": ">" },
+              "level": 2,
+              "say": "9/5와 12/5을 수직선에 각각 꽂으면 어느 쪽이 1을 더 많이 지나나요? 0에서 몇 칸씩 떨어진 곳인지 세어 볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.cmp.symbol", "value": ">" },
+              "level": 3,
+              "backtrack": "g3s1u6.compare-same-denom"
+            }
+          ],
+          "concepts": ["g3s2u4.compare-beyond-one"],
+          "submit": "button",
+          "showEngine": false,
+          "response": {
+            "fields": [
+              {
+                "kind": "compare",
+                "id": "cmp",
+                "label": "부등호",
+                "left": "9/5",
+                "right": "12/5"
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s2u4.A3.T5",
+          "prompt": "1 3/8과 12/8 중 더 큰 수를 고르세요.",
+          "engine": "E03",
+          "mode": "fraction",
+          "cpa": "A",
+          "config": {
+            "mode": "fraction",
+            "min": "0",
+            "max": "3",
+            "subdivisions": 8,
+            "labels": "partial"
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.pick.selected",
+            "value": ["b"]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "response.pick.selected", "value": ["a"] },
+              "level": 1,
+              "say": "1 3/8과 12/8은 모두 1을 지나요? 자연수 부분이 같으면 분수 부분은 어떻게 비교해야 할까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction" },
+              "level": 1,
+              "say": "1보다 큰 부분을 각각 8분의 몇으로 나타내 볼까요? 두 수 모두 1을 지나 몇 칸 더 가나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.pick.selected", "value": ["a"] },
+              "level": 2,
+              "say": "두 수를 각각 1과 견주어 볼까요? 1을 지나 더 가는 쪽은 어느 수인가요? 8분의 몇 조각이 더 많은지 세어 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "response.pick.selected", "value": ["a"] },
+              "level": 3,
+              "backtrack": "g3s2u4.compare-beyond-one"
+            }
+          ],
+          "concepts": ["g3s2u4.compare-beyond-one"],
+          "submit": "button",
+          "showEngine": false,
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "pick",
+                "label": "더 큰 수",
+                "multiple": false,
+                "options": [
+                  { "id": "a", "label": "1 3/8" },
+                  { "id": "b", "label": "12/8" }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
