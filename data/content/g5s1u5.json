@@ -222,8 +222,8 @@
                 "label": "그대로 덜어 낼 수 없는 까닭",
                 "multiple": false,
                 "options": [
-                  { "id": "a", "label": "조각 하나의 크기가 서로 달라서" },
                   { "id": "b", "label": "조각의 수가 서로 달라서" },
+                  { "id": "a", "label": "조각 하나의 크기가 서로 달라서" },
                   { "id": "c", "label": "자연수 부분이 없어서" }
                 ]
               }
@@ -371,8 +371,17 @@
                 "name": "hasMisconception",
                 "args": { "code": "MC-SUB-SMALLER-FROM-LARGER" }
               },
+              "level": 1,
+              "say": "빼려는 분수가 빼어지는 분수보다 크면 어디에서 조각을 가져와야 하나요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": { "code": "MC-SUB-SMALLER-FROM-LARGER" }
+              },
               "level": 2,
-              "say": "3/12에서 9/12을 뺄 수 있나요? 모자라면 어디에서 조각을 가져와야 하나요?"
+              "say": "작은 분수에서 큰 분수를 뺄 수 없을 때는 어떻게 해야 하나요? 자연수 하나를 풀면 조각이 몇 개 늘어나나요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "fraction-steps" },

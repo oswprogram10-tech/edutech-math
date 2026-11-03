@@ -600,11 +600,13 @@ export function StepSolverView({
   const diagnosis = useMemo(() => firstDiagnosis(state), [state]);
   const keys = useMemo(() => keypadKeys(config.keypad), [config.keypad]);
   const rootRef = useRef<HTMLDivElement>(null);
+  const linesRef = useRef<HTMLOListElement>(null);
   const focusPending = useRef<string | null>(null);
 
   const isDebug = state.mode === 'debug';
   const activeLine = activeLineOf(state);
   const activeLineId = activeLine?.id ?? '';
+  const showLabels = state.mode === 'fraction-steps' && state.stepLabels.length > 0;
 
   const lineIndexOf = (lineId: string): number => {
     if (isDebug && state.lines[0]?.id === lineId) return state.samples.length;
@@ -618,6 +620,16 @@ export function StepSolverView({
     const element = rootRef.current?.querySelector<HTMLElement>(`[data-testid="${testId}"]`);
     element?.focus();
   }, [state.cursor]);
+
+  // 단계 이름표가 있으면 줄 목록만 스크롤된다. 고치는 줄이 목록 밖으로 밀리지 않게 맞춘다.
+  useEffect(() => {
+    if (!showLabels) return;
+    const list = linesRef.current;
+    if (!list) return;
+    const index = state.lines.findIndex((line) => line.id === activeLineId);
+    if (index < 0) return;
+    list.children.item(index)?.scrollIntoView({ block: 'nearest' });
+  }, [showLabels, activeLineId, state.lines]);
 
   const focusCursor = (action: StepSolverAction): void => {
     const next = reduce(state, action);
@@ -725,7 +737,6 @@ export function StepSolverView({
   };
 
   const rootStyle = { '--target': `${targetSize}px` } as CSSProperties;
-  const showLabels = state.mode === 'fraction-steps' && state.stepLabels.length > 0;
   const sampleCount = state.samples.length;
   const correctionAnalysis = analysis.lines[sampleCount];
   const selected = state.selectedLine;
@@ -736,6 +747,7 @@ export function StepSolverView({
       style={rootStyle}
       data-testid="step-solver"
       data-target-size={targetSize}
+      data-step-labels={showLabels ? 'true' : undefined}
       tabIndex={0}
       role="group"
       aria-label={S.canvasLabel}
@@ -807,7 +819,7 @@ export function StepSolverView({
           </section>
         ) : null
       ) : (
-        <ol className={styles.lines} aria-label={S.canvasLabel}>
+        <ol ref={linesRef} className={styles.lines} aria-label={S.canvasLabel}>
           {state.lines.map((line, index) => (
             <LineRow
               key={line.id}

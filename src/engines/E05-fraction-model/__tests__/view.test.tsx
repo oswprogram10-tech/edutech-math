@@ -126,6 +126,33 @@ describe('E05 기본 showValue=none (정답 노출 금지)', () => {
   });
 });
 
+describe('E05 mixed 문제의 피연산자 표기', () => {
+  it('config가 대분수면 대분수로 보여 준다', () => {
+    const config: FractionModelConfig = {
+      mode: 'mixed',
+      op: '-',
+      a: '3 1/6',
+      b: '1 3/4',
+      breakWhole: true,
+      commonGrid: 12,
+    };
+    const text = textOf(config, createInitialState(config));
+    expect(text).toContain('3 1/6');
+    expect(text).toContain('1 3/4');
+    expect(text).not.toContain('19/6');
+    expect(text).not.toContain('7/4');
+  });
+
+  it('config가 가분수면 가분수 표기를 그대로 쓴다', () => {
+    const config: FractionModelConfig = { mode: 'mixed', op: '+', a: '19/6', b: '7/4' };
+    const text = textOf(config, createInitialState(config));
+    expect(text).toContain('19/6');
+    expect(text).toContain('7/4');
+    expect(text).not.toContain('3 1/6');
+    expect(text).not.toContain('1 3/4');
+  });
+});
+
 describe('E05 읽기 전용 partition (선택지 그림)', () => {
   it('넓이 막대와 등분 도장을 숨겨 정답을 알려 주지 않는다', () => {
     const equalConfig: FractionModelConfig = { mode: 'partition', fixedParts: 4 };

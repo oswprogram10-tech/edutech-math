@@ -248,6 +248,14 @@ test('A1 조각 크기 맞춰 합치기 — 대표 오답 뒤 고쳐서 네 과�
   await expect(
     (await engineSlot(page)).getByText('먼저 두 막대를 겹쳐 조각 크기를 맞춰요.'),
   ).toBeVisible();
+  // 맞는 선택지가 첫 자리에 오지 않도록 순서를 섞는다.
+  const whyOptions = responseSlot(page).locator('[data-response-field="why"] [data-option-id]');
+  await expect(whyOptions).toHaveCount(3);
+  expect(
+    await whyOptions.evaluateAll((nodes) =>
+      nodes.map((node) => node.getAttribute('data-option-id')),
+    ),
+  ).toEqual(['b', 'a', 'c']);
   await toggleChoice(page, 'why', '조각의 수가 서로 달라서');
   await submit(page);
   await expectFailedWithHint(page, '칸선이 같은 자리에 있나요');
@@ -287,7 +295,12 @@ test('A2 4단계 풀이 코치 — 대표 오답 뒤 고쳐서 다섯 과제를 
   await retypeStepField(page, 2, 0, 'whole', '2', 1);
   await retypeStepField(page, 2, 0, 'num', '7', 1);
   await submit(page);
-  await expectFailedWithHint(page, '3/12에서 9/12을 뺄 수 있나요', ['1 5/12', '17/12'], 2);
+  await expectFailedWithHint(
+    page,
+    '작은 분수에서 큰 분수를 뺄 수 없을 때',
+    ['1 5/12', '17/12', '3/12', '9/12'],
+    2,
+  );
   await retypeStepField(page, 2, 0, 'whole', '1', 1);
   await retypeStepField(page, 2, 0, 'num', '5', 1);
   await submit(page);
@@ -345,6 +358,32 @@ test('A3 대분수 막대 쪼개기 — 대표 오답 뒤 고쳐서 세 과제�
   await typeMixed(page, 'ans', '1', '3', '5');
   await submit(page);
   await expectPassed(page, true);
+});
+
+test('크롬북에서 단계 이름표가 있어도 + 줄 키가 화면 안에 보인다', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromebook', '크롬북 화면에서만 확인한다');
+
+  await openActivity(page, 'g5s1u5.A2', '4단계 풀이 코치');
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await expect(page.getByTestId('key-add-line')).toBeInViewport({ ratio: 1 });
+
+  // 단계 이름표가 있는 과제는 줄 목록만 스크롤하고 키패드는 판 안에 남는다.
+  const layout = await page.getByTestId('step-solver').evaluate((root) => {
+    const lines = root.querySelector('ol[class*="lines"]') as HTMLElement | null;
+    const keypad = root.querySelector('[class*="keypad"]') as HTMLElement | null;
+    return {
+      linesOverflow: lines ? getComputedStyle(lines).overflowY : null,
+      linesGrow: lines ? getComputedStyle(lines).flexGrow : null,
+      keypadBottom: keypad?.getBoundingClientRect().bottom ?? null,
+      rootBottom: root.getBoundingClientRect().bottom,
+    };
+  });
+  expect(layout.linesOverflow).toBe('auto');
+  expect(layout.linesGrow).toBe('1');
+  expect(layout.keypadBottom).not.toBeNull();
+  expect(layout.keypadBottom ?? Number.POSITIVE_INFINITY).toBeLessThanOrEqual(
+    layout.rootBottom + 1,
+  );
 });
 
 test('크롬북·전자칠판 첫 화면에 입력 칸과 확인하기가 들어온다', async ({ page }, testInfo) => {
