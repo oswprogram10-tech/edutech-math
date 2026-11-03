@@ -1,0 +1,143 @@
+.wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+  height: 100%;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.buttons {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.button,
+.smallButton {
+  min-height: 48px;
+  min-width: 48px;
+  padding: 0 0.9rem;
+  border: 2px solid #2f6fde;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #1d2330;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.smallButton {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 0.65rem;
+  font-size: 0.95rem;
+}
+
+.wrap[data-target-size='64'] .button {
+  min-height: 64px;
+  min-width: 64px;
+  font-size: 1.1rem;
+}
+
+.wrap[data-target-size='64'] .smallButton {
+  min-height: 56px;
+  min-width: 56px;
+}
+
+.button:disabled,
+.smallButton:disabled {
+  border-color: #aab4c6;
+  color: #7a8497;
+  cursor: not-allowed;
+}
+
+.total {
+  margin: 0;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.canvas {
+  display: block;
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  aspect-ratio: 5 / 3;
+  border-radius: 16px;
+  background: #fbfaf6;
+  border: 1px solid #d7deea;
+  touch-action: none;
+  user-select: none;
+}
+
+.focusRing {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 4;
+}
+
+.item:focus-visible .focusRing,
+.plate:focus-visible .focusRing,
+.frame:focus-visible .focusRing {
+  stroke: #e8872e;
+  stroke-dasharray: 8 5;
+}
+
+.item:focus-visible,
+.plate:focus-visible,
+.frame:focus-visible {
+  outline: none;
+}
+
+.item {
+  cursor: pointer;
+}
+
+.plateControls {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.plateControl {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid #d7deea;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.plateName {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.buttonRow {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.instructions {
+  margin: 0;
+  color: var(--muted, #5b6577);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.status {
+  margin: 0;
+  min-height: 1.4em;
+  color: #1d2330;
+  font-size: 0.95rem;
+}
