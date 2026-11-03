@@ -320,6 +320,17 @@ export const differentCutFrom: EnginePredicate = (
   return observation['cutSignature'] !== signature;
 };
 
+/** args `{ count? }`. 지금 칼선의 방향 묶음(0°·45°·90°·135°)이 count가지 이상인가. */
+export const cutDirectionsAtLeast: EnginePredicate = (
+  observation: Observation,
+  args: JsonValue | undefined,
+): boolean => {
+  const record = payloadRecord(args);
+  const wanted = payloadNumber(record?.['count']) ?? 2;
+  const value = observation['cutDirections'];
+  return typeof value === 'number' && value >= wanted;
+};
+
 const COUNT_KEYS: Readonly<Record<string, keyof EventCounts>> = {
   partitioned: 'partitioned',
   shaded: 'shaded',
@@ -404,6 +415,7 @@ export const predicates: Readonly<Record<string, EnginePredicate>> = {
   commonGridIs,
   commonGridSize: commonGridIs,
   differentCutFrom,
+  cutDirectionsAtLeast,
   eventAtLeast,
   shadedCountIs,
   isReducedValue,

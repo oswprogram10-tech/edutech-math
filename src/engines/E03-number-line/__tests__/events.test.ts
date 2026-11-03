@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { emit, hasPointAt, cardsCorrect, jumpTotalIs, predicates, samePoint } from '../events';
+import {
+  emit,
+  hasPointAt,
+  cardsCorrect,
+  jumpTotalIs,
+  onlyPointAt,
+  predicates,
+  samePoint,
+} from '../events';
 import { observe } from '../observe';
 import { createInitialState, reduce } from '../reduce';
 import type { NumberLineConfig, NumberLineState } from '../types';
@@ -78,6 +86,20 @@ describe('E03 predicates', () => {
     expect(hasPointAt(observed, { value: '0.75' })).toBe(true);
     expect(hasPointAt(observed, { value: '1/2' })).toBe(false);
     expect(predicates['hasPointAt']?.(observed, { value: '6/8' })).toBe(true);
+  });
+
+  it('onlyPointAt은 점이 정확히 하나이고 그 값이 같을 때만 참이다', () => {
+    let state = reduce(fraction(), { type: 'place-point', value: '1/4' });
+    let observed = observe(state);
+    expect(onlyPointAt(observed, { value: '1/4' })).toBe(true);
+    expect(onlyPointAt(observed, { value: '0.25' })).toBe(true);
+    expect(onlyPointAt(observed, { value: '1/2' })).toBe(false);
+    expect(predicates['onlyPointAt']?.(observed, { value: '1/4' })).toBe(true);
+
+    state = reduce(state, { type: 'place-point', value: '1/2' });
+    observed = observe(state);
+    expect(onlyPointAt(observed, { value: '1/4' })).toBe(false);
+    expect(onlyPointAt(observed, { value: '1/2' })).toBe(false);
   });
 
   it('samePoint와 jumpTotalIs를 판정한다', () => {

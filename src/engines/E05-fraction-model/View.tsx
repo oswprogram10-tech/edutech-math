@@ -302,30 +302,30 @@ function PartitionView({
 
   return (
     <div className={styles.wrap} data-target-size={targetSize} data-cpa={cpa}>
-      <div className={styles.toolbar} role="toolbar" aria-label={S.canvasLabel}>
-        <ToolbarButton pressed={tool === 'line'} onClick={() => setTool('line')}>
-          {S.toolLine}
-        </ToolbarButton>
-        {state.shape === 'circle' ? (
-          <ToolbarButton pressed={tool === 'radial'} onClick={() => setTool('radial')}>
-            {S.toolRadial}
+      {/* 선택지 그림처럼 읽기 전용일 때는 도구 막대를 그리지 않는다.
+          바깥 선택지 <button> 안에 <button>이 들어가는 잘못된 중첩을 막는다. */}
+      {readOnly ? null : (
+        <div className={styles.toolbar} role="toolbar" aria-label={S.canvasLabel}>
+          <ToolbarButton pressed={tool === 'line'} onClick={() => setTool('line')}>
+            {S.toolLine}
           </ToolbarButton>
-        ) : null}
-        <ToolbarButton onClick={centerCut} disabled={readOnly}>
-          {S.centerCut}
-        </ToolbarButton>
-        {state.shape === 'circle' ? (
-          <ToolbarButton onClick={radialCut} disabled={readOnly}>
-            {S.radialCut}
+          {state.shape === 'circle' ? (
+            <ToolbarButton pressed={tool === 'radial'} onClick={() => setTool('radial')}>
+              {S.toolRadial}
+            </ToolbarButton>
+          ) : null}
+          <ToolbarButton onClick={centerCut}>{S.centerCut}</ToolbarButton>
+          {state.shape === 'circle' ? (
+            <ToolbarButton onClick={radialCut}>{S.radialCut}</ToolbarButton>
+          ) : null}
+          <ToolbarButton
+            onClick={() => dispatch({ type: 'clear-cuts' })}
+            disabled={state.cuts.length === 0}
+          >
+            {S.clearCuts}
           </ToolbarButton>
-        ) : null}
-        <ToolbarButton
-          onClick={() => dispatch({ type: 'clear-cuts' })}
-          disabled={readOnly || state.cuts.length === 0}
-        >
-          {S.clearCuts}
-        </ToolbarButton>
-      </div>
+        </div>
+      )}
 
       <CanvasFrame
         svgRef={svgRef}
@@ -392,22 +392,26 @@ function PartitionView({
           />
         ) : null}
 
-        <AreaBars pieces={pieces} />
-        {pieces.length === 1 ? (
-          <text x={500} y={552} textAnchor="middle" fill={INK} fontSize={22}>
-            {S.instructions.partition}
-          </text>
-        ) : (
-          <text
-            x={500}
-            y={556}
-            textAnchor="middle"
-            fill={equal ? GREEN : '#a34a1f'}
-            fontSize={26}
-            fontWeight={700}
-          >
-            {equal ? S.equalStamp : S.notEqualStamp}
-          </text>
+        {readOnly ? null : (
+          <>
+            <AreaBars pieces={pieces} />
+            {pieces.length === 1 ? (
+              <text x={500} y={552} textAnchor="middle" fill={INK} fontSize={22}>
+                {S.instructions.partition}
+              </text>
+            ) : (
+              <text
+                x={500}
+                y={556}
+                textAnchor="middle"
+                fill={equal ? GREEN : '#a34a1f'}
+                fontSize={26}
+                fontWeight={700}
+              >
+                {equal ? S.equalStamp : S.notEqualStamp}
+              </text>
+            )}
+          </>
         )}
       </CanvasFrame>
 

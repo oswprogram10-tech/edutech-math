@@ -1,0 +1,1220 @@
+{
+  "unit": "g3s1u6",
+  "title": "분수와 소수",
+  "activities": [
+    {
+      "id": "g3s1u6.A1",
+      "title": "등분 레이저 커터",
+      "tasks": [
+        {
+          "id": "g3s1u6.A1.T1",
+          "prompt": "직사각형 케이크를 똑같이 4조각으로 나눠 보세요.",
+          "engine": "E05",
+          "mode": "partition",
+          "cpa": "C",
+          "config": {
+            "mode": "partition",
+            "shape": "rect",
+            "targetParts": 4,
+            "cutTool": "free-line",
+            "equalityCheck": "area",
+            "areaTolerance": 0.02
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "isEqualPartition",
+            "args": { "parts": 4 }
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "equal", "value": false },
+              "level": 1,
+              "say": "조각이 네 개인데 넓이가 모두 같지는 않아요. 아래 넓이 막대를 보고 어느 조각이 다른지 찾아볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 1,
+              "say": "칼선을 옮겨 조각의 넓이를 똑같이 맞춰 보세요. 조각 수만 같다고 등분은 아니에요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 2,
+              "show": { "engine": "E05", "overlay": "size-compare" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 3,
+              "backtrack": "g3s1u3.partitive-division"
+            }
+          ],
+          "concepts": ["g3s1u6.equal-parts"],
+          "submit": "button"
+        },
+        {
+          "id": "g3s1u6.A1.T2",
+          "prompt": "이번에는 방향이 다른 칼선을 섞어서 똑같이 4조각으로 나눠 보세요.",
+          "engine": "E05",
+          "mode": "partition",
+          "cpa": "C",
+          "config": {
+            "mode": "partition",
+            "shape": "rect",
+            "targetParts": 4,
+            "cutTool": "free-line",
+            "areaTolerance": 0.02
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "isEqualPartition",
+                "args": { "parts": 4 }
+              },
+              {
+                "kind": "predicate",
+                "name": "cutDirectionsAtLeast",
+                "args": { "count": 2 }
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "equal", "value": false },
+              "level": 1,
+              "say": "네 조각의 넓이가 모두 같은지 아래 막대를 봐요. 넓이가 같아야 똑같이 나눈 거예요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 1,
+              "say": "가로 칼선과 세로 칼선을 함께 써 보세요. 한 방향으로만 자르면 조각이 길쭉해져요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 2,
+              "show": { "engine": "E05", "overlay": "size-compare" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 3,
+              "backtrack": "g3s1u3.partitive-division"
+            }
+          ],
+          "concepts": ["g3s1u6.equal-parts"],
+          "submit": "button"
+        },
+        {
+          "id": "g3s1u6.A1.T3",
+          "prompt": "4등분이 아닌 그림을 모두 고르세요.",
+          "engine": "E05",
+          "mode": "partition",
+          "cpa": "P",
+          "config": {
+            "mode": "partition",
+            "shape": "rect",
+            "areaTolerance": 0.02,
+            "presetCuts": [
+              {
+                "points": [
+                  { "x": 300, "y": 150 },
+                  { "x": 300, "y": 450 }
+                ]
+              },
+              {
+                "points": [
+                  { "x": 500, "y": 150 },
+                  { "x": 500, "y": 450 }
+                ]
+              },
+              {
+                "points": [
+                  { "x": 700, "y": 150 },
+                  { "x": 700, "y": 450 }
+                ]
+              }
+            ]
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.pick.selected",
+            "value": ["b", "d", "f"]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 1,
+              "say": "고른 그림마다 조각 수와 조각 크기를 모두 살펴보세요. 조각 수가 같아도 크기가 다르면 4등분이 아니에요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 2,
+              "show": { "engine": "E05", "overlay": "size-compare" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 3,
+              "backtrack": "g3s1u3.partitive-division"
+            }
+          ],
+          "concepts": ["g3s1u6.equal-parts"],
+          "submit": "button",
+          "showEngine": false,
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "pick",
+                "label": "그림",
+                "multiple": true,
+                "options": [
+                  {
+                    "id": "a",
+                    "label": "가",
+                    "figure": {
+                      "engine": "E05",
+                      "mode": "partition",
+                      "cpa": "P",
+                      "config": {
+                        "mode": "partition",
+                        "shape": "rect",
+                        "fixedParts": 4
+                      }
+                    }
+                  },
+                  {
+                    "id": "b",
+                    "label": "나",
+                    "figure": {
+                      "engine": "E05",
+                      "mode": "partition",
+                      "cpa": "P",
+                      "config": {
+                        "mode": "partition",
+                        "shape": "rect",
+                        "areaTolerance": 0.02,
+                        "presetCuts": [
+                          {
+                            "points": [
+                              { "x": 300, "y": 150 },
+                              { "x": 300, "y": 450 }
+                            ]
+                          },
+                          {
+                            "points": [
+                              { "x": 500, "y": 150 },
+                              { "x": 500, "y": 450 }
+                            ]
+                          },
+                          {
+                            "points": [
+                              { "x": 700, "y": 150 },
+                              { "x": 700, "y": 450 }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "id": "c",
+                    "label": "다",
+                    "figure": {
+                      "engine": "E05",
+                      "mode": "partition",
+                      "cpa": "P",
+                      "config": {
+                        "mode": "partition",
+                        "shape": "rect",
+                        "presetCuts": [
+                          {
+                            "points": [
+                              { "x": 500, "y": 150 },
+                              { "x": 500, "y": 450 }
+                            ]
+                          },
+                          {
+                            "points": [
+                              { "x": 150, "y": 300 },
+                              { "x": 850, "y": 300 }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "id": "d",
+                    "label": "라",
+                    "figure": {
+                      "engine": "E05",
+                      "mode": "partition",
+                      "cpa": "P",
+                      "config": {
+                        "mode": "partition",
+                        "shape": "rect",
+                        "fixedParts": 3
+                      }
+                    }
+                  },
+                  {
+                    "id": "e",
+                    "label": "마",
+                    "figure": {
+                      "engine": "E05",
+                      "mode": "partition",
+                      "cpa": "P",
+                      "config": {
+                        "mode": "partition",
+                        "shape": "rect",
+                        "presetCuts": [
+                          {
+                            "points": [
+                              { "x": 150, "y": 150 },
+                              { "x": 850, "y": 450 }
+                            ]
+                          },
+                          {
+                            "points": [
+                              { "x": 150, "y": 450 },
+                              { "x": 850, "y": 150 }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "id": "f",
+                    "label": "바",
+                    "figure": {
+                      "engine": "E05",
+                      "mode": "partition",
+                      "cpa": "P",
+                      "config": {
+                        "mode": "partition",
+                        "shape": "rect",
+                        "areaTolerance": 0.02,
+                        "presetCuts": [
+                          {
+                            "points": [
+                              { "x": 500, "y": 150 },
+                              { "x": 500, "y": 450 }
+                            ]
+                          },
+                          {
+                            "points": [
+                              { "x": 150, "y": 250 },
+                              { "x": 850, "y": 250 }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s1u6.A1.T4",
+          "prompt": "원 케이크를 똑같이 3조각으로 나눈 뒤, 조각 두 개를 색칠하고 색칠한 부분을 분수로 쓰세요.",
+          "engine": "E05",
+          "mode": "partition",
+          "cpa": "P",
+          "config": {
+            "mode": "partition",
+            "shape": "circle",
+            "cutTool": "radial",
+            "targetParts": 3
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "isEqualPartition",
+                "args": { "parts": 3 }
+              },
+              {
+                "kind": "predicate",
+                "name": "shadedCountIs",
+                "args": { "count": 2 }
+              },
+              {
+                "kind": "equals",
+                "path": "response.frac.value",
+                "value": "2/3"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "equal", "value": false },
+              "level": 1,
+              "say": "세 조각의 넓이가 모두 같은지 원의 조각을 살펴보세요. 중심에서 같은 각도로 잘라야 해요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 1,
+              "say": "색칠한 조각 수와 전체 조각 수를 각각 세어 분수로 써 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 2,
+              "show": { "engine": "E05", "overlay": "size-compare" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 3,
+              "backtrack": "g3s1u6.equal-parts"
+            }
+          ],
+          "concepts": ["g3s1u6.equal-parts", "g3s1u6.part-of-whole"],
+          "submit": "button",
+          "views": [
+            {
+              "slot": "left",
+              "engine": "E05",
+              "mode": "partition",
+              "cpa": "P",
+              "config": {
+                "mode": "partition",
+                "shape": "circle",
+                "cutTool": "radial",
+                "targetParts": 3
+              }
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "frac",
+                "label": "분수",
+                "forms": ["fraction"]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s1u6.A1.T5",
+          "prompt": "색칠한 부분이 전체의 얼마인지 분수로 쓰세요.",
+          "engine": "E05",
+          "mode": "shade",
+          "cpa": "A",
+          "config": {
+            "mode": "shade",
+            "shape": "bar",
+            "whole": {
+              "shape": "bar",
+              "partsX": 8,
+              "shaded": [0, 1, 2, 3, 4]
+            }
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "shadedCountIs",
+                "args": { "count": 5 }
+              },
+              {
+                "kind": "equals",
+                "path": "response.ans.value",
+                "value": "5/8"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-FRAC-PART-PART" },
+              "level": 1,
+              "say": "분모는 전체가 몇 조각인지 나타내요. 색칠한 칸과 전체 칸을 다시 세어 볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "shade" },
+              "level": 1,
+              "say": "색칠한 칸 수를 위에, 전체 칸 수를 아래에 써 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "shade" },
+              "level": 2,
+              "show": { "engine": "E05", "overlay": "grid-reveal" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "shade" },
+              "level": 3,
+              "backtrack": "g3s1u6.equal-parts"
+            }
+          ],
+          "concepts": ["g3s1u6.part-of-whole"],
+          "submit": "button",
+          "views": [
+            {
+              "slot": "left",
+              "engine": "E05",
+              "mode": "shade",
+              "cpa": "A",
+              "config": {
+                "mode": "shade",
+                "shape": "bar",
+                "whole": {
+                  "shape": "bar",
+                  "partsX": 8,
+                  "shaded": [0, 1, 2, 3, 4]
+                }
+              }
+            }
+          ],
+          "diagnose": [
+            {
+              "code": "MC-FRAC-PART-PART",
+              "args": { "part": "5", "whole": "8" }
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "ans",
+                "label": "분수",
+                "forms": ["fraction"]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "g3s1u6.A2",
+      "title": "단위분수 크기 비교",
+      "tasks": [
+        {
+          "id": "g3s1u6.A2.T1",
+          "prompt": "1/3과 1/5 중 어느 것이 더 큰지 부등호로 나타내세요.",
+          "engine": "E05",
+          "mode": "compare",
+          "cpa": "C",
+          "config": {
+            "mode": "compare",
+            "bars": [
+              { "parts": 3, "shaded": [0], "label": "1/3" },
+              { "parts": 5, "shaded": [0], "label": "1/5" }
+            ],
+            "align": "left"
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.cmp.symbol",
+            "value": ">"
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-FRAC-BIGGER-DENOM" },
+              "level": 1,
+              "say": "케이크를 5명이 나눌 때와 3명이 나눌 때, 내 조각은 언제 더 클까요? 막대의 한 칸 길이를 겹쳐 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "compare" },
+              "level": 1,
+              "say": "두 막대에서 색칠한 한 칸의 길이를 나란히 놓고 비교해 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "compare" },
+              "level": 2,
+              "show": {
+                "engine": "E03",
+                "overlay": "same-point",
+                "args": { "a": "1/3", "b": "1/5" }
+              }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "compare" },
+              "level": 3,
+              "backtrack": "g3s1u6.unit-fraction"
+            }
+          ],
+          "concepts": ["g3s1u6.unit-fraction"],
+          "submit": "button",
+          "views": [
+            {
+              "slot": "left",
+              "engine": "E05",
+              "mode": "compare",
+              "cpa": "C",
+              "config": {
+                "mode": "compare",
+                "bars": [
+                  { "parts": 3, "shaded": [0], "label": "1/3" },
+                  { "parts": 5, "shaded": [0], "label": "1/5" }
+                ],
+                "align": "left"
+              }
+            },
+            {
+              "slot": "right",
+              "engine": "E03",
+              "mode": "fraction",
+              "cpa": "P",
+              "config": {
+                "mode": "fraction",
+                "min": "0",
+                "max": "1",
+                "subdivisions": [3, 5]
+              }
+            }
+          ],
+          "links": [{ "from": "left", "event": "value-changed", "to": "right" }],
+          "diagnose": [
+            {
+              "code": "MC-FRAC-BIGGER-DENOM",
+              "args": { "left": "1/3", "right": "1/5" },
+              "path": "response.cmp.symbol"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "compare",
+                "id": "cmp",
+                "label": "부등호",
+                "left": "1/3",
+                "right": "1/5"
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s1u6.A2.T2",
+          "prompt": "1/2, 1/4, 1/8을 큰 수부터 차례대로 놓으세요.",
+          "engine": "E05",
+          "mode": "compare",
+          "cpa": "P",
+          "config": {
+            "mode": "compare",
+            "bars": [
+              { "parts": 2, "shaded": [0], "label": "1/2" },
+              { "parts": 4, "shaded": [0], "label": "1/4" },
+              { "parts": 8, "shaded": [0], "label": "1/8" }
+            ],
+            "align": "left"
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.seq.order",
+            "value": ["h2", "h4", "h8"]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "compare" },
+              "level": 1,
+              "say": "막대에서 색칠한 한 칸을 겹쳐 보세요. 조각이 많을수록 한 칸은 어떻게 될까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "compare" },
+              "level": 2,
+              "show": {
+                "engine": "E03",
+                "overlay": "same-point",
+                "args": { "a": "1/2", "b": "1/8" }
+              }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "compare" },
+              "level": 3,
+              "backtrack": "g3s1u6.unit-fraction"
+            }
+          ],
+          "concepts": ["g3s1u6.unit-fraction"],
+          "submit": "button",
+          "views": [
+            {
+              "slot": "left",
+              "engine": "E05",
+              "mode": "compare",
+              "cpa": "P",
+              "config": {
+                "mode": "compare",
+                "bars": [
+                  { "parts": 2, "shaded": [0], "label": "1/2" },
+                  { "parts": 4, "shaded": [0], "label": "1/4" },
+                  { "parts": 8, "shaded": [0], "label": "1/8" }
+                ],
+                "align": "left"
+              }
+            },
+            {
+              "slot": "right",
+              "engine": "E03",
+              "mode": "fraction",
+              "cpa": "P",
+              "config": {
+                "mode": "fraction",
+                "min": "0",
+                "max": "1",
+                "subdivisions": [2, 4, 8]
+              }
+            }
+          ],
+          "links": [{ "from": "left", "event": "value-changed", "to": "right" }],
+          "response": {
+            "fields": [
+              {
+                "kind": "order",
+                "id": "seq",
+                "label": "차례",
+                "items": [
+                  { "id": "h8", "label": "1/8" },
+                  { "id": "h4", "label": "1/4" },
+                  { "id": "h2", "label": "1/2" }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s1u6.A2.T3",
+          "prompt": "수직선에 1/4 자리를 찾아 점을 하나만 찍으세요.",
+          "engine": "E03",
+          "mode": "fraction",
+          "cpa": "P",
+          "config": {
+            "mode": "fraction",
+            "min": "0",
+            "max": "1",
+            "subdivisions": [4]
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "onlyPointAt",
+            "args": { "value": "1/4" }
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction" },
+              "level": 1,
+              "say": "점을 하나만 찍어야 해요. 0과 1 사이를 몇 조각으로 나눈 눈금인지 보고, 그중 하나만 골라 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction" },
+              "level": 2,
+              "show": { "engine": "E03", "overlay": "distance-from-zero" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction" },
+              "level": 3,
+              "backtrack": "g3s1u6.unit-fraction"
+            }
+          ],
+          "concepts": ["g3s1u6.unit-fraction"],
+          "submit": "button"
+        },
+        {
+          "id": "g3s1u6.A2.T4",
+          "prompt": "두 분수를 비교해 알맞은 부등호를 고르세요.",
+          "engine": "E05",
+          "mode": "compare",
+          "cpa": "P",
+          "config": {
+            "mode": "compare",
+            "bars": [
+              { "parts": 5, "shaded": [0, 1], "label": "2/5" },
+              { "parts": 5, "shaded": [0, 1, 2, 3], "label": "4/5" },
+              { "parts": 7, "shaded": [0, 1, 2], "label": "3/7" },
+              { "parts": 7, "shaded": [0, 1, 2, 3, 4], "label": "5/7" }
+            ],
+            "align": "left"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "equals",
+                "path": "response.c1.symbol",
+                "value": "<"
+              },
+              {
+                "kind": "equals",
+                "path": "response.c2.symbol",
+                "value": "<"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "compare" },
+              "level": 1,
+              "say": "분모가 같으면 한 칸의 크기가 같아요. 색칠한 칸 수가 많은 쪽이 더 큰지 살펴보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "compare" },
+              "level": 2,
+              "show": {
+                "engine": "E03",
+                "overlay": "same-point",
+                "args": { "a": "2/5", "b": "4/5" }
+              }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "compare" },
+              "level": 3,
+              "backtrack": "g3s1u6.compare-same-denom"
+            }
+          ],
+          "concepts": ["g3s1u6.compare-same-denom"],
+          "submit": "button",
+          "views": [
+            {
+              "slot": "left",
+              "engine": "E05",
+              "mode": "compare",
+              "cpa": "P",
+              "config": {
+                "mode": "compare",
+                "bars": [
+                  { "parts": 5, "shaded": [0, 1], "label": "2/5" },
+                  { "parts": 5, "shaded": [0, 1, 2, 3], "label": "4/5" },
+                  { "parts": 7, "shaded": [0, 1, 2], "label": "3/7" },
+                  { "parts": 7, "shaded": [0, 1, 2, 3, 4], "label": "5/7" }
+                ],
+                "align": "left"
+              }
+            },
+            {
+              "slot": "right",
+              "engine": "E03",
+              "mode": "fraction",
+              "cpa": "P",
+              "config": {
+                "mode": "fraction",
+                "min": "0",
+                "max": "1",
+                "subdivisions": [5, 7]
+              }
+            }
+          ],
+          "links": [{ "from": "left", "event": "value-changed", "to": "right" }],
+          "response": {
+            "fields": [
+              {
+                "kind": "compare",
+                "id": "c1",
+                "label": "첫째 비교",
+                "left": "2/5",
+                "right": "4/5"
+              },
+              {
+                "kind": "compare",
+                "id": "c2",
+                "label": "둘째 비교",
+                "left": "3/7",
+                "right": "5/7"
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s1u6.A2.T5",
+          "prompt": "1/6보다 크고 5/6보다 작은 분수를 모두 고르세요.",
+          "engine": "E03",
+          "mode": "fraction",
+          "cpa": "A",
+          "config": {
+            "mode": "fraction",
+            "min": "0",
+            "max": "1",
+            "subdivisions": [6]
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.pick.selected",
+            "value": ["n2", "n3", "n4"]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction" },
+              "level": 1,
+              "say": "1/6과 5/6 사이에 있는 분수를 찾아보세요. 분모가 같을 때는 분자가 무엇을 뜻할까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction" },
+              "level": 2,
+              "show": {
+                "engine": "E03",
+                "overlay": "same-point",
+                "args": { "a": "1/6", "b": "5/6" }
+              }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction" },
+              "level": 3,
+              "backtrack": "g3s1u6.compare-same-denom"
+            }
+          ],
+          "concepts": ["g3s1u6.compare-same-denom"],
+          "submit": "button",
+          "showEngine": false,
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "pick",
+                "label": "분수",
+                "multiple": true,
+                "options": [
+                  { "id": "n1", "label": "1/6" },
+                  { "id": "n2", "label": "2/6" },
+                  { "id": "n3", "label": "3/6" },
+                  { "id": "n4", "label": "4/6" },
+                  { "id": "n5", "label": "5/6" }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "g3s1u6.A3",
+      "title": "1/10 확대경",
+      "tasks": [
+        {
+          "id": "g3s1u6.A3.T1",
+          "prompt": "10등분한 리본을 4칸 색칠하고, 색칠한 부분을 분수와 소수로 쓰세요.",
+          "engine": "E05",
+          "mode": "partition",
+          "cpa": "C",
+          "config": {
+            "mode": "partition",
+            "shape": "bar",
+            "fixedParts": 10,
+            "label": "1m"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "shadedCountIs",
+                "args": { "count": 4 }
+              },
+              {
+                "kind": "equals",
+                "path": "response.frac.value",
+                "value": "2/5"
+              },
+              {
+                "kind": "equals",
+                "path": "response.dec.value",
+                "value": "2/5"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-FRAC-DEC-LINK" },
+              "level": 1,
+              "say": "10칸 중 몇 칸을 색칠했나요? 0.1이 몇 개 모이면 그만큼이 되는지 세어 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 1,
+              "say": "색칠한 칸 수를 분수로 쓰고, 그 분수를 0.1이 몇 개인지로 바꾸어 소수로 써 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 2,
+              "show": { "engine": "E05", "overlay": "size-compare" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 3,
+              "backtrack": "g3s1u6.tenths-decimal"
+            }
+          ],
+          "concepts": ["g3s1u6.part-of-whole", "g3s1u6.tenths-decimal"],
+          "submit": "button",
+          "views": [
+            {
+              "slot": "left",
+              "engine": "E05",
+              "mode": "partition",
+              "cpa": "C",
+              "config": {
+                "mode": "partition",
+                "shape": "bar",
+                "fixedParts": 10,
+                "label": "1m"
+              }
+            },
+            {
+              "slot": "right",
+              "engine": "E03",
+              "mode": "decimal",
+              "cpa": "P",
+              "config": {
+                "mode": "decimal",
+                "min": "0",
+                "max": "3",
+                "unit": "1",
+                "zoom": { "from": "1", "to": "1/10" }
+              }
+            }
+          ],
+          "links": [{ "from": "left", "event": "value-changed", "to": "right" }],
+          "diagnose": [
+            {
+              "code": "MC-FRAC-DEC-LINK",
+              "args": { "fraction": "4/10" },
+              "path": "response.dec.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "frac",
+                "label": "분수",
+                "forms": ["fraction"]
+              },
+              {
+                "kind": "number",
+                "id": "dec",
+                "label": "소수",
+                "forms": ["decimal"]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s1u6.A3.T2",
+          "prompt": "수직선에 0.7 자리를 찾아 점을 하나만 찍으세요.",
+          "engine": "E03",
+          "mode": "decimal",
+          "cpa": "P",
+          "config": {
+            "mode": "decimal",
+            "min": "0",
+            "max": "3",
+            "unit": "1",
+            "zoom": { "from": "1", "to": "1/10" }
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "onlyPointAt",
+            "args": { "value": "0.7" }
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal" },
+              "level": 1,
+              "say": "0과 1 사이를 10칸으로 나눈 눈금을 찾아보세요. 0에서 몇 칸 떨어진 곳인지 세어 볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal" },
+              "level": 2,
+              "show": { "engine": "E03", "overlay": "distance-from-zero" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal" },
+              "level": 3,
+              "backtrack": "g3s1u6.tenths-decimal"
+            }
+          ],
+          "concepts": ["g3s1u6.tenths-decimal"],
+          "submit": "button"
+        },
+        {
+          "id": "g3s1u6.A3.T3",
+          "prompt": "수직선에 1.3 자리를 찾아 점을 하나만 찍으세요.",
+          "engine": "E03",
+          "mode": "decimal",
+          "cpa": "P",
+          "config": {
+            "mode": "decimal",
+            "min": "0",
+            "max": "3",
+            "unit": "1",
+            "zoom": { "from": "1", "to": "1/10" }
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "onlyPointAt",
+            "args": { "value": "1.3" }
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal" },
+              "level": 1,
+              "say": "1과 2 사이를 10칸으로 나눈 눈금을 찾아보세요. 1에서 몇 칸 더 가야 하는지 세어 볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal" },
+              "level": 2,
+              "show": { "engine": "E03", "overlay": "distance-from-zero" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal" },
+              "level": 3,
+              "backtrack": "g3s1u6.tenths-decimal"
+            }
+          ],
+          "concepts": ["g3s1u6.tenths-decimal"],
+          "submit": "button"
+        },
+        {
+          "id": "g3s1u6.A3.T4",
+          "prompt": "두 소수를 비교해 알맞은 부등호를 고르세요.",
+          "engine": "E05",
+          "mode": "partition",
+          "cpa": "P",
+          "config": {
+            "mode": "partition",
+            "shape": "bar",
+            "fixedParts": 10,
+            "label": "1m"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "equals",
+                "path": "response.c1.symbol",
+                "value": "<"
+              },
+              {
+                "kind": "equals",
+                "path": "response.c2.symbol",
+                "value": ">"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 1,
+              "say": "0.1이 각각 몇 개인지 세어 보고, 수직선에서 어느 쪽이 더 오른쪽에 있는지 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 2,
+              "show": {
+                "engine": "E03",
+                "overlay": "same-point",
+                "args": { "a": "0.6", "b": "0.9" }
+              }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 3,
+              "backtrack": "g3s1u6.tenths-decimal"
+            }
+          ],
+          "concepts": ["g3s1u6.tenths-decimal"],
+          "submit": "button",
+          "views": [
+            {
+              "slot": "left",
+              "engine": "E05",
+              "mode": "partition",
+              "cpa": "P",
+              "config": {
+                "mode": "partition",
+                "shape": "bar",
+                "fixedParts": 10,
+                "label": "1m"
+              }
+            },
+            {
+              "slot": "right",
+              "engine": "E03",
+              "mode": "decimal",
+              "cpa": "P",
+              "config": {
+                "mode": "decimal",
+                "min": "0",
+                "max": "3",
+                "unit": "1",
+                "zoom": { "from": "1", "to": "1/10" }
+              }
+            }
+          ],
+          "links": [{ "from": "left", "event": "value-changed", "to": "right" }],
+          "response": {
+            "fields": [
+              {
+                "kind": "compare",
+                "id": "c1",
+                "label": "첫째 비교",
+                "left": "0.6",
+                "right": "0.9"
+              },
+              {
+                "kind": "compare",
+                "id": "c2",
+                "label": "둘째 비교",
+                "left": "1.2",
+                "right": "0.8"
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s1u6.A3.T5",
+          "prompt": "0.1이 23개인 수를 소수로 쓰세요.",
+          "engine": "E03",
+          "mode": "decimal",
+          "cpa": "A",
+          "config": {
+            "mode": "decimal",
+            "min": "0",
+            "max": "3",
+            "unit": "1",
+            "zoom": { "from": "1", "to": "1/10" }
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.ans.value",
+            "value": "23/10"
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal" },
+              "level": 1,
+              "say": "0.1이 10개면 1이에요. 23개면 1이 몇 개이고 0.1이 몇 개 남을까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal" },
+              "level": 2,
+              "show": {
+                "engine": "E03",
+                "overlay": "same-point",
+                "args": { "a": "0.1", "b": "1" }
+              }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal" },
+              "level": 3,
+              "backtrack": "g3s1u6.tenths-decimal"
+            }
+          ],
+          "concepts": ["g3s1u6.tenths-decimal"],
+          "submit": "button",
+          "showEngine": false,
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "ans",
+                "label": "소수",
+                "forms": ["decimal"]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -6,7 +6,7 @@
  */
 import { Rational } from '../../core/math';
 import type { JsonValue, Observation } from '../../core/engine-sdk';
-import { cutSignature, piecesAreEqual } from './geometry';
+import { cutDirectionCount, cutSignature, piecesAreEqual } from './geometry';
 import { decimalLabel, denominatorNumber, gcd, mixedLabel, numeratorNumber } from './fractions';
 import { overlayCells, piecesOf, simplifyView } from './reduce';
 import type { EventCounts, FractionModelConfig, FractionModelState } from './types';
@@ -97,6 +97,7 @@ export function observe(state: FractionModelState, config: FractionModelConfig):
         ...base,
         wholes: [entry],
         cutSignature: cutSignature(state.cuts),
+        cutDirections: cutDirectionCount(state.cuts),
         commonGrid: null,
         fixedParts: state.fixedParts,
         equal,

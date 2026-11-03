@@ -37,6 +37,38 @@ async function passThenNext(page: Page) {
   await page.getByRole('button', { name: '다음 과제' }).click();
 }
 
+/**
+ * ③ 힌트 뒤에는 지난 개념 부스터가 열린다. g3s1u6 단원 콘텐츠가 들어오면서
+ * demo.A3의 역추적이 g3s1u6.A2(단위분수) 부스터를 찾는다.
+ * 이 테스트는 응답 위젯 흐름을 보는 것이므로, 부스터 세 과제를 대표 정답으로
+ * 통과시키고 원래 과제로 돌아온다.
+ */
+async function finishBooster(page: Page) {
+  const dialog = page.getByTestId('booster-dialog');
+  await expect(dialog).toBeVisible();
+
+  // 1/3 > 1/5
+  await dialog.getByRole('button', { name: '크다' }).click();
+  await dialog.getByRole('button', { name: '확인하기' }).click();
+  await dialog.getByRole('button', { name: '다음 과제' }).click();
+
+  // 1/2, 1/4, 1/8을 큰 수부터
+  await dialog.getByRole('button', { name: '1/2 위로' }).click();
+  await dialog.getByRole('button', { name: '1/2 위로' }).click();
+  await dialog.getByRole('button', { name: '1/4 위로' }).click();
+  await dialog.getByRole('button', { name: '확인하기' }).click();
+  await dialog.getByRole('button', { name: '다음 과제' }).click();
+
+  // 수직선에 1/4
+  const canvas = dialog.getByTestId('number-line-canvas');
+  await canvas.scrollIntoViewIfNeeded();
+  const box = await canvas.boundingBox();
+  if (!box) throw new Error('부스터 수직선 크기를 알 수 없습니다.');
+  await page.mouse.click(box.x + 0.3 * box.width, box.y + 0.5 * box.height);
+  await dialog.getByRole('button', { name: '확인하기' }).click();
+  await expect(dialog).toHaveCount(0);
+}
+
 test('응답 과제 다섯 가지를 틀렸다가 고쳐서 통과한다', async ({ page }) => {
   await openActivity(page);
 
@@ -70,6 +102,7 @@ test('응답 과제 다섯 가지를 틀렸다가 고쳐서 통과한다', async
   await expect(hint).toHaveAttribute('data-hint-level', '3');
   await expect(page.getByTestId('hint-help')).toBeVisible();
   await expectNoAnswerLeak(page, ['5/6']);
+  await finishBooster(page);
 
   // 지우고 5/6으로 고쳐 쓴다.
   await response.getByRole('button', { name: '모두 지우기' }).click();

@@ -126,6 +126,76 @@ describe('E05 기본 showValue=none (정답 노출 금지)', () => {
   });
 });
 
+describe('E05 읽기 전용 partition (선택지 그림)', () => {
+  it('넓이 막대와 등분 도장을 숨겨 정답을 알려 주지 않는다', () => {
+    const equalConfig: FractionModelConfig = { mode: 'partition', fixedParts: 4 };
+    const equalState = createInitialState(equalConfig);
+    const equalView = render(
+      <FractionModelView
+        config={equalConfig}
+        state={equalState}
+        dispatch={() => {}}
+        cpa="P"
+        mode="partition"
+        readOnly
+        targetSize={48}
+      />,
+    );
+    const equalText = equalView.container.textContent ?? '';
+    expect(equalText).not.toContain(S.equalStamp);
+    expect(equalText).not.toContain(S.notEqualStamp);
+    expect(equalText).not.toContain(S.areaBarsLabel);
+    // 선택지 <button> 안에 도구 막대 <button>이 겹치지 않는다.
+    expect(equalView.queryByRole('toolbar')).toBeNull();
+
+    const unequalConfig: FractionModelConfig = {
+      mode: 'partition',
+      presetCuts: [
+        {
+          points: [
+            { x: 300, y: 150 },
+            { x: 300, y: 450 },
+          ],
+        },
+        {
+          points: [
+            { x: 500, y: 150 },
+            { x: 500, y: 450 },
+          ],
+        },
+        {
+          points: [
+            { x: 700, y: 150 },
+            { x: 700, y: 450 },
+          ],
+        },
+      ],
+    };
+    const unequalView = render(
+      <FractionModelView
+        config={unequalConfig}
+        state={createInitialState(unequalConfig)}
+        dispatch={() => {}}
+        cpa="P"
+        mode="partition"
+        readOnly
+        targetSize={48}
+      />,
+    );
+    const unequalText = unequalView.container.textContent ?? '';
+    expect(unequalText).not.toContain(S.equalStamp);
+    expect(unequalText).not.toContain(S.notEqualStamp);
+    expect(unequalText).not.toContain(S.areaBarsLabel);
+  });
+
+  it('읽기 전용이 아니면 같은 그림에서 도장과 넓이 막대를 보여 준다', () => {
+    const config: FractionModelConfig = { mode: 'partition', fixedParts: 4 };
+    const text = textOf(config, createInitialState(config));
+    expect(text).toContain(S.equalStamp);
+    expect(text).toContain(S.areaBarsLabel);
+  });
+});
+
 describe('E05 showValue 단계', () => {
   it("'raw'는 약분 전 표기만, 'raw-and-reduced'는 약분된 값까지 보여 준다", () => {
     const config: FractionModelConfig = {
