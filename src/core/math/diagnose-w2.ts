@@ -12,8 +12,8 @@
  * `detect: 'observation'` 코드(예: MC-DIV-BRING-DOWN)는 여기에 없다. 그 코드는
  * 엔진 predicate `hasMisconception`이나 GoalSpec이 맡는다.
  */
-import type { DiagnoseInput, DiagnoseDetector } from './diagnose';
-import { integerOf, rationalOf, studentValue, textOf } from './diagnose';
+import type { DiagnoseInput, DiagnoseDetector } from './diagnose-shared';
+import { integerOf, rationalOf, studentValue, textOf } from './diagnose-shared';
 import { Rational } from './rational';
 
 const ZERO = 0n;
@@ -580,17 +580,17 @@ const mulZeroOne: DiagnoseDetector = (input) => {
 
 /** MC-DIV-CHECK-NO-REMAINDER: 검산에서 나머지를 더하지 않음. */
 const divCheckNoRemainder: DiagnoseDetector = (input) => {
-  const quotient = integerOf(input.args, 'quotient');
-  const divisor = integerOf(input.args, 'divisor');
-  const remainder = integerOf(input.args, 'remainder');
+  const quotient = rationalOf(input.args, 'quotient');
+  const divisor = rationalOf(input.args, 'divisor');
+  const remainder = rationalOf(input.args, 'remainder');
   const student = studentValue(input);
   if (quotient === null || divisor === null || remainder === null || student === null) {
     return false;
   }
-  if (remainder === ZERO) return false;
-  const wrong = quotient * divisor;
-  const correct = wrong + remainder;
-  return student.equals(Rational.of(wrong)) && !student.equals(Rational.of(correct));
+  if (remainder.equals(Rational.of(ZERO))) return false;
+  const wrong = quotient.mul(divisor);
+  const correct = wrong.add(remainder);
+  return student.equals(wrong) && !student.equals(correct);
 };
 
 /** MC-DIV-ORDER-SWAP: 나누어지는 수와 나누는 수를 바꿈. */
@@ -617,13 +617,13 @@ const divQuotientZero: DiagnoseDetector = ({ value, args }) => {
 
 /** MC-DIV-REMAINDER-SCALED: 나머지를 확대된 수 그대로 씀. */
 const divRemainderScaled: DiagnoseDetector = (input) => {
-  const remainder = integerOf(input.args, 'remainder');
+  const remainder = rationalOf(input.args, 'remainder');
   const scale = rationalOf(input.args, 'scale');
   const student = studentValue(input);
   if (remainder === null || scale === null || student === null) return false;
   if (scale.equals(Rational.of(ONE))) return false;
-  const wrong = Rational.of(remainder).mul(scale);
-  return student.equals(wrong) && !student.equals(Rational.of(remainder));
+  const wrong = remainder.mul(scale);
+  return student.equals(wrong) && !student.equals(remainder);
 };
 
 /** MC-DIV-REMAINDER-TOO-BIG: v ≥ divisor. */

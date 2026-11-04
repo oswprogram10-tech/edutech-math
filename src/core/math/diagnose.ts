@@ -10,18 +10,12 @@
  * 감지하지 않는다(예: 1/2 + 1/2 = 2/4).
  */
 import { Rational } from './rational';
+import type { DiagnoseDetector, DiagnoseInput } from './diagnose-shared';
+import { integerOf, rationalOf, studentValue, textOf } from './diagnose-shared';
 import { diagnoseDetectorsW2 } from './diagnose-w2';
 
-export interface DiagnoseInput {
-  /** `path`로 찾은 관찰 값. 수·부등호 기호는 문자열이다. 없으면 null. */
-  readonly value: string | null;
-  /** 수 입력 필드의 학생 표기(`4/12`, `1 2/9`, `0.40`). 없으면 null. */
-  readonly raw: string | null;
-  /** 콘텐츠의 `diagnose[].args`. */
-  readonly args: unknown;
-}
-
-export type DiagnoseDetector = (input: DiagnoseInput) => boolean;
+export type { DiagnoseDetector, DiagnoseInput };
+export { integerOf, rationalOf, studentValue, textOf };
 
 const ZERO = 0n;
 const ONE = 1n;
@@ -49,43 +43,6 @@ function lcm(left: bigint, right: bigint): bigint {
 
 function pow10(exponent: number): bigint {
   return TEN ** BigInt(exponent);
-}
-
-function recordOf(args: unknown): Readonly<Record<string, unknown>> | null {
-  return typeof args === 'object' && args !== null && !Array.isArray(args)
-    ? (args as Readonly<Record<string, unknown>>)
-    : null;
-}
-
-export function textOf(args: unknown, key: string): string | null {
-  const record = recordOf(args);
-  const value = record?.[key];
-  return typeof value === 'string' && value.length > 0 ? value : null;
-}
-
-export function rationalOf(args: unknown, key: string): Rational | null {
-  const text = textOf(args, key);
-  if (text === null) return null;
-  try {
-    return Rational.parse(text);
-  } catch {
-    return null;
-  }
-}
-
-export function integerOf(args: unknown, key: string): bigint | null {
-  const text = textOf(args, key);
-  if (text === null || !/^-?\d+$/.test(text)) return null;
-  return BigInt(text);
-}
-
-export function studentValue(input: DiagnoseInput): Rational | null {
-  if (input.value === null) return null;
-  try {
-    return Rational.parse(input.value);
-  } catch {
-    return null;
-  }
 }
 
 interface RawParts {

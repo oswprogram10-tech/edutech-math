@@ -353,4 +353,32 @@ describe('W2 감지 경계', () => {
     expect(detect('MC-PV-NO-CARRY', '92', { a: '23', b: '4', op: 'mul' })).toBe(false);
     expect(detect('MC-PV-NO-CARRY', '82', { a: '23', b: '4', op: 'sub' })).toBe(false);
   });
+
+  it('소수 나머지의 확대와 검산도 감지한다', () => {
+    expect(detect('MC-DIV-REMAINDER-SCALED', '14', { remainder: '1.4', scale: '10' })).toBe(true);
+    expect(detect('MC-DIV-REMAINDER-SCALED', '1.4', { remainder: '1.4', scale: '10' })).toBe(false);
+    expect(detect('MC-DIV-REMAINDER-SCALED', '15', { remainder: '1.4', scale: '10' })).toBe(false);
+
+    expect(
+      detect('MC-DIV-CHECK-NO-REMAINDER', '6', {
+        quotient: '1.5',
+        divisor: '4',
+        remainder: '1.4',
+      }),
+    ).toBe(true);
+    expect(
+      detect('MC-DIV-CHECK-NO-REMAINDER', '7.4', {
+        quotient: '1.5',
+        divisor: '4',
+        remainder: '1.4',
+      }),
+    ).toBe(false);
+    expect(
+      detect('MC-DIV-CHECK-NO-REMAINDER', '7', {
+        quotient: '1.5',
+        divisor: '4',
+        remainder: '1.4',
+      }),
+    ).toBe(false);
+  });
 });
