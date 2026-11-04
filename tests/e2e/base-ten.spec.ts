@@ -132,3 +132,69 @@ test('키보드만으로 100판 하나를 풀어 십 10개로 나눈다', async 
   expect(record.value).toBe(100);
   expect(record.breaks).toBe(1);
 });
+
+test('큰 수 52840000을 네 자리씩 잘라 cutsCorrect가 된다', async ({ page }) => {
+  await openBaseTen(page, { mode: 'big-number', value: '52840000' });
+  await page.getByLabel('모드').selectOption('big-number');
+  await pollObservation(page, (current) => current.mode === 'big-number');
+
+  // 8자리 수라 오른쪽에서 4번째 자리 앞 틈 하나만 있다.
+  const gap = page.locator('[data-cut-position="4"]');
+  await expect(gap).toHaveCount(1);
+  await gap.focus();
+  await expect(gap).toBeFocused();
+  await page.keyboard.press('Enter');
+
+  await pollObservation(page, (current) => current.cutsCorrect === true);
+  const record = await readObservation(page);
+  expect(record.cuts).toEqual([4]);
+  // 자르기 전에는 덩어리를 나눈 표시가 없다가, 자른 뒤에는 표시가 생긴다.
+  await expect(page.locator('[data-cut-position="4"]')).toHaveAttribute('aria-pressed', 'true');
+});
+
+test('소수 1.2에서 막대 하나를 풀면 0.1이 낱개 10개가 된다', async ({ page }) => {
+  await openBaseTen(page, { mode: 'decimal', start: { value: '1.2' } });
+  await page.getByLabel('모드').selectOption('decimal');
+  await pollObservation(page, (current) => current.mode === 'decimal');
+
+  const bar = page.locator('[data-block-value="10"]').first();
+  await bar.focus();
+  await page.keyboard.press('Enter');
+
+  await pollObservation(
+    page,
+    (current) =>
+      (current.counts as Record<string, number> | undefined)?.['hundredths'] === 10 &&
+      (current.counts as Record<string, number> | undefined)?.['tenths'] === 1,
+  );
+  const record = await readObservation(page);
+  expect(record.value).toBe('1.2');
+  expect(record.counts).toEqual({ ones: 1, tenths: 1, hundredths: 10 });
+});
+
+test('52÷4를 한 바퀴·풀기·한 바퀴로 나누면 접시가 똑같아진다', async ({ page }) => {
+  await openBaseTen(page, { mode: 'divide', dividend: 52, divisor: 4 });
+  await page.getByLabel('모드').selectOption('divide');
+  await pollObservation(page, (current) => current.mode === 'divide');
+
+  await page.getByRole('button', { name: '십 한 바퀴' }).click();
+  await pollObservation(
+    page,
+    (current) =>
+      Array.isArray(current.plateValues) &&
+      (current.plateValues as number[]).every((value) => value === 10),
+  );
+
+  // 무더기에 남은 십 하나를 풀어 낱개 12개로 만든다.
+  const pileTen = page.locator('[data-block-plate="pile"][data-block-value="10"]').first();
+  await pileTen.focus();
+  await page.keyboard.press('Enter');
+
+  const onesRound = page.getByRole('button', { name: '하나 한 바퀴' });
+  for (let index = 0; index < 3; index += 1) await onesRound.click();
+
+  await pollObservation(page, (current) => current.equal === true && current.pileValue === 0);
+  const record = await readObservation(page);
+  expect(record.plateValues).toEqual([13, 13, 13, 13]);
+  expect(record.value).toBe(52);
+});

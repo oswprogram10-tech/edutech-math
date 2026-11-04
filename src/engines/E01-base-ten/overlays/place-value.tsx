@@ -2,21 +2,35 @@
  * 힌트 ②: 자릿값 칸마다 이름과 지금 그 칸 블록이 나타내는 수를 보여 준다.
  * 목표 수가 아니라 학생이 지금 놓은 상태만 읽어 준다.
  */
+import { Rational } from '../../../core/math';
 import type { OverlayProps } from '../../../core/engine-sdk';
-import { bandsFor, regionFor } from '../layout';
+import { bandsForState, regionFor } from '../layout';
+import { baseTenStrings as S } from '../strings.ko';
 import { DEFAULT_CHART_LABELS } from '../types';
 import type { BaseTenConfig, BaseTenState } from '../types';
-import { columnNameOf, placeValueOf } from '../value';
+import {
+  columnNameOf,
+  exponentOfShapeColumn,
+  isDecimal,
+  placeValueOf,
+  rationalOfShape,
+} from '../value';
 
 export function PlaceValueOverlay({ state }: OverlayProps<BaseTenConfig, BaseTenState>) {
   const region = regionFor(state);
-  const bands = bandsFor(region);
+  const bands = bandsForState(state, region);
+  const decimal = isDecimal(state.settings);
 
   return (
     <svg viewBox="0 0 1000 600" width="100%" height="100%" aria-hidden="true">
       {bands.map((band) => {
-        const name = columnNameOf(band.column);
-        const label = name === null ? '' : DEFAULT_CHART_LABELS[name];
+        const column = exponentOfShapeColumn(band.column, state.settings.interpretation);
+        const name = columnNameOf(column);
+        const label = decimal
+          ? (S.decimalPlaceLabels[column] ?? '')
+          : name === null
+            ? ''
+            : DEFAULT_CHART_LABELS[name];
         const place = placeValueOf(band.column);
         const count = state.blocks.filter(
           (block) =>
@@ -26,7 +40,10 @@ export function PlaceValueOverlay({ state }: OverlayProps<BaseTenConfig, BaseTen
             block.y >= band.y &&
             block.y <= band.y + band.height,
         ).length;
-        const total = place === null ? 0 : count * place;
+        const total = Rational.of(count).mul(
+          place === null ? Rational.of(0) : rationalOfShape(place, state.settings.interpretation),
+        );
+        const shown = decimal ? total.toDecimalString() : Number(total.n).toString();
         return (
           <g key={`place-${band.column}`}>
             <rect
@@ -58,7 +75,7 @@ export function PlaceValueOverlay({ state }: OverlayProps<BaseTenConfig, BaseTen
               fontSize={20}
               fill="#1d2330"
             >
-              {total}
+              {shown}
             </text>
           </g>
         );

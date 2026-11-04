@@ -174,3 +174,133 @@ describe('E01 자릿값 표', () => {
     expect(onDispatch).toHaveBeenCalledWith({ type: 'set-digit', column: 1, digit: 4 });
   });
 });
+
+describe('E01 decimal 화면', () => {
+  it('판·막대·낱개 이름을 소수로 읽고 나타내는 수는 쓰지 않는다', () => {
+    const config: BaseTenConfig = { mode: 'decimal', start: { value: '6.24' } };
+    const state = createInitialState(config);
+    const view = renderView(config, state);
+    const text = view.container.textContent ?? '';
+
+    expect(text).not.toContain('6.24');
+    expect(view.getByLabelText(S.addBlockFor(100, 'decimal'))).toBeTruthy();
+    expect(view.getByLabelText(S.addBlockFor(10, 'decimal'))).toBeTruthy();
+    expect(view.container.querySelector('[data-block-value="1"]')?.getAttribute('aria-label')).toBe(
+      S.blockLabelFor(1, 'decimal'),
+    );
+  });
+
+  it('풀기 단추와 블록이 소수 해석으로 동작한다', () => {
+    const config: BaseTenConfig = { mode: 'decimal', start: { value: '1.2' } };
+    const state = createInitialState(config);
+    const onDispatch = vi.fn();
+    const view = renderView(config, state, onDispatch);
+    const block = view.container.querySelector<SVGGElement>('[data-block-value="10"]');
+    if (!block) throw new Error('막대가 없습니다.');
+    const id = block.getAttribute('data-block-id');
+    fireEvent.keyDown(block, { key: 'Enter' });
+    expect(onDispatch).toHaveBeenCalledWith({ type: 'break', id });
+  });
+});
+
+describe('E01 big-number 화면', () => {
+  it('숫자 띠를 그리고 자르는 틈을 키보드로 누를 수 있다', () => {
+    const config: BaseTenConfig = { mode: 'big-number', value: '52840000' };
+    const state = createInitialState(config);
+    const onDispatch = vi.fn();
+    const view = renderView(config, state, onDispatch);
+
+    expect(view.getByRole('group', { name: S.bigNumberCanvasLabel })).toBeTruthy();
+    const gap = view.container.querySelector<SVGGElement>('[data-cut-position="4"]');
+    expect(gap).not.toBeNull();
+    expect(gap?.getAttribute('role')).toBe('button');
+    expect(gap?.getAttribute('tabindex')).toBe('0');
+    if (gap) fireEvent.keyDown(gap, { key: 'Enter' });
+    expect(onDispatch).toHaveBeenCalledWith({ type: 'cut', position: 4 });
+  });
+
+  it('펼치기 전에는 만·억 이름을 쓰지 않는다', () => {
+    const config: BaseTenConfig = { mode: 'big-number', value: '52840000' };
+    const state = createInitialState(config);
+    const text = textOf(config, state);
+    expect(text).not.toContain('만');
+    expect(text).not.toContain('억');
+  });
+
+  it('reverse는 들은 수(spoken)를 화면에 쓰지 않는다', () => {
+    const config: BaseTenConfig = {
+      mode: 'big-number',
+      reverse: { spoken: '이천삼십만 오' },
+    };
+    const state = createInitialState(config);
+    const view = renderView(config, state);
+    const text = view.container.textContent ?? '';
+    expect(text).not.toContain('이천');
+    expect(text).not.toContain('삼십');
+    expect(text).not.toContain('이천삼십만 오');
+    expect(view.getAllByLabelText(S.reverseCanvasLabel).length).toBeGreaterThan(0);
+  });
+
+  it('자르기 전에는 펼치기 버튼·이름표가 없고, 자른 뒤 오른쪽 덩어리부터 일·만·억·조를 붙인다', () => {
+    const config: BaseTenConfig = { mode: 'big-number', value: '3528007140000' };
+    const initial = createInitialState(config);
+    const before = renderView(config, initial);
+    expect(before.queryByRole('button', { name: S.expandGroup('일') })).toBeNull();
+    expect(before.container.querySelectorAll('[data-group-label]')).toHaveLength(0);
+
+    let cut = initial;
+    for (const position of [4, 8, 12]) cut = reduce(cut, { type: 'cut', position });
+    const after = renderView(config, cut);
+    const labels = Array.from(after.container.querySelectorAll('[data-group-label]'));
+    // 화면 왼쪽에서 오른쪽 순서로 읽으면 조·억·만·일이어야 한다.
+    const leftToRight = labels
+      .map((label) => ({ x: Number(label.getAttribute('x')), text: label.textContent }))
+      .sort((a, b) => a.x - b.x)
+      .map((label) => label.text);
+    expect(leftToRight).toEqual(['조', '억', '만', '일']);
+    const buttons = after
+      .getAllByRole('button')
+      .map((button) => button.textContent)
+      .filter((text) => text?.includes('덩어리'));
+    expect(buttons).toEqual(['조', '억', '만', '일'].map((name) => S.expandGroup(name)));
+  });
+});
+
+describe('E01 divide 화면', () => {
+  it('접시를 그리고 몫·나머지 숫자는 쓰지 않는다', () => {
+    const config: BaseTenConfig = { mode: 'divide', dividend: 52, divisor: 4 };
+    const state = createInitialState(config);
+    const view = renderView(config, state);
+    const text = view.container.textContent ?? '';
+
+    expect(text).not.toContain('13');
+    expect(text).not.toContain('52');
+    expect(view.container.querySelector('[data-testid="divide-plates"]')).not.toBeNull();
+    expect(view.getByRole('button', { name: S.dealRound(S.blockName[10]) })).toBeTruthy();
+    expect(view.queryByRole('button', { name: S.rewind })).toBeNull();
+  });
+
+  it('rewindCheck일 때만 되감기 단추를 보여 준다', () => {
+    const config: BaseTenConfig = {
+      mode: 'divide',
+      dividend: 52,
+      divisor: 4,
+      rewindCheck: true,
+    };
+    const state = createInitialState(config);
+    const onDispatch = vi.fn();
+    const view = renderView(config, state, onDispatch);
+
+    fireEvent.click(view.getByRole('button', { name: S.rewind }));
+    expect(onDispatch).toHaveBeenCalledWith({ type: 'rewind' });
+  });
+
+  it('블록에 접시 번호를 붙여 끌어 놓은 곳을 읽을 수 있다', () => {
+    const config: BaseTenConfig = { mode: 'divide', dividend: 52, divisor: 4 };
+    const state = reduce(createInitialState(config), { type: 'deal-round', value: 10 });
+    const view = renderView(config, state);
+    const plated = view.container.querySelectorAll('[data-block-plate="0"]');
+    expect(plated.length).toBeGreaterThan(0);
+    expect(view.container.querySelectorAll('[data-block-plate="pile"]').length).toBeGreaterThan(0);
+  });
+});

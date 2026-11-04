@@ -8,7 +8,11 @@
  * 좌표는 논리 좌표(1000×600) 정수만 상태에 둔다. 화면 픽셀은 저장하지 않는다.
  */
 
-export type BaseTenMode = 'count' | 'regroup' | 'add-sub' | 'place-chart' | 'free';
+export type BaseTenMode =
+  'count' | 'regroup' | 'add-sub' | 'place-chart' | 'free' | 'big-number' | 'decimal' | 'divide';
+
+/** 블록 모양은 그대로 두고 해석만 바꾼다(카드 T043 결정 2). */
+export type Interpretation = 'whole' | 'decimal';
 
 export type BlockValue = 1 | 10 | 100 | 1000;
 
@@ -34,16 +38,20 @@ export interface StartSpec {
   /** 낱개(1)를 seed로 정한 위치에 흩어 놓는다. */
   readonly scattered?: boolean;
   readonly seed?: number;
+  /** `"52"`, `"6.24"`처럼 수를 그대로 준다. 자리별 개수보다 이 값이 이긴다. */
+  readonly value?: string;
 }
 
-/** 자릿값 표의 열 이름. 높은 자리부터 적는다(카드 결정 8). */
-export type ChartName = 'thousands' | 'hundreds' | 'tens' | 'ones';
+/** 자릿값 표의 열 이름. 높은 자리부터 적는다(카드 결정 8). 소수 자리는 음수 지수다. */
+export type ChartName = 'thousands' | 'hundreds' | 'tens' | 'ones' | 'tenths' | 'hundredths';
 
 export const CHART_NAME_COLUMN: Readonly<Record<ChartName, number>> = {
   thousands: 3,
   hundreds: 2,
   tens: 1,
   ones: 0,
+  tenths: -1,
+  hundredths: -2,
 };
 
 export const DEFAULT_CHART_LABELS: Readonly<Record<ChartName, string>> = {
@@ -51,6 +59,8 @@ export const DEFAULT_CHART_LABELS: Readonly<Record<ChartName, string>> = {
   hundreds: '백',
   tens: '십',
   ones: '일',
+  tenths: '소수 첫째',
+  hundredths: '소수 둘째',
 };
 
 export interface BaseTenConfig {
@@ -99,6 +109,36 @@ export interface BaseTenConfig {
 
   /** 값이 100이 된 적이 있는지 Observation에 담을지. */
   readonly allowHundredReveal?: boolean;
+
+  // ── T043 확장 ─────────────────────────────────────────────
+  /** 100(판)·10(막대)·1(낱개)을 1·0.1·0.01로 읽는다. decimal 모드는 항상 decimal. */
+  readonly interpretation?: Interpretation;
+
+  // ── big-number ────────────────────────────────────────────
+  /** 1~16자리 숫자 문자열. 맨 앞 0은 쓰지 않는다. */
+  readonly value?: string;
+  /** student면 학생이 자른다. auto면 처음부터 네 자리마다 잘려 있다. */
+  readonly slicer?: 'student' | 'auto';
+  /** 일·만·억·조 덩어리 색. 기본 `["gray","green","blue","purple"]`. */
+  readonly groupColors?: readonly string[];
+  /** 덩어리를 펼쳐 천·백·십·일 칸 이름을 보여 줄 수 있는가. 기본 true. */
+  readonly expand?: boolean;
+  /** 있으면 숫자 띠 대신 소리 들은 수를 16칸에 만든다. `spoken`은 화면에 쓰지 않는다. */
+  readonly reverse?: { readonly spoken: string };
+
+  // ── divide ────────────────────────────────────────────────
+  /** 정수 또는 interpretation이 decimal이면 소수 문자열. */
+  readonly dividend?: number | string;
+  readonly divisor?: number;
+  /** 접시 수. 기본 divisor. */
+  readonly plates?: number;
+  /** "되감기" 버튼과 rewind Action을 쓸 수 있는가. */
+  readonly rewindCheck?: boolean;
+  /** 받기만 하고 엔진은 쓰지 않는다(연결은 실행기, 강조는 E07 몫). */
+  readonly linkColumnCalc?: boolean;
+  readonly autoHighlightSteps?: boolean;
+  /** 받기만 하고 엔진은 쓰지 않는다(TTS는 src/app 몫). */
+  readonly tts?: boolean;
 }
 
 /** reduce는 config를 받지 않으므로 설정 중 상태 계산에 필요한 값만 복사해 둔다. */
@@ -118,6 +158,10 @@ export interface BaseTenSettings {
   readonly digits: readonly number[];
   readonly render: BaseTenRender;
   readonly icon: BaseTenIcon | null;
+  readonly interpretation: Interpretation;
+  readonly plates: number;
+  readonly divisor: number;
+  readonly rewindCheck: boolean;
 }
 
 export interface BaseTenBlock {
@@ -126,11 +170,13 @@ export interface BaseTenBlock {
   readonly x: number;
   readonly y: number;
   readonly zone?: Zone;
+  /** divide에서 놓인 접시. 없으면 위쪽 무더기다. */
+  readonly plate?: number;
 }
 
 export interface BaseTenLogEntry {
-  readonly kind: 'group' | 'break';
-  readonly from: BlockValue;
+  readonly kind: 'group' | 'break' | 'rewind';
+  readonly from?: BlockValue;
 }
 
 /** 올가미가 실패했을 때 학생이 감싼 개수. 목표 값이 아니다. */
@@ -141,6 +187,25 @@ export interface BaseTenAttempt {
   readonly ok: boolean;
 }
 
+/** big-number 모드의 상태. 모든 계산은 문자열로 한다(값이 16자리까지라 number를 쓰지 않는다). */
+export interface BigNumberState {
+  readonly value: string;
+  /** 오른쪽에서 센 자릿수 위치. 정렬·중복 없음. */
+  readonly cuts: readonly number[];
+  /** 펼친 덩어리 index(오른쪽부터 0). */
+  readonly expanded: number | null;
+  /** 고른 숫자의 자릿값 지수. */
+  readonly selected: number | null;
+  /** reverse 칸(16칸). 왼쪽부터 조·억·만·일 × 천·백·십·일. */
+  readonly built: readonly (number | null)[];
+}
+
+export interface DivideState {
+  readonly plates: number;
+  /** 되감기 뒤 true. 이후 블록을 놓으면 false. */
+  readonly rewound: boolean;
+}
+
 export interface BaseTenState {
   readonly mode: BaseTenMode;
   readonly blocks: readonly BaseTenBlock[];
@@ -148,12 +213,16 @@ export interface BaseTenState {
   readonly chart: readonly (string | null)[] | null;
   /** place-chart 숫자 카드 index → 놓인 열(자릿값 지수), 아직 안 놓았으면 -1. */
   readonly digitPlacements: readonly number[];
-  /** 묶기·풀기 순서. 판정용이다. */
+  /** 묶기·풀기·되감기 순서. 판정용이다. */
   readonly log: readonly BaseTenLogEntry[];
   readonly lastAttempt: BaseTenAttempt | null;
   readonly reachedHundred: boolean;
   readonly nextId: number;
   readonly settings: BaseTenSettings;
+  /** big-number 모드일 때만 값이 있다. */
+  readonly bigNumber: BigNumberState | null;
+  /** divide 모드일 때만 값이 있다. */
+  readonly divide: DivideState | null;
 }
 
 export type BaseTenAction =
@@ -165,7 +234,19 @@ export type BaseTenAction =
   | { readonly type: 'group-tens'; readonly value?: BlockValue }
   | { readonly type: 'break'; readonly id: string }
   | { readonly type: 'set-digit'; readonly column: number; readonly digit: number | null }
-  | { readonly type: 'place-digit'; readonly index: number; readonly column: number };
+  | { readonly type: 'place-digit'; readonly index: number; readonly column: number }
+  // ── big-number ────────────────────────────────────────────
+  | { readonly type: 'cut'; readonly position: number }
+  | { readonly type: 'uncut'; readonly position: number }
+  | { readonly type: 'expand'; readonly group: number }
+  | { readonly type: 'select-digit'; readonly position: number }
+  | { readonly type: 'place-card'; readonly cell: number; readonly digit: number }
+  | { readonly type: 'clear-cell'; readonly cell: number }
+  // ── divide ────────────────────────────────────────────────
+  | { readonly type: 'deal-block'; readonly id: string; readonly plate: number }
+  | { readonly type: 'return-block'; readonly id: string }
+  | { readonly type: 'deal-round'; readonly value: BlockValue }
+  | { readonly type: 'rewind' };
 
 export const LOGICAL_WIDTH = 1000;
 export const LOGICAL_HEIGHT = 600;
