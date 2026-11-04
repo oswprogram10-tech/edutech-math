@@ -14,7 +14,7 @@ export function RemainderBesideOverlay({
   if (state.mode !== 'divide-measure') return null;
   const summary = measureSummary(state);
   if (summary.remaining.isZero()) return null;
-  const board = measureBoard(summary.dividend, summary.divisor);
+  const board = measureBoard(summary.dividend, summary.divisor, state.rulersLaid);
   const measuredLength = summary.divisor.mul(summary.measured);
   const startX = board.dividendBar.x + board.unit * screenLength(measuredLength);
   const rulerWidth = Math.max(1, board.unit * screenLength(summary.divisor));

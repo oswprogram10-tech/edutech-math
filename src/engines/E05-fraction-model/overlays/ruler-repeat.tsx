@@ -13,7 +13,7 @@ export function RulerRepeatOverlay({
 }: OverlayProps<FractionModelConfig, FractionModelState>) {
   if (state.mode !== 'divide-measure') return null;
   const summary = measureSummary(state);
-  const board = measureBoard(summary.dividend, summary.divisor);
+  const board = measureBoard(summary.dividend, summary.divisor, state.rulersLaid);
   const rulerWidth = Math.max(1, board.unit * screenLength(summary.divisor));
   const totalWidth = Math.max(1, board.unit * screenLength(summary.dividend));
   const count = Math.min(24, Math.ceil(totalWidth / rulerWidth));
