@@ -3,7 +3,7 @@ import { loadKnowledgeGraph } from '../../../core/knowledge';
 import type { KnowledgeGraph } from '../../../core/knowledge';
 import { loadUnitSummaries } from '../../content-units';
 import type { UnitSummary } from '../../content-units';
-import { MAP_HEIGHT, MAP_WIDTH, MIN_STAR_DISTANCE, layoutStars } from '../layout';
+import { MAP_HEIGHT, MAP_WIDTH, MIN_STAR_DISTANCE, layoutStars, nearestStar } from '../layout';
 import type { LayoutConcept, StarMapLayout } from '../layout';
 
 function layoutConcepts(graph: KnowledgeGraph): LayoutConcept[] {
@@ -109,5 +109,31 @@ describe('layoutStars', () => {
       'geometry',
       'data',
     ]);
+  });
+});
+
+describe('nearestStar', () => {
+  const stars = [
+    { index: 0, conceptId: 'on', unitId: 'u1', label: '켜진 별', x: 100, y: 100 },
+    { index: 1, conceptId: 'off', unitId: 'u2', label: '꺼진 별', x: 112, y: 100 },
+  ];
+
+  it('누른 자리에서 가장 가까운 켜진 별을 고른다', () => {
+    const picked = nearestStar(stars, new Set(['u1']), { x: 104, y: 100 }, 24);
+    expect(picked?.conceptId).toBe('on');
+  });
+
+  it('가장 가까운 별이 꺼진 단원이면 아무것도 고르지 않는다', () => {
+    // 꺼진 점을 정확히 눌렀다. 옆의 켜진 별이 반경 안에 있어도 열리면 안 된다.
+    expect(nearestStar(stars, new Set(['u1']), { x: 112, y: 100 }, 24)).toBeUndefined();
+  });
+
+  it('반경 밖을 누르면 아무것도 고르지 않는다', () => {
+    expect(nearestStar(stars, new Set(['u1', 'u2']), { x: 100, y: 130 }, 24)).toBeUndefined();
+  });
+
+  it('꺼진 단원도 켜져 있으면 가장 가까운 별을 고른다', () => {
+    const picked = nearestStar(stars, new Set(['u1', 'u2']), { x: 112, y: 100 }, 24);
+    expect(picked?.conceptId).toBe('off');
   });
 });

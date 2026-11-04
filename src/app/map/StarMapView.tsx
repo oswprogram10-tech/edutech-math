@@ -11,7 +11,7 @@ import { usePinch } from '../../core/engine-sdk';
 import { starMapStrings } from '../strings.ko';
 import type { Brightness } from './brightness';
 import { ConceptStar } from './ConceptStar';
-import { MAP_HEIGHT, MAP_WIDTH, STAR_RADIUS } from './layout';
+import { MAP_HEIGHT, MAP_WIDTH, STAR_RADIUS, nearestStar } from './layout';
 import type { MapZone, StarMapLayout } from './layout';
 import { STAR_PATH } from './star-shape';
 import styles from './StarMap.module.css';
@@ -195,19 +195,7 @@ export function StarMapView({
         STAR_RADIUS * 1.4,
         ((targetSize / 2) * (MAP_WIDTH / rect.width)) / scaleRef.current,
       );
-      let best: (typeof layout.stars)[number] | undefined;
-      let bestDistance = logicalRadius * logicalRadius;
-      for (const star of layout.stars) {
-        if (!enabledUnits.has(star.unitId)) continue;
-        const dx = star.x - point.x;
-        const dy = star.y - point.y;
-        const distance = dx * dx + dy * dy;
-        if (distance <= bestDistance) {
-          bestDistance = distance;
-          best = star;
-        }
-      }
-      return best;
+      return nearestStar(layout.stars, enabledUnits, point, logicalRadius);
     },
     [enabledUnits, layout, rectOf, screenToLogical, targetSize],
   );

@@ -85,6 +85,33 @@ export interface StarMapLayout {
   readonly zones: readonly MapZone[];
 }
 
+/**
+ * 누른 자리에서 가장 가까운 별 하나를 고른다.
+ *
+ * 손가락 굵기를 감안해 `radius` 안쪽이면 누른 것으로 본다. 가장 가까운 별이
+ * 꺼진 단원의 별이면 `undefined`를 돌려준다. 꺼진 점 옆에 켜진 별이 바짝
+ * 붙어 있을 때 꺼진 점을 눌러도 옆 별이 열리지 않게 하기 위해서다.
+ */
+export function nearestStar(
+  stars: readonly StarPoint[],
+  enabledUnits: ReadonlySet<string>,
+  point: { readonly x: number; readonly y: number },
+  radius: number,
+): StarPoint | undefined {
+  let best: StarPoint | undefined;
+  let bestDistance = radius * radius;
+  for (const star of stars) {
+    const dx = star.x - point.x;
+    const dy = star.y - point.y;
+    const distance = dx * dx + dy * dy;
+    if (distance <= bestDistance) {
+      bestDistance = distance;
+      best = star;
+    }
+  }
+  return best && enabledUnits.has(best.unitId) ? best : undefined;
+}
+
 function compareUnits(a: UnitSummary, b: UnitSummary): number {
   return (
     a.grade - b.grade || a.semester - b.semester || a.order - b.order || a.id.localeCompare(b.id)
