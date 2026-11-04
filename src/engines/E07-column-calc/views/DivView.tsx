@@ -7,7 +7,7 @@
  *   배수 사다리의 배수 표는 명세가 허용한 비계다.
  * - 모든 조작은 Pointer Events 또는 키보드로 한다.
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import type { CSSProperties } from 'react';
 import type { EngineViewProps } from '../../../core/engine-sdk';
 import { computeDivPlan, divAlarm, divComplete, estimateOver, estimatePartial } from '../grid-div';
@@ -83,7 +83,6 @@ export function DivView({
   // 높은 자리를 왼쪽에 그린다(세로셈 표기). 상태 계산은 낮은 자리부터 그대로 둔다.
   const renderedColumns = [...allColumns].reverse();
 
-  const [candidate, setCandidate] = useState(1);
   const maxMultiple = state.estimateMaxMultiple;
 
   const defaultSelection: CellRef = { row: 'quotient', column: top };
@@ -100,6 +99,8 @@ export function DivView({
   const onQuotient = keypadTarget.row === 'quotient';
   const showLadder = barAllowed && onQuotient && !readOnly;
   const ladderColumn = keypadTarget.column;
+  const tries = state.estimateTries[String(ladderColumn)] ?? [];
+  const selected: number | null = tries.length === 0 ? null : (tries[tries.length - 1] ?? null);
 
   function allowedColumns(cell: CellRef): readonly number[] {
     if (cell.row === 'quotient') return allColumns;
@@ -181,14 +182,12 @@ export function DivView({
   function preview(k: number): void {
     if (readOnly || !onQuotient) return;
     const bounded = Math.min(maxMultiple, Math.max(1, k));
-    setCandidate(bounded);
     dispatch({ type: 'try-estimate', column: ladderColumn, k: bounded });
   }
 
   function choose(k: number): void {
     if (readOnly || !onQuotient) return;
     const bounded = Math.min(maxMultiple, Math.max(1, k));
-    setCandidate(bounded);
     enterAt({ row: 'quotient', column: ladderColumn }, String(bounded));
   }
 
@@ -209,13 +208,13 @@ export function DivView({
 
       if (showLadder && event.key === '[') {
         event.preventDefault();
-        preview(candidate - 1);
+        preview((selected ?? 1) - 1);
       } else if (showLadder && event.key === ']') {
         event.preventDefault();
-        preview(candidate + 1);
-      } else if (showLadder && event.key === 'Enter') {
+        preview((selected ?? 1) + 1);
+      } else if (showLadder && event.key === 'Enter' && selected !== null) {
         event.preventDefault();
-        choose(candidate);
+        choose(selected);
       } else if (/^[0-9]$/.test(event.key)) {
         event.preventDefault();
         enterAt(keypadTarget, event.key);
@@ -447,8 +446,8 @@ export function DivView({
             divisor={plan.reading.divisor}
             partial={estimatePartial(state, reading, ladderColumn)}
             maxMultiple={maxMultiple}
-            candidate={candidate}
-            over={estimateOver(state, reading, ladderColumn, candidate)}
+            selected={selected}
+            over={selected === null ? false : estimateOver(state, reading, ladderColumn, selected)}
             onPreview={preview}
             onChoose={choose}
           />

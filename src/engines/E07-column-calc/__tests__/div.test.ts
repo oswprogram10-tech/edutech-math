@@ -204,6 +204,29 @@ describe('div 커서', () => {
     state = enter(state, 'quotient', 1, '0');
     expect(state.selected).toEqual({ row: 'div-diff', column: 0, index: 2 });
   });
+
+  it('0을 쓰면 바로 위 단계 중 가장 가까운 단계의 새 내림 칸으로 간다(4836÷4)', () => {
+    let state = createInitialState({ mode: 'div', dividend: 4836, divisor: 4 });
+    // 1·4·0·8 / 2·8·0·0·0·3 — 각 줄의 열린 칸을 키보드 순서대로 쓴 뒤
+    // 몫 십의 자리에 0을 쓴다.
+    for (const digit of ['1', '4', '0', '8', '2', '8', '0', '0', '0', '3', '0']) {
+      const cell = state.selected;
+      expect(cell).not.toBeNull();
+      state = apply(state, {
+        type: 'enter',
+        row: cell?.row ?? 'quotient',
+        column: cell?.column ?? 0,
+        digit,
+        ...(cell?.index === undefined ? {} : { index: cell.index }),
+      });
+    }
+    // 위에 단계가 둘(열 3, 열 2) 있어도 열 2 단계의 내림 칸 0으로 가야 한다.
+    expect(state.selected).toEqual({ row: 'div-diff', column: 0, index: 2 });
+
+    state = enter(state, 'div-diff', 0, '6', 2);
+    expect(state.divDiffs['2']?.['0']).toBe('6');
+    expect(state.selected).toEqual({ row: 'quotient', column: 0 });
+  });
 });
 
 describe('div Observation', () => {

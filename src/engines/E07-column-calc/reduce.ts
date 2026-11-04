@@ -477,7 +477,12 @@ function divAfterEnter(state: ColumnCalcState, cell: CellRef): CellRef | null {
     if (digit === undefined) return null;
     if (digit === '0') {
       if (column <= 0) return null;
-      const previous = plan.steps.find((step) => step.column > column);
+      // 단계는 높은 열부터 정렬돼 있다. column보다 높은 단계 중 가장 가까운(열이 작은) 단계.
+      let previous: (typeof plan.steps)[number] | undefined;
+      for (const step of plan.steps) {
+        if (step.column <= column) break;
+        previous = step;
+      }
       if (previous && previous.bringColumns.includes(column - 1)) {
         return { row: 'div-diff', column: column - 1, index: previous.column };
       }
