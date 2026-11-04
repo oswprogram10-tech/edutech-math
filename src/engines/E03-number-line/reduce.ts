@@ -5,6 +5,11 @@
  * 수 값은 `Rational`로 계산한 뒤 `toJSON()` 문자열로 저장한다.
  */
 import { Rational } from '../../core/math/rational';
+import { createDoubleState, reduceDoubleAction } from './reduce-double';
+import { createLogZoomState, reduceLogZoom } from './reduce-log';
+import { createRoundingState, reduceRoundingAction } from './reduce-rounding';
+import { createSkipState, reduceSkipAction } from './reduce-skip';
+import { configRational, DEFAULT_MAX, modeOf, normalizeCards } from './state-helpers';
 import {
   buildRows,
   centeredView,
@@ -27,15 +32,6 @@ import type {
 } from './types';
 
 const ONE = Rational.of(1);
-const DEFAULT_MAX: Record<NumberLineMode, string> = {
-  integer: '9',
-  fraction: '1',
-  decimal: '1',
-};
-
-function modeOf(config: NumberLineConfig): NumberLineMode {
-  return config.mode === 'fraction' || config.mode === 'decimal' ? config.mode : 'integer';
-}
 
 function normalizeSubdivisions(
   mode: NumberLineMode,
@@ -49,16 +45,6 @@ function normalizeSubdivisions(
   return [...new Set(parts)];
 }
 
-function normalizeCards(value: readonly string[] | undefined): string[] {
-  const cards: string[] = [];
-  for (const raw of value ?? []) {
-    const text = raw.trim();
-    if (text.length === 0 || parseValue(text) === null) continue;
-    if (!cards.includes(text)) cards.push(text);
-  }
-  return cards;
-}
-
 export function rowsOf(state: NumberLineState): TickRow[] {
   return buildRows({
     mode: state.mode,
@@ -70,10 +56,14 @@ export function rowsOf(state: NumberLineState): TickRow[] {
 
 export function createInitialState(config: NumberLineConfig): NumberLineState {
   const mode = modeOf(config);
-  const unit = parseValue(config.unit) ?? ONE;
+  if (mode === 'skip-count') return createSkipState(config);
+  if (mode === 'rounding') return createRoundingState(config);
+  if (mode === 'log-zoom') return createLogZoomState(config);
+  if (mode === 'double') return createDoubleState(config);
+  const unit = configRational(config.unit) ?? ONE;
   const safeUnit = unit.isZero() || unit.isNegative() ? ONE : unit;
-  const min = parseValue(config.min) ?? Rational.of(0);
-  let max = parseValue(config.max) ?? parseValue(DEFAULT_MAX[mode]) ?? Rational.of(1);
+  const min = configRational(config.min) ?? Rational.of(0);
+  let max = configRational(config.max) ?? parseValue(DEFAULT_MAX[mode]) ?? Rational.of(1);
   if (max.compareTo(min) <= 0) max = min.add(safeUnit);
 
   const subdivisions = normalizeSubdivisions(mode, config.subdivisions);
@@ -114,6 +104,10 @@ export function createInitialState(config: NumberLineConfig): NumberLineState {
     lastValue: null,
     nextPointId: 1,
     counts: EMPTY_COUNTS,
+    skip: null,
+    rounding: null,
+    logZoom: null,
+    double: null,
   };
 }
 
@@ -280,7 +274,12 @@ export function reduce(state: NumberLineState, action: NumberLineAction): Number
       if (!value) return state;
       const cardValue = parseValue(action.card);
       if (!cardValue) return state;
-      const placed = value.toJSON();
+      const max = parseValue(state.max) ?? value;
+      // log-zoom에서는 범위 밖 카드를 지우지 않고 그 값 그대로 두어 "→"로 보이게 한다.
+      const placed =
+        state.mode === 'log-zoom' && cardValue.compareTo(max) > 0
+          ? cardValue.toJSON()
+          : value.toJSON();
       return {
         ...state,
         cardValues: { ...state.cardValues, [action.card]: placed },
@@ -364,6 +363,26 @@ export function reduce(state: NumberLineState, action: NumberLineAction): Number
       if (state.linkedValue === text) return state;
       return { ...state, linkedValue: text };
     }
+
+    case 'choose-step':
+    case 'hop':
+    case 'unhop':
+    case 'clear-hops':
+      return reduceSkipAction(state, action) ?? state;
+
+    case 'round':
+    case 'move-marker':
+    case 'select-item':
+    case 'clear-marker':
+      return reduceRoundingAction(state, action) ?? state;
+
+    case 'log-zoom':
+      return reduceLogZoom(state, action.level) ?? state;
+
+    case 'select-pair':
+    case 'scale-pair':
+    case 'remove-pair':
+      return reduceDoubleAction(state, action) ?? state;
   }
 }
 

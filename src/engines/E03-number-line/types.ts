@@ -5,7 +5,26 @@
  * 상태·Observation·Action에는 `toJSON()` 문자열(`"3/4"`, `"11/4"`)로 넣는다.
  * 화면 좌표만 number다(T011 구현 결정 2).
  */
-export type NumberLineMode = 'integer' | 'fraction' | 'decimal';
+export type NumberLineMode =
+  'integer' | 'fraction' | 'decimal' | 'skip-count' | 'rounding' | 'log-zoom' | 'double';
+
+/** 어림 방법. 반올림은 5 이상을 올린다(ticks.roundRational). */
+export type RoundingMethod = 'up' | 'down' | 'half-up';
+export type RoundingControls = 'buttons' | 'drag';
+export type LogZoomLabelStyle = 'digits' | 'korean';
+export type DoubleOpKind = 'divide' | 'multiply';
+export type DoubleLabelStyle = 'expression' | 'values';
+
+/** 콘텐츠가 직접 넣는 이정표. 데이터 파일을 읽지 않는다. */
+export interface NumberLineLandmarkConfig {
+  readonly value: number | string;
+  readonly label: string;
+}
+
+export interface NumberLineDoubleSideConfig {
+  readonly label?: string;
+  readonly max?: number | string;
+}
 
 export interface NumberLineZoomConfig {
   /** 가장 굵은 눈금(기본 "1"). decimal에서만 쓴다. */
@@ -20,21 +39,65 @@ export interface NumberLineZoomConfig {
  */
 export interface NumberLineConfig {
   readonly mode?: NumberLineMode;
-  readonly min?: string;
-  readonly max?: string;
+  readonly min?: number | string;
+  readonly max?: number | string;
   /** fraction에서 1을 몇 등분할지. 배열이면 눈금 줄을 여러 개 그린다. */
   readonly subdivisions?: number | readonly number[];
   /** 한 단위. integer의 눈금 크기, fraction의 분자 단위. 기본 "1". */
-  readonly unit?: string;
+  readonly unit?: number | string;
   readonly zoom?: NumberLineZoomConfig;
-  /** 끌어서 꽂는 카드 값 목록. 대분수 `"1 1/4"` 허용. */
-  readonly cards?: readonly string[];
-  readonly snap?: 'tick';
+  /** 끌어서 꽂는 카드 값 목록. 대분수 `"1 1/4"` 허용. log-zoom은 number도 받는다. */
+  readonly cards?: readonly (number | string)[];
+  readonly snap?: 'tick' | 'minor' | 'major';
   /** 두 값이 같은 점인지 세로 레이저로 보여 줄지(정답 표시 아님). */
   readonly laser?: boolean;
   readonly showJumps?: boolean;
-  readonly labels?: 'all' | 'partial' | 'none';
+  /** 표시 힌트. skip-count의 `all|partial|none`, double의 `expression|values`를 함께 받는다. */
+  readonly labels?: 'all' | 'partial' | 'none' | 'expression' | 'values';
   readonly character?: string;
+
+  // ── skip-count · log-zoom 뛰어 세기 ─────────────────────────
+  /** skip-count 시작 값(기본 min). log-zoom 뛰어 세기 시작 값에도 쓴다. */
+  readonly start?: number | string;
+  /** 고를 수 있는 뛰기 크기. */
+  readonly stepChoices?: readonly (number | string)[];
+  /** 있으면 고르기 버튼 없이 이 크기로 고정한다. */
+  readonly step?: number | string;
+  /** 여러 줄: 줄마다 고정 step(g5s1u2). 있으면 stepChoices·step을 무시한다. */
+  readonly steps?: readonly (number | string)[];
+  /** 뛴 횟수를 화면에 쓸지(기본 false — 정답 노출 금지). */
+  readonly showHopCount?: boolean;
+
+  // ── rounding ───────────────────────────────────────────────
+  /** 어림할 값 목록(1~3개). */
+  readonly values?: readonly (number | string)[];
+  /** 값이 하나일 때. */
+  readonly value?: number | string;
+  /** 어림할 자리 단위(10, 100, 1, 0.1 …). */
+  readonly place?: number | string;
+  readonly methods?: readonly RoundingMethod[];
+  readonly controls?: RoundingControls;
+  /** 받기만 하고 무시한다(문장은 콘텐츠·응답 위젯 몫). */
+  readonly scenarios?: unknown;
+  readonly showConsequence?: boolean;
+
+  // ── log-zoom ───────────────────────────────────────────────
+  /** 단계별 최댓값. 정수 문자열 16자리까지. */
+  readonly levels?: readonly (number | string)[];
+  readonly startLevel?: number;
+  readonly labelStyle?: LogZoomLabelStyle;
+  readonly landmarks?: readonly NumberLineLandmarkConfig[];
+
+  // ── double ─────────────────────────────────────────────────
+  readonly top?: NumberLineDoubleSideConfig;
+  readonly bottom?: NumberLineDoubleSideConfig;
+  /** [위, 아래] 대응 쌍. */
+  readonly anchors?: readonly (readonly [number | string, number | string])[];
+  readonly divisors?: readonly (number | string)[];
+  readonly multipliers?: readonly (number | string)[];
+  /** 받기만 하고 무시한다. */
+  readonly ops?: readonly string[];
+  readonly goal?: string;
 }
 
 export interface NumberLineCounts {
@@ -74,6 +137,54 @@ export interface NumberLineJump {
   readonly to: string;
 }
 
+/** skip-count 한 줄. `hops`는 뛴 뒤 도착 값들이다. */
+export interface SkipRowState {
+  readonly step: string | null;
+  readonly hops: readonly string[];
+}
+
+export interface SkipCountState {
+  readonly start: string;
+  readonly rows: readonly SkipRowState[];
+}
+
+export interface RoundingItemState {
+  readonly value: string;
+  readonly marker: string | null;
+  readonly method: RoundingMethod | null;
+}
+
+export interface RoundingState {
+  readonly items: readonly RoundingItemState[];
+  readonly selected: number;
+}
+
+export interface LogZoomState {
+  readonly level: number;
+  /** 단계별 최댓값. Observation이 config 없이도 읽을 수 있게 상태에 둔다. */
+  readonly levels: readonly string[];
+}
+
+export interface DoubleOpState {
+  readonly kind: DoubleOpKind;
+  readonly factor: number;
+}
+
+export interface DoublePairState {
+  readonly top: string;
+  readonly bottom: string;
+  /** 이 쌍을 만든 쌍의 index. anchor는 null. */
+  readonly from: number | null;
+  readonly op: DoubleOpState | null;
+}
+
+export interface DoubleLineState {
+  readonly pairs: readonly DoublePairState[];
+  readonly selected: number;
+  /** 위 수직선의 설정 최댓값(화면 구간 확장의 기준). */
+  readonly topMax: string;
+}
+
 export interface NumberLineState {
   readonly mode: NumberLineMode;
   readonly min: string;
@@ -104,6 +215,11 @@ export interface NumberLineState {
   readonly lastValue: string | null;
   readonly nextPointId: number;
   readonly counts: NumberLineCounts;
+  /** 새 모드의 상태. 다른 모드에서는 null이다. */
+  readonly skip: SkipCountState | null;
+  readonly rounding: RoundingState | null;
+  readonly logZoom: LogZoomState | null;
+  readonly double: DoubleLineState | null;
 }
 
 export type NumberLineAction =
@@ -119,7 +235,23 @@ export type NumberLineAction =
   | { readonly type: 'place-card'; readonly card: string; readonly value: string }
   | { readonly type: 'zoom'; readonly level: number; readonly center: string }
   | { readonly type: 'pan'; readonly delta: string }
-  | { readonly type: 'set-linked'; readonly value: string };
+  | { readonly type: 'set-linked'; readonly value: string }
+  // skip-count · log-zoom 뛰어 세기
+  | { readonly type: 'choose-step'; readonly row: number; readonly step: string }
+  | { readonly type: 'hop'; readonly row: number }
+  | { readonly type: 'unhop'; readonly row: number }
+  | { readonly type: 'clear-hops'; readonly row: number }
+  // rounding
+  | { readonly type: 'round'; readonly item: number; readonly method: RoundingMethod }
+  | { readonly type: 'move-marker'; readonly item: number; readonly value: string }
+  | { readonly type: 'select-item'; readonly item: number }
+  | { readonly type: 'clear-marker'; readonly item: number }
+  // log-zoom
+  | { readonly type: 'log-zoom'; readonly level: number }
+  // double
+  | { readonly type: 'select-pair'; readonly index: number }
+  | { readonly type: 'scale-pair'; readonly kind: DoubleOpKind; readonly factor: number }
+  | { readonly type: 'remove-pair' };
 
 export const LOGICAL_WIDTH = 1000;
 export const LOGICAL_HEIGHT = 600;

@@ -1,5 +1,5 @@
 /** E03 수직선의 학생 화면 문구. 하드코딩하지 않고 여기서만 쓴다. */
-import type { NumberLineMode } from './types';
+import type { NumberLineMode, RoundingMethod } from './types';
 
 export const numberLineStrings = {
   name: '수직선',
@@ -8,6 +8,10 @@ export const numberLineStrings = {
     integer: '눈금을 눌러 점을 찍고, 점을 끌어 옮겨 보세요.',
     fraction: '눈금을 눌러 분수의 자리를 찾아보세요. 카드는 끌어다 꽂을 수 있어요.',
     decimal: '확대하면 더 잘게 나뉜 눈금이 보여요. 점을 눌러 자리를 찾아보세요.',
+    'skip-count': '몇씩 뛸지 고르고 「한 번 뛰기」를 눌러 보세요. 점프를 되돌릴 수도 있어요.',
+    rounding: '수를 가장 가까운 눈금으로 끌어 옮겨 보세요.',
+    'log-zoom': '「−」를 누르면 더 큰 수의 세계로 넓어져요. 이전 구간이 얼마나 작아지는지 보세요.',
+    double: '위와 아래 수직선에서 같은 자리에 놓인 두 수를 살펴보세요.',
   } satisfies Record<NumberLineMode, string>,
   zoomOut: '축소',
   zoomIn: '확대',
@@ -33,4 +37,57 @@ export const numberLineStrings = {
   emptyPoints: '아직 찍은 점이 없어요.',
   jumpSize: (size: string) => `점프 ${size}`,
   overlayDistance: (value: string, distance: string) => `${value}까지 ${distance}`,
+
+  skip: {
+    stepGroup: '몇씩 뛸까요',
+    stepChoice: (step: string) => `${step}씩`,
+    hop: '한 번 뛰기',
+    unhop: '되돌리기',
+    clearHops: '뛴 것 지우기',
+    rowGroup: '뛸 줄',
+    rowChoice: (row: number) => `${row}번째 줄`,
+    hopCount: (count: number) => `${count}번 뛰었어요`,
+    stepFixed: (step: string) => `${step}씩 뛰는 줄`,
+  },
+
+  rounding: {
+    itemGroup: '어림할 수',
+    item: (value: string) => `수 ${value}`,
+    methodGroup: '어림 방법',
+    method: (method: RoundingMethod) =>
+      method === 'up' ? '올림' : method === 'down' ? '버림' : '반올림',
+    clear: '어림 표시 지우기',
+    markerLabel: '어림한 자리',
+    moveLeft: '어림한 자리 한 눈금 왼쪽',
+    moveRight: '어림한 자리 한 눈금 오른쪽',
+    placeHint: (place: string) => `${place} 자리 눈금으로 어림해요`,
+    dragHint: '수를 고른 뒤 방향키로 어림한 자리를 옮기고 Enter로 정해요.',
+  },
+
+  logZoom: {
+    zoomOutLabel: '한 단계 넓게 보기',
+    zoomInLabel: '한 단계 좁게 보기',
+    range: (max: string) => `0부터 ${max}까지`,
+    level: (level: number, count: number) => `${level}/${count} 단계`,
+    cardTray: '수 카드',
+    card: (card: string) => `카드 ${card}`,
+    placedCard: (card: string, value: string) => `${card} 카드 → ${value}`,
+    pastBand: '앞에서 보던 구간',
+    offRange: '오른쪽 밖',
+    landmark: (label: string) => `이정표 ${label}`,
+  },
+
+  double: {
+    topDefault: '위',
+    bottomDefault: '아래',
+    pairLabel: (index: number) => `${index + 1}번째 대응`,
+    pairGroup: '대응 쌍',
+    opGroup: '연산',
+    op: (kind: 'divide' | 'multiply', factor: number) =>
+      kind === 'divide' ? `÷ ${factor}` : `× ${factor}`,
+    remove: '마지막 쌍 지우기',
+    opsBand: '누른 연산',
+    anchor: '처음 대응',
+    noPair: '대응 쌍이 없어요.',
+  },
 } as const;

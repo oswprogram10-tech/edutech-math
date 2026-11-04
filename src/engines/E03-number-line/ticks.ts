@@ -154,10 +154,13 @@ export function tickStep(
   subdivisions: number,
   level: number,
 ): Rational {
-  if (mode === 'integer') return unit;
+  if (mode === 'fraction') {
+    const parts = subdivisions > 0 ? subdivisions : 4;
+    return unit.div(Rational.of(parts));
+  }
   if (mode === 'decimal') return unit.div(tenTo(level));
-  const parts = subdivisions > 0 ? subdivisions : 4;
-  return unit.div(Rational.of(parts));
+  // integer와 T048 새 모드(skip-count·rounding·log-zoom·double)는 unit이 눈금 간격이다.
+  return unit;
 }
 
 /** 눈금 줄의 y 좌표. 줄이 여러 개면 위아래로 고르게 편다. */

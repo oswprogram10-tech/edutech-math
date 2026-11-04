@@ -10,23 +10,39 @@ import { numberLineStrings } from './strings.ko';
 import type { NumberLineAction, NumberLineConfig, NumberLineState } from './types';
 import { NumberLineView } from './View';
 import { DistanceFromZeroOverlay } from './overlays/distance-from-zero';
+import { PairReplayOverlay } from './overlays/pair-replay';
+import { PrevBandOverlay } from './overlays/prev-band';
 import { SamePointOverlay } from './overlays/same-point';
+import { TwoTicksOverlay } from './overlays/two-ticks';
 
 const definition: EngineDefinition<NumberLineConfig, NumberLineState, NumberLineAction> = {
   id: 'E03',
   name: numberLineStrings.name,
-  modes: ['integer', 'fraction', 'decimal'],
+  modes: ['integer', 'fraction', 'decimal', 'skip-count', 'rounding', 'log-zoom', 'double'],
   createInitialState,
   reduce,
   View: NumberLineView,
   observe,
-  events: ['point-placed', 'point-moved', 'jumped', 'card-placed', 'zoomed', 'value-changed'],
+  events: [
+    'point-placed',
+    'point-moved',
+    'jumped',
+    'card-placed',
+    'zoomed',
+    'value-changed',
+    'hopped',
+    'rounded',
+    'pair-added',
+  ],
   emit,
   receive,
   predicates,
   overlays: {
     'distance-from-zero': DistanceFromZeroOverlay,
     'same-point': SamePointOverlay,
+    'two-ticks': TwoTicksOverlay,
+    'pair-replay': PairReplayOverlay,
+    'prev-band': PrevBandOverlay,
   },
 };
 

@@ -1,0 +1,240 @@
+/** @vitest-environment jsdom */
+import { cleanup, fireEvent, render } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { createInitialState, reduce } from '../reduce';
+import { numberLineStrings } from '../strings.ko';
+import type { NumberLineAction, NumberLineConfig, NumberLineState } from '../types';
+import { NumberLineView } from '../View';
+
+afterEach(cleanup);
+
+function renderView(
+  config: NumberLineConfig,
+  state: NumberLineState,
+  onDispatch: (action: NumberLineAction) => void = () => {},
+  targetSize: 48 | 64 = 48,
+) {
+  return render(
+    <NumberLineView
+      config={config}
+      state={state}
+      dispatch={onDispatch}
+      cpa="P"
+      mode={state.mode}
+      targetSize={targetSize}
+    />,
+  );
+}
+
+function canvasOf(view: ReturnType<typeof renderView>): SVGSVGElement {
+  const canvas = view.container.querySelector<SVGSVGElement>('[data-testid="number-line-canvas"]');
+  if (!canvas) throw new Error('수직선 캔버스가 없습니다.');
+  return canvas;
+}
+
+describe('T048 skip-count 화면', () => {
+  it('기본 설정에서는 뛴 횟수 숫자를 쓰지 않는다', () => {
+    const config: NumberLineConfig = { mode: 'skip-count', min: 0, max: 30 };
+    const state = createInitialState(config);
+    const view = renderView(config, state);
+    expect(view.queryByTestId('skip-hop-count')).toBeNull();
+    expect(view.container.textContent ?? '').not.toContain('번 뛰었어요');
+    expect(view.getByText(numberLineStrings.skip.stepChoice('2'))).toBeTruthy();
+    expect(view.getByText(numberLineStrings.skip.hop)).toBeTruthy();
+  });
+
+  it('단추와 키보드 J로 뛴다', () => {
+    const config: NumberLineConfig = { mode: 'skip-count', min: 0, max: 30 };
+    let state = createInitialState(config);
+    state = reduce(state, { type: 'choose-step', row: 0, step: '5' });
+    const onDispatch = vi.fn();
+    const view = renderView(config, state, onDispatch);
+
+    fireEvent.click(view.getByText(numberLineStrings.skip.stepChoice('5')));
+    expect(onDispatch).toHaveBeenLastCalledWith({ type: 'choose-step', row: 0, step: '5' });
+
+    fireEvent.click(view.getByText(numberLineStrings.skip.hop));
+    expect(onDispatch).toHaveBeenLastCalledWith({ type: 'hop', row: 0 });
+
+    fireEvent.keyDown(canvasOf(view), { key: 'j' });
+    expect(onDispatch).toHaveBeenLastCalledWith({ type: 'hop', row: 0 });
+  });
+
+  it('showHopCount일 때만 뛴 횟수를 쓴다', () => {
+    const config: NumberLineConfig = {
+      mode: 'skip-count',
+      min: 0,
+      max: 30,
+      showHopCount: true,
+    };
+    let state = createInitialState(config);
+    state = reduce(state, { type: 'choose-step', row: 0, step: '5' });
+    state = reduce(state, { type: 'hop', row: 0 });
+    const view = renderView(config, state);
+    expect(view.getByTestId('skip-hop-count').textContent).toContain('1');
+  });
+});
+
+describe('T048 rounding 화면', () => {
+  it('결과 값을 따로 글자로 쓰지 않는다', () => {
+    const config: NumberLineConfig = { mode: 'rounding', value: 243, place: 10 };
+    const state = reduce(createInitialState(config), {
+      type: 'round',
+      item: 0,
+      method: 'up',
+    });
+    const view = renderView(config, state);
+    expect(view.queryByTestId('rounding-result')).toBeNull();
+    const marker = view.getByTestId('rounding-marker-0');
+    expect(marker.getAttribute('data-marker')).toBe('250');
+    expect(marker.textContent ?? '').toBe('');
+    // 원래 값은 문제에 주어진 수라 보여도 된다.
+    expect(view.container.textContent ?? '').toContain('243');
+  });
+
+  it('올림·버림·반올림 단추가 round Action을 보낸다', () => {
+    const config: NumberLineConfig = { mode: 'rounding', value: 243, place: 10 };
+    const state = createInitialState(config);
+    const onDispatch = vi.fn();
+    const view = renderView(config, state, onDispatch);
+
+    fireEvent.click(view.getByText(numberLineStrings.rounding.method('up')));
+    expect(onDispatch).toHaveBeenLastCalledWith({ type: 'round', item: 0, method: 'up' });
+    fireEvent.click(view.getByText(numberLineStrings.rounding.method('down')));
+    expect(onDispatch).toHaveBeenLastCalledWith({ type: 'round', item: 0, method: 'down' });
+    fireEvent.click(view.getByText(numberLineStrings.rounding.method('half-up')));
+    expect(onDispatch).toHaveBeenLastCalledWith({ type: 'round', item: 0, method: 'half-up' });
+  });
+
+  it('drag 모드는 방향키로 큰 눈금 한 칸씩 옮긴다', () => {
+    const config: NumberLineConfig = {
+      mode: 'rounding',
+      value: 243,
+      place: 10,
+      controls: 'drag',
+    };
+    const state = createInitialState(config);
+    const onDispatch = vi.fn();
+    const view = renderView(config, state, onDispatch);
+    expect(view.queryByText(numberLineStrings.rounding.method('up'))).toBeNull();
+
+    fireEvent.keyDown(canvasOf(view), { key: 'ArrowRight' });
+    expect(onDispatch).toHaveBeenLastCalledWith({
+      type: 'move-marker',
+      item: 0,
+      value: '253',
+    });
+  });
+});
+
+describe('T048 log-zoom 화면', () => {
+  it('카드의 정답 위치를 미리 찍어 두지 않는다', () => {
+    const config: NumberLineConfig = {
+      mode: 'log-zoom',
+      levels: [10, 100, 1000, 10000],
+      cards: [500, 1000, 2500, 9000],
+    };
+    const state = createInitialState(config);
+    const view = renderView(config, state);
+    const canvas = canvasOf(view);
+    expect(canvas.getAttribute('data-mode')).toBe('log-zoom');
+    expect(canvas.querySelector('[data-card-value="2500"]')).toBeNull();
+    expect(canvas.querySelector('[data-point-id]')).toBeNull();
+    expect(view.getByTestId('log-card-2500')).toBeTruthy();
+  });
+
+  it('− 단추와 키보드 −가 단계를 넓힌다', () => {
+    const config: NumberLineConfig = { mode: 'log-zoom' };
+    const state = createInitialState(config);
+    const onDispatch = vi.fn();
+    const view = renderView(config, state, onDispatch);
+
+    fireEvent.click(view.getByLabelText(numberLineStrings.logZoom.zoomOutLabel));
+    expect(onDispatch).toHaveBeenLastCalledWith({ type: 'log-zoom', level: 1 });
+    fireEvent.keyDown(canvasOf(view), { key: '-' });
+    expect(onDispatch).toHaveBeenLastCalledWith({ type: 'log-zoom', level: 1 });
+  });
+
+  it('이전 단계가 있으면 이전 구간 띠를 보여 준다', () => {
+    const config: NumberLineConfig = { mode: 'log-zoom' };
+    const state = reduce(createInitialState(config), { type: 'log-zoom', level: 2 });
+    const view = renderView(config, state);
+    expect(view.getByTestId('log-prev-band')).toBeTruthy();
+  });
+});
+
+describe('T048 double 화면', () => {
+  const config: NumberLineConfig = {
+    mode: 'double',
+    top: { label: '양', max: '3/4' },
+    anchors: [['2/3', '1']],
+    divisors: [2, 3],
+    multipliers: [2, 3],
+  };
+
+  function scaled(): NumberLineState {
+    let state = createInitialState(config);
+    state = reduce(state, { type: 'scale-pair', kind: 'divide', factor: 2 });
+    state = reduce(state, { type: 'scale-pair', kind: 'multiply', factor: 3 });
+    return state;
+  }
+
+  it('새 쌍의 기본 라벨은 값이 아니라 만든 식이다', () => {
+    const state = scaled();
+    const view = renderView(config, state);
+    expect(view.getByTestId('pair-label-top-1').textContent).toBe('2/3 ÷ 2');
+    expect(view.getByTestId('pair-label-bottom-1').textContent).toBe('1 ÷ 2');
+    expect(view.getByTestId('pair-label-top-2').textContent).toBe('2/3 ÷ 2 × 3');
+    expect(view.getByTestId('pair-label-bottom-2').textContent).toBe('1 ÷ 2 × 3');
+    expect(view.getByTestId('pair-label-top-2').textContent).not.toBe('1');
+  });
+
+  it('values 라벨은 교사 시연용으로만 값를 쓴다', () => {
+    const valueConfig: NumberLineConfig = { ...config, labels: 'values' };
+    let state = createInitialState(valueConfig);
+    state = reduce(state, { type: 'scale-pair', kind: 'divide', factor: 2 });
+    state = reduce(state, { type: 'scale-pair', kind: 'multiply', factor: 3 });
+    const view = renderView(valueConfig, state);
+    expect(view.getByTestId('pair-label-top-2').textContent).toBe('1');
+    expect(view.getByTestId('pair-label-bottom-2').textContent).toBe('3/2');
+  });
+
+  it('÷·× 단추가 scale-pair Action을 보낸다', () => {
+    const state = createInitialState(config);
+    const onDispatch = vi.fn();
+    const view = renderView(config, state, onDispatch);
+
+    fireEvent.click(view.getByText(numberLineStrings.double.op('divide', 2)));
+    expect(onDispatch).toHaveBeenLastCalledWith({ type: 'scale-pair', kind: 'divide', factor: 2 });
+    fireEvent.click(view.getByText(numberLineStrings.double.op('multiply', 3)));
+    expect(onDispatch).toHaveBeenLastCalledWith({
+      type: 'scale-pair',
+      kind: 'multiply',
+      factor: 3,
+    });
+  });
+
+  it('누른 연산을 차례로 쌓아 보여 주고 합친 결과는 쓰지 않는다', () => {
+    const view = renderView(config, scaled());
+    const band = view.getByTestId('double-ops-band');
+    expect(band.textContent).toContain('÷ 2');
+    expect(band.textContent).toContain('× 3');
+    expect(band.textContent ?? '').not.toContain('3/2');
+  });
+});
+
+describe('T048 기존 모드 유지', () => {
+  it('integer는 기존 화면을 그대로 쓴다', () => {
+    const config: NumberLineConfig = { mode: 'integer', min: 0, max: 9 };
+    const state = createInitialState(config);
+    const view = renderView(config, state);
+    expect(canvasOf(view).getAttribute('data-mode')).toBe('integer');
+  });
+
+  it('targetSize 64를 화면에 표시한다', () => {
+    const config: NumberLineConfig = { mode: 'skip-count', min: 0, max: 30 };
+    const state = createInitialState(config);
+    const view = renderView(config, state, () => {}, 64);
+    expect(view.container.querySelector('[data-target-size="64"]')).not.toBeNull();
+  });
+});

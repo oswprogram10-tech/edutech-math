@@ -92,6 +92,60 @@ function countsRecord(state: NumberLineState): Record<string, number> {
   };
 }
 
+/** skip-count·log-zoom 뛰어 세기. 없으면 모두 null. */
+function skipObservation(state: NumberLineState): {
+  readonly rows: JsonValue[] | null;
+  readonly step: string | null;
+  readonly hopCount: number | null;
+  readonly landing: string | null;
+} {
+  const skip = state.skip;
+  if (!skip) return { rows: null, step: null, hopCount: null, landing: null };
+  const rows: JsonValue[] = skip.rows.map((row) => {
+    const landing = row.hops[row.hops.length - 1] ?? skip.start;
+    return {
+      step: row.step,
+      hops: [...row.hops],
+      hopCount: row.hops.length,
+      landing,
+    };
+  });
+  const first = skip.rows[0];
+  const landing = first ? (first.hops[first.hops.length - 1] ?? skip.start) : null;
+  return {
+    rows,
+    step: first?.step ?? null,
+    hopCount: first ? first.hops.length : null,
+    landing,
+  };
+}
+
+function roundingObservation(state: NumberLineState): JsonValue[] | null {
+  if (!state.rounding) return null;
+  return state.rounding.items.map((item) => ({
+    value: item.value,
+    marker: item.marker,
+    method: item.method,
+  }));
+}
+
+function doubleObservation(state: NumberLineState): {
+  readonly pairs: JsonValue[] | null;
+  readonly ops: string[] | null;
+} {
+  const line = state.double;
+  if (!line) return { pairs: null, ops: null };
+  const pairs: JsonValue[] = line.pairs.map((pair) => ({
+    top: pair.top,
+    bottom: pair.bottom,
+  }));
+  const ops: string[] = [];
+  for (const pair of line.pairs) {
+    if (pair.op) ops.push(`${pair.op.kind}:${pair.op.factor}`);
+  }
+  return { pairs, ops };
+}
+
 export function observe(state: NumberLineState): Observation {
   const rows = rowsOf(state);
   const tick = rows[0]?.step.toJSON() ?? '1';
@@ -127,6 +181,10 @@ export function observe(state: NumberLineState): Observation {
     sources: [...group.sources],
   }));
 
+  const skip = skipObservation(state);
+  const rounding = roundingObservation(state);
+  const double = doubleObservation(state);
+
   return {
     mode: state.mode,
     min: state.min,
@@ -161,5 +219,16 @@ export function observe(state: NumberLineState): Observation {
     cardPlaced: counts['cardPlaced'] ?? 0,
     zoomed: counts['zoomed'] ?? 0,
     valueChanged: counts['valueChanged'] ?? 0,
+    // T048 새 모드. 해당 없으면 null이다.
+    skipRows: skip.rows,
+    step: skip.step,
+    hopCount: skip.hopCount,
+    landing: skip.landing,
+    rounding,
+    level: state.logZoom ? state.logZoom.level : null,
+    levelMax: state.logZoom ? state.max : null,
+    levels: state.logZoom ? [...state.logZoom.levels] : null,
+    pairs: double.pairs,
+    doubleOps: double.ops,
   };
 }

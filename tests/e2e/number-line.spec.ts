@@ -17,6 +17,17 @@ interface ObservationRecord {
   readonly viewMax?: string;
   readonly points?: ReadonlyArray<{ readonly value?: string }>;
   readonly pointValues?: readonly string[];
+  readonly cards?: Readonly<Record<string, string | null>>;
+  readonly landing?: string | null;
+  readonly hopCount?: number | null;
+  readonly level?: number | null;
+  readonly pairs?: ReadonlyArray<{ readonly top?: string; readonly bottom?: string }>;
+  readonly doubleOps?: readonly string[];
+  readonly rounding?: ReadonlyArray<{
+    readonly value?: string;
+    readonly marker?: string | null;
+    readonly method?: string | null;
+  }>;
   readonly [key: string]: unknown;
 }
 
@@ -223,4 +234,95 @@ test('+/− 버튼과 Ctrl+휠로 눈금을 바꾼다', async ({ page }) => {
 
   // 캔버스가 화면 밖으로 밀리지 않았는지(휠이 페이지 스크롤을 먹지 않았는지) 확인.
   expect(box.width).toBeGreaterThan(0);
+});
+
+test('skip-count에서 5씩 고르고 J로 네 번 뛰면 20에 닿는다', async ({ page }) => {
+  await openNumberLine(page, {
+    mode: 'skip-count',
+    min: 0,
+    max: 30,
+    stepChoices: [2, 3, 4, 5],
+  });
+  await selectMode(page, 'skip-count');
+
+  await page.getByRole('button', { name: '5씩' }).click();
+  const canvas = page.getByTestId('number-line-canvas');
+  await canvas.focus();
+  for (let step = 0; step < 4; step += 1) {
+    await page.keyboard.press('j');
+  }
+  await pollObservation(
+    page,
+    (observation) => observation.hopCount === 4 && observation.landing === '20',
+  );
+
+  const observation = await readObservation(page);
+  expect(observation.landing).toBe('20');
+  expect(observation.hopCount).toBe(4);
+});
+
+test('rounding에서 243을 10 자리로 올림하면 marker가 250이다', async ({ page }) => {
+  await openNumberLine(page, { mode: 'rounding', value: 243, place: 10 });
+  await selectMode(page, 'rounding');
+
+  await page.getByRole('button', { name: '올림', exact: true }).click();
+  await pollObservation(page, (observation) => observation.rounding?.[0]?.marker === '250');
+
+  const observation = await readObservation(page);
+  expect(observation.rounding?.[0]).toEqual({
+    value: '243',
+    marker: '250',
+    method: 'up',
+  });
+});
+
+test('log-zoom에서 − 세 번으로 level 3에 간 뒤 카드 2500을 놓는다', async ({ page }) => {
+  const { at } = await openNumberLine(page, {
+    mode: 'log-zoom',
+    levels: [10, 100, 1000, 10000],
+    cards: [500, 1000, 2500, 9000],
+  });
+  await selectMode(page, 'log-zoom');
+
+  const zoomOut = page.getByRole('button', { name: '한 단계 넓게 보기' });
+  for (let level = 1; level <= 3; level += 1) {
+    await zoomOut.click();
+    await pollObservation(page, (observation) => observation.level === level);
+  }
+
+  await page.getByTestId('log-card-2500').click();
+  await pollObservation(page, (observation) => observation['selectedCard'] === '2500');
+  await tapAt(page, at, 300, 380);
+  await pollObservation(page, (observation) => observation.cards?.['2500'] === '2500');
+
+  const observation = await readObservation(page);
+  expect(observation.level).toBe(3);
+  expect(observation.cards?.['2500']).toBe('2500');
+});
+
+test('double에서 ÷2 뒤 ×3을 하면 1↔3/2 쌍이 생긴다', async ({ page }) => {
+  await openNumberLine(page, {
+    mode: 'double',
+    top: { label: '양', max: '3/4' },
+    bottom: { label: '자 2/3로 잰 횟수' },
+    anchors: [['2/3', '1']],
+    divisors: [2, 3, 4],
+    multipliers: [2, 3],
+  });
+  await selectMode(page, 'double');
+
+  await page.getByRole('button', { name: '÷ 2' }).click();
+  await pollObservation(page, (observation) => observation.pairs?.length === 2);
+  await page.getByRole('button', { name: '× 3' }).click();
+  await pollObservation(
+    page,
+    (observation) =>
+      observation.pairs?.length === 3 &&
+      observation.pairs[2]?.top === '1' &&
+      observation.pairs[2]?.bottom === '3/2',
+  );
+
+  const observation = await readObservation(page);
+  expect(observation.pairs?.[2]).toEqual({ top: '1', bottom: '3/2' });
+  expect(observation.doubleOps).toEqual(['divide:2', 'multiply:3']);
 });
