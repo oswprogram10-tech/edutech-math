@@ -362,14 +362,30 @@ export function MulView({
 
   function cellLabel(cell: CellRef): string {
     if (cell.row === 'partial' && cell.index !== undefined) {
-      return S.partialCell(placeNameKo(cell.column), cell.index);
+      return decimalMul
+        ? S.columnCell(S.rowPartial(cell.index), cell.column)
+        : S.partialCell(placeNameKo(cell.column), cell.index);
     }
     if (cell.row === 'partial-carry' && cell.index !== undefined) {
-      return S.partialCarryCell(placeNameKo(cell.column), cell.index);
+      return decimalMul
+        ? S.columnCell(`${S.rowPartial(cell.index)} ${S.rowPartialCarry}`, cell.column)
+        : S.partialCarryCell(placeNameKo(cell.column), cell.index);
     }
-    if (cell.row === 'carry') return S.carryCell(placeNameKo(cell.column));
-    return S.resultCell(placeNameKo(cell.column));
+    if (cell.row === 'carry') {
+      return decimalMul
+        ? S.columnCell(S.rowCarry, cell.column)
+        : S.carryCell(placeNameKo(cell.column));
+    }
+    return decimalMul
+      ? S.columnCell(S.rowResult, cell.column)
+      : S.resultCell(placeNameKo(cell.column));
   }
+
+  const pointMarker = (
+    <span className={styles.pointDot} data-point-mark="true" aria-hidden="true">
+      .
+    </span>
+  );
 
   const keypadLabel = keypadTarget ? S.selectedCell(cellLabel(keypadTarget)) : '';
   const pointBlocked = decimalMul && state.requireEstimate && state.phase === 'estimate';
@@ -455,7 +471,7 @@ export function MulView({
             if (!state.selected && defaultSelection && keypadTarget) selectAt(defaultSelection);
           }}
         >
-          {cpa === 'C' ? (
+          {cpa === 'C' && !decimalMul ? (
             <div className={styles.row} style={rowsStyle} aria-hidden="true">
               <span className={styles.rowLabel} />
               {renderedColumns.map((column) => (
@@ -480,7 +496,11 @@ export function MulView({
                     data-row="carry"
                     data-column={column}
                     data-selected={selected}
-                    aria-label={S.carryCell(placeNameKo(column))}
+                    aria-label={
+                      decimalMul
+                        ? S.columnCell(S.rowCarry, column)
+                        : S.carryCell(placeNameKo(column))
+                    }
                     disabled={readOnly}
                     onClick={() => selectAt({ row: 'carry', column })}
                   >
@@ -491,7 +511,18 @@ export function MulView({
             </div>
           ) : null}
 
-          <div className={styles.row} style={rowsStyle} ref={topRowRef}>
+          <div
+            className={styles.row}
+            style={rowsStyle}
+            ref={topRowRef}
+            data-operand="a"
+            role={decimalMul ? 'group' : undefined}
+            aria-label={
+              decimalMul && state.aPoint !== null
+                ? S.operandNumber(S.rowTop, state.aText)
+                : undefined
+            }
+          >
             <span className={styles.rowLabel} />
             {renderedColumns.map((column) => {
               const digit = operandDigit(grid.a, state.aPoint, column);
@@ -509,23 +540,37 @@ export function MulView({
                     type="button"
                     className={`${styles.cell} ${styles.cellPad}`}
                     {...common}
-                    aria-label={S.placeCursor(placeNameKo(column))}
+                    aria-label={
+                      decimalMul ? S.placeColumnCursor(column) : S.placeCursor(placeNameKo(column))
+                    }
                     disabled={readOnly}
                     onClick={() => onTopCell(column)}
                   >
                     {digit}
+                    {point ? pointMarker : null}
                   </button>
                 );
               }
               return (
                 <span key={column} className={styles.cell} {...common}>
                   {digit}
+                  {point ? pointMarker : null}
                 </span>
               );
             })}
           </div>
 
-          <div className={styles.row} style={rowsStyle}>
+          <div
+            className={styles.row}
+            style={rowsStyle}
+            data-operand="b"
+            role={decimalMul ? 'group' : undefined}
+            aria-label={
+              decimalMul && state.bPoint !== null
+                ? S.operandNumber(S.rowBottom, state.bText)
+                : undefined
+            }
+          >
             <span className={`${styles.rowLabel} ${styles.op}`}>{S.operationSign.mul}</span>
             {renderedColumns.map((column) => {
               const digit = operandDigit(grid.b, state.bPoint, column);
@@ -540,6 +585,7 @@ export function MulView({
                   data-point={point ? 'true' : undefined}
                 >
                   {digit}
+                  {point ? pointMarker : null}
                 </span>
               );
             })}
@@ -580,7 +626,14 @@ export function MulView({
                           data-index={row.index}
                           data-column={column}
                           data-selected={selected}
-                          aria-label={S.partialCarryCell(placeNameKo(column), row.index)}
+                          aria-label={
+                            decimalMul
+                              ? S.columnCell(
+                                  `${S.rowPartial(row.index)} ${S.rowPartialCarry}`,
+                                  column,
+                                )
+                              : S.partialCarryCell(placeNameKo(column), row.index)
+                          }
                           disabled={readOnly || !aligned}
                           onClick={() =>
                             selectAt({ row: 'partial-carry', column, index: row.index })
@@ -627,7 +680,11 @@ export function MulView({
                           data-column={column}
                           data-placeholder="true"
                           data-row-color={colorAttr}
-                          aria-label={S.placeholderCell(placeNameKo(column))}
+                          aria-label={
+                            decimalMul
+                              ? S.placeholderColumnCell(column)
+                              : S.placeholderCell(placeNameKo(column))
+                          }
                         >
                           0
                         </span>
@@ -661,7 +718,11 @@ export function MulView({
                           column,
                           index: row.index,
                         })}
-                        aria-label={S.partialCell(placeNameKo(column), row.index)}
+                        aria-label={
+                          decimalMul
+                            ? S.columnCell(S.rowPartial(row.index), column)
+                            : S.partialCell(placeNameKo(column), row.index)
+                        }
                         disabled={readOnly || !aligned}
                         onClick={() => selectAt({ row: 'partial', column, index: row.index })}
                       >
@@ -704,11 +765,16 @@ export function MulView({
                   data-selected={selected}
                   data-flagged={isFlagged(cell)}
                   data-point={decimalMul && state.resultPoint === column ? 'true' : undefined}
-                  aria-label={S.resultCell(placeNameKo(column))}
+                  aria-label={
+                    decimalMul
+                      ? S.columnCell(S.rowResult, column)
+                      : S.resultCell(placeNameKo(column))
+                  }
                   disabled={readOnly || !aligned}
                   onClick={() => selectAt(cell)}
                 >
                   {digit}
+                  {decimalMul && state.resultPoint === column ? pointMarker : null}
                 </button>
               );
             })}
@@ -739,9 +805,7 @@ export function MulView({
                     data-column={column}
                     data-on={on}
                     aria-pressed={on}
-                    aria-label={
-                      on ? S.pointCellOn(placeNameKo(column)) : S.pointCell(placeNameKo(column))
-                    }
+                    aria-label={on ? S.pointColumnCellOn(column) : S.pointColumnCell(column)}
                     disabled={readOnly || !aligned || pointBlocked}
                     onClick={() => placePoint(column)}
                   >

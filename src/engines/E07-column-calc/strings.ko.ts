@@ -1,6 +1,26 @@
 /** E07 세로셈 격자의 학생 문구. 화면에 하드코딩하지 않는다. */
 import type { ColumnMode, ColumnOp } from './types';
 
+const ORDINALS = [
+  '첫째',
+  '둘째',
+  '셋째',
+  '넷째',
+  '다섯째',
+  '여섯째',
+  '일곱째',
+  '여덟째',
+  '아홉째',
+  '열째',
+] as const;
+
+/** 소수 곱셈의 열 이름. 0 = 맨 오른쪽 칸 → "오른쪽에서 첫째 칸". */
+function columnFromRight(column: number): string {
+  const order = column + 1;
+  const ordinal = ORDINALS[order - 1] ?? `${order}번째`;
+  return `오른쪽에서 ${ordinal} 칸`;
+}
+
 export const columnCalcStrings = {
   name: '세로셈 격자',
   canvasLabel: '세로셈 격자',
@@ -140,12 +160,19 @@ export const columnCalcStrings = {
   ladderFocusTitle: '몫 후보 견주기',
   ladderFocusHint: '고른 몫과 바로 위아래 몫의 높이를 견주어 보세요.',
   // ── decimal × (T077) ─────────────────────────────────────
-  decimalMulInstruction:
-    '두 수의 오른쪽 끝을 맞춰 놓고 자연수처럼 곱한 뒤, 결과 줄에 소수점을 놓아 보세요.',
+  decimalMulInstruction: '세로셈으로 곱한 뒤, 결과 줄에 소수점을 놓아 보세요.',
   pointRow: '점 놓기',
   pointCell: (place: string) => `${place} 자리 오른쪽에 소수점 놓기`,
   pointCellOn: (place: string) => `${place} 자리 오른쪽 소수점 지우기`,
   pointMark: '·',
+  /** 소수 곱셈은 자릿값이 아니라 오른쪽부터 센 칸 번호로 읽는다. */
+  columnFromRight,
+  columnCell: (prefix: string, column: number) => `${prefix} ${columnFromRight(column)}`,
+  placeholderColumnCell: (column: number) => `${columnFromRight(column)} 자리 밀기 0`,
+  pointColumnCell: (column: number) => `${columnFromRight(column)} 오른쪽에 소수점 놓기`,
+  pointColumnCellOn: (column: number) => `${columnFromRight(column)} 오른쪽 소수점 지우기`,
+  placeColumnCursor: (column: number) => `${columnFromRight(column)}에 카드 놓기`,
+  operandNumber: (row: string, value: string) => `${row} ${value}`,
   estimateFirst: '소수점을 놓기 전에 어림값을 먼저 써요',
   decimalEstimateLabel: '어림값',
   decimalEstimateInput: '소수 어림값 쓰기',
