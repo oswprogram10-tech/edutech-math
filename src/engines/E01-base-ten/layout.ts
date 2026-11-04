@@ -69,6 +69,9 @@ export function dividePlateAt(point: Point, count: number): number | null {
   return null;
 }
 
+/** 접시 이름표가 차지하는 위쪽 높이. 블록은 이 아래에서 시작한다. */
+export const PLATE_LABEL_CLEARANCE = 30;
+
 /**
  * 접시 하나 안에 블록을 자릿값별로 줄 맞춰 놓는다.
  * 큰 블록부터 위에서 아래로, 같은 값은 가로로 채운다.
@@ -76,7 +79,7 @@ export function dividePlateAt(point: Point, count: number): number | null {
 export function arrangeOnPlate(rect: Rect, blocks: readonly BaseTenBlock[]): BaseTenBlock[] {
   const ordered = [...blocks].sort((a, b) => b.value - a.value || a.id.localeCompare(b.id));
   const result: BaseTenBlock[] = [];
-  let cursorY = rect.y + 6;
+  let cursorY = rect.y + PLATE_LABEL_CLEARANCE;
   for (const value of [1000, 100, 10, 1] as BlockValue[]) {
     const group = ordered.filter((block) => block.value === value);
     if (group.length === 0) continue;
@@ -94,7 +97,10 @@ export function arrangeOnPlate(rect: Rect, blocks: readonly BaseTenBlock[]): Bas
         ...block,
         x: Math.round(Math.max(minX, Math.min(maxX, x))),
         y: Math.round(
-          Math.max(rect.y + size.height / 2, Math.min(rect.y + rect.height - size.height / 2, y)),
+          Math.max(
+            rect.y + PLATE_LABEL_CLEARANCE + size.height / 2,
+            Math.min(rect.y + rect.height - size.height / 2, y),
+          ),
         ),
       });
     });

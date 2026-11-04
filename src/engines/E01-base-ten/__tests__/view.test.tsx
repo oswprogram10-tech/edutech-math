@@ -240,6 +240,21 @@ describe('E01 big-number 화면', () => {
     expect(text).not.toContain('이천삼십만 오');
     expect(view.getAllByLabelText(S.reverseCanvasLabel).length).toBeGreaterThan(0);
   });
+
+  it('자르기 전에는 펼치기 버튼이 없고, 자른 뒤 덩어리마다 단위 이름표를 그린다', () => {
+    const config: BaseTenConfig = { mode: 'big-number', value: '52840000' };
+    const initial = createInitialState(config);
+    const before = renderView(config, initial);
+    expect(before.queryByRole('button', { name: S.expandGroup('만') })).toBeNull();
+    expect(before.container.querySelectorAll('[data-group-label]')).toHaveLength(1);
+    expect(before.container.querySelector('[data-group-label="0"]')?.textContent).toBe('일');
+
+    const cut = reduce(initial, { type: 'cut', position: 4 });
+    const after = renderView(config, cut);
+    expect(after.getByRole('button', { name: S.expandGroup('만') })).toBeTruthy();
+    expect(after.container.querySelector('[data-group-label="0"]')?.textContent).toBe('일');
+    expect(after.container.querySelector('[data-group-label="1"]')?.textContent).toBe('만');
+  });
 });
 
 describe('E01 divide 화면', () => {

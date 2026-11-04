@@ -293,19 +293,31 @@ export function BigNumberView({
               const last = digitRects[segment.end - 1];
               if (!first || !last) return null;
               return (
-                <rect
-                  key={`segment-${segment.group}`}
-                  x={first.x - 4}
-                  y={BIG_STRIP.y - 4}
-                  width={last.x + last.width - first.x + 8}
-                  height={BIG_STRIP.height + 8}
-                  rx={14}
-                  fill={color}
-                  fillOpacity={0.1}
-                  stroke={color}
-                  strokeOpacity={0.55}
-                  strokeWidth={2}
-                />
+                <g key={`segment-${segment.group}`}>
+                  <rect
+                    x={first.x - 4}
+                    y={BIG_STRIP.y - 4}
+                    width={last.x + last.width - first.x + 8}
+                    height={BIG_STRIP.height + 8}
+                    rx={14}
+                    fill={color}
+                    fillOpacity={0.1}
+                    stroke={color}
+                    strokeOpacity={0.55}
+                    strokeWidth={2}
+                  />
+                  <text
+                    x={(first.x + last.x + last.width) / 2}
+                    y={BIG_STRIP.y - 18}
+                    textAnchor="middle"
+                    fontSize={22}
+                    fontWeight={700}
+                    fill={color}
+                    data-group-label={segment.group}
+                  >
+                    {groupName(segment.group)}
+                  </text>
+                </g>
               );
             })}
 
@@ -453,7 +465,7 @@ export function BigNumberView({
         )}
       </svg>
 
-      {!reverse && canExpand && segments.length > 0 ? (
+      {!reverse && canExpand && big.cuts.length > 0 ? (
         <div className={styles.toolbar} role="group" aria-label={S.bigNumberStrip}>
           {segments.map((segment) => {
             const expanded = big.expanded === segment.group;

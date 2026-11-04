@@ -55,8 +55,8 @@ function builtOf(big: BigNumberState): { readonly value: string | null; readonly
   return { value: tail.join(''), gap: false };
 }
 
-function bigObservation(state: BaseTenState, big: BigNumberState): Observation {
-  const built = builtOf(big);
+function bigObservation(state: BaseTenState, big: BigNumberState, reverse: boolean): Observation {
+  const built = reverse ? builtOf(big) : null;
   return {
     mode: state.mode,
     digits: big.value,
@@ -64,8 +64,8 @@ function bigObservation(state: BaseTenState, big: BigNumberState): Observation {
     cutsCorrect: cutsCorrectOf(big.value, big.cuts),
     expanded: big.expanded,
     selectedPlace: big.selected,
-    built: built.value,
-    builtHasGap: built.gap,
+    built: built?.value ?? null,
+    builtHasGap: built?.gap ?? null,
   };
 }
 
@@ -114,7 +114,7 @@ function divideObservation(state: BaseTenState): Observation {
 
 export function observe(state: BaseTenState, config: BaseTenConfig): Observation {
   if (state.mode === 'big-number' && state.bigNumber) {
-    return bigObservation(state, state.bigNumber);
+    return bigObservation(state, state.bigNumber, config.reverse !== undefined);
   }
   if (state.mode === 'divide') {
     return divideObservation(state);

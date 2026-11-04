@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { assertSerializable } from '../../../core/engine-sdk';
 import { emit, predicates, receive } from '../events';
+import { blockRect, dividePlateRects, PLATE_LABEL_CLEARANCE } from '../layout';
 import { observe } from '../observe';
 import { canDealRound, createInitialState, reduce } from '../reduce';
 import type { BaseTenConfig, BaseTenState, BlockValue } from '../types';
@@ -156,26 +157,38 @@ describe('E01 big-number', () => {
     expect(observe(state, { mode: 'big-number' }).expanded).toBeNull();
   });
 
-  it('reverse는 16칸에 숫자를 놓고 가운데 빈칸을 읽는다', () => {
-    let state = stateOf({ mode: 'big-number', reverse: { spoken: '이천삼십만 오' } });
+  it('reverse가 없으면 built·builtHasGap을 null로 둔다', () => {
+    let state = stateOf({ mode: 'big-number', value: '52840000' });
+    state = reduce(state, { type: 'cut', position: 4 });
     const observation = observe(state, { mode: 'big-number' });
+    expect(observation.built).toBeNull();
+    expect(observation.builtHasGap).toBeNull();
+  });
+
+  it('reverse는 16칸에 숫자를 놓고 가운데 빈칸을 읽는다', () => {
+    const config: BaseTenConfig = {
+      mode: 'big-number',
+      reverse: { spoken: '이천삼십만 오' },
+    };
+    let state = stateOf(config);
+    const observation = observe(state, config);
     expect(observation.digits).toBe('');
     expect(observation.built).toBeNull();
     expect(observation.builtHasGap).toBe(true);
 
     state = reduce(state, { type: 'place-card', cell: 15, digit: 5 });
-    expect(observe(state, { mode: 'big-number' }).built).toBe('5');
+    expect(observe(state, config).built).toBe('5');
     state = reduce(state, { type: 'place-card', cell: 13, digit: 2 });
-    expect(observe(state, { mode: 'big-number' }).built).toBeNull();
-    expect(observe(state, { mode: 'big-number' }).builtHasGap).toBe(true);
+    expect(observe(state, config).built).toBeNull();
+    expect(observe(state, config).builtHasGap).toBe(true);
     state = reduce(state, { type: 'place-card', cell: 14, digit: 3 });
-    const filled = observe(state, { mode: 'big-number' });
+    const filled = observe(state, config);
     expect(filled.built).toBe('235');
     expect(filled.builtHasGap).toBe(false);
     expect(predicates.builtIs?.(filled, { value: '235' })).toBe(true);
 
     state = reduce(state, { type: 'clear-cell', cell: 14 });
-    expect(observe(state, { mode: 'big-number' }).built).toBeNull();
+    expect(observe(state, config).built).toBeNull();
   });
 
   it('상태는 JSON으로 저장할 수 있다', () => {
@@ -316,6 +329,20 @@ describe('E01 divide', () => {
 
     state = reduce(state, { type: 'deal-block', id: pileIds(state, 10)[0] as string, plate: 0 });
     expect(observe(state, { mode: 'divide' }).rewound).toBe(false);
+  });
+
+  it('접시 이름표를 덮지 않도록 블록은 이름표 아래에서 시작한다', () => {
+    let state = stateOf({ mode: 'divide', dividend: 52, divisor: 4 });
+    state = dealRoundMany(state, 10, 1);
+    state = dealRoundMany(state, 1, 2);
+    const rectst = dividePlateRects(state.divide?.plates ?? 0);
+    const firstPlate = rectst[0];
+    if (!firstPlate) throw new Error('첫 접시가 없습니다.');
+    const plated = state.blocks.filter((block) => block.plate === 0);
+    expect(plated.length).toBeGreaterThan(0);
+    for (const block of plated) {
+      expect(blockRect(block).y).toBeGreaterThanOrEqual(firstPlate.y + PLATE_LABEL_CLEARANCE);
+    }
   });
 
   it('receive는 rewind-requested만 되감기로 바꾸고 상태는 저장 가능하다', () => {
