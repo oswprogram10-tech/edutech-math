@@ -3,14 +3,15 @@
  * 곱은 쓰지 않고 학생이 만든 칸을 세어 보게 한다.
  */
 import type { OverlayProps } from '../../../core/engine-sdk';
+import { decimalTenthsOf } from '../area';
 import { decimalBoardRect, fractionSquareRect } from '../layout';
 import type { ArrayAreaConfig, ArrayAreaState } from '../types';
 
 export function OverlapCountOverlay({ state }: OverlayProps<ArrayAreaConfig, ArrayAreaState>) {
   if (state.mode === 'decimal-area' && state.decimal !== null) {
     const board = decimalBoardRect(state.settings.maxA, state.settings.maxB);
-    const aCells = Math.round(Number(state.decimal.a) * 10);
-    const bCells = Math.round(Number(state.decimal.b) * 10);
+    const aCells = decimalTenthsOf(state.decimal.a);
+    const bCells = decimalTenthsOf(state.decimal.b);
     return (
       <svg viewBox="0 0 1000 600" width="100%" height="100%" aria-hidden="true">
         {Array.from({ length: aCells }, (_, col) =>
