@@ -5,33 +5,58 @@
  * 몫 열 c에 0이 아닌 숫자를 쓰면 그 열에 단계가 생기고, 그 단계의 곱·뺄셈 줄
  * 기대값은 학생 몫·학생 앞 단계 값만으로 계산한다. 정답은 화면에 내보내지 않는다.
  *
- * 값은 `BigInt`로만 계산하고 상태·화면에는 문자열 자리만 둔다.
+ * T078: 소수 나눗셈은 격자 수 G·g와 열 범위 top … low를 쓴다. decimal이
+ * 아니면 low = 0이라 T047 계산과 같다.
+ * 값은 `BigInt`·`Rational`로만 계산하고 상태·화면에는 문자열 자리만 둔다.
  */
+import { Rational } from '../../core/math';
+import { divGridNumbers, gridDividendDigit } from './grid-div-decimal';
+import type { DivGridNumbers } from './grid-div-decimal';
 import type { ColumnCalcState } from './types';
 
 const ZERO = 0n;
 const TEN = 10n;
 
 export interface DivReading {
-  /** 나누어지는 수. */
+  /** 격자 나누어지는 수 G(소수 자리는 숫자열만). */
   readonly dividend: bigint;
-  /** 나누는 수. */
+  /** 격자 나누는 수 g. */
   readonly divisor: bigint;
   /** 나누어지는 수의 맨 윗열. */
   readonly top: number;
-  /** 몫 칸을 맨 윗열부터 열 0까지 그대로 읽은 문자열. 빈칸은 공백. */
+  /** 가장 낮은 열(붙인 0 포함). */
+  readonly low: number;
+  /** 피제수의 소수 자리만 반영한 가장 낮은 열. */
+  readonly baseLow: number;
+  /** 붙인 0의 개수. */
+  readonly appendedZeros: number;
+  readonly decimal: boolean;
+  readonly gridOpen: boolean;
+  /** 몫 소수점: 일의 자리 열. 점은 그 칸 오른쪽에 그린다. */
+  readonly quotientPoint: number | null;
+  /** 몫 칸을 맨 윗열부터 가장 낮은 열까지 그대로 읽은 문자열. 빈칸은 공백. */
   readonly quotientRaw: string;
-  /** 학생 몫 값(맨 앞 0 무시). 한 칸도 없으면 null. */
-  readonly quotient: bigint | null;
+  /** 점을 뺀 몫 칸 문자열(빈칸은 공백). */
+  readonly quotientCells: string;
+  /** 학생 몫 값. 한 칸도 없으면 null. */
+  readonly quotient: Rational | null;
   readonly quotientText: string | null;
   /** 맨 윗열에 0을 썼는가. */
   readonly quotientLeadingZero: boolean;
   /** 채워진 몫 칸 중 가장 높은 열. 없으면 null. */
   readonly quotientHighest: number | null;
-  /** 가장 높은 몫 칸부터 열 0까지 빈칸이 없는가. */
+  /** 채워진 몫 칸 중 가장 낮은 열. 없으면 null. */
+  readonly quotientLowest: number | null;
+  /** 가장 높은 몫 칸부터 (decimal이면 가장 낮은 칸, 아니면 열 0)까지 빈칸이 없는가. */
   readonly quotientComplete: boolean;
-  /** 높은 몫 칸과 열 0 사이에 빈칸이 있는데 더 낮은 칸이 채워졌는가. */
+  /** 높은 몫 칸과 낮은 몫 칸 사이에 빈칸이 있는데 더 낮은 칸이 채워졌는가. */
   readonly skippedZero: boolean;
+  readonly scaledDividend: Rational;
+  readonly scaledDivisor: Rational;
+  readonly scaleA: number;
+  readonly scaleB: number;
+  /** 격자 정수 I = G × 10^(−low). */
+  readonly I: bigint;
 }
 
 export interface DivStepPlan {
@@ -69,12 +94,25 @@ export interface DivPlan {
   readonly steps: readonly DivStepPlan[];
 }
 
+export interface DivRemainderDetail {
+  /** 원래 단위 나머지. */
+  readonly value: Rational;
+  /** 격자 단위 나머지(R × 10^L). */
+  readonly gridValue: Rational;
+  /** 마지막 뺄셈 줄의 가장 낮은 열. */
+  readonly low: number;
+}
+
 function absBig(value: bigint): bigint {
   return value < ZERO ? -value : value;
 }
 
 export function pow10Big(exponent: number): bigint {
   return TEN ** BigInt(exponent);
+}
+
+function pow10Rational(exponent: number): Rational {
+  return exponent >= 0 ? Rational.of(pow10Big(exponent)) : Rational.of(1n, pow10Big(-exponent));
 }
 
 /** 0 이상의 정수를 자리 문자열로. */
@@ -90,6 +128,7 @@ export function expectedDigitsFor(
   value: bigint,
   columns: readonly number[],
 ): Record<string, string> {
+  if (columns.length === 0) return {};
   const padded = digitsOf(absBig(value)).padStart(columns.length, '0');
   const record: Record<string, string> = {};
   for (let index = 0; index < columns.length; index += 1) {
@@ -146,37 +185,73 @@ export function rowHasRun(
   return run > 0;
 }
 
-export function readDivReading(state: ColumnCalcState): DivReading {
-  const dividend = /^\d+$/.test(state.aText) ? BigInt(state.aText) : ZERO;
-  const divisor = /^\d+$/.test(state.bText) ? BigInt(state.bText) : 1n;
-  const top = Math.max(0, state.aText.replace(/\D/g, '').length - 1);
-
-  let raw = '';
-  let leadingZero = false;
+function quotientRawOf(
+  state: ColumnCalcState,
+  numbers: DivGridNumbers,
+  point: number | null,
+): string {
+  let cells = '';
   let highest: number | null = null;
-  for (let column = top; column >= 0; column -= 1) {
+  for (let column = numbers.top; column >= numbers.low; column -= 1) {
+    const digit = state.quotient[String(column)] ?? ' ';
+    if (digit !== ' ' && highest === null) highest = column;
+    cells += digit;
+  }
+  // 마지막으로 쓴 숫자 뒤의 빈칸은 적지 않는다(가운데 빈칸은 남긴다).
+  cells = cells.replace(/\s+$/, '');
+  if (point === null) return cells;
+  // 점이 모든 숫자보다 위에 있으면 앞에 0.을 붙인다.
+  if (highest === null || point > highest) return `0.${cells.replace(/^\s+/, '')}`;
+  let raw = '';
+  for (let column = numbers.top; column >= numbers.low; column -= 1) {
+    raw += state.quotient[String(column)] ?? ' ';
+    if (column === point) raw += '.';
+  }
+  return raw.replace(/\s+$/, '').replace(/^\s+/, '');
+}
+
+export function readDivReading(state: ColumnCalcState): DivReading {
+  const numbers = divGridNumbers(state);
+  const point = numbers.decimal ? state.quotientPoint : null;
+
+  let cells = '';
+  let highest: number | null = null;
+  let lowest: number | null = null;
+  let leadingZero = false;
+  for (let column = numbers.top; column >= numbers.low; column -= 1) {
     const digit = state.quotient[String(column)] ?? null;
-    raw += digit ?? ' ';
-    if (digit !== null && highest === null) highest = column;
-    if (column === top && digit === '0') leadingZero = true;
-  }
-
-  let quotient: bigint | null = null;
-  if (highest !== null) {
-    let text = '';
-    for (let column = highest; column >= 0; column -= 1) {
-      text += state.quotient[String(column)] ?? '';
+    cells += digit ?? ' ';
+    if (digit !== null) {
+      if (highest === null) highest = column;
+      lowest = column;
     }
-    quotient = BigInt(text.length === 0 ? '0' : text);
+    if (column === numbers.top && digit === '0') leadingZero = true;
   }
 
+  let quotient: Rational | null = null;
   let quotientComplete = false;
   let skippedZero = false;
-  if (highest !== null) {
+  if (highest !== null && lowest !== null) {
+    let digits = '';
+    let fracDigits = 0;
+    for (let column = highest; column >= lowest; column -= 1) {
+      const digit = state.quotient[String(column)];
+      if (digit === undefined) continue;
+      digits += digit;
+      if (point !== null && column < point) fracDigits += 1;
+    }
+    if (digits.length > 0) {
+      quotient =
+        fracDigits === 0
+          ? Rational.of(BigInt(digits))
+          : Rational.of(BigInt(digits), pow10Big(fracDigits));
+    }
+
     quotientComplete = true;
+    const end = numbers.decimal ? lowest : 0;
     const blanks: number[] = [];
     const filled: number[] = [];
-    for (let column = highest; column >= 0; column -= 1) {
+    for (let column = highest; column >= end; column -= 1) {
       const digit = state.quotient[String(column)];
       if (digit === undefined) {
         quotientComplete = false;
@@ -189,23 +264,36 @@ export function readDivReading(state: ColumnCalcState): DivReading {
   }
 
   return {
-    dividend,
-    divisor,
-    top,
-    quotientRaw: raw,
+    dividend: BigInt(numbers.G.digits),
+    divisor: BigInt(numbers.g.digits),
+    top: numbers.top,
+    low: numbers.low,
+    baseLow: numbers.baseLow,
+    appendedZeros: numbers.appended,
+    decimal: numbers.decimal,
+    gridOpen: numbers.gridOpen,
+    quotientPoint: point,
+    quotientRaw: quotientRawOf(state, numbers, point),
+    quotientCells: cells,
     quotient,
     quotientText: quotient === null ? null : quotient.toString(),
     quotientLeadingZero: leadingZero,
     quotientHighest: highest,
+    quotientLowest: lowest,
     quotientComplete,
     skippedZero,
+    scaledDividend: numbers.G.value,
+    scaledDivisor: numbers.g.value,
+    scaleA: numbers.scaleA,
+    scaleB: numbers.scaleB,
+    I: numbers.I,
   };
 }
 
 /** 단계로 삼을 몫 열(0이 아닌 몫 숫자)을 높은 열부터 모은다. */
 export function stepColumns(state: ColumnCalcState, reading: DivReading): number[] {
   const columns: number[] = [];
-  for (let column = reading.top; column >= 0; column -= 1) {
+  for (let column = reading.top; column >= reading.low; column -= 1) {
     const digit = state.quotient[String(column)];
     if (digit !== undefined && digit !== '0') columns.push(column);
   }
@@ -215,16 +303,32 @@ export function stepColumns(state: ColumnCalcState, reading: DivReading): number
 /**
  * 한 단계의 내림 칸 범위.
  *
- * 다음 단계가 있으면 그 몫 열까지, 없으면 바로 아래부터 이어지는 학생의 0 몫
- * 칸을 지나 한 열 더 내려간다(0 미만이면 0). 0이 없으면 `c − 1` 하나다.
+ * decimal에서는 마지막 단계의 몫 열이 0 이하이고 그 아래에 학생이 쓴 0이
+ * 없으면 내림 칸을 만들지 않는다. c > 0이면 열 0까지 내린다.
+ * T047(decimal=false)은 기존 규칙 그대로다.
  */
 export function bringEnd(
   state: ColumnCalcState,
+  numbers: DivGridNumbers,
   column: number,
   nextStepColumn: number | null,
 ): number {
-  if (column <= 0) return column;
   if (nextStepColumn !== null) return nextStepColumn;
+
+  if (numbers.decimal) {
+    let cursor = column - 1;
+    let sawZero = false;
+    const floor = column > 0 ? 0 : numbers.low;
+    while (cursor >= floor && state.quotient[String(cursor)] === '0') {
+      sawZero = true;
+      cursor -= 1;
+    }
+    if (sawZero) return Math.max(floor, cursor);
+    if (column > 0) return 0;
+    return column;
+  }
+
+  if (column <= 0) return column;
   let cursor = column - 1;
   let sawZero = false;
   while (cursor >= 0 && state.quotient[String(cursor)] === '0') {
@@ -250,7 +354,7 @@ export function estimatePartial(
   reading: DivReading,
   column: number,
 ): bigint {
-  const scaled = reading.dividend / pow10Big(Math.max(0, column));
+  const scaled = reading.I / pow10Big(Math.max(0, column - reading.low));
   const above = upperQuotientValue(state, reading, column);
   return scaled - TEN * (reading.divisor * above);
 }
@@ -266,12 +370,14 @@ export function estimateOver(
 }
 
 export function computeDivPlan(state: ColumnCalcState): DivPlan {
+  const numbers = divGridNumbers(state);
   const reading = readDivReading(state);
-  const divisorDigits = state.bText.replace(/\D/g, '').length;
+  const divisorDigits = numbers.g.digits.length;
   const columns = stepColumns(state, reading);
   const steps: DivStepPlan[] = [];
 
-  let partial = columns.length > 0 ? reading.dividend / pow10Big(columns[0] as number) : ZERO;
+  let partial =
+    columns.length > 0 ? reading.I / pow10Big((columns[0] as number) - reading.low) : ZERO;
 
   for (let index = 0; index < columns.length; index += 1) {
     const column = columns[index] as number;
@@ -288,17 +394,15 @@ export function computeDivPlan(state: ColumnCalcState): DivPlan {
     const diffColumns: number[] = [];
     for (let current = column; current <= diffHigh; current += 1) diffColumns.push(current);
 
-    const end = bringEnd(state, column, nextColumn);
+    const end = bringEnd(state, numbers, column, nextColumn);
     const bringColumns: number[] = [];
-    if (column > 0) {
-      for (let current = column - 1; current >= end; current -= 1) bringColumns.push(current);
-    }
+    for (let current = column - 1; current >= end; current -= 1) bringColumns.push(current);
 
     const expectedProduct = expectedDigitsFor(product, productColumns);
     const expectedDiff = diff < ZERO ? null : expectedDigitsFor(diff, diffColumns);
     const expectedBring: Record<string, string> = {};
     for (const current of bringColumns) {
-      expectedBring[String(current)] = state.aText.charAt(reading.top - current) || '0';
+      expectedBring[String(current)] = gridDividendDigit(numbers, current) || '0';
     }
 
     const rowColumns = [...new Set([...diffColumns, ...bringColumns])].sort(
@@ -359,13 +463,37 @@ export function divStepReadings(state: ColumnCalcState, plan: DivPlan): DivStepR
   });
 }
 
-/** 마지막 단계의 뺄셈 줄 값. 단계가 없으면 몫을 쓴 경우 나누어지는 수. */
-export function divRemainder(state: ColumnCalcState, plan: DivPlan): bigint | null {
+/** 마지막 단계의 뺄셈 줄에서 원래 단위·격자 단위 나머지를 구한다. */
+export function divRemainderDetail(
+  state: ColumnCalcState,
+  plan: DivPlan,
+): DivRemainderDetail | null {
   const last = plan.steps[plan.steps.length - 1];
   if (last) {
-    return readRowValue(state.divDiffs[String(last.column)], last.rowColumns);
+    const row = readRowValue(state.divDiffs[String(last.column)], last.rowColumns);
+    if (row === null) return null;
+    const low = last.rowColumns[0] ?? 0;
+    const gridValue = Rational.of(row).mul(pow10Rational(low));
+    return {
+      value: gridValue.div(pow10Rational(plan.reading.scaleA)),
+      gridValue,
+      low,
+    };
   }
-  return plan.reading.quotientText === null ? null : plan.reading.dividend;
+  if (plan.reading.quotientText === null) return null;
+  const original = Rational.parse(state.aText);
+  return {
+    value: original,
+    gridValue: plan.reading.scaledDividend,
+    low: plan.reading.low,
+  };
+}
+
+/** T047 호환: 마지막 뺄셈 줄 값(정수). */
+export function divRemainder(state: ColumnCalcState, plan: DivPlan): bigint | null {
+  const detail = divRemainderDetail(state, plan);
+  if (!detail) return null;
+  return detail.value.n;
 }
 
 /** 마지막 단계의 뺄셈 줄에서 내림 앞부분(뺀 결과) 값. 경고등 판정에 쓴다. */
@@ -390,6 +518,11 @@ export function divAlarm(state: ColumnCalcState, plan: DivPlan, enabled: boolean
 export function divComplete(state: ColumnCalcState, plan: DivPlan): boolean {
   if (!plan.reading.quotientComplete) return false;
   if (plan.steps.length === 0) return false;
+  if (plan.reading.decimal) {
+    if (plan.reading.quotientLowest === null) return false;
+    if (plan.reading.quotientLowest > 0) return false;
+    if (plan.reading.quotientLowest < 0 && plan.reading.quotientPoint === null) return false;
+  }
   for (const step of plan.steps) {
     if (!rowHasRun(state.divProducts[String(step.column)], step.productColumns)) return false;
     if (!rowHasRun(state.divDiffs[String(step.column)], step.rowColumns)) return false;

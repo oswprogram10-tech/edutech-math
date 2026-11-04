@@ -15,7 +15,7 @@ import {
   computeDivPlan,
   divAlarm,
   divComplete,
-  divRemainder,
+  divRemainderDetail,
   divStepReadings,
   divWrongColumns,
   estimateRevised,
@@ -42,7 +42,14 @@ function observeDiv(state: ColumnCalcState): Observation {
   const plan = computeDivPlan(state);
   const errors = classifyDiv(state, plan);
   const misconceptions = uniqueCodes(errors);
-  const remainder = divRemainder(state, plan);
+  const remainderDetail = divRemainderDetail(state, plan);
+  const remainder = remainderDetail === null ? null : remainderDetail.value.toString();
+  const remainderGrid =
+    remainderDetail === null
+      ? null
+      : plan.reading.decimal
+        ? remainderDetail.gridValue.toString()
+        : remainderDetail.value.toString();
   return {
     mode: state.mode,
     op: state.op,
@@ -78,8 +85,21 @@ function observeDiv(state: ColumnCalcState): Observation {
     divisor: plan.reading.divisor.toString(),
     quotient: plan.reading.quotientText,
     quotientRaw: plan.reading.quotientRaw,
+    quotientCells: plan.reading.quotientCells,
     quotientLeadingZero: plan.reading.quotientLeadingZero,
-    remainder: remainder === null ? null : remainder.toString(),
+    quotientPoint: plan.reading.quotientPoint,
+    remainder,
+    remainderGrid,
+    decimal: state.decimal,
+    extendedZeros: plan.reading.appendedZeros,
+    scaleA: plan.reading.scaleA,
+    scaleB: plan.reading.scaleB,
+    scaledDividend: plan.reading.scaledDividend.toString(),
+    scaledDivisor: plan.reading.scaledDivisor.toString(),
+    gridOpen: plan.reading.gridOpen,
+    oneSideTried: state.oneSideTried,
+    topColumn: plan.reading.top,
+    lowColumn: plan.reading.low,
     steps: divStepReadings(state, plan).map((step) => ({
       column: step.column,
       q: step.q,
@@ -147,6 +167,20 @@ function observeDecimalMul(state: ColumnCalcState): Observation {
     requireEstimate: state.requireEstimate,
     shiftValue: shiftValueText(state),
     shiftHistory: [...state.shiftHistory],
+    // ── div decimal ───────────────────────────────────────────
+    quotientPoint: null,
+    quotientCells: null,
+    remainderGrid: null,
+    decimal: null,
+    extendedZeros: null,
+    scaleA: null,
+    scaleB: null,
+    scaledDividend: null,
+    scaledDivisor: null,
+    gridOpen: null,
+    oneSideTried: null,
+    topColumn: null,
+    lowColumn: null,
   };
 }
 
@@ -215,5 +249,19 @@ export function observe(state: ColumnCalcState): Observation {
     requireEstimate: null,
     shiftValue: null,
     shiftHistory: null,
+    // ── div decimal ───────────────────────────────────────────
+    quotientPoint: null,
+    quotientCells: null,
+    remainderGrid: null,
+    decimal: null,
+    extendedZeros: null,
+    scaleA: null,
+    scaleB: null,
+    scaledDividend: null,
+    scaledDivisor: null,
+    gridOpen: null,
+    oneSideTried: null,
+    topColumn: null,
+    lowColumn: null,
   };
 }

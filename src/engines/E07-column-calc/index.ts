@@ -14,12 +14,16 @@ import { AlignCompareOverlay } from './overlays/align-compare';
 import { ColumnSumOverlay } from './overlays/column-sum';
 import { LadderFocusOverlay } from './overlays/ladder-focus';
 import { LeftoverBlinkOverlay } from './overlays/leftover-blink';
+import { ExtendZeroOverlay } from './overlays/extend-zero';
 import { PartialShiftOverlay } from './overlays/partial-shift';
 import { PartialSplitOverlay } from './overlays/partial-split';
 import { PlaceValueOverlay } from './overlays/place-value';
 import { PointEstimateOverlay } from './overlays/point-estimate';
+import { QuotientCheckLineOverlay } from './overlays/quotient-check-line';
 import { QuotientGapOverlay } from './overlays/quotient-gap';
+import { RemainderPlaceOverlay } from './overlays/remainder-place';
 import { RemainderVsDivisorOverlay } from './overlays/remainder-vs-divisor';
+import { ScaleTilesOverlay } from './overlays/scale-tiles';
 
 const definition: EngineDefinition<ColumnCalcConfig, ColumnCalcState, ColumnCalcAction> = {
   id: 'E07',
@@ -42,6 +46,7 @@ const definition: EngineDefinition<ColumnCalcConfig, ColumnCalcState, ColumnCalc
     'rewind-requested',
     'point-placed',
     'shifted',
+    'scaled',
   ],
   emit,
   predicates,
@@ -56,6 +61,10 @@ const definition: EngineDefinition<ColumnCalcConfig, ColumnCalcState, ColumnCalc
     'ladder-focus': LadderFocusOverlay,
     'point-estimate': PointEstimateOverlay,
     'align-compare': AlignCompareOverlay,
+    'extend-zero': ExtendZeroOverlay,
+    'scale-tiles': ScaleTilesOverlay,
+    'remainder-place': RemainderPlaceOverlay,
+    'quotient-check-line': QuotientCheckLineOverlay,
   },
 };
 

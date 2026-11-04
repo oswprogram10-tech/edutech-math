@@ -290,3 +290,104 @@ test('95÷23 배수 사다리에서 5 다음 4를 고르면 estimateRevised가 �
   expect(observation.quotient).toBe('4');
   expect(observation.estimateTries).toEqual({ '0': [5, 4] });
 });
+
+test('소수 나눗셈 6.24÷3: 키보드로 2.08을 쓰고 점을 놓아 52/25를 만든다', async ({ page }) => {
+  await openColumnCalc(page, {
+    mode: 'div',
+    decimal: true,
+    dividend: '6.24',
+    divisor: 3,
+    flagSkippedZero: true,
+  });
+  await selectMode(page, 'div');
+  await expect(page.getByTestId('column-grid')).toHaveAttribute('data-decimal', 'true');
+
+  // 몫 → 곱 → 뺄셈 → (0 몫) → 내림 → 다음 몫 순서다.
+  await page.getByTestId('column-grid').focus();
+  for (const key of '26002484200') {
+    await page.keyboard.press(key);
+  }
+
+  // 몫 소수점은 몫 칸을 고르고 `.`로 놓는다.
+  await page.locator('[data-row="quotient"][data-column="0"]').click();
+  await page.keyboard.press('.');
+  await pollObservation(page, (observation) => observation.divComplete === true);
+
+  const observation = await readObservation(page);
+  expect(observation.quotient).toBe('52/25');
+  expect(observation.quotientRaw).toBe('2.08');
+  expect(observation.quotientPoint).toBe(0);
+  expect(observation.result).toBe('52/25');
+  expect(observation.remainder).toBe('0');
+  expect(observation.misconceptions).toEqual([]);
+});
+
+test('소수 나눗셈 9.3÷6: 격자에 초점을 두고 +로 0을 붙여 31/20을 만든다', async ({ page }) => {
+  await openColumnCalc(page, {
+    mode: 'div',
+    decimal: true,
+    dividend: '9.3',
+    divisor: 6,
+    extendZeros: 2,
+  });
+  await selectMode(page, 'div');
+
+  await page.getByTestId('column-grid').focus();
+  for (const key of '163530330') {
+    await page.keyboard.press(key);
+  }
+  // 격자에 초점이 있을 때 +는 실행기 확대가 아니라 0 붙이기다.
+  await page.keyboard.press('+');
+  await pollObservation(page, (observation) => observation.extendedZeros === 1);
+
+  await page.locator('[data-row="quotient"][data-column="-2"]').click();
+  for (const key of '500300') {
+    await page.keyboard.press(key);
+  }
+  await page.locator('[data-row="quotient"][data-column="0"]').click();
+  await page.keyboard.press('.');
+  await pollObservation(page, (observation) => observation.divComplete === true);
+
+  const observation = await readObservation(page);
+  expect(observation.quotient).toBe('31/20');
+  expect(observation.quotientRaw).toBe('1.55');
+  expect(observation.remainder).toBe('0');
+  expect(observation.extendedZeros).toBe(1);
+  expect(observation.misconceptions).toEqual([]);
+});
+
+test('소수÷소수 1.68÷0.24: 확대경 ×100 뒤 168÷24로 7을 만든다', async ({ page }) => {
+  await openColumnCalc(page, {
+    mode: 'div',
+    decimal: true,
+    dividend: '1.68',
+    divisor: '0.24',
+    magnifier: [10, 100],
+    allowOneSideScale: true,
+  });
+  await selectMode(page, 'div');
+  await expect(page.getByTestId('grid-closed')).toBeVisible();
+
+  await page.getByRole('button', { name: '×100' }).click();
+  await pollObservation(
+    page,
+    (observation) => observation.scaleA === 2 && observation.scaleB === 2,
+  );
+  await expect(page.getByTestId('magnifier-numbers')).toContainText('168');
+  await expect(page.getByTestId('magnifier-numbers')).toContainText('24');
+
+  await page.getByTestId('column-grid').focus();
+  for (const key of '7861000') {
+    await page.keyboard.press(key);
+  }
+  await pollObservation(page, (observation) => observation.divComplete === true);
+
+  const observation = await readObservation(page);
+  expect(observation.scaleA).toBe(2);
+  expect(observation.scaleB).toBe(2);
+  expect(observation.scaledDividend).toBe('168');
+  expect(observation.scaledDivisor).toBe('24');
+  expect(observation.quotient).toBe('7');
+  expect(observation.remainder).toBe('0');
+  expect(observation.misconceptions).toEqual([]);
+});
