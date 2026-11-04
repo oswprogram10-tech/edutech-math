@@ -472,3 +472,95 @@ describe('E05 약분 탐정 partition (묶음 조작)', () => {
     expect(view.queryByRole('button', { name: S.groupByCells(6) })).toBeNull();
   });
 });
+
+describe('E05 T049 정답 노출 금지', () => {
+  it('multiply는 곱(1/2)을 쓰지 않는다', () => {
+    const config: FractionModelConfig = {
+      mode: 'multiply',
+      a: '2/3',
+      b: '3/4',
+      build: 'preset',
+    };
+    const text = textOf(config, createInitialState(config));
+    expect(text).not.toContain('1/2');
+  });
+
+  it('divide-measure는 자를 놓기 전에 몫(6)을 쓰지 않는다', () => {
+    const config: FractionModelConfig = {
+      mode: 'divide-measure',
+      dividend: '3/4',
+      divisor: '1/8',
+    };
+    const text = textOf(config, createInitialState(config));
+    expect(text).not.toContain('6');
+  });
+
+  it('share는 접시에 합한 값(3/4)을 쓰지 않는다', () => {
+    const config: FractionModelConfig = {
+      mode: 'partition',
+      variant: 'share',
+      wholes: 3,
+      people: 4,
+      shape: 'circle',
+    };
+    let state = createInitialState(config);
+    for (let whole = 0; whole < 3; whole += 1) {
+      state = reduce(state, { type: 'cut-equal', whole, parts: 4 });
+    }
+    for (let whole = 0; whole < 3; whole += 1) {
+      for (let piece = 0; piece < 4; piece += 1) {
+        state = reduce(state, { type: 'deal-piece', whole, piece, plate: piece });
+      }
+    }
+    const text = textOf(config, state);
+    expect(text).not.toContain('3/4');
+  });
+
+  it('divide-whole은 남긴 값(4/15)과 1/3을 쓰지 않는다', () => {
+    const config: FractionModelConfig = {
+      mode: 'partition',
+      variant: 'divide-whole',
+      fraction: '4/5',
+      divisor: 3,
+    };
+    let state = createInitialState(config);
+    state = reduce(state, { type: 'set-rows', rows: 3 });
+    state = reduce(state, { type: 'keep-row', row: 0 });
+    const text = textOf(config, state);
+    expect(text).not.toContain('4/15');
+    expect(text).not.toContain('1/3');
+  });
+
+  it('showCounts가 꺼져 있으면 칸 수를 숨기고, 켜면 칸 수만 쓴다', () => {
+    const config: FractionModelConfig = {
+      mode: 'multiply',
+      a: '2/3',
+      b: '3/4',
+      build: 'preset',
+    };
+    const state = createInitialState(config);
+    expect(textOf(config, state)).not.toContain(S.multiplyCounts(12, 6));
+    const shown = textOf({ ...config, showCounts: true }, state);
+    expect(shown).toContain(S.multiplyCounts(12, 6));
+    expect(shown).not.toContain('1/2');
+  });
+
+  it('plateLabel이 꺼져 있으면 조각 크기·개수를 숨기고, 켜면 합한 값 없이 쓴다', () => {
+    const config: FractionModelConfig = {
+      mode: 'partition',
+      variant: 'share',
+      wholes: 1,
+      people: 2,
+      shape: 'circle',
+    };
+    let state = createInitialState(config);
+    state = reduce(state, { type: 'cut-equal', whole: 0, parts: 4 });
+    for (let piece = 0; piece < 4; piece += 1) {
+      state = reduce(state, { type: 'deal-piece', whole: 0, piece, plate: piece % 2 });
+    }
+    expect(textOf(config, state)).not.toContain(S.pieceCountLabel('1/4', 2));
+    const labelled = textOf({ ...config, plateLabel: true }, state);
+    expect(labelled).toContain(S.pieceCountLabel('1/4', 2));
+    expect(labelled).not.toContain('1/2');
+  });
+});

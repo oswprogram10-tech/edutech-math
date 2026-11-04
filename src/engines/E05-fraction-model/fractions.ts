@@ -22,7 +22,11 @@ export function isSafePositiveInteger(value: number): boolean {
   return Number.isSafeInteger(value) && value > 0;
 }
 
-export function parseFraction(input: string | undefined, fallback: string): Rational {
+export function parseFraction(input: string | number | undefined, fallback: string): Rational {
+  if (typeof input === 'number') {
+    if (!Number.isSafeInteger(input)) return Rational.parse(fallback);
+    return Rational.of(input);
+  }
   if (input === undefined || input.trim() === '') return Rational.parse(fallback);
   try {
     return Rational.parse(input);
@@ -43,6 +47,30 @@ export function parseRational(input: string | undefined): Rational | null {
 export function denominatorNumber(value: Rational): number | null {
   const denominator = Number(value.d);
   return Number.isSafeInteger(denominator) && denominator > 0 ? denominator : null;
+}
+
+/**
+ * 설정에서 온 수를 Rational로 읽는다(T049 결정 2).
+ * 문자열(`"2/3"`, `"1 1/2"`, `"4"`)과 안전한 정수 number를 받는다.
+ * 읽을 수 없으면 fallback 문자열을 쓴다.
+ */
+export function parseAnyRational(input: string | number | undefined, fallback: string): Rational {
+  return parseFraction(input, fallback);
+}
+
+/**
+ * 값이 차지하는 전체의 수(올림). 0 이하는 0이다.
+ * 화면에 정사각형을 몇 개 그릴지 정할 때만 쓴다(수학 값은 Rational).
+ */
+export function wholeUnits(value: Rational): number {
+  if (value.isNegative() || value.isZero()) return 0;
+  const mixed = value.toMixed();
+  return Number(mixed.whole) + (Number(mixed.num) > 0 ? 1 : 0);
+}
+
+/** 화면 길이(논리 좌표)로 바꿀 때만 쓰는 number 근사. 수학 판정에는 쓰지 않는다. */
+export function screenLength(value: Rational): number {
+  return Number(value.n) / Number(value.d);
 }
 
 export function numeratorNumber(value: Rational): number | null {

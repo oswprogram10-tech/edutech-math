@@ -8,7 +8,13 @@ import { Rational } from '../../core/math';
 import type { JsonValue, Observation } from '../../core/engine-sdk';
 import { cutDirectionCount, cutSignature, piecesAreEqual } from './geometry';
 import { decimalLabel, denominatorNumber, gcd, mixedLabel, numeratorNumber } from './fractions';
-import { overlayCells, piecesOf, simplifyView } from './reduce';
+import { piecesOf } from './pieces';
+import { measureSummary } from './reduce-divide-measure';
+import { divideWholeSummary } from './reduce-divide-whole';
+import { multiplySummary } from './reduce-multiply';
+import { overlayCells, simplifyView } from './reduce';
+import { shareSummary } from './reduce-share';
+import { isDivideWholeState, isShareState } from './types';
 import type { EventCounts, FractionModelConfig, FractionModelState } from './types';
 
 interface WholeEntry {
@@ -87,6 +93,56 @@ export function observe(state: FractionModelState, config: FractionModelConfig):
 
   switch (state.mode) {
     case 'partition': {
+      if (isShareState(state)) {
+        const summary = shareSummary(state);
+        const piecesPerWhole = summary.piecesPerWhole;
+        const wholes = state.wholes.map((whole, index) => {
+          const count = piecesPerWhole[index] ?? 1;
+          const pieces = piecesOf({
+            shape: state.shape,
+            outline: state.outline,
+            cuts: whole.cuts,
+          });
+          const dealt = whole.pieces.filter(
+            (piece, pieceIndex) => pieceIndex < count && piece.plate !== null,
+          ).length;
+          return wholeEntry(count, dealt, piecesAreEqual(pieces, state.tolerance));
+        });
+        const dealtCount = wholes.reduce((sum, entry) => sum + entry.shaded, 0);
+        return {
+          ...base,
+          variant: 'share',
+          wholes,
+          commonGrid: null,
+          plates: summary.plateValues.map((value) => value.toString()),
+          platesEqual: summary.platesEqual,
+          allDealt: summary.allDealt,
+          piecesPerWhole: [...piecesPerWhole],
+          people: state.people,
+          equal: summary.equal,
+          shaded: dealtCount,
+          irreducible: false,
+        };
+      }
+      if (isDivideWholeState(state)) {
+        const summary = divideWholeSummary(state);
+        return {
+          ...base,
+          variant: 'divide-whole',
+          wholes: [improperEntry(state.dividendParts, state.dividendShaded)],
+          commonGrid: null,
+          dividend: state.dividend,
+          divisor: state.divisor,
+          rows: state.rows,
+          keptRow: state.keptRow,
+          kept: summary.kept === null ? null : summary.kept.toString(),
+          bundled: summary.bundled,
+          squares: summary.squares,
+          shaded: state.dividendShaded,
+          equal: true,
+          irreducible: false,
+        };
+      }
       const pieces = piecesOf(state);
       const parts = pieces.length;
       const shaded = state.shaded.filter((index) => index < parts).length;
@@ -316,6 +372,47 @@ export function observe(state: FractionModelState, config: FractionModelConfig):
         value: combined.toString(),
         equal: true,
         irreducible: totalShaded === 0,
+      };
+    }
+
+    case 'multiply': {
+      const summary = multiplySummary(state);
+      return {
+        ...base,
+        wholes: [wholeEntry(state.aParts, state.aShaded), wholeEntry(state.bParts, state.bShaded)],
+        commonGrid: null,
+        a: summary.a.toString(),
+        b: summary.b.toString(),
+        aParts: summary.aParts,
+        bParts: summary.bParts,
+        squares: summary.squares,
+        overlapCells: summary.overlapCells,
+        totalCells: summary.totalCells,
+        product: summary.product.toString(),
+        equal: true,
+        irreducible: isIrreducibleFraction(summary.product),
+      };
+    }
+
+    case 'divide-measure': {
+      const summary = measureSummary(state);
+      const dividendDen = denominatorNumber(summary.dividend) ?? 1;
+      const divisorDen = denominatorNumber(summary.divisor) ?? 1;
+      return {
+        ...base,
+        wholes: [
+          improperEntry(dividendDen, numeratorNumber(summary.dividend) ?? 0),
+          improperEntry(divisorDen, numeratorNumber(summary.divisor) ?? 0),
+        ],
+        commonGrid: null,
+        dividend: state.dividend,
+        divisor: state.divisor,
+        rulersLaid: summary.rulersLaid,
+        partial: state.partial,
+        measured: summary.measured.toString(),
+        measureComplete: summary.measureComplete,
+        equal: true,
+        irreducible: false,
       };
     }
   }

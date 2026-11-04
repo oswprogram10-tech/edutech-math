@@ -7,7 +7,12 @@
 import { Rational } from '../../core/math';
 import type { EngineEvent, EnginePredicate, JsonValue, Observation } from '../../core/engine-sdk';
 import { denominatorNumber, numeratorNumber } from './fractions';
+import { measureSummary } from './reduce-divide-measure';
+import { divideWholeSummary } from './reduce-divide-whole';
+import { multiplySummary } from './reduce-multiply';
 import { piecesOf } from './reduce';
+import { shareSummary } from './reduce-share';
+import { isDivideWholeState, isShareState } from './types';
 import type {
   EventCounts,
   FractionModelAction,
@@ -41,6 +46,12 @@ function ratioOf(shaded: number, parts: number): string {
 export function primaryValue(state: FractionModelState): string {
   switch (state.mode) {
     case 'partition': {
+      if (isShareState(state)) {
+        return shareSummary(state).plateValues[0]?.toString() ?? '0';
+      }
+      if (isDivideWholeState(state)) {
+        return divideWholeSummary(state).kept?.toString() ?? '0';
+      }
       const parts = piecesOf(state).length;
       return ratioOf(state.shaded.length, parts);
     }
@@ -69,6 +80,10 @@ export function primaryValue(state: FractionModelState): string {
       const total = state.size * state.size * state.layers;
       return ratioOf(state.shaded.length, total);
     }
+    case 'multiply':
+      return multiplySummary(state).product.toString();
+    case 'divide-measure':
+      return measureSummary(state).measured.toString();
   }
 }
 
@@ -77,6 +92,9 @@ function shadedPayload(next: FractionModelState): JsonValue {
     case 'shade':
       return { value: primaryValue(next), parts: next.parts, shaded: next.shaded.length };
     case 'partition':
+      if (isShareState(next) || isDivideWholeState(next)) {
+        return { value: primaryValue(next) };
+      }
       return { value: primaryValue(next), shaded: next.shaded.length };
     case 'discrete':
       return {
@@ -104,10 +122,82 @@ export function emit(
 
   switch (action.type) {
     case 'cut':
-      if (next.mode === 'partition') {
+      if (isShareState(next)) {
+        const whole = next.wholes[action.whole ?? 0];
+        events.push({
+          name: 'partitioned',
+          payload: {
+            parts: whole?.pieces.length ?? 0,
+            cuts: whole?.cuts.length ?? 0,
+          },
+        });
+      } else if (next.mode === 'partition' && !isDivideWholeState(next)) {
         events.push({
           name: 'partitioned',
           payload: { parts: piecesOf(next).length, cuts: next.cuts.length },
+        });
+      }
+      break;
+
+    case 'cut-equal':
+      if (isShareState(next)) {
+        const whole = next.wholes[action.whole];
+        events.push({
+          name: 'partitioned',
+          payload: {
+            parts: whole?.pieces.length ?? 0,
+            cuts: whole?.cuts.length ?? 0,
+          },
+        });
+      }
+      break;
+
+    case 'set-parts':
+    case 'set-shaded':
+      if (next.mode === 'multiply') {
+        const summary = multiplySummary(next);
+        events.push({
+          name: 'area-changed',
+          payload: {
+            a: summary.a.toString(),
+            b: summary.b.toString(),
+            product: summary.product.toString(),
+          },
+        });
+      }
+      break;
+
+    case 'lay-ruler':
+    case 'lift-ruler':
+    case 'clear-rulers':
+      if (next.mode === 'divide-measure') {
+        events.push({
+          name: 'ruler-laid',
+          payload: { count: next.rulersLaid, partial: next.partial },
+        });
+      }
+      break;
+
+    case 'deal-piece':
+      if (isShareState(next)) {
+        const value = shareSummary(next).plateValues[action.plate]?.toString() ?? '0';
+        events.push({ name: 'dealt', payload: { plate: action.plate, value } });
+      }
+      break;
+
+    case 'set-rows':
+      if (isDivideWholeState(next)) {
+        events.push({ name: 'rows-set', payload: { rows: next.rows } });
+      }
+      break;
+
+    case 'keep-row':
+    case 'keep-bundle':
+      if (isDivideWholeState(next)) {
+        const kept = divideWholeSummary(next).kept;
+        events.push({
+          name: 'row-kept',
+          payload: { value: kept === null ? null : kept.toString() },
         });
       }
       break;
@@ -229,6 +319,19 @@ function rationalOf(value: JsonValue | undefined): Rational | null {
   } catch {
     return null;
   }
+}
+
+/** 인자로 온 수(number 또는 Rational 문자열)를 Rational로 읽는다. */
+function rationalArg(value: JsonValue | undefined): Rational | null {
+  if (typeof value === 'number') {
+    if (!Number.isSafeInteger(value)) return null;
+    return Rational.of(value);
+  }
+  return rationalOf(value);
+}
+
+function observationRational(observation: Observation, key: string): Rational | null {
+  return rationalArg(observation[key]);
 }
 
 function candidateValues(observation: Observation): Rational[] {
@@ -407,6 +510,95 @@ export const isReducedValue: EnginePredicate = (
   return observation['irreducible'] === true;
 };
 
+/** args `{ value }`. 겹친 칸 수가 그 값인가. */
+export const overlapCellsIs: EnginePredicate = (
+  observation: Observation,
+  args: JsonValue | undefined,
+): boolean => {
+  const record = payloadRecord(args);
+  const target = rationalArg(record?.['value']);
+  const actual = observationRational(observation, 'overlapCells');
+  return target !== null && actual !== null && actual.equals(target);
+};
+
+/** args `{ value }`. 곱(관찰 전용)이 그 값인가. */
+export const productIs: EnginePredicate = (
+  observation: Observation,
+  args: JsonValue | undefined,
+): boolean => {
+  const record = payloadRecord(args);
+  const target = rationalArg(record?.['value']);
+  const actual = observationRational(observation, 'product');
+  return target !== null && actual !== null && actual.equals(target);
+};
+
+/** args `{ a, b }`. 학생이 놓은 두 분수가 그 값들인가. */
+export const factorsAre: EnginePredicate = (
+  observation: Observation,
+  args: JsonValue | undefined,
+): boolean => {
+  const record = payloadRecord(args);
+  const a = rationalArg(record?.['a']);
+  const b = rationalArg(record?.['b']);
+  const actualA = observationRational(observation, 'a');
+  const actualB = observationRational(observation, 'b');
+  return (
+    a !== null &&
+    b !== null &&
+    actualA !== null &&
+    actualB !== null &&
+    actualA.equals(a) &&
+    actualB.equals(b)
+  );
+};
+
+/** args `{ value }`. 잰 길이(온전한 자 + 부분 자)가 그 값인가. */
+export const measuredIs: EnginePredicate = (
+  observation: Observation,
+  args: JsonValue | undefined,
+): boolean => {
+  const record = payloadRecord(args);
+  const target = rationalArg(record?.['value']);
+  const actual = observationRational(observation, 'measured');
+  return target !== null && actual !== null && actual.equals(target);
+};
+
+/** args `{ value }`. 모든 접시가 그 값을 받았는가. */
+export const platesAre: EnginePredicate = (
+  observation: Observation,
+  args: JsonValue | undefined,
+): boolean => {
+  const record = payloadRecord(args);
+  const target = rationalArg(record?.['value']);
+  const plates = observation['plates'];
+  if (target === null || !Array.isArray(plates) || plates.length === 0) return false;
+  return plates.every((plate) => {
+    const value = rationalArg(plate);
+    return value !== null && value.equals(target);
+  });
+};
+
+/** args `{ value }`. 남긴 값이 그 값인가. */
+export const keptValueIs: EnginePredicate = (
+  observation: Observation,
+  args: JsonValue | undefined,
+): boolean => {
+  const record = payloadRecord(args);
+  const target = rationalArg(record?.['value']);
+  const actual = observationRational(observation, 'kept');
+  return target !== null && actual !== null && actual.equals(target);
+};
+
+/** args `{ rows }`. 가로 칸 수가 그 값인가. */
+export const rowsIs: EnginePredicate = (
+  observation: Observation,
+  args: JsonValue | undefined,
+): boolean => {
+  const record = payloadRecord(args);
+  const rows = payloadNumber(record?.['rows']);
+  return rows !== null && observation['rows'] === rows;
+};
+
 export const predicates: Readonly<Record<string, EnginePredicate>> = {
   isEqualPartition,
   shadedEquals,
@@ -419,4 +611,11 @@ export const predicates: Readonly<Record<string, EnginePredicate>> = {
   eventAtLeast,
   shadedCountIs,
   isReducedValue,
+  overlapCellsIs,
+  productIs,
+  factorsAre,
+  measuredIs,
+  platesAre,
+  keptValueIs,
+  rowsIs,
 };

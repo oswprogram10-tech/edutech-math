@@ -56,6 +56,19 @@ async function verticalCut(
   await page.mouse.up();
 }
 
+/** `?config=`로 설정을 넘겨 연다. 샌드박스는 모드 select 값으로 `mode`를 덮어쓴다. */
+async function openFractionsWithConfig(page: Page, config: Record<string, unknown>) {
+  const query = encodeURIComponent(JSON.stringify(config));
+  await page.goto(`/?config=${query}#/sandbox/E05`);
+  await expect(page.getByRole('heading', { name: '분수 모델' })).toBeVisible();
+  const canvas = page.getByTestId('fraction-canvas');
+  await expect(canvas).toBeVisible();
+  return {
+    canvas,
+    observation: page.getByTestId('observation'),
+  };
+}
+
 test('직사각형을 4등분하면 넓이가 같은 4조각으로 판정한다', async ({ page }) => {
   const { at } = await openFractions(page);
 
@@ -151,4 +164,88 @@ test('키보드로 조각을 색칠하고 되돌릴 수 있다', async ({ page }
       (current.wholes[0] as { raw?: string } | undefined)?.raw === '0/4',
   );
   await expect(observation).toContainText('"mode":"shade"');
+});
+
+test('T049 multiply: 2/3 × 3/4를 단추로 놓으면 겹친 칸이 6이다', async ({ page }) => {
+  await openFractionsWithConfig(page, { a: '2/3', b: '3/4' });
+  await page.getByLabel('모드').selectOption('multiply');
+  await pollObservation(page, (current) => current.mode === 'multiply');
+
+  for (let count = 0; count < 2; count += 1) {
+    await page.getByRole('button', { name: '노랑 칸 늘리기' }).click();
+  }
+  for (let count = 0; count < 3; count += 1) {
+    await page.getByRole('button', { name: '파랑 칸 늘리기' }).click();
+  }
+
+  await pollObservation(page, (current) => current['overlapCells'] === 6);
+  const observation = await readObservation(page);
+  expect(observation).toMatchObject({ a: '2/3', b: '3/4', overlapCells: 6, product: '1/2' });
+  // 곱은 화면에 쓰지 않는다.
+  await expect(page.getByTestId('fraction-canvas')).not.toContainText('1/2');
+});
+
+test('T049 divide-measure: 3/4 ÷ 1/8에서 Space로 자를 6번 놓는다', async ({ page }) => {
+  await openFractionsWithConfig(page, { dividend: '3/4', divisor: '1/8' });
+  await page.getByLabel('모드').selectOption('divide-measure');
+  await pollObservation(page, (current) => current.mode === 'divide-measure');
+
+  const canvas = page.getByTestId('fraction-canvas');
+  await canvas.focus();
+  for (let count = 0; count < 6; count += 1) await page.keyboard.press('Space');
+
+  await pollObservation(page, (current) => current['rulersLaid'] === 6);
+  const observation = await readObservation(page);
+  expect(observation).toMatchObject({
+    rulersLaid: 6,
+    partial: null,
+    measured: '6',
+    measureComplete: true,
+  });
+});
+
+test('T049 share: 전체 3개를 4조각씩 나누고 키보드로 접시에 나르면 platesEqual', async ({
+  page,
+}) => {
+  await openFractionsWithConfig(page, { variant: 'share', wholes: 3, people: 4 });
+  await pollObservation(page, (current) => current.mode === 'partition');
+
+  for (let whole = 1; whole <= 3; whole += 1) {
+    await page.getByRole('button', { name: `${whole}번째 전체 똑같이 4조각` }).click();
+  }
+
+  for (let whole = 0; whole < 3; whole += 1) {
+    for (let piece = 0; piece < 4; piece += 1) {
+      const cell = page.locator(
+        `[data-testid="share-piece"][data-whole="${whole}"][data-piece="${piece}"]`,
+      );
+      await cell.focus();
+      await page.keyboard.press('Enter');
+      await page.keyboard.press(String(piece + 1));
+    }
+  }
+
+  await pollObservation(page, (current) => current['platesEqual'] === true);
+  const observation = await readObservation(page);
+  expect(observation).toMatchObject({
+    plates: ['3/4', '3/4', '3/4', '3/4'],
+    allDealt: true,
+    platesEqual: true,
+    equal: true,
+  });
+});
+
+test('T049 divide-whole: 4/5 ÷ 3에서 가로 3칸을 열고 한 줄만 남기면 4/15', async ({ page }) => {
+  await openFractionsWithConfig(page, { variant: 'divide-whole', fraction: '4/5', divisor: 3 });
+  await pollObservation(page, (current) => current.mode === 'partition');
+
+  await page.getByRole('button', { name: '÷ 3' }).click();
+  await page.getByRole('button', { name: '가로 칸 늘리기' }).click();
+  await page.getByRole('button', { name: '가로 칸 늘리기' }).click();
+  await page.getByRole('button', { name: '1번째 줄만 남기기' }).click();
+
+  await pollObservation(page, (current) => current['kept'] === '4/15');
+  const observation = await readObservation(page);
+  expect(observation).toMatchObject({ rows: 3, keptRow: 0, kept: '4/15' });
+  await expect(page.getByTestId('fraction-canvas')).not.toContainText('4/15');
 });
