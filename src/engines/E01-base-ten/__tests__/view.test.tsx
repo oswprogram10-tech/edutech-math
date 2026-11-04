@@ -241,19 +241,28 @@ describe('E01 big-number 화면', () => {
     expect(view.getAllByLabelText(S.reverseCanvasLabel).length).toBeGreaterThan(0);
   });
 
-  it('자르기 전에는 펼치기 버튼이 없고, 자른 뒤 덩어리마다 단위 이름표를 그린다', () => {
-    const config: BaseTenConfig = { mode: 'big-number', value: '52840000' };
+  it('자르기 전에는 펼치기 버튼·이름표가 없고, 자른 뒤 오른쪽 덩어리부터 일·만·억·조를 붙인다', () => {
+    const config: BaseTenConfig = { mode: 'big-number', value: '3528007140000' };
     const initial = createInitialState(config);
     const before = renderView(config, initial);
-    expect(before.queryByRole('button', { name: S.expandGroup('만') })).toBeNull();
-    expect(before.container.querySelectorAll('[data-group-label]')).toHaveLength(1);
-    expect(before.container.querySelector('[data-group-label="0"]')?.textContent).toBe('일');
+    expect(before.queryByRole('button', { name: S.expandGroup('일') })).toBeNull();
+    expect(before.container.querySelectorAll('[data-group-label]')).toHaveLength(0);
 
-    const cut = reduce(initial, { type: 'cut', position: 4 });
+    let cut = initial;
+    for (const position of [4, 8, 12]) cut = reduce(cut, { type: 'cut', position });
     const after = renderView(config, cut);
-    expect(after.getByRole('button', { name: S.expandGroup('만') })).toBeTruthy();
-    expect(after.container.querySelector('[data-group-label="0"]')?.textContent).toBe('일');
-    expect(after.container.querySelector('[data-group-label="1"]')?.textContent).toBe('만');
+    const labels = Array.from(after.container.querySelectorAll('[data-group-label]'));
+    // 화면 왼쪽에서 오른쪽 순서로 읽으면 조·억·만·일이어야 한다.
+    const leftToRight = labels
+      .map((label) => ({ x: Number(label.getAttribute('x')), text: label.textContent }))
+      .sort((a, b) => a.x - b.x)
+      .map((label) => label.text);
+    expect(leftToRight).toEqual(['조', '억', '만', '일']);
+    const buttons = after
+      .getAllByRole('button')
+      .map((button) => button.textContent)
+      .filter((text) => text?.includes('덩어리'));
+    expect(buttons).toEqual(['조', '억', '만', '일'].map((name) => S.expandGroup(name)));
   });
 });
 

@@ -63,7 +63,8 @@ function segmentsOf(value: string, cuts: readonly number[]): Segment[] {
     segments.push({
       start: length - right,
       end: length - left,
-      group: bounds.length - 2 - index,
+      // 자르는 위치는 오른쪽부터 센다. 맨 오른쪽 덩어리가 0(일), 그다음이 1(만)…
+      group: index,
     });
   }
   return segments;
@@ -306,17 +307,19 @@ export function BigNumberView({
                     strokeOpacity={0.55}
                     strokeWidth={2}
                   />
-                  <text
-                    x={(first.x + last.x + last.width) / 2}
-                    y={BIG_STRIP.y - 18}
-                    textAnchor="middle"
-                    fontSize={22}
-                    fontWeight={700}
-                    fill={color}
-                    data-group-label={segment.group}
-                  >
-                    {groupName(segment.group)}
-                  </text>
+                  {big.cuts.length > 0 ? (
+                    <text
+                      x={(first.x + last.x + last.width) / 2}
+                      y={BIG_STRIP.y - 18}
+                      textAnchor="middle"
+                      fontSize={22}
+                      fontWeight={700}
+                      fill={color}
+                      data-group-label={segment.group}
+                    >
+                      {groupName(segment.group)}
+                    </text>
+                  ) : null}
                 </g>
               );
             })}
@@ -467,7 +470,7 @@ export function BigNumberView({
 
       {!reverse && canExpand && big.cuts.length > 0 ? (
         <div className={styles.toolbar} role="group" aria-label={S.bigNumberStrip}>
-          {segments.map((segment) => {
+          {[...segments].reverse().map((segment) => {
             const expanded = big.expanded === segment.group;
             const name = groupName(segment.group);
             return (
