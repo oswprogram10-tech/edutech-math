@@ -8,6 +8,7 @@
 import type { EngineEvent, JsonValue } from '../../core/engine-sdk';
 import { computeGrid } from './grid';
 import { digitAt, parseNumber } from './grid';
+import { divGridNumbers } from './grid-div-decimal';
 import { computeMulPlan } from './grid-mul';
 import type {
   ColumnCalcAction,
@@ -144,7 +145,9 @@ const divideProgress: Receiver = (state, payload) => {
   if (!record) return null;
   const columns = record['columns'];
   if (!Array.isArray(columns)) return null;
-  const top = state.aText.replace(/\D/g, '').length - 1;
+  const numbers = divGridNumbers(state);
+  const top = numbers.top;
+  const low = numbers.low;
 
   const marks: LinkMark[] = [];
   const fill: LinkValue[] = [];
@@ -155,7 +158,7 @@ const divideProgress: Receiver = (state, payload) => {
     const pile = integerOf(entry, 'pile');
     if (column === null || perPlate === null || pile === null) continue;
     if (pile !== 0) continue;
-    if (column < 0 || column > top) continue;
+    if (column < low || column > top) continue;
     if (perPlate < 0 || perPlate > 9) continue;
     const digit = String(perPlate);
     if (state.linkMarks === 'auto') {

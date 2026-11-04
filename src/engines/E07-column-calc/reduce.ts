@@ -3,6 +3,7 @@
  * 수 값은 정수 자리 계산과 `Rational`로만 다루고, 상태에는 문자열만 둔다.
  */
 import { computeDivPlan, divComplete, expectedDigitsFor } from './grid-div';
+import { divGridNumbers, firstQuotientColumn } from './grid-div-decimal';
 import { decimalEstimate, shiftDelta, shiftFits, shiftOpOf } from './grid-decimal';
 import { computeMulPlan } from './grid-mul';
 import type { MulPlan } from './grid-mul';
@@ -45,8 +46,60 @@ const MODES: readonly ColumnMode[] = ['add', 'sub', 'decimal', 'mul', 'estimate'
 /** 소수 곱셈 기본 수(범위 밖 설정을 고칠 때). */
 const DEFAULT_DECIMAL_MUL = { a: '2.4', b: '1.3' } as const;
 
+/** 소수 나눗셈 기본 수(범위 밖 설정을 고칠 때). */
+const DEFAULT_DIV_DECIMAL = { a: '6.24', b: '3' } as const;
+
 function normalizeMode(value: ColumnMode | undefined): ColumnMode {
   return value !== undefined && MODES.includes(value) ? value : 'add';
+}
+
+/** 소수 나눗셈 설정인가(`div` + decimal 또는 `decimal` + div). */
+function isDecimalDivConfig(mode: ColumnMode, config: ColumnCalcConfig): boolean {
+  return (mode === 'div' && config.decimal === true) || (mode === 'decimal' && config.op === 'div');
+}
+
+/** 소수 나눗셈 피제수: 소수점 뺀 숫자 1~5개, 소수 자리 0~3, 0보다 크다. */
+function divDecimalDividend(text: string): ParsedNumber | null {
+  const parsed = parseNumber(text);
+  if (!parsed) return null;
+  if (parsed.digits.length < 1 || parsed.digits.length > 5) return null;
+  if (parsed.fracDigits > 3) return null;
+  if (BigInt(parsed.digits) <= 0n) return null;
+  return parsed;
+}
+
+/** 소수 나눗셈 제수: 자연수 1~99 또는 소수 자리 1~2이고 값이 1~99인 소수. */
+function divDecimalDivisor(text: string): ParsedNumber | null {
+  const parsed = parseNumber(text);
+  if (!parsed) return null;
+  if (parsed.fracDigits > 2) return null;
+  const value = BigInt(parsed.digits);
+  if (value < 1n || value > 99n) return null;
+  return parsed;
+}
+
+function extendLimitOf(value: number | undefined): number {
+  if (value === undefined) return 2;
+  if (!Number.isInteger(value) || value < 0 || value > 3) return 2;
+  return value;
+}
+
+function magnifierOf(value: readonly number[] | undefined): readonly number[] {
+  if (!Array.isArray(value)) return [];
+  const allowed = [10, 100, 1000];
+  return allowed.filter((factor) => value.includes(factor));
+}
+
+/** decimal div에서 처음 고를 몫 칸. 앞자리부터 훑어 처음 g 이상이 되는 열. */
+function divDecimalSelection(state: ColumnCalcState): CellRef | null {
+  if (!state.decimal) return null;
+  const numbers = divGridNumbers(state);
+  if (!numbers.gridOpen) return null;
+  const first = firstQuotientColumn(state);
+  // 몫이 1보다 작으면 0.45÷5처럼 일의 자리·소수 첫째 자리에 0을 먼저 써야 한다.
+  const column = Math.max(0, first ?? 0);
+  if (column < numbers.low || column > numbers.top) return null;
+  return { row: 'quotient', column };
 }
 
 /** 소수 곱셈 설정 수: 소수점 뺀 숫자 1~`maxDigits`개, 소수 자리 0~3. */
@@ -236,6 +289,14 @@ function baseState(
     rewindEnabled: Boolean(config.rewindCheck),
     estimateBarShow: estimateBarShow(config.estimateBar),
     estimateMaxMultiple: estimateMaxMultiple(config.estimateBar),
+    decimal: false,
+    scaleA: 0,
+    scaleB: 0,
+    quotientPoint: null,
+    extendLimit: 0,
+    magnifier: [],
+    allowOneSideScale: false,
+    oneSideTried: false,
     resultPoint: null,
     requireEstimate: config.requireEstimate === true,
     placeCards: config.placeCards === true,
@@ -278,21 +339,78 @@ function withDebugSample(state: ColumnCalcState, config: ColumnCalcConfig): Colu
   };
 }
 
+/** 소수 나눗셈 디버그 몫 문자열을 칸과 점으로 읽는다. 형식이 안 맞으면 null. */
+function decimalQuotientSample(
+  state: ColumnCalcState,
+  raw: string,
+): { quotient: Record<string, string>; quotientPoint: number | null } | null {
+  const numbers = divGridNumbers(state);
+  if (!numbers.gridOpen) return null;
+  const quotient: Record<string, string> = {};
+  let quotientPoint: number | null = null;
+  let column = numbers.top;
+  for (let index = 0; index < raw.length; index += 1) {
+    const char = raw.charAt(index);
+    if (char === '.') {
+      if (quotientPoint !== null) return null;
+      // 점은 바로 앞 칸 오른쪽에 있다.
+      quotientPoint = column + 1;
+      if (quotientPoint > numbers.top) return null;
+      continue;
+    }
+    if (column < numbers.low) return null;
+    if (char === ' ') {
+      column -= 1;
+      continue;
+    }
+    if (!/^[0-9]$/.test(char)) return null;
+    quotient[String(column)] = char;
+    column -= 1;
+  }
+  if (column !== numbers.low - 1) return null;
+  return { quotient, quotientPoint };
+}
+
 /** div 디버그 풀이: 주어진 몫으로 모든 단계 줄을 계산해 채운다. */
 function withDivDebugSample(state: ColumnCalcState, config: ColumnCalcConfig): ColumnCalcState {
   const sample = config.debugSample;
-  const quotientText = sample?.quotient;
-  if (quotientText === undefined) return state;
-  const digits = String(quotientText).replace(/\D/g, '');
-  if (digits.length === 0) return state;
-  const top = Math.max(0, state.aText.replace(/\D/g, '').length - 1);
-  const quotient: Record<string, string> = {};
-  for (let offset = 0; offset < digits.length; offset += 1) {
-    const column = digits.length - 1 - offset;
-    if (column >= 0 && column <= top) quotient[String(column)] = digits.charAt(offset) ?? '0';
+  let quotient: Record<string, string>;
+  let quotientPoint = state.quotientPoint;
+
+  if (state.decimal) {
+    if (sample?.quotientRaw !== undefined) {
+      const parsed = decimalQuotientSample(state, String(sample.quotientRaw));
+      if (!parsed) return state;
+      quotient = parsed.quotient;
+      quotientPoint = parsed.quotientPoint;
+    } else if (sample?.quotient !== undefined) {
+      const digits = String(sample.quotient).replace(/\D/g, '');
+      if (digits.length === 0) return state;
+      const numbers = divGridNumbers(state);
+      quotient = {};
+      for (let offset = 0; offset < digits.length; offset += 1) {
+        const column = numbers.top - offset;
+        if (column < numbers.low) break;
+        quotient[String(column)] = digits.charAt(offset) ?? '0';
+      }
+      if (Object.keys(quotient).length === 0) return state;
+    } else {
+      return state;
+    }
+  } else {
+    const quotientText = sample?.quotient;
+    if (quotientText === undefined) return state;
+    const digits = String(quotientText).replace(/\D/g, '');
+    if (digits.length === 0) return state;
+    const top = Math.max(0, state.aText.replace(/\D/g, '').length - 1);
+    quotient = {};
+    for (let offset = 0; offset < digits.length; offset += 1) {
+      const column = digits.length - 1 - offset;
+      if (column >= 0 && column <= top) quotient[String(column)] = digits.charAt(offset) ?? '0';
+    }
   }
 
-  const seeded: ColumnCalcState = { ...state, quotient };
+  const seeded: ColumnCalcState = { ...state, quotient, quotientPoint };
   const plan = computeDivPlan(seeded);
   const products: Record<string, Record<string, string>> = {};
   const diffs: Record<string, Record<string, string>> = {};
@@ -343,7 +461,28 @@ export function createInitialState(config: ColumnCalcConfig = {}): ColumnCalcSta
     return { ...base, selected: mulSelection(computeMulPlan(base)) };
   }
 
-  if (mode === 'div') {
+  if (mode === 'div' || (mode === 'decimal' && config.op === 'div')) {
+    const decimal = isDecimalDivConfig(mode, config);
+    if (decimal) {
+      const rawDividend = config.dividend ?? config.a;
+      const rawDivisor = config.divisor ?? config.b;
+      const a =
+        divDecimalDividend(String(rawDividend ?? DEFAULT_DIV_DECIMAL.a)) ??
+        requireNumber(DEFAULT_DIV_DECIMAL.a);
+      const b =
+        divDecimalDivisor(String(rawDivisor ?? DEFAULT_DIV_DECIMAL.b)) ??
+        requireNumber(DEFAULT_DIV_DECIMAL.b);
+      const seeded: ColumnCalcState = {
+        ...baseState('div', 'div', a, b, config),
+        decimal: true,
+        extendLimit: extendLimitOf(config.extendZeros),
+        magnifier: magnifierOf(config.magnifier),
+        allowOneSideScale: config.allowOneSideScale === true,
+        rewindEnabled: false,
+      };
+      const sampled = withDivDebugSample(seeded, config);
+      return { ...sampled, selected: divDecimalSelection(sampled) };
+    }
     const rawDividend = config.dividend ?? config.a;
     const rawDivisor = config.divisor ?? config.b;
     const dividendText = boundedNaturalText(rawDividend, 9999, DEFAULT_NUMBERS.div.a);
@@ -484,6 +623,27 @@ function toggleNumber(values: readonly number[], column: number): number[] {
   return values.includes(column) ? values.filter((value) => value !== column) : [...values, column];
 }
 
+/** 한 열의 값을 지운 새 레코드. */
+function withoutKey<T>(record: Readonly<Record<string, T>>, column: number): Record<string, T> {
+  const next: Record<string, T> = {};
+  for (const [key, value] of Object.entries(record)) {
+    if (key !== String(column)) next[key] = value;
+  }
+  return next;
+}
+
+/** 단계별 줄에서 한 열을 지운 새 레코드. */
+function withoutColumn(
+  records: Readonly<Record<string, Readonly<Record<string, string>>>>,
+  column: number,
+): Record<string, Record<string, string>> {
+  const next: Record<string, Record<string, string>> = {};
+  for (const [key, record] of Object.entries(records)) {
+    next[key] = withoutKey(record, column);
+  }
+  return next;
+}
+
 function cellOf(cell: CellRef): CellRef {
   return cell.index === undefined
     ? { row: cell.row, column: cell.column }
@@ -520,16 +680,19 @@ function mulAfterEnter(state: ColumnCalcState, cell: CellRef): CellRef | null {
   return null;
 }
 
-function divTop(state: ColumnCalcState): number {
-  return Math.max(0, state.aText.replace(/\D/g, '').length - 1);
+function divColumnLow(state: ColumnCalcState): number {
+  return state.decimal ? divGridNumbers(state).low : 0;
 }
 
 function selectDiv(
   state: ColumnCalcState,
   action: Extract<ColumnCalcAction, { type: 'select' }>,
 ): ColumnCalcState {
+  if (state.decimal && !divGridNumbers(state).gridOpen) return state;
+  const top = divGridNumbers(state).top;
+  const low = divColumnLow(state);
   if (action.row === 'quotient') {
-    if (action.column < 0 || action.column > divTop(state)) return state;
+    if (action.column < low || action.column > top) return state;
     return { ...state, selected: { row: 'quotient', column: action.column } };
   }
   if (action.index === undefined) return state;
@@ -553,10 +716,45 @@ function selectDiv(
 /** 교과서 순서로 커서를 옮긴다(몫 → 곱 → 뺄셈 → 내림 → 다음 몫). */
 function divAfterEnter(state: ColumnCalcState, cell: CellRef): CellRef | null {
   const plan = computeDivPlan(state);
+  const numbers = divGridNumbers(state);
+  const decimal = state.decimal;
+
   if (cell.row === 'quotient') {
     const column = cell.column;
     const digit = state.quotient[String(column)];
     if (digit === undefined) return null;
+
+    if (decimal) {
+      // 위쪽 단계의 아직 안 쓴 내림 칸이 있으면 먼저 그리로 간다.
+      let previous: (typeof plan.steps)[number] | undefined;
+      for (const step of plan.steps) {
+        if (step.column <= column) break;
+        previous = step;
+      }
+      if (previous) {
+        const record = state.divDiffs[String(previous.column)];
+        const unfilled = previous.bringColumns.find(
+          (bringColumn) => record?.[String(bringColumn)] === undefined,
+        );
+        if (unfilled !== undefined) {
+          return { row: 'div-diff', column: unfilled, index: previous.column };
+        }
+      }
+      if (digit === '0') {
+        const nextColumn = column - 1;
+        return nextColumn >= numbers.low ? { row: 'quotient', column: nextColumn } : null;
+      }
+      const step = plan.steps.find((entry) => entry.column === column);
+      if (!step) return null;
+      const firstProduct = step.productColumns[0];
+      if (firstProduct !== undefined) {
+        return { row: 'div-product', column: firstProduct, index: column };
+      }
+      const firstDiff = step.diffColumns[0];
+      if (firstDiff !== undefined) return { row: 'div-diff', column: firstDiff, index: column };
+      return null;
+    }
+
     if (digit === '0') {
       if (column <= 0) return null;
       // 단계는 높은 열부터 정렬돼 있다. column보다 높은 단계 중 가장 가까운(열이 작은) 단계.
@@ -605,9 +803,35 @@ function divAfterEnter(state: ColumnCalcState, cell: CellRef): CellRef | null {
       if (firstBring !== undefined) {
         return { row: 'div-diff', column: firstBring, index: cell.index };
       }
+      // 소수: 마지막 단계가 일의 자리 이하에서 끝나면 다음 소수 자리 몫으로 간다.
+      if (decimal && step.column <= 0 && step.column - 1 >= numbers.low) {
+        return { row: 'quotient', column: step.column - 1 };
+      }
       return null;
     }
     if (step.bringColumns.includes(cell.column)) {
+      if (decimal) {
+        // 내린 칸에 이미 몫 단계가 있으면 그 단계의 곱 줄부터 이어 쓴다.
+        const nextStep = plan.steps.find(
+          (entry) => entry.column === cell.column && entry.column !== step.column,
+        );
+        if (nextStep) {
+          const productRecord = state.divProducts[String(nextStep.column)];
+          const firstProduct = nextStep.productColumns.find(
+            (column) => productRecord?.[String(column)] === undefined,
+          );
+          if (firstProduct !== undefined) {
+            return { row: 'div-product', column: firstProduct, index: nextStep.column };
+          }
+          const diffRecord = state.divDiffs[String(nextStep.column)];
+          const firstDiff = nextStep.diffColumns.find(
+            (column) => diffRecord?.[String(column)] === undefined,
+          );
+          if (firstDiff !== undefined) {
+            return { row: 'div-diff', column: firstDiff, index: nextStep.column };
+          }
+        }
+      }
       const nextBring = step.bringColumns.find((column) => column < cell.column);
       if (nextBring !== undefined) {
         return { row: 'div-diff', column: nextBring, index: cell.index };
@@ -625,8 +849,11 @@ function enterDiv(
   action: Extract<ColumnCalcAction, { type: 'enter' }>,
 ): ColumnCalcState {
   if (action.digit !== null && !/^[0-9]$/.test(action.digit)) return state;
+  if (state.decimal && !divGridNumbers(state).gridOpen) return state;
+  const top = divGridNumbers(state).top;
+  const low = divColumnLow(state);
   if (action.row === 'quotient') {
-    if (action.column < 0 || action.column > divTop(state)) return state;
+    if (action.column < low || action.column > top) return state;
     const next: ColumnCalcState = {
       ...state,
       quotient: writeDigit(state.quotient, action.column, action.digit),
@@ -852,7 +1079,34 @@ export function reduce(state: ColumnCalcState, action: ColumnCalcAction): Column
     }
 
     case 'pad-zero': {
-      if (state.mode !== 'decimal' || state.padZeros === 'off') return state;
+      if (state.padZeros === 'off') return state;
+
+      if (state.op === 'div') {
+        if (!state.decimal || action.number !== 'a') return state;
+        const numbers = divGridNumbers(state);
+        if (!numbers.gridOpen) return state;
+        if (action.column === numbers.low - 1) {
+          if (numbers.appended >= state.extendLimit) return state;
+          return { ...state, aPads: sortedUnique([...state.aPads, action.column]) };
+        }
+        if (action.column === numbers.low && numbers.appended > 0) {
+          const removed = action.column;
+          return {
+            ...state,
+            aPads: state.aPads.filter((column) => column !== removed),
+            quotient: withoutKey(state.quotient, removed),
+            divProducts: withoutColumn(state.divProducts, removed),
+            divDiffs: withoutColumn(state.divDiffs, removed),
+            estimateTries: withoutKey(state.estimateTries, removed),
+            quotientPoint: state.quotientPoint === removed ? null : state.quotientPoint,
+            flagged: state.flagged.filter((cell) => cell.column !== removed),
+            selected: state.selected?.column === removed ? null : state.selected,
+          };
+        }
+        return state;
+      }
+
+      if (state.mode !== 'decimal') return state;
       if (state.aPoint === null || state.bPoint === null) return state;
       const a = requireNumber(state.aText);
       const b = requireNumber(state.bText);
@@ -974,7 +1228,10 @@ export function reduce(state: ColumnCalcState, action: ColumnCalcAction): Column
 
     case 'try-estimate': {
       if (state.op !== 'div') return state;
-      if (!Number.isInteger(action.column) || action.column < 0 || action.column > divTop(state)) {
+      const numbers = divGridNumbers(state);
+      if (state.decimal && !numbers.gridOpen) return state;
+      const low = state.decimal ? numbers.low : 0;
+      if (!Number.isInteger(action.column) || action.column < low || action.column > numbers.top) {
         return state;
       }
       if (!Number.isInteger(action.k) || action.k < 1 || action.k > state.estimateMaxMultiple) {
@@ -998,6 +1255,24 @@ export function reduce(state: ColumnCalcState, action: ColumnCalcAction): Column
     }
 
     case 'place-point': {
+      if (action.target === 'quotient') {
+        if (state.op !== 'div' || !state.decimal) return state;
+        const numbers = divGridNumbers(state);
+        if (!numbers.gridOpen) return state;
+        if (action.column === null) {
+          return state.quotientPoint === null ? state : { ...state, quotientPoint: null };
+        }
+        if (
+          !Number.isInteger(action.column) ||
+          action.column < numbers.low ||
+          action.column > numbers.top
+        ) {
+          return state;
+        }
+        // 같은 자리를 다시 누르면 지운다.
+        const next = state.quotientPoint === action.column ? null : action.column;
+        return { ...state, quotientPoint: next };
+      }
       if (!isDecimalMul(state) || action.target !== 'result') return state;
       if (state.requireEstimate && state.phase === 'estimate') return state;
       // 바른 정렬 전에는 부분곱·결과 칸과 마찬가지로 점도 놓지 않는다.
@@ -1010,6 +1285,31 @@ export function reduce(state: ColumnCalcState, action: ColumnCalcAction): Column
       // 같은 자리를 다시 누르면 지운다.
       const next = requested !== null && state.resultPoint === requested ? null : requested;
       return { ...state, resultPoint: next };
+    }
+
+    case 'scale': {
+      if (state.op !== 'div' || !state.decimal) return state;
+      if (!Number.isInteger(action.to) || action.to < 0 || action.to > 3) return state;
+      const scaleA =
+        action.side === 'both' || action.side === 'dividend' ? action.to : state.scaleA;
+      const scaleB = action.side === 'both' || action.side === 'divisor' ? action.to : state.scaleB;
+      if (scaleA === state.scaleA && scaleB === state.scaleB) return state;
+      // 격자 수가 바뀌면 이전 칸은 새 수와 맞지 않으므로 모두 비운다.
+      return {
+        ...state,
+        scaleA,
+        scaleB,
+        oneSideTried: state.oneSideTried || action.side !== 'both',
+        quotient: {},
+        divProducts: {},
+        divDiffs: {},
+        estimateTries: {},
+        aPads: [],
+        quotientPoint: null,
+        flagged: [],
+        selected: null,
+        rewound: false,
+      };
     }
 
     case 'shift': {

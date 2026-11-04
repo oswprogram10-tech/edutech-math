@@ -45,12 +45,14 @@ export interface EstimateTolerance {
   readonly yellow?: number | string;
 }
 
-/** 미리 채우는 틀린 풀이(디버그 과제). div는 `quotient`만 쓴다. */
+/** 미리 채우는 틀린 풀이(디버그 과제). div는 `quotient`·`quotientRaw`를 쓴다. */
 export interface MulDebugSample {
   readonly rows?: readonly (number | string)[];
   readonly sum?: number | string;
   /** div: 미리 채울 몫(`"12"`). 그 몫으로 모든 단계 줄을 계산해 채운다. */
   readonly quotient?: string;
+  /** div decimal: 몫 칸을 top부터 쓴 문자열. 빈칸은 공백, `.`은 일의 자리 표시. */
+  readonly quotientRaw?: string;
 }
 
 /** 배수 사다리. C는 막대, P는 배수 표, A에서는 숨긴다. */
@@ -90,6 +92,14 @@ export interface ColumnCalcConfig {
   readonly rewindCheck?: boolean | { readonly engine?: string; readonly mode?: string };
   /** div: 몫 칸에 커서가 있을 때 격자 옆에 배수 사다리를 보인다. */
   readonly estimateBar?: EstimateBar;
+  /** div: 소수 나눗셈(소수 피제수·몫 소수점·확대경). */
+  readonly decimal?: boolean;
+  /** div decimal: 피제수 끝에 붙일 수 있는 0의 개수(0~3). 기본 2. */
+  readonly extendZeros?: number;
+  /** div decimal: 확대경에 보일 배수(10·100·1000). */
+  readonly magnifier?: readonly number[];
+  /** div decimal: 한쪽만 확대하는 실험 버튼을 보인다. */
+  readonly allowOneSideScale?: boolean;
 
   // ── estimate ──────────────────────────────────────────────
   /** 어림값이 몇 자리(10·100·1000)의 배수인지. 기본 100. */
@@ -207,6 +217,23 @@ export interface ColumnCalcState {
   readonly estimateBarShow: EstimateBar['show'];
   readonly estimateMaxMultiple: number;
 
+  // ── div decimal (T078) ───────────────────────────────────
+  /** 소수 나눗셈인가. false면 T047과 같다. */
+  readonly decimal: boolean;
+  /** 격자 수 G = dividend × 10^scaleA. */
+  readonly scaleA: number;
+  /** 격자 수 g = divisor × 10^scaleB. */
+  readonly scaleB: number;
+  /** 몫에서 일의 자리가 되는 열. 점은 그 칸 오른쪽. */
+  readonly quotientPoint: number | null;
+  /** 피제수 끝에 붙일 수 있는 0의 최대 개수. */
+  readonly extendLimit: number;
+  /** 확대경 배수 목록. */
+  readonly magnifier: readonly number[];
+  readonly allowOneSideScale: boolean;
+  /** 한쪽만 확대해 본 적이 있는가. */
+  readonly oneSideTried: boolean;
+
   // ── decimal + mul (T077) ──────────────────────────────────
   /** 결과 줄에서 일의 자리가 되는 칸. 점은 그 칸 오른쪽에 그린다. */
   readonly resultPoint: number | null;
@@ -263,6 +290,14 @@ export type ColumnCalcAction =
   | { readonly type: 'rewind' }
   /** 소수 곱셈: 결과 줄 `column` 오른쪽에 소수점을 놓는다. null은 지우기. */
   | { readonly type: 'place-point'; readonly target: 'result'; readonly column: number | null }
+  /** 소수 나눗셈: 몫 `column` 오른쪽에 소수점을 놓는다. null은 지우기. */
+  | { readonly type: 'place-point'; readonly target: 'quotient'; readonly column: number | null }
+  /** 소수 나눗셈: 소수점을 옮긴다. both는 두 수를 같은 배수로. */
+  | {
+      readonly type: 'scale';
+      readonly side: 'both' | 'dividend' | 'divisor';
+      readonly to: number;
+    }
   /** 시프트 데모: 자릿값 기둥을 `op`만큼 옮긴다. */
   | { readonly type: 'shift'; readonly op: ShiftOp }
   /** 시프트 데모: 처음 자리로 돌아간다(기록은 유지). */

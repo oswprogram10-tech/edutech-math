@@ -6,7 +6,14 @@
  * 순서대로 검사하고 코드마다 한 번만 기록한다(T047 결정 13).
  */
 import type { ColumnError, MisconceptionCode } from './classify';
-import { divWrongColumns, pow10Big, readDiffResultValue, readRowValue } from './grid-div';
+import {
+  divComplete,
+  divRemainderDetail,
+  divWrongColumns,
+  pow10Big,
+  readDiffResultValue,
+  readRowValue,
+} from './grid-div';
 import type { DivPlan, DivStepPlan } from './grid-div';
 import type { ColumnCalcState } from './types';
 
@@ -68,10 +75,16 @@ function bringHasBlank(state: ColumnCalcState, step: DivStepPlan): boolean {
 function quotientZeroColumn(state: ColumnCalcState, plan: DivPlan): number | null {
   const highest = plan.reading.quotientHighest;
   if (highest === null) return null;
-  for (let column = highest - 1; column >= 0; column -= 1) {
+  for (let column = highest - 1; column >= plan.reading.low; column -= 1) {
     if (state.quotient[String(column)] === undefined) return column;
   }
   return highest;
+}
+
+/** 몫 칸 문자열(빈칸 공백)에서 앞자리 0을 줄인 정수 숫자열. */
+function normalizedDigits(cells: string): string {
+  const digits = cells.replace(/\s/g, '');
+  return digits.replace(/^0+(?=\d)/, '');
 }
 
 export function classifyDiv(state: ColumnCalcState, plan: DivPlan): ColumnError[] {
@@ -89,16 +102,30 @@ export function classifyDiv(state: ColumnCalcState, plan: DivPlan): ColumnError[
 
   // ① 몫의 0 누락.
   if (divisor > ZERO) {
-    const correctText = (dividend / divisor).toString();
-    const studentText = plan.reading.quotientText;
-    if (
-      studentText !== null &&
-      studentText !== correctText &&
-      zeroRemovedCandidates(correctText).has(digitsOnly(studentText))
-    ) {
-      add('MC-DIV-QUOTIENT-ZERO', quotientZeroColumn(state, plan) ?? plan.reading.top);
-    } else if (plan.reading.skippedZero) {
-      add('MC-DIV-QUOTIENT-ZERO', quotientZeroColumn(state, plan) ?? plan.reading.top);
+    if (plan.reading.decimal) {
+      // 격자 정수 영역(소수점을 뺀 몫)에서 정답과 0을 뺀 값을 견준다.
+      const correctGridText = (plan.reading.I / divisor).toString();
+      const studentDigits = normalizedDigits(plan.reading.quotientCells);
+      if (
+        studentDigits !== correctGridText &&
+        zeroRemovedCandidates(correctGridText).has(studentDigits)
+      ) {
+        add('MC-DIV-QUOTIENT-ZERO', quotientZeroColumn(state, plan) ?? plan.reading.top);
+      } else if (plan.reading.skippedZero) {
+        add('MC-DIV-QUOTIENT-ZERO', quotientZeroColumn(state, plan) ?? plan.reading.top);
+      }
+    } else {
+      const correctText = (dividend / divisor).toString();
+      const studentText = plan.reading.quotientText;
+      if (
+        studentText !== null &&
+        studentText !== correctText &&
+        zeroRemovedCandidates(correctText).has(digitsOnly(studentText))
+      ) {
+        add('MC-DIV-QUOTIENT-ZERO', quotientZeroColumn(state, plan) ?? plan.reading.top);
+      } else if (plan.reading.skippedZero) {
+        add('MC-DIV-QUOTIENT-ZERO', quotientZeroColumn(state, plan) ?? plan.reading.top);
+      }
     }
   }
 
@@ -141,7 +168,37 @@ export function classifyDiv(state: ColumnCalcState, plan: DivPlan): ColumnError[
     }
   }
 
-  // ⑤ 위 넷에 해당하지 않는 틀린 칸.
+  if (plan.reading.decimal) {
+    // ⑤ 소수 몫의 소수점 자리.
+    const lowest = plan.reading.quotientLowest;
+    const belowOnes = lowest !== null && lowest < 0;
+    if (belowOnes) {
+      if (plan.reading.quotientPoint === null) {
+        add('MC-DEC-POINT-PLACEMENT', lowest);
+      } else if (plan.reading.quotientPoint !== 0) {
+        add('MC-DEC-POINT-PLACEMENT', plan.reading.quotientPoint);
+      }
+    }
+
+    // ⑥ 0을 붙여 계속 나눌 수 있는데 멈춘 풀이.
+    if (plan.reading.appendedZeros < state.extendLimit && divComplete(state, plan)) {
+      const detail = divRemainderDetail(state, plan);
+      if (detail && !detail.value.isZero()) {
+        add('MC-DIV-NO-EXTEND-ZERO', lowest ?? plan.reading.top);
+      }
+    }
+
+    // ⑦ 한쪽만 소수점을 옮긴 채 몫을 쓴 풀이.
+    if (
+      plan.reading.gridOpen &&
+      plan.reading.scaleA !== plan.reading.scaleB &&
+      plan.reading.quotientHighest !== null
+    ) {
+      add('MC-DEC-DIV-SCALE-ONE-SIDE', plan.reading.quotientHighest);
+    }
+  }
+
+  // ⑧ 위에 해당하지 않는 틀린 칸.
   const covered = new Set(errors.map((error) => error.column));
   for (const column of divWrongColumns(state, plan)) {
     if (covered.has(column)) continue;

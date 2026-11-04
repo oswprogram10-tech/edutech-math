@@ -144,3 +144,130 @@
   opacity: 0.65;
   cursor: default;
 }
+
+/* ── T078 소수 나눗셈 ─────────────────────────────────────── */
+
+/* 소수점 옮기기: 처음 수의 소수점은 속이 빈 점, 화살표 버튼으로 옮긴다. */
+.scalePanel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-self: flex-start;
+  max-width: min(100%, 460px);
+  padding: 0.55rem 0.7rem;
+  border: 2px solid #b9c6dc;
+  border-radius: 14px;
+  background: #fbfcff;
+}
+
+.scaleTitle {
+  color: #1d2330;
+  font-size: 0.92rem;
+}
+
+.scaleRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.scaleLabel {
+  min-width: 5.4rem;
+  color: #5a6478;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.scaleNumber {
+  min-width: 4.5rem;
+  color: #1d2330;
+  font-size: 1.25rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 처음 소수점 자리는 속이 빈 점으로 남긴다. */
+.hollowDot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.72em;
+  height: 0.72em;
+  margin: 0 0.08em;
+  border: 2px solid #2f6fde;
+  border-radius: 50%;
+  color: transparent;
+  font-size: 0;
+  vertical-align: middle;
+}
+
+.scaleButton {
+  min-height: 48px;
+  min-width: 48px;
+  padding: 0;
+  border: 2px solid #2f6fde;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #1d2330;
+  font: inherit;
+  font-size: 1.1rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.scaleButton:disabled {
+  border-color: #aab4c6;
+  color: #7a8497;
+  cursor: not-allowed;
+}
+
+.scaleHint {
+  margin: 0;
+  color: #5a6478;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+/* 나누는 수가 자연수가 아니어서 격자를 열 수 없을 때. */
+.closedNote {
+  margin: 0 0 0.3rem;
+  padding: 0.45rem 0.6rem;
+  border: 2px dashed #8a5a00;
+  border-radius: 10px;
+  background: #fff7e6;
+  color: #7a4f00;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+/* 피제수 끝 0 붙이기/떼기. */
+.zeroRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.zeroButton {
+  min-height: 48px;
+  padding: 0.45rem 0.9rem;
+  border: 2px dashed #2f6fde;
+  border-radius: 12px;
+  background: #f4f8ff;
+  color: #1d2330;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.zeroButton:disabled {
+  border-color: #aab4c6;
+  color: #7a8497;
+  cursor: not-allowed;
+}
+
+.zeroNote {
+  color: #5a6478;
+  font-size: 0.8rem;
+}

@@ -142,7 +142,18 @@ export function emit(
     case 'place-point': {
       events.push({
         name: 'point-placed',
-        payload: { target: 'result', column: next.resultPoint },
+        payload:
+          action.target === 'quotient'
+            ? { target: 'quotient', column: next.quotientPoint }
+            : { target: 'result', column: next.resultPoint },
+      });
+      break;
+    }
+
+    case 'scale': {
+      events.push({
+        name: 'scaled',
+        payload: { scaleA: next.scaleA, scaleB: next.scaleB },
       });
       break;
     }
@@ -178,6 +189,30 @@ function parseObservationValue(observation: Observation, key: string): Rational 
   } catch {
     return null;
   }
+}
+
+/** number·문자열 인자를 Rational로 읽는다. 읽을 수 없으면 null. */
+function rationalOf(value: JsonValue | undefined): Rational | null {
+  const text = typeof value === 'number' ? String(value) : typeof value === 'string' ? value : null;
+  if (text === null) return null;
+  try {
+    return Rational.parse(text);
+  } catch {
+    return null;
+  }
+}
+
+/** args `{ value }`와 Observation의 한 값을 Rational로 견준다. */
+function rationalValueIs(
+  observation: Observation,
+  key: string,
+  args: JsonValue | undefined,
+): boolean {
+  const record = recordOf(args);
+  if (!record) return false;
+  const expected = rationalOf(record['value']);
+  const actual = parseObservationValue(observation, key);
+  return actual !== null && expected !== null && actual.equals(expected);
 }
 
 /** args `{ value }`와 결과 값이 같은가. `"4.77"`과 `"477/100"`은 같다. */
@@ -358,43 +393,23 @@ export const linkMarked: EnginePredicate = (
   return Array.isArray(highlights) && highlights.includes(`${kind}:${column}`);
 };
 
-/** args `{ value }`: 학생이 쓴 몫(정수). */
+/** args `{ value }`: 학생이 쓴 몫. 정수·소수 모두 Rational로 견준다. */
 export const quotientIs: EnginePredicate = (
   observation: Observation,
   args: JsonValue | undefined,
-): boolean => {
-  const record = recordOf(args);
-  if (!record) return false;
-  const expected = record['value'];
-  const actual = observation['quotient'];
-  if (typeof actual !== 'string' || !/^\d+$/.test(actual)) return false;
-  if (typeof expected === 'number') {
-    return Number.isInteger(expected) && BigInt(actual) === BigInt(expected);
-  }
-  if (typeof expected === 'string' && /^\d+$/.test(expected.trim())) {
-    return BigInt(actual) === BigInt(expected.trim());
-  }
-  return false;
-};
+): boolean => rationalValueIs(observation, 'quotient', args);
 
-/** args `{ value }`: 마지막 단계 뺄셈 줄 값(나머지). */
+/** args `{ value }`: 마지막 단계 뺄셈 줄 값(나머지). decimal은 원래 단위 Rational. */
 export const remainderIs: EnginePredicate = (
   observation: Observation,
   args: JsonValue | undefined,
-): boolean => {
-  const record = recordOf(args);
-  if (!record) return false;
-  const expected = record['value'];
-  const actual = observation['remainder'];
-  if (typeof actual !== 'string' || !/^\d+$/.test(actual)) return false;
-  if (typeof expected === 'number') {
-    return Number.isInteger(expected) && BigInt(actual) === BigInt(expected);
-  }
-  if (typeof expected === 'string' && /^\d+$/.test(expected.trim())) {
-    return BigInt(actual) === BigInt(expected.trim());
-  }
-  return false;
-};
+): boolean => rationalValueIs(observation, 'remainder', args);
+
+/** args `{ value }`: 격자 단위 나머지(T078). */
+export const remainderGridIs: EnginePredicate = (
+  observation: Observation,
+  args: JsonValue | undefined,
+): boolean => rationalValueIs(observation, 'remainderGrid', args);
 
 /** args `{ value: boolean }`: 나머지 경고등. */
 export const alarmIs: EnginePredicate = (
@@ -413,6 +428,25 @@ export const alarmIs: EnginePredicate = (
 export const estimateRevised: EnginePredicate = (observation: Observation): boolean =>
   observation['estimateRevised'] === true;
 
+/** args `{ factor }`: 두 수의 소수점을 같은 만큼 옮겼고 10^scale = factor인가. */
+export const scaleIs: EnginePredicate = (
+  observation: Observation,
+  args: JsonValue | undefined,
+): boolean => {
+  const record = recordOf(args);
+  if (!record) return false;
+  const factor = rationalOf(record['factor']);
+  const scaleA = numberOf(observation['scaleA']);
+  const scaleB = numberOf(observation['scaleB']);
+  if (factor === null || scaleA === null || scaleB === null) return false;
+  if (scaleA !== scaleB || scaleA < 0 || !Number.isInteger(scaleA)) return false;
+  return factor.equals(Rational.of(10n ** BigInt(scaleA)));
+};
+
+/** 한쪽 소수점만 옮겨 본 적이 있는가. */
+export const oneSideTried: EnginePredicate = (observation: Observation): boolean =>
+  observation['oneSideTried'] === true;
+
 /** args `{ column, digit }`: 몫 칸 하나의 숫자. */
 export const quotientCellIs: EnginePredicate = (
   observation: Observation,
@@ -423,16 +457,25 @@ export const quotientCellIs: EnginePredicate = (
   const column = numberOf(record['column']);
   const digit = stringOf(record['digit']);
   const dividend = observation['dividend'];
+  const cells = observation['quotientCells'];
   const raw = observation['quotientRaw'];
   if (
     column === null ||
     digit === null ||
     typeof dividend !== 'string' ||
-    typeof raw !== 'string'
+    (typeof cells !== 'string' && typeof raw !== 'string')
   ) {
     return false;
   }
-  const index = dividend.length - 1 - column;
+  // decimal은 격자 열 범위가 0 아래로 내려가므로 Observation의 topColumn을 쓴다.
+  const top = numberOf(observation['topColumn']);
+  const index = top === null ? dividend.length - 1 - column : top - column;
+  // quotientCells는 점 없이 칸 그대로라 열 → 글자 위치가 바로 맞는다.
+  if (typeof cells === 'string') {
+    if (index < 0 || index >= cells.length) return false;
+    return cells.charAt(index) === digit;
+  }
+  if (typeof raw !== 'string') return false;
   if (index < 0 || index >= raw.length) return false;
   return raw.charAt(index) === digit;
 };
@@ -450,10 +493,13 @@ export const predicates: Readonly<Record<string, EnginePredicate>> = {
   linkMarked,
   quotientIs,
   remainderIs,
+  remainderGridIs,
   alarmIs,
   estimateRevised,
   quotientCellIs,
   pointPlaced,
   shiftValueIs,
   shiftUsed,
+  scaleIs,
+  oneSideTried,
 };

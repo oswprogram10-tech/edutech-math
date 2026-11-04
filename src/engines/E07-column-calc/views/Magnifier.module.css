@@ -1,0 +1,96 @@
+/* 소수 ÷ 소수 확대경(T078). 조작은 모두 버튼이다. */
+
+.magnifier {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  align-self: flex-start;
+  max-width: min(100%, 460px);
+  padding: 0.6rem 0.75rem;
+  border: 2px solid #b9c6dc;
+  border-radius: 14px;
+  background: #fbfcff;
+}
+
+.title {
+  color: #1d2330;
+  font-size: 0.92rem;
+}
+
+.numbers {
+  margin: 0;
+  color: #1d2330;
+  font-size: 1.3rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.button,
+.oneSide {
+  min-height: 48px;
+  min-width: 48px;
+  padding: 0.4rem 0.75rem;
+  border: 2px solid #2f6fde;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #1d2330;
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.oneSide {
+  border-style: dashed;
+  border-color: #8a5a00;
+  color: #7a4f00;
+}
+
+.button:disabled,
+.oneSide:disabled {
+  border-color: #aab4c6;
+  color: #7a8497;
+  cursor: not-allowed;
+}
+
+/* 나누어지는 수 막대(고정 너비) 안에 나누는 수 조각을 이어 그린다. */
+.track {
+  position: relative;
+  height: 26px;
+  border: 2px solid #2f6fde;
+  border-radius: 8px;
+  background: repeating-linear-gradient(45deg, #eef2f9 0 5px, #f8fafd 5px 10px);
+  overflow: hidden;
+}
+
+.pieces {
+  display: flex;
+  height: 100%;
+}
+
+.piece {
+  flex: 0 0 auto;
+  height: 100%;
+  border-right: 1px solid #2f6fde;
+  background: #cfe0ff;
+  box-sizing: border-box;
+}
+
+.hint {
+  margin: 0;
+  color: #5a6478;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+[data-target-size='64'] .button,
+[data-target-size='64'] .oneSide {
+  min-height: 64px;
+  min-width: 64px;
+}
