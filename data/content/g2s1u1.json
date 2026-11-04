@@ -1,0 +1,471 @@
+{
+  "unit": "g2s1u1",
+  "title": "세 자리 수",
+  "activities": [
+    {
+      "id": "g2s1u1.A1",
+      "title": "100 모형 융합 프레스기",
+      "tasks": [
+        {
+          "id": "g2s1u1.A1.T1",
+          "prompt": "막대 10개를 한 덩어리로 묶고, 모두 몇인지 써 보세요.",
+          "engine": "E01",
+          "mode": "regroup",
+          "cpa": "C",
+          "config": {
+            "mode": "regroup",
+            "start": { "tens": 10, "ones": 0 },
+            "allowedBlocks": [1, 10, 100],
+            "lasso": true,
+            "chart": ["hundreds", "tens", "ones"]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "countsAre", "args": { "hundreds": 1, "tens": 0 } },
+              { "kind": "equals", "path": "response.ans.value", "value": "100" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 1,
+              "say": "막대가 아직 열 개 그대로 있어요. 열 개를 한 덩어리로 묶으면 어떤 모양이 될까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "ten-outline", "args": { "from": 10 } }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 3,
+              "backtrack": "g1s2u1.hundred"
+            }
+          ],
+          "concepts": ["g2s1u1.hundred-unit", "g2s1u1.three-digit"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "ans",
+                "label": "모두 몇인지",
+                "forms": ["integer"]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g2s1u1.A1.T2",
+          "prompt": "판 1개, 막대 13개, 낱개 4개를 정리하고 모두 몇인지 써 보세요.",
+          "engine": "E01",
+          "mode": "regroup",
+          "cpa": "C",
+          "config": {
+            "mode": "regroup",
+            "start": { "hundreds": 1, "tens": 13, "ones": 4 },
+            "allowedBlocks": [1, 10, 100],
+            "lasso": true,
+            "chart": ["hundreds", "tens", "ones"]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "canonical" },
+              {
+                "kind": "predicate",
+                "name": "countsAre",
+                "args": { "hundreds": 2, "tens": 3, "ones": 4 }
+              },
+              { "kind": "equals", "path": "response.ans.value", "value": "234" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-PV-NONCANON" },
+              "level": 1,
+              "say": "막대 10개로 무엇을 만들 수 있지?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 1,
+              "say": "막대가 열 개를 넘어요. 십 묶음과 낱개로 다시 정리하면 백·십·일이 각각 몇 개가 될까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "ten-outline", "args": { "from": 10 } }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 3,
+              "backtrack": "g2s1u1.hundred-unit"
+            }
+          ],
+          "concepts": ["g2s1u1.hundred-unit", "g2s1u1.three-digit"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-PV-NONCANON",
+              "args": { "parts": ["1", "13", "4"] }
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "ans",
+                "label": "모두 몇인지",
+                "forms": ["integer"]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g2s1u1.A1.T3",
+          "prompt": "판 2개, 막대 0개, 낱개 6개가 나타내는 수를 써 보세요.",
+          "engine": "E01",
+          "mode": "regroup",
+          "cpa": "P",
+          "config": {
+            "mode": "regroup",
+            "start": { "hundreds": 2, "tens": 0, "ones": 6 },
+            "allowedBlocks": [1, 10, 100],
+            "lasso": true,
+            "chart": ["hundreds", "tens", "ones"]
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.ans.value",
+            "value": "206"
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-PV-ZERO" },
+              "level": 1,
+              "say": "십 모형이 하나도 없으면 그 칸에 뭐라고 쓸까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 1,
+              "say": "판과 낱개가 각각 몇 개인지 세어 보고, 가운데 자리가 비어 있을 때 수를 어떻게 읽는지 생각해 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "place-value" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 3,
+              "backtrack": "g2s1u1.digit-value"
+            }
+          ],
+          "concepts": ["g2s1u1.three-digit", "g2s1u1.digit-value"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-PV-ZERO",
+              "args": { "expected": "206" }
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "ans",
+                "label": "나타내는 수",
+                "forms": ["integer"]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g2s1u1.A1.T4",
+          "prompt": "판 하나를 풀어 막대로 바꿔도 수가 그대로인지 확인해 보세요.",
+          "engine": "E01",
+          "mode": "regroup",
+          "cpa": "C",
+          "config": {
+            "mode": "regroup",
+            "start": { "hundreds": 1, "tens": 2, "ones": 3 },
+            "allowedBlocks": [1, 10, 100],
+            "lasso": true,
+            "chart": ["hundreds", "tens", "ones"]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "brokeAtLeast", "args": { "from": 100, "count": 1 } },
+              {
+                "kind": "predicate",
+                "name": "countsAre",
+                "args": { "hundreds": 0, "tens": 12, "ones": 3 }
+              },
+              { "kind": "predicate", "name": "valueIs", "args": { "value": 123 } }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 1,
+              "say": "판 하나를 풀면 막대가 몇 개 생길까요? 풀기 전과 후에 나타내는 수가 같은지 살펴보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "break-preview" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 3,
+              "backtrack": "g2s1u1.hundred-unit"
+            }
+          ],
+          "concepts": ["g2s1u1.hundred-unit", "g2s1u1.three-digit"],
+          "submit": "button"
+        }
+      ]
+    },
+    {
+      "id": "g2s1u1.A2",
+      "title": "자릿값 카드 대결",
+      "tasks": [
+        {
+          "id": "g2s1u1.A2.T1",
+          "prompt": "3, 7, 1 카드로 가장 큰 세 자리 수를 만들어 보세요.",
+          "engine": "E01",
+          "mode": "place-chart",
+          "cpa": "P",
+          "config": {
+            "mode": "place-chart",
+            "columns": [2, 1, 0],
+            "chart": ["hundreds", "tens", "ones"],
+            "digits": [3, 7, 1],
+            "bidirectional": true
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "chartIs",
+            "args": { "value": 731 }
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "place-chart" },
+              "level": 1,
+              "say": "백 자리에 가장 큰 카드를 놓으면 수가 어떻게 달라질까요? 세 카드를 자리마다 바꿔 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "place-chart" },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "place-value" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "place-chart" },
+              "level": 3,
+              "backtrack": "g2s1u1.compare-skip"
+            }
+          ],
+          "concepts": ["g2s1u1.three-digit", "g2s1u1.compare-skip"],
+          "submit": "button"
+        },
+        {
+          "id": "g2s1u1.A2.T2",
+          "prompt": "같은 카드로 가장 작은 세 자리 수를 만들어 보세요.",
+          "engine": "E01",
+          "mode": "place-chart",
+          "cpa": "P",
+          "config": {
+            "mode": "place-chart",
+            "columns": [2, 1, 0],
+            "chart": ["hundreds", "tens", "ones"],
+            "digits": [3, 7, 1],
+            "bidirectional": true
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "chartIs",
+            "args": { "value": 137 }
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "place-chart" },
+              "level": 1,
+              "say": "가장 작은 수를 만들려면 가장 큰 카드를 어느 자리에 놓아야 할까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "place-chart" },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "place-value" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "place-chart" },
+              "level": 3,
+              "backtrack": "g2s1u1.compare-skip"
+            }
+          ],
+          "concepts": ["g2s1u1.three-digit", "g2s1u1.compare-skip"],
+          "submit": "button"
+        },
+        {
+          "id": "g2s1u1.A2.T3",
+          "prompt": "0, 5, 2 카드로 가장 작은 세 자리 수를 만들어 보세요.",
+          "engine": "E01",
+          "mode": "place-chart",
+          "cpa": "P",
+          "config": {
+            "mode": "place-chart",
+            "columns": [2, 1, 0],
+            "chart": ["hundreds", "tens", "ones"],
+            "digits": [0, 5, 2],
+            "bidirectional": true
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "chartIs",
+            "args": { "value": 205 }
+          },
+          "hints": [
+            {
+              "when": { "kind": "predicate", "name": "chartIs", "args": { "value": 25 } },
+              "level": 1,
+              "say": "맨 앞에 0이 있으면 몇 자리 수일까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "place-chart" },
+              "level": 1,
+              "say": "0도 카드이지만 맨 앞에 놓으면 수의 자릿수가 달라져요. 0을 다른 자리에 놓으면 어떻게 될까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "place-chart" },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "place-value" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "place-chart" },
+              "level": 3,
+              "backtrack": "g2s1u1.digit-value"
+            }
+          ],
+          "concepts": ["g2s1u1.three-digit", "g2s1u1.digit-value"],
+          "submit": "button"
+        },
+        {
+          "id": "g2s1u1.A2.T4",
+          "prompt": "547에서 4는 얼마를 나타낼까요?",
+          "engine": "E01",
+          "mode": "count",
+          "cpa": "P",
+          "config": {
+            "mode": "count",
+            "start": { "hundreds": 5, "tens": 4, "ones": 7 }
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.ans.value",
+            "value": "40"
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-PV-DIGIT-FACE" },
+              "level": 1,
+              "say": "4는 어느 칸에 있어?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "count" },
+              "level": 1,
+              "say": "4가 백·십·일 중 어느 자리에 있는지 살펴보고, 그 자리에서 나타내는 값이 얼마인지 생각해 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "count" },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "place-value" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "count" },
+              "level": 3,
+              "backtrack": "g1s1u5.tens-and-ones"
+            }
+          ],
+          "concepts": ["g2s1u1.digit-value"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-PV-DIGIT-FACE",
+              "args": { "digit": "4", "place": "1" }
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "ans",
+                "label": "4가 나타내는 값",
+                "forms": ["integer"]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g2s1u1.A2.T5",
+          "prompt": "438부터 10씩 세 번 뛰어 세어 보세요.",
+          "engine": "E01",
+          "mode": "count",
+          "cpa": "A",
+          "config": { "mode": "count" },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "response.n1.value", "value": "448" },
+              { "kind": "equals", "path": "response.n2.value", "value": "458" },
+              { "kind": "equals", "path": "response.n3.value", "value": "468" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "count" },
+              "level": 1,
+              "say": "10씩 뛰어 세면 십 자리 숫자가 어떻게 바뀌나요? 일의 자리는 그대로인지 살펴보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "count" },
+              "level": 2,
+              "say": "한 번 뛸 때마다 십의 자리만 하나씩 늘어나요. 세 번 뛴 수를 차례대로 써 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "count" },
+              "level": 3,
+              "backtrack": "g2s1u1.compare-skip"
+            }
+          ],
+          "concepts": ["g2s1u1.compare-skip"],
+          "submit": "button",
+          "showEngine": false,
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "n1",
+                "label": "한 번 뛴 수",
+                "forms": ["integer"]
+              },
+              {
+                "kind": "number",
+                "id": "n2",
+                "label": "두 번 뛴 수",
+                "forms": ["integer"]
+              },
+              {
+                "kind": "number",
+                "id": "n3",
+                "label": "세 번 뛴 수",
+                "forms": ["integer"]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
