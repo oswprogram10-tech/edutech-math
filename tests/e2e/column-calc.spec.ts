@@ -120,3 +120,47 @@ test('키보드만으로 52 − 17 = 35를 쓴다', async ({ page }) => {
   expect(observation.wrongColumns).toEqual([]);
   expect(observation.misconceptions).toEqual([]);
 });
+
+test('키보드로 46×27의 부분곱 322·920과 합 1242를 쓴다', async ({ page }) => {
+  await openColumnCalc(page, { a: 46, b: 27 });
+  await selectMode(page, 'mul');
+  await pollObservation(page, (observation) => observation.mode === 'mul');
+
+  // 일의 자리부터: 첫째 줄 223, 둘째 줄 29, 합 2421.
+  await page.getByTestId('column-grid').focus();
+  for (const key of '223292421') {
+    await page.keyboard.press(key);
+  }
+  await pollObservation(page, (observation) => observation.complete === true);
+
+  const observation = await readObservation(page);
+  expect(observation.partials).toEqual(['322', '920']);
+  expect(observation.rowsComplete).toBe(true);
+  expect(observation.result).toBe('1242');
+  expect(observation.resultRaw).toBe('1242');
+  expect(observation.wrongColumns).toEqual([]);
+  expect(observation.misconceptions).toEqual([]);
+});
+
+test('어림값 800을 정한 뒤 389 + 412 = 801을 쓰면 초록 신호가 나온다', async ({ page }) => {
+  await openColumnCalc(page, { a: 389, b: 412 });
+  await selectMode(page, 'estimate');
+  await expect(page.getByTestId('estimate-cell')).toBeVisible();
+  await expect(page.getByTestId('column-grid')).toHaveCount(0);
+
+  for (const digit of '800') {
+    await page.getByRole('button', { name: `${digit} 쓰기` }).click();
+  }
+  await page.getByRole('button', { name: '어림값 정하기' }).click();
+  await expect(page.getByTestId('column-grid')).toBeVisible();
+
+  await typeResult(page, ['1', '0', '8']);
+  await pollObservation(page, (observation) => observation.signal === 'green');
+
+  const observation = await readObservation(page);
+  expect(observation.phase).toBe('calc');
+  expect(observation.estimate).toBe('800');
+  expect(observation.result).toBe('801');
+  await expect(page.getByTestId('estimate-signal')).toHaveAttribute('data-signal', 'green');
+  await expect(page.getByTestId('estimate-signal')).toContainText('가까워요');
+});

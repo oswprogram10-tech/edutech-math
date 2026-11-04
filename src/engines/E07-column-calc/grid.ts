@@ -163,6 +163,74 @@ function templateRange(
   };
 }
 
+/**
+ * 곱셈 격자의 뼈대. 결과 줄의 기대 숫자만 여기서 만들고, 부분곱 줄은
+ * `grid-mul.ts`가 학생 상태와 함께 계산한다(이 파일은 순수 자리 계산만).
+ */
+function computeMulGrid(
+  state: ColumnCalcState,
+  a: ParsedNumber,
+  b: ParsedNumber,
+  alignment: AlignmentResult,
+): GridComputation {
+  if (a.fracDigits !== 0 || b.fracDigits !== 0) {
+    return {
+      a,
+      b,
+      aPoint: state.aPoint,
+      bPoint: state.bPoint,
+      low: 0,
+      high: 1,
+      alignment,
+      resultColumns: [],
+      requiredColumns: [],
+      displayColumns: columnRange(0, 1),
+      columns: [],
+      byColumn: new Map(),
+    };
+  }
+
+  const productText = (BigInt(a.digits) * BigInt(b.digits)).toString();
+  const productLength = productText.length;
+  const high = Math.max(a.intDigits, b.intDigits, productLength);
+  const resultColumns = columnRange(0, productLength);
+  const requiredColumns = columnRange(0, productLength - 1);
+  const columns: ColumnComputation[] = [];
+  const byColumn = new Map<number, ColumnComputation>();
+  for (let column = 0; column <= high; column += 1) {
+    const expected = Number(productText[productLength - 1 - column] ?? '0');
+    const computation: ColumnComputation = {
+      column,
+      top: Number(a.digits[a.intDigits - 1 - column] ?? '0'),
+      bottom: Number(b.digits[b.intDigits - 1 - column] ?? '0'),
+      carryIn: 0,
+      carryOut: 0,
+      borrowFromHigher: 0,
+      decrement: 0,
+      expected,
+      noCarryDigit: null,
+      originalTopDigit: null,
+    };
+    columns.push(computation);
+    byColumn.set(column, computation);
+  }
+
+  return {
+    a,
+    b,
+    aPoint: state.aPoint,
+    bPoint: state.bPoint,
+    low: 0,
+    high,
+    alignment,
+    resultColumns,
+    requiredColumns,
+    displayColumns: columns.map((entry) => entry.column),
+    columns,
+    byColumn,
+  };
+}
+
 /** 두 수가 놓인 자리로 기대값을 계산한다. decimal에서 아직 안 놓았으면 빈 격자. */
 export function computeGrid(state: ColumnCalcState): GridComputation {
   const a = parseNumber(state.aText);
@@ -206,6 +274,8 @@ export function computeGrid(state: ColumnCalcState): GridComputation {
       byColumn: new Map(),
     };
   }
+
+  if (state.op === 'mul') return computeMulGrid(state, a, b, alignment);
 
   const aAnchor = anchorOf(a, aPoint);
   const bAnchor = anchorOf(b, bPoint);

@@ -282,6 +282,126 @@
           "showEngine": false
         }
       ]
+    },
+    {
+      "id": "demo.A4",
+      "title": "블록과 세로셈",
+      "tasks": [
+        {
+          "id": "demo.A4.T1",
+          "prompt": "왼쪽 블록으로 10개를 묶으면 오른쪽 세로셈에 받아올림이 표시돼요. 38 + 25를 끝까지 계산하세요.",
+          "engine": "E07",
+          "mode": "add",
+          "cpa": "C",
+          "config": {
+            "mode": "add",
+            "op": "add",
+            "a": 38,
+            "b": 25,
+            "linkMarks": "auto"
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "resultIs",
+            "args": { "value": "63" }
+          },
+          "hints": [],
+          "concepts": [],
+          "submit": "auto",
+          "views": [
+            {
+              "slot": "right",
+              "engine": "E07",
+              "mode": "add",
+              "cpa": "C",
+              "config": {
+                "mode": "add",
+                "op": "add",
+                "a": 38,
+                "b": 25,
+                "linkMarks": "auto"
+              }
+            },
+            {
+              "slot": "left",
+              "engine": "E01",
+              "mode": "add-sub",
+              "cpa": "C",
+              "config": {
+                "mode": "add-sub",
+                "op": "add",
+                "a": 38,
+                "b": 25
+              }
+            }
+          ],
+          "links": [
+            { "from": "left", "event": "grouped", "to": "right" },
+            { "from": "left", "event": "broken", "to": "right" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "demo.A5",
+      "title": "넓이와 곱셈",
+      "tasks": [
+        {
+          "id": "demo.A5.T1",
+          "prompt": "왼쪽 넓이 모델을 40과 6으로 나누면 오른쪽 부분곱 줄에 같은 색이 칠해져요. 46 × 5를 끝까지 계산하세요.",
+          "engine": "E07",
+          "mode": "mul",
+          "cpa": "C",
+          "config": {
+            "mode": "mul",
+            "a": 46,
+            "b": 5,
+            "style": "partial-products"
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "resultIs",
+            "args": { "value": "230" }
+          },
+          "hints": [],
+          "concepts": [],
+          "submit": "auto",
+          "views": [
+            {
+              "slot": "right",
+              "engine": "E07",
+              "mode": "mul",
+              "cpa": "C",
+              "config": {
+                "mode": "mul",
+                "a": 46,
+                "b": 5,
+                "style": "partial-products"
+              }
+            },
+            {
+              "slot": "left",
+              "engine": "E04",
+              "mode": "area-model",
+              "cpa": "C",
+              "config": {
+                "mode": "area-model",
+                "a": 46,
+                "b": 5,
+                "splitA": "free",
+                "splitB": "none"
+              }
+            }
+          ],
+          "links": [
+            {
+              "from": "left",
+              "event": "partial-product-changed",
+              "to": "right"
+            }
+          ]
+        }
+      ]
     }
   ]
 }

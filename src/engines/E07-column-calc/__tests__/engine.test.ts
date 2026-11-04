@@ -1,6 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import { assertSerializable } from '../../../core/engine-sdk';
-import { alignedByPoint, complete, emit, hasMisconception, noErrors, resultIs } from '../events';
+import {
+  alignedByPoint,
+  complete,
+  emit,
+  estimateIs,
+  flaggedCell,
+  hasMisconception,
+  linkMarked,
+  noErrors,
+  partialsAre,
+  resultIs,
+  signalIs,
+} from '../events';
 import { computeGrid } from '../grid';
 import { observe } from '../observe';
 import { createInitialState, reduce } from '../reduce';
@@ -432,5 +444,296 @@ describe('E07 판정 함수와 이벤트', () => {
     const observation = observe(state);
     expect(noErrors(observation, undefined)).toBe(false);
     expect(hasMisconception(observation, { code: 'MC-PV-NO-CARRY' })).toBe(true);
+  });
+});
+
+function mulState(config: ColumnCalcConfig = {}): ColumnCalcState {
+  return stateOf({ mode: 'mul', a: '46', b: '27', ...config });
+}
+
+function enterPartial(
+  state: ColumnCalcState,
+  index: number,
+  column: number,
+  digit: string | null,
+): ColumnCalcState {
+  return apply(state, { type: 'enter', row: 'partial', column, digit, index });
+}
+
+/** 46×27의 부분곱 두 줄(322·920)을 채운다. 합 줄은 비워 둔다. */
+function fillMulPartials(state: ColumnCalcState): ColumnCalcState {
+  let current = state;
+  for (const [column, digit] of [
+    [0, '2'],
+    [1, '2'],
+    [2, '3'],
+  ] as const) {
+    current = enterPartial(current, 0, column, digit);
+  }
+  for (const [column, digit] of [
+    [1, '2'],
+    [2, '9'],
+  ] as const) {
+    current = enterPartial(current, 1, column, digit);
+  }
+  return current;
+}
+
+describe('E07 mul', () => {
+  it('46×27은 첫째 부분곱 줄 일의 자리부터 고르고, 한 줄은 낮은 자리 → 높은 자리로 간다', () => {
+    let state = mulState();
+    expect(state.selected).toEqual({ row: 'partial', column: 0, index: 0 });
+
+    state = enterPartial(state, 0, 0, '2');
+    expect(state.selected).toEqual({ row: 'partial', column: 1, index: 0 });
+    state = enterPartial(state, 0, 1, '2');
+    expect(state.selected).toEqual({ row: 'partial', column: 2, index: 0 });
+    state = enterPartial(state, 0, 2, '3');
+    // 줄이 끝나면 다음 줄의 가장 낮은 칸(밀어 둔 0 자리 다음)으로 간다.
+    expect(state.selected).toEqual({ row: 'partial', column: 1, index: 1 });
+    state = enterPartial(state, 1, 1, '2');
+    state = enterPartial(state, 1, 2, '9');
+    expect(state.selected).toEqual({ row: 'result', column: 0 });
+  });
+
+  it('46×27을 끝까지 쓰면 complete·result 1242, 부분곱 값은 322·920이다', () => {
+    let state = fillMulPartials(mulState());
+    expect(observe(state)['rowsComplete']).toBe(true);
+    expect(observe(state)['partials']).toEqual(['322', '920']);
+    expect(observe(state)['complete']).toBe(false);
+
+    state = fillResult(state, [
+      [0, '2'],
+      [1, '4'],
+      [2, '2'],
+      [3, '1'],
+    ]);
+    const observation = observe(state);
+    expect(observation['complete']).toBe(true);
+    expect(observation['result']).toBe('1242');
+    expect(observation['expectedRowCount']).toBe(2);
+    expect(observation['misconceptions']).toEqual([]);
+    expect(resultIs(observation, { value: '1242' })).toBe(true);
+    expect(partialsAre(observation, { values: [322, 920] })).toBe(true);
+    expect(partialsAre(observation, { values: ['322', '902'] })).toBe(false);
+  });
+
+  it('부분곱 칸 입력은 줄 index를 붙여 cell-entered를 낸다', () => {
+    const before = mulState();
+    const after = enterPartial(before, 0, 0, '2');
+    const events = emit(before, after, {
+      type: 'enter',
+      row: 'partial',
+      column: 0,
+      digit: '2',
+      index: 0,
+    });
+    expect(events).toEqual([
+      {
+        name: 'cell-entered',
+        payload: { row: 'partial', column: 0, digit: '2', index: 0 },
+      },
+    ]);
+  });
+
+  it('한 자리 곱셈은 받아올림 줄에 쓸 수 있고 carry-marked를 낸다', () => {
+    const before = mulState({ a: '213', b: '4' });
+    const after = apply(before, { type: 'enter', row: 'carry', column: 1, digit: '1' });
+    expect(after.carries).toEqual({ '1': '1' });
+    const events = emit(before, after, { type: 'enter', row: 'carry', column: 1, digit: '1' });
+    expect(events.map((event) => event.name)).toEqual(['cell-entered', 'carry-marked']);
+  });
+
+  it('합 줄이 다 차면 value-changed로 1242를 알린다', () => {
+    const before = fillResult(fillMulPartials(mulState()), [
+      [0, '2'],
+      [1, '4'],
+      [2, '2'],
+    ]);
+    const after = enter(before, 'result', 3, '1');
+    const events = emit(before, after, {
+      type: 'enter',
+      row: 'result',
+      column: 3,
+      digit: '1',
+    });
+    expect(events.map((event) => event.name)).toEqual(['cell-entered', 'value-changed']);
+    expect(events[1]?.payload).toEqual({ value: '1242' });
+  });
+
+  it('틀린 칸 표시는 Action으로 남고 flaggedCell로 판정한다', () => {
+    let state = fillMulPartials(mulState());
+    state = apply(state, { type: 'flag-cell', row: 'partial', column: 1, index: 1 });
+    let observation = observe(state);
+    expect(observation['flaggedCells']).toEqual([{ row: 'partial', column: 1, index: 1 }]);
+    expect(flaggedCell(observation, { row: 'partial', column: 1, index: 1 })).toBe(true);
+    expect(flaggedCell(observation, { row: 'partial', column: 2, index: 1 })).toBe(false);
+
+    // 다시 누르면 표시가 풀린다.
+    state = apply(state, { type: 'flag-cell', row: 'partial', column: 1, index: 1 });
+    observation = observe(state);
+    expect(observation['flaggedCells']).toEqual([]);
+  });
+
+  it('add·sub에서는 flag-cell을 무시한다', () => {
+    const state = stateOf({ mode: 'add' });
+    expect(apply(state, { type: 'flag-cell', row: 'result', column: 0 })).toBe(state);
+  });
+
+  it('연결 강조는 linkHighlights에 남고, 다음 입력에서 지워진다', () => {
+    let state = apply(mulState(), {
+      type: 'link-mark',
+      marks: [{ kind: 'carry', column: 1 }],
+      fill: [],
+      crosses: [],
+      tens: [],
+    });
+    const observation = observe(state);
+    expect(observation['linkHighlights']).toEqual(['carry:1']);
+    expect(linkMarked(observation, { kind: 'carry', column: 1 })).toBe(true);
+    expect(linkMarked(observation, { kind: 'carry', column: 2 })).toBe(false);
+
+    state = enterPartial(state, 0, 0, '2');
+    expect(observe(state)['linkHighlights']).toEqual([]);
+  });
+
+  it('E04 부분곱 색은 줄 index별로 남는다', () => {
+    let state = apply(mulState(), {
+      type: 'link-colors',
+      colors: { '0': 2, '1': 1 },
+    });
+    expect(observe(state)['rowColors']).toEqual({ '0': 2, '1': 1 });
+    state = apply(state, { type: 'link-colors', colors: {} });
+    expect(observe(state)['rowColors']).toEqual({});
+  });
+});
+
+describe('E07 estimate', () => {
+  function estimateState(config: ColumnCalcConfig = {}): ColumnCalcState {
+    return stateOf({ mode: 'estimate', op: 'add', a: '389', b: '412', ...config });
+  }
+
+  function typeEstimate(state: ColumnCalcState, text: string): ColumnCalcState {
+    return [...text].reduce(
+      (current, digit) => apply(current, { type: 'enter-estimate', digit }),
+      state,
+    );
+  }
+
+  it('어림값을 잠그면 estimate-locked를 내고 격자를 연다', () => {
+    const before = typeEstimate(estimateState(), '800');
+    expect(before.phase).toBe('estimate');
+    const after = apply(before, { type: 'lock-estimate' });
+    expect(after.phase).toBe('calc');
+    expect(after.selected).toEqual({ row: 'result', column: 0 });
+
+    const events = emit(before, after, { type: 'lock-estimate' });
+    expect(events).toContainEqual({
+      name: 'estimate-locked',
+      payload: { estimate: '800' },
+    });
+  });
+
+  it('어림값이 없으면 잠그지 않고 이벤트도 없다', () => {
+    const state = estimateState();
+    expect(apply(state, { type: 'lock-estimate' })).toBe(state);
+    expect(emit(state, state, { type: 'lock-estimate' })).toEqual([]);
+  });
+
+  it('결과가 완성되면 signal-changed로 초록을 알린다', () => {
+    let state = apply(typeEstimate(estimateState(), '800'), { type: 'lock-estimate' });
+    state = apply(state, { type: 'enter', row: 'result', column: 0, digit: '1' });
+    state = apply(state, { type: 'enter', row: 'result', column: 1, digit: '0' });
+    const before = state;
+    const after = apply(state, { type: 'enter', row: 'result', column: 2, digit: '8' });
+
+    const observation = observe(after);
+    expect(observation['phase']).toBe('calc');
+    expect(observation['estimate']).toBe('800');
+    expect(observation['signal']).toBe('green');
+    expect(observation['result']).toBe('801');
+    expect(signalIs(observation, { value: 'green' })).toBe(true);
+    expect(signalIs(observation, { value: 'red' })).toBe(false);
+    expect(estimateIs(observation, { value: 800 })).toBe(true);
+    expect(estimateIs(observation, { value: '800' })).toBe(true);
+    expect(estimateIs(observation, { value: '700' })).toBe(false);
+
+    const events = emit(before, after, {
+      type: 'enter',
+      row: 'result',
+      column: 2,
+      digit: '8',
+    });
+    expect(events.map((event) => event.name)).toEqual([
+      'cell-entered',
+      'value-changed',
+      'signal-changed',
+    ]);
+    expect(events[2]?.payload).toEqual({ signal: 'green' });
+  });
+
+  it('어림값을 다시 고치면 격자 입력을 잠시 막고, 잠그면 이어서 쓴다', () => {
+    let state = apply(typeEstimate(estimateState(), '800'), { type: 'lock-estimate' });
+    state = apply(state, { type: 'enter', row: 'result', column: 0, digit: '1' });
+
+    state = apply(state, { type: 'unlock-estimate' });
+    expect(state.phase).toBe('estimate');
+    expect(state.selected).toBeNull();
+    // 다시 어림 단계로 돌아가도 이미 쓴 결과는 지우지 않는다.
+    expect(state.result).toEqual({ '0': '1' });
+    expect(apply(state, { type: 'enter', row: 'result', column: 1, digit: '0' })).toBe(state);
+
+    state = apply(state, { type: 'enter-estimate', digit: null });
+    state = apply(state, { type: 'enter-estimate', digit: null });
+    state = apply(state, { type: 'enter-estimate', digit: null });
+    expect(state.estimate).toBeNull();
+    state = typeEstimate(state, '900');
+    state = apply(state, { type: 'lock-estimate' });
+    expect(state.phase).toBe('calc');
+    expect(observe(state)['estimate']).toBe('900');
+  });
+
+  it('sample은 틀린 결과를 그대로 두고, recheck로 지운 뒤 다시 푼다', () => {
+    let state = estimateState({ sample: '500' });
+    expect(state.hasSample).toBe(true);
+    state = apply(typeEstimate(state, '800'), { type: 'lock-estimate' });
+    expect(observe(state)['signal']).toBe('red');
+
+    const before = state;
+    state = apply(state, { type: 'recheck' });
+    expect(state.rechecked).toBe(true);
+    expect(state.result).toEqual({});
+    expect(observe(state)['signal']).toBeNull();
+    const events = emit(before, state, { type: 'recheck' });
+    expect(events).toContainEqual({ name: 'signal-changed', payload: { signal: null } });
+  });
+
+  it('sample이 없는 과제는 recheck를 무시한다', () => {
+    const state = apply(typeEstimate(estimateState(), '800'), { type: 'lock-estimate' });
+    expect(apply(state, { type: 'recheck' })).toBe(state);
+  });
+});
+
+describe('E07 상태 직렬화', () => {
+  it('곱셈·어림 상태는 JSON으로 그대로 되돌아온다', () => {
+    let mul = fillMulPartials(mulState());
+    mul = apply(mul, { type: 'flag-cell', row: 'partial', column: 1, index: 0 });
+    mul = apply(mul, { type: 'link-colors', colors: { '0': 3 } });
+    assertSerializable(mul);
+    expect(JSON.parse(JSON.stringify(mul))).toEqual(mul);
+
+    let estimate = stateOf({
+      mode: 'estimate',
+      op: 'add',
+      a: '389',
+      b: '412',
+      sample: '500',
+    });
+    for (const digit of '800') {
+      estimate = apply(estimate, { type: 'enter-estimate', digit });
+    }
+    estimate = apply(estimate, { type: 'lock-estimate' });
+    assertSerializable(estimate);
+    expect(JSON.parse(JSON.stringify(estimate))).toEqual(estimate);
   });
 });

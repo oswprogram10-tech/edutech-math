@@ -84,7 +84,8 @@ test('세 과제를 차례로 풀고, 실패해도 정답·판정 상태를 노�
   await page.getByRole('button', { name: '다음 과제' }).click();
 
   // 과제 3: 연결된 두 판. 왼쪽에 놓으면 오른쪽에도 놓인다.
-  await expect(page.getByText('과제 3 / 8')).toBeVisible();
+  // T046에서 demo.A4·A5를 뒤에 덧붙여 전체 과제 수가 8 → 10이 되었다.
+  await expect(page.getByText('과제 3 / 10')).toBeVisible();
   await expect(panel(page, 'left')).toBeVisible();
   await expect(panel(page, 'right')).toBeVisible();
 
