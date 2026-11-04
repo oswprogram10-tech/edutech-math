@@ -126,9 +126,17 @@ test('키보드로 46×27의 부분곱 322·920과 합 1242를 쓴다', async ({
   await selectMode(page, 'mul');
   await pollObservation(page, (observation) => observation.mode === 'mul');
 
-  // 일의 자리부터: 첫째 줄 223, 둘째 줄 29, 합 2421.
+  // 일의 자리부터: 첫째 줄 223, 둘째 줄 29. 커서는 여분 앞자리 칸까지 가므로
+  // 아래 줄로 내려가 일의 자리로 옮긴 뒤 합 2421을 쓴다.
   await page.getByTestId('column-grid').focus();
-  for (const key of '223292421') {
+  for (const key of '22329') {
+    await page.keyboard.press(key);
+  }
+  await page.keyboard.press('ArrowDown');
+  for (let step = 0; step < 3; step += 1) {
+    await page.keyboard.press('ArrowRight');
+  }
+  for (const key of '2421') {
     await page.keyboard.press(key);
   }
   await pollObservation(page, (observation) => observation.complete === true);

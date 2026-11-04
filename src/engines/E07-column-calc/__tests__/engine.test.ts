@@ -493,6 +493,9 @@ describe('E07 mul', () => {
     expect(state.selected).toEqual({ row: 'partial', column: 1, index: 1 });
     state = enterPartial(state, 1, 1, '2');
     state = enterPartial(state, 1, 2, '9');
+    // 정답(920)은 끝났어도 여분 앞자리 칸으로 간다. 커서가 답의 자릿수를 알려 주지 않는다.
+    expect(state.selected).toEqual({ row: 'partial', column: 3, index: 1 });
+    state = enterPartial(state, 1, 3, '0');
     expect(state.selected).toEqual({ row: 'result', column: 0 });
   });
 
