@@ -1,0 +1,556 @@
+{
+  "unit": "g2s2u2",
+  "title": "곱셈구구",
+  "activities": [
+    {
+      "id": "g2s2u2.A1",
+      "title": "무연필 배열판 분할 전략가",
+      "tasks": [
+        {
+          "id": "g2s2u2.A1.T1",
+          "prompt": "6×7 점 배열을 5와 2로 나누어 세어 보고, 모두 몇 개인지 쓰세요.",
+          "engine": "E04",
+          "mode": "split",
+          "cpa": "C",
+          "config": {
+            "mode": "split",
+            "rows": 6,
+            "cols": 7,
+            "maxSplits": 1,
+            "orientation": "either",
+            "snapHints": [5],
+            "showPartials": "color"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "partialsAre", "args": { "products": [30, 12] } },
+              { "kind": "equals", "path": "response.ans.value", "value": "42" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-MUL-SPLIT-PARTIAL-DROP" },
+              "level": 1,
+              "say": "나눈 두 부분을 모두 세었어? 한쪽 조각만 세면 배열 전체가 되나요?"
+            },
+            {
+              "when": { "misconception": "MC-MUL-ADD-CONFUSE" },
+              "level": 1,
+              "say": "6이 몇 줄 있고 한 줄에 몇 개씩 있나요? 두 수를 더하면 배열의 점 수가 되나요?"
+            },
+            {
+              "when": { "misconception": "MC-MUL-FACT-NEIGHBOR" },
+              "level": 1,
+              "say": "6×7은 6×6에서 한 줄을 더한 것과 같아요. 한 줄에 몇 개씩 더 늘어나나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "split" },
+              "level": 1,
+              "say": "5개씩 묶인 조각과 2개씩 묶인 조각이 각각 몇 줄인가요? 두 조각을 합치면 몇 줄이 되나요?"
+            },
+            {
+              "when": { "misconception": "MC-MUL-SPLIT-PARTIAL-DROP" },
+              "level": 2,
+              "show": { "engine": "E04", "overlay": "known-fact", "args": { "index": 1 } }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "split" },
+              "level": 2,
+              "show": { "engine": "E04", "overlay": "row-count" }
+            },
+            {
+              "when": { "misconception": "MC-MUL-SPLIT-PARTIAL-DROP" },
+              "level": 3,
+              "backtrack": "g2s2u2.split-strategy"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "split" },
+              "level": 3,
+              "backtrack": "g2s2u2.split-strategy"
+            }
+          ],
+          "concepts": ["g2s2u2.facts-by-table", "g2s2u2.split-strategy"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-MUL-SPLIT-PARTIAL-DROP",
+              "args": { "a": "6", "parts": ["5", "2"] },
+              "path": "response.ans.value"
+            },
+            {
+              "code": "MC-MUL-ADD-CONFUSE",
+              "args": { "a": "6", "b": "7" },
+              "path": "response.ans.value"
+            },
+            {
+              "code": "MC-MUL-FACT-NEIGHBOR",
+              "args": { "a": "6", "b": "7" },
+              "path": "response.ans.value"
+            }
+          ],
+          "response": {
+            "fields": [{ "kind": "number", "id": "ans", "label": "배열의 점 수", "forms": ["integer"] }]
+          }
+        },
+        {
+          "id": "g2s2u2.A1.T2",
+          "prompt": "아는 곱셈으로 나누어 7×8을 구하고 '분할 기록하기'를 눌러 보세요.",
+          "engine": "E04",
+          "mode": "split",
+          "cpa": "P",
+          "config": {
+            "mode": "split",
+            "rows": 7,
+            "cols": 8,
+            "maxSplits": 1,
+            "orientation": "either",
+            "snapHints": [5],
+            "showPartials": "color"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "distinctSplitsAtLeast", "args": { "count": 1 } },
+              { "kind": "equals", "path": "response.ans.value", "value": "56" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-MUL-ADD-CONFUSE" },
+              "level": 1,
+              "say": "7이 몇 줄 있고 한 줄에 몇 개씩 있나요? 두 수를 더하면 배열의 점 수가 되나요?"
+            },
+            {
+              "when": { "misconception": "MC-MUL-FACT-NEIGHBOR" },
+              "level": 1,
+              "say": "7×8은 7×7에서 한 줄을 더한 것과 같아요. 한 줄에 몇 개씩 더 늘어나나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "split" },
+              "level": 1,
+              "say": "7×8을 7×5와 7×3처럼 아는 곱으로 나누면 두 조각이 각각 몇 개인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "split" },
+              "level": 2,
+              "show": { "engine": "E04", "overlay": "row-count" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "split" },
+              "level": 3,
+              "backtrack": "g2s2u2.split-strategy"
+            }
+          ],
+          "concepts": ["g2s2u2.split-strategy", "g2s2u2.facts-by-table"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-MUL-ADD-CONFUSE",
+              "args": { "a": "7", "b": "8" },
+              "path": "response.ans.value"
+            },
+            {
+              "code": "MC-MUL-FACT-NEIGHBOR",
+              "args": { "a": "7", "b": "8" },
+              "path": "response.ans.value"
+            }
+          ],
+          "response": {
+            "fields": [{ "kind": "number", "id": "ans", "label": "모두 몇 개인지", "forms": ["integer"] }]
+          }
+        },
+        {
+          "id": "g2s2u2.A1.T3",
+          "prompt": "서로 다른 두 가지 방법으로 8×9를 나누고, 방법마다 '분할 기록하기'를 누르세요.",
+          "engine": "E04",
+          "mode": "split",
+          "cpa": "P",
+          "config": {
+            "mode": "split",
+            "rows": 8,
+            "cols": 9,
+            "maxSplits": 1,
+            "orientation": "either",
+            "snapHints": [5],
+            "showPartials": "color"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "distinctSplitsAtLeast", "args": { "count": 2 } },
+              { "kind": "equals", "path": "response.ans.value", "value": "72" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-MUL-FACT-NEIGHBOR" },
+              "level": 1,
+              "say": "8×9는 8×8에서 한 줄을 더한 것과 같아요. 한 줄에 몇 개씩 더 늘어나나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "split" },
+              "level": 1,
+              "say": "가로로 나눈 방법과 세로로 나눈 방법이 서로 다른 분할인가요? 두 방법을 모두 기록했나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "split" },
+              "level": 2,
+              "show": { "engine": "E04", "overlay": "row-count" }
+            },
+            {
+              "when": { "misconception": "MC-MUL-FACT-NEIGHBOR" },
+              "level": 3,
+              "backtrack": "g2s2u2.table-step"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "split" },
+              "level": 3,
+              "backtrack": "g2s2u2.split-strategy"
+            }
+          ],
+          "concepts": ["g2s2u2.split-strategy", "g2s2u2.facts-by-table"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-MUL-FACT-NEIGHBOR",
+              "args": { "a": "8", "b": "9" },
+              "path": "response.ans.value"
+            }
+          ],
+          "response": {
+            "fields": [{ "kind": "number", "id": "ans", "label": "8×9의 곱", "forms": ["integer"] }]
+          }
+        },
+        {
+          "id": "g2s2u2.A1.T4",
+          "prompt": "10줄 배열에서 '한 줄 늘이기'를 한 번 눌러 한 줄을 빼고, 9×6을 구해 보세요.",
+          "engine": "E04",
+          "mode": "split",
+          "cpa": "P",
+          "config": {
+            "mode": "split",
+            "rows": 10,
+            "cols": 6,
+            "maxSplits": 1,
+            "orientation": "either",
+            "snapHints": [5],
+            "showPartials": "color",
+            "allowExtend": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "partialsAre", "args": { "products": [60, 6] } },
+              { "kind": "equals", "path": "response.ans.value", "value": "54" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-MUL-FACT-NEIGHBOR" },
+              "level": 1,
+              "say": "9×6은 9×5에서 한 줄을 더한 것과 같아요. 한 줄에 몇 개씩 더 늘어나나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "split" },
+              "level": 1,
+              "say": "10줄 전체에서 뺄 한 줄은 몇 개인가요? 10×6에서 그만큼 빼면 몇 개가 남나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "split" },
+              "level": 2,
+              "show": { "engine": "E04", "overlay": "known-fact", "args": { "index": 1 } }
+            },
+            {
+              "when": { "misconception": "MC-MUL-FACT-NEIGHBOR" },
+              "level": 3,
+              "backtrack": "g2s2u2.table-step"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "split" },
+              "level": 3,
+              "backtrack": "g2s2u2.table-step"
+            }
+          ],
+          "concepts": ["g2s2u2.table-step", "g2s2u2.split-strategy"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-MUL-FACT-NEIGHBOR",
+              "args": { "a": "9", "b": "6" },
+              "path": "response.ans.value"
+            }
+          ],
+          "response": {
+            "fields": [{ "kind": "number", "id": "ans", "label": "9×6의 곱", "forms": ["integer"] }]
+          }
+        }
+      ]
+    },
+    {
+      "id": "g2s2u2.A2",
+      "title": "곱셈표 대칭 색칠 보드",
+      "tasks": [
+        {
+          "id": "g2s2u2.A2.T1",
+          "prompt": "곱셈표에서 4단 줄을 채워 보세요.",
+          "engine": "E04",
+          "mode": "times-table",
+          "cpa": "P",
+          "config": {
+            "mode": "times-table",
+            "size": [9, 9],
+            "prefill": "none",
+            "symmetryReveal": true,
+            "colorSameValue": true
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "cellsMatch",
+            "args": {
+              "cells": [
+                { "r": 4, "c": 1, "value": 4 },
+                { "r": 4, "c": 2, "value": 8 },
+                { "r": 4, "c": 3, "value": 12 },
+                { "r": 4, "c": 4, "value": 16 },
+                { "r": 4, "c": 5, "value": 20 },
+                { "r": 4, "c": 6, "value": 24 },
+                { "r": 4, "c": 7, "value": 28 },
+                { "r": 4, "c": 8, "value": 32 },
+                { "r": 4, "c": 9, "value": 36 }
+              ]
+            }
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "times-table" },
+              "level": 1,
+              "say": "4단 줄은 4, 8, 12처럼 4씩 커져요. 4×7 다음 칸은 4를 몇 번 더한 수인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "times-table" },
+              "level": 2,
+              "show": { "engine": "E04", "overlay": "row-count" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "times-table" },
+              "level": 3,
+              "backtrack": "g2s2u2.table-step"
+            }
+          ],
+          "concepts": ["g2s2u2.facts-by-table", "g2s2u2.table-step"],
+          "submit": "button"
+        },
+        {
+          "id": "g2s2u2.A2.T2",
+          "prompt": "4×7과 곱이 같은 다른 칸을 골라 보세요.",
+          "engine": "E04",
+          "mode": "times-table",
+          "cpa": "P",
+          "config": {
+            "mode": "times-table",
+            "size": [9, 9],
+            "prefill": "rows-2-5",
+            "symmetryReveal": true,
+            "colorSameValue": true
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "selectedAre",
+            "args": { "cells": ["7,4"] }
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "times-table" },
+              "level": 1,
+              "say": "곱셈표를 대각선으로 접으면 4×7 칸은 어느 칸과 겹치나요? 두 수의 순서만 바뀐 칸을 찾아보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "times-table" },
+              "level": 2,
+              "show": { "engine": "E04", "overlay": "fold-diagonal" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "times-table" },
+              "level": 3,
+              "backtrack": "g2s2u2.table-symmetry"
+            }
+          ],
+          "concepts": ["g2s2u2.table-symmetry"],
+          "submit": "button"
+        },
+        {
+          "id": "g2s2u2.A2.T3",
+          "prompt": "대각선으로 접으면 같은 수끼리 겹칠까요?",
+          "engine": "E04",
+          "mode": "times-table",
+          "cpa": "P",
+          "config": {
+            "mode": "times-table",
+            "size": [9, 9],
+            "prefill": "rows-2-5",
+            "symmetryReveal": true,
+            "colorSameValue": true
+          },
+          "goal": { "kind": "equals", "path": "response.fold.selected", "value": ["yes"] },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "times-table" },
+              "level": 1,
+              "say": "4×7 칸과 7×4 칸을 보세요. 두 수의 순서만 바뀌면 곱은 어떻게 되나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "times-table" },
+              "level": 2,
+              "show": { "engine": "E04", "overlay": "fold-diagonal" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "times-table" },
+              "level": 3,
+              "backtrack": "g2s2u2.table-symmetry"
+            }
+          ],
+          "concepts": ["g2s2u2.table-symmetry"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "fold",
+                "label": "접었을 때",
+                "multiple": false,
+                "options": [
+                  { "id": "yes", "label": "예" },
+                  { "id": "no", "label": "아니요" }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g2s2u2.A2.T4",
+          "prompt": "1×5, 0×5, 5×0의 곱을 각각 쓰세요.",
+          "engine": "E04",
+          "mode": "times-table",
+          "cpa": "A",
+          "config": {
+            "mode": "times-table",
+            "size": [9, 9],
+            "prefill": "rows-2-5",
+            "symmetryReveal": true,
+            "colorSameValue": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "response.f1.value", "value": "5" },
+              { "kind": "equals", "path": "response.f2.value", "value": "0" },
+              { "kind": "equals", "path": "response.f3.value", "value": "0" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-MUL-ZERO-ONE" },
+              "level": 1,
+              "say": "접시가 0개면 사탕은 몇 개일까요? 어떤 수에 1을 곱하면 그 수가 그대로인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "times-table" },
+              "level": 1,
+              "say": "5개씩 담긴 접시가 하나도 없으면 사탕은 몇 개인가요? 접시 하나에 5개씩 있으면 몇 개인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "times-table" },
+              "level": 2,
+              "say": "0×5는 0이 5개 있는 것과 같아요. 5×0은 5가 하나도 없는 것과 같아요. 두 경우 모두 얼마인가요?"
+            },
+            {
+              "when": { "misconception": "MC-MUL-ZERO-ONE" },
+              "level": 3,
+              "backtrack": "g2s2u2.one-zero"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "times-table" },
+              "level": 3,
+              "backtrack": "g2s2u2.one-zero"
+            }
+          ],
+          "concepts": ["g2s2u2.one-zero"],
+          "submit": "button",
+          "showEngine": false,
+          "diagnose": [
+            {
+              "code": "MC-MUL-ZERO-ONE",
+              "args": { "a": "1", "b": "5" },
+              "path": "response.f1.value"
+            },
+            {
+              "code": "MC-MUL-ZERO-ONE",
+              "args": { "a": "0", "b": "5" },
+              "path": "response.f2.value"
+            },
+            {
+              "code": "MC-MUL-ZERO-ONE",
+              "args": { "a": "5", "b": "0" },
+              "path": "response.f3.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "f1", "label": "1×5", "forms": ["integer"] },
+              { "kind": "number", "id": "f2", "label": "0×5", "forms": ["integer"] },
+              { "kind": "number", "id": "f3", "label": "5×0", "forms": ["integer"] }
+            ]
+          }
+        },
+        {
+          "id": "g2s2u2.A2.T5",
+          "prompt": "곱이 24인 칸을 모두 고르고, 몇 칸을 골랐는지 쓰세요.",
+          "engine": "E04",
+          "mode": "times-table",
+          "cpa": "P",
+          "config": {
+            "mode": "times-table",
+            "size": [9, 9],
+            "prefill": "rows-2-5",
+            "symmetryReveal": true,
+            "colorSameValue": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "selectedAre",
+                "args": { "cells": ["3,8", "4,6", "6,4", "8,3"] }
+              },
+              { "kind": "equals", "path": "response.count.value", "value": "4" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "times-table" },
+              "level": 1,
+              "say": "24가 나오는 곱을 작은 수부터 짝지어 보세요. 3×8을 찾았으면 순서를 바꾼 칸도 같은 곱인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "times-table" },
+              "level": 2,
+              "show": { "engine": "E04", "overlay": "fold-diagonal" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "times-table" },
+              "level": 3,
+              "backtrack": "g2s2u2.table-symmetry"
+            }
+          ],
+          "concepts": ["g2s2u2.table-symmetry", "g2s2u2.facts-by-table"],
+          "submit": "button",
+          "response": {
+            "fields": [{ "kind": "number", "id": "count", "label": "고른 칸 수", "forms": ["integer"] }]
+          }
+        }
+      ]
+    }
+  ]
+}
