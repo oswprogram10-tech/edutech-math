@@ -12,7 +12,7 @@ const COLORS = ['#2f6fde', '#e8872e', '#2f9e6b', '#b455c8', '#c94b4b', '#5b728f'
 export function SizeCompareOverlay({
   state,
 }: OverlayProps<FractionModelConfig, FractionModelState>) {
-  if (state.mode !== 'partition') return null;
+  if (state.mode !== 'partition' || 'variant' in state) return null;
   const pieces = piecesOf(state);
   if (pieces.length === 0) return null;
   const maxArea = Math.max(...pieces.map((piece) => piece.area), 1);

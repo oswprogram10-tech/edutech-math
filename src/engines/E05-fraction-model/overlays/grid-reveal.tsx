@@ -18,6 +18,10 @@ function gridOf(state: FractionModelState): number | null {
     return lcm(da, db);
   }
   if (state.mode === 'shade') return state.parts;
+  if (state.mode === 'multiply') {
+    // 두 방향 칸을 합친 격자 수. 너무 많으면 격자 선만 보이므로 상한을 둔다.
+    return Math.min(60, Math.max(2, state.aParts * state.bParts));
+  }
   if (state.mode === 'add-sub') {
     const a = parseFraction(state.a, '1/2');
     const b = parseFraction(state.b, '1/3');

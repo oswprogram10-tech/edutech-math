@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fractionModelStrings as S } from '../strings.ko';
 import { createInitialState, reduce } from '../reduce';
 import type { FractionModelConfig, FractionModelState, MixedState } from '../types';
+import { LOGICAL_WIDTH } from '../types';
 import { FractionModelView } from '../View';
 
 afterEach(cleanup);
@@ -470,5 +471,164 @@ describe('E05 약분 탐정 partition (묶음 조작)', () => {
       />,
     );
     expect(view.queryByRole('button', { name: S.groupByCells(6) })).toBeNull();
+  });
+});
+
+describe('E05 T049 정답 노출 금지', () => {
+  it('multiply는 곱(1/2)을 쓰지 않는다', () => {
+    const config: FractionModelConfig = {
+      mode: 'multiply',
+      a: '2/3',
+      b: '3/4',
+      build: 'preset',
+    };
+    const text = textOf(config, createInitialState(config));
+    expect(text).not.toContain('1/2');
+  });
+
+  it('divide-measure는 자를 놓기 전에 몫(6)을 쓰지 않는다', () => {
+    const config: FractionModelConfig = {
+      mode: 'divide-measure',
+      dividend: '3/4',
+      divisor: '1/8',
+    };
+    const text = textOf(config, createInitialState(config));
+    expect(text).not.toContain('6');
+  });
+
+  it('share는 접시에 합한 값(3/4)을 쓰지 않는다', () => {
+    const config: FractionModelConfig = {
+      mode: 'partition',
+      variant: 'share',
+      wholes: 3,
+      people: 4,
+      shape: 'circle',
+    };
+    let state = createInitialState(config);
+    for (let whole = 0; whole < 3; whole += 1) {
+      state = reduce(state, { type: 'cut-equal', whole, parts: 4 });
+    }
+    for (let whole = 0; whole < 3; whole += 1) {
+      for (let piece = 0; piece < 4; piece += 1) {
+        state = reduce(state, { type: 'deal-piece', whole, piece, plate: piece });
+      }
+    }
+    const text = textOf(config, state);
+    expect(text).not.toContain('3/4');
+  });
+
+  it('divide-whole은 남긴 값(4/15)과 1/3을 쓰지 않는다', () => {
+    const config: FractionModelConfig = {
+      mode: 'partition',
+      variant: 'divide-whole',
+      fraction: '4/5',
+      divisor: 3,
+    };
+    let state = createInitialState(config);
+    state = reduce(state, { type: 'set-rows', rows: 3 });
+    state = reduce(state, { type: 'keep-row', row: 0 });
+    const text = textOf(config, state);
+    expect(text).not.toContain('4/15');
+    expect(text).not.toContain('1/3');
+  });
+
+  it('showCounts가 꺼져 있으면 칸 수를 숨기고, 켜면 칸 수만 쓴다', () => {
+    const config: FractionModelConfig = {
+      mode: 'multiply',
+      a: '2/3',
+      b: '3/4',
+      build: 'preset',
+    };
+    const state = createInitialState(config);
+    expect(textOf(config, state)).not.toContain(S.multiplyCounts(12, 6));
+    const shown = textOf({ ...config, showCounts: true }, state);
+    expect(shown).toContain(S.multiplyCounts(12, 6));
+    expect(shown).not.toContain('1/2');
+  });
+
+  it('plateLabel이 꺼져 있으면 조각 크기·개수를 숨기고, 켜면 합한 값 없이 쓴다', () => {
+    const config: FractionModelConfig = {
+      mode: 'partition',
+      variant: 'share',
+      wholes: 1,
+      people: 2,
+      shape: 'circle',
+    };
+    let state = createInitialState(config);
+    state = reduce(state, { type: 'cut-equal', whole: 0, parts: 4 });
+    for (let piece = 0; piece < 4; piece += 1) {
+      state = reduce(state, { type: 'deal-piece', whole: 0, piece, plate: piece % 2 });
+    }
+    expect(textOf(config, state)).not.toContain(S.pieceCountLabel('1/4', 2));
+    const labelled = textOf({ ...config, plateLabel: true }, state);
+    expect(labelled).toContain(S.pieceCountLabel('1/4', 2));
+    expect(labelled).not.toContain('1/2');
+  });
+});
+
+describe('E05 T049 divide-measure 눈금·자 배치', () => {
+  const config: FractionModelConfig = {
+    mode: 'divide-measure',
+    dividend: '3/4',
+    divisor: '2/3',
+  };
+
+  function twoRulers(): FractionModelState {
+    let state = createInitialState(config);
+    state = reduce(state, { type: 'lay-ruler' });
+    state = reduce(state, { type: 'lay-ruler' });
+    return state;
+  }
+
+  it('자 두 번을 놓아도 모든 자 사각형이 캔버스 안에 들어온다', () => {
+    const view = renderView(config, twoRulers());
+    const rulers = [
+      ...view.container.querySelectorAll(
+        '[data-testid="measure-ruler"], [data-testid="measure-partial-ruler"]',
+      ),
+    ];
+    expect(rulers).toHaveLength(2);
+    for (const ruler of rulers) {
+      const x = Number(ruler.getAttribute('x'));
+      const width = Number(ruler.getAttribute('width'));
+      expect(x).toBeGreaterThanOrEqual(0);
+      expect(x + width).toBeLessThanOrEqual(LOGICAL_WIDTH);
+    }
+  });
+
+  it('나뉨수 막대 위에 전체 눈금 숫자 0·1·2를 쓰고 분모 칸 선을 그린다', () => {
+    const view = renderView(config, twoRulers());
+    const labels = [...view.container.querySelectorAll('[data-testid="measure-whole-label"]')].map(
+      (label) => label.textContent,
+    );
+    expect(labels).toEqual(['0', '1', '2']);
+
+    // 나뉨수 3/4은 1/4 칸 3개(경계선 4개), 자 2/3은 1/3 칸 2개(경계선 3개).
+    expect(view.container.querySelectorAll('[data-testid="dividend-part-line"]')).toHaveLength(4);
+    const rulerLines = Array.from(
+      view.container.querySelectorAll('[data-testid="ruler-part-line"]'),
+    ).map((line) => Number(line.getAttribute('x1')));
+    expect(rulerLines).toHaveLength(3);
+    // 자의 한 칸(1/3)은 나뉨수 한 칸(1/4)보다 넓다 — 자 폭을 분모 수로 나누면 2/9가 되어 좁아진다.
+    const dividendLines = Array.from(
+      view.container.querySelectorAll('[data-testid="dividend-part-line"]'),
+    ).map((line) => Number(line.getAttribute('x1')));
+    const rulerCell = (rulerLines[1] ?? 0) - (rulerLines[0] ?? 0);
+    const dividendCell = (dividendLines[1] ?? 0) - (dividendLines[0] ?? 0);
+    expect(rulerCell / dividendCell).toBeCloseTo(4 / 3, 5);
+  });
+});
+
+describe('E05 T049 divide-whole 분모 칸 경계선', () => {
+  it('칠한 부분 안에 세로 경계선을 그려 5칸을 셀 수 있게 한다', () => {
+    const config: FractionModelConfig = {
+      mode: 'partition',
+      variant: 'divide-whole',
+      fraction: '4/5',
+      divisor: 2,
+    };
+    const view = renderView(config, createInitialState(config));
+    const lines = view.container.querySelectorAll('[data-testid="divide-whole-column-line"]');
+    expect(lines).toHaveLength(4);
   });
 });

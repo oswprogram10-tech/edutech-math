@@ -13,6 +13,11 @@ export const fractionModelStrings = {
     addSub: '조각 크기를 먼저 맞춘 뒤 합치거나 덜어 내세요.',
     decimal: '칸을 눌러 색칠하고, 층을 바꾸어 0.1과 0.01을 살펴보세요.',
     decimalSingle: '칸을 눌러 색칠하세요. 왼쪽 단추를 누르면 한 줄이 한꺼번에 색칠돼요.',
+    multiply:
+      '세로 칸과 가로 칸을 놓아 두 분수의 넓이를 겹쳐 보세요. 겹친 칸은 격자 무늬로 보여요.',
+    divideMeasure: '자를 놓아 나뉨수를 재어 보세요. 남은 길이가 자보다 짧으면 부분 자를 놓아요.',
+    share: '전체를 똑같이 자르고, 조각을 골라 접시에 나눠 보세요.',
+    divideWhole: '÷ 카드를 눌러 가로 칸을 열고, 한 줄이나 한 묶음만 남겨 보세요.',
   },
   toolLine: '직선 칼선',
   toolRadial: '중심 칼선',
@@ -86,4 +91,54 @@ export const fractionModelStrings = {
   cutHint: '칼선을 끌거나 아래 버튼을 쓰세요.',
   presetHint: '이미 나뉘어 있어요. 조각을 눌러 색칠해 보세요.',
   keyboardHint: '키보드: Tab으로 조각을 고르고 Enter나 Space로 색칠해요.',
+
+  // T049 multiply
+  multiplyCanvasLabel: '세로 칸과 가로 칸이 겹친 넓이 판',
+  aPartsDown: '세로 칸 줄이기',
+  aPartsUp: '세로 칸 늘리기',
+  aShadedDown: '노랑 칸 줄이기',
+  aShadedUp: '노랑 칸 늘리기',
+  bPartsDown: '가로 칸 줄이기',
+  bPartsUp: '가로 칸 늘리기',
+  bShadedDown: '파랑 칸 줄이기',
+  bShadedUp: '파랑 칸 늘리기',
+  multiplyCounts: (total: number, overlap: number) => `전체 칸 ${total} · 겹친 칸 ${overlap}`,
+  multiplyLegend: '노랑은 세로 빗금, 파랑은 가로 빗금, 겹친 칸은 격자 무늬예요.',
+  multiplyKeyboardHint: '키보드: Tab으로 단추를 고르고 Enter나 Space로 눌러요.',
+
+  // T049 divide-measure
+  measureCanvasLabel: '나뉨수 막대와 자 막대',
+  layRuler: '자 놓기',
+  liftRuler: '자 들기',
+  clearRulers: '자 모두 들기',
+  rulerStamp: (index: number) => `${index + 1}번째 자`,
+  measureHint: '자를 놓으면 놓은 자마다 번호가 찍혀요.',
+  measureKeyboardHint: '키보드: Space나 Enter로 자를 놓고, Backspace로 들어요.',
+
+  // T049 partition variant=share
+  shareCanvasLabel: '전체를 나누어 접시에 나르는 판',
+  wholeGroup: (index: number) => `${index + 1}번째 전체`,
+  equalCut: (whole: number, parts: number) => `${whole + 1}번째 전체 똑같이 ${parts}조각`,
+  pieceAria: (whole: number, piece: number) => `${whole + 1}번째 전체 ${piece + 1}번째 조각`,
+  pieceSelectedAria: (whole: number, piece: number) =>
+    `${whole + 1}번째 전체 ${piece + 1}번째 조각 선택됨`,
+  plateButton: (index: number) => `접시 ${index + 1}`,
+  plateButtonSelected: (index: number) => `접시 ${index + 1}에 놓기`,
+  returnPiece: '전체로 되돌리기',
+  cutPartsDown: '조각 수 줄이기',
+  cutPartsUp: '조각 수 늘리기',
+  shareHint: '조각을 누르고 접시를 누르면 그 접시에 놓여요.',
+  shareKeyboardHint: '키보드: Tab으로 조각을 고르고 Enter, 이어서 접시 번호 키를 눌러요.',
+  pieceCountLabel: (piece: string, count: number) => `${piece} 조각 ${count}개`,
+
+  // T049 partition variant=divide-whole
+  divideWholeCanvasLabel: '나뉨수를 가로로 나누는 판',
+  divisorCard: (divisor: number) => `÷ ${divisor}`,
+  rowsDown: '가로 칸 줄이기',
+  rowsUp: '가로 칸 늘리기',
+  keepRow: (row: number) => `${row + 1}번째 줄만 남기기`,
+  bundle: '묶어서 나누기',
+  keepBundle: (index: number) => `${index + 1}번째 묶음만 남기기`,
+  divideWholeHint: '가로 칸을 늘리면 칠한 띠가 가로로 나뉘어요.',
+  morphEquation: (from: string, to: string) => `${from} → ${to}`,
 } as const;

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { assertSerializable } from '../../../core/engine-sdk';
 import { observe } from '../observe';
 import { createInitialState, reduce } from '../reduce';
+import { isShareState } from '../types';
 import type {
   AddSubState,
   DecimalGridState,
@@ -503,6 +504,259 @@ describe('E05 decimal-grid', () => {
   });
 });
 
+describe('E05 multiply (T049)', () => {
+  const multiply = (config: FractionModelConfig = {}): FractionModelState =>
+    createInitialState({ mode: 'multiply', ...config });
+
+  it('2/3 × 3/4: 학생이 놓으면 겹침 6칸·전체 12칸·곱 1/2', () => {
+    let state = multiply({ a: '2/3', b: '3/4' });
+    let observation = observe(state, { mode: 'multiply' });
+    expect(observation).toMatchObject({
+      a: '0',
+      b: '0',
+      overlapCells: 0,
+      product: '0',
+    });
+
+    state = apply(state, { type: 'set-shaded', side: 'a', count: 2 });
+    state = apply(state, { type: 'set-shaded', side: 'b', count: 3 });
+    observation = observe(state, { mode: 'multiply' });
+    expect(observation).toMatchObject({
+      a: '2/3',
+      b: '3/4',
+      aParts: 3,
+      bParts: 4,
+      squares: 1,
+      overlapCells: 6,
+      totalCells: 12,
+      product: '1/2',
+    });
+  });
+
+  it('preset이면 처음부터 a·b대로 놓인다', () => {
+    const state = multiply({ a: '2/3', b: '3/4', build: 'preset' });
+    expect(observe(state, { mode: 'multiply' })).toMatchObject({
+      overlapCells: 6,
+      product: '1/2',
+    });
+  });
+
+  it('1 1/2 × 2/3: 사각형 2개에 걸쳐 칠하고 곱은 1', () => {
+    const state = multiply({ a: '1 1/2', b: '2/3', build: 'preset' });
+    expect(observe(state, { mode: 'multiply' })).toMatchObject({
+      a: '3/2',
+      b: '2/3',
+      aParts: 2,
+      squares: 2,
+      product: '1',
+    });
+  });
+
+  it('4 × 2/3: 사각형 4개, 곱은 8/3', () => {
+    const state = multiply({ a: 4, b: '2/3', build: 'preset' });
+    expect(observe(state, { mode: 'multiply' })).toMatchObject({
+      a: '4',
+      squares: 4,
+      product: '8/3',
+    });
+  });
+
+  it('b 쪽 색칠은 bParts를 넘지 않고 a 쪽은 전체 4개까지만 센다', () => {
+    let state = multiply({ a: '2/3', b: '3/4' });
+    state = apply(state, { type: 'set-shaded', side: 'b', count: 99 });
+    expect(state.mode === 'multiply' ? state.bShaded : -1).toBe(4);
+
+    state = apply(state, { type: 'set-shaded', side: 'a', count: 99 });
+    expect(state.mode === 'multiply' ? state.aShaded : -1).toBe(12);
+  });
+
+  it('범위를 벗어난 칸 수는 무시하거나 한도로 자른다', () => {
+    const state = multiply({ a: '2/3', b: '3/4' });
+    expect(apply(state, { type: 'set-shaded', side: 'b', count: Number.NaN })).toBe(state);
+  });
+});
+
+describe('E05 divide-measure (T049)', () => {
+  const measure = (config: FractionModelConfig = {}): FractionModelState =>
+    createInitialState({ mode: 'divide-measure', ...config });
+
+  function lay(state: FractionModelState, times: number): FractionModelState {
+    let next = state;
+    for (let index = 0; index < times; index += 1) {
+      next = apply(next, { type: 'lay-ruler' });
+    }
+    return next;
+  }
+
+  it('3/4 ÷ 1/8: 자를 6번 놓으면 정확히 다 잰다', () => {
+    const state = lay(measure({ dividend: '3/4', divisor: '1/8' }), 6);
+    const observation = observe(state, { mode: 'divide-measure' });
+    expect(observation).toMatchObject({
+      dividend: '3/4',
+      divisor: '1/8',
+      rulersLaid: 6,
+      partial: null,
+      measured: '6',
+      measureComplete: true,
+    });
+  });
+
+  it('3/4 ÷ 2/3: 온전한 자 1개 + 부분 자 1/8', () => {
+    const state = lay(measure({ dividend: '3/4', divisor: '2/3' }), 2);
+    const observation = observe(state, { mode: 'divide-measure' });
+    expect(observation).toMatchObject({
+      rulersLaid: 1,
+      partial: '1/8',
+      measured: '9/8',
+      measureComplete: true,
+    });
+  });
+
+  it('2 ÷ 1/3: 자를 6번 놓는다', () => {
+    const state = lay(measure({ dividend: 2, divisor: '1/3' }), 6);
+    expect(observe(state, { mode: 'divide-measure' })).toMatchObject({
+      rulersLaid: 6,
+      partial: null,
+      measured: '6',
+      measureComplete: true,
+    });
+  });
+
+  it('부분 자를 놓은 뒤에는 더 놓지 않고, 들기는 부분 자부터 지운다', () => {
+    let state = lay(measure({ dividend: '3/4', divisor: '2/3' }), 2);
+    const afterPartial = state;
+    expect(apply(state, { type: 'lay-ruler' })).toBe(afterPartial);
+
+    state = apply(state, { type: 'lift-ruler' });
+    expect(observe(state, { mode: 'divide-measure' })).toMatchObject({
+      rulersLaid: 1,
+      partial: null,
+      measured: '1',
+    });
+    state = apply(state, { type: 'lift-ruler' });
+    expect(observe(state, { mode: 'divide-measure' })).toMatchObject({
+      rulersLaid: 0,
+      partial: null,
+      measured: '0',
+    });
+  });
+});
+
+describe('E05 partition variant=share (T049)', () => {
+  function share(config: FractionModelConfig = {}): FractionModelState {
+    return createInitialState({ mode: 'partition', variant: 'share', ...config });
+  }
+
+  function dealAll(state: FractionModelState): FractionModelState {
+    let next = state;
+    for (let whole = 0; whole < 3; whole += 1) {
+      for (let piece = 0; piece < 4; piece += 1) {
+        next = apply(next, { type: 'deal-piece', whole, piece, plate: piece });
+      }
+    }
+    return next;
+  }
+
+  it('3 전체를 4조각씩 나누어 4접시에 나르면 접시마다 3/4이고 모두 같다', () => {
+    let state = share({ wholes: 3, people: 4 });
+    for (let whole = 0; whole < 3; whole += 1) {
+      state = apply(state, { type: 'cut-equal', whole, parts: 4 });
+    }
+    state = dealAll(state);
+    const observation = observe(state, { mode: 'partition' });
+    expect(observation).toMatchObject({
+      variant: 'share',
+      plates: ['3/4', '3/4', '3/4', '3/4'],
+      platesEqual: true,
+      allDealt: true,
+      piecesPerWhole: [4, 4, 4],
+      people: 4,
+      equal: true,
+    });
+  });
+
+  it('한 전체를 다르게 자르면 equal이 꺼진다', () => {
+    let state = share({ wholes: 2, people: 3, shape: 'rect' });
+    state = apply(state, { type: 'cut-equal', whole: 0, parts: 4 });
+    state = apply(state, {
+      type: 'cut',
+      tool: 'line',
+      whole: 1,
+      points: [
+        { x: 300, y: 150 },
+        { x: 300, y: 450 },
+      ],
+    });
+    const observation = observe(state, { mode: 'partition' });
+    expect(observation['piecesPerWhole']).toEqual([4, 2]);
+    expect(observation['equal']).toBe(false);
+  });
+
+  it('한 조각은 한 접시에만 놓인다(다시 놓으면 옮겨진다)', () => {
+    let state = share({ wholes: 1, people: 2 });
+    state = apply(state, { type: 'cut-equal', whole: 0, parts: 2 });
+    state = apply(state, { type: 'deal-piece', whole: 0, piece: 0, plate: 0 });
+    state = apply(state, { type: 'deal-piece', whole: 0, piece: 0, plate: 1 });
+    const observation = observe(state, { mode: 'partition' });
+    expect(observation['plates']).toEqual(['0', '1/2']);
+    expect(observation['allDealt']).toBe(false);
+
+    expect(isShareState(state) ? state.wholes[0]?.pieces[0]?.plate : null).toBe(1);
+  });
+});
+
+describe('E05 partition variant=divide-whole (T049)', () => {
+  function divideWhole(config: FractionModelConfig = {}): FractionModelState {
+    return createInitialState({ mode: 'partition', variant: 'divide-whole', ...config });
+  }
+
+  it('4/5는 약분 퍼즐(simplify)로 바뀌지 않는다', () => {
+    const state = divideWhole({ fraction: '4/5', divisor: 3 });
+    expect(state.mode).toBe('partition');
+    expect('simplify' in state).toBe(false);
+    expect(observe(state, { mode: 'partition' })).toMatchObject({
+      variant: 'divide-whole',
+      dividend: '4/5',
+      divisor: 3,
+      rows: 1,
+      kept: null,
+      bundled: false,
+    });
+  });
+
+  it('가로 3칸을 열고 한 줄만 남기면 4/15', () => {
+    let state = divideWhole({ fraction: '4/5', divisor: 3 });
+    state = apply(state, { type: 'set-rows', rows: 3 });
+    state = apply(state, { type: 'keep-row', row: 1 });
+    expect(observe(state, { mode: 'partition' })).toMatchObject({
+      rows: 3,
+      keptRow: 1,
+      kept: '4/15',
+    });
+  });
+
+  it('6/7 ÷ 3은 묶어서 나누면 한 묶음이 2/7', () => {
+    let state = divideWhole({ fraction: '6/7', divisor: 3 });
+    state = apply(state, { type: 'bundle' });
+    state = apply(state, { type: 'keep-bundle', index: 0 });
+    expect(observe(state, { mode: 'partition' })).toMatchObject({
+      bundled: true,
+      kept: '2/7',
+    });
+  });
+
+  it('2 1/4 ÷ 3: 사각형 3개, 한 줄만 남기면 3/4', () => {
+    let state = divideWhole({ fraction: '2 1/4', divisor: 3 });
+    state = apply(state, { type: 'set-rows', rows: 3 });
+    state = apply(state, { type: 'keep-row', row: 0 });
+    expect(observe(state, { mode: 'partition' })).toMatchObject({
+      squares: 3,
+      rows: 3,
+      kept: '3/4',
+    });
+  });
+});
+
 describe('E05 직렬화', () => {
   it('모든 모드의 초기 상태와 Observation이 JSON으로 안전하다', () => {
     const configs: FractionModelConfig[] = [
@@ -520,6 +774,10 @@ describe('E05 직렬화', () => {
       { mode: 'mixed', direction: 'improper-to-mixed', value: '11/4' },
       { mode: 'add-sub', op: '+', a: '2/5', b: '4/5' },
       { mode: 'decimal-grid', size: 10, layers: 2 },
+      { mode: 'multiply', a: '1 1/2', b: '2/3', build: 'preset', showCounts: true },
+      { mode: 'divide-measure', dividend: '3/4', divisor: '1/8' },
+      { mode: 'partition', variant: 'share', wholes: 3, people: 4 },
+      { mode: 'partition', variant: 'divide-whole', fraction: '4/5', divisor: 3 },
     ];
     for (const config of configs) {
       const state = createInitialState(config);

@@ -23,6 +23,11 @@ import { denominatorNumber, gcd, numeratorNumber, parseFraction } from './fracti
 import { piecesOf, simplifyView } from './reduce';
 import { fractionModelStrings as S } from './strings.ko';
 import { CIRCLE_CENTER, CIRCLE_RADIUS, LOGICAL_HEIGHT, LOGICAL_WIDTH } from './types';
+import { isDivideWholeState, isShareState } from './types';
+import { DivideMeasureView } from './views/DivideMeasureView';
+import { DivideWholeView } from './views/DivideWholeView';
+import { MultiplyView } from './views/MultiplyView';
+import { ShareView } from './views/ShareView';
 import type {
   AddSubState,
   CompareState,
@@ -106,8 +111,9 @@ const MIXED_INPUT = /^\s*\d+\s+\d+\s*\/\s*\d+\s*$/;
  * config에 대분수로 적힌 피연산자는 대분수 표기 그대로 보여 준다.
  * 엔진 상태는 값을 가분수 문자열로 들고 있어서 그대로 쓰면 19/6처럼 보인다.
  */
-function operandLabel(configText: string | undefined, stateText: string | null): string {
-  if (configText !== undefined && MIXED_INPUT.test(configText)) return configText.trim();
+function operandLabel(configText: string | number | undefined, stateText: string | null): string {
+  const text = typeof configText === 'number' ? String(configText) : configText;
+  if (text !== undefined && MIXED_INPUT.test(text)) return text.trim();
   return stateText ?? '';
 }
 
@@ -1870,6 +1876,30 @@ export function FractionModelView({
 }: FractionViewProps) {
   switch (state.mode) {
     case 'partition':
+      if (isShareState(state)) {
+        return (
+          <ShareView
+            config={config}
+            state={state}
+            dispatch={dispatch}
+            cpa={cpa}
+            readOnly={readOnly}
+            targetSize={targetSize}
+          />
+        );
+      }
+      if (isDivideWholeState(state)) {
+        return (
+          <DivideWholeView
+            config={config}
+            state={state}
+            dispatch={dispatch}
+            cpa={cpa}
+            readOnly={readOnly}
+            targetSize={targetSize}
+          />
+        );
+      }
       return (
         <PartitionView
           config={config}
@@ -1951,6 +1981,28 @@ export function FractionModelView({
         <DecimalGridView
           state={state}
           config={config}
+          dispatch={dispatch}
+          cpa={cpa}
+          readOnly={readOnly}
+          targetSize={targetSize}
+        />
+      );
+    case 'multiply':
+      return (
+        <MultiplyView
+          config={config}
+          state={state}
+          dispatch={dispatch}
+          cpa={cpa}
+          readOnly={readOnly}
+          targetSize={targetSize}
+        />
+      );
+    case 'divide-measure':
+      return (
+        <DivideMeasureView
+          config={config}
+          state={state}
           dispatch={dispatch}
           cpa={cpa}
           readOnly={readOnly}

@@ -97,6 +97,82 @@ describe('E05 이벤트', () => {
     const { events } = step(state, { type: 'fuse' });
     expect(events.map((event) => event.name)).toEqual(['fused']);
   });
+
+  it('multiply는 넓이가 바뀔 때 area-changed와 value-changed(곱)를 낸다', () => {
+    const state = createInitialState({ mode: 'multiply', a: '2/3', b: '3/4' });
+    const shadedA = step(state, { type: 'set-shaded', side: 'a', count: 2 });
+    expect(shadedA.events.find((event) => event.name === 'area-changed')).toEqual({
+      name: 'area-changed',
+      payload: { a: '2/3', b: '0', product: '0' },
+    });
+
+    const shadedB = step(shadedA.next, { type: 'set-shaded', side: 'b', count: 3 });
+    expect(shadedB.events.find((event) => event.name === 'area-changed')).toEqual({
+      name: 'area-changed',
+      payload: { a: '2/3', b: '3/4', product: '1/2' },
+    });
+    expect(shadedB.events).toContainEqual({
+      name: 'value-changed',
+      payload: { value: '1/2' },
+    });
+  });
+
+  it('divide-measure는 자를 놓을 때마다 ruler-laid를 낸다', () => {
+    let state = createInitialState({ mode: 'divide-measure', dividend: '3/4', divisor: '1/8' });
+    for (let index = 0; index < 6; index += 1) {
+      const laid = step(state, { type: 'lay-ruler' });
+      expect(laid.events.find((event) => event.name === 'ruler-laid')).toEqual({
+        name: 'ruler-laid',
+        payload: { count: index + 1, partial: null },
+      });
+      state = laid.next;
+    }
+    expect(step(state, { type: 'lay-ruler' }).events).toEqual([]);
+  });
+
+  it('share는 조각을 놓을 때 dealt와 접시 값 value-changed를 낸다', () => {
+    let state = createInitialState({
+      mode: 'partition',
+      variant: 'share',
+      wholes: 1,
+      people: 2,
+    });
+    state = reduce(state, { type: 'cut-equal', whole: 0, parts: 2 });
+    const dealt = step(state, { type: 'deal-piece', whole: 0, piece: 0, plate: 0 });
+    expect(dealt.events.find((event) => event.name === 'dealt')).toEqual({
+      name: 'dealt',
+      payload: { plate: 0, value: '1/2' },
+    });
+    expect(dealt.events).toContainEqual({
+      name: 'value-changed',
+      payload: { value: '1/2' },
+    });
+  });
+
+  it('divide-whole는 가로 칸·남긴 줄 이벤트를 낸다', () => {
+    let state = createInitialState({
+      mode: 'partition',
+      variant: 'divide-whole',
+      fraction: '4/5',
+      divisor: 3,
+    });
+    const rows = step(state, { type: 'set-rows', rows: 3 });
+    expect(rows.events.find((event) => event.name === 'rows-set')).toEqual({
+      name: 'rows-set',
+      payload: { rows: 3 },
+    });
+    state = rows.next;
+
+    const kept = step(state, { type: 'keep-row', row: 0 });
+    expect(kept.events.find((event) => event.name === 'row-kept')).toEqual({
+      name: 'row-kept',
+      payload: { value: '4/15' },
+    });
+    expect(kept.events).toContainEqual({
+      name: 'value-changed',
+      payload: { value: '4/15' },
+    });
+  });
 });
 
 describe('E05 receive', () => {
@@ -266,6 +342,64 @@ describe('E05 predicates', () => {
     expect(observed['cutDirections']).toBe(1);
     expect(predicates['cutDirectionsAtLeast']?.(observed, { count: 2 })).toBe(false);
   });
+
+  it('multiply 판정: 겹친 칸·곱·두 분수를 본다', () => {
+    const config: FractionModelConfig = {
+      mode: 'multiply',
+      a: '2/3',
+      b: '3/4',
+      build: 'preset',
+    };
+    const observed = observe(createInitialState(config), config);
+    expect(predicates['overlapCellsIs']?.(observed, { value: 6 })).toBe(true);
+    expect(predicates['overlapCellsIs']?.(observed, { value: 5 })).toBe(false);
+    expect(predicates['productIs']?.(observed, { value: '1/2' })).toBe(true);
+    expect(predicates['productIs']?.(observed, { value: '2/3' })).toBe(false);
+    expect(predicates['factorsAre']?.(observed, { a: '2/3', b: '3/4' })).toBe(true);
+    expect(predicates['factorsAre']?.(observed, { a: '1/2', b: '3/4' })).toBe(false);
+  });
+
+  it('divide-measure 판정: 잰 길이를 본다', () => {
+    let state = createInitialState({ mode: 'divide-measure', dividend: '3/4', divisor: '1/8' });
+    for (let index = 0; index < 6; index += 1) state = reduce(state, { type: 'lay-ruler' });
+    const observed = observe(state, { mode: 'divide-measure' });
+    expect(predicates['measuredIs']?.(observed, { value: 6 })).toBe(true);
+    expect(predicates['measuredIs']?.(observed, { value: '3/4' })).toBe(false);
+  });
+
+  it('share 판정: 모든 접시가 같은 값을 받았는지 본다', () => {
+    let state = createInitialState({
+      mode: 'partition',
+      variant: 'share',
+      wholes: 1,
+      people: 2,
+    });
+    state = reduce(state, { type: 'cut-equal', whole: 0, parts: 2 });
+    state = reduce(state, { type: 'deal-piece', whole: 0, piece: 0, plate: 0 });
+    const half = observe(state, { mode: 'partition' });
+    expect(predicates['platesAre']?.(half, { value: '1/2' })).toBe(false);
+
+    state = reduce(state, { type: 'deal-piece', whole: 0, piece: 1, plate: 1 });
+    const equal = observe(state, { mode: 'partition' });
+    expect(predicates['platesAre']?.(equal, { value: '1/2' })).toBe(true);
+    expect(predicates['platesAre']?.(equal, { value: '1/4' })).toBe(false);
+  });
+
+  it('divide-whole 판정: 가로 칸과 남긴 값을 본다', () => {
+    let state = createInitialState({
+      mode: 'partition',
+      variant: 'divide-whole',
+      fraction: '4/5',
+      divisor: 3,
+    });
+    state = reduce(state, { type: 'set-rows', rows: 3 });
+    state = reduce(state, { type: 'keep-row', row: 0 });
+    const observed = observe(state, { mode: 'partition' });
+    expect(predicates['rowsIs']?.(observed, { rows: 3 })).toBe(true);
+    expect(predicates['rowsIs']?.(observed, { rows: 2 })).toBe(false);
+    expect(predicates['keptValueIs']?.(observed, { value: '4/15' })).toBe(true);
+    expect(predicates['keptValueIs']?.(observed, { value: '1/3' })).toBe(false);
+  });
 });
 
 describe('E05 engine definition', () => {
@@ -280,6 +414,8 @@ describe('E05 engine definition', () => {
       'mixed',
       'add-sub',
       'decimal-grid',
+      'multiply',
+      'divide-measure',
     ]);
     expect(definition.events).toEqual([
       'partitioned',
@@ -288,12 +424,43 @@ describe('E05 engine definition', () => {
       'fused',
       'broke-whole',
       'overlaid',
+      'area-changed',
+      'ruler-laid',
+      'dealt',
+      'rows-set',
+      'row-kept',
     ]);
-    expect(Object.keys(definition.overlays ?? {})).toEqual(['size-compare', 'grid-reveal']);
+    expect(Object.keys(definition.overlays ?? {})).toEqual([
+      'size-compare',
+      'grid-reveal',
+      'overlap-count',
+      'ruler-repeat',
+      'remainder-beside',
+      'row-preview',
+    ]);
   });
 
   it('primaryValue는 모드마다 학생이 나타낸 수를 고른다', () => {
     expect(primaryValue(shade())).toBe('3/4');
     expect(primaryValue(createInitialState({ mode: 'discrete', items: 12 }))).toBe('0');
+    expect(
+      primaryValue(createInitialState({ mode: 'multiply', a: '2/3', b: '3/4', build: 'preset' })),
+    ).toBe('1/2');
+    expect(
+      primaryValue(createInitialState({ mode: 'divide-measure', dividend: '3/4', divisor: '1/8' })),
+    ).toBe('0');
+    expect(
+      primaryValue(createInitialState({ mode: 'partition', variant: 'share', wholes: 2 })),
+    ).toBe('0');
+    expect(
+      primaryValue(
+        createInitialState({
+          mode: 'partition',
+          variant: 'divide-whole',
+          fraction: '4/5',
+          divisor: 3,
+        }),
+      ),
+    ).toBe('0');
   });
 });

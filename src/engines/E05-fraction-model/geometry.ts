@@ -558,3 +558,87 @@ export function cutDirectionCount(cuts: readonly Cut[]): number {
 export function pieceCentroid(piece: Piece): Point {
   return piece.centroid;
 }
+
+export function boundingBox(outline: readonly Point[]): {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+} {
+  const xs = outline.map((point) => point.x);
+  const ys = outline.map((point) => point.y);
+  return {
+    minX: Math.min(...xs),
+    minY: Math.min(...ys),
+    maxX: Math.max(...xs),
+    maxY: Math.max(...ys),
+  };
+}
+
+/** 세로선과 도형 외곽선의 교점. 미리 n등분한 칼선을 만들 때 쓴다. */
+function verticalSpan(outline: readonly Point[], x: number): [number, number] | null {
+  const ys: number[] = [];
+  for (let i = 0; i < outline.length; i += 1) {
+    const a = outline[i];
+    const b = outline[(i + 1) % outline.length];
+    if (!a || !b) continue;
+    const low = Math.min(a.x, b.x);
+    const high = Math.max(a.x, b.x);
+    if (x < low - 1e-6 || x > high + 1e-6) continue;
+    if (Math.abs(b.x - a.x) < 1e-9) {
+      ys.push(a.y, b.y);
+      continue;
+    }
+    const t = (x - a.x) / (b.x - a.x);
+    if (t < -1e-6 || t > 1 + 1e-6) continue;
+    ys.push(a.y + (b.y - a.y) * t);
+  }
+  if (ys.length < 2) return null;
+  return [Math.min(...ys), Math.max(...ys)];
+}
+
+/**
+ * `fixedParts`·share의 "똑같이 n조각"용 미리 n등분된 칼선.
+ * 원은 방사형, 나머지는 세로 칼선이다.
+ */
+export function autoPresetCuts(
+  shape: FractionShape,
+  outline: readonly Point[],
+  parts: number,
+): Cut[] {
+  if (parts <= 1) return [];
+  if (shape === 'circle') {
+    const cuts: Cut[] = [];
+    for (let k = 0; k < parts; k += 1) {
+      const angle = -Math.PI / 2 + (Math.PI * 2 * k) / parts;
+      cuts.push({
+        id: `preset-${k + 1}`,
+        tool: 'radial',
+        points: [
+          { ...CIRCLE_CENTER },
+          {
+            x: CIRCLE_CENTER.x + CIRCLE_RADIUS * Math.cos(angle),
+            y: CIRCLE_CENTER.y + CIRCLE_RADIUS * Math.sin(angle),
+          },
+        ],
+      });
+    }
+    return cuts;
+  }
+  const box = boundingBox(outline);
+  const cuts: Cut[] = [];
+  for (let k = 1; k < parts; k += 1) {
+    const x = box.minX + ((box.maxX - box.minX) * k) / parts;
+    const span = verticalSpan(outline, x);
+    if (!span) continue;
+    cuts.push({
+      id: `preset-${k}`,
+      tool: 'line',
+      points: [
+        { x, y: span[0] },
+        { x, y: span[1] },
+      ],
+    });
+  }
+  return cuts;
+}

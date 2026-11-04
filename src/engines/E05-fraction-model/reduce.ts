@@ -7,18 +7,13 @@
  */
 import { Rational } from '../../core/math';
 import { clamp } from '../../core/engine-sdk';
-import type { Point } from '../../core/engine-sdk';
 import {
+  autoPresetCuts,
   boundaryCandidates,
   circleCandidates,
-  circleSectors,
   outlineFor,
-  partitionPieces,
-  polygonArea,
-  polygonCentroid,
   samePoint,
 } from './geometry';
-import type { Piece } from './geometry';
 import {
   denominatorNumber,
   gcd,
@@ -27,7 +22,12 @@ import {
   parseFraction,
   parseRational,
 } from './fractions';
-import { CIRCLE_CENTER, CIRCLE_RADIUS, DEFAULT_TOLERANCE, EMPTY_COUNTS, bumpCounts } from './types';
+import { createDivideMeasure, reduceDivideMeasure } from './reduce-divide-measure';
+import { createDivideWhole, reduceDivideWhole } from './reduce-divide-whole';
+import { createMultiply, reduceMultiply } from './reduce-multiply';
+import { createShare, reduceShare } from './reduce-share';
+import { piecesOf } from './pieces';
+import { DEFAULT_TOLERANCE, EMPTY_COUNTS, bumpCounts } from './types';
 import type {
   AddSubState,
   CompareBar,
@@ -54,6 +54,15 @@ const MIN_PARTS = 1;
 /** 설정 키를 보고 모드를 고른다. `mode`가 있으면 그것을 따른다. */
 export function inferMode(config: FractionModelConfig): FractionMode {
   if (config.mode !== undefined) return config.mode;
+  if (config.variant !== undefined) return 'partition';
+  if (config.dividend !== undefined && config.divisor !== undefined) return 'divide-measure';
+  if (
+    config.layout !== undefined ||
+    config.build !== undefined ||
+    config.showCounts !== undefined
+  ) {
+    return 'multiply';
+  }
   if (config.bars !== undefined) return 'compare';
   if (config.items !== undefined) return 'discrete';
   if (
@@ -101,83 +110,6 @@ function validShaded(indices: readonly number[] | undefined, parts: number): num
 function toggleIndex(list: readonly number[], index: number): number[] {
   if (list.includes(index)) return list.filter((value) => value !== index);
   return [...list, index].sort((a, b) => a - b);
-}
-
-function boundingBox(outline: readonly Point[]): {
-  minX: number;
-  minY: number;
-  maxX: number;
-  maxY: number;
-} {
-  const xs = outline.map((point) => point.x);
-  const ys = outline.map((point) => point.y);
-  return {
-    minX: Math.min(...xs),
-    minY: Math.min(...ys),
-    maxX: Math.max(...xs),
-    maxY: Math.max(...ys),
-  };
-}
-
-/** 세로선과 도형 외곽선의 교점. 미리 n등분한 칼선을 만들 때 쓴다. */
-function verticalSpan(outline: readonly Point[], x: number): [number, number] | null {
-  const ys: number[] = [];
-  for (let i = 0; i < outline.length; i += 1) {
-    const a = outline[i];
-    const b = outline[(i + 1) % outline.length];
-    if (!a || !b) continue;
-    const low = Math.min(a.x, b.x);
-    const high = Math.max(a.x, b.x);
-    if (x < low - 1e-6 || x > high + 1e-6) continue;
-    if (Math.abs(b.x - a.x) < 1e-9) {
-      ys.push(a.y, b.y);
-      continue;
-    }
-    const t = (x - a.x) / (b.x - a.x);
-    if (t < -1e-6 || t > 1 + 1e-6) continue;
-    ys.push(a.y + (b.y - a.y) * t);
-  }
-  if (ys.length < 2) return null;
-  return [Math.min(...ys), Math.max(...ys)];
-}
-
-/** `fixedParts`용 미리 n등분된 칼선. 원은 방사형, 나머지는 세로 칼선. */
-function autoPresetCuts(shape: FractionShape, outline: readonly Point[], parts: number): Cut[] {
-  if (parts <= 1) return [];
-  if (shape === 'circle') {
-    const cuts: Cut[] = [];
-    for (let k = 0; k < parts; k += 1) {
-      const angle = -Math.PI / 2 + (Math.PI * 2 * k) / parts;
-      cuts.push({
-        id: `preset-${k + 1}`,
-        tool: 'radial',
-        points: [
-          { ...CIRCLE_CENTER },
-          {
-            x: CIRCLE_CENTER.x + CIRCLE_RADIUS * Math.cos(angle),
-            y: CIRCLE_CENTER.y + CIRCLE_RADIUS * Math.sin(angle),
-          },
-        ],
-      });
-    }
-    return cuts;
-  }
-  const box = boundingBox(outline);
-  const cuts: Cut[] = [];
-  for (let k = 1; k < parts; k += 1) {
-    const x = box.minX + ((box.maxX - box.minX) * k) / parts;
-    const span = verticalSpan(outline, x);
-    if (!span) continue;
-    cuts.push({
-      id: `preset-${k}`,
-      tool: 'line',
-      points: [
-        { x, y: span[0] },
-        { x, y: span[1] },
-      ],
-    });
-  }
-  return cuts;
 }
 
 /** 콘텐츠가 정한 칼선 목록. 좌표가 깨진 칼선은 조용히 건너뛴다. */
@@ -456,6 +388,8 @@ function createDecimalGrid(config: FractionModelConfig): DecimalGridState {
 export function createInitialState(config: FractionModelConfig): FractionModelState {
   switch (inferMode(config)) {
     case 'partition':
+      if (config.variant === 'share') return createShare(config);
+      if (config.variant === 'divide-whole') return createDivideWhole(config);
       return createPartition(config);
     case 'shade':
       return createShade(config);
@@ -471,25 +405,15 @@ export function createInitialState(config: FractionModelConfig): FractionModelSt
       return createAddSub(config);
     case 'decimal-grid':
       return createDecimalGrid(config);
+    case 'multiply':
+      return createMultiply(config);
+    case 'divide-measure':
+      return createDivideMeasure(config);
   }
 }
 
 /** partition 모드의 현재 조각들. 원은 부채꼴 넓이로 계산한다. */
-export function piecesOf(state: PartitionState): Piece[] {
-  if (state.shape === 'circle' && state.cuts.length > 0) {
-    return circleSectors(CIRCLE_CENTER, CIRCLE_RADIUS, state.cuts);
-  }
-  if (state.cuts.length === 0) {
-    return [
-      {
-        points: state.outline,
-        area: polygonArea(state.outline),
-        centroid: polygonCentroid(state.outline),
-      },
-    ];
-  }
-  return partitionPieces(state.outline, state.cuts, state.shape);
-}
+export { piecesOf };
 
 function reducePartition(state: PartitionState, action: FractionModelAction): PartitionState {
   if (state.preset && (action.type === 'cut' || action.type === 'clear-cuts')) {
@@ -916,6 +840,12 @@ function reduceDecimalGrid(state: DecimalGridState, action: FractionModelAction)
 export function reduce(state: FractionModelState, action: FractionModelAction): FractionModelState {
   switch (state.mode) {
     case 'partition':
+      if ('variant' in state && state.variant === 'share') {
+        return reduceShare(state, action);
+      }
+      if ('variant' in state && state.variant === 'divide-whole') {
+        return reduceDivideWhole(state, action);
+      }
       return reducePartition(state, action);
     case 'shade':
       return reduceShade(state, action);
@@ -931,6 +861,10 @@ export function reduce(state: FractionModelState, action: FractionModelAction): 
       return reduceAddSub(state, action);
     case 'decimal-grid':
       return reduceDecimalGrid(state, action);
+    case 'multiply':
+      return reduceMultiply(state, action);
+    case 'divide-measure':
+      return reduceDivideMeasure(state, action);
   }
 }
 

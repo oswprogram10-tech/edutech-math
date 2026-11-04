@@ -18,7 +18,26 @@ export type FractionMode =
   | 'discrete'
   | 'mixed'
   | 'add-sub'
-  | 'decimal-grid';
+  | 'decimal-grid'
+  | 'multiply'
+  | 'divide-measure';
+
+/** 넓이 곱셈의 두 쪽. `a`는 세로 칸, `b`는 가로 칸이다(T049 결정 3). */
+export type MultiplySide = 'a' | 'b';
+
+export type LayoutSide = 'vertical' | 'horizontal';
+
+/**
+ * `multiply`의 칸 방향. `overlay-slicer`의 `orientation`과 다른 키다.
+ * 섞지 않는다(T049 결정 3).
+ */
+export interface MultiplyLayoutConfig {
+  readonly a?: LayoutSide;
+  readonly b?: LayoutSide;
+}
+
+/** partition의 변형. 모드는 `partition` 그대로 두고 이 값으로 구분한다. */
+export type PartitionVariant = 'share' | 'divide-whole';
 
 export type FractionShape = 'rect' | 'square' | 'bar' | 'circle' | 'triangle' | 'polygon';
 
@@ -112,9 +131,10 @@ export interface FractionModelConfig {
   readonly bars?: readonly CompareBarConfig[];
   readonly align?: 'left' | 'right';
 
-  // ── overlay-slicer / add-sub ───────────────────────────────
-  readonly a?: string;
-  readonly b?: string;
+  // ── overlay-slicer / add-sub / multiply ────────────────────
+  /** 분수 문자열. `multiply`는 정수 number도 받는다(T049 결정 2). */
+  readonly a?: string | number;
+  readonly b?: string | number;
   readonly orientation?: OverlayOrientation;
   readonly challenge?: 'compare' | 'common-grid';
 
@@ -148,6 +168,47 @@ export interface FractionModelConfig {
    */
   readonly layerLabels?: readonly string[];
   readonly overlayAlpha?: number;
+
+  // ── multiply (T049) ────────────────────────────────────────
+  /**
+   * `multiply`: 칸 방향. 기본 `{ a: 'vertical', b: 'horizontal' }`.
+   * `overlay-slicer`의 `orientation`과 다른 키다.
+   */
+  readonly layout?: MultiplyLayoutConfig;
+  /** `multiply`: 처음부터 a·b대로 놓을지(`preset`) 학생이 놓을지(`student`). 기본 student. */
+  readonly build?: 'student' | 'preset';
+  /** `multiply`: "전체 칸 12 · 겹친 칸 6"을 쓸지. 기본 false(정답 노출 금지). */
+  readonly showCounts?: boolean;
+  /** `multiply`: 학생이 고를 수 있는 한 전체의 최대 칸 수. 기본 12. */
+  readonly maxDenominator?: number;
+  /** 받기만 하고 무시한다. 곱 그림은 늘 반투명 + 무늬다(T049 결정 3). */
+  readonly blend?: string;
+
+  // ── divide-measure / divide-whole (T049) ───────────────────
+  /** `divide-measure`: 나뉨수. `"3/4"`, `"1 1/2"`, `4`를 받는다. */
+  readonly dividend?: string | number;
+  /** `divide-measure`: 나누는 수(자 길이). `divide-whole`: 2~6. */
+  readonly divisor?: string | number;
+  /** `divide-measure`: 부분 자를 자의 몇인지 세어 볼 수 있게만 한다. 기본 false. */
+  readonly showRemainderFractionOfDivisor?: boolean;
+
+  // ── partition variant=share (T049) ─────────────────────────
+  /** `partition`의 변형. 있으면 `simplifyFrom`을 건너뛴다. */
+  readonly variant?: PartitionVariant;
+  /** `share`: 전체 수(1~6). */
+  readonly wholes?: number;
+  /** `share`: 접시 수(2~6). */
+  readonly people?: number;
+  /** `share`: 접시에 "1/4 조각 3개"처럼 조각 크기·개수만 쓸지. 기본 false. */
+  readonly plateLabel?: boolean;
+  /** `share`: 받기만 하고 무시한다. 넓이 같음 검사는 늘 켠다. */
+  readonly equalPartsCheck?: boolean;
+
+  // ── partition variant=divide-whole (T049) ──────────────────
+  /** `divide-whole`: 나뉘수 ÷ divisor의 결과를 곱셈식으로 모핑해 보여 줄지. 기본 false. */
+  readonly morphToMultiply?: boolean;
+  /** `divide-whole`: 분자가 divisor의 배수일 때 묶어서 나누기 지름길을 보여 줄지. 기본 true. */
+  readonly groupShortcut?: boolean;
 }
 
 /** 이벤트 횟수. `eventAtLeast` 판정이 이 값을 본다. */
@@ -316,6 +377,89 @@ export interface DecimalGridState {
   readonly counters: EventCounts;
 }
 
+/**
+ * `multiply`: 두 분수 넓이의 겹침.
+ * `aShaded`는 여러 전체에 걸쳐 센 칸 수라 `aParts`보다 클 수 있다.
+ * `b`는 1 이하라 `bShaded ≤ bParts`다.
+ */
+export interface MultiplyState {
+  readonly mode: 'multiply';
+  /** 한 전체를 나눈 세로 칸 수. */
+  readonly aParts: number;
+  /** 여러 전체에 걸쳐 칠한 세로 칸 수. */
+  readonly aShaded: number;
+  readonly bParts: number;
+  readonly bShaded: number;
+  readonly layout: {
+    readonly a: LayoutSide;
+    readonly b: LayoutSide;
+  };
+  readonly maxDenominator: number;
+  readonly counters: EventCounts;
+}
+
+/**
+ * `divide-measure`: 나누는 수 막대(자)로 나뉨수를 재기.
+ * `partial`은 부분 자가 자의 몇인지(`"1/8"`), 아직 없으면 null이다.
+ */
+export interface DivideMeasureState {
+  readonly mode: 'divide-measure';
+  readonly dividend: string;
+  readonly divisor: string;
+  /** 온전히 놓은 자 수. */
+  readonly rulersLaid: number;
+  readonly partial: string | null;
+  readonly showRemainderFractionOfDivisor: boolean;
+  readonly counters: EventCounts;
+}
+
+/** 접시에 놓였는지. `null`이면 아직 전체 위에 있다. */
+export interface SharePiece {
+  readonly plate: number | null;
+}
+
+/** 전체 하나. `pieces.length`가 지금 조각 수다. */
+export interface ShareWhole {
+  readonly cuts: readonly Cut[];
+  readonly pieces: readonly SharePiece[];
+}
+
+/** `partition` variant=share. mode는 'partition' 그대로다. */
+export interface ShareState {
+  readonly mode: 'partition';
+  readonly variant: 'share';
+  readonly shape: FractionShape;
+  readonly outline: readonly Point[];
+  readonly wholes: readonly ShareWhole[];
+  readonly people: number;
+  /** 고른 조각. 아직 고르지 않았으면 null. */
+  readonly selected: { readonly whole: number; readonly piece: number } | null;
+  readonly tolerance: number;
+  readonly counters: EventCounts;
+}
+
+/** `partition` variant=divide-whole: ÷자연수 → ×1/n. */
+export interface DivideWholeState {
+  readonly mode: 'partition';
+  readonly variant: 'divide-whole';
+  readonly shape: FractionShape;
+  readonly dividend: string;
+  readonly dividendParts: number;
+  readonly dividendShaded: number;
+  readonly divisor: number;
+  /** "÷ n" 카드를 눌러 가로 칸 슬라이더를 열었는지. */
+  readonly rowsOpen: boolean;
+  /** 가로 칸 수(1~divisor). */
+  readonly rows: number;
+  readonly keptRow: number | null;
+  /** "묶어서 나누기"를 눌렀는지. */
+  readonly bundleOpen: boolean;
+  readonly keptBundle: number | null;
+  readonly morphToMultiply: boolean;
+  readonly groupShortcut: boolean;
+  readonly counters: EventCounts;
+}
+
 export type FractionModelState =
   | PartitionState
   | ShadeState
@@ -324,7 +468,21 @@ export type FractionModelState =
   | DiscreteState
   | MixedState
   | AddSubState
-  | DecimalGridState;
+  | DecimalGridState
+  | MultiplyState
+  | DivideMeasureState
+  | ShareState
+  | DivideWholeState;
+
+/** `partition` 합집합에서 share 상태를 골라 낸다. */
+export function isShareState(state: FractionModelState): state is ShareState {
+  return state.mode === 'partition' && 'variant' in state && state.variant === 'share';
+}
+
+/** `partition` 합집합에서 divide-whole 상태를 골라 낸다. */
+export function isDivideWholeState(state: FractionModelState): state is DivideWholeState {
+  return state.mode === 'partition' && 'variant' in state && state.variant === 'divide-whole';
+}
 
 export type FractionModelAction =
   // partition
@@ -332,8 +490,10 @@ export type FractionModelAction =
       readonly type: 'cut';
       readonly tool: 'line' | 'radial';
       readonly points: readonly [Point, Point];
+      /** `share`에서 어느 전체를 자르는지. 없으면 0번 전체. */
+      readonly whole?: number;
     }
-  | { readonly type: 'clear-cuts' }
+  | { readonly type: 'clear-cuts'; readonly whole?: number }
   | { readonly type: 'shade-piece'; readonly index: number }
   // shade (set-group-size는 discrete와 공유한다)
   | { readonly type: 'toggle-part'; readonly index: number }
@@ -360,7 +520,30 @@ export type FractionModelAction =
   | { readonly type: 'toggle-cell'; readonly index: number }
   | { readonly type: 'shade-row'; readonly row: number }
   | { readonly type: 'set-layer'; readonly layer: number }
-  | { readonly type: 'clear-cells' };
+  | { readonly type: 'clear-cells' }
+  // multiply (E04 fraction-area와 같은 이름)
+  | { readonly type: 'set-parts'; readonly side: MultiplySide; readonly parts: number }
+  | { readonly type: 'set-shaded'; readonly side: MultiplySide; readonly count: number }
+  // divide-measure
+  | { readonly type: 'lay-ruler' }
+  | { readonly type: 'lift-ruler' }
+  | { readonly type: 'clear-rulers' }
+  // partition variant=share
+  | { readonly type: 'cut-equal'; readonly whole: number; readonly parts: number }
+  | { readonly type: 'select-piece'; readonly whole: number; readonly piece: number }
+  | {
+      readonly type: 'deal-piece';
+      readonly whole: number;
+      readonly piece: number;
+      readonly plate: number;
+    }
+  | { readonly type: 'return-piece'; readonly whole: number; readonly piece: number }
+  // partition variant=divide-whole
+  | { readonly type: 'open-rows' }
+  | { readonly type: 'set-rows'; readonly rows: number }
+  | { readonly type: 'keep-row'; readonly row: number }
+  | { readonly type: 'bundle' }
+  | { readonly type: 'keep-bundle'; readonly index: number };
 
 export const LOGICAL_WIDTH = 1000;
 export const LOGICAL_HEIGHT = 600;
