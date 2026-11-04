@@ -33,7 +33,8 @@ function asTen(state: CountersState): TenFrameState {
 }
 
 function asPartWhole(state: CountersState): PartWholeState {
-  if (state.mode !== 'part-whole') throw new Error('part-whole 상태가 아닙니다.');
+  if (state.mode !== 'part-whole' || 'variant' in state)
+    throw new Error('part-whole 상태가 아닙니다.');
   return state;
 }
 

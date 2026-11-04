@@ -133,6 +133,70 @@ export function bondTreeLayout(parts: number): {
   };
 }
 
+/** rekenrek 줄의 세로 위치. 1~10줄이 모두 캔버스 안에 들어온다. */
+export function rekenrekRowY(rows: number, row: number): number {
+  const count = Math.max(1, rows);
+  const gap = count > 1 ? Math.min(82, 440 / (count - 1)) : 0;
+  return Math.round(120 + row * gap);
+}
+
+export const REKENREK_LEFT_X = 210;
+export const REKENREK_RIGHT_X = 790;
+export const REKENREK_BEAD_GAP = 46;
+
+/** 방울 자리. seed 없이도 같은 순서면 같은 자리(엔진 상태에 좌표를 두지 않는다). */
+export function bubblePoint(index: number): Point {
+  const column = index % 5;
+  const row = Math.floor(index / 5);
+  return {
+    x: 170 + column * 165 + ((index * 37) % 34) - 17,
+    y: 150 + row * 120 + ((index * 53) % 28) - 14,
+  };
+}
+
+/** 다리 틈 한 칸의 논리 폭. 틈이 길어도 캔버스 안에 들어온다. */
+export function bridgeCellWidth(gap: number): number {
+  return Math.max(24, Math.min(56, 720 / Math.max(1, gap)));
+}
+
+/** bridge 화면의 왼쪽 둑 x, 막대 중심 y. View·오버레이가 함께 쓴다. */
+export const BRIDGE_START_X = 140;
+export const BRIDGE_GROUND_Y = 260;
+
+/** measure-out 봉지 자리(아래 줄, 한 줄에 6개). */
+export function bagPoint(index: number): Point {
+  const column = index % 6;
+  const row = Math.floor(index / 6);
+  return { x: 100 + column * 140, y: 438 + row * 82 };
+}
+
+/** share 접시의 중심. View·오버레이가 함께 쓴다. */
+export function sharePlateCenter(groups: number, plate: number): Point {
+  const step = groups > 1 ? 620 / (groups - 1) : 0;
+  return { x: 190 + plate * step, y: 495 };
+}
+
+// ─────────────────────────────────────────────────────────────
+// pairing: 두 명씩 짝을 지어 한 줄에 두 쌍(4명)까지 놓는다.
+// 짝 선이 줄을 넘지 않도록 짝은 항상 같은 줄의 이웃이다.
+// ─────────────────────────────────────────────────────────────
+
+export const PAIRING_ICON_RADIUS = 26;
+const PAIRING_PER_ROW = 4;
+const PAIRING_X_GAP = 130;
+const PAIRING_Y_GAP = 92;
+const PAIRING_LEFT = 305;
+const PAIRING_TOP = 150;
+
+export function pairingPoint(index: number): Point {
+  const column = index % PAIRING_PER_ROW;
+  const row = Math.floor(index / PAIRING_PER_ROW);
+  return {
+    x: PAIRING_LEFT + column * PAIRING_X_GAP,
+    y: PAIRING_TOP + row * PAIRING_Y_GAP,
+  };
+}
+
 export function inRect(
   point: Point,
   rect: { readonly x: number; readonly y: number; readonly width: number; readonly height: number },
