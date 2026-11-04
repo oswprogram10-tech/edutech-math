@@ -75,7 +75,9 @@ describe('E07 곱셈 격자 계획', () => {
     expect(plan.rows.map((row) => row.shiftedValue)).toEqual([322n, 920n]);
     expect(plan.rows[0]?.carryColumns).toEqual([1, 2]);
     expect(plan.rows[1]?.placeholderColumns).toEqual([0]);
-    expect(plan.rows[1]?.columns).toEqual([1, 2]);
+    // 92가 아니라 그 줄이 가질 수 있는 최대 자릿수(a 2자리 + 1)만큼 연다(십~천).
+    expect(plan.rows[1]?.columns).toEqual([1, 2, 3]);
+    expect(plan.resultColumns).toEqual([0, 1, 2, 3]);
     const second = plan.rows[1];
     if (!second) return;
     expect(isPlaceholder(second, 0)).toBe(true);
@@ -95,6 +97,42 @@ describe('E07 곱셈 격자 계획', () => {
     expect(observation['complete']).toBe(true);
     expect(observation['result']).toBe('1242');
     expect(observation['misconceptions']).toEqual([]);
+  });
+
+  it('46×27 둘째 줄은 92든 920이든 열린 칸 수가 같다(천~일)', () => {
+    const base = mulState({ a: 46, b: 27 });
+    const plan = computeMulPlan(base);
+    expect(plan).not.toBeNull();
+    if (!plan) return;
+    const second = plan.rows[1];
+    if (!second) return;
+    // 일(0)은 자리 밀기 0이라 점선 칸, 십~천 3칸을 열어 모두 4칸이다.
+    expect(second.end + 1).toBe(4);
+    expect(second.columns).toEqual([1, 2, 3]);
+
+    const shifted = enterDigits(base, 'partial', { 1: '2', 2: '9' }, 1);
+    expect(readRowValue(shifted, second)).toBe('920');
+    expect(computeMulPlan(shifted)?.rows[1]?.columns).toEqual(second.columns);
+
+    const shiftForgotten = enterDigits(
+      mulState({ a: 46, b: 27, showZeroPlaceholder: false }),
+      'partial',
+      { 0: '2', 1: '9' },
+      1,
+    );
+    expect(readRowValue(shiftForgotten, second)).toBe('92');
+    const forgottenRow = computeMulPlan(shiftForgotten)?.rows[1];
+    expect(forgottenRow?.end).toBe(second.end);
+    expect((forgottenRow?.end ?? -1) + 1).toBe(4);
+  });
+
+  it('partial-products 줄도 그 자리 곱의 최대 자릿수만큼 연다', () => {
+    const plan = computeMulPlan(mulState({ a: 46, b: 5, style: 'partial-products' }));
+    expect(plan).not.toBeNull();
+    if (!plan) return;
+    // 6×5(30)는 0~1, 4×5를 십의 자리로 민 200은 0~2까지 연다.
+    expect(plan.rows[0]?.columns).toEqual([0, 1]);
+    expect(plan.rows[1]?.columns).toEqual([0, 1, 2]);
   });
 
   it('46×5 partial-products는 30·200 부분곱과 합 230을 만든다', () => {

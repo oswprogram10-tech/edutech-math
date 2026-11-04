@@ -113,11 +113,18 @@ function carryRow(
   };
 }
 
-function placeProductRow(index: number, factor: number, place: number, b: bigint): MulRowPlan {
+function placeProductRow(
+  index: number,
+  factor: number,
+  place: number,
+  b: bigint,
+  bIntDigits: number,
+): MulRowPlan {
   const value = BigInt(factor) * b * 10n ** BigInt(place);
   const digits = value.toString();
   const start = 0;
-  const end = digits.length - 1;
+  // 그 자리 곱의 최대 자릿수(한 자리 × b → b 자릿수 + 1)만큼 연다. 자리 밀기 포함.
+  const end = place + bIntDigits;
   const expectedDigits: Record<string, string> = {};
   for (let offset = 0; offset < digits.length; offset += 1) {
     expectedDigits[String(end - offset)] = digits[offset] ?? '0';
@@ -159,9 +166,9 @@ export function computeMulPlan(state: ColumnCalcState): MulPlan | null {
       for (let place = 0; place < b.intDigits; place += 1) {
         const factor = Number(b.digits[b.intDigits - 1 - place] ?? '0');
         const value = aValue * BigInt(factor);
-        const digits = value.toString();
         const start = place;
-        const end = place + digits.length - 1;
+        // 정답 자릿수가 아니라 그 줄이 가질 수 있는 최대 자릿수(a 자릿수 + 1)만큼 연다.
+        const end = place + a.digits.length;
         const placeholderColumns = showZeroPlaceholder && place > 0 ? range(0, place - 1) : [];
         const columns = range(0, end).filter((column) => !placeholderColumns.includes(column));
         rows.push(
@@ -173,17 +180,18 @@ export function computeMulPlan(state: ColumnCalcState): MulPlan | null {
     for (let place = 0; place < a.intDigits; place += 1) {
       const factor = Number(a.digits[a.intDigits - 1 - place] ?? '0');
       if (factor === 0) continue;
-      rows.push(placeProductRow(rows.length, factor, place, bValue));
+      rows.push(placeProductRow(rows.length, factor, place, bValue, b.intDigits));
     }
   }
 
   const aLength = a.intDigits;
   const bLength = b.intDigits;
   const rowHigh = rows.reduce((high, row) => Math.max(high, row.end), 0);
-  const high = Math.max(aLength, bLength, productDigits.length, rowHigh);
+  // 합 줄도 a·b 자릿수 합만큼 연다(정답 자릿수에 맞추지 않는다).
+  const resultHigh = aLength + bLength - 1;
+  const high = Math.max(aLength, bLength, productDigits.length, rowHigh, resultHigh);
   const requiredColumns = range(0, productDigits.length - 1);
-  // 합 줄은 참값보다 한 칸 더 쓸 수 있다(틀린 풀이도 그대로 보이게).
-  const resultColumns = range(0, productDigits.length);
+  const resultColumns = range(0, resultHigh);
 
   return {
     aText: state.aText,
@@ -248,12 +256,15 @@ export function partialValues(state: ColumnCalcState, plan: MulPlan): (string | 
   return plan.rows.map((row) => readRowValue(state, row));
 }
 
-/** 부분곱 줄을 다 채웠는가. 자리 밀기로 비는 낮은 열은 비어 있거나 0이면 된다. */
+/**
+ * 부분곱 줄을 다 채웠는가. 자리 밀기로 비는 낮은 열은 비어 있거나 0이면 되고,
+ * 최대 자릿수만큼 열어 둔 앞자리 빈칸도 0으로 읽으므로 채우지 않아도 된다.
+ */
 export function rowsComplete(state: ColumnCalcState, plan: MulPlan): boolean {
   return plan.rows.every((row) => {
     const record = state.partials[row.index];
-    for (let column = row.start; column <= row.end; column += 1) {
-      if (digitOf(record, column) === null) return false;
+    for (const key of Object.keys(row.expectedDigits)) {
+      if (digitOf(record, Number(key)) === null) return false;
     }
     for (let column = 0; column < row.start; column += 1) {
       const digit = digitOf(record, column);

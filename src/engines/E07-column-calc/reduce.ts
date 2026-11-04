@@ -3,7 +3,7 @@
  * 수 값은 정수 자리 계산과 `Rational`로만 다루고, 상태에는 문자열만 둔다.
  */
 import { computeMulPlan } from './grid-mul';
-import type { MulPlan } from './grid-mul';
+import type { MulPlan, MulRowPlan } from './grid-mul';
 import type {
   CellRef,
   ColumnCalcAction,
@@ -311,14 +311,22 @@ function cellOf(cell: CellRef): CellRef {
     : { row: cell.row, column: cell.column, index: cell.index };
 }
 
+/** 그 줄에서 실제로 채워야 하는(정답 자릿수에 해당하는) 열. 앞자리 여분 칸은 건너뛴다. */
+function valueColumns(row: MulRowPlan): number[] {
+  return Object.keys(row.expectedDigits)
+    .map(Number)
+    .sort((left, right) => left - right);
+}
+
 function mulAfterEnter(state: ColumnCalcState, cell: CellRef): CellRef | null {
   const plan = computeMulPlan(state);
   if (!plan) return null;
   if (cell.row === 'partial' && cell.index !== undefined) {
     const row = plan.rows[cell.index];
     if (!row) return null;
-    // 한 줄 안에서는 일의 자리 → 높은 자리로 간다.
-    const higher = row.columns.filter((column) => column > cell.column);
+    // 한 줄 안에서는 일의 자리 → 높은 자리로 간다. 여분 앞자리 칸은 건너뛴다.
+    const required = valueColumns(row);
+    const higher = required.filter((column) => column > cell.column);
     const nextColumn = higher[0];
     if (nextColumn !== undefined) {
       return { row: 'partial', column: nextColumn, index: row.index };
