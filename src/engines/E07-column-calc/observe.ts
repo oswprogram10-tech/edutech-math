@@ -7,8 +7,18 @@
 import type { JsonValue, Observation } from '../../core/engine-sdk';
 import { classifyColumns, uniqueCodes } from './classify';
 import type { ColumnError } from './classify';
+import { classifyDiv } from './classify-div';
 import { classifyMul } from './classify-mul';
 import { estimateIsMultiple, estimateSignal } from './estimate';
+import {
+  computeDivPlan,
+  divAlarm,
+  divComplete,
+  divRemainder,
+  divStepReadings,
+  divWrongColumns,
+  estimateRevised,
+} from './grid-div';
 import { computeGrid, readResult } from './grid';
 import { computeMulPlan, partialValues, rowsComplete } from './grid-mul';
 import type { CellRef, ColumnCalcState } from './types';
@@ -19,7 +29,68 @@ function flaggedCellJson(cell: CellRef): JsonValue {
     : { row: cell.row, column: cell.column, index: cell.index };
 }
 
+function observeDiv(state: ColumnCalcState): Observation {
+  const grid = computeGrid(state);
+  const plan = computeDivPlan(state);
+  const errors = classifyDiv(state, plan);
+  const misconceptions = uniqueCodes(errors);
+  const remainder = divRemainder(state, plan);
+  return {
+    mode: state.mode,
+    op: state.op,
+    a: state.aText,
+    b: state.bText,
+    aligned: grid.alignment.aligned,
+    alignment: grid.alignment.alignment,
+    complete: divComplete(state, plan),
+    result: plan.reading.quotientText,
+    resultRaw: plan.reading.quotientRaw,
+    carries: { ...state.carries },
+    regroups: { ...state.regroups },
+    wrongColumns: divWrongColumns(state, plan),
+    errors: errors.map((error) => ({ column: error.column, code: error.code })),
+    misconceptions,
+    // ── mul ─────────────────────────────────────────────────
+    style: null,
+    partials: null,
+    expectedRowCount: null,
+    rowsComplete: null,
+    flaggedCells: state.flagged.map(flaggedCellJson),
+    rowColors: null,
+    // ── 연결 ────────────────────────────────────────────────
+    linkHighlights: [...state.linkHighlights],
+    // ── estimate ────────────────────────────────────────────
+    phase: null,
+    estimate: null,
+    estimateIsMultiple: null,
+    signal: null,
+    rechecked: null,
+    // ── div ─────────────────────────────────────────────────
+    dividend: plan.reading.dividend.toString(),
+    divisor: plan.reading.divisor.toString(),
+    quotient: plan.reading.quotientText,
+    quotientRaw: plan.reading.quotientRaw,
+    quotientLeadingZero: plan.reading.quotientLeadingZero,
+    remainder: remainder === null ? null : remainder.toString(),
+    steps: divStepReadings(state, plan).map((step) => ({
+      column: step.column,
+      q: step.q,
+      product: step.product,
+      diff: step.diff,
+    })),
+    divComplete: divComplete(state, plan),
+    alarm: divAlarm(state, plan, state.alarmEnabled),
+    skippedZero: plan.reading.skippedZero,
+    estimateTries: Object.fromEntries(
+      Object.entries(state.estimateTries).map(([column, tries]) => [column, [...tries]]),
+    ),
+    estimateRevised: estimateRevised(state, plan),
+    rewound: state.rewound,
+  };
+}
+
 export function observe(state: ColumnCalcState): Observation {
+  if (state.op === 'div') return observeDiv(state);
   const grid = computeGrid(state);
   const reading = readResult(state, grid);
   const plan = state.op === 'mul' ? computeMulPlan(state) : null;

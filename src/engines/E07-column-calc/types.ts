@@ -9,9 +9,9 @@
  * T046: `mul`(부분곱·받아올림)과 `estimate`(어림값 → 결과 신호등)를 더했다.
  * 기존 add·sub·decimal의 상태·Action 모양은 그대로 두고 필드만 덧붙였다.
  */
-export type ColumnMode = 'add' | 'sub' | 'decimal' | 'mul' | 'estimate';
+export type ColumnMode = 'add' | 'sub' | 'decimal' | 'mul' | 'estimate' | 'div';
 
-export type ColumnOp = 'add' | 'sub' | 'mul';
+export type ColumnOp = 'add' | 'sub' | 'mul' | 'div';
 
 /** `"C-P"`면 C·P 단계에서 자석 정렬, A 단계는 자석 없음. true/false도 받는다. */
 export type MagnetAlign = 'C-P' | boolean;
@@ -35,10 +35,19 @@ export interface EstimateTolerance {
   readonly yellow?: number | string;
 }
 
-/** 미리 채우는 틀린 풀이(디버그 과제). */
+/** 미리 채우는 틀린 풀이(디버그 과제). div는 `quotient`만 쓴다. */
 export interface MulDebugSample {
   readonly rows?: readonly (number | string)[];
   readonly sum?: number | string;
+  /** div: 미리 채울 몫(`"12"`). 그 몫으로 모든 단계 줄을 계산해 채운다. */
+  readonly quotient?: string;
+}
+
+/** 배수 사다리. C는 막대, P는 배수 표, A에서는 숨긴다. */
+export interface EstimateBar {
+  readonly show: 'C-P' | 'C' | 'P' | false;
+  /** 1 … maxMultiple까지 후보로 보여 준다. 기본 9. */
+  readonly maxMultiple?: number;
 }
 
 export interface ColumnCalcConfig {
@@ -58,6 +67,20 @@ export interface ColumnCalcConfig {
   readonly showZeroPlaceholder?: boolean;
   readonly debugSample?: MulDebugSample;
 
+  // ── div ───────────────────────────────────────────────────
+  /** div: 나누어지는 수(1~9999). 없으면 `a`. */
+  readonly dividend?: number | string;
+  /** div: 나누는 수(1~99). 없으면 `b`. */
+  readonly divisor?: number | string;
+  /** div: 나머지가 나누는 수 이상이면 경고등을 켠다. */
+  readonly remainderAlarm?: boolean;
+  /** div: 가운데 빈 몫 칸을 깜빡인다. */
+  readonly flagSkippedZero?: boolean;
+  /** div: 완성 뒤 되감기 버튼을 보인다. 명세의 `{engine, mode}` 객체도 받는다. */
+  readonly rewindCheck?: boolean | { readonly engine?: string; readonly mode?: string };
+  /** div: 몫 칸에 커서가 있을 때 격자 옆에 배수 사다리를 보인다. */
+  readonly estimateBar?: EstimateBar;
+
   // ── estimate ──────────────────────────────────────────────
   /** 어림값이 몇 자리(10·100·1000)의 배수인지. 기본 100. */
   readonly roundTo?: number;
@@ -70,24 +93,35 @@ export interface ColumnCalcConfig {
 }
 
 /** 학생이 고칠 수 있는 줄. 윗수·아랫수는 카드/설정으로 정해진다. */
-export type EditableRow = 'result' | 'carry' | 'regroup' | 'partial' | 'partial-carry';
+export type EditableRow =
+  | 'result'
+  | 'carry'
+  | 'regroup'
+  | 'partial'
+  | 'partial-carry'
+  | 'quotient'
+  | 'div-product'
+  | 'div-diff';
 
 export interface CellRef {
   readonly row: EditableRow;
   readonly column: number;
-  /** `partial`·`partial-carry` 줄 번호(0부터, 낮은 자리부터). */
+  /**
+   * `partial`·`partial-carry` 줄 번호(0부터, 낮은 자리부터).
+   * div의 `div-product`·`div-diff`는 **그 단계의 몫 열**이다(줄 번호가 아니다).
+   */
   readonly index?: number;
 }
 
 /** `link-mark`가 강조만 할 칸. 키는 `"kind:column"` 꼴이다. */
 export interface LinkMark {
-  readonly kind: 'carry' | 'cross' | 'regroup' | 'ten';
+  readonly kind: 'carry' | 'cross' | 'regroup' | 'ten' | 'quotient';
   readonly column: number;
 }
 
 /** `link-mark`가 자동으로 쓸 값(학생이 블록으로 한 조작을 옮겨 적는 것). */
 export interface LinkValue {
-  readonly kind: 'carry' | 'regroup';
+  readonly kind: 'carry' | 'regroup' | 'quotient';
   readonly column: number;
   readonly digit: string;
 }
@@ -138,6 +172,22 @@ export interface ColumnCalcState {
   /** `Rational`로 읽을 수 있는 한계 문자열. */
   readonly toleranceGreen: string;
   readonly toleranceYellow: string;
+
+  // ── div ───────────────────────────────────────────────────
+  /** 몫 칸: 열 → 숫자. 맨 앞 빈칸은 "쓰지 않음"이다. */
+  readonly quotient: Readonly<Record<string, string>>;
+  /** 단계(몫 열) → 곱 줄 열 → 숫자. */
+  readonly divProducts: Readonly<Record<string, Readonly<Record<string, string>>>>;
+  /** 단계(몫 열) → 뺄셈 줄 열 → 숫자. */
+  readonly divDiffs: Readonly<Record<string, Readonly<Record<string, string>>>>;
+  /** 배수 사다리에서 고른 후보: 열 → 고른 순서. */
+  readonly estimateTries: Readonly<Record<string, readonly number[]>>;
+  readonly rewound: boolean;
+  readonly alarmEnabled: boolean;
+  readonly flagSkippedZero: boolean;
+  readonly rewindEnabled: boolean;
+  readonly estimateBarShow: EstimateBar['show'];
+  readonly estimateMaxMultiple: number;
 }
 
 export type ColumnCalcAction =
@@ -176,7 +226,11 @@ export type ColumnCalcAction =
   | { readonly type: 'enter-estimate'; readonly digit: string | null }
   | { readonly type: 'lock-estimate' }
   | { readonly type: 'unlock-estimate' }
-  | { readonly type: 'recheck' };
+  | { readonly type: 'recheck' }
+  /** div: 배수 사다리에서 몫 후보를 미리 골라 본다. */
+  | { readonly type: 'try-estimate'; readonly column: number; readonly k: number }
+  /** div: 완성한 풀이를 거꾸로 되감는다. */
+  | { readonly type: 'rewind' };
 
 /** 격자 위쪽에 그리는 자릿값 이름. C 단계에서만 보여 준다. */
 export const PLACE_NAMES_KO: Readonly<Record<number, string>> = {

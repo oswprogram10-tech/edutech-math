@@ -11,14 +11,18 @@ import { columnCalcStrings } from './strings.ko';
 import type { ColumnCalcAction, ColumnCalcConfig, ColumnCalcState } from './types';
 import { ColumnCalcView } from './View';
 import { ColumnSumOverlay } from './overlays/column-sum';
+import { LadderFocusOverlay } from './overlays/ladder-focus';
+import { LeftoverBlinkOverlay } from './overlays/leftover-blink';
 import { PartialShiftOverlay } from './overlays/partial-shift';
 import { PartialSplitOverlay } from './overlays/partial-split';
 import { PlaceValueOverlay } from './overlays/place-value';
+import { QuotientGapOverlay } from './overlays/quotient-gap';
+import { RemainderVsDivisorOverlay } from './overlays/remainder-vs-divisor';
 
 const definition: EngineDefinition<ColumnCalcConfig, ColumnCalcState, ColumnCalcAction> = {
   id: 'E07',
   name: columnCalcStrings.name,
-  modes: ['add', 'sub', 'decimal', 'mul', 'estimate'],
+  modes: ['add', 'sub', 'decimal', 'mul', 'estimate', 'div'],
   createInitialState,
   reduce,
   View: ColumnCalcView,
@@ -31,6 +35,9 @@ const definition: EngineDefinition<ColumnCalcConfig, ColumnCalcState, ColumnCalc
     'value-changed',
     'estimate-locked',
     'signal-changed',
+    'estimate-tried',
+    'alarm-changed',
+    'rewind-requested',
   ],
   emit,
   predicates,
@@ -39,6 +46,10 @@ const definition: EngineDefinition<ColumnCalcConfig, ColumnCalcState, ColumnCalc
     'column-sum': ColumnSumOverlay,
     'partial-shift': PartialShiftOverlay,
     'partial-split': PartialSplitOverlay,
+    'quotient-gap': QuotientGapOverlay,
+    'remainder-vs-divisor': RemainderVsDivisorOverlay,
+    'leftover-blink': LeftoverBlinkOverlay,
+    'ladder-focus': LadderFocusOverlay,
   },
 };
 

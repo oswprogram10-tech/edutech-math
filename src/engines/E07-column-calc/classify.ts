@@ -18,6 +18,10 @@ export type MisconceptionCode =
   | 'MC-MUL-PARTIAL-MISSING'
   | 'MC-MUL-CARRY-ADD-BEFORE'
   | 'MC-MUL-NO-PLACE-VALUE'
+  | 'MC-DIV-QUOTIENT-ZERO'
+  | 'MC-DIV-REMAINDER-TOO-BIG'
+  | 'MC-DIV-BRING-DOWN'
+  | 'MC-DIV-ESTIMATE-OFF'
   | 'unknown';
 
 export interface ClassifyInput {

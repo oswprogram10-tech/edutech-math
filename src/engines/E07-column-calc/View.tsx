@@ -5,14 +5,17 @@
  * - add·sub·decimal: `views/AddSubView`
  * - mul: `views/MulView`
  * - estimate: `views/EstimateView`
+ * - div: `views/DivView`
  */
 import { AddSubView } from './views/AddSubView';
 import type { ColumnViewProps } from './views/AddSubView';
+import { DivView } from './views/DivView';
 import { EstimateView } from './views/EstimateView';
 import { MulView } from './views/MulView';
 
 export function ColumnCalcView(props: ColumnViewProps) {
   if (props.state.mode === 'mul') return <MulView {...props} />;
   if (props.state.mode === 'estimate') return <EstimateView {...props} />;
+  if (props.state.mode === 'div') return <DivView {...props} />;
   return <AddSubView {...props} />;
 }

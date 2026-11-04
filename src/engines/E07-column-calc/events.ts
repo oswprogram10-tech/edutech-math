@@ -7,6 +7,7 @@
 import { Rational } from '../../core/math';
 import type { EngineEvent, EnginePredicate, JsonValue, Observation } from '../../core/engine-sdk';
 import { estimateSignal } from './estimate';
+import { computeDivPlan, divAlarm, divComplete, estimateOver } from './grid-div';
 import { alignmentOf, computeGrid, readResult } from './grid';
 import type { ColumnCalcAction, ColumnCalcState } from './types';
 
@@ -24,6 +25,11 @@ function numberOf(value: JsonValue | undefined): number | null {
 }
 
 function valueEvent(state: ColumnCalcState): EngineEvent[] {
+  if (state.op === 'div') {
+    const plan = computeDivPlan(state);
+    if (!divComplete(state, plan) || plan.reading.quotientText === null) return [];
+    return [{ name: 'value-changed', payload: { value: plan.reading.quotientText } }];
+  }
   const reading = readResult(state, computeGrid(state));
   if (!reading.complete || reading.value === null) return [];
   return [{ name: 'value-changed', payload: { value: reading.value } }];
@@ -95,8 +101,36 @@ export function emit(
       break;
     }
 
+    case 'try-estimate': {
+      const plan = computeDivPlan(next);
+      events.push({
+        name: 'estimate-tried',
+        payload: {
+          column: action.column,
+          k: action.k,
+          over: estimateOver(next, plan.reading, action.column, action.k),
+        },
+      });
+      break;
+    }
+
+    case 'rewind': {
+      if (next.rewound && !prev.rewound) {
+        events.push({ name: 'rewind-requested', payload: {} });
+      }
+      break;
+    }
+
     default:
       break;
+  }
+
+  if (prev.op === 'div' && next.op === 'div') {
+    const before = divAlarm(prev, computeDivPlan(prev), prev.alarmEnabled);
+    const after = divAlarm(next, computeDivPlan(next), next.alarmEnabled);
+    if (before !== after) {
+      events.push({ name: 'alarm-changed', payload: { on: after } });
+    }
   }
 
   return [...events, ...valueEvent(next), ...signalEvent(prev, next)];
@@ -244,6 +278,85 @@ export const linkMarked: EnginePredicate = (
   return Array.isArray(highlights) && highlights.includes(`${kind}:${column}`);
 };
 
+/** args `{ value }`: 학생이 쓴 몫(정수). */
+export const quotientIs: EnginePredicate = (
+  observation: Observation,
+  args: JsonValue | undefined,
+): boolean => {
+  const record = recordOf(args);
+  if (!record) return false;
+  const expected = record['value'];
+  const actual = observation['quotient'];
+  if (typeof actual !== 'string' || !/^\d+$/.test(actual)) return false;
+  if (typeof expected === 'number') {
+    return Number.isInteger(expected) && BigInt(actual) === BigInt(expected);
+  }
+  if (typeof expected === 'string' && /^\d+$/.test(expected.trim())) {
+    return BigInt(actual) === BigInt(expected.trim());
+  }
+  return false;
+};
+
+/** args `{ value }`: 마지막 단계 뺄셈 줄 값(나머지). */
+export const remainderIs: EnginePredicate = (
+  observation: Observation,
+  args: JsonValue | undefined,
+): boolean => {
+  const record = recordOf(args);
+  if (!record) return false;
+  const expected = record['value'];
+  const actual = observation['remainder'];
+  if (typeof actual !== 'string' || !/^\d+$/.test(actual)) return false;
+  if (typeof expected === 'number') {
+    return Number.isInteger(expected) && BigInt(actual) === BigInt(expected);
+  }
+  if (typeof expected === 'string' && /^\d+$/.test(expected.trim())) {
+    return BigInt(actual) === BigInt(expected.trim());
+  }
+  return false;
+};
+
+/** args `{ value: boolean }`: 나머지 경고등. */
+export const alarmIs: EnginePredicate = (
+  observation: Observation,
+  args: JsonValue | undefined,
+): boolean => {
+  const record = recordOf(args);
+  return (
+    record !== null &&
+    typeof record['value'] === 'boolean' &&
+    observation['alarm'] === record['value']
+  );
+};
+
+/** 같은 열에서 선을 넘는 후보를 고른 뒤 더 작은 후보를 골랐는가. */
+export const estimateRevised: EnginePredicate = (observation: Observation): boolean =>
+  observation['estimateRevised'] === true;
+
+/** args `{ column, digit }`: 몫 칸 하나의 숫자. */
+export const quotientCellIs: EnginePredicate = (
+  observation: Observation,
+  args: JsonValue | undefined,
+): boolean => {
+  const record = recordOf(args);
+  if (!record) return false;
+  const column = numberOf(record['column']);
+  const digit = stringOf(record['digit']);
+  const dividend = observation['dividend'];
+  const raw = observation['quotientRaw'];
+  if (
+    column === null ||
+    digit === null ||
+    typeof dividend !== 'string' ||
+    typeof raw !== 'string'
+  ) {
+    return false;
+  }
+  const index = dividend.length - 1 - column;
+  if (index < 0 || index >= raw.length) return false;
+  return raw.charAt(index) === digit;
+};
+
 export const predicates: Readonly<Record<string, EnginePredicate>> = {
   resultIs,
   alignedByPoint,
@@ -255,4 +368,9 @@ export const predicates: Readonly<Record<string, EnginePredicate>> = {
   estimateIs,
   flaggedCell,
   linkMarked,
+  quotientIs,
+  remainderIs,
+  alarmIs,
+  estimateRevised,
+  quotientCellIs,
 };
