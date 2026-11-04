@@ -6,13 +6,39 @@
  */
 import type { JsonValue, Observation } from '../../core/engine-sdk';
 import { classifyColumns, uniqueCodes } from './classify';
+import type { ColumnError } from './classify';
+import { classifyMul } from './classify-mul';
+import { estimateIsMultiple, estimateSignal } from './estimate';
 import { computeGrid, readResult } from './grid';
-import type { ColumnCalcState } from './types';
+import { computeMulPlan, partialValues, rowsComplete } from './grid-mul';
+import type { CellRef, ColumnCalcState } from './types';
+
+function flaggedCellJson(cell: CellRef): JsonValue {
+  return cell.index === undefined
+    ? { row: cell.row, column: cell.column }
+    : { row: cell.row, column: cell.column, index: cell.index };
+}
 
 export function observe(state: ColumnCalcState): Observation {
   const grid = computeGrid(state);
   const reading = readResult(state, grid);
-  const errors = classifyColumns(state, reading.wrongColumns, grid.alignment, grid.byColumn);
+  const plan = state.op === 'mul' ? computeMulPlan(state) : null;
+  const partialRowsComplete = plan === null ? true : rowsComplete(state, plan);
+  const complete = reading.complete && partialRowsComplete;
+
+  let errors: ColumnError[];
+  if (plan) {
+    const mulError = classifyMul(state, plan);
+    if (mulError) {
+      errors = [mulError];
+    } else if (reading.wrongColumns.length > 0) {
+      errors = reading.wrongColumns.map((column) => ({ column, code: 'unknown' }));
+    } else {
+      errors = [];
+    }
+  } else {
+    errors = classifyColumns(state, reading.wrongColumns, grid.alignment, grid.byColumn);
+  }
   const misconceptions = uniqueCodes(errors);
 
   const errorViews: JsonValue[] = errors.map((error) => ({
@@ -27,13 +53,28 @@ export function observe(state: ColumnCalcState): Observation {
     b: state.bText,
     aligned: grid.alignment.aligned,
     alignment: grid.alignment.alignment,
-    complete: reading.complete,
-    result: reading.value,
+    complete,
+    result: complete ? reading.value : null,
     resultRaw: reading.raw,
     carries: { ...state.carries },
     regroups: { ...state.regroups },
     wrongColumns: [...reading.wrongColumns],
     errors: errorViews,
     misconceptions,
+    // ── mul ─────────────────────────────────────────────────
+    style: plan ? plan.style : null,
+    partials: plan ? partialValues(state, plan) : null,
+    expectedRowCount: plan ? plan.rows.length : null,
+    rowsComplete: plan ? partialRowsComplete : null,
+    flaggedCells: plan ? state.flagged.map(flaggedCellJson) : null,
+    rowColors: plan ? { ...state.rowColors } : null,
+    // ── 연결 ────────────────────────────────────────────────
+    linkHighlights: [...state.linkHighlights],
+    // ── estimate ────────────────────────────────────────────
+    phase: state.mode === 'estimate' ? state.phase : null,
+    estimate: state.mode === 'estimate' ? state.estimate : null,
+    estimateIsMultiple: state.mode === 'estimate' ? estimateIsMultiple(state) : null,
+    signal: state.mode === 'estimate' ? estimateSignal(state) : null,
+    rechecked: state.mode === 'estimate' ? state.rechecked : null,
   };
 }

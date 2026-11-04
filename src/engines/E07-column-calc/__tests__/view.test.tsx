@@ -90,4 +90,117 @@ describe('E07 화면은 칸별 정답·오답을 표시하지 않는다', () => 
     expect(correctnessMarks(container)).toEqual([]);
     expect(container.querySelectorAll('[data-point="true"]').length).toBeGreaterThan(0);
   });
+
+  it('틀린 곱셈 46×27을 써도 기대값 1242와 칸별 판정이 나타나지 않는다', () => {
+    let state = createInitialState({ mode: 'mul', a: 46, b: 27 });
+    for (const [column, digit] of [
+      [0, '3'],
+      [1, '2'],
+      [2, '2'],
+    ] as const) {
+      state = apply(state, { type: 'enter', row: 'partial', column, digit, index: 0 });
+    }
+    // 자리 밀기를 잊고 92를 그대로 쓴 틀린 풀이(자리 밀기 0을 쓰지 않음).
+    for (const [column, digit] of [
+      [1, '2'],
+      [2, '9'],
+    ] as const) {
+      state = apply(state, { type: 'enter', row: 'partial', column, digit, index: 1 });
+    }
+    for (const [column, digit] of [
+      [0, '1'],
+      [1, '5'],
+      [2, '4'],
+      [3, '2'],
+    ] as const) {
+      state = apply(state, { type: 'enter', row: 'result', column, digit });
+    }
+
+    const { container } = renderView({ mode: 'mul', a: 46, b: 27 }, state);
+    expect(correctnessMarks(container)).toEqual([]);
+    expect(container.querySelectorAll('[data-row="partial"]').length).toBeGreaterThan(0);
+    expect(container.textContent).not.toContain('1242');
+    expect(container.textContent).not.toContain('정답');
+  });
+
+  it('46×27 둘째 부분곱 줄은 92든 920이든 천~일 4칸을 연다', () => {
+    const config: ColumnCalcConfig = { mode: 'mul', a: 46, b: 27 };
+    let shifted = createInitialState(config);
+    shifted = apply(shifted, { type: 'enter', row: 'partial', column: 1, digit: '2', index: 1 });
+    shifted = apply(shifted, { type: 'enter', row: 'partial', column: 2, digit: '9', index: 1 });
+    const first = renderView(config, shifted);
+    const firstCells = [
+      ...first.container.querySelectorAll('[data-row="partial"][data-index="1"]'),
+    ].filter(
+      (cell) =>
+        cell instanceof HTMLButtonElement || cell.getAttribute('data-placeholder') === 'true',
+    );
+    expect(firstCells.length).toBe(4);
+    expect(
+      first.container.querySelector('[data-row="partial"][data-index="1"][data-column="3"]')
+        ?.tagName,
+    ).toBe('BUTTON');
+    first.unmount();
+
+    // 자리 밀기를 잊고 92를 쓴 상태(점선 0 없이)도 칸 수는 같다.
+    const noPlaceholderConfig: ColumnCalcConfig = {
+      mode: 'mul',
+      a: 46,
+      b: 27,
+      showZeroPlaceholder: false,
+    };
+    let forgotten = createInitialState(noPlaceholderConfig);
+    forgotten = apply(forgotten, {
+      type: 'enter',
+      row: 'partial',
+      column: 0,
+      digit: '2',
+      index: 1,
+    });
+    forgotten = apply(forgotten, {
+      type: 'enter',
+      row: 'partial',
+      column: 1,
+      digit: '9',
+      index: 1,
+    });
+    const second = renderView(noPlaceholderConfig, forgotten);
+    const secondCells = [
+      ...second.container.querySelectorAll('[data-row="partial"][data-index="1"]'),
+    ].filter((cell) => cell instanceof HTMLButtonElement);
+    expect(secondCells.length).toBe(4);
+  });
+
+  it('어림 화면도 학생이 쓴 어림값·결과만 보여 주고 기대값 801을 쓰지 않는다', () => {
+    let state = createInitialState({
+      mode: 'estimate',
+      op: 'add',
+      a: 389,
+      b: 412,
+      sample: '500',
+    });
+    for (const digit of '800') {
+      state = apply(state, { type: 'enter-estimate', digit });
+    }
+    state = apply(state, { type: 'lock-estimate' });
+    // sample 500을 지우고 학생이 799를 쓴 상태(기대값 801).
+    state = apply(state, { type: 'recheck' });
+    for (const [column, digit] of [
+      [0, '9'],
+      [1, '9'],
+      [2, '7'],
+    ] as const) {
+      state = apply(state, { type: 'enter', row: 'result', column, digit });
+    }
+
+    const { container } = renderView({ mode: 'estimate', op: 'add', a: 389, b: 412 }, state);
+    expect(correctnessMarks(container)).toEqual([]);
+    expect(container.textContent).not.toContain('801');
+    expect(container.textContent).not.toContain('정답');
+
+    const signal = container.querySelector('[data-testid="estimate-signal"]');
+    expect(signal).not.toBeNull();
+    expect(signal?.getAttribute('data-signal')).toBe('green');
+    expect(signal?.textContent).toContain('가까워요');
+  });
 });

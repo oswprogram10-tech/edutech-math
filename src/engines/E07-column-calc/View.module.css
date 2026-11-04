@@ -298,3 +298,134 @@ button.cell:disabled {
   font-size: 0.82rem;
   line-height: 1.4;
 }
+
+/* E01 연결(hint)로 강조한 칸. 색만 쓰지 않고 테두리 모양도 바꾼다. */
+.cell[data-linked='true'],
+.tenToggle[data-linked='true'] {
+  border-color: #2f9e6b;
+  border-style: double;
+  background: #eefaf2;
+}
+
+/* 학생이 표시한 틀린 칸(곱셈). 다시 누르면 해제된다. */
+.cell[data-flagged='true'] {
+  border-color: #b45309;
+  border-style: dashed;
+  background: #fff4e5;
+  color: #7c3a06;
+}
+
+/* ── estimate ───────────────────────────────────────────── */
+
+.estimateBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.estimateLabel {
+  color: #3c4658;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.estimateCell {
+  min-height: 48px;
+  min-width: 96px;
+  padding: 0.25rem 0.75rem;
+  border: 2px solid #2f6fde;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #1d2330;
+  font: inherit;
+  font-size: 1.35rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.wrap[data-target-size='64'] .estimateCell {
+  min-height: 64px;
+  min-width: 120px;
+  font-size: 1.5rem;
+}
+
+.estimateCell[data-filled='false'] {
+  border-style: dashed;
+  color: #7a8497;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.estimateCell[data-locked='true'] {
+  border-color: #101828;
+  background: #fff7e6;
+}
+
+.lockButton {
+  min-height: 48px;
+  min-width: 48px;
+  padding: 0.35rem 0.9rem;
+  border: 2px solid #2f6fde;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #1d2330;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.wrap[data-target-size='64'] .lockButton {
+  min-height: 64px;
+}
+
+.lockButton:disabled {
+  border-color: #aab4c6;
+  color: #7a8497;
+  cursor: not-allowed;
+}
+
+.signal {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  align-self: flex-start;
+  padding: 0.45rem 0.85rem;
+  border: 2px solid #1d2330;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #1d2330;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.signalShape {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.signal[data-signal='green'] {
+  border-color: #1d6b3f;
+  background: #e6f4ec;
+  color: #1d5b3c;
+}
+
+.signal[data-signal='yellow'] {
+  border-color: #8a5a00;
+  background: #fdf4dc;
+  color: #7a4f00;
+}
+
+.signal[data-signal='red'] {
+  border-color: #8f1d1d;
+  background: #fdeaea;
+  color: #8f1d1d;
+}
+
+.recheckRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}

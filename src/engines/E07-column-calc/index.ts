@@ -5,27 +5,40 @@
 import type { EngineDefinition } from '../../core/engine-sdk';
 import { emit, predicates } from './events';
 import { observe } from './observe';
+import { receive } from './receive';
 import { createInitialState, reduce } from './reduce';
 import { columnCalcStrings } from './strings.ko';
 import type { ColumnCalcAction, ColumnCalcConfig, ColumnCalcState } from './types';
 import { ColumnCalcView } from './View';
 import { ColumnSumOverlay } from './overlays/column-sum';
+import { PartialShiftOverlay } from './overlays/partial-shift';
+import { PartialSplitOverlay } from './overlays/partial-split';
 import { PlaceValueOverlay } from './overlays/place-value';
 
 const definition: EngineDefinition<ColumnCalcConfig, ColumnCalcState, ColumnCalcAction> = {
   id: 'E07',
   name: columnCalcStrings.name,
-  modes: ['add', 'sub', 'decimal'],
+  modes: ['add', 'sub', 'decimal', 'mul', 'estimate'],
   createInitialState,
   reduce,
   View: ColumnCalcView,
   observe,
-  events: ['cell-entered', 'carry-marked', 'aligned', 'value-changed'],
+  receive,
+  events: [
+    'cell-entered',
+    'carry-marked',
+    'aligned',
+    'value-changed',
+    'estimate-locked',
+    'signal-changed',
+  ],
   emit,
   predicates,
   overlays: {
     'place-value': PlaceValueOverlay,
     'column-sum': ColumnSumOverlay,
+    'partial-shift': PartialShiftOverlay,
+    'partial-split': PartialSplitOverlay,
   },
 };
 

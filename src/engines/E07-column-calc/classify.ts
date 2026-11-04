@@ -10,9 +10,14 @@ import type { ColumnCalcState, ColumnMode, ColumnOp } from './types';
 
 export type MisconceptionCode =
   | 'MC-DEC-ALIGN-RIGHT'
+  | 'MC-PV-BORROW-ACROSS-ZERO'
   | 'MC-SUB-SMALLER-FROM-LARGER'
   | 'MC-PV-BORROW-NO-DECREMENT'
   | 'MC-PV-NO-CARRY'
+  | 'MC-MUL-PARTIAL-SHIFT'
+  | 'MC-MUL-PARTIAL-MISSING'
+  | 'MC-MUL-CARRY-ADD-BEFORE'
+  | 'MC-MUL-NO-PLACE-VALUE'
   | 'unknown';
 
 export interface ClassifyInput {
@@ -32,6 +37,17 @@ export function classifyColumn(input: ClassifyInput): MisconceptionCode {
   // ① 소수점을 오른쪽 끝에 맞춰 수를 놓았다.
   if (mode === 'decimal' && alignment.alignment === 'right-edge') {
     return 'MC-DEC-ALIGN-RIGHT';
+  }
+
+  // 0을 거쳐 받아내림하고 그 열을 9로 줄이지 않은 값(403−158의 십의 자리 5).
+  if (
+    op === 'sub' &&
+    computation.top === 0 &&
+    computation.decrement > 0 &&
+    computation.expected <= 8 &&
+    student === computation.expected + 1
+  ) {
+    return 'MC-PV-BORROW-ACROSS-ZERO';
   }
 
   // ② 작은 수에서 큰 수를 거꾸로 뺀 값.

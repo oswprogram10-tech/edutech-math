@@ -1,0 +1,94 @@
+/* E07 곱셈 화면 전용. 공통 칸·줄 모양은 View.module.css를 쓴다. */
+
+.rowGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.band {
+  display: inline-block;
+  width: 0.7rem;
+  height: 0.7rem;
+  margin-right: 0.3rem;
+  border-radius: 4px;
+  flex: 0 0 auto;
+}
+
+/* 색만으로 구분하지 않도록 무늬를 함께 그린다(E04 팔레트와 같은 순서). */
+.band[data-pattern='right'] {
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.85) 0 2px,
+    transparent 2px 4px
+  );
+}
+
+.band[data-pattern='left'] {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(255, 255, 255, 0.9) 0 2px,
+    transparent 2px 4px
+  );
+}
+
+.band[data-pattern='dots'] {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.95) 1px, transparent 1.5px);
+  background-size: 4px 4px;
+}
+
+.band[data-pattern='cross'] {
+  background-image:
+    linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.9) 45%,
+      transparent 45% 55%,
+      rgba(255, 255, 255, 0.9) 55%
+    ),
+    linear-gradient(
+      -45deg,
+      rgba(255, 255, 255, 0.9) 45%,
+      transparent 45% 55%,
+      rgba(255, 255, 255, 0.9) 55%
+    );
+}
+
+/* 자리 밀기로 비는 일의 자리 0은 점선으로 보여 준다(수정 불가). */
+.placeholder {
+  border-style: dotted;
+  border-color: #9aa8bf;
+  background: #f1f4fa;
+  color: #7a8497;
+  font-size: 0.95rem;
+}
+
+.flagRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.flagButton {
+  min-height: 48px;
+  min-width: 48px;
+  padding: 0.35rem 0.8rem;
+  border: 2px solid #b45309;
+  border-radius: 12px;
+  background: #fffaf0;
+  color: #7c3a06;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.flagButton[aria-pressed='true'] {
+  background: #ffe6c7;
+  box-shadow: 0 0 0 3px #f0b46c inset;
+}
+
+.flagButton:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
