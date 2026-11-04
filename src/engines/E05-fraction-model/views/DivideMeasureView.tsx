@@ -63,8 +63,12 @@ export function DivideMeasureView({
     }
   }
   const rulerTicks: number[] = [];
-  for (let step = 0; step <= divisorDen; step += 1) {
-    rulerTicks.push(board.rulerBar.x + (step / divisorDen) * board.rulerBar.width);
+  // 자는 1/분모 간격으로 나눈다(2/3 → 1/3 칸 2개). 자 폭을 분모 수로 나누지 않는다.
+  const rulerEnd = board.rulerBar.x + board.rulerBar.width + 0.5;
+  for (let step = 0; ; step += 1) {
+    const x = board.rulerBar.x + (step / divisorDen) * board.unit;
+    if (x > rulerEnd) break;
+    rulerTicks.push(x);
   }
 
   return (

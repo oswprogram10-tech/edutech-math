@@ -603,9 +603,19 @@ describe('E05 T049 divide-measure 눈금·자 배치', () => {
     );
     expect(labels).toEqual(['0', '1', '2']);
 
-    // 나뉨수 3/4은 1/4 칸 3개(경계선 4개), 자 2/3은 1/3 칸 2개(경계선 4개).
+    // 나뉨수 3/4은 1/4 칸 3개(경계선 4개), 자 2/3은 1/3 칸 2개(경계선 3개).
     expect(view.container.querySelectorAll('[data-testid="dividend-part-line"]')).toHaveLength(4);
-    expect(view.container.querySelectorAll('[data-testid="ruler-part-line"]')).toHaveLength(4);
+    const rulerLines = Array.from(
+      view.container.querySelectorAll('[data-testid="ruler-part-line"]'),
+    ).map((line) => Number(line.getAttribute('x1')));
+    expect(rulerLines).toHaveLength(3);
+    // 자의 한 칸(1/3)은 나뉨수 한 칸(1/4)보다 넓다 — 자 폭을 분모 수로 나누면 2/9가 되어 좁아진다.
+    const dividendLines = Array.from(
+      view.container.querySelectorAll('[data-testid="dividend-part-line"]'),
+    ).map((line) => Number(line.getAttribute('x1')));
+    const rulerCell = (rulerLines[1] ?? 0) - (rulerLines[0] ?? 0);
+    const dividendCell = (dividendLines[1] ?? 0) - (dividendLines[0] ?? 0);
+    expect(rulerCell / dividendCell).toBeCloseTo(4 / 3, 5);
   });
 });
 
