@@ -2,6 +2,7 @@
 import { cleanup, fireEvent, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createInitialState, reduce } from '../reduce';
+import { puzzleRects } from '../layout';
 import { arrayAreaStrings as S } from '../strings.ko';
 import type { ArrayAreaAction, ArrayAreaConfig, ArrayAreaState } from '../types';
 import { ArrayAreaView } from '../View';
@@ -102,6 +103,207 @@ describe('E04 기본 설정은 전체 곱을 화면에 쓰지 않는다', () => 
     expect(text).not.toContain('12');
   });
 });
+
+describe('E04 T045 새 모드 화면', () => {
+  it('tiling 기본 설정은 타일 개수·남는 칸 글자를 쓰지 않는다', () => {
+    const config: ArrayAreaConfig = { mode: 'tiling', width: 12, height: 18 };
+    const state = createInitialState(config);
+    const view = renderView(config, state);
+    const text = view.container.textContent ?? '';
+    expect(text).not.toContain('216');
+    expect(text).not.toContain('남는');
+    expect(view.getByTestId('tile-size').textContent).toBe('–');
+  });
+
+  it('tiling 크게 단추가 첫 타일 크기를 고른다', () => {
+    const config: ArrayAreaConfig = { mode: 'tiling', width: 12, height: 18 };
+    const state = createInitialState(config);
+    const onDispatch = vi.fn();
+    const view = renderView(config, state, onDispatch);
+    fireEvent.click(view.getByLabelText(S.tiling.biggerTile));
+    expect(onDispatch).toHaveBeenLastCalledWith({ type: 'set-tile', size: 1 });
+  });
+
+  it('decimal-area 기본 설정은 곱 0.18과 겹친 칸 수를 쓰지 않는다', () => {
+    const config: ArrayAreaConfig = { mode: 'decimal-area', a: '0.6', b: '0.3' };
+    const state = createInitialState(config);
+    const view = renderView(config, state);
+    const text = view.container.textContent ?? '';
+    expect(text).not.toContain('0.18');
+    expect(view.queryByTestId('overlap-count')).toBeNull();
+    expect(text).toContain('1칸 = 0.01');
+  });
+
+  it('decimal-area 가로 늘리기 단추가 0.1을 더한다', () => {
+    const config: ArrayAreaConfig = { mode: 'decimal-area', a: '0.6', b: '0.3' };
+    const state = createInitialState(config);
+    const onDispatch = vi.fn();
+    const view = renderView(config, state, onDispatch);
+    fireEvent.click(view.getByLabelText(S.decimalArea.bigger('a')));
+    expect(onDispatch).toHaveBeenLastCalledWith({
+      type: 'set-factor',
+      side: 'a',
+      value: '0.7',
+    });
+  });
+
+  it('fraction-area 기본 설정은 곱 분수 1/2를 쓰지 않는다', () => {
+    const config: ArrayAreaConfig = { mode: 'fraction-area', a: '2/3', b: '3/4' };
+    const state = createInitialState(config);
+    const view = renderView(config, state);
+    expect(view.container.textContent ?? '').not.toContain('1/2');
+    expect(view.queryByTestId('overlap-count')).toBeNull();
+  });
+
+  it('fraction-area 조각을 키보드로 칠할 수 있다', () => {
+    const config: ArrayAreaConfig = { mode: 'fraction-area', a: '2/3', b: '3/4' };
+    const state = createInitialState(config);
+    const onDispatch = vi.fn();
+    const view = renderView(config, state, onDispatch);
+    const cell = view.container.querySelector<SVGGElement>('[data-cell="0,0"]');
+    if (!cell) throw new Error('칸이 없습니다.');
+    fireEvent.keyDown(cell, { key: 'Enter' });
+    expect(onDispatch).toHaveBeenCalledWith({ type: 'set-shaded', side: 'a', k: 1 });
+  });
+
+  it('scaler는 예측 전에 슬라이더를 잠그고 결과 숫자를 숨긴다', () => {
+    const config: ArrayAreaConfig = {
+      mode: 'fraction-area',
+      variant: 'scaler',
+      base: 12,
+      multipliers: ['3/4'],
+      showResult: true,
+    };
+    const initial = createInitialState(config);
+    const view = renderView(config, initial);
+    expect((view.getByTestId('multiplier-slider') as HTMLInputElement).disabled).toBe(true);
+    expect(view.queryByTestId('scaler-result')).toBeNull();
+
+    const predicted = reduce(initial, { type: 'predict', value: 'smaller' });
+    const ready = renderView(config, predicted);
+    const slider = ready.container.querySelector<HTMLInputElement>(
+      '[data-testid="multiplier-slider"]',
+    );
+    expect(slider?.disabled).toBe(false);
+  });
+
+  it('scaler는 showResult일 때만 결과 길이를 쓴다', () => {
+    const config: ArrayAreaConfig = {
+      mode: 'fraction-area',
+      variant: 'scaler',
+      base: 12,
+      multipliers: ['3/4'],
+      showResult: true,
+    };
+    const state = applyScaler(config);
+    const view = renderView(config, state);
+    expect(view.getByTestId('scaler-result').textContent).toContain('9');
+  });
+
+  it('puzzle 조립 뒤에도 736·32×23을 DOM에 쓰지 않는다', () => {
+    const config: ArrayAreaConfig = {
+      mode: 'area-model',
+      a: 32,
+      b: 23,
+      puzzle: { splitsA: [30], splitsB: [20], seed: 1 },
+    };
+    const state = assemblePuzzle(createInitialState(config));
+    const view = renderView(config, state);
+    const text = view.container.textContent ?? '';
+    expect(text).not.toContain('736');
+    expect(text).not.toContain('32×23');
+  });
+
+  it('puzzle 600 조각만 놓아도 모든 슬롯이 조립판 안에 들어온다', () => {
+    const config: ArrayAreaConfig = {
+      mode: 'area-model',
+      a: 32,
+      b: 23,
+      puzzle: { splitsA: [30], splitsB: [20], seed: 1 },
+    };
+    const initial = createInitialState(config);
+    const piece = initial.puzzle?.pieces.find((item) => item.w * item.h === 600);
+    if (!piece) throw new Error('600 조각이 없습니다.');
+    const placed = reduce(initial, { type: 'place-piece', id: piece.id, col: 0, row: 0 });
+    const view = renderView(config, placed);
+    const board = puzzleRects().board;
+    const slots = Array.from(view.container.querySelectorAll('[data-slot]'));
+    expect(slots.length).toBeGreaterThan(0);
+    for (const slot of slots) {
+      const rect = slot.querySelector('rect');
+      if (!rect) throw new Error('슬롯 사각형이 없습니다.');
+      const x = Number(rect.getAttribute('x'));
+      const y = Number(rect.getAttribute('y'));
+      const width = Number(rect.getAttribute('width'));
+      const height = Number(rect.getAttribute('height'));
+      expect(x).toBeGreaterThanOrEqual(board.x);
+      expect(y).toBeGreaterThanOrEqual(board.y);
+      expect(x + width).toBeLessThanOrEqual(board.x + board.width + 0.01);
+      expect(y + height).toBeLessThanOrEqual(board.y + board.height + 0.01);
+    }
+  });
+
+  it('puzzle·scaler는 각자 안내 문구를 보여 준다', () => {
+    const puzzleConfig: ArrayAreaConfig = {
+      mode: 'area-model',
+      a: 32,
+      b: 23,
+      puzzle: { splitsA: [30], splitsB: [20], seed: 1 },
+    };
+    const puzzle = renderView(puzzleConfig, createInitialState(puzzleConfig));
+    expect(puzzle.container.textContent).toContain(S.puzzle.instruction);
+
+    const scalerConfig: ArrayAreaConfig = {
+      mode: 'fraction-area',
+      variant: 'scaler',
+      base: 12,
+      multipliers: ['3/4'],
+      predictFirst: false,
+    };
+    const scaler = renderView(scalerConfig, createInitialState(scalerConfig));
+    expect(scaler.container.textContent).toContain(S.scaler.instruction);
+  });
+
+  it('puzzle 조각을 골라 슬롯에 키보드로 놓는다', () => {
+    const config: ArrayAreaConfig = {
+      mode: 'area-model',
+      a: 32,
+      b: 23,
+      puzzle: { splitsA: [30], splitsB: [20], seed: 1 },
+    };
+    const state = createInitialState(config);
+    const onDispatch = vi.fn();
+    const view = renderView(config, state, onDispatch);
+    const piece = view.container.querySelector<SVGGElement>('[data-piece]');
+    const slot = view.container.querySelector<SVGGElement>('[data-slot="0,0"]');
+    if (!piece || !slot) throw new Error('조각이나 슬롯이 없습니다.');
+    fireEvent.keyDown(piece, { key: 'Enter' });
+    fireEvent.keyDown(slot, { key: 'Enter' });
+    expect(onDispatch).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'place-piece', col: 0, row: 0 }),
+    );
+  });
+});
+
+function applyScaler(config: ArrayAreaConfig): ArrayAreaState {
+  let state = createInitialState(config);
+  state = reduce(state, { type: 'predict', value: 'smaller' });
+  state = reduce(state, { type: 'set-multiplier', index: 0 });
+  return state;
+}
+
+function assemblePuzzle(state: ArrayAreaState): ArrayAreaState {
+  let next = state;
+  for (const piece of state.puzzle?.pieces ?? []) {
+    next = reduce(next, {
+      type: 'place-piece',
+      id: piece.id,
+      col: piece.w === 30 ? 0 : 1,
+      row: piece.h === 20 ? 0 : 1,
+    });
+  }
+  return next;
+}
 
 describe('E04 View 조작', () => {
   it('줄·칸 −/+ 단추가 resize Action을 보낸다', () => {

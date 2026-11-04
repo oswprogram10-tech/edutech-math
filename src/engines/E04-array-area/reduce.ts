@@ -6,13 +6,17 @@
  * - 전체 곱은 상태에 저장하지 않는다. 부분곱은 화면이 `area.ts`로 계산한다.
  */
 import { clamp } from '../../core/engine-sdk';
+import { Rational } from '../../core/math';
 import {
   arrayTotal,
   boundariesFor,
   cellKey,
+  decimalFactor,
+  parseFractionParts,
   piecesOfArea,
   piecesOfSplit,
   placeValueBoundaries,
+  puzzlePiecesOf,
   sameSplits,
   snapToHint,
   sortSplits,
@@ -28,14 +32,18 @@ import type {
   ArrayIcon,
   ArrayMode,
   FactHide,
+  FractionLayout,
   GridDisplay,
   PartialDisplay,
+  PuzzleConfig,
+  ScalerPrediction,
   SentenceMode,
   SideSplit,
   SplitLine,
   SplitOrientation,
   TableNumberCell,
   TablePrefill,
+  TileCompare,
 } from './types';
 import { MAX_AREA_SPLITS } from './types';
 
@@ -60,11 +68,36 @@ export function inferMode(config: ArrayAreaConfig): ArrayMode {
     return 'times-table';
   }
   if (
+    config.width !== undefined ||
+    config.height !== undefined ||
+    config.tileSizes !== undefined ||
+    config.compare !== undefined
+  ) {
+    return 'tiling';
+  }
+  if (
+    config.maxA !== undefined ||
+    config.maxB !== undefined ||
+    config.showUnitLabel !== undefined
+  ) {
+    return 'decimal-area';
+  }
+  if (
+    config.variant !== undefined ||
+    config.base !== undefined ||
+    config.multipliers !== undefined ||
+    config.maxDenominator !== undefined ||
+    config.layout !== undefined
+  ) {
+    return 'fraction-area';
+  }
+  if (
     config.a !== undefined ||
     config.b !== undefined ||
     config.splitA !== undefined ||
     config.splitB !== undefined ||
-    config.showGrid !== undefined
+    config.showGrid !== undefined ||
+    config.puzzle !== undefined
   ) {
     return 'area-model';
   }
@@ -94,8 +127,83 @@ function prefillOf(value: ArrayAreaConfig['prefill']): TablePrefill | readonly T
   return value === 'rows-2-5' ? 'rows-2-5' : 'none';
 }
 
+function numberOrUndefined(value: number | string | undefined): number | undefined {
+  return typeof value === 'number' ? value : undefined;
+}
+
+function tileSizesOf(config: ArrayAreaConfig, width: number, height: number): number[] {
+  const limit = Math.max(1, Math.min(width, height));
+  const source = config.tileSizes ?? Array.from({ length: limit }, (_, index) => index + 1);
+  const sizes = [
+    ...new Set(
+      source
+        .filter((size) => Number.isFinite(size))
+        .map((size) => Math.trunc(size))
+        .filter((size) => size >= 1 && size <= limit),
+    ),
+  ].sort((a, b) => a - b);
+  return sizes.length > 0 ? sizes : [1];
+}
+
+function compareOf(
+  width: number,
+  height: number,
+  value: TileCompare | undefined,
+): TileCompare | null {
+  if (value === undefined) return null;
+  return {
+    width: integer(value.width, width, 1, 30),
+    height: integer(value.height, height, 1, 30),
+  };
+}
+
+function layoutOf(config: ArrayAreaConfig): {
+  readonly a: FractionLayout;
+  readonly b: FractionLayout;
+} {
+  return {
+    a: config.layout?.a === 'horizontal' ? 'horizontal' : 'vertical',
+    b: config.layout?.b === 'vertical' ? 'vertical' : 'horizontal',
+  };
+}
+
+function scalerMultipliers(value: readonly string[] | undefined): string[] {
+  const fallback = ['1/4', '1/2', '3/4', '1', '5/4', '3/2', '2'];
+  const source = value !== undefined && value.length > 0 ? value : fallback;
+  const result: string[] = [];
+  for (const item of source) {
+    const text = String(item).trim();
+    try {
+      const parsed = Rational.parse(text);
+      if (!parsed.isNegative() && !result.includes(text)) result.push(text);
+    } catch {
+      // 형식이 아닌 눈금은 버린다.
+    }
+  }
+  return result.length > 0 ? result : fallback;
+}
+
+function puzzleOf(config: ArrayAreaConfig): PuzzleConfig | null {
+  const puzzle = config.puzzle;
+  if (puzzle === undefined) return null;
+  const label =
+    puzzle.label === 'dims' || puzzle.label === 'none' || puzzle.label === 'area'
+      ? puzzle.label
+      : 'area';
+  return {
+    splitsA: puzzle.splitsA.filter((at) => Number.isFinite(at)).map((at) => Math.trunc(at)),
+    splitsB: puzzle.splitsB.filter((at) => Number.isFinite(at)).map((at) => Math.trunc(at)),
+    seed: Number.isFinite(puzzle.seed) ? Math.trunc(puzzle.seed ?? 0) : 0,
+    label,
+  };
+}
+
 function settingsOf(config: ArrayAreaConfig): ArrayAreaSettings {
   const size = config.size ?? [9, 9];
+  const width = integer(config.width, 12, 1, 30);
+  const height = integer(config.height, 12, 1, 30);
+  const maxA = decimalFactor(config.maxA ?? '1', '4');
+  const maxB = decimalFactor(config.maxB ?? '1', '2');
   return {
     maxRows: integer(config.maxRows, 10, 1, MAX_ROWS),
     maxCols: integer(config.maxCols, 10, 1, MAX_COLS),
@@ -112,8 +220,8 @@ function settingsOf(config: ArrayAreaConfig): ArrayAreaSettings {
     showPartials: (config.showPartials ?? 'color') as PartialDisplay,
     allowExtend: config.allowExtend === true,
 
-    a: integer(config.a, 23, 1, 999),
-    b: integer(config.b, 4, 1, 99),
+    a: integer(numberOrUndefined(config.a), 23, 1, 999),
+    b: integer(numberOrUndefined(config.b), 4, 1, 99),
     splitA: sideSplitOf(config.splitA),
     splitB: sideSplitOf(config.splitB),
     showGrid: (config.showGrid ?? 'C-only') as GridDisplay,
@@ -124,6 +232,26 @@ function settingsOf(config: ArrayAreaConfig): ArrayAreaSettings {
     symmetryReveal: config.symmetryReveal === true,
     colorSameValue: config.colorSameValue === true,
     includeZero: config.includeZero === true,
+
+    shelf: config.shelf === true,
+    width,
+    height,
+    tileSizes: tileSizesOf(config, width, height),
+    compare: compareOf(width, height, config.compare),
+    maxA,
+    maxB,
+    grid: 10,
+    locked: config.locked === true,
+    showUnitLabel: config.showUnitLabel !== false,
+    showCounts: config.showCounts === true,
+    maxDenominator: integer(config.maxDenominator, 12, 1, 20),
+    layout: layoutOf(config),
+    variant: config.variant === 'scaler' ? 'scaler' : 'square',
+    base: integer(config.base, 12, 1, 20),
+    multipliers: scalerMultipliers(config.multipliers),
+    predictFirst: config.predictFirst !== false,
+    showResult: config.showResult === true,
+    puzzle: puzzleOf(config),
   };
 }
 
@@ -163,6 +291,41 @@ export function createInitialState(config: ArrayAreaConfig): ArrayAreaState {
       ? integer(config.cols, 8, 0, settings.maxCols)
       : integer(config.cols, 0, 0, settings.maxCols);
 
+  const decimal =
+    mode === 'decimal-area'
+      ? {
+          a: decimalFactor(typeof config.a === 'string' ? config.a : '0', settings.maxA),
+          b: decimalFactor(typeof config.b === 'string' ? config.b : '0', settings.maxB),
+        }
+      : null;
+
+  const fraction =
+    mode === 'fraction-area' && settings.variant !== 'scaler'
+      ? {
+          a: parseFractionParts(config.a, settings.maxDenominator),
+          b: parseFractionParts(config.b, settings.maxDenominator),
+        }
+      : null;
+
+  const scaler =
+    mode === 'fraction-area' && settings.variant === 'scaler'
+      ? { prediction: null, index: null, tried: [] }
+      : null;
+
+  const puzzle =
+    mode === 'area-model' && settings.puzzle !== null
+      ? {
+          pieces: puzzlePiecesOf(
+            settings.a,
+            settings.b,
+            settings.puzzle.splitsA,
+            settings.puzzle.splitsB,
+            settings.puzzle.seed ?? 0,
+          ),
+          placed: {},
+        }
+      : null;
+
   return {
     mode,
     rows,
@@ -180,6 +343,12 @@ export function createInitialState(config: ArrayAreaConfig): ArrayAreaState {
     selected: [],
     flash: null,
     folded: false,
+    tileSize: null,
+    recordedSizes: [],
+    decimal,
+    fraction,
+    scaler,
+    puzzle,
     settings,
   };
 }
@@ -218,6 +387,24 @@ export function reduce(state: ArrayAreaState, action: ArrayAreaAction): ArrayAre
       return paintCell(state, action.r, action.c, action.color);
     case 'fold':
       return { ...state, folded: !state.folded };
+    case 'set-tile':
+      return setTile(state, action.size);
+    case 'record-tile':
+      return recordTile(state);
+    case 'set-factor':
+      return setFactor(state, action.side, action.value);
+    case 'set-parts':
+      return setParts(state, action.side, action.n);
+    case 'set-shaded':
+      return setShaded(state, action.side, action.k);
+    case 'predict':
+      return predict(state, action.value);
+    case 'set-multiplier':
+      return setMultiplier(state, action.index);
+    case 'place-piece':
+      return placePiece(state, action.id, action.col, action.row);
+    case 'unplace-piece':
+      return unplacePiece(state, action.id);
     default:
       return state;
   }
@@ -416,6 +603,117 @@ function paintCell(
     painted = { ...state.painted, [key]: color };
   }
   return { ...state, painted };
+}
+
+// ─────────────────────────────────────────────────────────────
+// T045 확장 Action
+// ─────────────────────────────────────────────────────────────
+
+function setTile(state: ArrayAreaState, size: number): ArrayAreaState {
+  if (state.mode !== 'tiling') return state;
+  if (!Number.isInteger(size) || !state.settings.tileSizes.includes(size)) return state;
+  if (state.tileSize === size) return state;
+  return { ...state, tileSize: size };
+}
+
+function recordTile(state: ArrayAreaState): ArrayAreaState {
+  if (state.mode !== 'tiling' || state.tileSize === null) return state;
+  if (state.recordedSizes.includes(state.tileSize)) return state;
+  return {
+    ...state,
+    recordedSizes: [...state.recordedSizes, state.tileSize].sort((a, b) => a - b),
+  };
+}
+
+function setFactor(state: ArrayAreaState, side: 'a' | 'b', value: string): ArrayAreaState {
+  if (state.mode !== 'decimal-area' || state.decimal === null) return state;
+  const max = side === 'a' ? state.settings.maxA : state.settings.maxB;
+  const next = decimalFactor(value, max);
+  if (state.decimal[side] === next) return state;
+  return { ...state, decimal: { ...state.decimal, [side]: next } };
+}
+
+function setParts(state: ArrayAreaState, side: 'a' | 'b', n: number): ArrayAreaState {
+  if (state.mode !== 'fraction-area' || state.fraction === null) return state;
+  if (!Number.isInteger(n)) return state;
+  const nextN = clamp(n, 1, state.settings.maxDenominator);
+  const current = state.fraction[side];
+  if (current.n === nextN) return state;
+  const next = { n: nextN, k: Math.min(current.k, nextN) };
+  return { ...state, fraction: { ...state.fraction, [side]: next } };
+}
+
+function setShaded(state: ArrayAreaState, side: 'a' | 'b', k: number): ArrayAreaState {
+  if (state.mode !== 'fraction-area' || state.fraction === null) return state;
+  const current = state.fraction[side];
+  if (!Number.isInteger(k)) return state;
+  const nextK = clamp(k, 0, current.n);
+  if (current.k === nextK) return state;
+  return { ...state, fraction: { ...state.fraction, [side]: { n: current.n, k: nextK } } };
+}
+
+function predict(state: ArrayAreaState, value: ScalerPrediction): ArrayAreaState {
+  if (state.mode !== 'fraction-area' || state.scaler === null) return state;
+  if (value !== 'smaller' && value !== 'same' && value !== 'larger') return state;
+  if (state.scaler.prediction === value) return state;
+  return { ...state, scaler: { ...state.scaler, prediction: value } };
+}
+
+function setMultiplier(state: ArrayAreaState, index: number): ArrayAreaState {
+  if (state.mode !== 'fraction-area' || state.scaler === null) return state;
+  if (!Number.isInteger(index) || index < 0 || index >= state.settings.multipliers.length) {
+    return state;
+  }
+  if (state.settings.predictFirst && state.scaler.prediction === null) return state;
+  if (state.scaler.index === index) return state;
+  const multiplier = state.settings.multipliers[index];
+  if (multiplier === undefined) return state;
+  const tried = state.scaler.tried.includes(multiplier)
+    ? state.scaler.tried
+    : [...state.scaler.tried, multiplier];
+  return { ...state, scaler: { ...state.scaler, index, tried } };
+}
+
+function puzzleSlotCounts(state: ArrayAreaState): { cols: number; rows: number } | null {
+  if (state.puzzle === null) return null;
+  const widths = new Set(state.puzzle.pieces.map((piece) => piece.w));
+  const heights = new Set(state.puzzle.pieces.map((piece) => piece.h));
+  return { cols: widths.size, rows: heights.size };
+}
+
+function placePiece(state: ArrayAreaState, id: string, col: number, row: number): ArrayAreaState {
+  if (state.mode !== 'area-model' || state.puzzle === null) return state;
+  const piece = state.puzzle.pieces.find((item) => item.id === id);
+  if (!piece) return state;
+  if (!Number.isInteger(col) || !Number.isInteger(row) || col < 0 || row < 0) return state;
+  const counts = puzzleSlotCounts(state);
+  if (!counts || col >= counts.cols || row >= counts.rows) return state;
+
+  const occupant = state.puzzle.pieces.find((item) => {
+    const spot = state.puzzle?.placed[item.id];
+    return spot !== undefined && spot.col === col && spot.row === row;
+  });
+  if (occupant?.id === id) return state;
+
+  const previous = state.puzzle.placed[id];
+  const returned = occupant && previous === undefined ? occupant.id : null;
+  const placed: Record<string, { readonly col: number; readonly row: number }> = Object.fromEntries(
+    Object.entries(state.puzzle.placed).filter(
+      ([key]) => key !== id && (returned === null || key !== returned),
+    ),
+  );
+  if (occupant && previous !== undefined) placed[occupant.id] = previous;
+  placed[id] = { col, row };
+  return { ...state, puzzle: { ...state.puzzle, placed } };
+}
+
+function unplacePiece(state: ArrayAreaState, id: string): ArrayAreaState {
+  if (state.mode !== 'area-model' || state.puzzle === null) return state;
+  if (!(id in state.puzzle.placed)) return state;
+  const placed = Object.fromEntries(
+    Object.entries(state.puzzle.placed).filter(([key]) => key !== id),
+  );
+  return { ...state, puzzle: { ...state.puzzle, placed } };
 }
 
 // ─────────────────────────────────────────────────────────────

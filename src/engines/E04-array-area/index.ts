@@ -8,13 +8,25 @@ import type { ArrayAreaAction, ArrayAreaConfig, ArrayAreaState } from './types';
 import { ArrayAreaView } from './View';
 import { FoldDiagonalOverlay } from './overlays/fold-diagonal';
 import { KnownFactOverlay } from './overlays/known-fact';
+import { LeftoverStripOverlay } from './overlays/leftover-strip';
 import { MissingStripOverlay } from './overlays/missing-strip';
+import { OverlapCountOverlay } from './overlays/overlap-count';
+import { RibbonCutOverlay } from './overlays/ribbon-cut';
 import { RowCountOverlay } from './overlays/row-count';
+import { SlotMismatchOverlay } from './overlays/slot-mismatch';
 
 const definition: EngineDefinition<ArrayAreaConfig, ArrayAreaState, ArrayAreaAction> = {
   id: 'E04',
   name: arrayAreaStrings.name,
-  modes: ['dot-array', 'split', 'area-model', 'times-table'],
+  modes: [
+    'dot-array',
+    'split',
+    'area-model',
+    'times-table',
+    'tiling',
+    'decimal-area',
+    'fraction-area',
+  ],
   createInitialState,
   reduce,
   View: ArrayAreaView,
@@ -27,6 +39,10 @@ const definition: EngineDefinition<ArrayAreaConfig, ArrayAreaState, ArrayAreaAct
     'known-fact': KnownFactOverlay,
     'fold-diagonal': FoldDiagonalOverlay,
     'missing-strip': MissingStripOverlay,
+    'leftover-strip': LeftoverStripOverlay,
+    'overlap-count': OverlapCountOverlay,
+    'ribbon-cut': RibbonCutOverlay,
+    'slot-mismatch': SlotMismatchOverlay,
   },
 };
 

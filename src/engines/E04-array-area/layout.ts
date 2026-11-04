@@ -3,6 +3,7 @@
  * 좌표는 모두 논리 좌표(1000×600)다.
  */
 import type { SplitOrientation } from './types';
+import { decimalUnitsOf } from './area';
 
 export interface Point {
   readonly x: number;
@@ -284,4 +285,66 @@ export function areaPieceRects(
     }
   }
   return result;
+}
+
+// ─────────────────────────────────────────────────────────────
+// T045: 새 모드 배치
+// ─────────────────────────────────────────────────────────────
+
+export interface TileRoomRect {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+  readonly cell: number;
+}
+
+/** tiling: 방 A·B의 화면 사각형. `compare`가 없으면 방 A 하나만 가운데. */
+export function tilingRoomRects(
+  width: number,
+  height: number,
+  compare: { readonly width: number; readonly height: number } | null,
+): { readonly a: TileRoomRect; readonly b: TileRoomRect | null } {
+  const roomCell = (roomWidth: number, roomHeight: number) =>
+    Math.max(8, Math.min(26, Math.floor(400 / Math.max(1, roomWidth, roomHeight))));
+  const cell =
+    compare === null
+      ? roomCell(width, height)
+      : Math.min(roomCell(width, height), roomCell(compare.width, compare.height));
+  const build = (roomWidth: number, roomHeight: number, x: number): TileRoomRect => ({
+    x,
+    y: 150,
+    width: roomWidth * cell,
+    height: roomHeight * cell,
+    cell,
+  });
+  if (compare === null) {
+    return { a: build(width, height, Math.round(470 - (width * cell) / 2)), b: null };
+  }
+  return { a: build(width, height, 120), b: build(compare.width, compare.height, 600) };
+}
+
+export function decimalBoardRect(maxA: string, maxB: string): TileRoomRect {
+  const unitsX = decimalUnitsOf(maxA);
+  const unitsY = decimalUnitsOf(maxB);
+  const cell = Math.max(
+    5,
+    Math.min(Math.floor(500 / (unitsX * 10)), Math.floor(380 / (unitsY * 10))),
+  );
+  const width = unitsX * 10 * cell;
+  const height = unitsY * 10 * cell;
+  return { x: Math.round(470 - width / 2), y: 120, width, height, cell };
+}
+
+export function fractionSquareRect(): TileRoomRect {
+  const size = 400;
+  return { x: 270, y: 110, width: size, height: size, cell: size / 4 };
+}
+
+/** 퍼즐 조립판·조각 상자 자리. */
+export function puzzleRects(): { readonly box: TileRoomRect; readonly board: TileRoomRect } {
+  return {
+    box: { x: 30, y: 110, width: 300, height: 400, cell: 0 },
+    board: { x: 420, y: 110, width: 450, height: 400, cell: 0 },
+  };
 }
