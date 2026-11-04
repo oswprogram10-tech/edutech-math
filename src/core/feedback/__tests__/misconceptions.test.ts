@@ -33,12 +33,40 @@ function dataAt<T>(suffix: string): T {
 }
 
 const W1_UNITS = new Set(['g3s1u6', 'g3s2u4', 'g4s2u1', 'g4s2u3', 'g5s1u4', 'g5s1u5']);
+const W2_UNITS = new Set([
+  'g1s1u1',
+  'g1s1u3',
+  'g1s1u5',
+  'g1s2u1',
+  'g1s2u2',
+  'g1s2u4',
+  'g1s2u6',
+  'g2s1u1',
+  'g2s1u3',
+  'g2s1u6',
+  'g2s2u1',
+  'g2s2u2',
+  'g3s1u1',
+  'g3s1u3',
+  'g3s1u4',
+  'g3s2u1',
+  'g3s2u2',
+  'g4s1u1',
+  'g4s1u3',
+  'g5s1u2',
+  'g5s2u2',
+  'g5s2u4',
+  'g6s1u1',
+  'g6s1u3',
+  'g6s2u1',
+  'g6s2u2',
+]);
 
-/** docs/05 §5 표에서 W1 단원을 하나라도 쓰는 코드를 읽는다. */
-function documentedW1Codes(): Set<string> {
+/** docs/05 §5 표를 코드 → 단원 목록으로 읽는다. */
+function documentedRows(): Map<string, string[]> {
   const text = Object.values(docModules)[0] ?? '';
   if (text.length === 0) throw new Error('docs/05-learning-engine.md를 읽지 못했습니다.');
-  const codes = new Set<string>();
+  const rows = new Map<string, string[]>();
   for (const line of text.split(/\r?\n/)) {
     const match = /^\| `([A-Z0-9-]+)` \| [^|]* \| ([^|]*) \|/.exec(line);
     if (!match) continue;
@@ -46,21 +74,48 @@ function documentedW1Codes(): Set<string> {
       .split(',')
       .map((unit) => unit.trim())
       .filter((unit) => unit.length > 0);
-    if (units.some((unit) => W1_UNITS.has(unit))) codes.add(match[1] as string);
+    rows.set(match[1] as string, units);
+  }
+  return rows;
+}
+
+/** docs/05 §5 표에서 주어진 단원 집합을 하나라도 쓰는 코드를 읽는다. */
+function documentedCodes(units: ReadonlySet<string>): Set<string> {
+  const codes = new Set<string>();
+  for (const [code, rowUnits] of documentedRows()) {
+    if (rowUnits.some((unit) => units.has(unit))) codes.add(code);
   }
   return codes;
 }
 
-describe('W1 오개념 레지스트리', () => {
+describe('W1·W2 오개념 레지스트리', () => {
   const units = new Set(dataAt<UnitsFile>('/units.json').units.map((unit) => unit.id));
   const concepts = new Set(
     dataAt<ConceptsFile>('/concepts.json').concepts.map((concept) => concept.id),
   );
 
   it('docs/05 §5의 W1 코드를 모두 담는다', () => {
-    const documented = documentedW1Codes();
+    const documented = documentedCodes(W1_UNITS);
     expect(documented.size).toBeGreaterThan(20);
+    const registryW1 = MISCONCEPTIONS.filter((item) =>
+      item.units.some((unit) => W1_UNITS.has(unit)),
+    ).map((item) => item.code);
+    expect(registryW1.sort()).toEqual([...documented].sort());
+  });
+
+  it('docs/05 §5의 W1·W2 코드를 모두 담는다', () => {
+    const union = new Set([...W1_UNITS, ...W2_UNITS]);
+    const documented = documentedCodes(union);
+    expect(W2_UNITS.size).toBe(26);
+    expect(documented.size).toBeGreaterThan(80);
     expect([...MISCONCEPTIONS.map((item) => item.code)].sort()).toEqual([...documented].sort());
+  });
+
+  it('각 항목의 units가 docs/05 §5 표의 단원 열 전체와 같다', () => {
+    const rows = documentedRows();
+    for (const item of MISCONCEPTIONS) {
+      expect([...item.units].sort(), item.code).toEqual([...(rows.get(item.code) ?? [])].sort());
+    }
   });
 
   it('코드·뜻·단원이 비어 있지 않고 단원 ID가 실제로 있다', () => {
