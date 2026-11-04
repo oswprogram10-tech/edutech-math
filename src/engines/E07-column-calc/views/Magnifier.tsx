@@ -140,7 +140,7 @@ export function Magnifier({ state, dispatch, targetSize, readOnly }: MagnifierPr
         </div>
       </div>
 
-      <p className={styles.hint}>{numbers.gridOpen ? S.magnifierHint : S.magnifierClosed}</p>
+      <p className={styles.hint}>{numbers.gridOpen ? S.magnifierHint : S.divisorNotWhole}</p>
     </section>
   );
 }

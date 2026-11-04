@@ -172,12 +172,13 @@ export function classifyDiv(state: ColumnCalcState, plan: DivPlan): ColumnError[
     // ⑤ 소수 몫의 소수점 자리.
     const lowest = plan.reading.quotientLowest;
     const belowOnes = lowest !== null && lowest < 0;
-    if (belowOnes) {
-      if (plan.reading.quotientPoint === null) {
-        add('MC-DEC-POINT-PLACEMENT', lowest);
-      } else if (plan.reading.quotientPoint !== 0) {
-        add('MC-DEC-POINT-PLACEMENT', plan.reading.quotientPoint);
-      }
+    const point = plan.reading.quotientPoint;
+    // 점을 놓았는데 일의 자리(열 0)가 아니면 그 자체가 오개념이다.
+    // 열 0 아래 몫 칸을 쓰지 않았어도(예: 168 ÷ 24에서 7을 열 0에 쓰고 점을 열 1에 놓음) 기록한다.
+    if (point !== null && point !== 0) {
+      add('MC-DEC-POINT-PLACEMENT', point);
+    } else if (point === null && belowOnes) {
+      add('MC-DEC-POINT-PLACEMENT', lowest ?? plan.reading.top);
     }
 
     // ⑥ 0을 붙여 계속 나눌 수 있는데 멈춘 풀이.

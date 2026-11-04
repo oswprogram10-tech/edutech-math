@@ -353,6 +353,28 @@ describe('div decimal 오류 분류', () => {
     expect(classifyDiv(state, plan).map((error) => error.code)).toContain('MC-DEC-POINT-PLACEMENT');
   });
 
+  it('열 0에 7을 쓰고 점을 열 1에 놓으면 0.7로 읽어 MC-DEC-POINT-PLACEMENT', () => {
+    // 1.68 ÷ 0.24 → 양쪽 ×100 → 168 ÷ 24. 열 0 아래 몫 칸이 없어도 점 위치가 틀리면 기록한다.
+    let state = createInitialState({
+      mode: 'div',
+      decimal: true,
+      dividend: '1.68',
+      divisor: '0.24',
+    });
+    state = scaleBoth(state, 2);
+    state = enter(state, 'quotient', 0, '7');
+    state = placePoint(state, 1);
+    const plan = computeDivPlan(state);
+    expect(plan.reading.quotientPoint).toBe(1);
+    // 열 0 아래(소수 자리)에 쓴 몫 칸이 없어도 점 위치만으로 기록한다.
+    expect(plan.reading.quotientLowest).toBe(0);
+    const pointErrors = classifyDiv(state, plan).filter(
+      (error) => error.code === 'MC-DEC-POINT-PLACEMENT',
+    );
+    expect(pointErrors).toHaveLength(1);
+    expect(pointErrors[0]?.column).toBe(1);
+  });
+
   it('9.3 ÷ 6을 1.5에서 멈추면 MC-DIV-NO-EXTEND-ZERO', () => {
     let state = createInitialState({
       mode: 'div',

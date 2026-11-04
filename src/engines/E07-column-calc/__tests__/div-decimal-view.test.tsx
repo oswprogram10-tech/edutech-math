@@ -29,6 +29,74 @@ function quotientText(container: HTMLElement): string {
   return container.querySelector('[data-testid="quotient-row"]')?.textContent ?? '';
 }
 
+/** 학생에게 보이는 글자와 aria-label을 모두 모은다. */
+function exposedText(container: HTMLElement): string {
+  const parts: string[] = [container.textContent ?? ''];
+  for (const element of container.querySelectorAll('*')) {
+    const label = element.getAttribute('aria-label');
+    if (label !== null) parts.push(label);
+  }
+  return parts.join('\n');
+}
+
+describe('E07 소수 나눗셈 화면 문구는 학생이 찾을 규칙을 말하지 않는다(T078)', () => {
+  const forbidden = ['몫은 같', '몫은 그대로', '0을 붙여', '자연수로 만들'];
+
+  it('1.68 ÷ 0.24 시작 화면에 규칙 문구가 없다', () => {
+    const { container } = renderDiv(
+      {
+        mode: 'div',
+        decimal: true,
+        dividend: '1.68',
+        divisor: '0.24',
+        magnifier: [10, 100],
+        allowOneSideScale: true,
+      },
+      'C',
+    );
+    const text = exposedText(container);
+    for (const phrase of forbidden) expect(text).not.toContain(phrase);
+    expect(text).toContain('화살표로 소수점을 옮길 수 있어요.');
+  });
+
+  it('9.3 ÷ 6 시작 화면에 규칙 문구가 없다', () => {
+    const { container } = renderDiv(
+      { mode: 'div', decimal: true, dividend: '9.3', divisor: 6, extendZeros: 2 },
+      'C',
+    );
+    const text = exposedText(container);
+    for (const phrase of forbidden) expect(text).not.toContain(phrase);
+    expect(text).toContain('몫부터 한 칸씩 써 보세요.');
+  });
+
+  it('확대경을 켠 뒤에도 규칙 대신 막대 조각을 세어 보라고 한다', () => {
+    const config: ColumnCalcConfig = {
+      mode: 'div',
+      decimal: true,
+      dividend: '1.68',
+      divisor: '0.24',
+      magnifier: [10, 100],
+      allowOneSideScale: true,
+    };
+    const state = reduce(createInitialState(config), { type: 'scale', side: 'both', to: 2 });
+    const { container } = render(
+      <ColumnCalcView
+        config={config}
+        state={state}
+        dispatch={() => {}}
+        cpa="C"
+        mode="div"
+        targetSize={48}
+      />,
+    );
+    const magnifier = container.querySelector<HTMLElement>('[data-testid="magnifier"]');
+    expect(magnifier).not.toBeNull();
+    const text = exposedText(magnifier as HTMLElement);
+    for (const phrase of forbidden) expect(text).not.toContain(phrase);
+    expect(text).toContain('막대 조각을 세어 보세요.');
+  });
+});
+
 describe('E07 소수 나눗셈 화면은 정답 값을 드러내지 않는다', () => {
   it('6.24÷3 기본 화면에 몫 2.08·208이 없다', () => {
     const { container } = renderDiv({
