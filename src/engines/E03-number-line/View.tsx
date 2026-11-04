@@ -34,6 +34,10 @@ import type { TickRow } from './ticks';
 import { numberLineStrings } from './strings.ko';
 import { LINE_LEFT, LINE_RIGHT, LOGICAL_HEIGHT, LOGICAL_WIDTH } from './types';
 import type { NumberLineAction, NumberLineConfig, NumberLineMode, NumberLineState } from './types';
+import { DoubleView } from './views/DoubleView';
+import { LogZoomView } from './views/LogZoomView';
+import { RoundingView } from './views/RoundingView';
+import { SkipCountView } from './views/SkipCountView';
 import styles from './View.module.css';
 
 const LOGICAL = { width: LOGICAL_WIDTH, height: LOGICAL_HEIGHT };
@@ -132,7 +136,28 @@ function rowForValue(
   return 0;
 }
 
-export function NumberLineView({
+type NumberLineViewProps = EngineViewProps<NumberLineConfig, NumberLineState, NumberLineAction>;
+
+/**
+ * 모드에 따라 화면을 고르기만 한다(T048 결정 1).
+ * 기존 3개 모드는 아래 BasicNumberLineView가 그대로 담당한다.
+ */
+export function NumberLineView(props: NumberLineViewProps) {
+  switch (props.state.mode) {
+    case 'skip-count':
+      return <SkipCountView {...props} />;
+    case 'rounding':
+      return <RoundingView {...props} />;
+    case 'log-zoom':
+      return <LogZoomView {...props} />;
+    case 'double':
+      return <DoubleView {...props} />;
+    default:
+      return <BasicNumberLineView {...props} />;
+  }
+}
+
+function BasicNumberLineView({
   config,
   state,
   dispatch,
@@ -140,7 +165,7 @@ export function NumberLineView({
   readOnly = false,
   scale = 1,
   targetSize,
-}: EngineViewProps<NumberLineConfig, NumberLineState, NumberLineAction>) {
+}: NumberLineViewProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const renderedSize = useRenderedSize(svgRef);
   const rows = rowsOf(state);

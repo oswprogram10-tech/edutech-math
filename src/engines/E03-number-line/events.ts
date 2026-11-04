@@ -80,6 +80,69 @@ export function emit(
       return [{ name: 'zoomed', payload: { level: next.zoomLevel, tick: nextTick(next) } }];
     }
 
+    case 'hop': {
+      const row = next.skip?.rows[action.row];
+      const before = prev.skip?.rows[action.row];
+      if (!row || !before || row.hops.length === before.hops.length) return [];
+      const landing = row.hops[row.hops.length - 1];
+      if (landing === undefined) return [];
+      return [
+        {
+          name: 'hopped',
+          payload: { row: action.row, step: row.step, count: row.hops.length, landing },
+        },
+        ...valuePayload(landing),
+      ];
+    }
+
+    case 'round': {
+      const item = next.rounding?.items[action.item];
+      const before = prev.rounding?.items[action.item];
+      if (!item || !before) return [];
+      const resultChanged = item.marker !== null && item.marker !== before.marker;
+      const methodChanged = item.method !== before.method;
+      if (!resultChanged && !methodChanged) return [];
+      const events: EngineEvent[] = [
+        {
+          name: 'rounded',
+          payload: {
+            item: action.item,
+            value: item.value,
+            result: item.marker,
+            method: item.method,
+          },
+        },
+      ];
+      if (resultChanged) events.push(...valuePayload(item.marker));
+      return events;
+    }
+
+    case 'move-marker': {
+      const item = next.rounding?.items[action.item];
+      const before = prev.rounding?.items[action.item];
+      if (!item || !before || item.marker === before.marker) return [];
+      return valuePayload(item.marker);
+    }
+
+    case 'log-zoom': {
+      const level = next.logZoom?.level;
+      if (level === undefined || level === prev.logZoom?.level) return [];
+      const max = parseValue(next.max) ?? Rational.of(0);
+      return [
+        {
+          name: 'zoomed',
+          payload: { level, tick: max.div(Rational.of(10)).toJSON() },
+        },
+      ];
+    }
+
+    case 'scale-pair': {
+      const pairs = next.double?.pairs;
+      const pair = pairs?.[pairs.length - 1];
+      if (!pair || pairs?.length === prev.double?.pairs.length) return [];
+      return [{ name: 'pair-added', payload: { top: pair.top, bottom: pair.bottom } }];
+    }
+
     default:
       return [];
   }
@@ -194,10 +257,178 @@ export const jumpTotalIs: EnginePredicate = (
   return sameRational(observation, 'jumpTotal', expected);
 };
 
+// ── T048 새 모드 predicates ─────────────────────────────────
+
+function numberField(record: Readonly<Record<string, JsonValue>>, key: string): number | null {
+  const value = record[key];
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+function rowRecord(
+  observation: Observation,
+  row: number,
+): Readonly<Record<string, JsonValue>> | null {
+  const rows = observation['skipRows'];
+  if (!Array.isArray(rows)) return null;
+  const entry = rows[row];
+  if (entry === null || typeof entry !== 'object' || Array.isArray(entry)) return null;
+  return entry;
+}
+
+function rowArg(record: Readonly<Record<string, JsonValue>>): number {
+  const row = numberField(record, 'row');
+  return row !== null && row >= 0 ? Math.trunc(row) : 0;
+}
+
+function rationalFieldEquals(value: JsonValue | undefined, expected: Rational): boolean {
+  if (typeof value !== 'string') return false;
+  const parsed = parseValue(value);
+  return parsed !== null && parsed.equals(expected);
+}
+
+/** args `{ value, row? }`에 해당 줄의 도착 값이 그 값인가. */
+export const landingIs: EnginePredicate = (
+  observation: Observation,
+  args: JsonValue | undefined,
+): boolean => {
+  const record = payloadRecord(args);
+  if (!record) return false;
+  const expected = parseValue(stringField(record, 'value') ?? undefined);
+  if (!expected) return false;
+  const row = rowRecord(observation, rowArg(record));
+  if (!row) return false;
+  return rationalFieldEquals(row['landing'], expected);
+};
+
+/** args `{ count, row? }`에 해당 줄의 뛴 횟수가 그 수인가. */
+export const hopCountIs: EnginePredicate = (
+  observation: Observation,
+  args: JsonValue | undefined,
+): boolean => {
+  const record = payloadRecord(args);
+  if (!record) return false;
+  const count = numberField(record, 'count');
+  if (count === null) return false;
+  const row = rowRecord(observation, rowArg(record));
+  if (!row) return false;
+  const actual = row['hopCount'];
+  return typeof actual === 'number' && actual === count;
+};
+
+/** args `{ value, row? }`에 해당 줄의 뛰기 크기가 그 값인가. */
+export const stepIs: EnginePredicate = (
+  observation: Observation,
+  args: JsonValue | undefined,
+): boolean => {
+  const record = payloadRecord(args);
+  if (!record) return false;
+  const expected = parseValue(stringField(record, 'value') ?? undefined);
+  if (!expected) return false;
+  const row = rowRecord(observation, rowArg(record));
+  if (!row) return false;
+  return rationalFieldEquals(row['step'], expected);
+};
+
+/** args `{ value, result, method? }`로 어림했는가. */
+export const roundedTo: EnginePredicate = (
+  observation: Observation,
+  args: JsonValue | undefined,
+): boolean => {
+  const record = payloadRecord(args);
+  if (!record) return false;
+  const value = parseValue(stringField(record, 'value') ?? undefined);
+  const result = parseValue(stringField(record, 'result') ?? undefined);
+  if (!value || !result) return false;
+  const method = stringField(record, 'method');
+  const items = observation['rounding'];
+  if (!Array.isArray(items)) return false;
+  return items.some((entry) => {
+    if (entry === null || typeof entry !== 'object' || Array.isArray(entry)) return false;
+    if (!rationalFieldEquals(entry['value'], value)) return false;
+    if (!rationalFieldEquals(entry['marker'], result)) return false;
+    if (method === null) return true;
+    const actual = entry['method'];
+    return typeof actual === 'string' && actual === method;
+  });
+};
+
+function placedValues(observation: Observation): Rational[] {
+  const values: Rational[] = [];
+  const points = observation['points'];
+  if (Array.isArray(points)) {
+    for (const entry of points) {
+      if (entry === null || typeof entry !== 'object' || Array.isArray(entry)) continue;
+      const parsed = parseValue(typeof entry['value'] === 'string' ? entry['value'] : undefined);
+      if (parsed) values.push(parsed);
+    }
+  }
+  const cards = observation['cards'];
+  if (cards !== null && typeof cards === 'object' && !Array.isArray(cards)) {
+    for (const raw of Object.values(cards)) {
+      const parsed = parseValue(typeof raw === 'string' ? raw : undefined);
+      if (parsed) values.push(parsed);
+    }
+  }
+  return values;
+}
+
+/** args `{ value, within }`: |점 − value| ≤ within 인 점(또는 꽂힌 카드)이 있는가. */
+export const hasPointNear: EnginePredicate = (
+  observation: Observation,
+  args: JsonValue | undefined,
+): boolean => {
+  const record = payloadRecord(args);
+  if (!record) return false;
+  const expected = parseValue(stringField(record, 'value') ?? undefined);
+  const within = parseValue(stringField(record, 'within') ?? undefined);
+  if (!expected || !within || within.isNegative()) return false;
+  return placedValues(observation).some(
+    (value) => value.sub(expected).abs().compareTo(within) <= 0,
+  );
+};
+
+/** args `{ level }`: log-zoom의 현재 단계가 그 값인가. */
+export const levelIs: EnginePredicate = (
+  observation: Observation,
+  args: JsonValue | undefined,
+): boolean => {
+  const record = payloadRecord(args);
+  if (!record) return false;
+  const level = numberField(record, 'level');
+  const actual = observation['level'];
+  return level !== null && typeof actual === 'number' && actual === level;
+};
+
+/** args `{ top, bottom }`: 그 대응 쌍이 있는가. */
+export const hasPair: EnginePredicate = (
+  observation: Observation,
+  args: JsonValue | undefined,
+): boolean => {
+  const record = payloadRecord(args);
+  if (!record) return false;
+  const top = parseValue(stringField(record, 'top') ?? undefined);
+  const bottom = parseValue(stringField(record, 'bottom') ?? undefined);
+  if (!top || !bottom) return false;
+  const pairs = observation['pairs'];
+  if (!Array.isArray(pairs)) return false;
+  return pairs.some((entry) => {
+    if (entry === null || typeof entry !== 'object' || Array.isArray(entry)) return false;
+    return rationalFieldEquals(entry['top'], top) && rationalFieldEquals(entry['bottom'], bottom);
+  });
+};
+
 export const predicates: Readonly<Record<string, EnginePredicate>> = {
   hasPointAt,
   onlyPointAt,
   cardsCorrect,
   samePoint,
   jumpTotalIs,
+  // T048
+  landingIs,
+  hopCountIs,
+  stepIs,
+  roundedTo,
+  hasPointNear,
+  levelIs,
+  hasPair,
 };

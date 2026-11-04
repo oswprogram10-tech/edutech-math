@@ -38,6 +38,13 @@
   cursor: not-allowed;
 }
 
+.button[data-selected='true'] {
+  background: #eef3ff;
+  border-width: 3px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .zoomLabel,
 .badge {
   min-width: 4.5rem;
@@ -280,4 +287,107 @@
 
 .hint {
   font-weight: 600;
+}
+
+/* ── T048 새 모드 ─────────────────────────────────────────── */
+
+.roundingMarker {
+  transition: transform 260ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .roundingMarker {
+    transition: none;
+  }
+}
+
+.prevBand {
+  stroke: #5b79b8;
+  stroke-width: 2;
+  opacity: 0.9;
+}
+
+.prevBandBlink {
+  animation: e03-prev-band-blink 1.6s ease-in-out infinite;
+}
+
+@keyframes e03-prev-band-blink {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prevBandBlink {
+    animation: none;
+  }
+}
+
+.landmark {
+  stroke: #b35c00;
+  stroke-width: 2;
+  stroke-dasharray: 4 4;
+}
+
+.offRangeArrow {
+  fill: #a52a2a;
+  font-size: 34px;
+  font-weight: 700;
+}
+
+.doubleConnector {
+  stroke: #7a8497;
+  stroke-width: 2.5;
+  stroke-dasharray: 5 5;
+}
+
+.doubleConnector[data-selected='true'] {
+  stroke: #101828;
+  stroke-width: 5;
+  stroke-dasharray: none;
+}
+
+.canvas g[role='button']:focus-visible .doubleConnector {
+  stroke: #101828;
+  stroke-width: 6;
+  stroke-dasharray: 10 5;
+}
+
+.doubleHit {
+  fill: transparent;
+}
+
+.doubleLabel {
+  fill: #1d2330;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.opsBand {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  min-height: 48px;
+  padding: 0 0.4rem;
+}
+
+.opsLabel {
+  color: #3c4658;
+  font-weight: 700;
+}
+
+.opsItem {
+  min-width: 48px;
+  padding: 0.3rem 0.7rem;
+  border: 2px dashed #2f6fde;
+  border-radius: 10px;
+  background: #f7f9ff;
+  color: #1d2330;
+  font-weight: 700;
+  text-align: center;
 }
