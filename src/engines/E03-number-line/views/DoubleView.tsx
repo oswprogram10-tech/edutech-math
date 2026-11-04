@@ -27,6 +27,7 @@ import styles from '../View.module.css';
 const LOGICAL = { width: LOGICAL_WIDTH, height: LOGICAL_HEIGHT };
 const TOP_Y = 245;
 const BOTTOM_Y = 415;
+const LABEL_GAP = 96;
 
 function fractionText(value: Rational): string {
   return formatValue(value, 'fraction');
@@ -68,6 +69,37 @@ export function DoubleView({
   const xOf = (value: Rational): number => xOfValue(value, Rational.of(0), viewMax);
   const topLabel = config.top?.label ?? numberLineStrings.double.topDefault;
   const bottomLabel = config.bottom?.label ?? numberLineStrings.double.bottomDefault;
+
+  // 기본(expression)에서는 눈금 숫자를 0과 anchor 값에만 쓴다. 새 쌍의 값은
+  // 눈금 라벨로도 드러나지 않는다(정답 노출 금지). values만 모든 눈금을 쓴다.
+  const anchorTops = pairs
+    .filter((pair) => pair.from === null)
+    .map((pair) => parseValue(pair.top))
+    .filter((value): value is Rational => value !== null);
+  const anchorBottoms = pairs
+    .filter((pair) => pair.from === null)
+    .map((pair) => parseValue(pair.bottom))
+    .filter((value): value is Rational => value !== null);
+  const tickNumberAt = (value: Rational, anchors: readonly Rational[]): boolean => {
+    if (style === 'values') return true;
+    return value.isZero() || anchors.some((anchor) => anchor.equals(value));
+  };
+
+  // 쌍 라벨은 위 줄 위쪽·아래 줄 아래쪽에 두고, x가 가까우면 높이를 엇갈린다.
+  const pairLabelLevels: number[] = [];
+  const lastLabelX: number[] = [];
+  for (const pair of pairs) {
+    const top = parseValue(pair.top);
+    const x = top ? xOf(top) : 0;
+    let level = lastLabelX.findIndex((previous) => Math.abs(previous - x) >= LABEL_GAP);
+    if (level < 0) {
+      level = lastLabelX.length;
+      lastLabelX.push(x);
+    } else {
+      lastLabelX[level] = x;
+    }
+    pairLabelLevels.push(level);
+  }
 
   const scalePair = (kind: DoubleOpKind, factor: number) => {
     if (readOnly) return;
@@ -210,7 +242,12 @@ export function DoubleView({
 
         {ticks.map((tick) => {
           const x = xOf(tick.top);
-          const showLabel = tick.index % labelEvery === 0;
+          const showTopLabel =
+            style === 'values' ? tick.index % labelEvery === 0 : tickNumberAt(tick.top, anchorTops);
+          const showBottomLabel =
+            style === 'values'
+              ? tick.index % labelEvery === 0
+              : tickNumberAt(tick.bottom, anchorBottoms);
           return (
             <g
               key={`double-tick-${tick.index}`}
@@ -231,15 +268,15 @@ export function DoubleView({
                 y2={BOTTOM_Y + 9}
                 className={tick.index % (labelEvery * 2) === 0 ? styles.majorTick : styles.tick}
               />
-              {showLabel ? (
-                <>
-                  <text x={x} y={TOP_Y - 20} className={styles.tickLabel}>
-                    {fractionText(tick.top)}
-                  </text>
-                  <text x={x} y={BOTTOM_Y + 32} className={styles.tickLabel}>
-                    {fractionText(tick.bottom)}
-                  </text>
-                </>
+              {showTopLabel ? (
+                <text x={x} y={TOP_Y - 20} className={styles.tickLabel}>
+                  {fractionText(tick.top)}
+                </text>
+              ) : null}
+              {showBottomLabel ? (
+                <text x={x} y={BOTTOM_Y + 32} className={styles.tickLabel}>
+                  {fractionText(tick.bottom)}
+                </text>
               ) : null}
             </g>
           );
@@ -252,6 +289,7 @@ export function DoubleView({
           const isSelected = index === selected;
           const x = xOf(top);
           const texts = pairTexts(pairs, index, style);
+          const level = pairLabelLevels[index] ?? 0;
           return (
             <g
               key={`double-pair-${index}`}
@@ -301,20 +339,22 @@ export function DoubleView({
               />
               <text
                 x={x}
-                y={TOP_Y - 26}
+                y={TOP_Y - 48 - level * 22}
                 className={styles.doubleLabel}
                 textAnchor="middle"
                 data-testid={`pair-label-top-${index}`}
+                data-label-level={level}
                 pointerEvents="none"
               >
                 {texts.top}
               </text>
               <text
                 x={x}
-                y={BOTTOM_Y + 34}
+                y={BOTTOM_Y + 56 + level * 22}
                 className={styles.doubleLabel}
                 textAnchor="middle"
                 data-testid={`pair-label-bottom-${index}`}
+                data-label-level={level}
                 pointerEvents="none"
               >
                 {texts.bottom}

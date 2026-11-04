@@ -19,6 +19,7 @@ import styles from '../View.module.css';
 
 const LOGICAL = { width: LOGICAL_WIDTH, height: LOGICAL_HEIGHT };
 const TAP_SLOP = 6;
+const MIN_STEP_LABEL_WIDTH = 28;
 const ROW_COLORS = ['#0f7b6c', '#8a3bd8', '#b35c00', '#2f6fde'];
 const ROW_DASHES = ['', '10 6', '3 5', '14 5 3 5'];
 
@@ -403,9 +404,10 @@ export function SkipCountView({
               {arcs.map((arc) => {
                 const x1 = xOf(arc.from);
                 const x2 = xOf(arc.to);
-                const lift = 48 + (arc.index % 4) * 16 + rowIndex * 6;
+                const lift = 48 + rowIndex * 6;
                 const top = y - lift;
                 const mid = (x1 + x2) / 2;
+                const showStep = stepValue !== null && Math.abs(x2 - x1) >= MIN_STEP_LABEL_WIDTH;
                 return (
                   <g key={`arc-${rowIndex}-${arc.index}`}>
                     <path
@@ -416,13 +418,14 @@ export function SkipCountView({
                       strokeDasharray={dash}
                       markerEnd="url(#e03-skip-arrow)"
                     />
-                    {stepValue ? (
+                    {showStep && stepValue ? (
                       <text
                         x={mid}
                         y={top + 16}
                         textAnchor="middle"
                         fill={color}
                         className={styles.jumpLabel}
+                        data-testid="skip-hop-step-label"
                       >
                         {formatValue(stepValue, 'integer')}
                       </text>

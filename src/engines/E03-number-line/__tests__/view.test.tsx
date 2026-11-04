@@ -73,6 +73,26 @@ describe('T048 skip-count 화면', () => {
     const view = renderView(config, state);
     expect(view.getByTestId('skip-hop-count').textContent).toContain('1');
   });
+
+  it('호 폭이 28px보다 좁으면 step 라벨을 그리지 않는다', () => {
+    const wideConfig: NumberLineConfig = { mode: 'skip-count', min: 0, max: 30, step: 5 };
+    let wide = createInitialState(wideConfig);
+    wide = reduce(wide, { type: 'hop', row: 0 });
+    const wideView = renderView(wideConfig, wide);
+    expect(wideView.queryByTestId('skip-hop-step-label')).not.toBeNull();
+    wideView.unmount();
+
+    const narrowConfig: NumberLineConfig = { mode: 'skip-count', min: 0, max: 1000, step: 1 };
+    let narrow = createInitialState(narrowConfig);
+    narrow = reduce(narrow, { type: 'hop', row: 0 });
+    expect(renderView(narrowConfig, narrow).queryByTestId('skip-hop-step-label')).toBeNull();
+  });
+
+  it('되돌리기 단추 이름은 "한 번 되돌리기"다', () => {
+    const config: NumberLineConfig = { mode: 'skip-count', min: 0, max: 30, step: 5 };
+    const view = renderView(config, createInitialState(config));
+    expect(view.getByText('한 번 되돌리기')).toBeTruthy();
+  });
 });
 
 describe('T048 rounding 화면', () => {
@@ -106,7 +126,7 @@ describe('T048 rounding 화면', () => {
     expect(onDispatch).toHaveBeenLastCalledWith({ type: 'round', item: 0, method: 'half-up' });
   });
 
-  it('drag 모드는 방향키로 큰 눈금 한 칸씩 옮긴다', () => {
+  it('drag 모드에서 marker가 없으면 방향키가 올림·버림 눈금으로 바로 놓는다', () => {
     const config: NumberLineConfig = {
       mode: 'rounding',
       value: 243,
@@ -122,7 +142,38 @@ describe('T048 rounding 화면', () => {
     expect(onDispatch).toHaveBeenLastCalledWith({
       type: 'move-marker',
       item: 0,
-      value: '253',
+      value: '250',
+    });
+    fireEvent.keyDown(canvasOf(view), { key: 'ArrowLeft' });
+    expect(onDispatch).toHaveBeenLastCalledWith({
+      type: 'move-marker',
+      item: 0,
+      value: '240',
+    });
+  });
+
+  it('marker가 없을 때 ▶는 400, ◀는 300으로 놓는다', () => {
+    const config: NumberLineConfig = {
+      mode: 'rounding',
+      value: 389,
+      place: 100,
+      controls: 'drag',
+    };
+    const state = createInitialState(config);
+    const onDispatch = vi.fn();
+    const view = renderView(config, state, onDispatch);
+
+    fireEvent.click(view.getByLabelText(numberLineStrings.rounding.moveRight));
+    expect(onDispatch).toHaveBeenLastCalledWith({
+      type: 'move-marker',
+      item: 0,
+      value: '400',
+    });
+    fireEvent.click(view.getByLabelText(numberLineStrings.rounding.moveLeft));
+    expect(onDispatch).toHaveBeenLastCalledWith({
+      type: 'move-marker',
+      item: 0,
+      value: '300',
     });
   });
 });
@@ -141,6 +192,30 @@ describe('T048 log-zoom 화면', () => {
     expect(canvas.querySelector('[data-card-value="2500"]')).toBeNull();
     expect(canvas.querySelector('[data-point-id]')).toBeNull();
     expect(view.getByTestId('log-card-2500')).toBeTruthy();
+  });
+
+  it('호 폭이 28px보다 좁으면 step 라벨을 그리지 않는다', () => {
+    const wideConfig: NumberLineConfig = {
+      mode: 'log-zoom',
+      levels: [10],
+      start: '0',
+      step: '1',
+    };
+    let wide = createInitialState(wideConfig);
+    wide = reduce(wide, { type: 'hop', row: 0 });
+    const wideView = renderView(wideConfig, wide);
+    expect(wideView.queryByTestId('log-hop-step-label')).not.toBeNull();
+    wideView.unmount();
+
+    const narrowConfig: NumberLineConfig = {
+      mode: 'log-zoom',
+      levels: [1000],
+      start: '0',
+      step: '1',
+    };
+    let narrow = createInitialState(narrowConfig);
+    narrow = reduce(narrow, { type: 'hop', row: 0 });
+    expect(renderView(narrowConfig, narrow).queryByTestId('log-hop-step-label')).toBeNull();
   });
 
   it('− 단추와 키보드 −가 단계를 넓힌다', () => {
@@ -187,6 +262,18 @@ describe('T048 double 화면', () => {
     expect(view.getByTestId('pair-label-top-2').textContent).toBe('2/3 ÷ 2 × 3');
     expect(view.getByTestId('pair-label-bottom-2').textContent).toBe('1 ÷ 2 × 3');
     expect(view.getByTestId('pair-label-top-2').textContent).not.toBe('1');
+  });
+
+  it('기본 설정에서는 눈금 숫자를 0과 anchor 값에만 쓰고 새 쌍의 값을 쓰지 않는다', () => {
+    const state = scaled();
+    const view = renderView(config, state);
+    const text = view.container.textContent ?? '';
+    expect(text).not.toContain('1/3');
+    expect(text).not.toContain('1/2');
+    expect(text).not.toContain('1 1/2');
+    expect(text).not.toContain('3/2');
+    // 0과 anchor(2/3, 1)은 눈금 숫자로 읽을 수 있다.
+    expect(text).toContain('2/3');
   });
 
   it('values 라벨은 교사 시연용으로만 값를 쓴다', () => {

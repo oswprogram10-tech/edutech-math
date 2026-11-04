@@ -26,6 +26,7 @@ import styles from '../View.module.css';
 const LOGICAL = { width: LOGICAL_WIDTH, height: LOGICAL_HEIGHT };
 const LINE_Y = 380;
 const TAP_SLOP = 6;
+const MIN_STEP_LABEL_WIDTH = 28;
 
 interface PressState {
   readonly pointerId: number;
@@ -506,8 +507,10 @@ export function LogZoomView({
           if (!from) return null;
           const x1 = xOf(from);
           const x2 = xOf(point);
-          const lift = 46 + (index % 3) * 18;
+          const lift = 46;
           const top = LINE_Y - lift;
+          const showStep =
+            skip?.rows[0]?.step !== undefined && Math.abs(x2 - x1) >= MIN_STEP_LABEL_WIDTH;
           return (
             <g key={`log-hop-${index}`} pointerEvents="none">
               <path
@@ -516,8 +519,13 @@ export function LogZoomView({
                 className={styles.jump}
                 markerEnd="url(#e03-log-arrow)"
               />
-              {skip?.rows[0]?.step ? (
-                <text x={(x1 + x2) / 2} y={top + 16} className={styles.jumpLabel}>
+              {showStep && skip?.rows[0]?.step ? (
+                <text
+                  x={(x1 + x2) / 2}
+                  y={top + 16}
+                  className={styles.jumpLabel}
+                  data-testid="log-hop-step-label"
+                >
                   {logTickLabel(parseValue(skip.rows[0].step) ?? minor, config.labelStyle)}
                 </text>
               ) : null}

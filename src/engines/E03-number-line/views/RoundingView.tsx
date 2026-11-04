@@ -9,7 +9,7 @@ import type { KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerE
 import { minTouchRadius, pointerToLogical, useRenderedSize } from '../../../core/engine-sdk';
 import type { EngineViewProps, Point } from '../../../core/engine-sdk';
 import { Rational } from '../../../core/math/rational';
-import { formatNumber } from '../rounding';
+import { formatNumber, isBigTick, roundValue } from '../rounding';
 import { roundingPlaceOf } from '../reduce-rounding';
 import { numberLineStrings } from '../strings.ko';
 import { parseValue, visibleTicks, xOfValue } from '../ticks';
@@ -101,9 +101,17 @@ export function RoundingView({
 
   const nudgeMarker = (direction: -1 | 1) => {
     if (readOnly) return;
-    const base = markerValue ?? itemValue;
-    if (!base) return;
-    moveMarkerTo(base.add(place.mul(Rational.of(direction))));
+    // marker가 있으면 한 칸씩. 없으면 값에서 가장 가까운 큰 눈금으로 바로 놓는다.
+    // ▶ = 올림, ◀ = 버림이고, 값이 이미 큰 눈금이면 한 칸 더 간다.
+    if (markerValue !== null) {
+      moveMarkerTo(markerValue.add(place.mul(Rational.of(direction))));
+      return;
+    }
+    if (!itemValue) return;
+    const target = isBigTick(itemValue, place)
+      ? itemValue.add(place.mul(Rational.of(direction)))
+      : roundValue(itemValue, place, direction > 0 ? 'up' : 'down');
+    moveMarkerTo(target);
   };
 
   const onPointerDown = (event: ReactPointerEvent<SVGSVGElement>) => {

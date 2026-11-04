@@ -42,7 +42,7 @@ export const numberLineStrings = {
     stepGroup: '몇씩 뛸까요',
     stepChoice: (step: string) => `${step}씩`,
     hop: '한 번 뛰기',
-    unhop: '되돌리기',
+    unhop: '한 번 되돌리기',
     clearHops: '뛴 것 지우기',
     rowGroup: '뛸 줄',
     rowChoice: (row: number) => `${row}번째 줄`,
