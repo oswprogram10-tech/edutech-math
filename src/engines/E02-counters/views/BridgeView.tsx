@@ -78,21 +78,23 @@ export function BridgeView({
                 length
               ) : (
                 <svg
-                  width={Math.min(78, 8 + length * 7)}
+                  width={2 + length * 7}
                   height={18}
-                  viewBox={`0 0 ${8 + length * 7} 18`}
+                  viewBox={`0 0 ${2 + length * 7} 18`}
                   aria-hidden="true"
                 >
-                  <rect
-                    x={1}
-                    y={3}
-                    width={6 + length * 7}
-                    height={12}
-                    rx={3}
-                    fill="#8fbf8a"
-                    stroke="#3f7a49"
-                    strokeWidth={1.5}
-                  />
+                  {Array.from({ length }, (_, cellIndex) => (
+                    <rect
+                      key={`rod-button-cell-${cellIndex}`}
+                      x={1 + cellIndex * 7}
+                      y={3}
+                      width={6}
+                      height={12}
+                      fill="#8fbf8a"
+                      stroke="#3f7a49"
+                      strokeWidth={1}
+                    />
+                  ))}
                 </svg>
               )}
             </button>
@@ -116,6 +118,17 @@ export function BridgeView({
         data-testid="counters-canvas"
       >
         <rect width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} fill={PAPER} />
+        <defs>
+          <pattern
+            id="e02-ten-hatch"
+            width={8}
+            height={8}
+            patternUnits="userSpaceOnUse"
+            patternTransform="rotate(45)"
+          >
+            <line x1={0} y1={0} x2={0} y2={8} stroke="#b25c32" strokeWidth={2.4} />
+          </pattern>
+        </defs>
 
         <rect
           x={START_X - 90}
@@ -142,6 +155,20 @@ export function BridgeView({
           strokeWidth={3}
           strokeDasharray="10 8"
         />
+        {face === 'cells'
+          ? Array.from({ length: bridge.gap + 1 }, (_, tick) => (
+              <line
+                key={`gap-tick-${tick}`}
+                data-gap-tick={tick}
+                x1={START_X + tick * cell}
+                y1={GROUND_Y + 26}
+                x2={START_X + tick * cell}
+                y2={GROUND_Y + 54}
+                stroke={MUTED}
+                strokeWidth={2}
+              />
+            ))
+          : null}
 
         {config.tenMarker ? (
           <g>
@@ -170,6 +197,13 @@ export function BridgeView({
 
         {placed.map((rod) => {
           const overflows = rod.x + rod.width > START_X + gapWidth + 2;
+          const before = bridge.placed.slice(0, rod.index).reduce((total, item) => total + item, 0);
+          const overCells =
+            config.tenMarker && face === 'cells'
+              ? Array.from({ length: rod.length }, (_, cellIndex) => cellIndex).filter(
+                  (cellIndex) => before + cellIndex >= 10,
+                )
+              : [];
           return (
             <g
               key={`placed-${rod.index}`}
@@ -193,6 +227,24 @@ export function BridgeView({
                 stroke={overflows ? '#b25c32' : '#3f7a49'}
                 strokeWidth={3}
               />
+              {overCells.map((cellIndex) => (
+                <g key={`over-${rod.index}-${cellIndex}`} data-over-ten="true">
+                  <rect
+                    x={rod.x + cellIndex * cell}
+                    y={GROUND_Y - 30}
+                    width={cell}
+                    height={60}
+                    fill="#f0b27a"
+                  />
+                  <rect
+                    x={rod.x + cellIndex * cell}
+                    y={GROUND_Y - 30}
+                    width={cell}
+                    height={60}
+                    fill="url(#e02-ten-hatch)"
+                  />
+                </g>
+              ))}
               {face === 'cells' ? (
                 Array.from({ length: rod.length }, (_, cellIndex) => (
                   <line

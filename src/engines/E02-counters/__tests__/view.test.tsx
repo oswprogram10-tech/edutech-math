@@ -1,6 +1,7 @@
 /** @vitest-environment jsdom */
 import { cleanup, render } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
+import { pairingPoint } from '../layout';
 import { createInitialState, reduce } from '../reduce';
 import { countersStrings as S } from '../strings.ko';
 import type { CountersConfig, CountersState } from '../types';
@@ -224,5 +225,59 @@ describe('E02 T041 새 모드도 기본 설정에서 정답 숫자를 쓰지 않
     const { container, queryByTestId } = renderView(config, state);
     expect(queryByTestId('counter-total')).toBeNull();
     expect(container.textContent ?? '').not.toMatch(/\d/);
+  });
+});
+
+describe('E02 T041 검수 수정', () => {
+  it('pairing 13명은 짝 선이 모두 같은 줄 안에 있고 아이는 한 색이다', () => {
+    const config: CountersConfig = { mode: 'pairing', count: 13, predictFirst: false };
+    const state = reduce(createInitialState(config), { type: 'make-pairs' });
+    const { container } = renderView(config, state);
+
+    const lines = Array.from(container.querySelectorAll('[data-pair-line]'));
+    expect(lines).toHaveLength(6);
+    for (const line of lines) {
+      expect(line.getAttribute('y1')).toBe(line.getAttribute('y2'));
+      const pair = Number(line.getAttribute('data-pair-line'));
+      expect(pairingPoint(pair * 2).y).toBe(pairingPoint(pair * 2 + 1).y);
+    }
+
+    const people = Array.from(container.querySelectorAll('[data-person]'));
+    expect(people).toHaveLength(13);
+    const colors = new Set(
+      people.map((person) => person.querySelector('[data-color]')?.getAttribute('data-color')),
+    );
+    expect([...colors]).toEqual(['red']);
+    expect(container.querySelector('[data-leftover-flag]')).not.toBeNull();
+  });
+
+  it('pairing 예측 단계에서도 아이를 보여 준다', () => {
+    const config: CountersConfig = { mode: 'pairing', count: 6, predictFirst: true };
+    const state = createInitialState(config);
+    const { container } = renderView(config, state);
+    expect(container.querySelectorAll('[data-person]')).toHaveLength(6);
+  });
+
+  it('bridge cells는 틈 눈금을 그리고 9+5에서 10을 넘은 칸 4개를 다른 무늬로 그린다', () => {
+    const config: CountersConfig = {
+      mode: 'part-whole',
+      variant: 'bridge',
+      gap: 14,
+      rods: [5, 9],
+      maxRods: 2,
+      tenMarker: true,
+    };
+    let state = createInitialState(config);
+    state = reduce(state, { type: 'place-rod', length: 9 });
+    state = reduce(state, { type: 'place-rod', length: 5 });
+    const { container } = renderView(config, state);
+
+    expect(container.querySelectorAll('[data-gap-tick]')).toHaveLength(15);
+    expect(container.querySelectorAll('[data-over-ten="true"]')).toHaveLength(4);
+
+    const nineButton = Array.from(container.querySelectorAll('button')).find(
+      (button) => button.getAttribute('aria-label') === S.rodLabel(9),
+    );
+    expect(nineButton?.querySelectorAll('rect')).toHaveLength(9);
   });
 });

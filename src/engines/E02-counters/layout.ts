@@ -176,6 +176,27 @@ export function sharePlateCenter(groups: number, plate: number): Point {
   return { x: 190 + plate * step, y: 495 };
 }
 
+// ─────────────────────────────────────────────────────────────
+// pairing: 두 명씩 짝을 지어 한 줄에 두 쌍(4명)까지 놓는다.
+// 짝 선이 줄을 넘지 않도록 짝은 항상 같은 줄의 이웃이다.
+// ─────────────────────────────────────────────────────────────
+
+export const PAIRING_ICON_RADIUS = 26;
+const PAIRING_PER_ROW = 4;
+const PAIRING_X_GAP = 130;
+const PAIRING_Y_GAP = 92;
+const PAIRING_LEFT = 305;
+const PAIRING_TOP = 150;
+
+export function pairingPoint(index: number): Point {
+  const column = index % PAIRING_PER_ROW;
+  const row = Math.floor(index / PAIRING_PER_ROW);
+  return {
+    x: PAIRING_LEFT + column * PAIRING_X_GAP,
+    y: PAIRING_TOP + row * PAIRING_Y_GAP,
+  };
+}
+
 export function inRect(
   point: Point,
   rect: { readonly x: number; readonly y: number; readonly width: number; readonly height: number },

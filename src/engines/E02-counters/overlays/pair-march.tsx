@@ -1,15 +1,9 @@
 /** 힌트 ②: 짝짓기 연출을 다시 보이고, 남는 1명을 깃발 없이 윤곽으로 강조한다. */
 import type { OverlayProps } from '../../../core/engine-sdk';
+import { PAIRING_ICON_RADIUS, pairingPoint } from '../layout';
 import type { CountersConfig, CountersState } from '../types';
 
-const ICON_RADIUS = 26;
-
-function personPoint(index: number): { x: number; y: number } {
-  return {
-    x: 250 + (index % 5) * 125,
-    y: 175 + Math.floor(index / 5) * 105,
-  };
-}
+const ICON_RADIUS = PAIRING_ICON_RADIUS;
 
 export function PairMarchOverlay({ state }: OverlayProps<CountersConfig, CountersState>) {
   if (state.mode !== 'pairing') return null;
@@ -18,8 +12,8 @@ export function PairMarchOverlay({ state }: OverlayProps<CountersConfig, Counter
   return (
     <svg viewBox="0 0 1000 600" width="100%" height="100%" aria-hidden="true">
       {pairs.map((pair) => {
-        const first = personPoint(pair * 2);
-        const second = personPoint(pair * 2 + 1);
+        const first = pairingPoint(pair * 2);
+        const second = pairingPoint(pair * 2 + 1);
         return (
           <g key={`march-${pair}`}>
             <line
@@ -53,8 +47,8 @@ export function PairMarchOverlay({ state }: OverlayProps<CountersConfig, Counter
       })}
       {leftover !== null ? (
         <circle
-          cx={personPoint(leftover).x}
-          cy={personPoint(leftover).y}
+          cx={pairingPoint(leftover).x}
+          cy={pairingPoint(leftover).y}
           r={ICON_RADIUS + 10}
           fill="none"
           stroke="#e8872e"
