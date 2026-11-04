@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fractionModelStrings as S } from '../strings.ko';
 import { createInitialState, reduce } from '../reduce';
 import type { FractionModelConfig, FractionModelState, MixedState } from '../types';
+import { LOGICAL_WIDTH } from '../types';
 import { FractionModelView } from '../View';
 
 afterEach(cleanup);
@@ -562,5 +563,62 @@ describe('E05 T049 정답 노출 금지', () => {
     const labelled = textOf({ ...config, plateLabel: true }, state);
     expect(labelled).toContain(S.pieceCountLabel('1/4', 2));
     expect(labelled).not.toContain('1/2');
+  });
+});
+
+describe('E05 T049 divide-measure 눈금·자 배치', () => {
+  const config: FractionModelConfig = {
+    mode: 'divide-measure',
+    dividend: '3/4',
+    divisor: '2/3',
+  };
+
+  function twoRulers(): FractionModelState {
+    let state = createInitialState(config);
+    state = reduce(state, { type: 'lay-ruler' });
+    state = reduce(state, { type: 'lay-ruler' });
+    return state;
+  }
+
+  it('자 두 번을 놓아도 모든 자 사각형이 캔버스 안에 들어온다', () => {
+    const view = renderView(config, twoRulers());
+    const rulers = [
+      ...view.container.querySelectorAll(
+        '[data-testid="measure-ruler"], [data-testid="measure-partial-ruler"]',
+      ),
+    ];
+    expect(rulers).toHaveLength(2);
+    for (const ruler of rulers) {
+      const x = Number(ruler.getAttribute('x'));
+      const width = Number(ruler.getAttribute('width'));
+      expect(x).toBeGreaterThanOrEqual(0);
+      expect(x + width).toBeLessThanOrEqual(LOGICAL_WIDTH);
+    }
+  });
+
+  it('나뉨수 막대 위에 전체 눈금 숫자 0·1·2를 쓰고 분모 칸 선을 그린다', () => {
+    const view = renderView(config, twoRulers());
+    const labels = [...view.container.querySelectorAll('[data-testid="measure-whole-label"]')].map(
+      (label) => label.textContent,
+    );
+    expect(labels).toEqual(['0', '1', '2']);
+
+    // 나뉨수 3/4은 1/4 칸 3개(경계선 4개), 자 2/3은 1/3 칸 2개(경계선 4개).
+    expect(view.container.querySelectorAll('[data-testid="dividend-part-line"]')).toHaveLength(4);
+    expect(view.container.querySelectorAll('[data-testid="ruler-part-line"]')).toHaveLength(4);
+  });
+});
+
+describe('E05 T049 divide-whole 분모 칸 경계선', () => {
+  it('칠한 부분 안에 세로 경계선을 그려 5칸을 셀 수 있게 한다', () => {
+    const config: FractionModelConfig = {
+      mode: 'partition',
+      variant: 'divide-whole',
+      fraction: '4/5',
+      divisor: 2,
+    };
+    const view = renderView(config, createInitialState(config));
+    const lines = view.container.querySelectorAll('[data-testid="divide-whole-column-line"]');
+    expect(lines).toHaveLength(4);
   });
 });

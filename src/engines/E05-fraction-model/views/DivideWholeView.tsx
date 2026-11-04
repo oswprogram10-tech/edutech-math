@@ -138,6 +138,23 @@ export function DivideWholeView({
           return (
             <g key={`dw-square-${square}`}>
               {cells}
+              {Array.from({ length: Math.max(0, state.dividendParts - 1) }, (_, index) => {
+                const column = index + 1;
+                const x = originX + column * board.cellWidth;
+                return (
+                  <line
+                    key={`dw-column-line-${square}-${column}`}
+                    x1={x}
+                    y1={board.originY}
+                    x2={x}
+                    y2={board.originY + board.size}
+                    stroke={INK}
+                    strokeWidth={2.5}
+                    opacity={0.85}
+                    data-testid="divide-whole-column-line"
+                  />
+                );
+              })}
               <rect
                 x={originX}
                 y={board.originY}

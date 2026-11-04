@@ -24,8 +24,8 @@ export function DivideMeasureView({
 }: ModeProps<DivideMeasureState>) {
   const summary = useMemo(() => measureSummary(state), [state]);
   const board = useMemo(
-    () => measureBoard(summary.dividend, summary.divisor),
-    [summary.dividend, summary.divisor],
+    () => measureBoard(summary.dividend, summary.divisor, state.rulersLaid),
+    [summary.dividend, summary.divisor, state.rulersLaid],
   );
   const dividendDen = denominatorNumber(summary.dividend) ?? 1;
   const divisorDen = denominatorNumber(summary.divisor) ?? 1;
@@ -91,6 +91,32 @@ export function DivideMeasureView({
           opacity={0.12}
         />
 
+        {Array.from({ length: board.units + 1 }, (_, whole) => {
+          const x = board.originX + whole * board.unit;
+          return (
+            <g key={`whole-tick-${whole}`} pointerEvents="none">
+              <line
+                x1={x}
+                y1={board.dividendBar.y - 18}
+                x2={x}
+                y2={board.dividendBar.y}
+                stroke={INK}
+                strokeWidth={2}
+                opacity={0.75}
+              />
+              <text
+                x={x}
+                y={board.dividendBar.y - 26}
+                textAnchor="middle"
+                fontSize={18}
+                fill={INK}
+                data-testid="measure-whole-label"
+              >
+                {whole}
+              </text>
+            </g>
+          );
+        })}
         {dividendTicks.map((x, index) => (
           <line
             key={`dividend-tick-${index}`}
@@ -101,6 +127,7 @@ export function DivideMeasureView({
             stroke={MUTED}
             strokeWidth={index % dividendDen === 0 ? 2 : 1}
             opacity={index % dividendDen === 0 ? 0.8 : 0.45}
+            data-testid="dividend-part-line"
           />
         ))}
         <rect
@@ -112,7 +139,12 @@ export function DivideMeasureView({
           stroke={INK}
           strokeWidth={3}
         />
-        <text x={board.dividendBar.x} y={board.dividendBar.y - 12} fontSize={20} fill={INK}>
+        <text
+          x={board.dividendBar.x}
+          y={board.dividendBar.y + board.dividendBar.height + 26}
+          fontSize={20}
+          fill={INK}
+        >
           나뉨수
         </text>
 
@@ -125,6 +157,7 @@ export function DivideMeasureView({
             y2={board.rulerBar.y + board.rulerBar.height}
             stroke={MUTED}
             strokeWidth={1.5}
+            data-testid="ruler-part-line"
           />
         ))}
         <rect
@@ -151,6 +184,8 @@ export function DivideMeasureView({
               fill="#dbe7ff"
               stroke={BLUE}
               strokeWidth={2.5}
+              data-testid="measure-ruler"
+              data-index={index}
             />
             <text
               x={board.originX + (index + 0.5) * rulerWidth}
@@ -178,6 +213,7 @@ export function DivideMeasureView({
               stroke={BLUE}
               strokeWidth={2.5}
               strokeDasharray="9 7"
+              data-testid="measure-partial-ruler"
             />
             <rect
               x={board.originX + state.rulersLaid * rulerWidth}
