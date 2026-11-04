@@ -3,6 +3,7 @@
  * 수 값은 정수 자리 계산과 `Rational`로만 다루고, 상태에는 문자열만 둔다.
  */
 import { computeDivPlan, divComplete, expectedDigitsFor } from './grid-div';
+import { decimalEstimate, shiftDelta, shiftFits, shiftOpOf } from './grid-decimal';
 import { computeMulPlan } from './grid-mul';
 import type { MulPlan } from './grid-mul';
 import type {
@@ -15,13 +16,16 @@ import type {
   EstimateBar,
   EstimateTolerance,
   MulStyle,
+  ShiftOp,
 } from './types';
 import {
   anchorOf,
   compareNumbers,
   computeGrid,
   digitAt,
+  isDecimalMul,
   mostOf,
+  mulAlignment,
   parseNumber,
   type ParsedNumber,
 } from './grid';
@@ -38,8 +42,43 @@ const DEFAULT_NUMBERS: Readonly<Record<ColumnMode, { a: string; b: string }>> = 
 
 const MODES: readonly ColumnMode[] = ['add', 'sub', 'decimal', 'mul', 'estimate', 'div'];
 
+/** 소수 곱셈 기본 수(범위 밖 설정을 고칠 때). */
+const DEFAULT_DECIMAL_MUL = { a: '2.4', b: '1.3' } as const;
+
 function normalizeMode(value: ColumnMode | undefined): ColumnMode {
   return value !== undefined && MODES.includes(value) ? value : 'add';
+}
+
+/** 소수 곱셈 설정 수: 소수점 뺀 숫자 1~`maxDigits`개, 소수 자리 0~3. */
+function decimalMulNumber(text: string, maxDigits: number): ParsedNumber | null {
+  const parsed = parseNumber(text);
+  if (!parsed) return null;
+  if (parsed.digits.length < 1 || parsed.digits.length > maxDigits) return null;
+  if (parsed.fracDigits > 3) return null;
+  return parsed;
+}
+
+function shiftDemoValue(text: string): ParsedNumber | null {
+  const parsed = parseNumber(text);
+  if (!parsed) return null;
+  if (parsed.digits.length > 6 || parsed.fracDigits > 3) return null;
+  return parsed;
+}
+
+function shiftDemoOps(values: readonly string[] | undefined): readonly ShiftOp[] {
+  if (!values) return [];
+  const ops: ShiftOp[] = [];
+  for (const value of values) {
+    const op = shiftOpOf(value);
+    if (op !== null) ops.push(op);
+  }
+  return ops;
+}
+
+function clampResultPoint(column: number | null, high: number): number | null {
+  if (column === null) return null;
+  if (!Number.isInteger(column) || column < 0 || column > high) return null;
+  return column;
 }
 
 function requireNumber(text: string): ParsedNumber {
@@ -197,6 +236,14 @@ function baseState(
     rewindEnabled: Boolean(config.rewindCheck),
     estimateBarShow: estimateBarShow(config.estimateBar),
     estimateMaxMultiple: estimateMaxMultiple(config.estimateBar),
+    resultPoint: null,
+    requireEstimate: config.requireEstimate === true,
+    placeCards: config.placeCards === true,
+    shiftBase: null,
+    shiftOps: [],
+    shiftExponent: 0,
+    shiftHistory: [],
+    shiftHideGrid: config.shiftDemo?.hideGrid === true,
   };
 }
 
@@ -333,9 +380,44 @@ export function createInitialState(config: ColumnCalcConfig = {}): ColumnCalcSta
     return withEstimateSample(state, config);
   }
 
+  const op = mode === 'decimal' ? (config.op ?? 'add') : mode;
+
+  if (mode === 'decimal' && op === 'mul') {
+    const mulA = decimalMulNumber(rawA, 4) ?? requireNumber(DEFAULT_DECIMAL_MUL.a);
+    const mulB = decimalMulNumber(rawB, 3) ?? requireNumber(DEFAULT_DECIMAL_MUL.b);
+    const placeCards = config.placeCards === true;
+    const requireEstimate = config.requireEstimate === true;
+    const shift = config.shiftDemo;
+    let shiftBase: string | null = null;
+    let shiftOps: readonly ShiftOp[] = [];
+    if (shift && shift.value !== undefined) {
+      const parsed = shiftDemoValue(String(shift.value));
+      if (parsed) {
+        shiftBase = parsed.text;
+        shiftOps = shiftDemoOps(shift.ops);
+      }
+    }
+    const seeded: ColumnCalcState = {
+      ...baseState('decimal', 'mul', mulA, mulB, config),
+      aPoint: mulA.fracDigits,
+      bPoint: placeCards ? null : mulB.fracDigits,
+      phase: requireEstimate ? 'estimate' : 'calc',
+      requireEstimate,
+      placeCards,
+      shiftBase,
+      shiftOps,
+      shiftExponent: 0,
+      shiftHistory: [],
+      shiftHideGrid: shift?.hideGrid === true,
+    };
+    return {
+      ...seeded,
+      selected: mulAlignment(seeded).aligned ? mulSelection(computeMulPlan(seeded)) : null,
+    };
+  }
+
   const a = requireNumber(rawA);
   const b = requireNumber(rawB);
-  const op = mode === 'decimal' ? (config.op ?? 'add') : mode;
 
   if (op === 'sub' && compareNumbers(a, b) < 0) {
     throw new Error(S.configError('빼는 수가 빼어지는 수보다 큽니다.'));
@@ -630,6 +712,8 @@ export function reduce(state: ColumnCalcState, action: ColumnCalcAction): Column
   switch (action.type) {
     case 'place': {
       if (state.mode !== 'decimal') return state;
+      // 소수 곱셈은 b 카드만, placeCards일 때만 놓는다.
+      if (isDecimalMul(state) && (!state.placeCards || action.number !== 'b')) return state;
       if (!Number.isInteger(action.pointColumn)) return state;
       if (action.pointColumn < -20 || action.pointColumn > 12) return state;
       if (action.number === 'a' && state.aPoint === action.pointColumn) return state;
@@ -645,6 +729,7 @@ export function reduce(state: ColumnCalcState, action: ColumnCalcAction): Column
         aPads: [],
         bPads: [],
         result: {},
+        resultPoint: null,
         carries: {},
         regroups: {},
         crosses: [],
@@ -652,12 +737,19 @@ export function reduce(state: ColumnCalcState, action: ColumnCalcAction): Column
         selected: null,
       };
       const padded = withAutoPads(placed, a, b);
+      if (isDecimalMul(padded)) {
+        return {
+          ...padded,
+          selected: mulAlignment(padded).aligned ? mulSelection(computeMulPlan(padded)) : null,
+        };
+      }
       return padded.aPoint !== null && padded.bPoint !== null
         ? { ...padded, selected: selectionFor(padded) }
         : padded;
     }
 
     case 'select': {
+      if (isDecimalMul(state) && !mulAlignment(state).aligned) return state;
       if (!rowAllowed(state, action.row, action.index)) return state;
       if (state.op === 'div') return selectDiv(state, action);
       const grid = computeGrid(state);
@@ -683,6 +775,7 @@ export function reduce(state: ColumnCalcState, action: ColumnCalcAction): Column
     }
 
     case 'enter': {
+      if (isDecimalMul(state) && !mulAlignment(state).aligned) return state;
       if (!rowAllowed(state, action.row, action.index)) return state;
       if (action.digit !== null && !/^[0-9]$/.test(action.digit)) return state;
       if (state.op === 'div') return enterDiv(state, action);
@@ -835,16 +928,33 @@ export function reduce(state: ColumnCalcState, action: ColumnCalcAction): Column
     }
 
     case 'enter-estimate': {
+      if (isDecimalMul(state)) {
+        if (state.phase !== 'estimate') return state;
+        return enterDecimalEstimate(state, action);
+      }
       if (state.mode !== 'estimate' || state.phase !== 'estimate') return state;
       return enterEstimate(state, action);
     }
 
     case 'lock-estimate': {
+      if (isDecimalMul(state)) {
+        if (state.phase !== 'estimate' || decimalEstimate(state) === null) return state;
+        const next: ColumnCalcState = { ...state, phase: 'calc' };
+        return {
+          ...next,
+          selected: mulAlignment(next).aligned ? mulSelection(computeMulPlan(next)) : null,
+        };
+      }
       if (state.mode !== 'estimate') return state;
       return lockEstimate(state);
     }
 
     case 'unlock-estimate': {
+      if (isDecimalMul(state)) {
+        if (state.phase !== 'calc') return state;
+        // 놓은 점은 그대로 둔다(T077 결정 5).
+        return { ...state, phase: 'estimate', selected: null };
+      }
       if (state.mode !== 'estimate' || state.phase !== 'calc') return state;
       return { ...state, phase: 'estimate', selected: null };
     }
@@ -887,9 +997,59 @@ export function reduce(state: ColumnCalcState, action: ColumnCalcAction): Column
       return { ...state, rewound: true };
     }
 
+    case 'place-point': {
+      if (!isDecimalMul(state) || action.target !== 'result') return state;
+      if (state.requireEstimate && state.phase === 'estimate') return state;
+      // 바른 정렬 전에는 부분곱·결과 칸과 마찬가지로 점도 놓지 않는다.
+      if (!mulAlignment(state).aligned) return state;
+      const plan = computeMulPlan(state);
+      if (!plan) return state;
+      const high = plan.resultColumns[plan.resultColumns.length - 1] ?? 0;
+      const requested = action.column === null ? null : clampResultPoint(action.column, high);
+      if (action.column !== null && requested === null) return state;
+      // 같은 자리를 다시 누르면 지운다.
+      const next = requested !== null && state.resultPoint === requested ? null : requested;
+      return { ...state, resultPoint: next };
+    }
+
+    case 'shift': {
+      if (state.shiftBase === null || !state.shiftOps.includes(action.op)) return state;
+      if (!shiftFits(state, action.op)) return state;
+      return {
+        ...state,
+        shiftExponent: state.shiftExponent + shiftDelta(action.op),
+        shiftHistory: [...state.shiftHistory, action.op],
+      };
+    }
+
+    case 'shift-reset': {
+      if (state.shiftBase === null) return state;
+      if (state.shiftExponent === 0) return state;
+      // 기록은 남기고 처음 자리로 돌아간다.
+      return { ...state, shiftExponent: 0 };
+    }
+
     default:
       return state;
   }
+}
+
+/** 소수 곱셈 어림 입력: 숫자와 소수점 하나를 받는다. */
+function enterDecimalEstimate(
+  state: ColumnCalcState,
+  action: Extract<ColumnCalcAction, { type: 'enter-estimate' }>,
+): ColumnCalcState {
+  if (action.digit === null) {
+    if (state.estimate === null || state.estimate.length === 0) return state;
+    const next = state.estimate.slice(0, -1);
+    return { ...state, estimate: next.length === 0 ? null : next };
+  }
+  if (action.digit !== '.' && !/^[0-9]$/.test(action.digit)) return state;
+  const current = state.estimate ?? '';
+  const candidate = `${current}${action.digit}`;
+  // 입력 중에는 잠정 형식을 허용한다(정하기에서 최종 검사).
+  if (!/^\d{0,4}(\.\d{0,3})?$/.test(candidate)) return state;
+  return { ...state, estimate: candidate };
 }
 
 function enterEstimate(

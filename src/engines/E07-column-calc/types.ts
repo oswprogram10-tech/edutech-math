@@ -29,6 +29,16 @@ export type LinkMarks = 'auto' | 'hint';
 export type EstimatePhase = 'estimate' | 'calc';
 export type EstimateSignal = 'green' | 'yellow' | 'red';
 
+/** 자릿값 기둥 시프트 데모의 한 걸음. */
+export type ShiftOp = '×10' | '×100' | '×1000' | '×0.1' | '×0.01' | '×0.001';
+
+/** 시프트 데모 설정. `value`는 처음 값, `ops`는 버튼으로 보일 걸음. */
+export interface ShiftDemo {
+  readonly value?: number | string;
+  readonly ops?: readonly string[];
+  readonly hideGrid?: boolean;
+}
+
 /** 어림값과 학생 결과의 차이 한계. 문자열·숫자 모두 받는다. */
 export interface EstimateTolerance {
   readonly green?: number | string;
@@ -87,6 +97,14 @@ export interface ColumnCalcConfig {
   readonly tolerance?: EstimateTolerance;
   /** 미리 채운 틀린 결과. `recheck`로 지우고 다시 푼다. */
   readonly sample?: number | string;
+
+  // ── decimal + mul (T077) ──────────────────────────────────
+  /** 소수점을 놓기 전에 어림값을 먼저 정하게 한다. */
+  readonly requireEstimate?: boolean;
+  /** b 카드를 학생이 직접 놓는다(오른쪽 끝 맞춤 관찰). */
+  readonly placeCards?: boolean;
+  /** 자릿값 기둥 시프트 데모. */
+  readonly shiftDemo?: ShiftDemo;
 
   // ── 연결(E01·E04) ─────────────────────────────────────────
   readonly linkMarks?: LinkMarks;
@@ -188,6 +206,18 @@ export interface ColumnCalcState {
   readonly rewindEnabled: boolean;
   readonly estimateBarShow: EstimateBar['show'];
   readonly estimateMaxMultiple: number;
+
+  // ── decimal + mul (T077) ──────────────────────────────────
+  /** 결과 줄에서 일의 자리가 되는 칸. 점은 그 칸 오른쪽에 그린다. */
+  readonly resultPoint: number | null;
+  readonly requireEstimate: boolean;
+  readonly placeCards: boolean;
+  /** 시프트 데모의 처음 값(읽을 수 없으면 null). */
+  readonly shiftBase: string | null;
+  readonly shiftOps: readonly ShiftOp[];
+  readonly shiftExponent: number;
+  readonly shiftHistory: readonly ShiftOp[];
+  readonly shiftHideGrid: boolean;
 }
 
 export type ColumnCalcAction =
@@ -230,7 +260,13 @@ export type ColumnCalcAction =
   /** div: 배수 사다리에서 몫 후보를 미리 골라 본다. */
   | { readonly type: 'try-estimate'; readonly column: number; readonly k: number }
   /** div: 완성한 풀이를 거꾸로 되감는다. */
-  | { readonly type: 'rewind' };
+  | { readonly type: 'rewind' }
+  /** 소수 곱셈: 결과 줄 `column` 오른쪽에 소수점을 놓는다. null은 지우기. */
+  | { readonly type: 'place-point'; readonly target: 'result'; readonly column: number | null }
+  /** 시프트 데모: 자릿값 기둥을 `op`만큼 옮긴다. */
+  | { readonly type: 'shift'; readonly op: ShiftOp }
+  /** 시프트 데모: 처음 자리로 돌아간다(기록은 유지). */
+  | { readonly type: 'shift-reset' };
 
 /** 격자 위쪽에 그리는 자릿값 이름. C 단계에서만 보여 준다. */
 export const PLACE_NAMES_KO: Readonly<Record<number, string>> = {

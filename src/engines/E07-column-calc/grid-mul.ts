@@ -7,7 +7,7 @@
  * 값은 `BigInt`로만 계산하고, 화면·상태에는 문자열 자리만 둔다.
  * 기대값(정답)은 Observation·힌트에 숫자로 내보내지 않는다.
  */
-import { parseNumber } from './grid';
+import { isDecimalMul, parseNumber } from './grid';
 import type { ColumnCalcState, MulStyle } from './types';
 
 /**
@@ -149,53 +149,67 @@ function placeProductRow(
 export function computeMulPlan(state: ColumnCalcState): MulPlan | null {
   const a = parseNumber(state.aText);
   const b = parseNumber(state.bText);
-  if (!a || !b || a.fracDigits !== 0 || b.fracDigits !== 0) return null;
+  const decimalMul = isDecimalMul(state);
+  if (!a || !b) return null;
+  if (!decimalMul && (a.fracDigits !== 0 || b.fracDigits !== 0)) return null;
 
-  const aValue = BigInt(a.digits);
-  const bValue = BigInt(b.digits);
+  // 소수 곱셈은 소수점을 뺀 숫자열을 자연수로 보고 오른쪽 끝을 맞춘다.
+  // 앞의 0은 격자 값에 영향을 주지 않으므로 지운다(0.25 → 25).
+  const aDigits = decimalMul ? normalizeDigits(a.digits) : a.digits;
+  const bDigits = decimalMul ? normalizeDigits(b.digits) : b.digits;
+  const aLength = aDigits.length;
+  const bLength = bDigits.length;
+
+  const aValue = BigInt(aDigits);
+  const bValue = BigInt(bDigits);
   const product = aValue * bValue;
   const productDigits = product.toString();
-  const singleDigit = b.intDigits === 1;
-  const style: MulStyle =
-    state.style === 'partial-products' && !singleDigit ? 'carry' : state.style;
-  const showZeroPlaceholder = state.showZeroPlaceholder && !state.hasDebugSample;
+  const singleDigit = bLength === 1;
+  const style: MulStyle = decimalMul
+    ? 'carry'
+    : state.style === 'partial-products' && !singleDigit
+      ? 'carry'
+      : state.style;
+  const showZeroPlaceholder = !decimalMul && state.showZeroPlaceholder && !state.hasDebugSample;
   const rows: MulRowPlan[] = [];
 
   if (style === 'carry') {
     if (!singleDigit) {
-      for (let place = 0; place < b.intDigits; place += 1) {
-        const factor = Number(b.digits[b.intDigits - 1 - place] ?? '0');
+      for (let place = 0; place < bLength; place += 1) {
+        const factor = Number(bDigits[bLength - 1 - place] ?? '0');
         const value = aValue * BigInt(factor);
         const start = place;
         // 정답 자릿수가 아니라 그 줄이 가질 수 있는 최대 자릿수(a 자릿수 + 1)만큼 연다.
-        const end = place + a.digits.length;
+        const end = place + aDigits.length;
         const placeholderColumns = showZeroPlaceholder && place > 0 ? range(0, place - 1) : [];
         const columns = range(0, end).filter((column) => !placeholderColumns.includes(column));
         rows.push(
-          carryRow(place, a.digits, factor, place, value, start, end, columns, placeholderColumns),
+          carryRow(place, aDigits, factor, place, value, start, end, columns, placeholderColumns),
         );
       }
     }
   } else {
-    for (let place = 0; place < a.intDigits; place += 1) {
-      const factor = Number(a.digits[a.intDigits - 1 - place] ?? '0');
+    for (let place = 0; place < aLength; place += 1) {
+      const factor = Number(aDigits[aLength - 1 - place] ?? '0');
       if (factor === 0) continue;
-      rows.push(placeProductRow(rows.length, factor, place, bValue, b.intDigits));
+      rows.push(placeProductRow(rows.length, factor, place, bValue, bLength));
     }
   }
 
-  const aLength = a.intDigits;
-  const bLength = b.intDigits;
   const rowHigh = rows.reduce((high, row) => Math.max(high, row.end), 0);
   // 합 줄도 a·b 자릿수 합만큼 연다(정답 자릿수에 맞추지 않는다).
-  const resultHigh = aLength + bLength - 1;
-  const high = Math.max(aLength, bLength, productDigits.length, rowHigh, resultHigh);
+  // 소수 곱셈은 앞에 0을 써야 하는 경우(0.25 × 0.4의 0.100)까지 연다.
+  const resultHigh = decimalMul
+    ? Math.max(aLength + bLength - 1, a.fracDigits + b.fracDigits)
+    : aLength + bLength - 1;
+  const displayHigh = decimalMul ? Math.max(a.digits.length - 1, b.digits.length - 1) : 0;
+  const high = Math.max(aLength, bLength, productDigits.length, rowHigh, resultHigh, displayHigh);
   const requiredColumns = range(0, productDigits.length - 1);
   const resultColumns = range(0, resultHigh);
 
   return {
-    aText: state.aText,
-    bText: state.bText,
+    aText: decimalMul ? aDigits : state.aText,
+    bText: decimalMul ? bDigits : state.bText,
     a: aValue,
     b: bValue,
     product,

@@ -1,0 +1,180 @@
+/* E07 자릿값 기둥 시프트 데모(T077). 공통 버튼 모양은 View.module.css를 쓴다. */
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.title {
+  color: #1d2330;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.note {
+  color: #5a6478;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.track {
+  position: relative;
+  min-width: 384px;
+  overflow: hidden;
+}
+
+.pillars {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 2px;
+}
+
+.pillar {
+  min-height: 4.6rem;
+  border: 2px dashed #c8d4ea;
+  border-radius: 10px;
+  background: #fbfcff;
+}
+
+.pillar[data-filled='true'] {
+  border-style: solid;
+  border-color: #9db4dd;
+  background: #eef3ff;
+}
+
+.wrap[data-target-size='64'] .pillar {
+  min-height: 5.4rem;
+}
+
+.cards {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(100% / 8);
+  height: 100%;
+  border: 2px solid #2f6fde;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #1d2330;
+  font-size: 1.5rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  transition: transform 240ms ease;
+  will-change: transform;
+}
+
+.wrap[data-target-size='64'] .card {
+  font-size: 1.7rem;
+}
+
+/* 일과 소수 첫째 사이에 고정한 소수점. */
+.point {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 3px;
+  border-radius: 2px;
+  background: #101828;
+  transform: translateX(-50%);
+}
+
+.point::after {
+  content: '';
+  position: absolute;
+  top: -0.1rem;
+  left: 50%;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: #101828;
+  transform: translateX(-50%);
+}
+
+.labels {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 2px;
+  min-width: 384px;
+}
+
+.placeLabel {
+  overflow: hidden;
+  color: #5a6478;
+  font-size: 0.62rem;
+  line-height: 1.15;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.shiftButton,
+.resetButton {
+  min-height: 48px;
+  min-width: 64px;
+  padding: 0.2rem 0.7rem;
+  border: 2px solid #2f6fde;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #1d2330;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.resetButton {
+  border-color: #8a5a00;
+  color: #7a4f00;
+}
+
+.wrap[data-target-size='64'] .shiftButton,
+.wrap[data-target-size='64'] .resetButton {
+  min-height: 64px;
+  font-size: 1.1rem;
+}
+
+.shiftButton:disabled,
+.resetButton:disabled {
+  border-color: #aab4c6;
+  color: #7a8497;
+  cursor: not-allowed;
+}
+
+.hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+}

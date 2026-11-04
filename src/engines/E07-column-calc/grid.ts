@@ -97,6 +97,31 @@ export function alignmentOf(state: ColumnCalcState): AlignmentResult {
   return { aligned: false, alignment: 'other', pointColumn: null };
 }
 
+/** 소수 곱셈인가(mode decimal + op mul). */
+export function isDecimalMul(state: ColumnCalcState): boolean {
+  return state.mode === 'decimal' && state.op === 'mul';
+}
+
+/**
+ * 소수 곱셈의 정렬. `'right-edge'`만 바른 정렬이다.
+ * 두 수의 소수 자리 수가 같으면 point와 right-edge가 같은 자리이므로 right-edge로 본다.
+ */
+export function mulAlignment(state: ColumnCalcState): AlignmentResult {
+  if (!isDecimalMul(state)) return { aligned: true, alignment: null, pointColumn: 0 };
+  const a = parseNumber(state.aText);
+  const b = parseNumber(state.bText);
+  if (!a || !b || state.aPoint === null || state.bPoint === null) {
+    return { aligned: false, alignment: null, pointColumn: null };
+  }
+  if (anchorOf(a, state.aPoint) === anchorOf(b, state.bPoint)) {
+    return { aligned: true, alignment: 'right-edge', pointColumn: null };
+  }
+  if (state.aPoint === state.bPoint) {
+    return { aligned: false, alignment: 'point', pointColumn: state.aPoint };
+  }
+  return { aligned: false, alignment: 'other', pointColumn: null };
+}
+
 export interface ColumnComputation {
   readonly column: number;
   /** 윗수·아랫수의 그 자리 숫자(받아내림으로 고치기 전). */
@@ -163,9 +188,17 @@ function templateRange(
   };
 }
 
+function stripLeadingZeros(text: string): string {
+  const trimmed = text.replace(/^0+(?=\d)/, '');
+  return trimmed.length === 0 ? '0' : trimmed;
+}
+
 /**
  * 곱셈 격자의 뼈대. 결과 줄의 기대 숫자만 여기서 만들고, 부분곱 줄은
  * `grid-mul.ts`가 학생 상태와 함께 계산한다(이 파일은 순수 자리 계산만).
+ *
+ * 소수 곱셈은 소수점을 뺀 숫자열을 자연수로 보고 오른쪽 끝을 맞춘다.
+ * 결과 줄은 `max(자연수 곱 자릿수, aFrac + bFrac)`까지 연다(0.25 × 0.4의 0.100).
  */
 function computeMulGrid(
   state: ColumnCalcState,
@@ -173,7 +206,8 @@ function computeMulGrid(
   b: ParsedNumber,
   alignment: AlignmentResult,
 ): GridComputation {
-  if (a.fracDigits !== 0 || b.fracDigits !== 0) {
+  const decimalMul = isDecimalMul(state);
+  if (!decimalMul && (a.fracDigits !== 0 || b.fracDigits !== 0)) {
     return {
       a,
       b,
@@ -190,10 +224,18 @@ function computeMulGrid(
     };
   }
 
-  const productText = (BigInt(a.digits) * BigInt(b.digits)).toString();
+  const aDigits = decimalMul ? stripLeadingZeros(a.digits) : a.digits;
+  const bDigits = decimalMul ? stripLeadingZeros(b.digits) : b.digits;
+  const aLength = aDigits.length;
+  const bLength = bDigits.length;
+  const productText = (BigInt(aDigits) * BigInt(bDigits)).toString();
   const productLength = productText.length;
-  const high = Math.max(a.intDigits, b.intDigits, productLength);
-  const resultColumns = columnRange(0, productLength);
+  const resultHigh = decimalMul
+    ? Math.max(aLength + bLength - 1, a.fracDigits + b.fracDigits)
+    : aLength + bLength - 1;
+  const displayHigh = decimalMul ? Math.max(a.digits.length - 1, b.digits.length - 1) : 0;
+  const high = Math.max(aLength, bLength, productLength, resultHigh, displayHigh);
+  const resultColumns = columnRange(0, resultHigh);
   const requiredColumns = columnRange(0, productLength - 1);
   const columns: ColumnComputation[] = [];
   const byColumn = new Map<number, ColumnComputation>();
@@ -201,8 +243,8 @@ function computeMulGrid(
     const expected = Number(productText[productLength - 1 - column] ?? '0');
     const computation: ColumnComputation = {
       column,
-      top: Number(a.digits[a.intDigits - 1 - column] ?? '0'),
-      bottom: Number(b.digits[b.intDigits - 1 - column] ?? '0'),
+      top: Number(aDigits[aLength - 1 - column] ?? '0'),
+      bottom: Number(bDigits[bLength - 1 - column] ?? '0'),
       carryIn: 0,
       carryOut: 0,
       borrowFromHigher: 0,
@@ -258,6 +300,9 @@ export function computeGrid(state: ColumnCalcState): GridComputation {
   const bPoint = state.bPoint ?? 0;
   const placed = state.aPoint !== null && state.bPoint !== null;
 
+  // 곱셈은 b 카드를 놓기 전에도 격자 뼈대를 그린다(정렬 전 입력은 reduce가 막는다).
+  if (state.op === 'mul') return computeMulGrid(state, a, b, alignment);
+
   if (!placed && state.mode === 'decimal') {
     return {
       a,
@@ -274,8 +319,6 @@ export function computeGrid(state: ColumnCalcState): GridComputation {
       byColumn: new Map(),
     };
   }
-
-  if (state.op === 'mul') return computeMulGrid(state, a, b, alignment);
 
   const aAnchor = anchorOf(a, aPoint);
   const bAnchor = anchorOf(b, bPoint);

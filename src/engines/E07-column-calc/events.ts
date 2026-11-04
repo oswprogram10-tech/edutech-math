@@ -7,8 +7,14 @@
 import { Rational } from '../../core/math';
 import type { EngineEvent, EnginePredicate, JsonValue, Observation } from '../../core/engine-sdk';
 import { estimateSignal } from './estimate';
+import {
+  decimalMulComplete,
+  decimalSignal,
+  readDecimalResult,
+  shiftValueText,
+} from './grid-decimal';
 import { computeDivPlan, divAlarm, divComplete, estimateOver } from './grid-div';
-import { alignmentOf, computeGrid, readResult } from './grid';
+import { alignmentOf, computeGrid, isDecimalMul, mulAlignment, readResult } from './grid';
 import type { ColumnCalcAction, ColumnCalcState } from './types';
 
 function recordOf(value: JsonValue | undefined): Readonly<Record<string, JsonValue>> | null {
@@ -30,15 +36,25 @@ function valueEvent(state: ColumnCalcState): EngineEvent[] {
     if (!divComplete(state, plan) || plan.reading.quotientText === null) return [];
     return [{ name: 'value-changed', payload: { value: plan.reading.quotientText } }];
   }
+  if (isDecimalMul(state)) {
+    const reading = readDecimalResult(state);
+    if (!decimalMulComplete(state) || reading.value === null) return [];
+    return [{ name: 'value-changed', payload: { value: reading.value } }];
+  }
   const reading = readResult(state, computeGrid(state));
   if (!reading.complete || reading.value === null) return [];
   return [{ name: 'value-changed', payload: { value: reading.value } }];
 }
 
+function stateSignal(state: ColumnCalcState): string | null {
+  if (state.mode === 'estimate') return estimateSignal(state);
+  if (isDecimalMul(state)) return decimalSignal(state);
+  return null;
+}
+
 function signalEvent(prev: ColumnCalcState, next: ColumnCalcState): EngineEvent[] {
-  if (prev.mode !== 'estimate' || next.mode !== 'estimate') return [];
-  const before = estimateSignal(prev);
-  const after = estimateSignal(next);
+  const before = stateSignal(prev);
+  const after = stateSignal(next);
   if (before === after) return [];
   return [{ name: 'signal-changed', payload: { signal: after } }];
 }
@@ -87,7 +103,9 @@ export function emit(
     }
 
     case 'place': {
-      const alignment = alignmentOf(next).alignment;
+      const alignment = isDecimalMul(next)
+        ? mulAlignment(next).alignment
+        : alignmentOf(next).alignment;
       if (alignment !== null) {
         events.push({ name: 'aligned', payload: { alignment } });
       }
@@ -117,6 +135,22 @@ export function emit(
     case 'rewind': {
       if (next.rewound && !prev.rewound) {
         events.push({ name: 'rewind-requested', payload: {} });
+      }
+      break;
+    }
+
+    case 'place-point': {
+      events.push({
+        name: 'point-placed',
+        payload: { target: 'result', column: next.resultPoint },
+      });
+      break;
+    }
+
+    case 'shift': {
+      const value = shiftValueText(next);
+      if (value !== null) {
+        events.push({ name: 'shifted', payload: { op: action.op, value } });
       }
       break;
     }
@@ -224,7 +258,7 @@ export const signalIs: EnginePredicate = (
   return record !== null && observation['signal'] === record['value'];
 };
 
-/** args `{ value }`: 학생이 쓴 어림값. */
+/** args `{ value }`: 학생이 쓴 어림값. 정수·소수 모두 Rational로 견준다. */
 export const estimateIs: EnginePredicate = (
   observation: Observation,
   args: JsonValue | undefined,
@@ -234,12 +268,58 @@ export const estimateIs: EnginePredicate = (
   const expected = record['value'];
   const actual = observation['estimate'];
   if (typeof actual !== 'string') return false;
-  if (typeof expected === 'number') return actual === String(expected);
-  if (typeof expected !== 'string') return false;
-  if (/^\d+$/.test(actual) && /^\d+$/.test(expected)) {
-    return BigInt(actual) === BigInt(expected);
+  const expectedText =
+    typeof expected === 'number'
+      ? String(expected)
+      : typeof expected === 'string'
+        ? expected
+        : null;
+  if (expectedText === null) return false;
+  try {
+    return Rational.parse(actual).equals(Rational.parse(expectedText));
+  } catch {
+    return actual === expectedText;
   }
-  return actual === expected;
+};
+
+/** 결과 줄에 소수점을 놓았는가. */
+export const pointPlaced: EnginePredicate = (observation: Observation): boolean =>
+  observation['pointPlaced'] === true;
+
+/** args `{ value }`: 시프트 데모 값(Rational 비교). */
+export const shiftValueIs: EnginePredicate = (
+  observation: Observation,
+  args: JsonValue | undefined,
+): boolean => {
+  const record = recordOf(args);
+  if (!record) return false;
+  const expected = record['value'];
+  const expectedText =
+    typeof expected === 'number'
+      ? String(expected)
+      : typeof expected === 'string'
+        ? expected
+        : null;
+  if (expectedText === null) return false;
+  const actual = parseObservationValue(observation, 'shiftValue');
+  if (actual === null) return false;
+  try {
+    return actual.equals(Rational.parse(expectedText));
+  } catch {
+    return false;
+  }
+};
+
+/** args `{ op }`: 시프트 데모에서 그 걸음을 눌렀는가. */
+export const shiftUsed: EnginePredicate = (
+  observation: Observation,
+  args: JsonValue | undefined,
+): boolean => {
+  const record = recordOf(args);
+  if (!record) return false;
+  const op = stringOf(record['op']);
+  const history = observation['shiftHistory'];
+  return op !== null && Array.isArray(history) && history.includes(op);
 };
 
 /** args `{ row, index?, column }`: 학생이 표시한 틀린 칸. */
@@ -373,4 +453,7 @@ export const predicates: Readonly<Record<string, EnginePredicate>> = {
   alarmIs,
   estimateRevised,
   quotientCellIs,
+  pointPlaced,
+  shiftValueIs,
+  shiftUsed,
 };

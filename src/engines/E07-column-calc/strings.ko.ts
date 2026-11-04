@@ -1,6 +1,26 @@
 /** E07 세로셈 격자의 학생 문구. 화면에 하드코딩하지 않는다. */
 import type { ColumnMode, ColumnOp } from './types';
 
+const ORDINALS = [
+  '첫째',
+  '둘째',
+  '셋째',
+  '넷째',
+  '다섯째',
+  '여섯째',
+  '일곱째',
+  '여덟째',
+  '아홉째',
+  '열째',
+] as const;
+
+/** 소수 곱셈의 열 이름. 0 = 맨 오른쪽 칸 → "오른쪽에서 첫째 칸". */
+function columnFromRight(column: number): string {
+  const order = column + 1;
+  const ordinal = ORDINALS[order - 1] ?? `${order}번째`;
+  return `오른쪽에서 ${ordinal} 칸`;
+}
+
 export const columnCalcStrings = {
   name: '세로셈 격자',
   canvasLabel: '세로셈 격자',
@@ -139,4 +159,46 @@ export const columnCalcStrings = {
   leftoverBlinkHint: '남은 수가 어디로 갔는지 점선 칸을 살펴보세요.',
   ladderFocusTitle: '몫 후보 견주기',
   ladderFocusHint: '고른 몫과 바로 위아래 몫의 높이를 견주어 보세요.',
+  // ── decimal × (T077) ─────────────────────────────────────
+  decimalMulInstruction: '세로셈으로 곱한 뒤, 결과 줄에 소수점을 놓아 보세요.',
+  pointRow: '점 놓기',
+  pointCell: (place: string) => `${place} 자리 오른쪽에 소수점 놓기`,
+  pointCellOn: (place: string) => `${place} 자리 오른쪽 소수점 지우기`,
+  pointMark: '·',
+  /** 소수 곱셈은 자릿값이 아니라 오른쪽부터 센 칸 번호로 읽는다. */
+  columnFromRight,
+  columnCell: (prefix: string, column: number) => `${prefix} ${columnFromRight(column)}`,
+  placeholderColumnCell: (column: number) => `${columnFromRight(column)} 자리 밀기 0`,
+  pointColumnCell: (column: number) => `${columnFromRight(column)} 오른쪽에 소수점 놓기`,
+  pointColumnCellOn: (column: number) => `${columnFromRight(column)} 오른쪽 소수점 지우기`,
+  placeColumnCursor: (column: number) => `${columnFromRight(column)}에 카드 놓기`,
+  operandNumber: (row: string, value: string) => `${row} ${value}`,
+  estimateFirst: '소수점을 놓기 전에 어림값을 먼저 써요',
+  decimalEstimateLabel: '어림값',
+  decimalEstimateInput: '소수 어림값 쓰기',
+  estimateDigitKey: (digit: string) => `${digit} 어림값으로 쓰기`,
+  estimateDotKey: '소수점 쓰기',
+  estimateApply: '정하기',
+  decimalEstimateHint: '결과가 어림값에 얼마나 가까운지 살펴보세요.',
+  // ── shift ────────────────────────────────────────────────
+  shiftTitle: '자릿값 기둥',
+  shiftLabel: '자릿값 기둥 시프트 데모',
+  shiftOp: (op: string) => `${op} 만큼 옮기기`,
+  shiftReset: '처음으로',
+  shiftPillar: (place: string) => `${place} 기둥`,
+  shiftCard: (place: string, digit: string) => `${place} 기둥에 ${digit} 카드`,
+  shiftEmpty: (place: string) => `${place} 기둥 비어 있음`,
+  shiftPoint: '소수점은 움직이지 않아요',
+  shiftHint: '기둥을 눌러 숫자 카드가 어느 자리로 가는지 살펴보세요.',
+  // ── overlays ─────────────────────────────────────────────
+  overlayPointEstimate: '어림값과 결과 견주기',
+  overlayAlignCompare: '정렬 견주기',
+  pointEstimateTitle: '어림값과 결과',
+  pointEstimateHint: '어림값과 결과를 수직선에서 견주어 보세요.',
+  pointEstimateNoEstimate: '어림값을 써 보면 비교할 수 있어요.',
+  alignCompareTitle: '두 가지 정렬',
+  alignComparePoint: '소수점 맞춤',
+  alignCompareRight: '오른쪽 끝 맞춤',
+  alignCompareHint: '맨 오른쪽 숫자의 자리를 견주어 보세요.',
+  decimalResultPointLabel: '결과 소수점',
 } as const;

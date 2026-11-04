@@ -10,12 +10,14 @@ import { createInitialState, reduce } from './reduce';
 import { columnCalcStrings } from './strings.ko';
 import type { ColumnCalcAction, ColumnCalcConfig, ColumnCalcState } from './types';
 import { ColumnCalcView } from './View';
+import { AlignCompareOverlay } from './overlays/align-compare';
 import { ColumnSumOverlay } from './overlays/column-sum';
 import { LadderFocusOverlay } from './overlays/ladder-focus';
 import { LeftoverBlinkOverlay } from './overlays/leftover-blink';
 import { PartialShiftOverlay } from './overlays/partial-shift';
 import { PartialSplitOverlay } from './overlays/partial-split';
 import { PlaceValueOverlay } from './overlays/place-value';
+import { PointEstimateOverlay } from './overlays/point-estimate';
 import { QuotientGapOverlay } from './overlays/quotient-gap';
 import { RemainderVsDivisorOverlay } from './overlays/remainder-vs-divisor';
 
@@ -38,6 +40,8 @@ const definition: EngineDefinition<ColumnCalcConfig, ColumnCalcState, ColumnCalc
     'estimate-tried',
     'alarm-changed',
     'rewind-requested',
+    'point-placed',
+    'shifted',
   ],
   emit,
   predicates,
@@ -50,6 +54,8 @@ const definition: EngineDefinition<ColumnCalcConfig, ColumnCalcState, ColumnCalc
     'remainder-vs-divisor': RemainderVsDivisorOverlay,
     'leftover-blink': LeftoverBlinkOverlay,
     'ladder-focus': LadderFocusOverlay,
+    'point-estimate': PointEstimateOverlay,
+    'align-compare': AlignCompareOverlay,
   },
 };
 
