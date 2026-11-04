@@ -220,7 +220,12 @@ test('A2 곱셈표 대칭 색칠 보드 — 대표 오답 뒤 고쳐서 다섯 �
   ] as const;
   for (const cell of row) await fillCell(page, 4, cell.c, cell.digits);
   await submit(page);
-  await expectFailedWithHint(page, '4단 줄은 4, 8, 12처럼');
+  await expectFailedWithHint(page, '4단에서 한 칸 오른쪽으로 가면 곱이 얼마씩 커질까요?');
+  // 힌트 ①이 과제 정답 값(4·8·12…)을 그대로 알려 주지 않는다.
+  const firstHint = page.getByTestId('hint-text');
+  await expect(firstHint).not.toContainText('4, 8, 12');
+  await expect(firstHint).not.toContainText('12');
+  await expect(firstHint).not.toContainText('8');
   await fillCell(page, 4, 9, ['3', '6']);
   await submit(page);
   await expectPassed(page);

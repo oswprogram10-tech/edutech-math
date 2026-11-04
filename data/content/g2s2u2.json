@@ -325,7 +325,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "times-table" },
               "level": 1,
-              "say": "4단 줄은 4, 8, 12처럼 4씩 커져요. 4×7 다음 칸은 4를 몇 번 더한 수인가요?"
+              "say": "4단에서 한 칸 오른쪽으로 가면 곱이 얼마씩 커질까요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "times-table" },
