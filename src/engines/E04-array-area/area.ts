@@ -201,7 +201,7 @@ export function tileFit(width: number, height: number, size: number): TileFit {
 }
 
 /** 설정 문자열을 0.1 단위 소수 문자열로. 범위를 넘으면 자르고, 형식이 틀리면 `0`. */
-export function decimalFactor(text: string | number | undefined, max: number): string {
+export function decimalFactor(text: string | number | undefined, max: string | Rational): string {
   if (text === undefined) return '0';
   let value: Rational;
   try {
@@ -210,7 +210,7 @@ export function decimalFactor(text: string | number | undefined, max: number): s
     return '0';
   }
   if (value.isNegative()) value = Rational.of(0);
-  const maximum = Rational.of(max);
+  const maximum = typeof max === 'string' ? decimalRational(max) : max;
   if (value.compareTo(maximum) > 0) value = maximum;
   const tenths = value.mul(Rational.of(10)).integerPart();
   return Rational.of(tenths, 10).toDecimalString();
@@ -222,6 +222,20 @@ export function decimalRational(text: string): Rational {
   } catch {
     return Rational.of(0);
   }
+}
+
+/** `text`를 0.1 단위 칸 수로. 소수 값은 `Rational`로 곱한 뒤 정수부만 쓴다. */
+export function decimalTenthsOf(text: string): number {
+  return Number(decimalRational(text).mul(Rational.of(10)).integerPart());
+}
+
+/** `text`보다 작지 않은(올림) 가장 작은 1 이상 정수. 1.5 → 2. */
+export function decimalUnitsOf(text: string): number {
+  const value = decimalRational(text);
+  const whole = value.integerPart();
+  const remainder = value.n % value.d;
+  const ceiling = remainder > 0n ? whole + 1n : whole;
+  return Math.max(1, Number(ceiling));
 }
 
 export interface DecimalAreaFacts {
@@ -245,8 +259,8 @@ export function decimalAreaOf(
   const overlapCells = Number(
     a.mul(Rational.of(10)).integerPart() * b.mul(Rational.of(10)).integerPart(),
   );
-  const columns = Math.max(1, Math.ceil(Number(decimalRational(maxA).toString())));
-  const rows = Math.max(1, Math.ceil(Number(decimalRational(maxB).toString())));
+  const columns = decimalUnitsOf(maxA);
+  const rows = decimalUnitsOf(maxB);
   return {
     a,
     b,

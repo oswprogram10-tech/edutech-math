@@ -48,10 +48,6 @@ export function PuzzleView({
   const rects = puzzleRects();
   const a = settings.a;
   const b = settings.b;
-  const boardScale = Math.min(
-    rects.board.width / Math.max(1, a),
-    rects.board.height / Math.max(1, b),
-  );
 
   const columnWidths = Array.from({ length: cols }, (_, col) => {
     const placedPiece = pieces.find((piece) => puzzle.placed[piece.id]?.col === col);
@@ -61,6 +57,12 @@ export function PuzzleView({
     const placedPiece = pieces.find((piece) => puzzle.placed[piece.id]?.row === row);
     return placedPiece?.h ?? b / rows;
   });
+  const totalWidth = columnWidths.reduce((sum, width) => sum + width, 0);
+  const totalHeight = rowHeights.reduce((sum, height) => sum + height, 0);
+  const boardScale = Math.min(
+    rects.board.width / Math.max(1, totalWidth),
+    rects.board.height / Math.max(1, totalHeight),
+  );
   const columnX: number[] = [rects.board.x];
   for (let col = 0; col < cols; col += 1) {
     columnX.push((columnX[col] ?? rects.board.x) + (columnWidths[col] ?? 0) * boardScale);
@@ -97,7 +99,7 @@ export function PuzzleView({
     <div className={styles.wrap} data-target-size={targetSize} style={{ width: `${100 * scale}%` }}>
       <div className={styles.toolbar}>
         <span className={styles.groupLabel}>{S.puzzle.box}</span>
-        <span className={styles.hint}>{S.instructions['area-model']}</span>
+        <span className={styles.hint}>{S.puzzle.instruction}</span>
         <button
           type="button"
           className={styles.button}

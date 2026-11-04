@@ -68,6 +68,7 @@ export const arrayAreaStrings = {
     result: (value: string) => `리본 길이 ${value}`,
     canvasLabel: '곱하는 수만큼 리본 길이가 바뀌는 판',
     tried: (count: number) => `${count}가지 곱하는 수를 시험했어요.`,
+    instruction: '곱하는 수를 골라 리본이 어떻게 바뀌는지 살펴보세요.',
   },
   puzzle: {
     box: '조각 상자',
@@ -78,6 +79,7 @@ export const arrayAreaStrings = {
     canvasLabel: '넓이 조각을 모아 직사각형을 만드는 판',
     pieceArea: (area: number) => `${area}`,
     pieceDims: (w: number, h: number) => `${w}×${h}`,
+    instruction: '조각을 골라 조립판의 자리에 놓으며 직사각형을 완성해 보세요.',
   },
 
   rows: '줄',

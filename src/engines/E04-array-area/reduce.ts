@@ -202,8 +202,8 @@ function settingsOf(config: ArrayAreaConfig): ArrayAreaSettings {
   const size = config.size ?? [9, 9];
   const width = integer(config.width, 12, 1, 30);
   const height = integer(config.height, 12, 1, 30);
-  const maxA = decimalFactor(config.maxA ?? '1', 4);
-  const maxB = decimalFactor(config.maxB ?? '1', 2);
+  const maxA = decimalFactor(config.maxA ?? '1', '4');
+  const maxB = decimalFactor(config.maxB ?? '1', '2');
   return {
     maxRows: integer(config.maxRows, 10, 1, MAX_ROWS),
     maxCols: integer(config.maxCols, 10, 1, MAX_COLS),
@@ -294,8 +294,8 @@ export function createInitialState(config: ArrayAreaConfig): ArrayAreaState {
   const decimal =
     mode === 'decimal-area'
       ? {
-          a: decimalFactor(typeof config.a === 'string' ? config.a : '0', Number(settings.maxA)),
-          b: decimalFactor(typeof config.b === 'string' ? config.b : '0', Number(settings.maxB)),
+          a: decimalFactor(typeof config.a === 'string' ? config.a : '0', settings.maxA),
+          b: decimalFactor(typeof config.b === 'string' ? config.b : '0', settings.maxB),
         }
       : null;
 
@@ -628,7 +628,7 @@ function recordTile(state: ArrayAreaState): ArrayAreaState {
 function setFactor(state: ArrayAreaState, side: 'a' | 'b', value: string): ArrayAreaState {
   if (state.mode !== 'decimal-area' || state.decimal === null) return state;
   const max = side === 'a' ? state.settings.maxA : state.settings.maxB;
-  const next = decimalFactor(value, Number(max));
+  const next = decimalFactor(value, max);
   if (state.decimal[side] === next) return state;
   return { ...state, decimal: { ...state.decimal, [side]: next } };
 }

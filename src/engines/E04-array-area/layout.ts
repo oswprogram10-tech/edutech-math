@@ -3,6 +3,7 @@
  * 좌표는 모두 논리 좌표(1000×600)다.
  */
 import type { SplitOrientation } from './types';
+import { decimalUnitsOf } from './area';
 
 export interface Point {
   readonly x: number;
@@ -324,8 +325,8 @@ export function tilingRoomRects(
 }
 
 export function decimalBoardRect(maxA: string, maxB: string): TileRoomRect {
-  const unitsX = Math.max(1, Math.ceil(Number(maxA)));
-  const unitsY = Math.max(1, Math.ceil(Number(maxB)));
+  const unitsX = decimalUnitsOf(maxA);
+  const unitsY = decimalUnitsOf(maxB);
   const cell = Math.max(
     5,
     Math.min(Math.floor(500 / (unitsX * 10)), Math.floor(380 / (unitsY * 10))),

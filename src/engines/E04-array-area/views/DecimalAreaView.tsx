@@ -6,6 +6,7 @@
  */
 import { Rational } from '../../../core/math';
 import type { EngineViewProps } from '../../../core/engine-sdk';
+import { decimalTenthsOf } from '../area';
 import { decimalBoardRect } from '../layout';
 import { arrayAreaStrings as S } from '../strings.ko';
 import type { ArrayAreaAction, ArrayAreaConfig, ArrayAreaState } from '../types';
@@ -23,7 +24,7 @@ function tenthsText(tenths: number): string {
 }
 
 function clampedTenths(value: number, max: string): number {
-  const maximum = Math.round(Number(max) * 10);
+  const maximum = decimalTenthsOf(max);
   return Math.max(0, Math.min(maximum, Math.round(value)));
 }
 
@@ -39,8 +40,8 @@ export function DecimalAreaView({
   if (decimal === null) return null;
   const { settings } = state;
   const board = decimalBoardRect(settings.maxA, settings.maxB);
-  const aCells = Math.round(Number(decimal.a) * 10);
-  const bCells = Math.round(Number(decimal.b) * 10);
+  const aCells = decimalTenthsOf(decimal.a);
+  const bCells = decimalTenthsOf(decimal.b);
   const cell = board.cell;
   const locked = settings.locked || readOnly;
 
@@ -55,6 +56,8 @@ export function DecimalAreaView({
         {(['a', 'b'] as const).map((side) => {
           const value = side === 'a' ? decimal.a : decimal.b;
           const max = side === 'a' ? settings.maxA : settings.maxB;
+          const cells = side === 'a' ? aCells : bCells;
+          const maxCells = decimalTenthsOf(max);
           return (
             <div className={styles.group} key={`factor-${side}`}>
               <span className={styles.groupLabel}>
@@ -64,8 +67,8 @@ export function DecimalAreaView({
                 type="button"
                 className={styles.iconButton}
                 aria-label={S.decimalArea.smaller(side)}
-                onClick={() => setSide(side, Number(value) * 10 - 1)}
-                disabled={locked || Number(value) <= 0}
+                onClick={() => setSide(side, cells - 1)}
+                disabled={locked || cells <= 0}
               >
                 −
               </button>
@@ -76,8 +79,8 @@ export function DecimalAreaView({
                 type="button"
                 className={styles.iconButton}
                 aria-label={S.decimalArea.bigger(side)}
-                onClick={() => setSide(side, Number(value) * 10 + 1)}
-                disabled={locked || Number(value) >= Number(max)}
+                onClick={() => setSide(side, cells + 1)}
+                disabled={locked || cells >= maxCells}
               >
                 +
               </button>
@@ -85,12 +88,12 @@ export function DecimalAreaView({
                 <input
                   type="range"
                   min={0}
-                  max={Number(max)}
+                  max={maxCells / 10}
                   step={0.1}
-                  value={Number(value)}
+                  value={cells / 10}
                   aria-label={side === 'a' ? S.decimalArea.a : S.decimalArea.b}
                   disabled={readOnly}
-                  onChange={(event) => setSide(side, Number(event.target.value) * 10)}
+                  onChange={(event) => setSide(side, decimalTenthsOf(event.target.value))}
                 />
               )}
             </div>

@@ -2,6 +2,7 @@
 import { cleanup, fireEvent, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createInitialState, reduce } from '../reduce';
+import { puzzleRects } from '../layout';
 import { arrayAreaStrings as S } from '../strings.ko';
 import type { ArrayAreaAction, ArrayAreaConfig, ArrayAreaState } from '../types';
 import { ArrayAreaView } from '../View';
@@ -211,6 +212,56 @@ describe('E04 T045 새 모드 화면', () => {
     const text = view.container.textContent ?? '';
     expect(text).not.toContain('736');
     expect(text).not.toContain('32×23');
+  });
+
+  it('puzzle 600 조각만 놓아도 모든 슬롯이 조립판 안에 들어온다', () => {
+    const config: ArrayAreaConfig = {
+      mode: 'area-model',
+      a: 32,
+      b: 23,
+      puzzle: { splitsA: [30], splitsB: [20], seed: 1 },
+    };
+    const initial = createInitialState(config);
+    const piece = initial.puzzle?.pieces.find((item) => item.w * item.h === 600);
+    if (!piece) throw new Error('600 조각이 없습니다.');
+    const placed = reduce(initial, { type: 'place-piece', id: piece.id, col: 0, row: 0 });
+    const view = renderView(config, placed);
+    const board = puzzleRects().board;
+    const slots = Array.from(view.container.querySelectorAll('[data-slot]'));
+    expect(slots.length).toBeGreaterThan(0);
+    for (const slot of slots) {
+      const rect = slot.querySelector('rect');
+      if (!rect) throw new Error('슬롯 사각형이 없습니다.');
+      const x = Number(rect.getAttribute('x'));
+      const y = Number(rect.getAttribute('y'));
+      const width = Number(rect.getAttribute('width'));
+      const height = Number(rect.getAttribute('height'));
+      expect(x).toBeGreaterThanOrEqual(board.x);
+      expect(y).toBeGreaterThanOrEqual(board.y);
+      expect(x + width).toBeLessThanOrEqual(board.x + board.width + 0.01);
+      expect(y + height).toBeLessThanOrEqual(board.y + board.height + 0.01);
+    }
+  });
+
+  it('puzzle·scaler는 각자 안내 문구를 보여 준다', () => {
+    const puzzleConfig: ArrayAreaConfig = {
+      mode: 'area-model',
+      a: 32,
+      b: 23,
+      puzzle: { splitsA: [30], splitsB: [20], seed: 1 },
+    };
+    const puzzle = renderView(puzzleConfig, createInitialState(puzzleConfig));
+    expect(puzzle.container.textContent).toContain(S.puzzle.instruction);
+
+    const scalerConfig: ArrayAreaConfig = {
+      mode: 'fraction-area',
+      variant: 'scaler',
+      base: 12,
+      multipliers: ['3/4'],
+      predictFirst: false,
+    };
+    const scaler = renderView(scalerConfig, createInitialState(scalerConfig));
+    expect(scaler.container.textContent).toContain(S.scaler.instruction);
   });
 
   it('puzzle 조각을 골라 슬롯에 키보드로 놓는다', () => {

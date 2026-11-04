@@ -6,6 +6,7 @@
  */
 import { Rational } from '../../../core/math';
 import type { EngineViewProps } from '../../../core/engine-sdk';
+import { scalerTrend } from '../area';
 import { arrayAreaStrings as S } from '../strings.ko';
 import type { ArrayAreaAction, ArrayAreaConfig, ArrayAreaState } from '../types';
 import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../types';
@@ -18,13 +19,17 @@ const BLUE = '#2f6fde';
 const ORANGE = '#b45309';
 const GRAY = '#6b7280';
 
-function ratioOf(text: string): number {
+function multiplierRational(text: string): Rational | null {
   try {
-    const value = Rational.parse(text);
-    return Number(value.n) / Number(value.d);
+    return Rational.parse(text);
   } catch {
-    return 1;
+    return null;
   }
+}
+
+/** 화면 좌표(px)를 구할 때만 쓰는 비율. 수학 판정에는 쓰지 않는다. */
+function ratioForLayout(value: Rational): number {
+  return Number(value.n) / Number(value.d);
 }
 
 export function ScalerView({
@@ -43,33 +48,19 @@ export function ScalerView({
   const multiplier = index === null ? null : (multipliers[index] ?? null);
   const lockedByPrediction = settings.predictFirst && scaler.prediction === null;
   const base = settings.base;
-  const maxRatio = Math.max(
-    1,
-    ...multipliers.map((item) => {
-      return ratioOf(item);
-    }),
-  );
+  const maxMultiplier = multipliers.reduce<Rational>((largest, item) => {
+    const value = multiplierRational(item);
+    if (value === null) return largest;
+    return value.compareTo(largest) > 0 ? value : largest;
+  }, Rational.of(1));
+  const maxRatio = Math.max(1, ratioForLayout(maxMultiplier));
   const pxPerUnit = 560 / Math.max(1, base * maxRatio);
   const originalWidth = base * pxPerUnit;
+  const multiplierValue = multiplier === null ? null : multiplierRational(multiplier);
   const resultText =
-    multiplier === null
-      ? null
-      : (() => {
-          try {
-            return Rational.of(base).mul(Rational.parse(multiplier)).toString();
-          } catch {
-            return null;
-          }
-        })();
-  const resultRatio = multiplier === null ? null : ratioOf(multiplier);
-  const trend =
-    resultRatio === null
-      ? null
-      : resultRatio < 1
-        ? 'smaller'
-        : resultRatio === 1
-          ? 'same'
-          : 'larger';
+    multiplierValue === null ? null : Rational.of(base).mul(multiplierValue).toString();
+  const resultRatio = multiplierValue === null ? null : ratioForLayout(multiplierValue);
+  const trend = multiplierValue === null ? null : scalerTrend(multiplierValue);
   const resultColor = trend === 'smaller' ? BLUE : trend === 'same' ? GRAY : ORANGE;
   const ribbonX = 150;
   const ribbonY = 220;
@@ -139,7 +130,7 @@ export function ScalerView({
           </span>
         ) : null}
         <span className={styles.hint}>
-          {lockedByPrediction ? S.scaler.predict : S.instructions['fraction-area']}
+          {lockedByPrediction ? S.scaler.predict : S.scaler.instruction}
         </span>
       </div>
 

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { assertSerializable } from '../../../core/engine-sdk';
-import { decimalAreaOf, fractionAreaOf, puzzlePiecesOf, tileFit } from '../area';
+import { Rational } from '../../../core/math';
+import { decimalAreaOf, decimalFactor, fractionAreaOf, puzzlePiecesOf, tileFit } from '../area';
 import { emit, predicates } from '../events';
 import { observe } from '../observe';
 import { createInitialState, reduce } from '../reduce';
@@ -111,6 +112,20 @@ describe('E04 decimal-area', () => {
     expect(facts.product.toDecimalString()).toBe('0.18');
     expect(facts.overlapCells).toBe(18);
     expect(facts.unitSquares).toBe(100);
+  });
+
+  it('maxA "1.5"도 createInitialState·set-factor "1.4"가 동작하고 정사각형 2개다', () => {
+    const state = stateOf({ mode: 'decimal-area', a: '0', b: '0', maxA: '1.5' });
+    const next = reduce(state, { type: 'set-factor', side: 'a', value: '1.4' });
+    expect(next.decimal?.a).toBe('1.4');
+    expect(observe(next)['a']).toBe('1.4');
+    expect(observe(next)['unitSquares']).toBe(200);
+  });
+
+  it('decimalFactor의 max는 소수 문자열과 Rational을 받는다', () => {
+    expect(decimalFactor('1.4', '1.5')).toBe('1.4');
+    expect(decimalFactor('1.9', '1.5')).toBe('1.5');
+    expect(decimalFactor('1.9', Rational.of(3, 2))).toBe('1.5');
   });
 });
 
