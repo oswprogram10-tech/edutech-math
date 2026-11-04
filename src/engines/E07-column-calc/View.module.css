@@ -429,3 +429,47 @@ button.cell:disabled {
   align-items: center;
   gap: 0.6rem;
 }
+
+/* 소수 곱셈의 어림 상자(T077). 격자 위 작은 상자 + 키패드. */
+.estimateSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-self: flex-start;
+  padding: 0.55rem 0.7rem;
+  border: 2px solid #c8d4ea;
+  border-radius: 14px;
+  background: #fbfcff;
+}
+
+/* 결과 줄 아래 점 놓기 줄. 칸 하나가 48px 타깃이다. */
+.pointButton {
+  min-height: 48px;
+  min-width: 48px;
+  border-style: dashed;
+  border-color: #9db4dd;
+  background: #f4f8ff;
+  color: #8a94a6;
+  font-size: 1.3rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.pointButton[data-on='true'] {
+  border-style: solid;
+  border-color: #101828;
+  background: #fff7e6;
+  color: #101828;
+}
+
+.pointButton:disabled {
+  border-color: #d7deea;
+  color: #b6bfce;
+  cursor: not-allowed;
+}
+
+.wrap[data-target-size='64'] .pointButton {
+  min-height: 64px;
+  min-width: 64px;
+  font-size: 1.5rem;
+}

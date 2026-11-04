@@ -22,6 +22,8 @@ export type MisconceptionCode =
   | 'MC-DIV-REMAINDER-TOO-BIG'
   | 'MC-DIV-BRING-DOWN'
   | 'MC-DIV-ESTIMATE-OFF'
+  | 'MC-DEC-POINT-PLACEMENT'
+  | 'MC-DEC-MULT-ALIGN-POINT'
   | 'unknown';
 
 export interface ClassifyInput {

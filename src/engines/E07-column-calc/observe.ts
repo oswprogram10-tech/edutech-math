@@ -7,6 +7,7 @@
 import type { JsonValue, Observation } from '../../core/engine-sdk';
 import { classifyColumns, uniqueCodes } from './classify';
 import type { ColumnError } from './classify';
+import { classifyDecimalMul } from './classify-decimal';
 import { classifyDiv } from './classify-div';
 import { classifyMul } from './classify-mul';
 import { estimateIsMultiple, estimateSignal } from './estimate';
@@ -19,7 +20,14 @@ import {
   divWrongColumns,
   estimateRevised,
 } from './grid-div';
-import { computeGrid, readResult } from './grid';
+import {
+  decimalMulComplete,
+  decimalSignal,
+  decimalWrongColumns,
+  readDecimalResult,
+  shiftValueText,
+} from './grid-decimal';
+import { computeGrid, isDecimalMul, mulAlignment, readResult } from './grid';
 import { computeMulPlan, partialValues, rowsComplete } from './grid-mul';
 import type { CellRef, ColumnCalcState } from './types';
 
@@ -86,11 +94,65 @@ function observeDiv(state: ColumnCalcState): Observation {
     ),
     estimateRevised: estimateRevised(state, plan),
     rewound: state.rewound,
+    // ── decimal + mul ───────────────────────────────────────
+    resultPoint: null,
+    pointPlaced: null,
+    requireEstimate: null,
+    shiftValue: null,
+    shiftHistory: null,
+  };
+}
+
+function observeDecimalMul(state: ColumnCalcState): Observation {
+  const plan = computeMulPlan(state);
+  const alignment = mulAlignment(state);
+  const reading = readDecimalResult(state);
+  const errors = classifyDecimalMul(state, plan);
+  const rowsDone = plan ? rowsComplete(state, plan) : true;
+  const complete = decimalMulComplete(state, plan);
+
+  return {
+    mode: state.mode,
+    op: state.op,
+    a: state.aText,
+    b: state.bText,
+    aligned: alignment.aligned,
+    alignment: alignment.alignment,
+    complete,
+    result: complete ? reading.value : null,
+    resultRaw: reading.raw,
+    carries: { ...state.carries },
+    regroups: { ...state.regroups },
+    wrongColumns: [...decimalWrongColumns(state, plan)],
+    errors: errors.map((error) => ({ column: error.column, code: error.code })),
+    misconceptions: uniqueCodes(errors),
+    // ── mul ─────────────────────────────────────────────────
+    style: plan ? plan.style : null,
+    partials: plan ? partialValues(state, plan) : null,
+    expectedRowCount: plan ? plan.rows.length : null,
+    rowsComplete: plan ? rowsDone : null,
+    flaggedCells: state.flagged.map(flaggedCellJson),
+    rowColors: { ...state.rowColors },
+    // ── 연결 ────────────────────────────────────────────────
+    linkHighlights: [...state.linkHighlights],
+    // ── estimate ────────────────────────────────────────────
+    phase: state.phase,
+    estimate: state.estimate,
+    estimateIsMultiple: null,
+    signal: decimalSignal(state),
+    rechecked: null,
+    // ── decimal + mul ───────────────────────────────────────
+    resultPoint: state.resultPoint,
+    pointPlaced: state.resultPoint !== null,
+    requireEstimate: state.requireEstimate,
+    shiftValue: shiftValueText(state),
+    shiftHistory: [...state.shiftHistory],
   };
 }
 
 export function observe(state: ColumnCalcState): Observation {
   if (state.op === 'div') return observeDiv(state);
+  if (isDecimalMul(state)) return observeDecimalMul(state);
   const grid = computeGrid(state);
   const reading = readResult(state, grid);
   const plan = state.op === 'mul' ? computeMulPlan(state) : null;
@@ -147,5 +209,11 @@ export function observe(state: ColumnCalcState): Observation {
     estimateIsMultiple: state.mode === 'estimate' ? estimateIsMultiple(state) : null,
     signal: state.mode === 'estimate' ? estimateSignal(state) : null,
     rechecked: state.mode === 'estimate' ? state.rechecked : null,
+    // ── decimal + mul ───────────────────────────────────────
+    resultPoint: null,
+    pointPlaced: null,
+    requireEstimate: null,
+    shiftValue: null,
+    shiftHistory: null,
   };
 }

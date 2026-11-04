@@ -150,6 +150,57 @@ test('키보드로 46×27의 부분곱 322·920과 합 1242를 쓴다', async ({
   expect(observation.misconceptions).toEqual([]);
 });
 
+test('소수 곱셈 2.4 × 1.3: 어림 3을 정하고 점을 놓아 78/25를 만든다', async ({ page }) => {
+  await openColumnCalc(page, {
+    mode: 'decimal',
+    op: 'mul',
+    a: '2.4',
+    b: '1.3',
+    requireEstimate: true,
+  });
+  await selectMode(page, 'decimal');
+  await expect(page.getByTestId('decimal-estimate')).toBeVisible();
+
+  await page.getByRole('button', { name: '3 어림값으로 쓰기' }).click();
+  await page.getByTestId('decimal-estimate-lock').click();
+  await pollObservation(page, (observation) => observation.phase === 'calc');
+
+  // 일의 자리부터 부분곱 두 줄(여분 앞자리 0 포함)을 쓰고, 결과 312를 쓴 뒤
+  // 여분 앞자리에서 한 칸 오른쪽으로 와 점을 놓는다.
+  await page.getByTestId('column-grid').focus();
+  for (const key of '2700420213') {
+    await page.keyboard.press(key);
+  }
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('.');
+  await pollObservation(page, (observation) => observation.complete === true);
+
+  const observation = await readObservation(page);
+  expect(observation.result).toBe('78/25');
+  expect(observation.resultRaw).toBe('3.12');
+  expect(observation.signal).toBe('green');
+  expect(observation.pointPlaced).toBe(true);
+  expect(observation.misconceptions).toEqual([]);
+});
+
+test('시프트 데모 3.75에서 ×10을 누르면 75/2가 된다', async ({ page }) => {
+  await openColumnCalc(page, {
+    op: 'mul',
+    a: '3.75',
+    b: '10',
+    shiftDemo: { value: '3.75', ops: ['×10', '×0.1'] },
+  });
+  await selectMode(page, 'decimal');
+  await expect(page.getByTestId('shift-demo')).toBeVisible();
+
+  await page.getByRole('button', { name: '×10 만큼 옮기기' }).click();
+  await pollObservation(page, (observation) => observation.shiftValue === '75/2');
+
+  const observation = await readObservation(page);
+  expect(observation.shiftValue).toBe('75/2');
+  expect(observation.shiftHistory).toEqual(['×10']);
+});
+
 test('어림값 800을 정한 뒤 389 + 412 = 801을 쓰면 초록 신호가 나온다', async ({ page }) => {
   await openColumnCalc(page, { a: 389, b: 412 });
   await selectMode(page, 'estimate');

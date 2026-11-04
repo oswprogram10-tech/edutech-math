@@ -14,8 +14,10 @@ import { EstimateView } from './views/EstimateView';
 import { MulView } from './views/MulView';
 
 export function ColumnCalcView(props: ColumnViewProps) {
-  if (props.state.mode === 'mul') return <MulView {...props} />;
+  // 어림(estimate) 모드는 자체 화면이 op에 맞는 격자를 고른다.
   if (props.state.mode === 'estimate') return <EstimateView {...props} />;
+  // 소수 곱셈(decimal + mul)도 같은 곱셈 격자를 쓴다.
+  if (props.state.op === 'mul') return <MulView {...props} />;
   if (props.state.mode === 'div') return <DivView {...props} />;
   return <AddSubView {...props} />;
 }
