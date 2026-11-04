@@ -1,10 +1,15 @@
 /**
  * E01의 수 계산을 한 곳에 모은 파일.
  *
- * 카드 결정 2: 블록 값은 지금 number지만, T043에서 0.1·0.01이 들어와도
- * `valueOf`·`countsOf`만 고치면 되도록 다른 파일은 이 함수들만 쓴다.
+ * 카드 T043 결정 2: 블록 모양 값(`BlockValue` 1·10·100·1000)은 그대로 두고
+ * `interpretation`에 따라 해석만 바꾼다.
+ * - whole: 1000=1000, 100=100, 10=10, 1=1
+ * - decimal: 100=1, 10=0.1, 1=0.01 (1000은 쓰지 않는다)
+ *
+ * 소수 계산은 모두 `Rational`로 한다. 0.1·0.01을 number로 더하거나 곱하지 않는다.
  */
-import type { BaseTenState, BlockValue, ChartName, Zone } from './types';
+import { Rational } from '../../core/math';
+import type { BaseTenSettings, BaseTenState, BlockValue, ChartName, Zone } from './types';
 import { CHART_NAME_COLUMN } from './types';
 
 export interface PlaceCounts {
@@ -16,6 +21,7 @@ export interface PlaceCounts {
 
 export const ZERO_COUNTS: PlaceCounts = { thousands: 0, hundreds: 0, tens: 0, ones: 0 };
 
+/** 블록 모양이 놓이는 화면 띠(0=낱개 … 3=천). 해석과 무관하다. */
 export function columnOf(value: BlockValue): number {
   switch (value) {
     case 1:
@@ -44,6 +50,7 @@ export function placeValueOf(column: number): BlockValue | null {
   }
 }
 
+/** 자릿값 지수 → 열 이름. 소수 자리는 음수다. */
 export function columnNameOf(column: number): ChartName | null {
   switch (column) {
     case 0:
@@ -54,9 +61,68 @@ export function columnNameOf(column: number): ChartName | null {
       return 'hundreds';
     case 3:
       return 'thousands';
+    case -1:
+      return 'tenths';
+    case -2:
+      return 'hundredths';
     default:
       return null;
   }
+}
+
+/** 블록 모양 띠 → 자릿값 지수. decimal에서 100→0, 10→−1, 1→−2. */
+export function exponentOfShapeColumn(column: number, interpretation: 'whole' | 'decimal'): number {
+  if (interpretation === 'whole') return column;
+  switch (column) {
+    case 2:
+      return 0;
+    case 1:
+      return -1;
+    case 0:
+      return -2;
+    default:
+      return column;
+  }
+}
+
+/** 자릿값 지수 → 블록 모양 띠. decimal에서 0→2, −1→1, −2→0. */
+export function shapeColumnOfExponent(index: number, interpretation: 'whole' | 'decimal'): number {
+  if (interpretation === 'whole') return index;
+  switch (index) {
+    case 0:
+      return 2;
+    case -1:
+      return 1;
+    case -2:
+      return 0;
+    default:
+      return index;
+  }
+}
+
+/** 블록 하나가 나타내는 수(모양 값). */
+export function placeExponentOf(value: BlockValue, interpretation: 'whole' | 'decimal'): number {
+  return exponentOfShapeColumn(columnOf(value), interpretation);
+}
+
+/** 모양 값 → 그 모양이 나타내는 수. */
+export function rationalOfShape(value: BlockValue, interpretation: 'whole' | 'decimal'): Rational {
+  if (interpretation === 'whole') return Rational.of(value);
+  switch (value) {
+    case 100:
+      return Rational.of(1);
+    case 10:
+      return Rational.of(1, 10);
+    case 1:
+      return Rational.of(1, 100);
+    case 1000:
+      return Rational.of(10);
+  }
+}
+
+/** 블록 모양 한 칸의 값. whole은 1, decimal은 1/100. */
+export function scaleOf(settings: Pick<BaseTenSettings, 'interpretation'>): Rational {
+  return settings.interpretation === 'decimal' ? Rational.of(1, 100) : Rational.of(1);
 }
 
 /** `maxValue`가 나타낼 수 있는 자리 수. 최소 2(십·일), 최대 4(천·백·십·일). */
@@ -77,9 +143,72 @@ export function countsToValue(counts: PlaceCounts): number {
   return counts.thousands * 1000 + counts.hundreds * 100 + counts.tens * 10 + counts.ones;
 }
 
+/** 설정이 소수 해석인가. */
+export function isDecimal(settings: Pick<BaseTenSettings, 'interpretation'>): boolean {
+  return settings.interpretation === 'decimal';
+}
+
+/**
+ * `"52"`·`"6.24"` 같은 수를 정규형 블록 개수로 바꾼다.
+ * 잘못된 문자열·음수·너무 큰 수·소수 셋째 자리 이상이면 null(빈 판).
+ * decimal은 판·막대·낱개가 각각 0~9개인 정규형만 받는다.
+ */
+export function countsFromValue(
+  text: string,
+  interpretation: 'whole' | 'decimal',
+): PlaceCounts | null {
+  const trimmed = text.trim();
+  if (trimmed.length === 0 || trimmed.startsWith('-')) return null;
+
+  if (interpretation === 'whole') {
+    const match = /^(\d{1,4})$/.exec(trimmed);
+    if (match === null) return null;
+    const digits = (match[1] as string).padStart(4, '0');
+    return {
+      thousands: Number(digits[0]),
+      hundreds: Number(digits[1]),
+      tens: Number(digits[2]),
+      ones: Number(digits[3]),
+    };
+  }
+
+  const match = /^(\d+)(?:\.(\d{1,2}))?$/.exec(trimmed);
+  if (match === null) return null;
+  const wholePart = (match[1] as string).replace(/^0+(?=\d)/, '');
+  if (wholePart.length > 1) return null;
+  const fraction = (match[2] ?? '').padEnd(2, '0');
+  return {
+    thousands: 0,
+    hundreds: Number(wholePart),
+    tens: Number(fraction[0]),
+    ones: Number(fraction[1]),
+  };
+}
+
+/** 정규형 블록 개수를 해석에 맞는 수 문자열로. */
+export function valueStringOf(counts: PlaceCounts, interpretation: 'whole' | 'decimal'): string {
+  const total = Rational.of(countsToValue(counts)).mul(
+    interpretation === 'decimal' ? Rational.of(1, 100) : Rational.of(1),
+  );
+  return interpretation === 'decimal' ? total.toDecimalString() : Number(total.n).toString();
+}
+
 export function isCanonicalCounts(counts: PlaceCounts): boolean {
   return [counts.thousands, counts.hundreds, counts.tens, counts.ones].every(
     (count) => count >= 0 && count <= 9,
+  );
+}
+
+/** decimal 정규형: 100(판) 0~9, 10(막대) 0~9, 1(낱개) 0~9, 1000 없음. */
+export function isCanonicalDecimalCounts(counts: PlaceCounts): boolean {
+  return (
+    counts.thousands === 0 &&
+    counts.hundreds >= 0 &&
+    counts.hundreds <= 9 &&
+    counts.tens >= 0 &&
+    counts.tens <= 9 &&
+    counts.ones >= 0 &&
+    counts.ones <= 9
   );
 }
 
@@ -100,7 +229,7 @@ export function countedBlocks(state: BaseTenState): BaseTenState['blocks'] {
   return state.blocks.filter((block) => block.zone === 'a');
 }
 
-function countsOfBlocks(blocks: BaseTenState['blocks'], zone?: Zone): PlaceCounts {
+export function countsOfBlocks(blocks: BaseTenState['blocks'], zone?: Zone): PlaceCounts {
   let thousands = 0;
   let hundreds = 0;
   let tens = 0;
@@ -134,12 +263,23 @@ export function countsOf(state: BaseTenState): PlaceCounts {
   return countsOfBlocks(state.blocks, 'a');
 }
 
-/** 지금 나타내는 수. add는 모으기 칸, sub는 남은 값. */
+/** 모양 값의 합(whole에서 지금 나타내는 수). decimal에서는 자릿값 단위 수다. */
 export function valueOf(state: BaseTenState): number {
   return countsToValue(countsOf(state));
 }
 
-/** 자릿값과 상관없이 캔버스에 있는 모든 블록의 값(최대값 검사용). */
+/** 지금 나타내는 수를 정확한 유리수로. decimal에서도 부동소수 없이 계산한다. */
+export function rationalValueOf(state: BaseTenState): Rational {
+  return Rational.of(valueOf(state)).mul(scaleOf(state.settings));
+}
+
+/** decimal이면 소수 문자열, whole이면 정수 number로 Observation·이벤트에 쓴다. */
+export function jsonValueOf(state: BaseTenState): number | string {
+  const value = rationalValueOf(state);
+  return state.settings.interpretation === 'decimal' ? value.toDecimalString() : Number(value.n);
+}
+
+/** 자릿값과 상관없이 캔버스에 있는 모든 블록의 모양 값 합(최대값 검사용). */
 export function totalBlockValue(state: BaseTenState): number {
   return state.blocks.reduce((sum, block) => sum + block.value, 0);
 }
@@ -163,8 +303,21 @@ export function canTake(state: BaseTenState, value: BlockValue, movingId?: strin
   return inTake + 1 <= takeLimitOf(state, value);
 }
 
+/** 그 자릿값 지수에 놓인 블록 수. decimal은 음수 지수를 받는다. */
 export function countsForColumn(state: BaseTenState, column: number): number {
   const counts = countsOf(state);
+  if (state.settings.interpretation === 'decimal') {
+    switch (column) {
+      case 0:
+        return counts.hundreds;
+      case -1:
+        return counts.tens;
+      case -2:
+        return counts.ones;
+      default:
+        return 0;
+    }
+  }
   switch (column) {
     case 3:
       return counts.thousands;
@@ -179,34 +332,40 @@ export function countsForColumn(state: BaseTenState, column: number): number {
   }
 }
 
+function placeRationalOf(column: number): Rational {
+  return column >= 0 ? Rational.of(10 ** column) : Rational.of(1, 10 ** -column);
+}
+
 /**
  * 표가 가리키는 수.
  * - student: 모든 칸이 한 자리 숫자일 때만.
  * - auto: 블록 개수를 그대로 읽으므로 10 이상·음수인 칸이 있으면 null(정규형 아님).
+ * decimal이면 소수 문자열을 돌려준다.
  */
-export function chartValueOf(state: BaseTenState): number | null {
+export function chartValueOf(state: BaseTenState): number | string | null {
   const columns = state.settings.chartColumns;
   if (state.chart === null || columns.length === 0) return null;
+  const decimal = state.settings.interpretation === 'decimal';
 
+  let total = Rational.of(0);
   if (state.settings.chartFill === 'auto') {
-    let value = 0;
     for (const column of columns) {
       const count = countsForColumn(state, column);
       if (count < 0 || count > 9) return null;
-      const place = placeValueOf(column);
-      if (place === null) return null;
-      value += count * place;
+      total = total.add(Rational.of(count).mul(placeRationalOf(column)));
     }
-    return value;
+  } else {
+    if (state.chart.length === 0) return null;
+    for (let index = 0; index < state.chart.length; index += 1) {
+      const cell = state.chart[index];
+      const column = columns[index];
+      if (cell === null || cell === undefined || !/^[0-9]$/.test(cell) || column === undefined) {
+        return null;
+      }
+      total = total.add(Rational.of(Number(cell)).mul(placeRationalOf(column)));
+    }
   }
-
-  const digits: number[] = [];
-  for (const cell of state.chart) {
-    if (cell === null || !/^[0-9]$/.test(cell)) return null;
-    digits.push(Number(cell));
-  }
-  if (digits.length === 0) return null;
-  return Number(digits.join(''));
+  return decimal ? total.toDecimalString() : Number(total.n);
 }
 
 /** 위치가 그 자리의 칸 안에 있는지 판정할 때 쓰는 지수. */

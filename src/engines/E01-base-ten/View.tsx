@@ -6,7 +6,7 @@
  * - 올가미는 SDK `useLasso`로 그리고, 고른 블록 ID만 Action에 담는다.
  * - 기본 설정에서는 나타내는 수를 화면에 숫자로 쓰지 않는다(카드 결정 15).
  */
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent } from 'react';
 import {
   distance,
@@ -22,10 +22,12 @@ import {
   ADD_A,
   ADD_B,
   ADD_SUM,
-  bandsFor,
+  bandsForState,
   blockRect,
   boxSlotRect,
   defaultDropPoint,
+  DIVIDE_PILE,
+  dividePlateAt,
   inRect,
   STRIP,
   SUB_A,
@@ -35,7 +37,7 @@ import {
   zoneAt,
 } from './layout';
 import type { Rect } from './layout';
-import { canGroupTens } from './reduce';
+import { canDealRound, canGroupTens } from './reduce';
 import { baseTenStrings as S } from './strings.ko';
 import { BUNDLE_THRESHOLD, DEFAULT_CHART_LABELS, LOGICAL_HEIGHT, LOGICAL_WIDTH } from './types';
 import type {
@@ -45,9 +47,19 @@ import type {
   BaseTenState,
   BaseTenIcon,
   BlockValue,
+  Interpretation,
   Zone,
 } from './types';
-import { canTake, columnNameOf, countsForColumn, placeCountOf } from './value';
+import {
+  canTake,
+  columnNameOf,
+  countsForColumn,
+  exponentOfShapeColumn,
+  isDecimal,
+  placeCountOf,
+} from './value';
+import { BigNumberView } from './views/BigNumberView';
+import { DividePlates } from './views/DividePlates';
 import styles from './View.module.css';
 
 const LOGICAL = { width: LOGICAL_WIDTH, height: LOGICAL_HEIGHT };
@@ -85,7 +97,12 @@ function renderKindOf(config: BaseTenConfig, state: BaseTenState, cpa: string): 
   return 'table';
 }
 
-function chartLabelOf(config: BaseTenConfig, column: number): string {
+function chartLabelOf(
+  config: BaseTenConfig,
+  column: number,
+  interpretation: Interpretation,
+): string {
+  if (interpretation === 'decimal') return S.decimalPlaceLabels[column] ?? '';
   const name = columnNameOf(column);
   if (name === null) return '';
   return config.chartLabels?.[name] ?? DEFAULT_CHART_LABELS[name];
@@ -378,7 +395,12 @@ function zoneRectsOf(state: BaseTenState): { zone: Zone; rect: Rect }[] {
   ];
 }
 
-export function BaseTenView({
+export function BaseTenView(props: EngineViewProps<BaseTenConfig, BaseTenState, BaseTenAction>) {
+  if (props.state.mode === 'big-number') return <BigNumberView {...props} />;
+  return <BlockView {...props} />;
+}
+
+function BlockView({
   config,
   state,
   dispatch,
@@ -451,6 +473,15 @@ export function BaseTenView({
         tapBlock(id, downTime.current);
         return;
       }
+      if (state.mode === 'divide') {
+        const plate = dividePlateAt(current, state.divide?.plates ?? 1);
+        if (plate !== null) {
+          dispatch({ type: 'deal-block', id, plate });
+        } else if (inRect(current, DIVIDE_PILE)) {
+          dispatch({ type: 'return-block', id });
+        }
+        return;
+      }
       if (inRect(current, TRASH_RECT)) {
         dispatch({ type: 'remove', id });
         setSelected(null);
@@ -484,6 +515,21 @@ export function BaseTenView({
     disabled: readOnly || !state.settings.lasso,
     onGesture: ({ points, isTap }) => {
       if (isTap) {
+        const point = points[0];
+        // 블록을 골라 둔 채 접시를 톡 누르면 그 접시에 놓는다(끌기 대신).
+        if (point && state.mode === 'divide' && selectedBlock !== null) {
+          const plate = dividePlateAt(point, state.divide?.plates ?? 1);
+          if (plate !== null && selectedBlock.plate !== plate) {
+            dispatch({ type: 'deal-block', id: selectedBlock.id, plate });
+            setSelected(null);
+            return;
+          }
+          if (inRect(point, DIVIDE_PILE) && selectedBlock.plate !== undefined) {
+            dispatch({ type: 'return-block', id: selectedBlock.id });
+            setSelected(null);
+            return;
+          }
+        }
         setSelected(null);
         setChartTarget(null);
         return;
@@ -515,6 +561,11 @@ export function BaseTenView({
     if (!block) return;
     const step = KEY_STEP * (event.shiftKey ? 5 : 1);
     const key = event.key;
+    if (state.mode === 'divide' && /^[1-9]$/.test(key)) {
+      event.preventDefault();
+      dispatch({ type: 'deal-block', id, plate: Number(key) - 1 });
+      return;
+    }
     if (key === 'ArrowLeft') {
       event.preventDefault();
       moveBy(id, -step, 0);
@@ -600,6 +651,10 @@ export function BaseTenView({
   const placeCount = placeCountOf(state.settings.maxValue);
   const snapRegions = snapRegionsOf(state);
   const zoneRects = zoneRectsOf(state);
+  const interpretation = state.settings.interpretation;
+  const decimal = isDecimal(state.settings);
+  const divide = state.mode === 'divide';
+  const divideValues = [...state.settings.allowedBlocks].sort((a, b) => b - a);
 
   const bundled = new Set<BlockValue>();
   for (const value of [1, 10, 100, 1000] as BlockValue[]) {
@@ -610,14 +665,16 @@ export function BaseTenView({
   return (
     <div className={styles.wrap} data-target-size={targetSize} style={{ width: `${100 * scale}%` }}>
       <div className={styles.toolbar}>
-        <button
-          type="button"
-          className={styles.button}
-          onClick={() => dispatch({ type: 'group-tens' })}
-          disabled={readOnly || !canGroupTens(state)}
-        >
-          {S.groupTens}
-        </button>
+        {!divide ? (
+          <button
+            type="button"
+            className={styles.button}
+            onClick={() => dispatch({ type: 'group-tens' })}
+            disabled={readOnly || !canGroupTens(state)}
+          >
+            {S.groupTens}
+          </button>
+        ) : null}
         <button
           type="button"
           className={styles.button}
@@ -626,6 +683,29 @@ export function BaseTenView({
         >
           {S.breakBlock}
         </button>
+        {divide
+          ? divideValues.map((value) => (
+              <button
+                key={`round-${value}`}
+                type="button"
+                className={styles.button}
+                onClick={() => dispatch({ type: 'deal-round', value })}
+                disabled={readOnly || !canDealRound(state, value)}
+              >
+                {S.dealRound(S.blockNameFor(value, interpretation))}
+              </button>
+            ))
+          : null}
+        {divide && state.settings.rewindCheck ? (
+          <button
+            type="button"
+            className={styles.button}
+            onClick={() => dispatch({ type: 'rewind' })}
+            disabled={readOnly}
+          >
+            {S.rewind}
+          </button>
+        ) : null}
         <p className={styles.hint} aria-live="polite">
           {selectedBlock ? S.selected : S.noneSelected}
         </p>
@@ -665,91 +745,98 @@ export function BaseTenView({
         <rect width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} fill={PAPER} />
 
         {/* 블록 상자 */}
-        <g role="group" aria-label={S.toolbox} data-testid="block-box">
-          <rect
-            x={TOOLBOX_RECT.x}
-            y={TOOLBOX_RECT.y}
-            width={TOOLBOX_RECT.width}
-            height={TOOLBOX_RECT.height}
-            rx={14}
-            fill="#f1ede2"
-            stroke="#d7deea"
-            strokeWidth={2}
-          />
-          {state.settings.allowedBlocks.map((value, index) => {
-            const slot = boxSlotRect(index, state.settings.allowedBlocks.length);
-            return (
-              <g
-                key={value}
-                role="button"
-                tabIndex={readOnly ? -1 : 0}
-                aria-label={S.addBlock(value)}
-                data-toolbox-value={value}
-                className={styles.tool}
-                onPointerDown={(event) => {
-                  if (readOnly) return;
-                  event.stopPropagation();
-                  spawnValue.current = value;
-                  spawnDrag.handlers.onPointerDown(event);
-                }}
-                onKeyDown={(event) => {
-                  if (readOnly) return;
-                  if (event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar') {
-                    event.preventDefault();
-                    const point = defaultDropPoint(state, value);
-                    dispatch({ type: 'add', value, x: point.x, y: point.y });
-                  }
-                }}
-              >
-                <rect
-                  x={slot.x}
-                  y={slot.y}
-                  width={slot.width}
-                  height={slot.height}
-                  rx={10}
-                  fill="#ffffff"
-                  stroke="#c9d3e2"
-                  strokeWidth={1.6}
-                />
-                <ToolboxGlyph value={value} rect={slot} />
-                <text
-                  x={slot.x + slot.width / 2}
-                  y={slot.y + slot.height - 6}
-                  textAnchor="middle"
-                  fontSize={14}
-                  fill={MUTED}
-                  pointerEvents="none"
+        {!divide ? (
+          <g role="group" aria-label={S.toolbox} data-testid="block-box">
+            <rect
+              x={TOOLBOX_RECT.x}
+              y={TOOLBOX_RECT.y}
+              width={TOOLBOX_RECT.width}
+              height={TOOLBOX_RECT.height}
+              rx={14}
+              fill="#f1ede2"
+              stroke="#d7deea"
+              strokeWidth={2}
+            />
+            {state.settings.allowedBlocks.map((value, index) => {
+              const slot = boxSlotRect(index, state.settings.allowedBlocks.length);
+              return (
+                <g
+                  key={value}
+                  role="button"
+                  tabIndex={readOnly ? -1 : 0}
+                  aria-label={S.addBlockFor(value, interpretation)}
+                  data-toolbox-value={value}
+                  className={styles.tool}
+                  onPointerDown={(event) => {
+                    if (readOnly) return;
+                    event.stopPropagation();
+                    spawnValue.current = value;
+                    spawnDrag.handlers.onPointerDown(event);
+                  }}
+                  onKeyDown={(event) => {
+                    if (readOnly) return;
+                    if (event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar') {
+                      event.preventDefault();
+                      const point = defaultDropPoint(state, value);
+                      dispatch({ type: 'add', value, x: point.x, y: point.y });
+                    }
+                  }}
                 >
-                  {S.blockName[value]}
-                </text>
-              </g>
-            );
-          })}
-        </g>
+                  <rect
+                    x={slot.x}
+                    y={slot.y}
+                    width={slot.width}
+                    height={slot.height}
+                    rx={10}
+                    fill="#ffffff"
+                    stroke="#c9d3e2"
+                    strokeWidth={1.6}
+                  />
+                  <ToolboxGlyph value={value} rect={slot} />
+                  <text
+                    x={slot.x + slot.width / 2}
+                    y={slot.y + slot.height - 6}
+                    textAnchor="middle"
+                    fontSize={14}
+                    fill={MUTED}
+                    pointerEvents="none"
+                  >
+                    {S.blockNameFor(value, interpretation)}
+                  </text>
+                </g>
+              );
+            })}
+          </g>
+        ) : null}
 
         {/* 휴지통 */}
-        <g pointerEvents="none">
-          <rect
-            x={TRASH_RECT.x}
-            y={TRASH_RECT.y}
-            width={TRASH_RECT.width}
-            height={TRASH_RECT.height}
-            rx={12}
-            fill="#ffffff"
-            stroke="#aab4c6"
-            strokeWidth={2}
-            strokeDasharray="8 6"
-          />
-          <text
-            x={TRASH_RECT.x + TRASH_RECT.width / 2}
-            y={TRASH_RECT.y + TRASH_RECT.height / 2 + 7}
-            textAnchor="middle"
-            fontSize={18}
-            fill={MUTED}
-          >
-            {S.trash}
-          </text>
-        </g>
+        {!divide ? (
+          <g pointerEvents="none">
+            <rect
+              x={TRASH_RECT.x}
+              y={TRASH_RECT.y}
+              width={TRASH_RECT.width}
+              height={TRASH_RECT.height}
+              rx={12}
+              fill="#ffffff"
+              stroke="#aab4c6"
+              strokeWidth={2}
+              strokeDasharray="8 6"
+            />
+            <text
+              x={TRASH_RECT.x + TRASH_RECT.width / 2}
+              y={TRASH_RECT.y + TRASH_RECT.height / 2 + 7}
+              textAnchor="middle"
+              fontSize={18}
+              fill={MUTED}
+            >
+              {S.trash}
+            </text>
+          </g>
+        ) : null}
+
+        {/* divide 접시 */}
+        {divide ? <DividePlates state={state} /> : null}
 
         {/* add-sub 구역 */}
         {zoneRects.map(({ zone, rect }) => (
@@ -778,10 +865,10 @@ export function BaseTenView({
         {/* 자릿값 칸 */}
         {snapRegions.map(({ key, rect, showLabels }) => (
           <g key={`bands-${key}`} pointerEvents="none">
-            {bandsFor(rect).map((band) => {
-              const name = columnNameOf(band.column);
-              const label = name === null ? '' : chartLabelOf(config, band.column);
-              const visible = band.column < placeCount;
+            {bandsForState(state, rect).map((band) => {
+              const column = exponentOfShapeColumn(band.column, interpretation);
+              const label = chartLabelOf(config, column, interpretation);
+              const visible = decimal || band.column < placeCount;
               if (!visible) return null;
               return (
                 <g key={`band-${key}-${band.column}`}>
@@ -823,10 +910,11 @@ export function BaseTenView({
                 key={block.id}
                 role="button"
                 tabIndex={readOnly ? -1 : 0}
-                aria-label={S.blockLabel(block.value)}
+                aria-label={S.blockLabelFor(block.value, interpretation)}
                 aria-pressed={isSelected}
                 data-block-id={block.id}
                 data-block-value={block.value}
+                data-block-plate={divide ? (block.plate ?? 'pile') : undefined}
                 data-shake={shakeMe ? 'true' : undefined}
                 className={styles.block}
                 onPointerDown={(event) => onBlockPointerDown(event, block.id)}
@@ -920,27 +1008,31 @@ export function BaseTenView({
         <div className={styles.chartWrapper}>
           <div className={styles.chart} role="group" aria-label={S.chart}>
             {state.settings.chartColumns.map((column, index) => {
-              const label = chartLabelOf(config, column);
+              const label = chartLabelOf(config, column, interpretation);
               const auto = state.settings.chartFill === 'auto';
               const text = auto
                 ? String(countsForColumn(state, column))
                 : (state.chart?.[index] ?? '');
+              const pointBefore = column < 0 && (state.settings.chartColumns[index - 1] ?? 1) >= 0;
               return (
-                <div key={column} className={styles.chartColumn}>
-                  <span className={styles.chartHeading}>{label}</span>
-                  <button
-                    type="button"
-                    className={styles.chartCell}
-                    data-chart-column={column}
-                    aria-label={S.chartCell(label)}
-                    aria-pressed={chartTarget === column}
-                    aria-disabled={auto}
-                    onClick={() => handleChartClick(column)}
-                    onKeyDown={(event) => handleChartKey(event, column)}
-                  >
-                    {text === '' ? '–' : text}
-                  </button>
-                </div>
+                <Fragment key={column}>
+                  {pointBefore ? <span className={styles.decimalPoint}>.</span> : null}
+                  <div className={styles.chartColumn}>
+                    <span className={styles.chartHeading}>{label}</span>
+                    <button
+                      type="button"
+                      className={styles.chartCell}
+                      data-chart-column={column}
+                      aria-label={S.chartCell(label)}
+                      aria-pressed={chartTarget === column}
+                      aria-disabled={auto}
+                      onClick={() => handleChartClick(column)}
+                      onKeyDown={(event) => handleChartKey(event, column)}
+                    >
+                      {text === '' ? '–' : text}
+                    </button>
+                  </div>
+                </Fragment>
               );
             })}
           </div>

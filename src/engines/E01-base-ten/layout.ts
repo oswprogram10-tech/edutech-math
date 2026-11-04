@@ -36,6 +36,133 @@ export const ADD_SUM: Rect = { x: 16, y: 336, width: 968, height: 248 };
 export const SUB_A: Rect = { x: 16, y: 110, width: 474, height: 474 };
 export const SUB_TAKE: Rect = { x: 510, y: 110, width: 474, height: 474 };
 
+// ── divide (T043) ───────────────────────────────────────────
+/** 나눗셈에서 아직 접시에 나누지 않은 블록을 두는 위쪽 무더기. */
+export const DIVIDE_PILE: Rect = { x: 16, y: 110, width: 968, height: 180 };
+export const DIVIDE_PLATE_AREA: Rect = { x: 16, y: 306, width: 968, height: 278 };
+
+export function dividePlateRects(count: number): Rect[] {
+  const safe = Math.max(1, Math.min(9, Math.trunc(count)));
+  const columns = Math.min(safe, 4);
+  const rows = Math.ceil(safe / columns);
+  const gap = 10;
+  const width = (DIVIDE_PLATE_AREA.width - gap * (columns - 1)) / columns;
+  const height = (DIVIDE_PLATE_AREA.height - gap * (rows - 1)) / rows;
+  return Array.from({ length: safe }, (_, index) => {
+    const column = index % columns;
+    const row = Math.floor(index / columns);
+    return {
+      x: DIVIDE_PLATE_AREA.x + column * (width + gap),
+      y: DIVIDE_PLATE_AREA.y + row * (height + gap),
+      width,
+      height,
+    };
+  });
+}
+
+export function dividePlateAt(point: Point, count: number): number | null {
+  const rects = dividePlateRects(count);
+  for (let index = 0; index < rects.length; index += 1) {
+    const rect = rects[index];
+    if (rect && inRect(point, rect)) return index;
+  }
+  return null;
+}
+
+/**
+ * 접시 하나 안에 블록을 자릿값별로 줄 맞춰 놓는다.
+ * 큰 블록부터 위에서 아래로, 같은 값은 가로로 채운다.
+ */
+export function arrangeOnPlate(rect: Rect, blocks: readonly BaseTenBlock[]): BaseTenBlock[] {
+  const ordered = [...blocks].sort((a, b) => b.value - a.value || a.id.localeCompare(b.id));
+  const result: BaseTenBlock[] = [];
+  let cursorY = rect.y + 6;
+  for (const value of [1000, 100, 10, 1] as BlockValue[]) {
+    const group = ordered.filter((block) => block.value === value);
+    if (group.length === 0) continue;
+    const size = blockSize(value);
+    const perRow = Math.max(1, Math.floor((rect.width - 10) / (size.width + 6)));
+    const rows = Math.ceil(group.length / perRow);
+    group.forEach((block, index) => {
+      const column = index % perRow;
+      const row = Math.floor(index / perRow);
+      const maxX = rect.x + rect.width - size.width / 2 - 4;
+      const minX = rect.x + size.width / 2 + 4;
+      const x = rect.x + rect.width / 2 + (column - (perRow - 1) / 2) * (size.width + 6);
+      const y = cursorY + size.height / 2 + row * (size.height + 6);
+      result.push({
+        ...block,
+        x: Math.round(Math.max(minX, Math.min(maxX, x))),
+        y: Math.round(
+          Math.max(rect.y + size.height / 2, Math.min(rect.y + rect.height - size.height / 2, y)),
+        ),
+      });
+    });
+    cursorY += rows * (size.height + 6) + 4;
+  }
+  return result;
+}
+
+// ── big-number (T043) ───────────────────────────────────────
+export const BIG_STRIP: Rect = { x: 40, y: 150, width: 920, height: 150 };
+export const BIG_REVERSE_GRID: Rect = { x: 70, y: 110, width: 860, height: 260 };
+
+export function bigDigitWidth(length: number): number {
+  const safe = Math.max(1, length);
+  return Math.min(64, Math.max(26, (BIG_STRIP.width - (safe - 1) * 10) / safe));
+}
+
+export function bigDigitRects(length: number): Rect[] {
+  const safe = Math.max(1, length);
+  const width = bigDigitWidth(safe);
+  const gap = 10;
+  const total = safe * width + (safe - 1) * gap;
+  const startX = BIG_STRIP.x + (BIG_STRIP.width - total) / 2;
+  const height = 96;
+  const y = BIG_STRIP.y + (BIG_STRIP.height - height) / 2;
+  return Array.from({ length: safe }, (_, index) => ({
+    x: startX + index * (width + gap),
+    y,
+    width,
+    height,
+  }));
+}
+
+/** 숫자 사이 틈(오른쪽에서 센 자릿수 위치). */
+export function bigGapRects(length: number): { readonly position: number; readonly rect: Rect }[] {
+  const rects = bigDigitRects(length);
+  const gaps: { position: number; rect: Rect }[] = [];
+  for (let index = 0; index < rects.length - 1; index += 1) {
+    const left = rects[index];
+    const right = rects[index + 1];
+    if (!left || !right) continue;
+    gaps.push({
+      position: rects.length - 1 - index,
+      rect: {
+        x: left.x + left.width,
+        y: BIG_STRIP.y,
+        width: right.x - (left.x + left.width),
+        height: BIG_STRIP.height,
+      },
+    });
+  }
+  return gaps;
+}
+
+export function reverseCellRect(cell: number): Rect {
+  const group = Math.floor(cell / 4);
+  const place = cell % 4;
+  const gap = 12;
+  const width = (BIG_REVERSE_GRID.width - gap * 3) / 4;
+  const height = (BIG_REVERSE_GRID.height - gap * 3) / 4;
+  return {
+    x: BIG_REVERSE_GRID.x + group * (width + gap),
+    y: BIG_REVERSE_GRID.y + place * (height + gap),
+    width,
+    height,
+  };
+}
+
 export function inRect(point: Point, rect: Rect): boolean {
   return (
     point.x >= rect.x &&
@@ -99,10 +226,27 @@ export function blockRect(block: {
   };
 }
 
-/** 캔버스를 4개의 자릿값 띠로 나눈다(높은 자리부터). */
+/** 캔버스를 4개의 자릿값 띠로 나눈다(높은 자리부터, whole 기준). */
 export function bandsFor(rect: Rect): Band[] {
   const width = rect.width / 4;
   return [3, 2, 1, 0].map((column, index) => ({
+    column,
+    x: rect.x + index * width,
+    width,
+    y: rect.y,
+    height: rect.height,
+  }));
+}
+
+/** 블록 모양 띠. decimal은 판(100)·막대(10)·낱개(1) 세 띠만 쓴다. */
+export function shapeColumnsFor(state: Pick<BaseTenState, 'settings'>): number[] {
+  return state.settings.interpretation === 'decimal' ? [2, 1, 0] : [3, 2, 1, 0];
+}
+
+export function bandsForState(state: Pick<BaseTenState, 'settings'>, rect: Rect): Band[] {
+  const columns = shapeColumnsFor(state);
+  const width = rect.width / columns.length;
+  return columns.map((column, index) => ({
     column,
     x: rect.x + index * width,
     width,
@@ -146,6 +290,7 @@ export function slotIndexInBand(
 }
 
 export function regionFor(state: Pick<BaseTenState, 'mode' | 'settings'>, zone?: Zone): Rect {
+  if (state.mode === 'divide') return DIVIDE_PILE;
   if (state.mode === 'add-sub') {
     if (state.settings.op === 'add') {
       switch (zone) {
@@ -197,7 +342,7 @@ export function snapToColumns(
   if (!state.settings.snapColumns) return point;
   const region = regionFor(state, zone);
   if (!inRect(point, expandRect(region, 24))) return point;
-  const bands = bandsFor(region);
+  const bands = bandsForState(state, region);
   const ownColumn = columnOf(value);
   const own = bands.find((band) => band.column === ownColumn);
   if (!own) return point;
@@ -218,7 +363,9 @@ export function snapToColumns(
 export function defaultDropPoint(state: BaseTenState, value: BlockValue): Point {
   const zone = state.mode === 'add-sub' ? (state.settings.op === 'add' ? 'sum' : 'a') : undefined;
   const region = regionFor(state, zone);
-  const band = bandsFor(region).find((candidate) => candidate.column === columnOf(value));
+  const band = bandsForState(state, region).find(
+    (candidate) => candidate.column === columnOf(value),
+  );
   if (!band) return { x: region.x + region.width / 2, y: region.y + region.height / 2 };
   return slotPoint(band, value, slotIndexInBand(state.blocks, band, value));
 }
@@ -333,8 +480,12 @@ export function scatteredPoint(random: () => number, index: number, rect: Rect):
 }
 
 /** 처음 블록을 자리별 띠에 줄 맞춰 놓는다. */
-export function arrangeByPlace(blocks: readonly BaseTenBlock[], rect: Rect): BaseTenBlock[] {
-  const bands = bandsFor(rect);
+export function arrangeByPlace(
+  state: Pick<BaseTenState, 'settings'>,
+  blocks: readonly BaseTenBlock[],
+  rect: Rect,
+): BaseTenBlock[] {
+  const bands = bandsForState(state, rect);
   const counters = new Map<number, number>();
   return blocks.map((block) => {
     const column = columnOf(block.value);

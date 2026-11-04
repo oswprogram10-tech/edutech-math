@@ -5,13 +5,17 @@
  * - 모든 상태 변경은 Action 하나로 기록되고, 같은 Action 목록은 같은 상태를 재생한다.
  * - reduce는 config를 받지 않으므로 필요한 설정은 `state.settings`에 복사해 둔다.
  */
+import { Rational } from '../../core/math';
 import { clamp } from '../../core/engine-sdk';
 import type { Point } from '../../core/engine-sdk';
 import {
   arrangeByPlace,
-  bandsFor,
+  arrangeOnPlate,
+  bandsForState,
   blockValuesForNumber,
   defaultDropPoint,
+  DIVIDE_PILE,
+  dividePlateRects,
   fanPoints,
   findFreePoint,
   inRect,
@@ -31,9 +35,11 @@ import type {
   BaseTenSettings,
   BaseTenState,
   BaseTenMode,
+  BigNumberState,
   BlockValue,
   ChartFill,
   ChartName,
+  Interpretation,
   StartSpec,
   Zone,
 } from './types';
@@ -42,9 +48,10 @@ import {
   columnOf,
   columnsOf,
   countsForColumn,
+  countsFromValue,
   placeValueOf,
+  rationalValueOf,
   totalBlockValue,
-  valueOf,
 } from './value';
 
 const MAX_VALUE = 9999;
@@ -55,15 +62,21 @@ function integer(value: number | undefined, fallback: number, min: number, max: 
   return clamp(Math.round(value), min, max);
 }
 
-function normalizeAllowed(values: readonly BlockValue[] | undefined): BlockValue[] {
+function normalizeAllowed(
+  values: readonly BlockValue[] | undefined,
+  interpretation: Interpretation,
+): BlockValue[] {
   const source = values ?? [1, 10, 100];
   const kept = source.filter((value) => BLOCK_VALUES.includes(value));
-  const unique = [...new Set(kept)].sort((a, b) => a - b);
+  let unique = [...new Set(kept)].sort((a, b) => a - b);
+  if (interpretation === 'decimal') unique = unique.filter((value) => value !== 1000);
   return unique.length > 0 ? unique : [1, 10, 100];
 }
 
 export function inferMode(config: BaseTenConfig): BaseTenMode {
   if (config.mode !== undefined) return config.mode;
+  if (config.reverse !== undefined || config.slicer !== undefined) return 'big-number';
+  if (config.dividend !== undefined || config.divisor !== undefined) return 'divide';
   if (
     config.op !== undefined ||
     config.a !== undefined ||
@@ -103,7 +116,7 @@ function chartColumnsOf(config: BaseTenConfig, mode: BaseTenMode): number[] {
     return [...new Set(fromNames)].sort((a, b) => b - a);
   }
   const explicit = (config.columns ?? []).filter(
-    (column) => Number.isInteger(column) && column >= 0 && column <= 3,
+    (column) => Number.isInteger(column) && column >= -2 && column <= 3,
   );
   if (explicit.length > 0) {
     return [...new Set(explicit)].sort((a, b) => b - a);
@@ -112,16 +125,20 @@ function chartColumnsOf(config: BaseTenConfig, mode: BaseTenMode): number[] {
     const digits = config.digits ?? [];
     return columnsOf(digits.length >= 2 ? Math.min(4, digits.length) : 2);
   }
+  if (mode === 'decimal') return [0, -1, -2];
   return [];
 }
 
 function settingsOf(config: BaseTenConfig, mode: BaseTenMode): BaseTenSettings {
   const maxValue = integer(config.maxValue, MAX_VALUE, 1, MAX_VALUE);
+  const interpretation: Interpretation =
+    mode === 'decimal' ? 'decimal' : (config.interpretation ?? 'whole');
   const chartColumns = chartColumnsOf(config, mode);
   const chartFill: ChartFill =
     chartColumns.length > 0 ? (config.chartFill ?? 'student') : 'student';
+  const divisor = integer(config.divisor, 2, 2, 9);
   return {
-    allowedBlocks: normalizeAllowed(config.allowedBlocks),
+    allowedBlocks: normalizeAllowed(config.allowedBlocks, interpretation),
     maxValue,
     snapColumns: config.snapColumns ?? mode === 'add-sub',
     lasso: config.lasso ?? true,
@@ -138,6 +155,10 @@ function settingsOf(config: BaseTenConfig, mode: BaseTenMode): BaseTenSettings {
     ),
     render: config.render ?? 'auto',
     icon: config.icon ?? null,
+    interpretation,
+    plates: integer(config.plates, divisor, 1, 9),
+    divisor,
+    rewindCheck: config.rewindCheck ?? false,
   };
 }
 
@@ -146,8 +167,33 @@ interface BlockDraft {
   readonly zone?: Zone;
 }
 
-function draftsFromStart(start: StartSpec | undefined): BlockDraft[] {
+function draftsFromCounts(counts: {
+  readonly thousands: number;
+  readonly hundreds: number;
+  readonly tens: number;
+  readonly ones: number;
+}): BlockDraft[] {
+  const drafts: BlockDraft[] = [];
+  for (const [value, count] of [
+    [1000, counts.thousands],
+    [100, counts.hundreds],
+    [10, counts.tens],
+    [1, counts.ones],
+  ] as const) {
+    for (let index = 0; index < count; index += 1) drafts.push({ value });
+  }
+  return drafts;
+}
+
+function draftsFromStart(
+  start: StartSpec | undefined,
+  interpretation: Interpretation,
+): BlockDraft[] {
   if (!start) return [];
+  if (typeof start.value === 'string') {
+    const counts = countsFromValue(start.value, interpretation);
+    return counts === null ? [] : draftsFromCounts(counts);
+  }
   const drafts: BlockDraft[] = [];
   const add = (value: BlockValue, count: number | undefined) => {
     const safe = integer(count, 0, 0, MAX_BLOCKS);
@@ -158,6 +204,31 @@ function draftsFromStart(start: StartSpec | undefined): BlockDraft[] {
   add(10, start.tens);
   add(1, start.ones);
   return drafts;
+}
+
+function sanitizeBigValue(text: string | undefined): string {
+  if (text === undefined) return '';
+  const digits = text.replace(/[^0-9]/g, '').slice(0, 16);
+  return digits.replace(/^0+(?=\d)/, '');
+}
+
+function autoCutsOf(length: number): number[] {
+  const cuts: number[] = [];
+  for (let position = 4; position < length; position += 4) cuts.push(position);
+  return cuts;
+}
+
+function bigNumberStateOf(config: BaseTenConfig, mode: BaseTenMode): BigNumberState | null {
+  if (mode !== 'big-number') return null;
+  const reverse = config.reverse !== undefined;
+  const value = reverse ? '' : sanitizeBigValue(config.value);
+  return {
+    value,
+    cuts: reverse || config.slicer !== 'auto' ? [] : autoCutsOf(value.length),
+    expanded: null,
+    selected: null,
+    built: Array.from({ length: 16 }, () => null),
+  };
 }
 
 function buildBlocks(
@@ -184,6 +255,18 @@ function initialBlocks(
   config: BaseTenConfig,
   settings: BaseTenSettings,
 ): { blocks: BaseTenBlock[]; nextId: number } {
+  if (mode === 'big-number') return { blocks: [], nextId: 1 };
+
+  if (mode === 'divide') {
+    const source = config.dividend === undefined ? '0' : String(config.dividend);
+    const counts = countsFromValue(source, settings.interpretation);
+    const built = buildBlocks(counts === null ? [] : draftsFromCounts(counts), 1);
+    return {
+      blocks: arrangeByPlace({ settings }, built.blocks, DIVIDE_PILE),
+      nextId: built.nextId,
+    };
+  }
+
   if (mode === 'add-sub') {
     const aDrafts = blockValuesForNumber(settings.a).map<BlockDraft>((entry) => ({
       value: entry.value,
@@ -198,15 +281,15 @@ function initialBlocks(
         : [];
     const a = buildBlocks(aDrafts, 1);
     const b = buildBlocks(bDrafts, a.nextId);
-    const arrangedA = arrangeByPlace(a.blocks, regionFor({ mode, settings }, 'a'));
-    const arrangedB = arrangeByPlace(b.blocks, regionFor({ mode, settings }, 'b'));
+    const arrangedA = arrangeByPlace({ settings }, a.blocks, regionFor({ mode, settings }, 'a'));
+    const arrangedB = arrangeByPlace({ settings }, b.blocks, regionFor({ mode, settings }, 'b'));
     return { blocks: [...arrangedA, ...arrangedB], nextId: b.nextId };
   }
 
   const start = config.start;
-  const built = buildBlocks(draftsFromStart(start), 1);
+  const built = buildBlocks(draftsFromStart(start, settings.interpretation), 1);
   const region = settings.snapColumns ? regionFor({ mode, settings }) : WORK_FULL;
-  let blocks = arrangeByPlace(built.blocks, region);
+  let blocks = arrangeByPlace({ settings }, built.blocks, region);
 
   if (start?.scattered === true) {
     const random = seededRandom(start.seed ?? 1);
@@ -238,11 +321,13 @@ export function createInitialState(config: BaseTenConfig): BaseTenState {
     reachedHundred: false,
     nextId,
     settings,
+    bigNumber: bigNumberStateOf(config, mode),
+    divide: mode === 'divide' ? { plates: settings.plates, rewound: false } : null,
   };
 
   return {
     ...base,
-    reachedHundred: Math.max(0, valueOf(base)) >= 100,
+    reachedHundred: rationalValueOf(base).compareTo(Rational.of(100)) >= 0,
   };
 }
 
@@ -283,7 +368,7 @@ function withBlocks(
   };
   return syncChart({
     ...next,
-    reachedHundred: next.reachedHundred || Math.max(0, valueOf(next)) >= 100,
+    reachedHundred: next.reachedHundred || rationalValueOf(next).compareTo(Rational.of(100)) >= 0,
   });
 }
 
@@ -313,12 +398,35 @@ export function reduce(state: BaseTenState, action: BaseTenAction): BaseTenState
       return setDigit(state, action.column, action.digit);
     case 'place-digit':
       return placeDigit(state, action.index, action.column);
+    // ── big-number ────────────────────────────────────────────
+    case 'cut':
+      return cutNumber(state, action.position);
+    case 'uncut':
+      return uncutNumber(state, action.position);
+    case 'expand':
+      return expandGroup(state, action.group);
+    case 'select-digit':
+      return selectDigit(state, action.position);
+    case 'place-card':
+      return placeCard(state, action.cell, action.digit);
+    case 'clear-cell':
+      return clearCell(state, action.cell);
+    // ── divide ────────────────────────────────────────────────
+    case 'deal-block':
+      return dealBlock(state, action.id, action.plate);
+    case 'return-block':
+      return returnBlock(state, action.id);
+    case 'deal-round':
+      return dealRound(state, action.value);
+    case 'rewind':
+      return rewindDivide(state);
     default:
       return state;
   }
 }
 
 function addBlock(state: BaseTenState, value: BlockValue, point: Point): BaseTenState {
+  if (state.mode === 'big-number' || state.mode === 'divide') return state;
   if (!state.settings.allowedBlocks.includes(value)) return state;
   if (totalBlockValue(state) + value > state.settings.maxValue) return state;
   if (state.blocks.length >= MAX_BLOCKS) return state;
@@ -342,6 +450,7 @@ function addBlock(state: BaseTenState, value: BlockValue, point: Point): BaseTen
 }
 
 function moveBlock(state: BaseTenState, id: string, point: Point): BaseTenState {
+  if (state.mode === 'big-number' || state.mode === 'divide') return state;
   const block = blockOf(state, id);
   if (!block) return state;
 
@@ -365,6 +474,7 @@ function moveBlock(state: BaseTenState, id: string, point: Point): BaseTenState 
 }
 
 function removeBlock(state: BaseTenState, id: string): BaseTenState {
+  if (state.mode === 'big-number' || state.mode === 'divide') return state;
   if (!blockOf(state, id)) return state;
   return withBlocks(
     state,
@@ -374,6 +484,7 @@ function removeBlock(state: BaseTenState, id: string): BaseTenState {
 }
 
 function lassoGroup(state: BaseTenState, ids: readonly string[]): BaseTenState {
+  if (state.mode === 'big-number' || state.mode === 'divide') return state;
   const unique = [...new Set(ids)];
   if (unique.length === 0) return state;
 
@@ -384,8 +495,10 @@ function lassoGroup(state: BaseTenState, ids: readonly string[]): BaseTenState {
 
   const value = found[0]?.value;
   const same = value !== undefined && found.every((block) => block.value === value);
+  const forbidden =
+    value === 1000 || (state.settings.interpretation === 'decimal' && value === 100);
 
-  if (unique.length !== 10 || !same || value === undefined || value === 1000) {
+  if (unique.length !== 10 || !same || value === undefined || forbidden) {
     return {
       ...state,
       lastAttempt: {
@@ -400,8 +513,12 @@ function lassoGroup(state: BaseTenState, ids: readonly string[]): BaseTenState {
 }
 
 function groupTens(state: BaseTenState, requested?: BlockValue): BaseTenState {
+  if (state.mode === 'big-number' || state.mode === 'divide') return state;
   const candidates = BLOCK_VALUES.filter(
-    (value) => value !== 1000 && state.blocks.filter((block) => block.value === value).length >= 10,
+    (value) =>
+      value !== 1000 &&
+      !(state.settings.interpretation === 'decimal' && value === 100) &&
+      state.blocks.filter((block) => block.value === value).length >= 10,
   );
   if (candidates.length === 0) return state;
 
@@ -433,7 +550,9 @@ function performGroup(
   };
   if (zone !== undefined && state.settings.snapColumns) {
     const region = regionFor(state, zone);
-    const band = bandsFor(region).find((candidate) => candidate.column === columnOf(higher));
+    const band = bandsForState(state, region).find(
+      (candidate) => candidate.column === columnOf(higher),
+    );
     if (band) {
       point = slotPoint(band, higher, slotIndexInBand(remaining, band, higher));
     }
@@ -462,8 +581,10 @@ function performGroup(
 }
 
 function breakBlock(state: BaseTenState, id: string): BaseTenState {
+  if (state.mode === 'big-number') return state;
   const block = blockOf(state, id);
   if (!block || block.value === 1) return state;
+  if (state.mode === 'divide' && block.plate !== undefined) return state;
   if (state.mode === 'add-sub' && !state.settings.regroupAllowed) return state;
 
   const lower = (block.value / 10) as BlockValue;
@@ -539,7 +660,7 @@ function placeDigit(state: BaseTenState, index: number, column: number): BaseTen
   let nextId = state.nextId;
   if (digit > 0) {
     const region = regionFor(state);
-    const band = bandsFor(region).find((candidate) => candidate.column === column);
+    const band = bandsForState(state, region).find((candidate) => candidate.column === column);
     const created = Array.from({ length: digit }, () => {
       const piece: BaseTenBlock = {
         id: `b${nextId}`,
@@ -573,21 +694,201 @@ function placeDigit(state: BaseTenState, index: number, column: number): BaseTen
 }
 
 // ─────────────────────────────────────────────────────────────
+// big-number
+// ─────────────────────────────────────────────────────────────
+
+function bigOf(state: BaseTenState): BigNumberState | null {
+  return state.mode === 'big-number' ? state.bigNumber : null;
+}
+
+function cutNumber(state: BaseTenState, position: number): BaseTenState {
+  const big = bigOf(state);
+  if (!big) return state;
+  if (!Number.isInteger(position) || position < 1 || position >= big.value.length) return state;
+  if (big.cuts.includes(position)) return state;
+  const cuts = [...big.cuts, position].sort((a, b) => a - b);
+  return { ...state, bigNumber: { ...big, cuts } };
+}
+
+function uncutNumber(state: BaseTenState, position: number): BaseTenState {
+  const big = bigOf(state);
+  if (!big || !big.cuts.includes(position)) return state;
+  return { ...state, bigNumber: { ...big, cuts: big.cuts.filter((cut) => cut !== position) } };
+}
+
+function expandGroup(state: BaseTenState, group: number): BaseTenState {
+  const big = bigOf(state);
+  if (!big) return state;
+  const groups = Math.max(1, Math.ceil(big.value.length / 4));
+  if (!Number.isInteger(group) || group < 0 || group >= groups) return state;
+  return { ...state, bigNumber: { ...big, expanded: big.expanded === group ? null : group } };
+}
+
+function selectDigit(state: BaseTenState, position: number): BaseTenState {
+  const big = bigOf(state);
+  if (!big) return state;
+  if (!Number.isInteger(position) || position < 0 || position >= big.value.length) return state;
+  return { ...state, bigNumber: { ...big, selected: position } };
+}
+
+function placeCard(state: BaseTenState, cell: number, digit: number): BaseTenState {
+  const big = bigOf(state);
+  if (!big) return state;
+  if (!Number.isInteger(cell) || cell < 0 || cell > 15) return state;
+  if (!Number.isInteger(digit) || digit < 0 || digit > 9) return state;
+  const built = big.built.map((current, index) => (index === cell ? digit : current));
+  return { ...state, bigNumber: { ...big, built } };
+}
+
+function clearCell(state: BaseTenState, cell: number): BaseTenState {
+  const big = bigOf(state);
+  if (!big || !Number.isInteger(cell) || cell < 0 || cell > 15) return state;
+  if (big.built[cell] === null) return state;
+  const built = big.built.map((current, index) => (index === cell ? null : current));
+  return { ...state, bigNumber: { ...big, built } };
+}
+
+// ─────────────────────────────────────────────────────────────
+// divide
+// ─────────────────────────────────────────────────────────────
+
+function blockWithoutPlate(block: BaseTenBlock, point: Point): BaseTenBlock {
+  return {
+    id: block.id,
+    value: block.value,
+    x: point.x,
+    y: point.y,
+    ...(block.zone === undefined ? {} : { zone: block.zone }),
+  };
+}
+
+function pilePoint(
+  state: BaseTenState,
+  pileBlocks: readonly BaseTenBlock[],
+  value: BlockValue,
+): Point {
+  const band = bandsForState(state, DIVIDE_PILE).find(
+    (candidate) => candidate.column === columnOf(value),
+  );
+  if (!band) return { x: DIVIDE_PILE.x + DIVIDE_PILE.width / 2, y: DIVIDE_PILE.y + 40 };
+  return slotPoint(band, value, slotIndexInBand(pileBlocks, band, value));
+}
+
+/** 접시에 놓인 블록만 접시 안에서 다시 줄 맞춘다(무더기 블록은 그대로). */
+function withDivideLayout(state: BaseTenState, blocks: readonly BaseTenBlock[]): BaseTenState {
+  const plates = state.divide?.plates ?? 1;
+  const rects = dividePlateRects(plates);
+  const pile: BaseTenBlock[] = [];
+  const plated: BaseTenBlock[] = [];
+  for (const block of blocks) {
+    if (block.plate === undefined) {
+      pile.push(block);
+      continue;
+    }
+    const rect = rects[block.plate];
+    if (rect === undefined) {
+      pile.push(blockWithoutPlate(block, { x: block.x, y: block.y }));
+      continue;
+    }
+    plated.push(block);
+  }
+  const arranged: BaseTenBlock[] = [];
+  for (let plate = 0; plate < plates; plate += 1) {
+    const rect = rects[plate];
+    if (!rect) continue;
+    arranged.push(
+      ...arrangeOnPlate(
+        rect,
+        plated.filter((block) => block.plate === plate),
+      ),
+    );
+  }
+  return withBlocks(state, [...pile, ...arranged], { lastAttempt: null });
+}
+
+function dealBlock(state: BaseTenState, id: string, plate: number): BaseTenState {
+  if (state.mode !== 'divide' || !state.divide) return state;
+  if (!Number.isInteger(plate) || plate < 0 || plate >= state.divide.plates) return state;
+  const block = blockOf(state, id);
+  if (!block || block.plate === plate) return state;
+  const blocks = state.blocks.map((item) => (item.id === id ? { ...item, plate } : item));
+  return withDivideLayout({ ...state, divide: { ...state.divide, rewound: false } }, blocks);
+}
+
+function returnBlock(state: BaseTenState, id: string): BaseTenState {
+  if (state.mode !== 'divide' || !state.divide) return state;
+  const block = blockOf(state, id);
+  if (!block || block.plate === undefined) return state;
+  const pile = state.blocks.filter((item) => item.plate === undefined);
+  const point = pilePoint(state, pile, block.value);
+  const blocks = state.blocks.map((item) =>
+    item.id === id ? blockWithoutPlate(item, point) : item,
+  );
+  return withDivideLayout({ ...state, divide: { ...state.divide, rewound: false } }, blocks);
+}
+
+/** "○ 한 바퀴"를 지금 누를 수 있는가. */
+export function canDealRound(state: BaseTenState, value: BlockValue): boolean {
+  if (state.mode !== 'divide' || !state.divide) return false;
+  return (
+    state.blocks.filter((block) => block.plate === undefined && block.value === value).length >=
+    state.divide.plates
+  );
+}
+
+function dealRound(state: BaseTenState, value: BlockValue): BaseTenState {
+  if (!canDealRound(state, value) || !state.divide) return state;
+  const chosen = state.blocks
+    .filter((block) => block.plate === undefined && block.value === value)
+    .slice(0, state.divide.plates);
+  const plateOf = new Map(chosen.map((block, index) => [block.id, index] as const));
+  const blocks = state.blocks.map((block) => {
+    const plate = plateOf.get(block.id);
+    return plate === undefined ? block : { ...block, plate };
+  });
+  return withDivideLayout({ ...state, divide: { ...state.divide, rewound: false } }, blocks);
+}
+
+function rewindDivide(state: BaseTenState): BaseTenState {
+  if (state.mode !== 'divide' || !state.divide) return state;
+  if (!state.blocks.some((block) => block.plate !== undefined)) return state;
+  const returned = state.blocks.map((block) =>
+    blockWithoutPlate(block, { x: block.x, y: block.y }),
+  );
+  const blocks = arrangeByPlace(state, returned, DIVIDE_PILE);
+  return withBlocks({ ...state, divide: { ...state.divide, rewound: true } }, blocks, {
+    log: [...state.log, { kind: 'rewind' }],
+    lastAttempt: null,
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
 // 테스트·View가 함께 쓰는 계산
 // ─────────────────────────────────────────────────────────────
 
+function logValuesOf(state: BaseTenState, kind: 'group' | 'break'): BlockValue[] {
+  return state.log
+    .filter((entry) => entry.kind === kind)
+    .map((entry) => entry.from)
+    .filter((value): value is BlockValue => value !== undefined);
+}
+
 export function groupedFrom(state: BaseTenState): number[] {
-  return state.log.filter((entry) => entry.kind === 'group').map((entry) => entry.from);
+  return logValuesOf(state, 'group');
 }
 
 export function brokenFrom(state: BaseTenState): number[] {
-  return state.log.filter((entry) => entry.kind === 'break').map((entry) => entry.from);
+  return logValuesOf(state, 'break');
 }
 
 /** "10개 묶기" 버튼을 지금 누를 수 있는가. */
 export function canGroupTens(state: BaseTenState): boolean {
+  if (state.mode === 'big-number' || state.mode === 'divide') return false;
   return BLOCK_VALUES.some(
-    (value) => value !== 1000 && state.blocks.filter((block) => block.value === value).length >= 10,
+    (value) =>
+      value !== 1000 &&
+      !(state.settings.interpretation === 'decimal' && value === 100) &&
+      state.blocks.filter((block) => block.value === value).length >= 10,
   );
 }
 
