@@ -138,10 +138,43 @@ function partialProducts(
   return { type: 'link-colors', colors };
 }
 
+const divideProgress: Receiver = (state, payload) => {
+  if (state.op !== 'div') return null;
+  const record = recordOf(payload);
+  if (!record) return null;
+  const columns = record['columns'];
+  if (!Array.isArray(columns)) return null;
+  const top = state.aText.replace(/\D/g, '').length - 1;
+
+  const marks: LinkMark[] = [];
+  const fill: LinkValue[] = [];
+  for (const entry of columns) {
+    if (entry === null || typeof entry !== 'object' || Array.isArray(entry)) continue;
+    const column = integerOf(entry, 'column');
+    const perPlate = integerOf(entry, 'perPlate');
+    const pile = integerOf(entry, 'pile');
+    if (column === null || perPlate === null || pile === null) continue;
+    if (pile !== 0) continue;
+    if (column < 0 || column > top) continue;
+    if (perPlate < 0 || perPlate > 9) continue;
+    const digit = String(perPlate);
+    if (state.linkMarks === 'auto') {
+      if (state.quotient[String(column)] === digit) continue;
+      fill.push({ kind: 'quotient', column, digit });
+    } else {
+      marks.push({ kind: 'quotient', column });
+    }
+  }
+
+  if (marks.length === 0 && fill.length === 0) return null;
+  return { type: 'link-mark', marks, fill, crosses: [], tens: [] };
+};
+
 export const receivers: Readonly<Record<string, Receiver>> = {
   grouped,
   broken,
   'partial-product-changed': partialProducts,
+  'divide-progress': divideProgress,
 };
 
 /** `${kind}:${column}` 꼴 강조 키. predicate와 같은 규칙을 쓴다. */

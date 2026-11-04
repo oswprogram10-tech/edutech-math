@@ -1,0 +1,166 @@
+/* E07 배수 사다리. 막대 높이만 화면 좌표 number를 쓴다. */
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 180px;
+  max-width: 320px;
+  padding: 0.6rem;
+  border: 2px solid #c8d4ea;
+  border-radius: 16px;
+  background: #fbfcff;
+}
+
+.title {
+  margin: 0;
+  color: #1d2330;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.candidates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.candidate,
+.tableButton {
+  border: 2px solid #2f6fde;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1d2330;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.candidate[data-candidate] {
+  box-shadow: 0 0 0 3px #101828 inset;
+}
+
+.candidate[data-over] {
+  border-color: #b4541c;
+  border-style: dashed;
+  background: repeating-linear-gradient(45deg, #ffe0c8 0 5px, #fff2e8 5px 10px);
+  color: #7a2f0c;
+}
+
+.stack {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0.4rem 0.2rem 0.2rem;
+  border-bottom: 2px solid #1d2330;
+}
+
+.line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 2px dashed #b4541c;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.lineLabel {
+  position: absolute;
+  right: 0;
+  top: -1.15rem;
+  padding: 0 0.25rem;
+  background: #fbfcff;
+  color: #7a2f0c;
+  font-size: 0.68rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.blocks,
+.blocksOver {
+  display: flex;
+  flex-direction: column-reverse;
+  width: 58px;
+  overflow: hidden;
+  border: 2px solid #2f6fde;
+  border-radius: 6px 6px 0 0;
+}
+
+.blocksOver {
+  border-color: #b4541c;
+  border-style: dashed;
+}
+
+.block {
+  flex: 1 1 0;
+  border-top: 1px dashed #8aa9e0;
+  background: #dce8ff;
+}
+
+.block:first-child {
+  border-top: none;
+}
+
+.blocksOver .block {
+  border-top-color: #e0a071;
+  background: repeating-linear-gradient(45deg, #ffe0c8 0 5px, #fff2e8 5px 10px);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.caption {
+  caption-side: top;
+  padding-bottom: 0.3rem;
+  color: #5a6478;
+  font-size: 0.78rem;
+  text-align: left;
+}
+
+.table th {
+  padding: 0.2rem 0.3rem;
+  color: #5a6478;
+  font-size: 0.75rem;
+  text-align: left;
+}
+
+.table td {
+  padding: 0.15rem 0.3rem;
+  border-top: 1px solid #e2e8f2;
+}
+
+.tableButton[aria-pressed='true'] {
+  box-shadow: 0 0 0 3px #101828 inset;
+}
+
+.multiple {
+  color: #1d2330;
+  font-weight: 700;
+}
+
+.status {
+  margin: 0;
+  color: #1d2330;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.choose {
+  min-height: 48px;
+  border: 2px solid #2f9e6b;
+  border-radius: 12px;
+  background: #e6f4ec;
+  color: #1d5b3c;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+[data-target-size='64'] .choose {
+  min-height: 64px;
+}

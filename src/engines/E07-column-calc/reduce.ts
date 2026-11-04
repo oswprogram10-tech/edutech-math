@@ -2,6 +2,7 @@
  * E07의 순수 reducer. 모든 상태 변경은 Action 하나로 기록된다.
  * 수 값은 정수 자리 계산과 `Rational`로만 다루고, 상태에는 문자열만 둔다.
  */
+import { computeDivPlan, divComplete, expectedDigitsFor } from './grid-div';
 import { computeMulPlan } from './grid-mul';
 import type { MulPlan } from './grid-mul';
 import type {
@@ -11,6 +12,7 @@ import type {
   ColumnCalcState,
   ColumnMode,
   EditableRow,
+  EstimateBar,
   EstimateTolerance,
   MulStyle,
 } from './types';
@@ -31,9 +33,10 @@ const DEFAULT_NUMBERS: Readonly<Record<ColumnMode, { a: string; b: string }>> = 
   decimal: { a: '3.5', b: '1.27' },
   mul: { a: '46', b: '5' },
   estimate: { a: '389', b: '412' },
+  div: { a: '52', b: '4' },
 };
 
-const MODES: readonly ColumnMode[] = ['add', 'sub', 'decimal', 'mul', 'estimate'];
+const MODES: readonly ColumnMode[] = ['add', 'sub', 'decimal', 'mul', 'estimate', 'div'];
 
 function normalizeMode(value: ColumnMode | undefined): ColumnMode {
   return value !== undefined && MODES.includes(value) ? value : 'add';
@@ -119,6 +122,31 @@ function positiveIntegerText(value: number | string | undefined, fallback: numbe
   return parsed > 0n ? parsed.toString() : String(fallback);
 }
 
+/** div: 1 이상 `max` 이하의 자연수만 받는다. 벗어나면 기본값. */
+function boundedNaturalText(
+  value: number | string | undefined,
+  max: number,
+  fallback: string,
+): string {
+  if (value === undefined) return fallback;
+  const text = String(value).trim();
+  if (!/^\d+$/.test(text)) return fallback;
+  const parsed = BigInt(text);
+  if (parsed < 1n || parsed > BigInt(max)) return fallback;
+  return parsed.toString();
+}
+
+function estimateBarShow(value: EstimateBar | undefined): EstimateBar['show'] {
+  if (!value || value.show === false) return false;
+  return value.show;
+}
+
+function estimateMaxMultiple(value: EstimateBar | undefined): number {
+  const multiple = value?.maxMultiple;
+  if (typeof multiple !== 'number' || !Number.isInteger(multiple)) return 9;
+  return Math.min(9, Math.max(1, multiple));
+}
+
 function baseState(
   mode: ColumnMode,
   op: ColumnCalcState['op'],
@@ -159,6 +187,16 @@ function baseState(
     roundTo: 100,
     toleranceGreen: '100',
     toleranceYellow: '200',
+    quotient: {},
+    divProducts: {},
+    divDiffs: {},
+    estimateTries: {},
+    rewound: false,
+    alarmEnabled: config.remainderAlarm === true,
+    flagSkippedZero: config.flagSkippedZero === true,
+    rewindEnabled: Boolean(config.rewindCheck),
+    estimateBarShow: estimateBarShow(config.estimateBar),
+    estimateMaxMultiple: estimateMaxMultiple(config.estimateBar),
   };
 }
 
@@ -193,6 +231,50 @@ function withDebugSample(state: ColumnCalcState, config: ColumnCalcConfig): Colu
   };
 }
 
+/** div 디버그 풀이: 주어진 몫으로 모든 단계 줄을 계산해 채운다. */
+function withDivDebugSample(state: ColumnCalcState, config: ColumnCalcConfig): ColumnCalcState {
+  const sample = config.debugSample;
+  const quotientText = sample?.quotient;
+  if (quotientText === undefined) return state;
+  const digits = String(quotientText).replace(/\D/g, '');
+  if (digits.length === 0) return state;
+  const top = Math.max(0, state.aText.replace(/\D/g, '').length - 1);
+  const quotient: Record<string, string> = {};
+  for (let offset = 0; offset < digits.length; offset += 1) {
+    const column = digits.length - 1 - offset;
+    if (column >= 0 && column <= top) quotient[String(column)] = digits.charAt(offset) ?? '0';
+  }
+
+  const seeded: ColumnCalcState = { ...state, quotient };
+  const plan = computeDivPlan(seeded);
+  const products: Record<string, Record<string, string>> = {};
+  const diffs: Record<string, Record<string, string>> = {};
+  let partial: bigint | null = null;
+  for (let index = 0; index < plan.steps.length; index += 1) {
+    const step = plan.steps[index];
+    if (!step) continue;
+    const current: bigint = index === 0 ? step.partial : (partial ?? 0n);
+    const product = step.product;
+    const diff: bigint = current - product;
+    products[String(step.column)] = { ...step.expectedProduct };
+    const record: Record<string, string> = {};
+    if (diff >= 0n) Object.assign(record, expectedDigitsFor(diff, step.diffColumns));
+    Object.assign(record, step.expectedBring);
+    diffs[String(step.column)] = record;
+
+    if (diff >= 0n) {
+      let bringValue = 0n;
+      for (const column of step.bringColumns) {
+        bringValue = bringValue * 10n + BigInt(step.expectedBring[String(column)] ?? '0');
+      }
+      partial = diff * 10n ** BigInt(step.bringColumns.length) + bringValue;
+    } else {
+      partial = null;
+    }
+  }
+  return { ...seeded, divProducts: products, divDiffs: diffs };
+}
+
 function withEstimateSample(state: ColumnCalcState, config: ColumnCalcConfig): ColumnCalcState {
   if (config.sample === undefined || config.sample === null) return state;
   const text = String(config.sample).trim();
@@ -212,6 +294,17 @@ export function createInitialState(config: ColumnCalcConfig = {}): ColumnCalcSta
     if (!a || !b) throw new Error(S.configError('곱셈 기본 수를 읽을 수 없습니다.'));
     const base = withDebugSample(baseState(mode, 'mul', a, b, config), config);
     return { ...base, selected: mulSelection(computeMulPlan(base)) };
+  }
+
+  if (mode === 'div') {
+    const rawDividend = config.dividend ?? config.a;
+    const rawDivisor = config.divisor ?? config.b;
+    const dividendText = boundedNaturalText(rawDividend, 9999, DEFAULT_NUMBERS.div.a);
+    const divisorText = boundedNaturalText(rawDivisor, 99, DEFAULT_NUMBERS.div.b);
+    const a = requireNumber(dividendText);
+    const b = requireNumber(divisorText);
+    const base = withDivDebugSample(baseState(mode, 'div', a, b, config), config);
+    return { ...base, selected: { row: 'quotient', column: a.intDigits - 1 } };
   }
 
   if (mode === 'estimate') {
@@ -270,6 +363,10 @@ function rowAllowed(state: ColumnCalcState, row: EditableRow, index?: number): b
     if (!rowPlan) return false;
     if (row === 'partial') return true;
     return rowPlan.carryColumns.length > 0;
+  }
+  if (row === 'quotient') return state.op === 'div';
+  if (row === 'div-product' || row === 'div-diff') {
+    return state.op === 'div' && index !== undefined;
   }
   return false;
 }
@@ -341,6 +438,186 @@ function mulAfterEnter(state: ColumnCalcState, cell: CellRef): CellRef | null {
   return null;
 }
 
+function divTop(state: ColumnCalcState): number {
+  return Math.max(0, state.aText.replace(/\D/g, '').length - 1);
+}
+
+function selectDiv(
+  state: ColumnCalcState,
+  action: Extract<ColumnCalcAction, { type: 'select' }>,
+): ColumnCalcState {
+  if (action.row === 'quotient') {
+    if (action.column < 0 || action.column > divTop(state)) return state;
+    return { ...state, selected: { row: 'quotient', column: action.column } };
+  }
+  if (action.index === undefined) return state;
+  const plan = computeDivPlan(state);
+  const step = plan.steps.find((entry) => entry.column === action.index);
+  if (!step) return state;
+  if (action.row === 'div-product') {
+    if (!step.productColumns.includes(action.column)) return state;
+    return {
+      ...state,
+      selected: { row: 'div-product', column: action.column, index: action.index },
+    };
+  }
+  if (action.row === 'div-diff') {
+    if (!step.rowColumns.includes(action.column)) return state;
+    return { ...state, selected: { row: 'div-diff', column: action.column, index: action.index } };
+  }
+  return state;
+}
+
+/** 교과서 순서로 커서를 옮긴다(몫 → 곱 → 뺄셈 → 내림 → 다음 몫). */
+function divAfterEnter(state: ColumnCalcState, cell: CellRef): CellRef | null {
+  const plan = computeDivPlan(state);
+  if (cell.row === 'quotient') {
+    const column = cell.column;
+    const digit = state.quotient[String(column)];
+    if (digit === undefined) return null;
+    if (digit === '0') {
+      if (column <= 0) return null;
+      // 단계는 높은 열부터 정렬돼 있다. column보다 높은 단계 중 가장 가까운(열이 작은) 단계.
+      let previous: (typeof plan.steps)[number] | undefined;
+      for (const step of plan.steps) {
+        if (step.column <= column) break;
+        previous = step;
+      }
+      if (previous && previous.bringColumns.includes(column - 1)) {
+        return { row: 'div-diff', column: column - 1, index: previous.column };
+      }
+      return { row: 'quotient', column: column - 1 };
+    }
+    const step = plan.steps.find((entry) => entry.column === column);
+    if (!step) return null;
+    const firstProduct = step.productColumns[0];
+    if (firstProduct !== undefined) {
+      return { row: 'div-product', column: firstProduct, index: column };
+    }
+    const firstDiff = step.diffColumns[0];
+    if (firstDiff !== undefined) return { row: 'div-diff', column: firstDiff, index: column };
+    return null;
+  }
+
+  if (cell.row === 'div-product' && cell.index !== undefined) {
+    const step = plan.steps.find((entry) => entry.column === cell.index);
+    if (!step) return null;
+    const nextProduct = step.productColumns.find((column) => column > cell.column);
+    if (nextProduct !== undefined) {
+      return { row: 'div-product', column: nextProduct, index: cell.index };
+    }
+    const firstDiff = step.diffColumns[0];
+    if (firstDiff !== undefined) return { row: 'div-diff', column: firstDiff, index: cell.index };
+    return null;
+  }
+
+  if (cell.row === 'div-diff' && cell.index !== undefined) {
+    const step = plan.steps.find((entry) => entry.column === cell.index);
+    if (!step) return null;
+    if (step.diffColumns.includes(cell.column)) {
+      const nextDiff = step.diffColumns.find((column) => column > cell.column);
+      if (nextDiff !== undefined) {
+        return { row: 'div-diff', column: nextDiff, index: cell.index };
+      }
+      const firstBring = step.bringColumns[0];
+      if (firstBring !== undefined) {
+        return { row: 'div-diff', column: firstBring, index: cell.index };
+      }
+      return null;
+    }
+    if (step.bringColumns.includes(cell.column)) {
+      const nextBring = step.bringColumns.find((column) => column < cell.column);
+      if (nextBring !== undefined) {
+        return { row: 'div-diff', column: nextBring, index: cell.index };
+      }
+      const lastBring = step.bringColumns[step.bringColumns.length - 1];
+      if (lastBring !== undefined) return { row: 'quotient', column: lastBring };
+      return null;
+    }
+  }
+  return null;
+}
+
+function enterDiv(
+  state: ColumnCalcState,
+  action: Extract<ColumnCalcAction, { type: 'enter' }>,
+): ColumnCalcState {
+  if (action.digit !== null && !/^[0-9]$/.test(action.digit)) return state;
+  if (action.row === 'quotient') {
+    if (action.column < 0 || action.column > divTop(state)) return state;
+    const next: ColumnCalcState = {
+      ...state,
+      quotient: writeDigit(state.quotient, action.column, action.digit),
+      linkHighlights: [],
+    };
+    if (action.digit === null) {
+      return { ...next, selected: { row: 'quotient', column: action.column } };
+    }
+    const moved = divAfterEnter(next, { row: 'quotient', column: action.column });
+    return { ...next, selected: moved ?? { row: 'quotient', column: action.column } };
+  }
+  if (action.index === undefined) return state;
+  const plan = computeDivPlan(state);
+  const step = plan.steps.find((entry) => entry.column === action.index);
+  if (!step) return state;
+
+  if (action.row === 'div-product') {
+    if (!step.productColumns.includes(action.column)) return state;
+    const record = writeDigit(
+      state.divProducts[String(action.index)] ?? {},
+      action.column,
+      action.digit,
+    );
+    const next: ColumnCalcState = {
+      ...state,
+      divProducts: { ...state.divProducts, [String(action.index)]: record },
+      linkHighlights: [],
+    };
+    if (action.digit === null) {
+      return {
+        ...next,
+        selected: { row: 'div-product', column: action.column, index: action.index },
+      };
+    }
+    const moved = divAfterEnter(next, {
+      row: 'div-product',
+      column: action.column,
+      index: action.index,
+    });
+    return {
+      ...next,
+      selected: moved ?? { row: 'div-product', column: action.column, index: action.index },
+    };
+  }
+
+  if (action.row === 'div-diff') {
+    if (!step.rowColumns.includes(action.column)) return state;
+    const record = writeDigit(
+      state.divDiffs[String(action.index)] ?? {},
+      action.column,
+      action.digit,
+    );
+    const next: ColumnCalcState = {
+      ...state,
+      divDiffs: { ...state.divDiffs, [String(action.index)]: record },
+      linkHighlights: [],
+    };
+    if (action.digit === null) {
+      return { ...next, selected: { row: 'div-diff', column: action.column, index: action.index } };
+    }
+    const moved = divAfterEnter(next, {
+      row: 'div-diff',
+      column: action.column,
+      index: action.index,
+    });
+    return {
+      ...next,
+      selected: moved ?? { row: 'div-diff', column: action.column, index: action.index },
+    };
+  }
+  return state;
+}
+
 export function reduce(state: ColumnCalcState, action: ColumnCalcAction): ColumnCalcState {
   if (state.mode === 'estimate' && state.phase === 'estimate') {
     if (action.type === 'enter-estimate') return enterEstimate(state, action);
@@ -382,6 +659,7 @@ export function reduce(state: ColumnCalcState, action: ColumnCalcAction): Column
 
     case 'select': {
       if (!rowAllowed(state, action.row, action.index)) return state;
+      if (state.op === 'div') return selectDiv(state, action);
       const grid = computeGrid(state);
       if (action.row === 'result') {
         if (!grid.resultColumns.includes(action.column)) return state;
@@ -407,6 +685,7 @@ export function reduce(state: ColumnCalcState, action: ColumnCalcAction): Column
     case 'enter': {
       if (!rowAllowed(state, action.row, action.index)) return state;
       if (action.digit !== null && !/^[0-9]$/.test(action.digit)) return state;
+      if (state.op === 'div') return enterDiv(state, action);
       const grid = computeGrid(state);
       if (action.row === 'result' && !grid.resultColumns.includes(action.column)) return state;
       if (action.column < grid.low || action.column > grid.high) return state;
@@ -510,7 +789,7 @@ export function reduce(state: ColumnCalcState, action: ColumnCalcAction): Column
     }
 
     case 'flag-cell': {
-      if (state.op !== 'mul') return state;
+      if (state.op !== 'mul' && state.op !== 'div') return state;
       const match = (cell: CellRef): boolean =>
         cell.row === action.row && cell.column === action.column && cell.index === action.index;
       const exists = state.flagged.some(match);
@@ -528,19 +807,23 @@ export function reduce(state: ColumnCalcState, action: ColumnCalcAction): Column
     case 'link-mark': {
       let carries = state.carries;
       let regroups = state.regroups;
+      let quotient = state.quotient;
       for (const value of action.fill) {
         if (value.kind === 'carry') {
           if (carries[String(value.column)] === undefined) {
             carries = { ...carries, [String(value.column)]: value.digit };
           }
-        } else {
+        } else if (value.kind === 'regroup') {
           regroups = { ...regroups, [String(value.column)]: value.digit };
+        } else if (state.op === 'div') {
+          quotient = { ...quotient, [String(value.column)]: value.digit };
         }
       }
       return {
         ...state,
         carries,
         regroups,
+        quotient,
         crosses: sortedUnique([...state.crosses, ...action.crosses]),
         tens: sortedUnique([...state.tens, ...action.tens]),
         linkHighlights: action.marks.map((mark) => `${mark.kind}:${mark.column}`),
@@ -577,6 +860,31 @@ export function reduce(state: ColumnCalcState, action: ColumnCalcAction): Column
             ? mulSelection(computeMulPlan(state))
             : selectionFor({ ...state, result: {} }),
       };
+    }
+
+    case 'try-estimate': {
+      if (state.op !== 'div') return state;
+      if (!Number.isInteger(action.column) || action.column < 0 || action.column > divTop(state)) {
+        return state;
+      }
+      if (!Number.isInteger(action.k) || action.k < 1 || action.k > state.estimateMaxMultiple) {
+        return state;
+      }
+      const previous = state.estimateTries[String(action.column)] ?? [];
+      return {
+        ...state,
+        estimateTries: {
+          ...state.estimateTries,
+          [String(action.column)]: [...previous, action.k],
+        },
+      };
+    }
+
+    case 'rewind': {
+      if (state.op !== 'div' || !state.rewindEnabled) return state;
+      if (state.rewound) return state;
+      if (!divComplete(state, computeDivPlan(state))) return state;
+      return { ...state, rewound: true };
     }
 
     default:

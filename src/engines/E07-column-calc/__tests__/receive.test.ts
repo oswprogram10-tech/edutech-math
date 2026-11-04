@@ -97,7 +97,12 @@ describe('E07 receive 연결', () => {
     expect(receive(mul, event('unknown-event', {}))).toBeNull();
   });
 
-  it('receivers 표는 이벤트 이름으로 찾는다(T047이 div를 더할 자리)', () => {
-    expect(Object.keys(receivers).sort()).toEqual(['broken', 'grouped', 'partial-product-changed']);
+  it('receivers 표는 이벤트 이름으로 찾는다(T047이 div를 더했다)', () => {
+    expect(Object.keys(receivers).sort()).toEqual([
+      'broken',
+      'divide-progress',
+      'grouped',
+      'partial-product-changed',
+    ]);
   });
 });

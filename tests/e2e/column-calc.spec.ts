@@ -172,3 +172,70 @@ test('어림값 800을 정한 뒤 389 + 412 = 801을 쓰면 초록 신호가 나
   await expect(page.getByTestId('estimate-signal')).toHaveAttribute('data-signal', 'green');
   await expect(page.getByTestId('estimate-signal')).toContainText('가까워요');
 });
+
+test('키보드로 52÷4의 몫 13과 나머지 0을 쓴다', async ({ page }) => {
+  await openColumnCalc(page, { mode: 'div', dividend: 52, divisor: 4 });
+  await selectMode(page, 'div');
+  await expect(page.getByTestId('column-grid')).toHaveAttribute('data-mode', 'div');
+
+  // 몫 → 곱 → 뺄셈 → 내림 → 다음 몫 순서다.
+  await page.getByTestId('column-grid').focus();
+  for (const key of '14123210') {
+    await page.keyboard.press(key);
+  }
+  await pollObservation(page, (observation) => observation.divComplete === true);
+
+  const observation = await readObservation(page);
+  expect(observation.quotient).toBe('13');
+  expect(observation.remainder).toBe('0');
+  expect(observation.result).toBe('13');
+  expect(observation.complete).toBe(true);
+  expect(observation.misconceptions).toEqual([]);
+});
+
+test('408÷4에서 십의 자리를 비우면 skippedZero가 켜진다', async ({ page }) => {
+  await openColumnCalc(page, {
+    mode: 'div',
+    dividend: 408,
+    divisor: 4,
+    flagSkippedZero: true,
+  });
+  await selectMode(page, 'div');
+
+  await page.getByTestId('column-grid').focus();
+  await page.keyboard.press('1');
+  // 십의 자리를 지나 일의 자리 몫 칸에 직접 2를 쓴다.
+  await page.locator('[data-row="quotient"][data-column="0"]').click();
+  await page.keyboard.press('2');
+  await pollObservation(page, (observation) => observation.skippedZero === true);
+
+  const observation = await readObservation(page);
+  expect(observation.skippedZero).toBe(true);
+  expect(observation.quotient).toBe('12');
+  expect(observation.misconceptions).toContain('MC-DIV-QUOTIENT-ZERO');
+  await expect(page.locator('[data-row="quotient"][data-column="1"][data-gap]')).toHaveCount(1);
+});
+
+test('95÷23 배수 사다리에서 5 다음 4를 고르면 estimateRevised가 켜진다', async ({ page }) => {
+  await openColumnCalc(page, {
+    mode: 'div',
+    dividend: 95,
+    divisor: 23,
+    estimateBar: { show: 'C-P', maxMultiple: 9 },
+    remainderAlarm: true,
+  });
+  await selectMode(page, 'div');
+  await expect(page.getByLabel('배수 사다리')).toBeVisible();
+
+  // 사다리는 몫 칸에 커서가 있을 때만 보인다. 일의 자리 몫 칸을 고른다.
+  await page.locator('[data-row="quotient"][data-column="0"]').click();
+  await page.getByRole('button', { name: /^5배/ }).click();
+  await page.getByRole('button', { name: /^4배/ }).click();
+  await page.getByRole('button', { name: '4을 몫으로 정하기' }).click();
+  await pollObservation(page, (observation) => observation.estimateRevised === true);
+
+  const observation = await readObservation(page);
+  expect(observation.estimateRevised).toBe(true);
+  expect(observation.quotient).toBe('4');
+  expect(observation.estimateTries).toEqual({ '0': [5, 4] });
+});
