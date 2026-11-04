@@ -142,3 +142,115 @@ test('23×4 넓이 모델의 가로 분할선을 20으로 끌면 20×4와 3×4 �
   await expect(canvas).toContainText('20×4');
   await expect(canvas).toContainText('3×4');
 });
+
+test('12×18 방에 타일 한 변 6을 고르면 남는 자리 없이 덮이고 타일 수는 화면에 없다', async ({
+  page,
+}) => {
+  const { canvas } = await openArrayArea(page, { mode: 'tiling', width: 12, height: 18 });
+  await page.getByLabel('모드').selectOption('tiling');
+  await pollObservation(page, (current) => current.width === 12 && current.height === 18);
+
+  const bigger = page.getByRole('button', { name: '타일 크게' });
+  for (let index = 0; index < 6; index += 1) await bigger.click();
+
+  await pollObservation(page, (current) => current.tileSize === 6 && current.fitsAll === true);
+  const record = await readObservation(page);
+  expect(record.leftoverCells).toEqual([0]);
+  expect(record.tilesUsed).toEqual([6]);
+  expect(record.recordedSizes).toEqual([]);
+
+  await page.getByRole('button', { name: '기록하기', exact: true }).click();
+  await pollObservation(
+    page,
+    (current) =>
+      Array.isArray(current.recordedSizes) && (current.recordedSizes as number[]).includes(6),
+  );
+
+  // 남는 칸 수·타일 수는 화면에 쓰지 않는다.
+  await expect(canvas).not.toContainText('216');
+  await expect(canvas).not.toContainText('남는');
+});
+
+test('0.6×0.3 소수 넓이는 겹친 칸 18이고 곱은 화면에 없다', async ({ page }) => {
+  const { canvas } = await openArrayArea(page, {
+    mode: 'decimal-area',
+    a: '0.6',
+    b: '0.3',
+  });
+  await page.getByLabel('모드').selectOption('decimal-area');
+  await pollObservation(page, (current) => current.overlapCells === 18);
+  expect((await readObservation(page)).product).toBe('0.18');
+
+  await page.getByRole('button', { name: '가로 늘리기' }).click();
+  await pollObservation(page, (current) => current.overlapCells === 21);
+  expect((await readObservation(page)).product).toBe('0.21');
+
+  for (let index = 0; index < 4; index += 1) {
+    await page.getByRole('button', { name: '가로 줄이기' }).click();
+  }
+  await pollObservation(page, (current) => current.overlapCells === 9);
+  expect((await readObservation(page)).product).toBe('0.09');
+
+  await expect(canvas).not.toContainText('0.18');
+  await expect(canvas).not.toContainText('0.09');
+});
+
+test('리본 12m에 3/4을 곱하면 예측 뒤 길이 9가 된다', async ({ page }) => {
+  const { canvas } = await openArrayArea(page, {
+    mode: 'fraction-area',
+    variant: 'scaler',
+    base: 12,
+    multipliers: ['3/4'],
+    showResult: true,
+  });
+  await page.getByLabel('모드').selectOption('fraction-area');
+  await pollObservation(page, (current) => current.prediction === null);
+
+  // 예측 전에는 곱하는 수를 고를 수 없다.
+  await expect(page.getByRole('button', { name: '뒤 눈금' })).toBeDisabled();
+  await page.getByRole('button', { name: '짧아질까' }).click();
+  await pollObservation(page, (current) => current.prediction === 'smaller');
+
+  await page.getByRole('button', { name: '뒤 눈금' }).click();
+  await pollObservation(page, (current) => current.result === '9');
+  const record = await readObservation(page);
+  expect(record.multiplier).toBe('3/4');
+  expect(record.predictionFits).toBe(true);
+  expect(record.tried).toEqual(['3/4']);
+
+  await expect(canvas).toContainText('리본 길이 9');
+});
+
+test('32×23 퍼즐 조각 네 개를 슬롯에 놓으면 조립되고 전체 곱은 화면에 없다', async ({ page }) => {
+  const { canvas } = await openArrayArea(page, {
+    mode: 'area-model',
+    a: 32,
+    b: 23,
+    puzzle: { splitsA: [30], splitsB: [20], seed: 1 },
+  });
+  await page.getByLabel('모드').selectOption('area-model');
+  await pollObservation(page, (current) => current.placedPieces === 0);
+
+  const pieces = await page.locator('[data-piece]').evaluateAll((elements) =>
+    elements.map((element) => ({
+      id: element.getAttribute('data-piece') ?? '',
+      label: element.getAttribute('aria-label') ?? '',
+    })),
+  );
+  expect(pieces).toHaveLength(4);
+
+  for (const piece of pieces) {
+    const area = Number(piece.label.split(' ').pop());
+    const col = area === 600 || area === 90 ? 0 : 1;
+    const row = area === 600 || area === 40 ? 0 : 1;
+    await page.locator(`[data-piece="${piece.id}"]`).click();
+    await page.locator(`[data-slot="${col},${row}"]`).click();
+  }
+
+  await pollObservation(page, (current) => current.puzzleAssembled === true);
+  const record = await readObservation(page);
+  expect(record.assembledDims).toEqual({ a: 32, b: 23 });
+  expect(record.placedPieces).toBe(4);
+
+  await expect(canvas).not.toContainText('736');
+});

@@ -47,6 +47,11 @@ import type {
   ArrayIcon,
   SplitOrientation,
 } from './types';
+import { DecimalAreaView } from './views/DecimalAreaView';
+import { FractionAreaView } from './views/FractionAreaView';
+import { PuzzleView } from './views/PuzzleView';
+import { ScalerView } from './views/ScalerView';
+import { TilingView } from './views/TilingView';
 import styles from './View.module.css';
 
 const LOGICAL = { width: LOGICAL_WIDTH, height: LOGICAL_HEIGHT };
@@ -304,7 +309,7 @@ interface EntryState {
   readonly text: string;
 }
 
-export function ArrayAreaView({
+function SquareArrayView({
   state,
   dispatch,
   cpa,
@@ -723,6 +728,49 @@ export function ArrayAreaView({
             <text x={790} y={470} textAnchor="middle" fontSize={14} fill={MUTED}>
               {S.factTitle}
             </text>
+          </g>
+        ) : null}
+
+        {state.settings.shelf ? (
+          <g data-testid="factor-shelf">
+            <line x1={790} y1={112} x2={960} y2={112} stroke={MUTED} strokeWidth={2} />
+            <text x={790} y={100} fontSize={16} fontWeight={700} fill={INK}>
+              {S.shelf}
+            </text>
+            {state.recorded.length === 0 ? (
+              <text x={790} y={142} fontSize={13} fill={MUTED}>
+                {S.shelfEmpty}
+              </text>
+            ) : null}
+            {state.recorded.map((item, index) => {
+              const top = 132 + index * 64;
+              const cell = Math.max(
+                2,
+                Math.min(
+                  5,
+                  Math.floor(28 / Math.max(1, item.rows)),
+                  Math.floor(36 / Math.max(1, item.cols)),
+                ),
+              );
+              return (
+                <g key={`shelf-${item.rows}-${item.cols}`} pointerEvents="none">
+                  {Array.from({ length: item.rows }, (_, row) =>
+                    Array.from({ length: item.cols }, (_, col) => (
+                      <circle
+                        key={`shelf-dot-${row}-${col}`}
+                        cx={792 + (col + 0.5) * cell}
+                        cy={top + 6 + (row + 0.5) * cell}
+                        r={Math.max(1.2, cell * 0.3)}
+                        fill={BLUE}
+                      />
+                    )),
+                  )}
+                  <text x={850} y={top + 20} fontSize={14} fontWeight={700} fill={INK}>
+                    {S.shelfRecorded(item.rows, item.cols)}
+                  </text>
+                </g>
+              );
+            })}
           </g>
         ) : null}
       </>
@@ -1540,4 +1588,24 @@ export function ArrayAreaView({
       <p className={styles.instructions}>{S.instructions[mode]}</p>
     </div>
   );
+}
+
+/** 모드에 따라 화면을 고르기만 한다. 새 화면은 `views/`에 있다. */
+export function ArrayAreaView(
+  props: EngineViewProps<ArrayAreaConfig, ArrayAreaState, ArrayAreaAction>,
+) {
+  const { state } = props;
+  if (state.mode === 'tiling') return <TilingView {...props} />;
+  if (state.mode === 'decimal-area') return <DecimalAreaView {...props} />;
+  if (state.mode === 'fraction-area') {
+    return state.settings.variant === 'scaler' ? (
+      <ScalerView {...props} />
+    ) : (
+      <FractionAreaView {...props} />
+    );
+  }
+  if (state.mode === 'area-model' && state.settings.puzzle !== null) {
+    return <PuzzleView {...props} />;
+  }
+  return <SquareArrayView {...props} />;
 }

@@ -6,9 +6,57 @@
  * 좌표는 논리 좌표(1000×600) 정수만 상태에 둔다.
  */
 
-export type ArrayMode = 'dot-array' | 'split' | 'area-model' | 'times-table';
+export type ArrayMode =
+  | 'dot-array'
+  | 'split'
+  | 'area-model'
+  | 'times-table'
+  | 'tiling'
+  | 'decimal-area'
+  | 'fraction-area';
 
 export type ArrayIcon = 'dot' | 'tree' | 'candy' | 'strawberry';
+
+/** T045: 분수 넓이의 한 변. `n`조각으로 나누고 `k`조각을 칠했다. */
+export interface FractionParts {
+  readonly n: number;
+  readonly k: number;
+}
+
+/** T045: scaler에서 리본 길이가 어떻게 변하는지. */
+export type ScalerPrediction = 'smaller' | 'same' | 'larger';
+
+export type FractionLayout = 'vertical' | 'horizontal';
+
+export interface TileCompare {
+  readonly width: number;
+  readonly height: number;
+}
+
+export interface PuzzleConfig {
+  readonly splitsA: readonly number[];
+  readonly splitsB: readonly number[];
+  readonly seed?: number;
+  readonly label?: 'area' | 'dims' | 'none';
+}
+
+export interface PuzzlePiece {
+  readonly id: string;
+  readonly w: number;
+  readonly h: number;
+}
+
+export interface PuzzlePlacement {
+  readonly col: number;
+  readonly row: number;
+}
+
+/** T045: area-model `puzzle`의 조각 상자·조립판 상태. */
+export interface PuzzleState {
+  readonly pieces: readonly PuzzlePiece[];
+  /** 조각 id → 조립판 슬롯. */
+  readonly placed: Readonly<Record<string, PuzzlePlacement>>;
+}
 
 export type SentenceMode = 'none' | 'dims';
 
@@ -79,11 +127,13 @@ export interface ArrayAreaConfig {
   readonly allowExtend?: boolean;
 
   // ── area-model ────────────────────────────────────────────
-  readonly a?: number;
-  readonly b?: number;
+  readonly a?: number | string;
+  readonly b?: number | string;
   readonly splitA?: SideSplit;
   readonly splitB?: SideSplit;
   readonly showGrid?: GridDisplay;
+  /** T045: area-model을 조각 퍼즐로 연다. */
+  readonly puzzle?: PuzzleConfig;
 
   // ── times-table ───────────────────────────────────────────
   readonly size?: readonly number[];
@@ -91,6 +141,36 @@ export interface ArrayAreaConfig {
   readonly symmetryReveal?: boolean;
   readonly colorSameValue?: boolean;
   readonly includeZero?: boolean;
+
+  // ── dot-array 추가(T045) ───────────────────────────────────
+  /** 약수 선반: 기록한 배열을 오른쪽에 쌓아 보여 준다. */
+  readonly shelf?: boolean;
+
+  // ── tiling ────────────────────────────────────────────────
+  /** 방의 가로·세로 칸 수(1~30). */
+  readonly width?: number;
+  readonly height?: number;
+  /** 고를 수 있는 타일 한 변. 기본 1…min(width,height). */
+  readonly tileSizes?: readonly number[];
+  /** 두 번째 방(같은 타일 크기를 함께 깐다). */
+  readonly compare?: TileCompare;
+
+  // ── decimal-area ──────────────────────────────────────────
+  readonly maxA?: string;
+  readonly maxB?: string;
+  readonly grid?: number;
+  readonly locked?: boolean;
+  readonly showUnitLabel?: boolean;
+  readonly showCounts?: boolean;
+
+  // ── fraction-area / scaler ────────────────────────────────
+  readonly variant?: 'square' | 'scaler';
+  readonly maxDenominator?: number;
+  readonly layout?: { readonly a?: FractionLayout; readonly b?: FractionLayout };
+  readonly base?: number;
+  readonly multipliers?: readonly string[];
+  readonly predictFirst?: boolean;
+  readonly showResult?: boolean;
 }
 
 /** reduce는 config를 받지 않으므로 필요한 설정을 복사해 둔다. */
@@ -122,6 +202,27 @@ export interface ArrayAreaSettings {
   readonly symmetryReveal: boolean;
   readonly colorSameValue: boolean;
   readonly includeZero: boolean;
+
+  // T045 확장
+  readonly shelf: boolean;
+  readonly width: number;
+  readonly height: number;
+  readonly tileSizes: readonly number[];
+  readonly compare: TileCompare | null;
+  readonly maxA: string;
+  readonly maxB: string;
+  readonly grid: number;
+  readonly locked: boolean;
+  readonly showUnitLabel: boolean;
+  readonly showCounts: boolean;
+  readonly maxDenominator: number;
+  readonly layout: { readonly a: FractionLayout; readonly b: FractionLayout };
+  readonly variant: 'square' | 'scaler';
+  readonly base: number;
+  readonly multipliers: readonly string[];
+  readonly predictFirst: boolean;
+  readonly showResult: boolean;
+  readonly puzzle: PuzzleConfig | null;
 }
 
 export interface ArrayAreaState {
@@ -154,6 +255,21 @@ export interface ArrayAreaState {
   readonly flash: string | null;
   readonly folded: boolean;
 
+  // T045 확장(모든 모드에서 null 허용 — JSON 직렬화 계약 유지)
+  readonly tileSize: number | null;
+  readonly recordedSizes: readonly number[];
+  readonly decimal: { readonly a: string; readonly b: string } | null;
+  readonly fraction: {
+    readonly a: FractionParts;
+    readonly b: FractionParts;
+  } | null;
+  readonly scaler: {
+    readonly prediction: ScalerPrediction | null;
+    readonly index: number | null;
+    readonly tried: readonly string[];
+  } | null;
+  readonly puzzle: PuzzleState | null;
+
   readonly settings: ArrayAreaSettings;
 }
 
@@ -181,7 +297,21 @@ export type ArrayAreaAction =
       readonly c: number;
       readonly color: number | null;
     }
-  | { readonly type: 'fold' };
+  | { readonly type: 'fold' }
+  | { readonly type: 'set-tile'; readonly size: number }
+  | { readonly type: 'record-tile' }
+  | { readonly type: 'set-factor'; readonly side: 'a' | 'b'; readonly value: string }
+  | { readonly type: 'set-parts'; readonly side: 'a' | 'b'; readonly n: number }
+  | { readonly type: 'set-shaded'; readonly side: 'a' | 'b'; readonly k: number }
+  | { readonly type: 'predict'; readonly value: ScalerPrediction }
+  | { readonly type: 'set-multiplier'; readonly index: number }
+  | {
+      readonly type: 'place-piece';
+      readonly id: string;
+      readonly col: number;
+      readonly row: number;
+    }
+  | { readonly type: 'unplace-piece'; readonly id: string };
 
 export const LOGICAL_WIDTH = 1000;
 export const LOGICAL_HEIGHT = 600;
