@@ -10,6 +10,7 @@
  * 감지하지 않는다(예: 1/2 + 1/2 = 2/4).
  */
 import { Rational } from './rational';
+import { diagnoseDetectorsW2 } from './diagnose-w2';
 
 export interface DiagnoseInput {
   /** `path`로 찾은 관찰 값. 수·부등호 기호는 문자열이다. 없으면 null. */
@@ -56,13 +57,13 @@ function recordOf(args: unknown): Readonly<Record<string, unknown>> | null {
     : null;
 }
 
-function textOf(args: unknown, key: string): string | null {
+export function textOf(args: unknown, key: string): string | null {
   const record = recordOf(args);
   const value = record?.[key];
   return typeof value === 'string' && value.length > 0 ? value : null;
 }
 
-function rationalOf(args: unknown, key: string): Rational | null {
+export function rationalOf(args: unknown, key: string): Rational | null {
   const text = textOf(args, key);
   if (text === null) return null;
   try {
@@ -72,13 +73,13 @@ function rationalOf(args: unknown, key: string): Rational | null {
   }
 }
 
-function integerOf(args: unknown, key: string): bigint | null {
+export function integerOf(args: unknown, key: string): bigint | null {
   const text = textOf(args, key);
   if (text === null || !/^-?\d+$/.test(text)) return null;
   return BigInt(text);
 }
 
-function studentValue(input: DiagnoseInput): Rational | null {
+export function studentValue(input: DiagnoseInput): Rational | null {
   if (input.value === null) return null;
   try {
     return Rational.parse(input.value);
@@ -474,7 +475,7 @@ const fractionDecimalLink: DiagnoseDetector = (input) => {
  * `detect: 'diagnose'`인 W1 코드의 감지 함수.
  * 엔진 조작으로만 알 수 있는 코드(예: MC-FRAC-UNEQUAL-PARTS)는 여기에 없다.
  */
-export const diagnoseDetectors: Readonly<Record<string, DiagnoseDetector>> = {
+const diagnoseDetectorsW1: Readonly<Record<string, DiagnoseDetector>> = {
   'MC-COMMON-DENOM-ONLY-PRODUCT': commonDenominatorOnlyProduct,
   'MC-DEC-ALIGN-RIGHT': decimalAlignRight,
   'MC-DEC-LONGER-BIGGER': decimalLongerBigger,
@@ -494,4 +495,10 @@ export const diagnoseDetectors: Readonly<Record<string, DiagnoseDetector>> = {
   'MC-FRAC-WHOLE-MINUS': wholeMinus,
   'MC-SIMPLIFY-PARTIAL': simplifyPartial,
   'MC-SUB-SMALLER-FROM-LARGER': subSmallerFromLarger,
+};
+
+/** W1·W2 `detect: 'diagnose'` 코드의 감지 함수 전체. */
+export const diagnoseDetectors: Readonly<Record<string, DiagnoseDetector>> = {
+  ...diagnoseDetectorsW1,
+  ...diagnoseDetectorsW2,
 };

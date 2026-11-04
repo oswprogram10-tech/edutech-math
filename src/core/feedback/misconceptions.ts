@@ -1,16 +1,20 @@
 /**
- * W1 오개념 레지스트리.
+ * W1·W2 오개념 레지스트리.
  *
  * `docs/05-learning-engine.md` §5 표에서 W1 여섯 단원(g3s1u6, g3s2u4, g4s2u1,
- * g4s2u3, g5s1u4, g5s1u5) 중 하나라도 쓰는 코드를 모두 옮겼다.
+ * g4s2u3, g5s1u4, g5s1u5)과 W2 26개 단원 중 하나라도 쓰는 코드를 모두 옮겼다.
  * `backtrack`은 단원 명세 오개념 표의 ③ 열에 있는 개념·단원 ID다.
  * 기본 발문은 넣지 않는다. 발문은 과제 콘텐츠의 HintRule이 맡는다.
+ *
+ * `detect: 'observation'` 코드는 힌트의 `when: {misconception}`로는 걸리지
+ * 않는다. 콘텐츠는 엔진 predicate `hasMisconception`이나 GoalSpec을 쓴다.
  */
 import type { Observation } from '../engine-sdk';
 import { diagnoseDetectors } from '../math/diagnose';
 import type { DiagnoseDetector } from '../math/diagnose';
 import { resolveObservationPath } from '../runner/goal';
 import type { ContentTask } from '../runner/types';
+import { W2_MISCONCEPTIONS } from './misconceptions-w2';
 
 export type MisconceptionDetect = 'diagnose' | 'observation';
 
@@ -26,7 +30,7 @@ export interface Misconception {
   readonly detect: MisconceptionDetect;
 }
 
-export const MISCONCEPTIONS: readonly Misconception[] = [
+const W1_MISCONCEPTIONS: readonly Misconception[] = [
   {
     code: 'MC-COMMON-DENOM-ONLY-PRODUCT',
     label: '공통분모는 두 분모의 곱이어야만 한다',
@@ -209,6 +213,12 @@ export const MISCONCEPTIONS: readonly Misconception[] = [
     backtrack: 'g4s2u1.mixed-borrow',
     detect: 'observation',
   },
+];
+
+/** W1·W2 코드 전체. 코드가 겹치지 않아 순서대로 합치기만 한다. */
+export const MISCONCEPTIONS: readonly Misconception[] = [
+  ...W1_MISCONCEPTIONS,
+  ...W2_MISCONCEPTIONS,
 ];
 
 const byCode = new Map(MISCONCEPTIONS.map((item) => [item.code, item]));
