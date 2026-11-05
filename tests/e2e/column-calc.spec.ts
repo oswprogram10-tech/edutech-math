@@ -391,3 +391,42 @@ test('소수÷소수 1.68÷0.24: 확대경 ×100 뒤 168÷24로 7을 만든다',
   expect(observation.remainder).toBe('0');
   expect(observation.misconceptions).toEqual([]);
 });
+
+test('소수 나눗셈 8.16÷4: 나누어지는 수 소수점이 보이고 엔진 밖 키는 격자에 들어가지 않는다', async ({
+  page,
+}) => {
+  await openColumnCalc(page, {
+    mode: 'div',
+    decimal: true,
+    dividend: '8.16',
+    divisor: 4,
+  });
+  await selectMode(page, 'div');
+
+  // 나누어지는 수 일의 자리 오른쪽에 소수점이 보인다(8.16).
+  await expect(
+    page.locator(
+      '[data-testid="column-grid"] [data-row="dividend"][data-column="0"] [data-point-mark="true"]',
+    ),
+  ).toBeVisible();
+
+  // 응답 칸 대신 엔진 밖 요소에 초점을 두고 친 숫자는 격자에 들어가지 않는다.
+  await page.evaluate(() => {
+    const outside = document.createElement('div');
+    outside.tabIndex = 0;
+    outside.id = 'outside-keyboard';
+    document.body.appendChild(outside);
+    outside.focus();
+  });
+  await page.keyboard.press('3');
+  await expect(
+    page.locator('[data-testid="column-grid"] [data-row="quotient"][data-filled="true"]'),
+  ).toHaveCount(0);
+
+  // 격자 칸에 초점을 두면 같은 키가 그 칸에 들어간다.
+  await page.locator('[data-testid="column-grid"] [data-row="quotient"][data-column="0"]').click();
+  await page.keyboard.press('3');
+  await expect(
+    page.locator('[data-testid="column-grid"] [data-row="quotient"][data-column="0"]'),
+  ).toHaveText('3');
+});

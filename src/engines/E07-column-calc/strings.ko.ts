@@ -128,6 +128,7 @@ export const columnCalcStrings = {
   rowDivProduct: (index: number) => `곱 ${index + 1}`,
   rowDivDiff: (index: number) => `뺄셈 ${index + 1}`,
   dividendLabel: '나누어지는 수',
+  dividendRowLabel: (text: string) => `나누어지는 수 ${text}`,
   divisorLabel: '나누는 수',
   quotientCell: (place: string) => `몫 ${place} 자리`,
   divProductCell: (place: string, index: number) => `곱 ${index + 1} ${place} 자리`,

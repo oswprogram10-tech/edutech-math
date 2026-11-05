@@ -15,6 +15,7 @@ import { computeGrid, isDecimalMul, mulAlignment } from '../grid';
 import type { ParsedNumber } from '../grid';
 import { computeMulPlan, isPlaceholder } from '../grid-mul';
 import type { MulPlan, MulRowPlan } from '../grid-mul';
+import { isForeignKeyTarget, isTextEntryTarget } from '../keyboard';
 import { paletteAt } from '../palette';
 import { columnCalcStrings as S } from '../strings.ko';
 import { placeNameKo } from '../types';
@@ -130,6 +131,7 @@ export function MulView({
   const [cardSelected, setCardSelected] = useState(false);
   const [dropColumn, setDropColumn] = useState(0);
   const topRowRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   const movedB = useRef(false);
 
   const activeCard = decimalMul && state.placeCards && cardMode === state.mode && cardSelected;
@@ -272,24 +274,17 @@ export function MulView({
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (readOnly) return;
-      const target = event.target;
-      if (
-        target instanceof HTMLElement &&
-        (target.tagName === 'INPUT' ||
-          target.tagName === 'TEXTAREA' ||
-          target.tagName === 'SELECT' ||
-          target.isContentEditable)
-      ) {
+      if (isTextEntryTarget(event.target) || isForeignKeyTarget(event.target, rootRef.current)) {
         return;
       }
+      if (readOnly) return;
       if (event.ctrlKey || event.metaKey || event.altKey) return;
 
       // 어림값 입력 상자 안에서는 EstimateBox가 직접 처리한다.
       if (
         state.phase === 'estimate' &&
-        target instanceof Element &&
-        target.closest('[data-estimate-box="true"]') !== null
+        event.target instanceof Element &&
+        event.target.closest('[data-estimate-box="true"]') !== null
       ) {
         return;
       }
@@ -346,7 +341,7 @@ export function MulView({
 
   if (!plan) {
     return (
-      <div className={styles.wrap} data-target-size={targetSize} data-cpa={cpa}>
+      <div ref={rootRef} className={styles.wrap} data-target-size={targetSize} data-cpa={cpa}>
         <p className={styles.instructions}>
           {decimalMul ? S.decimalMulInstruction : S.instructions.mul}
         </p>
@@ -392,7 +387,7 @@ export function MulView({
 
   if (decimalMul && state.shiftHideGrid) {
     return (
-      <div className={styles.wrap} data-target-size={targetSize} data-cpa={cpa}>
+      <div ref={rootRef} className={styles.wrap} data-target-size={targetSize} data-cpa={cpa}>
         {showInstructions ? <p className={styles.instructions}>{S.decimalMulInstruction}</p> : null}
         <ShiftDemo
           config={config}
@@ -408,7 +403,7 @@ export function MulView({
   }
 
   return (
-    <div className={styles.wrap} data-target-size={targetSize} data-cpa={cpa}>
+    <div ref={rootRef} className={styles.wrap} data-target-size={targetSize} data-cpa={cpa}>
       {showInstructions ? (
         <p className={styles.instructions}>
           {decimalMul ? S.decimalMulInstruction : S.instructions.mul}

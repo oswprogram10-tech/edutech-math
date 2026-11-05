@@ -468,3 +468,34 @@ describe('div decimal predicates와 events', () => {
     expect(oneSideTried(observe(solved624()), undefined)).toBe(false);
   });
 });
+
+describe('E07 소수 나눗셈 열 번호에 -0이 생기지 않는다(T079)', () => {
+  it('5 ÷ 0.4를 ×10 하면 low·baseLow가 +0이다', () => {
+    const config = {
+      mode: 'div' as const,
+      decimal: true,
+      dividend: '5',
+      divisor: '0.4',
+      extendZeros: 2,
+    };
+    const state = scaleBoth(createInitialState(config), 1);
+    const numbers = divGridNumbers(state);
+    expect(Object.is(numbers.baseLow, 0)).toBe(true);
+    expect(Object.is(numbers.low, 0)).toBe(true);
+    expect(numbers.IText).toBe('50');
+  });
+
+  it('0을 하나 붙인 뒤에도 low가 +0에서 -1로만 내려간다', () => {
+    const config = {
+      mode: 'div' as const,
+      decimal: true,
+      dividend: '5',
+      divisor: '0.4',
+      extendZeros: 2,
+    };
+    const state = appendZero(scaleBoth(createInitialState(config), 1));
+    const numbers = divGridNumbers(state);
+    expect(Object.is(numbers.baseLow, 0)).toBe(true);
+    expect(Object.is(numbers.low, -1)).toBe(true);
+  });
+});

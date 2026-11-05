@@ -1,8 +1,9 @@
 /** @vitest-environment jsdom */
 import { cleanup, render } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
+import { isSerializable } from '../../../core/engine-sdk';
 import { createInitialState, reduce } from '../reduce';
-import type { ColumnCalcConfig } from '../types';
+import type { ColumnCalcAction, ColumnCalcConfig } from '../types';
 import { ColumnCalcView } from '../View';
 
 afterEach(cleanup);
@@ -27,6 +28,13 @@ function gridText(container: HTMLElement): string {
 
 function quotientText(container: HTMLElement): string {
   return container.querySelector('[data-testid="quotient-row"]')?.textContent ?? '';
+}
+
+function pointMarks(container: HTMLElement, row: string, column: number): number {
+  const cell = container.querySelector(
+    `[data-testid="column-grid"] [data-row="${row}"][data-column="${column}"]`,
+  );
+  return cell?.querySelectorAll('[data-point-mark="true"]').length ?? 0;
 }
 
 /** 학생에게 보이는 글자와 aria-label을 모두 모은다. */
@@ -187,5 +195,175 @@ describe('E07 소수 나눗셈 화면은 정답 값을 드러내지 않는다', 
     expect(magnifier?.textContent ?? '').toContain('24');
     // 조각 개수는 숫자로 쓰지 않는다.
     expect(magnifier?.textContent ?? '').not.toMatch(/(^|\D)7(\D|$)/);
+  });
+});
+
+describe('E07 소수 나눗셈 격자는 소수점을 그린다(T079)', () => {
+  it('8.16 ÷ 4 시작 화면의 나누어지는 수 일의 자리 칸에 점이 하나 있다', () => {
+    const { container } = renderDiv({
+      mode: 'div',
+      decimal: true,
+      dividend: '8.16',
+      divisor: 4,
+    });
+    expect(pointMarks(container, 'dividend', 0)).toBe(1);
+    expect(container.querySelector('[aria-label="나누어지는 수 8.16"]')).not.toBeNull();
+  });
+
+  it('3 ÷ 4는 0을 붙이기 전에는 점이 없고 하나 붙이면 생긴다', () => {
+    const config: ColumnCalcConfig = {
+      mode: 'div',
+      decimal: true,
+      dividend: '3',
+      divisor: 4,
+      extendZeros: 2,
+    };
+    const before = createInitialState(config);
+    const first = renderDiv(config);
+    expect(pointMarks(first.container, 'dividend', 0)).toBe(0);
+    first.unmount();
+
+    const after = reduce(before, { type: 'pad-zero', number: 'a', column: -1 });
+    const second = render(
+      <ColumnCalcView
+        config={config}
+        state={after}
+        dispatch={() => {}}
+        cpa="A"
+        mode="div"
+        targetSize={48}
+      />,
+    );
+    expect(pointMarks(second.container, 'dividend', 0)).toBe(1);
+  });
+
+  it('5 ÷ 0.4를 ×10 한 뒤 0을 붙이면 50.0으로 점이 생긴다', () => {
+    const config: ColumnCalcConfig = {
+      mode: 'div',
+      decimal: true,
+      dividend: '5',
+      divisor: '0.4',
+      extendZeros: 2,
+    };
+    const scaled = reduce(createInitialState(config), {
+      type: 'scale',
+      side: 'both',
+      to: 1,
+    });
+    const first = render(
+      <ColumnCalcView
+        config={config}
+        state={scaled}
+        dispatch={() => {}}
+        cpa="A"
+        mode="div"
+        targetSize={48}
+      />,
+    );
+    expect(pointMarks(first.container, 'dividend', 0)).toBe(0);
+    first.unmount();
+
+    const after = reduce(scaled, { type: 'pad-zero', number: 'a', column: -1 });
+    const second = render(
+      <ColumnCalcView
+        config={config}
+        state={after}
+        dispatch={() => {}}
+        cpa="A"
+        mode="div"
+        targetSize={48}
+      />,
+    );
+    expect(pointMarks(second.container, 'dividend', 0)).toBe(1);
+  });
+
+  it('몫 점을 열 0에 놓으면 몫 줄 그 칸에 점이 생긴다', () => {
+    const config: ColumnCalcConfig = {
+      mode: 'div',
+      decimal: true,
+      dividend: '8.16',
+      divisor: 4,
+    };
+    const state = reduce(createInitialState(config), {
+      type: 'place-point',
+      target: 'quotient',
+      column: 0,
+    });
+    const { container } = render(
+      <ColumnCalcView
+        config={config}
+        state={state}
+        dispatch={() => {}}
+        cpa="A"
+        mode="div"
+        targetSize={48}
+      />,
+    );
+    expect(pointMarks(container, 'quotient', 0)).toBe(1);
+  });
+
+  it('1.68 ÷ 0.24를 ×100 한 격자(168)에는 나누어지는 수 점이 없다', () => {
+    const config: ColumnCalcConfig = {
+      mode: 'div',
+      decimal: true,
+      dividend: '1.68',
+      divisor: '0.24',
+      magnifier: [10, 100],
+      allowOneSideScale: true,
+    };
+    const state = reduce(createInitialState(config), { type: 'scale', side: 'both', to: 2 });
+    const { container } = render(
+      <ColumnCalcView
+        config={config}
+        state={state}
+        dispatch={() => {}}
+        cpa="C"
+        mode="div"
+        targetSize={48}
+      />,
+    );
+    expect(
+      container.querySelectorAll('[data-row="dividend"] [data-point-mark="true"]').length,
+    ).toBe(0);
+  });
+});
+
+describe('E07 점 놓기 Action은 JSON으로 왕복한다(T079)', () => {
+  it('5 ÷ 0.4를 ×10 한 화면의 점 버튼은 column +0을 보낸다', () => {
+    const config: ColumnCalcConfig = {
+      mode: 'div',
+      decimal: true,
+      dividend: '5',
+      divisor: '0.4',
+      extendZeros: 2,
+    };
+    const state = reduce(createInitialState(config), {
+      type: 'scale',
+      side: 'both',
+      to: 1,
+    });
+    const actions: ColumnCalcAction[] = [];
+    const { container } = render(
+      <ColumnCalcView
+        config={config}
+        state={state}
+        dispatch={(action) => actions.push(action)}
+        cpa="A"
+        mode="div"
+        targetSize={48}
+      />,
+    );
+    const button = container.querySelector<HTMLButtonElement>(
+      '[data-testid="column-grid"] [data-row="point"][data-column="0"]',
+    );
+    expect(button).not.toBeNull();
+    button?.click();
+
+    expect(actions).toHaveLength(1);
+    const action = actions[0];
+    expect(action?.type).toBe('place-point');
+    if (action?.type !== 'place-point') throw new Error('점 놓기 Action이 아닙니다.');
+    expect(Object.is(action.column, 0)).toBe(true);
+    expect(isSerializable(action)).toBe(true);
   });
 });

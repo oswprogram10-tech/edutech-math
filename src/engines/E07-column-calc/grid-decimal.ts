@@ -80,7 +80,7 @@ export function shiftFitsAt(text: string, exponent: number): boolean {
   const parsed = parseNumber(text);
   if (!parsed) return false;
   const most = parsed.intDigits - 1 + exponent;
-  const rightmost = -parsed.fracDigits + exponent;
+  const rightmost = exponent - parsed.fracDigits;
   return most <= SHIFT_HIGH && rightmost >= SHIFT_LOW;
 }
 
@@ -99,7 +99,7 @@ export function shiftCards(
   if (!parsed) return [];
   const cards: { column: number; digit: string }[] = [];
   for (let offset = 0; offset < parsed.digits.length; offset += 1) {
-    const column = -parsed.fracDigits + (parsed.digits.length - 1 - offset) + state.shiftExponent;
+    const column = parsed.digits.length - 1 - offset + state.shiftExponent - parsed.fracDigits;
     cards.push({ column, digit: parsed.digits[offset] ?? '0' });
   }
   return cards;

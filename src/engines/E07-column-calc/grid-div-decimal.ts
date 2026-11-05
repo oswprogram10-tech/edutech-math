@@ -124,7 +124,7 @@ export function divGridNumbers(state: ColumnCalcState): DivGridNumbers {
   const g = shiftScaled(b, scaleB);
   const gridOpen = b.fracDigits <= scaleB;
   const top = G.intDigits - 1;
-  const baseLow = -G.fracDigits;
+  const baseLow = 0 - G.fracDigits;
   const appended = appendedColumns(state, baseLow).length;
   const low = baseLow - appended;
   const IText = `${G.digits}${'0'.repeat(appended)}`;
