@@ -1,0 +1,592 @@
+{
+  "unit": "g1s1u3",
+  "title": "덧셈과 뺄셈",
+  "activities": [
+    {
+      "id": "g1s1u3.A1",
+      "title": "구슬 모으기·가르기",
+      "tasks": [
+        {
+          "id": "g1s1u3.A1.T1",
+          "prompt": "두 접시를 모아요. 모두 몇 개인가요?",
+          "engine": "E02",
+          "mode": "part-whole",
+          "cpa": "C",
+          "config": {
+            "mode": "part-whole",
+            "groups": [3, 2],
+            "parts": 2,
+            "gesture": ["pinch", "drag", "divider-button"],
+            "showBond": "structure",
+            "icon": "apple"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "platesAre", "args": { "values": [5, 0] } },
+              { "kind": "equals", "path": "response.n.value", "value": "5" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-COUNT-ONE-TO-ONE" },
+              "level": 1,
+              "say": "하나씩 손으로 짚어 볼까?"
+            },
+            {
+              "when": { "misconception": "MC-COUNT-ONE-TO-ONE" },
+              "level": 2,
+              "say": "번호가 붙은 셈돌을 다시 세어 볼까?",
+              "show": { "engine": "E02", "overlay": "count-ones" }
+            },
+            {
+              "when": { "misconception": "MC-COUNT-ONE-TO-ONE" },
+              "level": 3,
+              "backtrack": "g1s1u1.one-to-one"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 1,
+              "say": "큰 수는 이미 알고 있지? 거기서부터 세어 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 2,
+              "say": "접시마다 몇 개인지 나무에 그려 봤어요. 다시 세어 볼까?",
+              "show": { "engine": "E02", "overlay": "bond-tree" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 3,
+              "backtrack": "g1s1u3.compose-decompose"
+            }
+          ],
+          "concepts": ["g1s1u3.compose-decompose"],
+          "submit": "button",
+          "diagnose": [
+            { "code": "MC-COUNT-ONE-TO-ONE", "args": { "total": "5" }, "path": "response.n.value" }
+          ],
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "n", "label": "모두 몇 개", "forms": ["integer"] }
+            ]
+          }
+        },
+        {
+          "id": "g1s1u3.A1.T2",
+          "prompt": "사탕 6개를 두 접시에 나눠 담아요.",
+          "engine": "E02",
+          "mode": "part-whole",
+          "cpa": "C",
+          "config": {
+            "mode": "part-whole",
+            "total": 6,
+            "parts": 2,
+            "gesture": ["pinch", "drag", "divider-button"],
+            "showBond": "structure",
+            "icon": "candy"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "totalIs", "args": { "value": 6 } },
+              { "kind": "predicate", "name": "allPlatesAtLeast", "args": { "min": 1 } }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 1,
+              "say": "두 접시에 모두 사탕이 있나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 2,
+              "say": "접시마다 몇 개인지 나무에 그려 봤어요. 다시 세어 볼까?",
+              "show": { "engine": "E02", "overlay": "bond-tree" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 3,
+              "backtrack": "g1s1u3.compose-decompose"
+            }
+          ],
+          "concepts": ["g1s1u3.compose-decompose"],
+          "submit": "button"
+        },
+        {
+          "id": "g1s1u3.A1.T3",
+          "prompt": "6개를 다르게 나누는 방법 3가지를 찾아 기록해요.",
+          "engine": "E02",
+          "mode": "part-whole",
+          "cpa": "C",
+          "config": {
+            "mode": "part-whole",
+            "total": 6,
+            "parts": 2,
+            "gesture": ["pinch", "drag", "divider-button"],
+            "showBond": "structure",
+            "icon": "candy"
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "distinctSplitsAtLeast",
+            "args": { "count": 3, "total": 6 }
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 1,
+              "say": "한 접시에서 하나를 옮기면 어떻게 달라질까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 2,
+              "say": "접시마다 몇 개인지 나무에 그려 봤어요. 다시 세어 볼까?",
+              "show": { "engine": "E02", "overlay": "bond-tree" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 3,
+              "backtrack": "g1s1u3.compose-decompose"
+            }
+          ],
+          "concepts": ["g1s1u3.compose-decompose"],
+          "submit": "button"
+        },
+        {
+          "id": "g1s1u3.A1.T4",
+          "prompt": "8은 5와 몇으로 가를 수 있나요?",
+          "engine": "E02",
+          "mode": "part-whole",
+          "cpa": "P",
+          "config": {
+            "mode": "part-whole",
+            "groups": [5, 3],
+            "parts": 2,
+            "gesture": ["pinch", "drag", "divider-button"],
+            "showBond": "structure",
+            "icon": "dot"
+          },
+          "goal": { "kind": "equals", "path": "response.n.value", "value": "3" },
+          "hints": [
+            {
+              "when": { "misconception": "MC-EQUAL-ANSWER" },
+              "level": 1,
+              "say": "모두 8개야. 5개를 빼면 몇 개가 남을까?"
+            },
+            {
+              "when": { "misconception": "MC-EQUAL-ANSWER" },
+              "level": 2,
+              "say": "가르기 나무에서 8이 5와 무엇으로 나뉘는지 볼까?",
+              "show": { "engine": "E02", "overlay": "bond-tree" }
+            },
+            {
+              "when": { "misconception": "MC-EQUAL-ANSWER" },
+              "level": 3,
+              "backtrack": "g1s1u3.compose-decompose"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 1,
+              "say": "가르기 나무를 보며 다시 생각해 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 2,
+              "say": "가르기 나무에서 8이 5와 무엇으로 나뉘는지 볼까?",
+              "show": { "engine": "E02", "overlay": "bond-tree" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 3,
+              "backtrack": "g1s1u3.compose-decompose"
+            }
+          ],
+          "concepts": ["g1s1u3.compose-decompose"],
+          "submit": "button",
+          "diagnose": [
+            { "code": "MC-EQUAL-ANSWER", "args": { "a": "5", "b": "8" }, "path": "response.n.value" }
+          ],
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "n", "label": "남는 수", "forms": ["integer"] }
+            ]
+          }
+        },
+        {
+          "id": "g1s1u3.A1.T5",
+          "prompt": "9 = 4 + □ 에서 □는 얼마인가요?",
+          "engine": "E02",
+          "mode": "part-whole",
+          "cpa": "A",
+          "config": {
+            "mode": "part-whole",
+            "groups": [5, 3],
+            "parts": 2,
+            "gesture": ["pinch", "drag", "divider-button"],
+            "showBond": "structure",
+            "icon": "dot"
+          },
+          "goal": { "kind": "equals", "path": "response.n.value", "value": "5" },
+          "hints": [
+            {
+              "when": { "misconception": "MC-EQUAL-ANSWER" },
+              "level": 1,
+              "say": "양쪽이 같아야 해. 왼쪽은 몇이야?"
+            },
+            {
+              "when": { "misconception": "MC-EQUAL-ANSWER" },
+              "level": 2,
+              "say": "4와 어떤 수를 모으면 9가 되는지 다시 생각해 볼까?"
+            },
+            {
+              "when": { "misconception": "MC-EQUAL-ANSWER" },
+              "level": 3,
+              "backtrack": "g1s1u3.compose-decompose"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 1,
+              "say": "4에서 몇을 더하면 9가 될까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 2,
+              "say": "4에서 9까지 하나씩 세어 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 3,
+              "backtrack": "g1s1u3.compose-decompose"
+            }
+          ],
+          "concepts": ["g1s1u3.compose-decompose"],
+          "submit": "button",
+          "showEngine": false,
+          "diagnose": [
+            { "code": "MC-EQUAL-ANSWER", "args": { "a": "4", "b": "9" }, "path": "response.n.value" }
+          ],
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "n", "label": "□", "forms": ["integer"] }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "g1s1u3.A2",
+      "title": "그림 이야기 극장",
+      "tasks": [
+        {
+          "id": "g1s1u3.A2.T1",
+          "prompt": "새가 모였어요. 셈돌로 만들고 덧셈식을 써요.",
+          "engine": "E02",
+          "mode": "part-whole",
+          "cpa": "C",
+          "config": {
+            "mode": "part-whole",
+            "groups": [3, 2],
+            "parts": 2,
+            "gesture": ["pinch", "drag", "divider-button"],
+            "showBond": "structure",
+            "icon": "bird",
+            "scene": { "icon": "bird", "kind": "join", "numbers": [3, 2] }
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "platesAre", "args": { "values": [5, 0] } },
+              { "kind": "equals", "path": "response.x.value", "value": "3" },
+              { "kind": "equals", "path": "response.y.value", "value": "2" },
+              { "kind": "equals", "path": "response.z.value", "value": "5" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 1,
+              "say": "처음에 몇 마리였고, 몇 마리가 왔나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 2,
+              "say": "장면을 다시 보며 셈돌을 옮겨 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 3,
+              "backtrack": "g1s1u3.addition-meaning"
+            }
+          ],
+          "concepts": ["g1s1u3.addition-meaning"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "x", "label": "첫째 수", "forms": ["integer"] },
+              { "kind": "number", "id": "y", "label": "둘째 수", "forms": ["integer"] },
+              { "kind": "number", "id": "z", "label": "답", "forms": ["integer"] }
+            ]
+          }
+        },
+        {
+          "id": "g1s1u3.A2.T2",
+          "prompt": "풍선 2개가 터졌어요. 터진 풍선을 옆 접시로 옮기고 뺄셈식을 써요.",
+          "engine": "E02",
+          "mode": "part-whole",
+          "cpa": "C",
+          "config": {
+            "mode": "part-whole",
+            "groups": [7, 0],
+            "parts": 2,
+            "gesture": ["pinch", "drag", "divider-button"],
+            "showBond": "structure",
+            "icon": "balloon",
+            "scene": { "icon": "balloon", "kind": "remove", "numbers": [7, 2] }
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "platesAre",
+                "args": { "values": [5, 2], "ordered": true }
+              },
+              { "kind": "equals", "path": "response.x.value", "value": "7" },
+              { "kind": "equals", "path": "response.y.value", "value": "2" },
+              { "kind": "equals", "path": "response.z.value", "value": "5" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-SUB-DIRECTION" },
+              "level": 1,
+              "say": "터진 뒤 남은 풍선은 몇 개?"
+            },
+            {
+              "when": { "misconception": "MC-SUB-DIRECTION" },
+              "level": 2,
+              "say": "터진 풍선 접시는 빼고, 남은 접시만 세어 볼까?"
+            },
+            {
+              "when": { "misconception": "MC-SUB-DIRECTION" },
+              "level": 3,
+              "backtrack": "g1s1u3.compose-decompose"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 1,
+              "say": "처음 풍선은 몇 개였나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 2,
+              "say": "풍선이 터지는 장면을 다시 보며 셈돌을 옮겨 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 3,
+              "backtrack": "g1s1u3.subtraction-meaning"
+            }
+          ],
+          "concepts": ["g1s1u3.subtraction-meaning"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-SUB-DIRECTION",
+              "args": { "a": "7", "b": "2" },
+              "path": "response.z.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "x", "label": "첫째 수", "forms": ["integer"] },
+              { "kind": "number", "id": "y", "label": "둘째 수", "forms": ["integer"] },
+              { "kind": "number", "id": "z", "label": "답", "forms": ["integer"] }
+            ]
+          }
+        },
+        {
+          "id": "g1s1u3.A2.T3",
+          "prompt": "사탕을 하나씩 짝지어요. 몇 개 더 많은가요?",
+          "engine": "E02",
+          "mode": "part-whole",
+          "cpa": "C",
+          "config": {
+            "mode": "part-whole",
+            "parts": 2,
+            "gesture": ["pinch", "drag", "divider-button"],
+            "showBond": "structure",
+            "icon": "candy",
+            "scene": { "icon": "candy", "kind": "compare", "numbers": [5, 3] }
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "unpairedIs", "args": { "value": 2 } },
+              { "kind": "equals", "path": "pairs", "value": 3 },
+              { "kind": "equals", "path": "response.n.value", "value": "2" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-SUB-DIRECTION" },
+              "level": 1,
+              "say": "짝이 없는 사탕은 몇 개?"
+            },
+            {
+              "when": { "misconception": "MC-SUB-DIRECTION" },
+              "level": 2,
+              "say": "짝이 없는 사탕만 세어 볼까?",
+              "show": { "engine": "E02", "overlay": "pair-lines" }
+            },
+            {
+              "when": { "misconception": "MC-SUB-DIRECTION" },
+              "level": 3,
+              "backtrack": "g1s1u3.subtraction-meaning"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 1,
+              "say": "하나씩 짝지어 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 2,
+              "say": "짝이 없는 사탕만 세어 볼까?",
+              "show": { "engine": "E02", "overlay": "pair-lines" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 3,
+              "backtrack": "g1s1u3.subtraction-meaning"
+            }
+          ],
+          "concepts": ["g1s1u3.subtraction-meaning"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-SUB-DIRECTION",
+              "args": { "a": "5", "b": "3" },
+              "path": "response.n.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "n", "label": "더 많은 수", "forms": ["integer"] }
+            ]
+          }
+        },
+        {
+          "id": "g1s1u3.A2.T4",
+          "prompt": "사과 4개에 0개를 더하면 몇 개인가요?",
+          "engine": "E02",
+          "mode": "part-whole",
+          "cpa": "C",
+          "config": {
+            "mode": "part-whole",
+            "groups": [4, 0],
+            "parts": 2,
+            "gesture": ["pinch", "drag", "divider-button"],
+            "showBond": "structure",
+            "icon": "apple",
+            "scene": { "icon": "apple", "kind": "join", "numbers": [4, 0] }
+          },
+          "goal": { "kind": "equals", "path": "response.n.value", "value": "4" },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 1,
+              "say": "빈 접시에는 몇 개가 있나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 2,
+              "say": "4개에 0개를 더하면 그대로예요. 다시 세어 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 3,
+              "backtrack": "g1s1u3.zero-in-ops"
+            }
+          ],
+          "concepts": ["g1s1u3.zero-in-ops"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "n", "label": "모두 몇 개", "forms": ["integer"] }
+            ]
+          }
+        },
+        {
+          "id": "g1s1u3.A2.T5",
+          "prompt": "5 − 3 = 2에 맞는 이야기를 골라요.",
+          "engine": "E02",
+          "mode": "part-whole",
+          "cpa": "A",
+          "config": {
+            "mode": "part-whole",
+            "groups": [7, 0],
+            "parts": 2,
+            "gesture": ["pinch", "drag", "divider-button"],
+            "showBond": "structure",
+            "icon": "balloon",
+            "scene": { "icon": "balloon", "kind": "remove", "numbers": [7, 2] }
+          },
+          "goal": { "kind": "equals", "path": "response.story.selected", "value": ["fly"] },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "response.story.selected", "value": ["more"] },
+              "level": 1,
+              "say": "빼기는 없어지거나 줄어드는 이야기예요. 어느 이야기가 그럴까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.story.selected", "value": ["more"] },
+              "level": 2,
+              "say": "더 오는 이야기는 빼기가 아니에요. 날아가는 이야기를 다시 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.story.selected", "value": ["more"] },
+              "level": 3,
+              "backtrack": "g1s1u3.subtraction-meaning"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 1,
+              "say": "빼기는 어떤 일이 생긴 이야기일까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 2,
+              "say": "새가 날아가는 이야기와 더 오는 이야기를 다시 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 3,
+              "backtrack": "g1s1u3.subtraction-meaning"
+            }
+          ],
+          "concepts": ["g1s1u3.subtraction-meaning"],
+          "submit": "button",
+          "showEngine": false,
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "story",
+                "label": "이야기",
+                "multiple": false,
+                "options": [
+                  { "id": "fly", "label": "새 5마리 중 3마리가 날아갔어요" },
+                  { "id": "join", "label": "새 3마리와 2마리가 모였어요" },
+                  { "id": "more", "label": "새 5마리에 3마리가 더 왔어요" }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
