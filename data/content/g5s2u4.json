@@ -1,0 +1,687 @@
+{
+  "unit": "g5s2u4",
+  "title": "소수의 곱셈",
+  "activities": [
+    {
+      "id": "g5s2u4.A1",
+      "title": "1×1 정사각형 안의 소수 곱셈",
+      "tasks": [
+        {
+          "id": "g5s2u4.A1.T1",
+          "prompt": "가로를 4, 세로를 0.3으로 맞춘 뒤, 겹쳐서 진하게 칠해진 넓이를 소수로 써 보세요.",
+          "engine": "E04",
+          "mode": "decimal-area",
+          "cpa": "C",
+          "config": {
+            "mode": "decimal-area",
+            "maxA": "4",
+            "maxB": "1",
+            "grid": 10,
+            "locked": false,
+            "showUnitLabel": true,
+            "showCounts": false,
+            "a": "0",
+            "b": "0"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "a", "value": "4" },
+              { "kind": "equals", "path": "b", "value": "0.3" },
+              { "kind": "equals", "path": "response.ans.value", "value": "6/5" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-DEC-POINT-PLACEMENT" },
+              "level": 1,
+              "say": "가로 4와 세로 0.3을 곱한 넓이가 1보다 클까요, 작을까요? 어림한 크기와 쓴 답을 견주어 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal-area" },
+              "level": 1,
+              "say": "가로와 세로를 맞춘 뒤, 겹쳐서 진하게 칠해진 칸을 세어 보세요. 한 칸은 얼마인가요?"
+            },
+            {
+              "when": { "misconception": "MC-DEC-POINT-PLACEMENT" },
+              "level": 2,
+              "show": { "engine": "E04", "overlay": "overlap-count" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal-area" },
+              "level": 2,
+              "show": { "engine": "E04", "overlay": "overlap-count" }
+            },
+            {
+              "when": { "misconception": "MC-DEC-POINT-PLACEMENT" },
+              "level": 3,
+              "backtrack": "g5s2u4.decimal-times-whole"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal-area" },
+              "level": 3,
+              "backtrack": "g5s2u4.decimal-times-whole"
+            }
+          ],
+          "concepts": ["g5s2u4.decimal-times-whole"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-DEC-POINT-PLACEMENT",
+              "args": { "expected": "1.2" },
+              "path": "response.ans.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "ans", "label": "겹친 넓이", "forms": ["decimal"] }
+            ]
+          }
+        },
+        {
+          "id": "g5s2u4.A1.T2",
+          "prompt": "가로 0.6, 세로 0.3으로 맞추고 겹친 부분의 넓이를 써 보세요. 먼저 두 넓이의 크기를 비교해 보세요.",
+          "engine": "E04",
+          "mode": "decimal-area",
+          "cpa": "C",
+          "config": {
+            "mode": "decimal-area",
+            "maxA": "1",
+            "maxB": "1",
+            "grid": 10,
+            "locked": false,
+            "showUnitLabel": true,
+            "showCounts": false,
+            "a": "0",
+            "b": "0"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "a", "value": "0.6" },
+              { "kind": "equals", "path": "b", "value": "0.3" },
+              { "kind": "predicate", "name": "overlapCellsIs", "args": { "value": 18 } },
+              { "kind": "equals", "path": "response.cmp.symbol", "value": "<" },
+              { "kind": "equals", "path": "response.ans.value", "value": "9/50" }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  { "kind": "equals", "path": "response.cmp.symbol", "value": ">" },
+                  { "kind": "equals", "path": "response.cmp.symbol", "value": "=" }
+                ]
+              },
+              "level": 1,
+              "say": "0.6의 0.3만큼이면 0.6 전체보다 클까요, 작을까요?"
+            },
+            {
+              "when": { "misconception": "MC-DEC-POINT-PLACEMENT" },
+              "level": 1,
+              "say": "가로 0.6과 세로 0.3이 겹친 넓이가 0.1보다 클까요, 작을까요? 겹친 칸 수와 쓴 답을 견주어 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal-area" },
+              "level": 1,
+              "say": "가로 0.6, 세로 0.3이 겹친 칸은 모두 몇 칸인가요? 한 칸의 크기는 얼마인가요?"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  { "kind": "equals", "path": "response.cmp.symbol", "value": ">" },
+                  { "kind": "equals", "path": "response.cmp.symbol", "value": "=" }
+                ]
+              },
+              "level": 2,
+              "show": { "engine": "E04", "overlay": "overlap-count" }
+            },
+            {
+              "when": { "misconception": "MC-DEC-POINT-PLACEMENT" },
+              "level": 2,
+              "show": { "engine": "E04", "overlay": "overlap-count" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal-area" },
+              "level": 2,
+              "show": { "engine": "E04", "overlay": "overlap-count" }
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  { "kind": "equals", "path": "response.cmp.symbol", "value": ">" },
+                  { "kind": "equals", "path": "response.cmp.symbol", "value": "=" }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g5s2u2.scaling-smaller"
+            },
+            {
+              "when": { "misconception": "MC-DEC-POINT-PLACEMENT" },
+              "level": 3,
+              "backtrack": "g5s2u4.decimal-times-decimal"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal-area" },
+              "level": 3,
+              "backtrack": "g5s2u4.decimal-times-decimal"
+            }
+          ],
+          "concepts": ["g5s2u4.decimal-times-decimal", "g5s2u2.scaling-smaller"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-DEC-POINT-PLACEMENT",
+              "args": { "expected": "0.18" },
+              "path": "response.ans.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "compare",
+                "id": "cmp",
+                "label": "먼저 크기를 비교해 보세요",
+                "left": "0.6 × 0.3",
+                "right": "0.6"
+              },
+              { "kind": "number", "id": "ans", "label": "겹친 넓이", "forms": ["decimal"] }
+            ]
+          }
+        },
+        {
+          "id": "g5s2u4.A1.T3",
+          "prompt": "그림을 보고 1.2 × 0.4를 소수로 써 보세요.",
+          "engine": "E04",
+          "mode": "decimal-area",
+          "cpa": "P",
+          "config": {
+            "mode": "decimal-area",
+            "maxA": "2",
+            "maxB": "1",
+            "grid": 10,
+            "locked": true,
+            "showUnitLabel": true,
+            "showCounts": false,
+            "a": "1.2",
+            "b": "0.4"
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.ans.value",
+            "value": "12/25"
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-DEC-POINT-PLACEMENT" },
+              "level": 1,
+              "say": "1.2의 0.4만큼이면 1.2보다 클까요, 작을까요? 겹친 칸을 세어 어림해 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal-area" },
+              "level": 1,
+              "say": "그림에서 가로 1.2와 세로 0.4가 겹친 부분을 찾아보세요. 1.2는 1과 0.2로 나눌 수 있나요?"
+            },
+            {
+              "when": { "misconception": "MC-DEC-POINT-PLACEMENT" },
+              "level": 2,
+              "show": { "engine": "E04", "overlay": "overlap-count" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal-area" },
+              "level": 2,
+              "show": { "engine": "E04", "overlay": "overlap-count" }
+            },
+            {
+              "when": { "misconception": "MC-DEC-POINT-PLACEMENT" },
+              "level": 3,
+              "backtrack": "g5s2u4.decimal-times-decimal"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal-area" },
+              "level": 3,
+              "backtrack": "g5s2u4.decimal-times-decimal"
+            }
+          ],
+          "concepts": ["g5s2u4.decimal-times-decimal"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-DEC-POINT-PLACEMENT",
+              "args": { "expected": "0.48" },
+              "path": "response.ans.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "ans", "label": "겹친 넓이", "forms": ["decimal"] }
+            ]
+          }
+        },
+        {
+          "id": "g5s2u4.A1.T4",
+          "prompt": "0.5 × 0.5와 0.5의 크기를 비교하고, 그렇게 생각한 까닭을 골라 보세요.",
+          "engine": "E04",
+          "mode": "decimal-area",
+          "cpa": "A",
+          "config": {
+            "mode": "decimal-area",
+            "maxA": "1",
+            "maxB": "1",
+            "grid": 10,
+            "locked": true,
+            "showUnitLabel": false,
+            "showCounts": false,
+            "a": "0.5",
+            "b": "0.5"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "response.cmp.symbol", "value": "<" },
+              { "kind": "equals", "path": "response.why.selected", "value": ["half"] }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  { "kind": "equals", "path": "response.cmp.symbol", "value": ">" },
+                  { "kind": "equals", "path": "response.cmp.symbol", "value": "=" },
+                  { "kind": "equals", "path": "response.why.selected", "value": ["bigger"] }
+                ]
+              },
+              "level": 1,
+              "say": "0.5의 절반만큼을 구하는 셈이에요. 0.5를 반으로 나눈 크기와 0.5를 견주어 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal-area" },
+              "level": 1,
+              "say": "0.5를 똑같이 반으로 나누면 한 부분은 0.5보다 클까요, 작을까요?"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  { "kind": "equals", "path": "response.cmp.symbol", "value": ">" },
+                  { "kind": "equals", "path": "response.cmp.symbol", "value": "=" },
+                  { "kind": "equals", "path": "response.why.selected", "value": ["bigger"] }
+                ]
+              },
+              "level": 2,
+              "say": "넓이 모델에서 0.5의 0.5만큼이 차지하는 부분이 0.5 전체보다 큰지 작은지 떠올려 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal-area" },
+              "level": 2,
+              "say": "0.5 × 0.5는 0.5를 몇 번 더한 것과 같나요? 0.5의 절반은 얼마인가요?"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  { "kind": "equals", "path": "response.cmp.symbol", "value": ">" },
+                  { "kind": "equals", "path": "response.cmp.symbol", "value": "=" },
+                  { "kind": "equals", "path": "response.why.selected", "value": ["bigger"] }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g5s2u2.scaling-smaller"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal-area" },
+              "level": 3,
+              "backtrack": "g5s2u4.decimal-times-decimal"
+            }
+          ],
+          "concepts": ["g5s2u4.decimal-times-decimal"],
+          "submit": "button",
+          "showEngine": false,
+          "response": {
+            "fields": [
+              {
+                "kind": "compare",
+                "id": "cmp",
+                "left": "0.5 × 0.5",
+                "right": "0.5"
+              },
+              {
+                "kind": "choice",
+                "id": "why",
+                "label": "그렇게 생각한 까닭",
+                "multiple": false,
+                "options": [
+                  { "id": "half", "label": "0.5의 절반만큼을 구하는 셈이라서" },
+                  { "id": "bigger", "label": "곱하면 수가 커지니까" },
+                  { "id": "digits", "label": "소수점 아래 숫자가 많아져서" }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "g5s2u4.A2",
+      "title": "소수점 기둥 시프트와 어림 검증",
+      "tasks": [
+        {
+          "id": "g5s2u4.A2.T1",
+          "prompt": "버튼을 누르기 전에 먼저 써 보세요. 3.75 × 10과 3.75 × 0.1은 얼마일까요? 쓴 다음 버튼으로 확인해 보세요.",
+          "engine": "E07",
+          "mode": "decimal",
+          "cpa": "P",
+          "config": {
+            "mode": "decimal",
+            "op": "mul",
+            "a": "3.75",
+            "b": "10",
+            "shiftDemo": { "value": "3.75", "ops": ["×10", "×0.1"], "hideGrid": true }
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "response.x10.value", "value": "75/2" },
+              { "kind": "equals", "path": "response.x01.value", "value": "3/8" },
+              { "kind": "predicate", "name": "shiftUsed", "args": { "op": "×10" } },
+              { "kind": "predicate", "name": "shiftUsed", "args": { "op": "×0.1" } }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-DEC-SHIFT-POINT-MOVES" },
+              "level": 1,
+              "say": "×10이면 크기가 10배가 되었을까요? 숫자 카드가 어느 쪽으로 움직이는지 살펴보세요."
+            },
+            {
+              "when": { "misconception": "MC-DEC-POINT-PLACEMENT" },
+              "level": 1,
+              "say": "3.75의 10배라면 대략 얼마쯤이어야 할까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal" },
+              "level": 1,
+              "say": "먼저 두 결과를 어림해 보세요. 3.75를 10배 하면 3.75보다 커지나요, 작아지나요?"
+            },
+            {
+              "when": { "misconception": "MC-DEC-SHIFT-POINT-MOVES" },
+              "level": 2,
+              "say": "버튼을 누르고 숫자 카드가 어느 쪽으로 움직이는지 보세요."
+            },
+            {
+              "when": { "misconception": "MC-DEC-POINT-PLACEMENT" },
+              "level": 2,
+              "say": "3.75의 10배는 3.75보다 큰 수예요. 10분의 1배는 3.75보다 작은 수예요. 소수점이 어디로 가야 할지 생각해 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal" },
+              "level": 2,
+              "say": "버튼을 눌러 숫자 카드가 기둥 사이를 어떻게 옮겨 가는지 보고, 쓴 답과 견주어 보세요."
+            },
+            {
+              "when": { "misconception": "MC-DEC-SHIFT-POINT-MOVES" },
+              "level": 3,
+              "backtrack": "g4s2u3"
+            },
+            {
+              "when": { "misconception": "MC-DEC-POINT-PLACEMENT" },
+              "level": 3,
+              "backtrack": "g5s2u4.place-shift"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal" },
+              "level": 3,
+              "backtrack": "g5s2u4.place-shift"
+            }
+          ],
+          "concepts": ["g5s2u4.place-shift"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-DEC-SHIFT-POINT-MOVES",
+              "args": { "original": "3.75", "expected": "37.5" },
+              "path": "response.x10.value"
+            },
+            {
+              "code": "MC-DEC-POINT-PLACEMENT",
+              "args": { "expected": "37.5" },
+              "path": "response.x10.value"
+            },
+            {
+              "code": "MC-DEC-SHIFT-POINT-MOVES",
+              "args": { "original": "3.75", "expected": "0.375" },
+              "path": "response.x01.value"
+            },
+            {
+              "code": "MC-DEC-POINT-PLACEMENT",
+              "args": { "expected": "0.375" },
+              "path": "response.x01.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "x10", "label": "3.75 × 10", "forms": ["decimal"] },
+              { "kind": "number", "id": "x01", "label": "3.75 × 0.1", "forms": ["decimal"] }
+            ]
+          }
+        },
+        {
+          "id": "g5s2u4.A2.T2",
+          "prompt": "먼저 어림값을 정하고, 세로셈으로 계산한 뒤 결과에 소수점을 놓아 보세요.",
+          "engine": "E07",
+          "mode": "decimal",
+          "cpa": "P",
+          "config": {
+            "mode": "decimal",
+            "op": "mul",
+            "a": "2.4",
+            "b": "1.3",
+            "requireEstimate": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "resultIs", "args": { "value": "3.12" } },
+              { "kind": "predicate", "name": "complete" },
+              { "kind": "equals", "path": "phase", "value": "calc" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DEC-POINT-PLACEMENT" } },
+              "level": 1,
+              "say": "2와 1쯤의 곱이니까 결과는 대략 얼마쯤이어야 할까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal" },
+              "level": 1,
+              "say": "어림값과 계산한 값의 신호등을 비교해 보세요. 두 수가 맞는지 살펴보세요."
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DEC-POINT-PLACEMENT" } },
+              "level": 2,
+              "show": { "engine": "E07", "overlay": "point-estimate" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal" },
+              "level": 2,
+              "say": "어림값을 다시 확인하고, 결과의 소수점을 어림값에 맞추어 보세요."
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DEC-POINT-PLACEMENT" } },
+              "level": 3,
+              "backtrack": "g5s2u4.place-shift"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal" },
+              "level": 3,
+              "backtrack": "g5s2u4.decimal-point-by-estimate"
+            }
+          ],
+          "concepts": ["g5s2u4.place-shift", "g5s2u4.decimal-point-by-estimate"],
+          "submit": "button"
+        },
+        {
+          "id": "g5s2u4.A2.T3",
+          "prompt": "두 수를 세로셈 자리에 놓고 계산한 뒤 소수점을 놓아 보세요.",
+          "engine": "E07",
+          "mode": "decimal",
+          "cpa": "A",
+          "config": {
+            "mode": "decimal",
+            "op": "mul",
+            "a": "0.25",
+            "b": "0.4",
+            "placeCards": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "resultIs", "args": { "value": "0.1" } },
+              { "kind": "predicate", "name": "complete" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DEC-MULT-ALIGN-POINT" } },
+              "level": 1,
+              "say": "곱셈에서는 자연수처럼 계산한 다음 무엇으로 소수점을 정했지?"
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DEC-POINT-PLACEMENT" } },
+              "level": 1,
+              "say": "0.25의 0.4만큼이면 0.25보다 클까요, 작을까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal" },
+              "level": 1,
+              "say": "두 수의 오른쪽 끝 숫자를 맞추었나요? 소수점을 빼고 자연수처럼 계산해 보세요."
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DEC-MULT-ALIGN-POINT" } },
+              "level": 2,
+              "show": { "engine": "E07", "overlay": "align-compare" }
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DEC-POINT-PLACEMENT" } },
+              "level": 2,
+              "show": { "engine": "E07", "overlay": "point-estimate" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal" },
+              "level": 2,
+              "show": { "engine": "E07", "overlay": "align-compare" }
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DEC-MULT-ALIGN-POINT" } },
+              "level": 3,
+              "backtrack": "g5s2u4.decimal-point-by-estimate"
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DEC-POINT-PLACEMENT" } },
+              "level": 3,
+              "backtrack": "g5s2u4.place-shift"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal" },
+              "level": 3,
+              "backtrack": "g5s2u4.decimal-point-by-estimate"
+            }
+          ],
+          "concepts": ["g5s2u4.decimal-point-by-estimate", "g5s2u4.place-shift"],
+          "submit": "button"
+        },
+        {
+          "id": "g5s2u4.A2.T4",
+          "prompt": "2.4 × 1.3을 어림해 보고, 계산 결과로 알맞은 것을 골라 보세요.",
+          "engine": "E07",
+          "mode": "decimal",
+          "cpa": "A",
+          "config": {
+            "mode": "decimal",
+            "op": "mul",
+            "a": "2.4",
+            "b": "1.3"
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.pick.selected",
+            "value": ["b"]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  { "kind": "equals", "path": "response.pick.selected", "value": ["a"] },
+                  { "kind": "equals", "path": "response.pick.selected", "value": ["c"] }
+                ]
+              },
+              "level": 1,
+              "say": "2와 1쯤의 곱이니까 결과는 대략 얼마쯤이어야 할까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal" },
+              "level": 1,
+              "say": "2.4 × 1.3을 2 × 1로 어림하면 얼마쯤인가요? 세 수 중 어림값에 가장 가까운 것을 고르세요."
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  { "kind": "equals", "path": "response.pick.selected", "value": ["a"] },
+                  { "kind": "equals", "path": "response.pick.selected", "value": ["c"] }
+                ]
+              },
+              "level": 2,
+              "say": "2.4는 약 2, 1.3은 약 1이에요. 어림한 곱과 세 선택지를 견주어 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal" },
+              "level": 2,
+              "say": "곱한 결과의 소수 자리 수를 세어 보고, 어림값과 같은 크기가 되는지 확인해 보세요."
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  { "kind": "equals", "path": "response.pick.selected", "value": ["a"] },
+                  { "kind": "equals", "path": "response.pick.selected", "value": ["c"] }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g5s2u4.decimal-point-by-estimate"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "decimal" },
+              "level": 3,
+              "backtrack": "g5s2u4.decimal-point-by-estimate"
+            }
+          ],
+          "concepts": ["g5s2u4.decimal-point-by-estimate"],
+          "submit": "button",
+          "showEngine": false,
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "pick",
+                "label": "계산 결과로 알맞은 것",
+                "multiple": false,
+                "options": [
+                  { "id": "a", "label": "31.2" },
+                  { "id": "b", "label": "3.12" },
+                  { "id": "c", "label": "0.312" }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
