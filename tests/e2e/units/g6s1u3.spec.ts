@@ -110,8 +110,10 @@ function grid(page: Page): Locator {
   return engine(page).getByTestId('column-grid');
 }
 
-function gridCell(page: Page, row: string, column: number): Locator {
-  return grid(page).locator(`[data-row="${row}"][data-column="${column}"]`);
+function gridCell(page: Page, row: string, column: number, index?: number): Locator {
+  const base = `[data-row="${row}"][data-column="${column}"]`;
+  const selector = index === undefined ? base : `${base}[data-index="${index}"]`;
+  return grid(page).locator(selector);
 }
 
 /** 격자에 초점을 두고 숫자를 차례로 친다(엔진이 다음 칸으로 넘겨 준다). */
@@ -171,10 +173,17 @@ test('A2 몫의 0을 찾는 소크라테스 코치 — 대표 오답 뒤 고쳐�
   await openActivity(page, 'g6s1u3.A2', '몫의 0을 찾는 소크라테스 코치');
   await screenshot(page, 'g6s1u3-a2.png');
 
-  // T1 — 아무것도 쓰지 않고 확인해 일반 힌트 ①을 본 뒤 2.04를 완성한다.
+  // T1 — 몫 열 -1을 비워 둔 2.4로 확인해 QUOTIENT-ZERO 힌트 ①을 본 뒤 0을 채워 2.04로 고친다.
+  await typeGrid(page, '280');
+  await gridCell(page, 'quotient', -2).click();
+  await typeGrid(page, '4');
+  await typeGrid(page, '16');
+  await gridCell(page, 'div-product', -2, -2).click();
+  await typeGrid(page, '6100');
   await submit(page);
-  await expectFailedWithHint(page, '몫의 첫 자리는 나누어지는 수의 어느 자리에서 시작할까요?');
-  await typeGrid(page, '28001646100');
+  await expectFailedWithHint(page, '그 자리에서는 한 접시에 몇 개씩 갈까요?');
+  await gridCell(page, 'quotient', -1).click();
+  await typeGrid(page, '0');
   await placePoint(page, 0);
   await submit(page);
   await expectPassed(page);
