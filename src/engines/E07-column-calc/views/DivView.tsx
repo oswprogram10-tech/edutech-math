@@ -15,6 +15,7 @@ import type { EngineViewProps } from '../../../core/engine-sdk';
 import { computeDivPlan, divAlarm, divComplete, estimateOver, estimatePartial } from '../grid-div';
 import type { DivPlan } from '../grid-div';
 import { divGridNumbers, firstQuotientColumn, gridDividendDigit } from '../grid-div-decimal';
+import { isForeignKeyTarget, isTextEntryTarget } from '../keyboard';
 import { columnCalcStrings as S } from '../strings.ko';
 import { placeNameKo } from '../types';
 import type {
@@ -93,6 +94,7 @@ export function DivView({
 }: DivViewProps) {
   const numbers = useMemo(() => divGridNumbers(state), [state]);
   const plan = useMemo(() => computeDivPlan(state), [state]);
+  const rootRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
 
   const top = numbers.top;
@@ -240,17 +242,10 @@ export function DivView({
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (readOnly) return;
-      const target = event.target;
-      if (
-        target instanceof HTMLElement &&
-        (target.tagName === 'INPUT' ||
-          target.tagName === 'TEXTAREA' ||
-          target.tagName === 'SELECT' ||
-          target.isContentEditable)
-      ) {
+      if (isTextEntryTarget(event.target) || isForeignKeyTarget(event.target, rootRef.current)) {
         return;
       }
+      if (readOnly) return;
       if (event.ctrlKey || event.metaKey || event.altKey) return;
 
       // 격자에 초점이 있을 때만 0 붙이기/떼기 키를 가로챈다(실행기 확대·축소와 겹치지 않게).
@@ -312,6 +307,12 @@ export function DivView({
   const alarm = divAlarm(state, plan, state.alarmEnabled);
   const complete = divComplete(state, plan);
   const showScalePanel = state.decimal && numbers.b.fracDigits > 0;
+  const dividendText = `${numbers.G.text}${'0'.repeat(numbers.appended)}`;
+  const pointMarker = (
+    <span className={styles.pointDot} data-point-mark="true" aria-hidden="true">
+      .
+    </span>
+  );
 
   function cellLabel(cell: CellRef): string {
     if (cell.row === 'quotient') return S.quotientCell(placeNameKo(cell.column));
@@ -327,7 +328,7 @@ export function DivView({
   const keypadLabel = S.selectedCell(cellLabel(keypadTarget));
 
   return (
-    <div className={styles.wrap} data-target-size={targetSize} data-cpa={cpa}>
+    <div ref={rootRef} className={styles.wrap} data-target-size={targetSize} data-cpa={cpa}>
       {showInstructions ? (
         <p className={styles.instructions}>
           {state.decimal ? S.divDecimalInstruction : S.instructions.div}
@@ -465,6 +466,7 @@ export function DivView({
                     onClick={() => selectAt({ row: 'quotient', column })}
                   >
                     {digit}
+                    {point ? pointMarker : null}
                   </button>
                 );
               })}
@@ -500,15 +502,17 @@ export function DivView({
             ) : null}
 
             <div className={`${styles.row} ${divStyles.dividendRow}`} style={rowsStyle}>
-              <span className={`${styles.rowLabel} ${divStyles.divisorLabel}`}>
+              <span
+                className={`${styles.rowLabel} ${divStyles.divisorLabel}`}
+                aria-label={S.dividendRowLabel(dividendText)}
+              >
                 <span className={divStyles.divisor}>{numbers.g.text}</span>
                 <span aria-hidden="true">)</span>
               </span>
               {renderedColumns.map((column) => {
                 const digit = gridDividendDigit(numbers, column);
                 const appended = state.decimal && numbers.decimal && column < numbers.baseLow;
-                const point =
-                  state.decimal && numbers.decimal && numbers.G.fracDigits > 0 && column === 0;
+                const point = state.decimal && numbers.decimal && numbers.low < 0 && column === 0;
                 return (
                   <span
                     key={column}
@@ -520,6 +524,7 @@ export function DivView({
                     aria-label={appended ? S.appendedZeroCell(placeNameKo(column)) : undefined}
                   >
                     {digit}
+                    {point ? pointMarker : null}
                   </span>
                 );
               })}

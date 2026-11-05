@@ -7,8 +7,9 @@
  *
  * 신호등은 색 + 모양 + 말로만 보이고, 숫자 차이·기대값은 화면에 쓰지 않는다.
  */
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { estimateDigits, estimateSignal } from '../estimate';
+import { isForeignKeyTarget, isTextEntryTarget } from '../keyboard';
 import { columnCalcStrings as S } from '../strings.ko';
 import styles from '../View.module.css';
 import { AddSubView } from './AddSubView';
@@ -18,6 +19,7 @@ import { MulView } from './MulView';
 
 export function EstimateView(props: ColumnViewProps) {
   const { state, dispatch, readOnly = false } = props;
+  const rootRef = useRef<HTMLDivElement>(null);
   const phase = state.phase;
   const digits = state.estimate;
   const signal = estimateSignal(state);
@@ -25,17 +27,10 @@ export function EstimateView(props: ColumnViewProps) {
   useEffect(() => {
     if (phase !== 'estimate') return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (readOnly) return;
-      const target = event.target;
-      if (
-        target instanceof HTMLElement &&
-        (target.tagName === 'INPUT' ||
-          target.tagName === 'TEXTAREA' ||
-          target.tagName === 'SELECT' ||
-          target.isContentEditable)
-      ) {
+      if (isTextEntryTarget(event.target) || isForeignKeyTarget(event.target, rootRef.current)) {
         return;
       }
+      if (readOnly) return;
       if (event.ctrlKey || event.metaKey || event.altKey) return;
       if (/^[0-9]$/.test(event.key)) {
         event.preventDefault();
@@ -50,7 +45,12 @@ export function EstimateView(props: ColumnViewProps) {
   });
 
   return (
-    <div className={styles.wrap} data-target-size={props.targetSize} data-cpa={props.cpa}>
+    <div
+      ref={rootRef}
+      className={styles.wrap}
+      data-target-size={props.targetSize}
+      data-cpa={props.cpa}
+    >
       <p className={styles.instructions}>{S.instructions.estimate}</p>
 
       <div className={styles.estimateBar} role="group" aria-label={S.estimateLabel}>

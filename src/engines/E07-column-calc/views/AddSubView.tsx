@@ -11,6 +11,7 @@ import { useDrag } from '../../../core/engine-sdk';
 import type { EngineViewProps } from '../../../core/engine-sdk';
 import { computeGrid, digitAt } from '../grid';
 import type { ParsedNumber } from '../grid';
+import { isForeignKeyTarget, isTextEntryTarget } from '../keyboard';
 import { columnCalcStrings as S } from '../strings.ko';
 import { linkKey, placeNameKo } from '../types';
 import type {
@@ -77,6 +78,7 @@ export function AddSubView({
   }>({ mode: state.mode, card: null });
   const [dropColumn, setDropColumn] = useState(0);
   const topRowRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   const movedA = useRef(false);
   const movedB = useRef(false);
 
@@ -226,17 +228,10 @@ export function AddSubView({
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (readOnly) return;
-      const target = event.target;
-      if (
-        target instanceof HTMLElement &&
-        (target.tagName === 'INPUT' ||
-          target.tagName === 'TEXTAREA' ||
-          target.tagName === 'SELECT' ||
-          target.isContentEditable)
-      ) {
+      if (isTextEntryTarget(event.target) || isForeignKeyTarget(event.target, rootRef.current)) {
         return;
       }
+      if (readOnly) return;
       if (event.ctrlKey || event.metaKey || event.altKey) return;
 
       if (selectedCard !== null && isDecimal) {
@@ -303,7 +298,7 @@ export function AddSubView({
     state.linkHighlights.includes(linkKey(kind, column));
 
   return (
-    <div className={styles.wrap} data-target-size={targetSize} data-cpa={cpa}>
+    <div ref={rootRef} className={styles.wrap} data-target-size={targetSize} data-cpa={cpa}>
       {showInstructions ? (
         <p className={styles.instructions}>{S.instructions[state.mode]}</p>
       ) : null}
