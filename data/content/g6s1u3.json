@@ -1,0 +1,634 @@
+{
+  "unit": "g6s1u3",
+  "title": "소수의 나눗셈",
+  "activities": [
+    {
+      "id": "g6s1u3.A1",
+      "title": "십진 모형 세분화",
+      "tasks": [
+        {
+          "id": "g6s1u3.A1.T1",
+          "prompt": "6.24를 세 접시에 똑같이 나누어 보세요.",
+          "engine": "E01",
+          "mode": "divide",
+          "cpa": "C",
+          "config": {
+            "mode": "divide",
+            "interpretation": "decimal",
+            "dividend": "6.24",
+            "divisor": 3,
+            "plates": 3
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "platesEqual" },
+              { "kind": "predicate", "name": "plateValueIs", "args": { "value": "2.08" } },
+              { "kind": "predicate", "name": "pileValueIs", "args": { "value": "0" } },
+              { "kind": "predicate", "name": "brokeAtLeast", "args": { "from": 10, "count": 1 } }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "divide" },
+              "level": 1,
+              "say": "막대 2개를 3접시에 나누면 한 접시에 막대가 몇 개씩 가지?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "divide" },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "empty-plate" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "divide" },
+              "level": 3,
+              "backtrack": "g6s1u3.decimal-div-whole-blocks"
+            }
+          ],
+          "concepts": ["g6s1u3.decimal-div-whole-blocks"],
+          "submit": "button"
+        },
+        {
+          "id": "g6s1u3.A1.T2",
+          "prompt": "4.2를 다섯 접시에 똑같이 나누어 보세요.",
+          "engine": "E01",
+          "mode": "divide",
+          "cpa": "C",
+          "config": {
+            "mode": "divide",
+            "interpretation": "decimal",
+            "dividend": "4.2",
+            "divisor": 5,
+            "plates": 5
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "platesEqual" },
+              { "kind": "predicate", "name": "plateValueIs", "args": { "value": "0.84" } },
+              { "kind": "predicate", "name": "pileValueIs", "args": { "value": "0" } },
+              { "kind": "predicate", "name": "brokeAtLeast", "args": { "from": 100, "count": 1 } }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "divide" },
+              "level": 1,
+              "say": "판 4개를 5접시에 똑같이 놓을 수 있을까? 놓을 수 없으면 어떻게 할까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "divide" },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "break-preview" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "divide" },
+              "level": 3,
+              "backtrack": "g6s1u3.decimal-div-whole-blocks"
+            }
+          ],
+          "concepts": ["g6s1u3.decimal-div-whole-blocks"],
+          "submit": "button"
+        },
+        {
+          "id": "g6s1u3.A1.T3",
+          "prompt": "3을 네 접시에 똑같이 나누어 보세요.",
+          "engine": "E01",
+          "mode": "divide",
+          "cpa": "P",
+          "config": {
+            "mode": "divide",
+            "interpretation": "decimal",
+            "dividend": "3",
+            "divisor": 4,
+            "plates": 4
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "platesEqual" },
+              { "kind": "predicate", "name": "plateValueIs", "args": { "value": "0.75" } },
+              { "kind": "predicate", "name": "pileValueIs", "args": { "value": "0" } },
+              { "kind": "predicate", "name": "brokeAtLeast", "args": { "from": 100, "count": 1 } },
+              { "kind": "predicate", "name": "brokeAtLeast", "args": { "from": 10, "count": 1 } }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "divide" },
+              "level": 1,
+              "say": "남은 것을 더 작은 단위로 풀어서 나눌 수 있을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "divide" },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "break-preview" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "divide" },
+              "level": 3,
+              "backtrack": "g6s1u3.extend-with-zero"
+            }
+          ],
+          "concepts": ["g6s1u3.extend-with-zero"],
+          "submit": "button"
+        }
+      ]
+    },
+    {
+      "id": "g6s1u3.A2",
+      "title": "몫의 0을 찾는 소크라테스 코치",
+      "tasks": [
+        {
+          "id": "g6s1u3.A2.T1",
+          "prompt": "8.16 ÷ 4의 몫을 세로셈으로 구해 보세요.",
+          "engine": "E07",
+          "mode": "div",
+          "cpa": "P",
+          "config": {
+            "mode": "div",
+            "decimal": true,
+            "dividend": "8.16",
+            "divisor": 4,
+            "flagSkippedZero": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "quotientIs", "args": { "value": "2.04" } },
+              { "kind": "predicate", "name": "remainderIs", "args": { "value": "0" } },
+              { "kind": "predicate", "name": "quotientCellIs", "args": { "column": -1, "digit": "0" } }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DIV-QUOTIENT-ZERO" } },
+              "level": 1,
+              "say": "그 자리에서는 한 접시에 몇 개씩 갈까요?"
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DIV-NO-EXTEND-ZERO" } },
+              "level": 1,
+              "say": "남은 수를 더 작은 단위로 풀어서 나눌 수 있을까?"
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DEC-POINT-PLACEMENT" } },
+              "level": 1,
+              "say": "8쯤을 4로 나누면 대략 얼마?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "div" },
+              "level": 1,
+              "say": "몫의 첫 자리는 나누어지는 수의 어느 자리에서 시작할까요? 앞자리부터 차례로 나누어 보세요."
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DIV-QUOTIENT-ZERO" } },
+              "level": 2,
+              "show": { "engine": "E07", "overlay": "quotient-gap" }
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DIV-NO-EXTEND-ZERO" } },
+              "level": 2,
+              "show": { "engine": "E07", "overlay": "extend-zero" }
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DEC-POINT-PLACEMENT" } },
+              "level": 2,
+              "show": { "engine": "E07", "overlay": "quotient-check-line" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "div" },
+              "level": 2,
+              "say": "나누어지는 수의 각 자리 숫자를 하나씩 내려 가며 몫을 써 보세요."
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DIV-QUOTIENT-ZERO" } },
+              "level": 3,
+              "backtrack": "g6s1u3.decimal-div-whole-blocks"
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DIV-NO-EXTEND-ZERO" } },
+              "level": 3,
+              "backtrack": "g6s1u3.extend-with-zero"
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DEC-POINT-PLACEMENT" } },
+              "level": 3,
+              "backtrack": "g5s2u4.decimal-point-by-estimate"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "div" },
+              "level": 3,
+              "backtrack": "g6s1u3.quotient-place-value"
+            }
+          ],
+          "concepts": ["g6s1u3.quotient-place-value", "g6s1u3.quotient-zero"],
+          "submit": "button"
+        },
+        {
+          "id": "g6s1u3.A2.T2",
+          "prompt": "9.3 ÷ 6의 몫을 끝까지 구해 보세요.",
+          "engine": "E07",
+          "mode": "div",
+          "cpa": "P",
+          "config": {
+            "mode": "div",
+            "decimal": true,
+            "dividend": "9.3",
+            "divisor": 6,
+            "extendZeros": 2,
+            "flagSkippedZero": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "quotientIs", "args": { "value": "1.55" } },
+              { "kind": "predicate", "name": "remainderIs", "args": { "value": "0" } },
+              {
+                "kind": "any",
+                "of": [
+                  { "kind": "equals", "path": "extendedZeros", "value": 1 },
+                  { "kind": "equals", "path": "extendedZeros", "value": 2 }
+                ]
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DIV-QUOTIENT-ZERO" } },
+              "level": 1,
+              "say": "그 자리에서는 한 접시에 몇 개씩 갈까요?"
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DIV-NO-EXTEND-ZERO" } },
+              "level": 1,
+              "say": "남은 수를 더 작은 단위로 풀어서 나눌 수 있을까?"
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DEC-POINT-PLACEMENT" } },
+              "level": 1,
+              "say": "9쯤을 6으로 나누면 대략 얼마?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "div" },
+              "level": 1,
+              "say": "몫의 첫 자리는 나누어지는 수의 어느 자리에서 시작할까요? 앞자리부터 차례로 나누어 보세요."
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DIV-QUOTIENT-ZERO" } },
+              "level": 2,
+              "show": { "engine": "E07", "overlay": "quotient-gap" }
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DIV-NO-EXTEND-ZERO" } },
+              "level": 2,
+              "show": { "engine": "E07", "overlay": "extend-zero" }
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DEC-POINT-PLACEMENT" } },
+              "level": 2,
+              "show": { "engine": "E07", "overlay": "quotient-check-line" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "div" },
+              "level": 2,
+              "say": "나누어지는 수의 각 자리 숫자를 하나씩 내려 가며 몫을 써 보세요."
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DIV-QUOTIENT-ZERO" } },
+              "level": 3,
+              "backtrack": "g6s1u3.decimal-div-whole-blocks"
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DIV-NO-EXTEND-ZERO" } },
+              "level": 3,
+              "backtrack": "g6s1u3.extend-with-zero"
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DEC-POINT-PLACEMENT" } },
+              "level": 3,
+              "backtrack": "g5s2u4.decimal-point-by-estimate"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "div" },
+              "level": 3,
+              "backtrack": "g6s1u3.extend-with-zero"
+            }
+          ],
+          "concepts": ["g6s1u3.extend-with-zero", "g6s1u3.quotient-place-value"],
+          "submit": "button"
+        },
+        {
+          "id": "g6s1u3.A2.T3",
+          "prompt": "0.45 ÷ 5의 몫을 구해 보세요.",
+          "engine": "E07",
+          "mode": "div",
+          "cpa": "A",
+          "config": {
+            "mode": "div",
+            "decimal": true,
+            "dividend": "0.45",
+            "divisor": 5,
+            "flagSkippedZero": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "quotientIs", "args": { "value": "0.09" } },
+              { "kind": "predicate", "name": "remainderIs", "args": { "value": "0" } },
+              { "kind": "predicate", "name": "quotientCellIs", "args": { "column": 0, "digit": "0" } },
+              { "kind": "equals", "path": "quotientPoint", "value": 0 }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DIV-QUOTIENT-ZERO" } },
+              "level": 1,
+              "say": "그 자리에서는 한 접시에 몇 개씩 갈까요?"
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DIV-NO-EXTEND-ZERO" } },
+              "level": 1,
+              "say": "남은 수를 더 작은 단위로 풀어서 나눌 수 있을까?"
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DEC-POINT-PLACEMENT" } },
+              "level": 1,
+              "say": "0.4쯤을 5로 나누면 대략 얼마?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "div" },
+              "level": 1,
+              "say": "몫의 첫 자리는 나누어지는 수의 어느 자리에서 시작할까요? 앞자리부터 차례로 나누어 보세요."
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DIV-QUOTIENT-ZERO" } },
+              "level": 2,
+              "show": { "engine": "E07", "overlay": "quotient-gap" }
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DIV-NO-EXTEND-ZERO" } },
+              "level": 2,
+              "show": { "engine": "E07", "overlay": "extend-zero" }
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DEC-POINT-PLACEMENT" } },
+              "level": 2,
+              "show": { "engine": "E07", "overlay": "quotient-check-line" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "div" },
+              "level": 2,
+              "say": "나누어지는 수의 각 자리 숫자를 하나씩 내려 가며 몫을 써 보세요."
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DIV-QUOTIENT-ZERO" } },
+              "level": 3,
+              "backtrack": "g6s1u3.decimal-div-whole-blocks"
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DIV-NO-EXTEND-ZERO" } },
+              "level": 3,
+              "backtrack": "g6s1u3.extend-with-zero"
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DEC-POINT-PLACEMENT" } },
+              "level": 3,
+              "backtrack": "g5s2u4.decimal-point-by-estimate"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "div" },
+              "level": 3,
+              "backtrack": "g6s1u3.quotient-zero"
+            }
+          ],
+          "concepts": ["g6s1u3.quotient-zero", "g6s1u3.quotient-place-value"],
+          "submit": "button"
+        },
+        {
+          "id": "g6s1u3.A2.T4",
+          "prompt": "친구는 6.24 ÷ 3 = 2.8이라고 풀었어요. 틀린 칸을 표시하고 바른 몫을 써 보세요.",
+          "engine": "E07",
+          "mode": "div",
+          "cpa": "P",
+          "config": {
+            "mode": "div",
+            "decimal": true,
+            "dividend": "6.24",
+            "divisor": 3,
+            "flagSkippedZero": true,
+            "debugSample": { "quotientRaw": "2. 8" }
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "flaggedCell",
+                "args": { "row": "quotient", "column": -1 }
+              },
+              { "kind": "equals", "path": "response.ans.value", "value": "52/25" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DIV-QUOTIENT-ZERO" } },
+              "level": 1,
+              "say": "그 자리에서는 한 접시에 몇 개씩 갈까요?"
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DIV-NO-EXTEND-ZERO" } },
+              "level": 1,
+              "say": "남은 수를 더 작은 단위로 풀어서 나눌 수 있을까?"
+            },
+            {
+              "when": { "misconception": "MC-DEC-POINT-PLACEMENT" },
+              "level": 1,
+              "say": "6쯤을 3으로 나누면 대략 얼마?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "div" },
+              "level": 1,
+              "say": "친구가 쓴 몫에서 빠진 자리는 어디일까요? 그 자리에 몫을 써야 하는지 살펴보세요."
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DIV-QUOTIENT-ZERO" } },
+              "level": 2,
+              "show": { "engine": "E07", "overlay": "quotient-gap" }
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DIV-NO-EXTEND-ZERO" } },
+              "level": 2,
+              "show": { "engine": "E07", "overlay": "extend-zero" }
+            },
+            {
+              "when": { "misconception": "MC-DEC-POINT-PLACEMENT" },
+              "level": 2,
+              "show": { "engine": "E07", "overlay": "quotient-check-line" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "div" },
+              "level": 2,
+              "say": "몫의 빈 칸을 하나씩 짚어 보고, 그 자리에 들어갈 수를 다시 생각해 보세요."
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DIV-QUOTIENT-ZERO" } },
+              "level": 3,
+              "backtrack": "g6s1u3.decimal-div-whole-blocks"
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DIV-NO-EXTEND-ZERO" } },
+              "level": 3,
+              "backtrack": "g6s1u3.extend-with-zero"
+            },
+            {
+              "when": { "misconception": "MC-DEC-POINT-PLACEMENT" },
+              "level": 3,
+              "backtrack": "g5s2u4.decimal-point-by-estimate"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "div" },
+              "level": 3,
+              "backtrack": "g6s1u3.quotient-zero"
+            }
+          ],
+          "concepts": ["g6s1u3.quotient-zero", "g6s1u3.quotient-place-value"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-DIV-QUOTIENT-ZERO",
+              "args": { "expected": "2.08" },
+              "path": "response.ans.value"
+            },
+            {
+              "code": "MC-DEC-POINT-PLACEMENT",
+              "args": { "expected": "2.08" },
+              "path": "response.ans.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "ans", "label": "바른 몫", "forms": ["decimal"] }
+            ]
+          }
+        },
+        {
+          "id": "g6s1u3.A2.T5",
+          "prompt": "먼저 어림해 보세요. 19.5 ÷ 6은 어느 쪽에 가까울까요? 고른 다음 세로셈으로 몫을 구해 보세요.",
+          "engine": "E07",
+          "mode": "div",
+          "cpa": "A",
+          "config": {
+            "mode": "div",
+            "decimal": true,
+            "dividend": "19.5",
+            "divisor": 6,
+            "extendZeros": 2,
+            "flagSkippedZero": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "response.est.selected", "value": ["three"] },
+              { "kind": "predicate", "name": "quotientIs", "args": { "value": "3.25" } },
+              { "kind": "predicate", "name": "remainderIs", "args": { "value": "0" } }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "response.est.selected", "value": ["thirty"] },
+              "level": 1,
+              "say": "18쯤을 6으로 나누면 대략 얼마?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.est.selected", "value": ["thirty"] },
+              "level": 2,
+              "say": "19.5는 30보다 훨씬 작아요. 몫이 30쯤이 되려면 나누어지는 수가 얼마쯤이어야 할까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.est.selected", "value": ["thirty"] },
+              "level": 3,
+              "backtrack": "g5s2u4.decimal-point-by-estimate"
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DIV-QUOTIENT-ZERO" } },
+              "level": 1,
+              "say": "그 자리에서는 한 접시에 몇 개씩 갈까요?"
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DIV-NO-EXTEND-ZERO" } },
+              "level": 1,
+              "say": "남은 수를 더 작은 단위로 풀어서 나눌 수 있을까?"
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DEC-POINT-PLACEMENT" } },
+              "level": 1,
+              "say": "18쯤을 6으로 나누면 대략 얼마?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "div" },
+              "level": 1,
+              "say": "몫의 첫 자리는 나누어지는 수의 어느 자리에서 시작할까요? 앞자리부터 차례로 나누어 보세요."
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DIV-QUOTIENT-ZERO" } },
+              "level": 2,
+              "show": { "engine": "E07", "overlay": "quotient-gap" }
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DIV-NO-EXTEND-ZERO" } },
+              "level": 2,
+              "show": { "engine": "E07", "overlay": "extend-zero" }
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DEC-POINT-PLACEMENT" } },
+              "level": 2,
+              "show": { "engine": "E07", "overlay": "quotient-check-line" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "div" },
+              "level": 2,
+              "say": "나누어지는 수의 각 자리 숫자를 하나씩 내려 가며 몫을 써 보세요."
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DIV-QUOTIENT-ZERO" } },
+              "level": 3,
+              "backtrack": "g6s1u3.decimal-div-whole-blocks"
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DIV-NO-EXTEND-ZERO" } },
+              "level": 3,
+              "backtrack": "g6s1u3.extend-with-zero"
+            },
+            {
+              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DEC-POINT-PLACEMENT" } },
+              "level": 3,
+              "backtrack": "g5s2u4.decimal-point-by-estimate"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "div" },
+              "level": 3,
+              "backtrack": "g6s1u3.quotient-place-value"
+            }
+          ],
+          "concepts": ["g6s1u3.quotient-place-value", "g6s1u3.extend-with-zero"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "est",
+                "label": "19.5 ÷ 6은 어느 쪽에 가까울까요?",
+                "multiple": false,
+                "options": [
+                  { "id": "three", "label": "3쯤" },
+                  { "id": "thirty", "label": "30쯤" }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
