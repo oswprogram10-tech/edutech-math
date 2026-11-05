@@ -235,6 +235,15 @@ test('A2 이중 수직선으로 찾기 — 대표 오답 뒤 고쳐서 일곱 �
   await typeFraction(page, 'v', '8', '9');
   await submit(page);
   await expectFailedWithHint(page, "어떤 수로 '재고' 있었지?", ['9/8']);
+  // 같은 오답을 한 번 더 내면 오개념 힌트 ②의 그림이 함께 나온다.
+  await submit(page);
+  await expectFailedWithHint(
+    page,
+    '어떤 수로 재고 있었는지 그림에서 대응선을 따라가 볼까',
+    ['9/8'],
+    2,
+  );
+  await expect(page.locator('[data-overlay="pair-replay"]')).toHaveCount(1);
   await toggleChoice(page, 'expr', '3/4 × 3/2');
   await clearNumber(page, 'v');
   await typeFraction(page, 'v', '9', '8');
