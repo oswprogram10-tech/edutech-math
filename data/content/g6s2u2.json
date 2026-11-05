@@ -200,7 +200,7 @@
         },
         {
           "id": "g6s2u2.A1.T3",
-          "prompt": "확대경으로 두 수를 함께 키워 세로셈으로 4.5 ÷ 0.15의 몫을 구해 보세요.",
+          "prompt": "4.5 ÷ 0.15의 몫을 세로셈으로 구해 보세요.",
           "engine": "E07",
           "mode": "div",
           "cpa": "A",
@@ -208,8 +208,7 @@
             "mode": "div",
             "decimal": true,
             "dividend": "4.5",
-            "divisor": "0.15",
-            "magnifier": [10, 100]
+            "divisor": "0.15"
           },
           "goal": {
             "kind": "all",
@@ -322,7 +321,7 @@
         },
         {
           "id": "g6s2u2.A1.T4",
-          "prompt": "확대경으로 두 수를 함께 키워 세로셈으로 2.73 ÷ 1.3의 몫을 구해 보세요.",
+          "prompt": "2.73 ÷ 1.3의 몫을 세로셈으로 구해 보세요.",
           "engine": "E07",
           "mode": "div",
           "cpa": "A",
@@ -330,8 +329,7 @@
             "mode": "div",
             "decimal": true,
             "dividend": "2.73",
-            "divisor": "1.3",
-            "magnifier": [10, 100]
+            "divisor": "1.3"
           },
           "goal": {
             "kind": "all",
@@ -453,8 +451,7 @@
             "decimal": true,
             "dividend": "5",
             "divisor": "0.4",
-            "extendZeros": 2,
-            "magnifier": [10, 100]
+            "extendZeros": 2
           },
           "goal": {
             "kind": "all",
@@ -474,7 +471,7 @@
             {
               "when": { "kind": "equals", "path": "response.cmp.symbol", "value": "<" },
               "level": 2,
-              "say": "0.4씩 5를 채우면 몇 번 만에 5가 되는지 수직선에서 세어 보세요."
+              "say": "0.4씩 몇 번 더하면 5가 될지 생각해 보세요."
             },
             {
               "when": { "kind": "equals", "path": "response.cmp.symbol", "value": "<" },
@@ -489,7 +486,7 @@
             {
               "when": { "kind": "equals", "path": "response.cmp.symbol", "value": "=" },
               "level": 2,
-              "say": "0.4씩 5를 채우면 몇 번 만에 5가 되는지 수직선에서 세어 보세요."
+              "say": "0.4씩 몇 번 더하면 5가 될지 생각해 보세요."
             },
             {
               "when": { "kind": "equals", "path": "response.cmp.symbol", "value": "=" },

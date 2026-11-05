@@ -145,9 +145,13 @@ test('A1 동시 10배 확대경 — 대표 오답 뒤 고쳐서 다섯 과제를
   await openActivity(page, 'g6s2u2.A1', '동시 10배 확대경');
   await screenshot(page, 'g6s2u2-a1.png');
 
-  // T1 — 두 수를 키우기 전에 확인해 일반 힌트 ①을 본 뒤, ×100으로 168 ÷ 24를 푼다.
+  // T1 — 나누는 수만 화살표로 두 번 옮겨 1.68 ÷ 24로 몫을 한 자리 쓴 뒤 SCALE-ONE-SIDE 힌트 ①을 본다.
+  await engine(page).getByTestId('scale-divisor-right').click();
+  await engine(page).getByTestId('scale-divisor-right').click();
+  await typeGrid(page, '7');
   await submit(page);
-  await expectFailedWithHint(page, '두 수를 어떻게 바꾸면 이 격자에서 나눌 수 있을까?');
+  await expectFailedWithHint(page, '막대 하나만 늘리면 몇 번 들어가는지가 그대로일까?');
+  // 두 수를 함께 ×100 해 168 ÷ 24로 고친다.
   await magnifyBoth(page, 100);
   await typeGrid(page, '7861000');
   await submit(page);
