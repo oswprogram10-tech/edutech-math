@@ -18,6 +18,8 @@ import {
 } from '../../core/engine-sdk';
 import type { EngineViewProps, Point } from '../../core/engine-sdk';
 import { Rational } from '../../core/math/rational';
+import { frogAt, frogSteps } from './frog';
+import type { FrogStep } from './frog';
 import { rowsOf } from './reduce';
 import {
   formatValue,
@@ -184,6 +186,7 @@ function BasicNumberLineView({
   );
   const cards = cardLayout(state.cards, touchDiameter);
   const mode = state.mode;
+  const frog = state.frog;
 
   const [press, setPress] = useState<Press | null>(null);
   const [focused, setFocused] = useState(false);
@@ -595,6 +598,16 @@ function BasicNumberLineView({
         : { kind: press.kind, at: snapped(press.current) }
       : null;
 
+  const frogValue = frog ? frogAt(frog) : null;
+  const frogX = frogValue ? xOfValue(frogValue, viewMin, viewMax) : null;
+  const frogY = rows[0]?.y ?? 300;
+  const frogLog = frog
+    ? [
+        numberLineStrings.frog.start(formatValue(parseValue(frog.start) ?? min, mode)),
+        ...frog.jumps.map((size) => numberLineStrings.frog.jump(size)),
+      ].join(numberLineStrings.frog.logArrow)
+    : null;
+
   return (
     <div
       className={styles.wrap}
@@ -793,7 +806,11 @@ function BasicNumberLineView({
                 const labelEvery = labelInterval(row, viewMin, viewMax);
                 const showLabel =
                   config.labels !== 'none' &&
-                  (config.labels === 'partial' ? major : tick.index % labelEvery === 0);
+                  (config.labels === 'partial'
+                    ? frog === null
+                      ? major
+                      : major && tick.index % labelEvery === 0
+                    : tick.index % labelEvery === 0);
                 return (
                   <g
                     key={`tick-${rowIndex}-${tick.index}`}
@@ -861,6 +878,32 @@ function BasicNumberLineView({
                 index={index}
               />
             ))}
+
+        {frog
+          ? frogSteps(frog).map((step, index) => (
+              <FrogJumpArc
+                key={`frog-${index}-${step.size}`}
+                step={step}
+                min={viewMin}
+                max={viewMax}
+                rows={rows}
+                index={index}
+              />
+            ))
+          : null}
+
+        {frog && frogX !== null ? (
+          <g
+            data-testid="frog"
+            role="img"
+            aria-label={numberLineStrings.frog.aria}
+            pointerEvents="none"
+          >
+            <text x={frogX} y={frogY - 6} className={styles.frog}>
+              🐸
+            </text>
+          </g>
+        ) : null}
 
         {state.points.map((point) => {
           const parsed = parseValue(point.value);
@@ -980,7 +1023,54 @@ function BasicNumberLineView({
         ) : null}
       </svg>
 
-      <p className={styles.instructions}>{numberLineStrings.instructions[mode]}</p>
+      {frog ? (
+        <div className={styles.frogPanel} data-testid="frog-controls">
+          <div
+            className={styles.frogButtons}
+            role="group"
+            aria-label={numberLineStrings.frog.group}
+          >
+            {frog.sizes.map((size) => (
+              <button
+                key={size}
+                type="button"
+                className={styles.button}
+                onClick={() => dispatch({ type: 'frog-jump', size })}
+                disabled={readOnly}
+              >
+                {numberLineStrings.frog.jump(size)}
+              </button>
+            ))}
+            <button
+              type="button"
+              className={styles.button}
+              onClick={() => dispatch({ type: 'frog-undo' })}
+              disabled={readOnly || frog.jumps.length === 0}
+            >
+              {numberLineStrings.frog.undo}
+            </button>
+            <button
+              type="button"
+              className={styles.button}
+              onClick={() => dispatch({ type: 'frog-reset' })}
+              disabled={readOnly || frog.jumps.length === 0}
+            >
+              {numberLineStrings.frog.reset}
+            </button>
+          </div>
+          <p
+            className={styles.frogLog}
+            data-testid="frog-log"
+            aria-label={numberLineStrings.frog.logLabel}
+          >
+            {frogLog}
+          </p>
+        </div>
+      ) : null}
+
+      <p className={styles.instructions}>
+        {frog ? numberLineStrings.frog.instruction : numberLineStrings.instructions[mode]}
+      </p>
       {state.cards.length > 0 ? <p className={styles.hint}>{numberLineStrings.cardHint}</p> : null}
     </div>
   );
@@ -1128,6 +1218,50 @@ function JumpArrow({
       <path d={path} className={styles.jump} markerEnd="url(#e03-jump-arrow)" fill="none" />
       <text x={midX} y={top + 18} className={styles.jumpLabel}>
         {numberLineStrings.jumpSize(text)}
+      </text>
+    </g>
+  );
+}
+
+/** T080 개구리 점프 호. 호 위에는 누른 크기만 쓰고 도착 값은 쓰지 않는다. */
+function FrogJumpArc({
+  step,
+  min,
+  max,
+  rows,
+  index,
+}: {
+  step: FrogStep;
+  min: Rational;
+  max: Rational;
+  rows: readonly TickRow[];
+  index: number;
+}) {
+  const from = parseValue(step.from);
+  const to = parseValue(step.to);
+  if (!from || !to) return null;
+  if (
+    from.compareTo(min) < 0 ||
+    from.compareTo(max) > 0 ||
+    to.compareTo(min) < 0 ||
+    to.compareTo(max) > 0
+  ) {
+    return null;
+  }
+  const x1 = xOfValue(from, min, max);
+  const x2 = xOfValue(to, min, max);
+  if (Math.abs(x1 - x2) < 1) return null;
+  const row = rows[rowForValue(step.to, rows, min, max)] ?? rows[0];
+  const y = row?.y ?? 300;
+  const lift = 58 + (index % 3) * 22;
+  const top = Math.min(y - lift, y - 30);
+  const midX = (x1 + x2) / 2;
+  const path = `M ${x1} ${y - 26} Q ${midX} ${top} ${x2} ${y - 26}`;
+  return (
+    <g pointerEvents="none" data-testid="frog-jump-arc" data-jump-size={step.size}>
+      <path d={path} className={styles.frogJump} fill="none" />
+      <text x={midX} y={top + 18} className={styles.frogJumpLabel}>
+        {numberLineStrings.frog.jump(step.size)}
       </text>
     </g>
   );

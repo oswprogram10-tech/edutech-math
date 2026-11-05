@@ -5,6 +5,7 @@
  * 수 값은 `Rational`로 계산한 뒤 `toJSON()` 문자열로 저장한다.
  */
 import { Rational } from '../../core/math/rational';
+import { createFrogState, frogAt } from './frog';
 import { createDoubleState, reduceDoubleAction } from './reduce-double';
 import { createLogZoomState, reduceLogZoom } from './reduce-log';
 import { createRoundingState, reduceRoundingAction } from './reduce-rounding';
@@ -108,6 +109,7 @@ export function createInitialState(config: NumberLineConfig): NumberLineState {
     rounding: null,
     logZoom: null,
     double: null,
+    frog: createFrogState(config, mode, min, max),
   };
 }
 
@@ -383,6 +385,35 @@ export function reduce(state: NumberLineState, action: NumberLineAction): Number
     case 'scale-pair':
     case 'remove-pair':
       return reduceDoubleAction(state, action) ?? state;
+
+    case 'frog-jump': {
+      const frog = state.frog;
+      if (!frog) return state;
+      const size = parseValue(action.size);
+      if (!size || !frog.sizes.includes(size.toJSON())) return state;
+      const min = parseValue(state.min);
+      const max = parseValue(state.max);
+      if (!min || !max) return state;
+      const landing = frogAt(frog).add(size);
+      if (landing.compareTo(min) < 0 || landing.compareTo(max) > 0) return state;
+      return {
+        ...state,
+        frog: { ...frog, jumps: [...frog.jumps, size.toJSON()] },
+        counts: bumpCounts(state.counts, 'jumped'),
+      };
+    }
+
+    case 'frog-undo': {
+      const frog = state.frog;
+      if (!frog || frog.jumps.length === 0) return state;
+      return { ...state, frog: { ...frog, jumps: frog.jumps.slice(0, -1) } };
+    }
+
+    case 'frog-reset': {
+      const frog = state.frog;
+      if (!frog || frog.jumps.length === 0) return state;
+      return { ...state, frog: { ...frog, jumps: [] } };
+    }
   }
 }
 

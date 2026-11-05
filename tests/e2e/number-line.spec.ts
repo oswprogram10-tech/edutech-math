@@ -20,6 +20,10 @@ interface ObservationRecord {
   readonly cards?: Readonly<Record<string, string | null>>;
   readonly landing?: string | null;
   readonly hopCount?: number | null;
+  readonly frogAt?: string | null;
+  readonly frogStart?: string | null;
+  readonly frogJumps?: readonly string[] | null;
+  readonly frogJumpTotal?: string | null;
   readonly level?: number | null;
   readonly pairs?: ReadonlyArray<{ readonly top?: string; readonly bottom?: string }>;
   readonly doubleOps?: readonly string[];
@@ -325,4 +329,38 @@ test('double에서 ÷2 뒤 ×3을 하면 1↔3/2 쌍이 생긴다', async ({ pag
   const observation = await readObservation(page);
   expect(observation.pairs?.[2]).toEqual({ top: '1', bottom: '3/2' });
   expect(observation.doubleOps).toEqual(['divide:2', 'multiply:3']);
+});
+
+test('integer 개구리를 키보드로 +10 두 번, +1 세 번 뛰면 위치가 58이다', async ({ page }) => {
+  await openNumberLine(page, {
+    mode: 'integer',
+    min: 0,
+    max: 100,
+    unit: 1,
+    labels: 'partial',
+    jumpButtons: [10, 1, -1, -10],
+    jumpStart: 35,
+  });
+
+  const plusTen = page.getByRole('button', { name: '+10', exact: true });
+  const plusOne = page.getByRole('button', { name: '+1', exact: true });
+  await expect(plusTen).toBeVisible();
+  await expect(plusOne).toBeVisible();
+
+  // 마우스 없이 키보드(Enter·Space)로만 점프한다.
+  for (let count = 0; count < 2; count += 1) {
+    await plusTen.focus();
+    await page.keyboard.press('Enter');
+  }
+  for (let count = 0; count < 3; count += 1) {
+    await plusOne.focus();
+    await page.keyboard.press('Space');
+  }
+  await pollObservation(page, (observation) => observation.frogAt === '58');
+
+  const observation = await readObservation(page);
+  expect(observation.frogStart).toBe('35');
+  expect(observation.frogJumps).toEqual(['10', '10', '1', '1', '1']);
+  expect(observation.frogJumpTotal).toBe('23');
+  await expect(page.getByTestId('frog-log')).toHaveText('출발 35 → +10 → +10 → +1 → +1 → +1');
 });
