@@ -138,7 +138,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "partition" },
               "level": 2,
-              "say": "나누는 사람 수보다 피자 수가 많으면 한 명이 한 판보다 많이 받을까, 적게 받을까?"
+              "say": "피자 2판을 접시 다섯 개에 똑같이 나누면 접시마다 한 판이 될까, 한 판보다 적을까?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "partition" },
@@ -195,8 +195,18 @@
             {
               "when": { "misconception": "MC-FRAC-DIV-MULT-DENOM-WRONG" },
               "level": 1,
-              "say": "3명이 나누었는데 한 명 몫이 원래보다 많아졌을까?",
+              "say": "3명이 나누었는데 한 명 몫이 원래보다 많아졌을까?"
+            },
+            {
+              "when": { "misconception": "MC-FRAC-DIV-MULT-DENOM-WRONG" },
+              "level": 2,
+              "say": "한 명 몫이 원래보다 많아졌다면, 색칠한 부분을 세 줄로 나눈 한 줄은 전체의 얼마일까?",
               "show": { "engine": "E05", "overlay": "row-preview" }
+            },
+            {
+              "when": { "misconception": "MC-FRAC-DIV-MULT-DENOM-WRONG" },
+              "level": 3,
+              "backtrack": "g6s1u1.fraction-div-whole-share"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "partition" },
@@ -206,7 +216,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "partition" },
               "level": 2,
-              "say": "가로 칸을 열어 색칠한 띠를 여러 줄로 나눈 뒤, 한 줄만 남겨 보세요."
+              "say": "점선을 따라 나누면 색칠한 부분은 몇 묶음이 될까? 그중 하나는 전체의 얼마일까?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "partition" },
@@ -259,8 +269,18 @@
             {
               "when": { "misconception": "MC-FRAC-DIV-MULT-DENOM-WRONG" },
               "level": 1,
-              "say": "3명이 나누었는데 한 명 몫이 원래보다 많아졌을까?",
+              "say": "3명이 나누었는데 한 명 몫이 원래보다 많아졌을까?"
+            },
+            {
+              "when": { "misconception": "MC-FRAC-DIV-MULT-DENOM-WRONG" },
+              "level": 2,
+              "say": "한 명 몫이 원래보다 많아졌다면, 색칠한 부분을 세 줄로 나눈 한 줄은 전체의 얼마일까?",
               "show": { "engine": "E05", "overlay": "row-preview" }
+            },
+            {
+              "when": { "misconception": "MC-FRAC-DIV-MULT-DENOM-WRONG" },
+              "level": 3,
+              "backtrack": "g6s1u1.fraction-div-whole-share"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "partition" },
@@ -270,7 +290,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "partition" },
               "level": 2,
-              "say": "가로 칸을 세 줄로 나눈 뒤 한 줄만 남겨 보세요.",
+              "say": "점선을 따라 나누면 색칠한 부분은 몇 묶음이 될까? 그중 하나는 전체의 얼마일까?",
               "show": { "engine": "E05", "overlay": "row-preview" }
             },
             {
@@ -321,13 +341,19 @@
           },
           "hints": [
             {
-              "when": {
-                "kind": "equals",
-                "path": "response.expr.selected",
-                "value": ["three"]
-              },
+              "when": { "kind": "equals", "path": "response.expr.selected", "value": ["three"] },
               "level": 1,
-              "say": "3명이 나누었는데 한 명 몫이 원래보다 많아졌을까?",
+              "say": "3명이 나누었는데 한 명 몫이 원래보다 많아졌을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.expr.selected", "value": ["three"] },
+              "level": 2,
+              "say": "한 줄만 남긴 부분이 4/5의 얼마인지 그림에서 찾아볼까?",
+              "show": { "engine": "E05", "overlay": "row-preview" }
+            },
+            {
+              "when": { "kind": "equals", "path": "response.expr.selected", "value": ["three"] },
+              "level": 3,
               "backtrack": "g5s2u2.fraction-of-fraction"
             },
             {
@@ -338,7 +364,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "partition" },
               "level": 2,
-              "say": "가로 칸을 세 줄로 나눈 뒤 한 줄만 남겨 보세요.",
+              "say": "점선을 따라 나누면 색칠한 부분은 몇 묶음이 될까? 그중 하나는 전체의 얼마일까?",
               "show": { "engine": "E05", "overlay": "row-preview" }
             },
             {
@@ -389,8 +415,18 @@
             {
               "when": { "misconception": "MC-FRAC-DIV-MULT-DENOM-WRONG" },
               "level": 1,
-              "say": "3명이 나누었는데 한 명 몫이 원래보다 많아졌을까?",
+              "say": "3명이 나누었는데 한 명 몫이 원래보다 많아졌을까?"
+            },
+            {
+              "when": { "misconception": "MC-FRAC-DIV-MULT-DENOM-WRONG" },
+              "level": 2,
+              "say": "색칠한 부분을 세 줄로 나누면 한 줄은 몇 조각일까? 그 줄은 전체의 얼마일까?",
               "show": { "engine": "E05", "overlay": "row-preview" }
+            },
+            {
+              "when": { "misconception": "MC-FRAC-DIV-MULT-DENOM-WRONG" },
+              "level": 3,
+              "backtrack": "g6s1u1.mixed-div-whole"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "partition" },
@@ -400,7 +436,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "partition" },
               "level": 2,
-              "say": "가로 칸을 세 줄로 나눈 뒤 한 줄만 남겨 보세요.",
+              "say": "점선을 따라 나누면 색칠한 부분은 몇 묶음이 될까? 그중 하나는 전체의 얼마일까?",
               "show": { "engine": "E05", "overlay": "row-preview" }
             },
             {
@@ -451,10 +487,19 @@
           },
           "hints": [
             {
-              "when": { "kind": "equals", "path": "finalValue", "value": "5/2" },
+              "when": { "kind": "predicate", "name": "finalValueIs", "args": { "value": "5/2" } },
               "level": 1,
-              "say": "4명이 나누었는데 한 명 몫이 원래보다 많아졌을까?",
-              "backtrack": "g5s2u2.fraction-of-fraction"
+              "say": "4명이 나누었는데 한 명 몫이 원래보다 많아졌을까?"
+            },
+            {
+              "when": { "kind": "predicate", "name": "finalValueIs", "args": { "value": "5/2" } },
+              "level": 2,
+              "say": "한 명 몫이 5/8보다 많아졌다면, 몇 명에게 나눈 것인지 다시 볼까?"
+            },
+            {
+              "when": { "kind": "predicate", "name": "finalValueIs", "args": { "value": "5/2" } },
+              "level": 3,
+              "backtrack": "g6s1u1.div-n-equals-times-unit"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "fraction-steps" },
@@ -498,10 +543,19 @@
           },
           "hints": [
             {
-              "when": { "kind": "equals", "path": "finalValue", "value": "50/3" },
+              "when": { "kind": "predicate", "name": "finalValueIs", "args": { "value": "50/3" } },
               "level": 1,
-              "say": "5명이 나누었는데 한 명 몫이 원래보다 많아졌을까?",
-              "backtrack": "g5s2u2.fraction-of-fraction"
+              "say": "5명이 나누었는데 한 명 몫이 원래보다 많아졌을까?"
+            },
+            {
+              "when": { "kind": "predicate", "name": "finalValueIs", "args": { "value": "50/3" } },
+              "level": 2,
+              "say": "한 명 몫이 3 1/3보다 많아졌다면, 몇 명에게 나눈 것인지 다시 볼까?"
+            },
+            {
+              "when": { "kind": "predicate", "name": "finalValueIs", "args": { "value": "50/3" } },
+              "level": 3,
+              "backtrack": "g6s1u1.mixed-div-whole"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "fraction-steps" },
@@ -543,13 +597,18 @@
           },
           "hints": [
             {
-              "when": {
-                "kind": "equals",
-                "path": "response.why.selected",
-                "value": ["always"]
-              },
+              "when": { "kind": "equals", "path": "response.why.selected", "value": ["always"] },
               "level": 1,
-              "say": "÷3이면 왜 작아졌을까? 3등분했기 때문일까, 나누기라서일까?",
+              "say": "÷3이면 왜 작아졌을까? 3등분했기 때문일까, 나누기라서일까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.why.selected", "value": ["always"] },
+              "level": 2,
+              "say": "3등분한 한 조각과, 나누기라서 작아진 것과 어떤 차이가 있을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.why.selected", "value": ["always"] },
+              "level": 3,
               "backtrack": "g6s1u1.div-n-equals-times-unit"
             },
             {

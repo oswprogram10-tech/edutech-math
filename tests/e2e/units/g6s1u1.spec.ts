@@ -221,6 +221,10 @@ test('A2 한 줄만 남겨 나누기 — 대표 오답 뒤 고쳐서 일곱 과�
   await typeFraction(page, 'ans', '18', '7');
   await submit(page);
   await expectFailedWithHint(page, '3명이 나누었는데 한 명 몫이 원래보다 많아졌을까', ['2/7']);
+  // 같은 오답을 한 번 더 내면 오개념 힌트 ②의 그림이 함께 나온다.
+  await submit(page);
+  await expectFailedWithHint(page, '한 명 몫이 원래보다 많아졌다면', ['2/7'], 2);
+  await expect(page.locator('[data-overlay="row-preview"]')).toHaveCount(1);
   await clearNumber(page, 'ans');
   await divideIntoBundle(page, 3);
   await typeFraction(page, 'ans', '2', '7');
