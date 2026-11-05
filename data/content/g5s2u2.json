@@ -1,0 +1,599 @@
+{
+  "unit": "g5s2u2",
+  "title": "분수의 곱셈",
+  "activities": [
+    {
+      "id": "g5s2u2.A1",
+      "title": "겹친 넓이로 곱셈하기",
+      "tasks": [
+        {
+          "id": "g5s2u2.A1.T1",
+          "prompt": "막대 4개에 각각 2/3만큼 칠해 모아 보고, 모두 얼마인지 써 보세요.",
+          "engine": "E05",
+          "mode": "multiply",
+          "cpa": "C",
+          "config": {
+            "mode": "multiply",
+            "a": "4",
+            "b": "2/3",
+            "build": "student",
+            "maxDenominator": 12,
+            "showCounts": false
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "factorsAre", "args": { "a": "4", "b": "2/3" } },
+              { "kind": "equals", "path": "response.ans.value", "value": "8/3" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-FRAC-MULT-WHOLE-BOTH" },
+              "level": 1,
+              "say": "2/3이 4개 모이면 2/3과 크기가 같을까요? 분모도 4배가 되어야 하나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "multiply" },
+              "level": 1,
+              "say": "칠한 조각이 모두 몇 개이고, 조각 하나는 전체의 얼마일까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "multiply" },
+              "level": 2,
+              "say": "노란 칸과 파란 칸이 겹친 곳을 세어 보세요. 겹친 칸 하나는 전체의 얼마인가요?",
+              "show": { "engine": "E05", "overlay": "overlap-count" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "multiply" },
+              "level": 3,
+              "backtrack": "g5s2u2.whole-times-fraction"
+            }
+          ],
+          "concepts": ["g5s2u2.whole-times-fraction"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-FRAC-MULT-WHOLE-BOTH",
+              "args": { "fraction": "2/3", "n": "4" },
+              "path": "response.ans.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "ans",
+                "label": "모두의 양",
+                "forms": ["fraction", "mixed"]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g5s2u2.A1.T2",
+          "prompt": "세로로 2/3, 가로로 3/4만큼 칠하고 겹친 부분이 전체의 얼마인지 써 보세요.",
+          "engine": "E05",
+          "mode": "multiply",
+          "cpa": "C",
+          "config": {
+            "mode": "multiply",
+            "a": "2/3",
+            "b": "3/4",
+            "build": "student",
+            "maxDenominator": 12,
+            "showCounts": false
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "factorsAre", "args": { "a": "2/3", "b": "3/4" } },
+              { "kind": "predicate", "name": "overlapCellsIs", "args": { "value": 6 } },
+              { "kind": "equals", "path": "response.ans.value", "value": "1/2" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-FRAC-ADD-DENOM" },
+              "level": 1,
+              "say": "2/3의 3/4만큼인데, 분자끼리 더하고 분모끼리 더한 값이 맞을까요? 결과가 2/3보다 커졌나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "multiply" },
+              "level": 1,
+              "say": "겹친 칸은 몇 칸이고, 전체는 몇 칸으로 나뉘었을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "multiply" },
+              "level": 2,
+              "say": "노란 칸과 파란 칸이 겹친 곳을 세어 보세요. 겹친 칸 하나는 전체의 얼마인가요?",
+              "show": { "engine": "E05", "overlay": "overlap-count" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "multiply" },
+              "level": 3,
+              "backtrack": "g4s2u1.unit-fraction-count"
+            }
+          ],
+          "concepts": ["g5s2u2.fraction-of-fraction"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-FRAC-ADD-DENOM",
+              "args": { "a": "2/3", "b": "3/4" },
+              "path": "response.ans.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "ans",
+                "label": "겹친 부분",
+                "forms": ["fraction", "mixed"]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g5s2u2.A1.T3",
+          "prompt": "겹친 그림을 보고 1/2 × 1/5을 써 보고, 단위분수끼리 곱할 때 알게 된 것을 골라 보세요.",
+          "engine": "E05",
+          "mode": "multiply",
+          "cpa": "P",
+          "config": {
+            "mode": "multiply",
+            "a": "1/2",
+            "b": "1/5",
+            "build": "preset",
+            "maxDenominator": 12,
+            "showCounts": false
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "response.ans.value", "value": "1/10" },
+              { "kind": "equals", "path": "response.rule.selected", "value": ["mulden"] }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.rule.selected",
+                "value": ["common"]
+              },
+              "level": 1,
+              "say": "통분은 조각 크기를 맞추려고 했지. 곱셈에서도 조각 크기를 맞춰야 할까?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.rule.selected",
+                "value": ["addden"]
+              },
+              "level": 1,
+              "say": "1/2의 1/5만큼인데, 분자끼리 더하고 분모끼리 더한 값이 맞을까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "multiply" },
+              "level": 1,
+              "say": "전체가 몇 칸으로 나뉘었는지 세어 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "multiply" },
+              "level": 2,
+              "say": "두 색이 겹친 칸은 몇 칸인가요? 그 칸 하나는 전체의 얼마인가요?",
+              "show": { "engine": "E05", "overlay": "overlap-count" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "multiply" },
+              "level": 3,
+              "backtrack": "g5s2u2.fraction-of-fraction"
+            }
+          ],
+          "concepts": ["g5s2u2.fraction-of-fraction"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "ans",
+                "label": "겹친 부분",
+                "forms": ["fraction", "mixed"]
+              },
+              {
+                "kind": "choice",
+                "id": "rule",
+                "label": "단위분수끼리 곱할 때 알게 된 것",
+                "multiple": false,
+                "options": [
+                  { "id": "mulden", "label": "분모끼리 곱해요" },
+                  { "id": "addden", "label": "분모끼리 더해요" },
+                  { "id": "common", "label": "먼저 통분해요" }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g5s2u2.A1.T4",
+          "prompt": "정사각형 두 개에 걸친 겹친 부분을 보고 1 1/2 × 2/3을 써 보세요.",
+          "engine": "E05",
+          "mode": "multiply",
+          "cpa": "P",
+          "config": {
+            "mode": "multiply",
+            "a": "1 1/2",
+            "b": "2/3",
+            "build": "preset",
+            "maxDenominator": 12,
+            "showCounts": false
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.ans.value",
+            "value": "1"
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "multiply" },
+              "level": 1,
+              "say": "겹친 칸을 모으면 정사각형 몇 개만큼일까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "multiply" },
+              "level": 2,
+              "say": "겹친 칸을 세어 보고, 그 칸들을 이어 붙이면 정사각형 하나가 되는지 살펴보세요.",
+              "show": { "engine": "E05", "overlay": "overlap-count" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "multiply" },
+              "level": 3,
+              "backtrack": "g5s2u2.mixed-multiply"
+            }
+          ],
+          "concepts": ["g5s2u2.mixed-multiply", "g5s2u2.fraction-of-fraction"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "ans",
+                "label": "겹친 부분",
+                "forms": ["fraction", "mixed"]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g5s2u2.A1.T5",
+          "prompt": "3/5 × 5/6을 여러 줄로 계산해 보세요. 계산하는 중에 약분할 수 있으면 해 보세요.",
+          "engine": "E08",
+          "mode": "fraction-steps",
+          "cpa": "A",
+          "config": {
+            "mode": "fraction-steps",
+            "start": "3/5 × 5/6",
+            "keypad": ["digits", "fraction", "mixed", "mul", "add-line", "remove-line"],
+            "checkEachLine": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "allEquivalent", "value": true },
+              { "kind": "predicate", "name": "finalValueIs", "args": { "value": "1/2" } },
+              { "kind": "predicate", "name": "finalIrreducible" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "finalIrreducible", "value": false },
+              "level": 1,
+              "say": "마지막 분수를 더 간단하게 나타낼 수 있을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction-steps" },
+              "level": 1,
+              "say": "분자와 분모에 같은 수가 있으면 계산하기 전에 나눌 수 있을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction-steps" },
+              "level": 2,
+              "say": "여러 줄의 값이 모두 같은 양인지 막대로 견주어 보세요.",
+              "show": { "engine": "E08", "overlay": "bar-check" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction-steps" },
+              "level": 3,
+              "backtrack": "g5s2u2.cross-simplify"
+            }
+          ],
+          "concepts": ["g5s2u2.cross-simplify", "g5s2u2.fraction-of-fraction"],
+          "submit": "button"
+        }
+      ]
+    },
+    {
+      "id": "g5s2u2.A2",
+      "title": "리본 길이 바꾸기",
+      "tasks": [
+        {
+          "id": "g5s2u2.A2.T1",
+          "prompt": "12m 리본에 3/4을 곱하면 리본이 어떻게 될지 먼저 예측하고, 3/4을 골라 확인한 뒤 길이를 써 보세요.",
+          "engine": "E04",
+          "mode": "fraction-area",
+          "cpa": "P",
+          "config": {
+            "mode": "fraction-area",
+            "variant": "scaler",
+            "base": 12,
+            "multipliers": ["1/4", "1/2", "3/4", "1", "5/4", "3/2", "2"],
+            "predictFirst": true,
+            "showResult": false
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "predictionIs", "args": { "value": "smaller" } },
+              { "kind": "predicate", "name": "multiplierIs", "args": { "value": "3/4" } },
+              { "kind": "equals", "path": "response.len.value", "value": "9" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "prediction", "value": "larger" },
+              "level": 1,
+              "say": "12m의 3/4만큼이면 리본 전체보다 많을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "prediction", "value": "same" },
+              "level": 1,
+              "say": "12m의 3/4만큼이면 리본 전체와 같을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction-area" },
+              "level": 1,
+              "say": "리본 전체를 4도막으로 나누면 한 도막은 몇 m일까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction-area" },
+              "level": 2,
+              "say": "리본을 곱하는 수만큼 잘라 보세요. 처음 리본과 견주어 어느 쪽이 긴가요?",
+              "show": { "engine": "E04", "overlay": "ribbon-cut" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction-area" },
+              "level": 3,
+              "backtrack": "g5s2u2.whole-times-fraction"
+            }
+          ],
+          "concepts": ["g5s2u2.whole-times-fraction", "g5s2u2.scaling-smaller"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "len",
+                "label": "바뀐 리본 길이",
+                "forms": ["integer"]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g5s2u2.A2.T2",
+          "prompt": "이번에는 5/4을 곱해 보세요. 먼저 예측하고 확인한 뒤 길이를 써 보세요.",
+          "engine": "E04",
+          "mode": "fraction-area",
+          "cpa": "P",
+          "config": {
+            "mode": "fraction-area",
+            "variant": "scaler",
+            "base": 12,
+            "multipliers": ["1/4", "1/2", "3/4", "1", "5/4", "3/2", "2"],
+            "predictFirst": true,
+            "showResult": false
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "predictionIs", "args": { "value": "larger" } },
+              { "kind": "predicate", "name": "multiplierIs", "args": { "value": "5/4" } },
+              { "kind": "equals", "path": "response.len.value", "value": "15" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "prediction", "value": "smaller" },
+              "level": 1,
+              "say": "5/4은 1보다 클까, 작을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction-area" },
+              "level": 2,
+              "say": "곱하는 수가 1보다 크면 리본은 처음보다 길어질까, 짧아질까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction-area" },
+              "level": 3,
+              "backtrack": "g5s2u2.scaling-smaller"
+            }
+          ],
+          "concepts": ["g5s2u2.scaling-smaller", "g5s2u2.whole-times-fraction"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "len",
+                "label": "바뀐 리본 길이",
+                "forms": ["integer"]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g5s2u2.A2.T3",
+          "prompt": "곱한 결과가 12보다 작아지는 곱하는 수를 모두 골라 보세요. 슬라이더로 확인해도 돼요.",
+          "engine": "E04",
+          "mode": "fraction-area",
+          "cpa": "P",
+          "config": {
+            "mode": "fraction-area",
+            "variant": "scaler",
+            "base": 12,
+            "multipliers": ["1/4", "1/2", "3/4", "1", "5/4", "3/2", "2"],
+            "predictFirst": false,
+            "showResult": false
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.pick.selected",
+            "value": ["q12", "q14", "q34"]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction-area" },
+              "level": 1,
+              "say": "곱하는 수가 1보다 작으면 리본이 어떻게 됐지?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction-area" },
+              "level": 2,
+              "say": "슬라이더를 1 앞뒤로 움직이며 리본 길이를 견주어 보세요.",
+              "show": { "engine": "E04", "overlay": "ribbon-cut" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction-area" },
+              "level": 3,
+              "backtrack": "g5s2u2.scaling-smaller"
+            }
+          ],
+          "concepts": ["g5s2u2.scaling-smaller"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "pick",
+                "label": "결과가 12보다 작아지는 곱하는 수",
+                "multiple": true,
+                "options": [
+                  { "id": "q14", "label": "1/4" },
+                  { "id": "q12", "label": "1/2" },
+                  { "id": "q34", "label": "3/4" },
+                  { "id": "one", "label": "1" },
+                  { "id": "q54", "label": "5/4" },
+                  { "id": "q32", "label": "3/2" }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g5s2u2.A2.T4",
+          "prompt": "3/8 × 4/9을 계산해 보세요. 계산하기 전에 약분할 수 있는 수를 찾아 보세요.",
+          "engine": "E08",
+          "mode": "fraction-steps",
+          "cpa": "A",
+          "config": {
+            "mode": "fraction-steps",
+            "start": "3/8 × 4/9",
+            "keypad": ["digits", "fraction", "mixed", "mul", "add-line", "remove-line"],
+            "checkEachLine": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "allEquivalent", "value": true },
+              { "kind": "predicate", "name": "finalValueIs", "args": { "value": "1/6" } },
+              { "kind": "predicate", "name": "finalIrreducible" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "finalIrreducible", "value": false },
+              "level": 1,
+              "say": "마지막 분수를 더 간단하게 나타낼 수 있을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction-steps" },
+              "level": 1,
+              "say": "분자와 분모에 같은 수가 있으면 계산하기 전에 나눌 수 있을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction-steps" },
+              "level": 2,
+              "say": "여러 줄의 값이 모두 같은 양인지 막대로 견주어 보세요.",
+              "show": { "engine": "E08", "overlay": "bar-check" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction-steps" },
+              "level": 3,
+              "backtrack": "g5s2u2.cross-simplify"
+            }
+          ],
+          "concepts": ["g5s2u2.cross-simplify"],
+          "submit": "button"
+        },
+        {
+          "id": "g5s2u2.A2.T5",
+          "prompt": "□ × 7/8과 □의 크기를 비교해 보세요. □는 0이 아닌 수예요.",
+          "engine": "E04",
+          "mode": "fraction-area",
+          "cpa": "A",
+          "config": {
+            "mode": "fraction-area",
+            "variant": "scaler",
+            "base": 12,
+            "multipliers": ["1/4", "1/2", "3/4", "1", "5/4", "3/2", "2"],
+            "predictFirst": false,
+            "showResult": false
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.cmp.symbol",
+            "value": "<"
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "response.cmp.symbol", "value": ">" },
+              "level": 1,
+              "say": "□의 7/8만큼이면 □보다 많을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.cmp.symbol", "value": "=" },
+              "level": 1,
+              "say": "□의 7/8만큼이면 □와 같을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction-area" },
+              "level": 2,
+              "say": "곱하는 수가 1보다 작으면 결과는 □보다 커질까, 작아질까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction-area" },
+              "level": 3,
+              "backtrack": "g5s2u2.scaling-smaller"
+            }
+          ],
+          "concepts": ["g5s2u2.scaling-smaller"],
+          "submit": "button",
+          "showEngine": false,
+          "response": {
+            "fields": [
+              {
+                "kind": "compare",
+                "id": "cmp",
+                "label": "□ × 7/8과 □의 크기",
+                "left": "□ × 7/8",
+                "right": "□"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
