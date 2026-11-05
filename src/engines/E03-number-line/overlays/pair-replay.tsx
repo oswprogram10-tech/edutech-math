@@ -6,8 +6,8 @@ import type { OverlayProps } from '../../../core/engine-sdk';
 import { pairOps } from '../double';
 import { numberLineStrings } from '../strings.ko';
 import { parseValue, xOfValue } from '../ticks';
-import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../types';
 import type { NumberLineConfig, NumberLineState } from '../types';
+import { CanvasAlignedOverlay } from './canvas-frame';
 
 const TOP_Y = 245;
 const BOTTOM_Y = 415;
@@ -58,13 +58,7 @@ export function PairReplayOverlay({
   });
 
   return (
-    <svg
-      viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
-      width="100%"
-      height="100%"
-      data-testid="overlay-pair-replay"
-      aria-hidden="true"
-    >
+    <CanvasAlignedOverlay testId="overlay-pair-replay">
       <defs>
         <marker
           id="e03-pair-replay-arrow"
@@ -118,6 +112,6 @@ export function PairReplayOverlay({
           </g>
         );
       })}
-    </svg>
+    </CanvasAlignedOverlay>
   );
 }

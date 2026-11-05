@@ -6,8 +6,9 @@ import type { OverlayProps } from '../../../core/engine-sdk';
 import { formatNumber, roundingEdges } from '../rounding';
 import { roundingPlaceOf } from '../reduce-rounding';
 import { parseValue, xOfValue } from '../ticks';
-import { LINE_LEFT, LINE_RIGHT, LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../types';
+import { LINE_LEFT, LINE_RIGHT } from '../types';
 import type { NumberLineConfig, NumberLineState } from '../types';
+import { CanvasAlignedOverlay } from './canvas-frame';
 
 const LINE_Y = 330;
 
@@ -31,13 +32,7 @@ export function TwoTicksOverlay({ state }: OverlayProps<NumberLineConfig, Number
     .filter((item): item is NonNullable<typeof item> => item !== null);
   if (items.length === 0) return null;
   return (
-    <svg
-      viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
-      width="100%"
-      height="100%"
-      data-testid="overlay-two-ticks"
-      aria-hidden="true"
-    >
+    <CanvasAlignedOverlay testId="overlay-two-ticks">
       <rect
         x={LINE_LEFT - 8}
         y={LINE_Y - 40}
@@ -76,6 +71,6 @@ export function TwoTicksOverlay({ state }: OverlayProps<NumberLineConfig, Number
           })}
         </g>
       ))}
-    </svg>
+    </CanvasAlignedOverlay>
   );
 }
