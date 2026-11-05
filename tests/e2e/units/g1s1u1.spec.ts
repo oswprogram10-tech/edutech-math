@@ -295,10 +295,16 @@ test('A3 수 징검다리 — 대표 오답 뒤 고쳐서 네 과제를 통과�
   await submit(page);
   await expectPassed(page);
 
-  // T4 — 1에 점을 찍어 틀린 뒤, 되돌려 0으로 고친다.
+  // T4 — 1에 점을 찍어 두 번 틀린 뒤, ②를 보고 되돌려 0으로 고친다.
   await tapTick(page, '1');
   await submit(page);
   await expectFailedWithHint(page, '사과가 하나도 없으면 몇 개라고 하지?');
+  await submit(page);
+  await expectFailedWithHint(
+    page,
+    '사과가 하나씩 줄어들어 모두 없어지면 몇이 될까? 수직선에서 찾아볼까?',
+    2,
+  );
   await undo(page);
   await tapTick(page, '0');
   await submit(page);

@@ -776,7 +776,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "integer" },
               "level": 2,
-              "say": "수직선의 맨 왼쪽 끝을 살펴볼까?"
+              "say": "사과가 하나씩 줄어들어 모두 없어지면 몇이 될까? 수직선에서 찾아볼까?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "integer" },
