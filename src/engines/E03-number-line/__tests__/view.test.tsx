@@ -405,6 +405,10 @@ describe('T080 integer 개구리 화면', () => {
       '1',
     ]);
     expect(view.container.textContent ?? '').not.toContain('38');
+    // 수직선이 작게 줄어도 읽을 수 있게 번호는 논리 28 이상이어야 한다.
+    for (const label of view.container.querySelectorAll('[data-hop-number] text')) {
+      expect(Number(label.getAttribute('font-size'))).toBeGreaterThanOrEqual(28);
+    }
 
     // +10 점프가 눈금 한 칸이면 호 하나, 눈금이 1이면 1~10까지 센다.
     const denseConfig: NumberLineConfig = { ...config, max: 20, jumpStart: 0 };

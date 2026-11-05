@@ -9,8 +9,8 @@ import { Rational } from '../../../core/math/rational';
 import { frogSteps } from '../frog';
 import { rowsOf } from '../reduce';
 import { parseValue, xOfValue } from '../ticks';
-import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../types';
 import type { NumberLineConfig, NumberLineState } from '../types';
+import { CanvasAlignedOverlay } from './canvas-frame';
 
 interface GapArc {
   readonly key: string;
@@ -56,7 +56,8 @@ function gapArcs(
         x2: xOfValue(gapTo, min, max),
         y: rowY,
         count: index + 1,
-        lift: 16 + ((stepIndex + index) % 2) * 14,
+        // 번호 글자를 키운 만큼 호를 더 높이 띄우고, 이웃한 호와 번호가 겹치지 않게 번갈아 올린다.
+        lift: 34 + ((stepIndex + index) % 2) * 20,
       });
     }
     stepIndex += 1;
@@ -78,13 +79,7 @@ export function HopNumbersOverlay({ state }: OverlayProps<NumberLineConfig, Numb
   if (arcs.length === 0) return null;
 
   return (
-    <svg
-      viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
-      width="100%"
-      height="100%"
-      data-testid="overlay-hop-numbers"
-      aria-hidden="true"
-    >
+    <CanvasAlignedOverlay testId="overlay-hop-numbers">
       {arcs.map((arc) => {
         const mid = (arc.x1 + arc.x2) / 2;
         const top = arc.y - arc.lift;
@@ -98,9 +93,12 @@ export function HopNumbersOverlay({ state }: OverlayProps<NumberLineConfig, Numb
             />
             <text
               x={mid}
-              y={top + 1}
+              y={top - 4}
               fill="#8a4600"
-              fontSize={13}
+              stroke="#fffaf0"
+              strokeWidth={5}
+              paintOrder="stroke"
+              fontSize={32}
               fontWeight={700}
               textAnchor="middle"
             >
@@ -109,6 +107,6 @@ export function HopNumbersOverlay({ state }: OverlayProps<NumberLineConfig, Numb
           </g>
         );
       })}
-    </svg>
+    </CanvasAlignedOverlay>
   );
 }

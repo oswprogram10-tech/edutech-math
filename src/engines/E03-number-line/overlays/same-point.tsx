@@ -6,8 +6,8 @@ import type { OverlayProps } from '../../../core/engine-sdk';
 import { rowsOf } from '../reduce';
 import { parseValue, xOfValue } from '../ticks';
 import { numberLineStrings } from '../strings.ko';
-import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../types';
 import type { NumberLineConfig, NumberLineState } from '../types';
+import { CanvasAlignedOverlay } from './canvas-frame';
 
 interface Pair {
   readonly key: string;
@@ -78,13 +78,7 @@ export function SamePointOverlay({ state, args }: OverlayProps<NumberLineConfig,
   if (pairs.length === 0) return null;
 
   return (
-    <svg
-      viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
-      width="100%"
-      height="100%"
-      data-testid="overlay-same-point"
-      aria-hidden="true"
-    >
+    <CanvasAlignedOverlay testId="overlay-same-point">
       {pairs.map((pair) => (
         <g key={pair.key} data-same={pair.same}>
           <line
@@ -107,6 +101,6 @@ export function SamePointOverlay({ state, args }: OverlayProps<NumberLineConfig,
           </text>
         </g>
       ))}
-    </svg>
+    </CanvasAlignedOverlay>
   );
 }
