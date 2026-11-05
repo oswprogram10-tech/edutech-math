@@ -165,7 +165,7 @@ test('A1 1×1 정사각형 안의 소수 곱셈 — 대표 오답 뒤 고쳐서 
   await choose(page, 'cmp', '크다');
   await choose(page, 'why', '곱하면 수가 커지니까');
   await submit(page);
-  await expectFailedWithHint(page, '0.5의 절반만큼을 구하는 셈이에요');
+  await expectFailedWithHint(page, '0.5의 0.5만큼이면 0.5보다 클까요, 작을까요?');
   await choose(page, 'cmp', '작다');
   await choose(page, 'why', '0.5의 절반만큼을 구하는 셈이라서');
   await submit(page);

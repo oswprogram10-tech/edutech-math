@@ -296,7 +296,7 @@
                 ]
               },
               "level": 1,
-              "say": "0.5의 절반만큼을 구하는 셈이에요. 0.5를 반으로 나눈 크기와 0.5를 견주어 보세요."
+              "say": "0.5의 0.5만큼이면 0.5보다 클까요, 작을까요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "decimal-area" },
@@ -318,7 +318,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "decimal-area" },
               "level": 2,
-              "say": "0.5 × 0.5는 0.5를 몇 번 더한 것과 같나요? 0.5의 절반은 얼마인가요?"
+              "say": "넓이 그림에서 0.5 띠와 겹친 부분 중 어느 쪽이 더 넓을지 떠올려 보세요."
             },
             {
               "when": {
@@ -415,7 +415,7 @@
             {
               "when": { "misconception": "MC-DEC-POINT-PLACEMENT" },
               "level": 2,
-              "say": "3.75의 10배는 3.75보다 큰 수예요. 10분의 1배는 3.75보다 작은 수예요. 소수점이 어디로 가야 할지 생각해 보세요."
+              "say": "숫자 카드가 어느 기둥으로 옮겨 가는지 보고 쓴 답과 견주어 보세요."
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "decimal" },
@@ -559,7 +559,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "decimal" },
               "level": 1,
-              "say": "두 수의 오른쪽 끝 숫자를 맞추었나요? 소수점을 빼고 자연수처럼 계산해 보세요."
+              "say": "덧셈 세로셈과 곱셈 세로셈은 두 수를 놓는 방법이 같을까요?"
             },
             {
               "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-DEC-MULT-ALIGN-POINT" } },
@@ -643,7 +643,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "decimal" },
               "level": 2,
-              "say": "곱한 결과의 소수 자리 수를 세어 보고, 어림값과 같은 크기가 되는지 확인해 보세요."
+              "say": "어림한 값과 세 수를 하나씩 견주어 보세요. 가장 가까운 수는 무엇인가요?"
             },
             {
               "when": {
