@@ -1,0 +1,687 @@
+{
+  "unit": "g6s2u1",
+  "title": "분수의 나눗셈",
+  "activities": [
+    {
+      "id": "g6s2u1.A1",
+      "title": "나누는 수 막대로 재기",
+      "tasks": [
+        {
+          "id": "g6s2u1.A1.T1",
+          "prompt": "1/8 자를 3/4 막대 위에 이어 놓아 보고, 몇 번 들어가는지 써 보세요.",
+          "engine": "E05",
+          "mode": "divide-measure",
+          "cpa": "C",
+          "config": {
+            "mode": "divide-measure",
+            "dividend": "3/4",
+            "divisor": "1/8"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "measuredIs", "args": { "value": "6" } },
+              { "kind": "equals", "path": "measureComplete", "value": true },
+              { "kind": "equals", "path": "response.q.value", "value": "6" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "divide-measure" },
+              "level": 1,
+              "say": "자를 끝까지 이어 놓았나요? 막대 끝과 자 끝이 맞나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "divide-measure" },
+              "level": 2,
+              "say": "자를 되풀이해 놓은 모습을 보며 몇 번 놓였는지 세어 보세요.",
+              "show": { "engine": "E05", "overlay": "ruler-repeat" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "divide-measure" },
+              "level": 3,
+              "backtrack": "g6s2u1.measure-division"
+            }
+          ],
+          "concepts": ["g6s2u1.measure-division"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "q",
+                "label": "몇 번 들어가는지",
+                "forms": ["integer", "fraction", "mixed"]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g6s2u1.A1.T2",
+          "prompt": "2/7 자로 6/7 막대를 재어 몇 번 들어가는지 쓰고, 알게 된 것을 골라 보세요.",
+          "engine": "E05",
+          "mode": "divide-measure",
+          "cpa": "P",
+          "config": {
+            "mode": "divide-measure",
+            "dividend": "6/7",
+            "divisor": "2/7"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "measuredIs", "args": { "value": "3" } },
+              { "kind": "equals", "path": "measureComplete", "value": true },
+              { "kind": "equals", "path": "response.q.value", "value": "3" },
+              { "kind": "equals", "path": "response.rule.selected", "value": ["num"] }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "divide-measure" },
+              "level": 1,
+              "say": "1/7 조각이 6개 있는 막대를 2/7 자로 재면 몇 번일까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "divide-measure" },
+              "level": 2,
+              "say": "자를 되풀이해 놓은 모습을 보며 몇 번 놓였는지 세어 보세요.",
+              "show": { "engine": "E05", "overlay": "ruler-repeat" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "divide-measure" },
+              "level": 3,
+              "backtrack": "g6s2u1.same-denominator-div"
+            }
+          ],
+          "concepts": ["g6s2u1.same-denominator-div", "g6s2u1.measure-division"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "q",
+                "label": "몇 번 들어가는지",
+                "forms": ["integer", "fraction", "mixed"]
+              },
+              {
+                "kind": "choice",
+                "id": "rule",
+                "label": "알게 된 것",
+                "multiple": false,
+                "options": [
+                  { "id": "num", "label": "분모가 같으면 분자끼리 나누어 구할 수 있어요" },
+                  { "id": "den", "label": "분모끼리 나누어 구해요" },
+                  { "id": "add", "label": "분모끼리 더해서 구해요" }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g6s2u1.A1.T3",
+          "prompt": "2/3 자로 3/4 막대를 재어 보세요. 자가 다 들어가지 않으면 남은 부분이 자의 얼마인지 생각해서 몫을 써 보세요.",
+          "engine": "E05",
+          "mode": "divide-measure",
+          "cpa": "C",
+          "config": {
+            "mode": "divide-measure",
+            "dividend": "3/4",
+            "divisor": "2/3",
+            "showRemainderFractionOfDivisor": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "measuredIs", "args": { "value": "9/8" } },
+              { "kind": "equals", "path": "measureComplete", "value": true },
+              { "kind": "equals", "path": "response.q.value", "value": "9/8" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "response.q.value", "value": "13/12" },
+              "level": 1,
+              "say": "남은 부분은 무엇의 몇 분의 몇일까? 자? 피자 전체?",
+              "show": { "engine": "E05", "overlay": "remainder-beside" },
+              "backtrack": "g6s2u1.measure-division"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "divide-measure" },
+              "level": 1,
+              "say": "남은 부분 옆에 자 하나를 대면 자의 몇 칸만큼일까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "divide-measure" },
+              "level": 2,
+              "say": "남은 길이를 자와 나란히 놓고 견주어 보세요.",
+              "show": { "engine": "E05", "overlay": "remainder-beside" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "divide-measure" },
+              "level": 3,
+              "backtrack": "g6s2u1.common-denominator-div"
+            }
+          ],
+          "concepts": ["g6s2u1.measure-division", "g6s2u1.common-denominator-div"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "q",
+                "label": "몇 번 들어가는지",
+                "forms": ["integer", "fraction", "mixed"]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g6s2u1.A1.T4",
+          "prompt": "먼저 2 ÷ 1/3과 2의 크기를 비교하고, 자를 놓아 확인한 뒤 그 까닭을 골라 보세요.",
+          "engine": "E05",
+          "mode": "divide-measure",
+          "cpa": "C",
+          "config": {
+            "mode": "divide-measure",
+            "dividend": "2",
+            "divisor": "1/3"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "measuredIs", "args": { "value": "6" } },
+              { "kind": "equals", "path": "measureComplete", "value": true },
+              { "kind": "equals", "path": "response.cmp.symbol", "value": ">" },
+              { "kind": "equals", "path": "response.why.selected", "value": ["fits"] }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "response.cmp.symbol", "value": "<" },
+              "level": 1,
+              "say": "1/3 막대가 2 안에 몇 번 들어갈까?",
+              "show": { "engine": "E05", "overlay": "ruler-repeat" },
+              "backtrack": "g6s2u1.measure-division"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.cmp.symbol", "value": "=" },
+              "level": 1,
+              "say": "1/3 막대가 2 안에 몇 번 들어갈까?",
+              "show": { "engine": "E05", "overlay": "ruler-repeat" },
+              "backtrack": "g6s2u1.measure-division"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.why.selected", "value": ["always"] },
+              "level": 1,
+              "say": "1/3 막대가 2 안에 몇 번 들어갈까?",
+              "show": { "engine": "E05", "overlay": "ruler-repeat" },
+              "backtrack": "g6s2u1.measure-division"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "divide-measure" },
+              "level": 1,
+              "say": "1/3 막대가 2 안에 몇 번 들어갈까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "divide-measure" },
+              "level": 2,
+              "say": "자를 되풀이해 놓은 모습을 보며 자가 몇 번 놓였는지 세어 보세요.",
+              "show": { "engine": "E05", "overlay": "ruler-repeat" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "divide-measure" },
+              "level": 3,
+              "backtrack": "g6s2u1.measure-division"
+            }
+          ],
+          "concepts": ["g6s2u1.measure-division", "g6s2u1.quotient-bigger"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "compare",
+                "id": "cmp",
+                "label": "두 식의 크기",
+                "left": "2 ÷ 1/3",
+                "right": "2"
+              },
+              {
+                "kind": "choice",
+                "id": "why",
+                "label": "그 까닭",
+                "multiple": false,
+                "options": [
+                  { "id": "fits", "label": "1/3이 2 안에 6번 들어가서" },
+                  { "id": "always", "label": "나누면 언제나 작아져서" },
+                  { "id": "flip", "label": "2를 뒤집어서 곱해서" }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "g6s2u1.A2",
+      "title": "이중 수직선으로 찾기",
+      "tasks": [
+        {
+          "id": "g6s2u1.A2.T1",
+          "prompt": "자 2/3이 1번이에요. 위의 1/3은 아래에서 얼마일까요? 나누기 버튼으로 찾아 써 보세요.",
+          "engine": "E03",
+          "mode": "double",
+          "cpa": "P",
+          "config": {
+            "mode": "double",
+            "labels": "expression",
+            "top": { "label": "양", "max": "3/4" },
+            "bottom": { "label": "자 2/3로 잰 횟수" },
+            "anchors": [["2/3", "1"]],
+            "divisors": [2, 3, 4],
+            "multipliers": [2, 3]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "hasPair", "args": { "top": "1/3", "bottom": "1/2" } },
+              { "kind": "equals", "path": "response.v.value", "value": "1/2" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "double" },
+              "level": 1,
+              "say": "2/3을 반으로 나누면 1/3이지? 아래쪽 1도 똑같이 반으로 나누면?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "double" },
+              "level": 2,
+              "say": "지금까지 누른 나누기·곱하기가 위와 아래에 똑같이 쓰였는지 보세요.",
+              "show": { "engine": "E03", "overlay": "pair-replay" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "double" },
+              "level": 3,
+              "backtrack": "g6s2u1.measure-division"
+            }
+          ],
+          "concepts": ["g6s2u1.measure-division"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "v",
+                "label": "아래에서 얼마인지",
+                "forms": ["fraction", "mixed"]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g6s2u1.A2.T2",
+          "prompt": "위의 1은 아래에서 얼마일까요? 버튼으로 찾아 써 보세요.",
+          "engine": "E03",
+          "mode": "double",
+          "cpa": "P",
+          "config": {
+            "mode": "double",
+            "labels": "expression",
+            "top": { "label": "양", "max": "3/4" },
+            "bottom": { "label": "자 2/3로 잰 횟수" },
+            "anchors": [["2/3", "1"]],
+            "divisors": [2, 3, 4],
+            "multipliers": [2, 3]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "hasPair", "args": { "top": "1", "bottom": "3/2" } },
+              { "kind": "equals", "path": "response.v.value", "value": "3/2" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "double" },
+              "level": 1,
+              "say": "1/3이 몇 개 모이면 1이 될까? 아래쪽도 똑같이 해 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "double" },
+              "level": 2,
+              "say": "지금까지 누른 나누기·곱하기가 위와 아래에 똑같이 쓰였는지 보세요.",
+              "show": { "engine": "E03", "overlay": "pair-replay" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "double" },
+              "level": 3,
+              "backtrack": "g6s2u1.reciprocal-multiply"
+            }
+          ],
+          "concepts": ["g6s2u1.measure-division", "g6s2u1.reciprocal-multiply"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "v",
+                "label": "아래에서 얼마인지",
+                "forms": ["fraction", "mixed"]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g6s2u1.A2.T3",
+          "prompt": "위의 3/4까지 찾아가 보고, 3/4 ÷ 2/3과 같은 값이 되는 곱셈식을 고른 뒤 값을 써 보세요.",
+          "engine": "E03",
+          "mode": "double",
+          "cpa": "P",
+          "config": {
+            "mode": "double",
+            "labels": "expression",
+            "top": { "label": "양", "max": "3/4" },
+            "bottom": { "label": "자 2/3로 잰 횟수" },
+            "anchors": [["2/3", "1"]],
+            "divisors": [2, 3, 4],
+            "multipliers": [2, 3]
+          },
+          "diagnose": [
+            {
+              "code": "MC-FRAC-DIV-INVERT-WRONG",
+              "args": { "dividend": "3/4", "divisor": "2/3" },
+              "path": "response.v.value"
+            }
+          ],
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "hasPair", "args": { "top": "3/4", "bottom": "9/8" } },
+              { "kind": "equals", "path": "response.expr.selected", "value": ["a"] },
+              { "kind": "equals", "path": "response.v.value", "value": "9/8" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-FRAC-DIV-INVERT-WRONG" },
+              "level": 1,
+              "say": "어떤 수로 '재고' 있었지? 자는 어느 쪽이야?",
+              "show": { "engine": "E03", "overlay": "pair-replay" },
+              "backtrack": "g6s2u1.reciprocal-multiply"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.expr.selected", "value": ["b"] },
+              "level": 1,
+              "say": "어떤 수로 '재고' 있었지? 자는 어느 쪽이야?",
+              "show": { "engine": "E03", "overlay": "pair-replay" },
+              "backtrack": "g6s2u1.reciprocal-multiply"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "double" },
+              "level": 1,
+              "say": "위의 3/4와 아래에서 찾은 값을 대응선으로 확인했나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "double" },
+              "level": 2,
+              "say": "지금까지 누른 나누기·곱하기가 위와 아래에 똑같이 쓰였는지 보세요.",
+              "show": { "engine": "E03", "overlay": "pair-replay" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "double" },
+              "level": 3,
+              "backtrack": "g6s2u1.reciprocal-multiply"
+            }
+          ],
+          "concepts": ["g6s2u1.reciprocal-multiply", "g6s2u1.common-denominator-div"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "v",
+                "label": "아래에서 얼마인지",
+                "forms": ["fraction", "mixed"]
+              },
+              {
+                "kind": "choice",
+                "id": "expr",
+                "label": "같은 값이 되는 곱셈식",
+                "multiple": false,
+                "options": [
+                  { "id": "a", "label": "3/4 × 3/2" },
+                  { "id": "b", "label": "4/3 × 2/3" },
+                  { "id": "c", "label": "3/4 × 2/3" }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g6s2u1.A2.T4",
+          "prompt": "5/6 ÷ 3/5도 같은 방법으로 찾아 값을 써 보세요.",
+          "engine": "E03",
+          "mode": "double",
+          "cpa": "P",
+          "config": {
+            "mode": "double",
+            "labels": "expression",
+            "top": { "label": "양", "max": "5/6" },
+            "bottom": { "label": "자 3/5로 잰 횟수" },
+            "anchors": [["3/5", "1"]],
+            "divisors": [2, 3, 5, 6],
+            "multipliers": [2, 3, 5]
+          },
+          "diagnose": [
+            {
+              "code": "MC-FRAC-DIV-INVERT-WRONG",
+              "args": { "dividend": "5/6", "divisor": "3/5" },
+              "path": "response.v.value"
+            }
+          ],
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "hasPair", "args": { "top": "5/6", "bottom": "25/18" } },
+              { "kind": "equals", "path": "response.v.value", "value": "25/18" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-FRAC-DIV-INVERT-WRONG" },
+              "level": 1,
+              "say": "어떤 수로 '재고' 있었지? 자는 어느 쪽이야?",
+              "show": { "engine": "E03", "overlay": "pair-replay" },
+              "backtrack": "g6s2u1.reciprocal-multiply"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "double" },
+              "level": 1,
+              "say": "먼저 위의 1이 아래에서 얼마인지 찾아볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "double" },
+              "level": 2,
+              "say": "지금까지 누른 나누기·곱하기가 위와 아래에 똑같이 쓰였는지 보세요.",
+              "show": { "engine": "E03", "overlay": "pair-replay" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "double" },
+              "level": 3,
+              "backtrack": "g6s2u1.reciprocal-multiply"
+            }
+          ],
+          "concepts": ["g6s2u1.reciprocal-multiply"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "v",
+                "label": "아래에서 얼마인지",
+                "forms": ["fraction", "mixed"]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g6s2u1.A2.T5",
+          "prompt": "1 1/2 ÷ 3/4을 여러 줄로 계산해 보세요.",
+          "engine": "E08",
+          "mode": "fraction-steps",
+          "cpa": "A",
+          "config": {
+            "mode": "fraction-steps",
+            "start": "1 1/2 ÷ 3/4",
+            "keypad": ["digits", "fraction", "mixed", "mul", "div", "add-line", "remove-line"],
+            "checkEachLine": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "allEquivalent", "value": true },
+              { "kind": "predicate", "name": "finalValueIs", "args": { "value": "2" } }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "predicate", "name": "finalValueIs", "args": { "value": "1/2" } },
+              "level": 1,
+              "say": "어떤 수로 '재고' 있었지? 자는 어느 쪽이야?",
+              "backtrack": "g6s2u1.reciprocal-multiply"
+            },
+            {
+              "when": { "kind": "predicate", "name": "finalValueIs", "args": { "value": "8/9" } },
+              "level": 1,
+              "say": "어떤 수로 '재고' 있었지? 자는 어느 쪽이야?",
+              "backtrack": "g6s2u1.reciprocal-multiply"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction-steps" },
+              "level": 1,
+              "say": "분모가 같을 때는 왜 분자끼리 나누어도 됐을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction-steps" },
+              "level": 2,
+              "say": "앞 줄과 지금 줄의 값이 같은지 막대로 견주어 보세요.",
+              "show": { "engine": "E08", "overlay": "bar-check" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction-steps" },
+              "level": 3,
+              "backtrack": "g6s2u1.common-denominator-div"
+            }
+          ],
+          "concepts": ["g6s2u1.reciprocal-multiply", "g6s2u1.common-denominator-div"],
+          "submit": "button"
+        },
+        {
+          "id": "g6s2u1.A2.T6",
+          "prompt": "4 ÷ 2/5를 여러 줄로 계산해 보세요.",
+          "engine": "E08",
+          "mode": "fraction-steps",
+          "cpa": "A",
+          "config": {
+            "mode": "fraction-steps",
+            "start": "4 ÷ 2/5",
+            "keypad": ["digits", "fraction", "mixed", "mul", "div", "add-line", "remove-line"],
+            "checkEachLine": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "allEquivalent", "value": true },
+              { "kind": "predicate", "name": "finalValueIs", "args": { "value": "10" } }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "predicate", "name": "finalValueIs", "args": { "value": "1/10" } },
+              "level": 1,
+              "say": "어떤 수로 '재고' 있었지? 자는 어느 쪽이야?",
+              "backtrack": "g6s2u1.reciprocal-multiply"
+            },
+            {
+              "when": { "kind": "predicate", "name": "finalValueIs", "args": { "value": "5/8" } },
+              "level": 1,
+              "say": "어떤 수로 '재고' 있었지? 자는 어느 쪽이야?",
+              "backtrack": "g6s2u1.reciprocal-multiply"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction-steps" },
+              "level": 1,
+              "say": "2/5가 4 안에 몇 번 들어갈까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction-steps" },
+              "level": 2,
+              "say": "앞 줄과 지금 줄의 값이 같은지 막대로 견주어 보세요.",
+              "show": { "engine": "E08", "overlay": "bar-check" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction-steps" },
+              "level": 3,
+              "backtrack": "g6s2u1.reciprocal-multiply"
+            }
+          ],
+          "concepts": ["g6s2u1.reciprocal-multiply", "g6s2u1.measure-division"],
+          "submit": "button"
+        },
+        {
+          "id": "g6s2u1.A2.T7",
+          "prompt": "5/6 ÷ 5/12를 여러 줄로 계산해 보세요.",
+          "engine": "E08",
+          "mode": "fraction-steps",
+          "cpa": "A",
+          "config": {
+            "mode": "fraction-steps",
+            "start": "5/6 ÷ 5/12",
+            "keypad": ["digits", "fraction", "mixed", "mul", "div", "add-line", "remove-line"],
+            "checkEachLine": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "allEquivalent", "value": true },
+              { "kind": "predicate", "name": "finalValueIs", "args": { "value": "2" } }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "predicate", "name": "finalValueIs", "args": { "value": "1/2" } },
+              "level": 1,
+              "say": "어떤 수로 '재고' 있었지? 자는 어느 쪽이야?",
+              "backtrack": "g6s2u1.reciprocal-multiply"
+            },
+            {
+              "when": { "kind": "predicate", "name": "finalValueIs", "args": { "value": "72/25" } },
+              "level": 1,
+              "say": "어떤 수로 '재고' 있었지? 자는 어느 쪽이야?",
+              "backtrack": "g6s2u1.reciprocal-multiply"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction-steps" },
+              "level": 1,
+              "say": "분모를 같게 하면 5/6은 1/12이 몇 개일까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction-steps" },
+              "level": 2,
+              "say": "앞 줄과 지금 줄의 값이 같은지 막대로 견주어 보세요.",
+              "show": { "engine": "E08", "overlay": "bar-check" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction-steps" },
+              "level": 3,
+              "backtrack": "g6s2u1.common-denominator-div"
+            }
+          ],
+          "concepts": ["g6s2u1.reciprocal-multiply", "g6s2u1.common-denominator-div"],
+          "submit": "button"
+        }
+      ]
+    }
+  ]
+}
