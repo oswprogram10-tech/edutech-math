@@ -1,0 +1,593 @@
+{
+  "unit": "g6s1u1",
+  "title": "분수의 나눗셈",
+  "activities": [
+    {
+      "id": "g6s1u1.A1",
+      "title": "피자를 똑같이 나누기",
+      "tasks": [
+        {
+          "id": "g6s1u1.A1.T1",
+          "prompt": "피자 3판을 4명이 똑같이 나누어 접시에 놓고, 한 명이 받는 양을 써 보세요.",
+          "engine": "E05",
+          "mode": "partition",
+          "cpa": "C",
+          "config": {
+            "mode": "partition",
+            "variant": "share",
+            "shape": "circle",
+            "wholes": 3,
+            "people": 4,
+            "plateLabel": false
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "platesAre", "args": { "value": "3/4" } },
+              { "kind": "equals", "path": "allDealt", "value": true },
+              { "kind": "equals", "path": "response.ans.value", "value": "3/4" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 1,
+              "say": "피자 한 판을 몇 조각으로 자르면 4명이 똑같이 나눌 수 있을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 2,
+              "say": "접시마다 조각이 같은 크기로, 같은 개수만큼 놓였는지 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 3,
+              "backtrack": "g6s1u1.whole-div-as-fraction"
+            }
+          ],
+          "concepts": ["g6s1u1.whole-div-as-fraction"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "ans",
+                "label": "한 명이 받는 양",
+                "forms": ["fraction", "mixed"]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g6s1u1.A1.T2",
+          "prompt": "피자 5판을 3명이 똑같이 나누고, 한 명이 받는 양을 대분수나 가분수로 써 보세요.",
+          "engine": "E05",
+          "mode": "partition",
+          "cpa": "C",
+          "config": {
+            "mode": "partition",
+            "variant": "share",
+            "shape": "circle",
+            "wholes": 5,
+            "people": 3,
+            "plateLabel": false
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "platesAre", "args": { "value": "5/3" } },
+              { "kind": "equals", "path": "allDealt", "value": true },
+              { "kind": "equals", "path": "response.ans.value", "value": "5/3" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 1,
+              "say": "한 명이 한 판씩 받고 남은 피자는 어떻게 나눌까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 2,
+              "say": "남은 피자도 똑같이 나누어 접시마다 같은 양이 되게 해 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 3,
+              "backtrack": "g6s1u1.whole-div-as-fraction"
+            }
+          ],
+          "concepts": ["g6s1u1.whole-div-as-fraction"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "ans",
+                "label": "한 명이 받는 양",
+                "forms": ["fraction", "mixed"]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g6s1u1.A1.T3",
+          "prompt": "2 ÷ 5와 5 ÷ 2 중에서 몫이 1보다 큰 것을 골라 보세요.",
+          "engine": "E05",
+          "mode": "partition",
+          "cpa": "A",
+          "config": {
+            "mode": "partition",
+            "variant": "share",
+            "shape": "circle",
+            "wholes": 3,
+            "people": 4,
+            "plateLabel": false
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.pick.selected",
+            "value": ["b"]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 1,
+              "say": "피자 2판을 5명이 나누면 한 명이 한 판보다 많이 받을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 2,
+              "say": "나누는 사람 수보다 피자 수가 많으면 한 명이 한 판보다 많이 받을까, 적게 받을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 3,
+              "backtrack": "g6s1u1.whole-div-as-fraction"
+            }
+          ],
+          "concepts": ["g6s1u1.whole-div-as-fraction"],
+          "submit": "button",
+          "showEngine": false,
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "pick",
+                "label": "몫이 1보다 큰 식",
+                "multiple": false,
+                "options": [
+                  { "id": "a", "label": "2 ÷ 5" },
+                  { "id": "b", "label": "5 ÷ 2" }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "g6s1u1.A2",
+      "title": "한 줄만 남겨 나누기",
+      "tasks": [
+        {
+          "id": "g6s1u1.A2.T1",
+          "prompt": "6/7을 똑같이 셋으로 나누어 하나만 남기고, 남긴 부분이 전체의 얼마인지 써 보세요.",
+          "engine": "E05",
+          "mode": "partition",
+          "cpa": "C",
+          "config": {
+            "mode": "partition",
+            "variant": "divide-whole",
+            "fraction": "6/7",
+            "divisor": 3,
+            "groupShortcut": true,
+            "morphToMultiply": false
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "keptValueIs", "args": { "value": "2/7" } },
+              { "kind": "equals", "path": "response.ans.value", "value": "2/7" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-FRAC-DIV-MULT-DENOM-WRONG" },
+              "level": 1,
+              "say": "3명이 나누었는데 한 명 몫이 원래보다 많아졌을까?",
+              "show": { "engine": "E05", "overlay": "row-preview" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 1,
+              "say": "색칠한 조각 6개를 세 묶음으로 나누면 한 묶음은 몇 조각일까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 2,
+              "say": "가로 칸을 열어 색칠한 띠를 여러 줄로 나눈 뒤, 한 줄만 남겨 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 3,
+              "backtrack": "g6s1u1.fraction-div-whole-share"
+            }
+          ],
+          "concepts": ["g6s1u1.fraction-div-whole-share"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-FRAC-DIV-MULT-DENOM-WRONG",
+              "args": { "fraction": "6/7", "n": "3" },
+              "path": "response.ans.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "ans",
+                "label": "남긴 부분",
+                "forms": ["fraction", "mixed"]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g6s1u1.A2.T2",
+          "prompt": "4/5을 똑같이 셋으로 나누어 하나만 남기고, 남긴 부분이 전체의 얼마인지 써 보세요.",
+          "engine": "E05",
+          "mode": "partition",
+          "cpa": "C",
+          "config": {
+            "mode": "partition",
+            "variant": "divide-whole",
+            "fraction": "4/5",
+            "divisor": 3,
+            "morphToMultiply": false
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "rowsIs", "args": { "rows": 3 } },
+              { "kind": "predicate", "name": "keptValueIs", "args": { "value": "4/15" } },
+              { "kind": "equals", "path": "response.ans.value", "value": "4/15" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-FRAC-DIV-MULT-DENOM-WRONG" },
+              "level": 1,
+              "say": "3명이 나누었는데 한 명 몫이 원래보다 많아졌을까?",
+              "show": { "engine": "E05", "overlay": "row-preview" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 1,
+              "say": "색칠한 부분을 3등분하려면 칼선을 어느 방향으로 더 그을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 2,
+              "say": "가로 칸을 세 줄로 나눈 뒤 한 줄만 남겨 보세요.",
+              "show": { "engine": "E05", "overlay": "row-preview" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 3,
+              "backtrack": "g6s1u1.fraction-div-whole-share"
+            }
+          ],
+          "concepts": ["g6s1u1.fraction-div-whole-share"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-FRAC-DIV-MULT-DENOM-WRONG",
+              "args": { "fraction": "4/5", "n": "3" },
+              "path": "response.ans.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "ans",
+                "label": "남긴 부분",
+                "forms": ["fraction", "mixed"]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g6s1u1.A2.T3",
+          "prompt": "4/5 ÷ 3을 그림으로 다시 해 보고, 같은 값이 되는 곱셈식을 골라 보세요.",
+          "engine": "E05",
+          "mode": "partition",
+          "cpa": "P",
+          "config": {
+            "mode": "partition",
+            "variant": "divide-whole",
+            "fraction": "4/5",
+            "divisor": 3,
+            "morphToMultiply": false
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "keptValueIs", "args": { "value": "4/15" } },
+              { "kind": "equals", "path": "response.expr.selected", "value": ["third"] }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.expr.selected",
+                "value": ["three"]
+              },
+              "level": 1,
+              "say": "3명이 나누었는데 한 명 몫이 원래보다 많아졌을까?",
+              "backtrack": "g5s2u2.fraction-of-fraction"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 1,
+              "say": "남긴 한 줄은 4/5의 얼마만큼일까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 2,
+              "say": "가로 칸을 세 줄로 나눈 뒤 한 줄만 남겨 보세요.",
+              "show": { "engine": "E05", "overlay": "row-preview" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 3,
+              "backtrack": "g6s1u1.div-n-equals-times-unit"
+            }
+          ],
+          "concepts": ["g6s1u1.div-n-equals-times-unit"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "expr",
+                "label": "같은 값이 되는 곱셈식",
+                "multiple": false,
+                "options": [
+                  { "id": "third", "label": "4/5 × 1/3" },
+                  { "id": "three", "label": "4/5 × 3" },
+                  { "id": "fifth", "label": "1/5 × 3" }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g6s1u1.A2.T4",
+          "prompt": "2 1/4을 똑같이 셋으로 나누어 하나만 남기고, 남긴 부분을 써 보세요.",
+          "engine": "E05",
+          "mode": "partition",
+          "cpa": "P",
+          "config": {
+            "mode": "partition",
+            "variant": "divide-whole",
+            "fraction": "2 1/4",
+            "divisor": 3,
+            "morphToMultiply": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "keptValueIs", "args": { "value": "3/4" } },
+              { "kind": "equals", "path": "response.ans.value", "value": "3/4" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-FRAC-DIV-MULT-DENOM-WRONG" },
+              "level": 1,
+              "say": "3명이 나누었는데 한 명 몫이 원래보다 많아졌을까?",
+              "show": { "engine": "E05", "overlay": "row-preview" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 1,
+              "say": "2 1/4을 조각으로 나타내면 몇 조각일까? 그 조각을 셋으로 나눌 수 있을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 2,
+              "say": "가로 칸을 세 줄로 나눈 뒤 한 줄만 남겨 보세요.",
+              "show": { "engine": "E05", "overlay": "row-preview" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 3,
+              "backtrack": "g6s1u1.mixed-div-whole"
+            }
+          ],
+          "concepts": ["g6s1u1.mixed-div-whole"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-FRAC-DIV-MULT-DENOM-WRONG",
+              "args": { "fraction": "2 1/4", "n": "3" },
+              "path": "response.ans.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "ans",
+                "label": "남긴 부분",
+                "forms": ["fraction", "mixed"]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g6s1u1.A2.T5",
+          "prompt": "5/8 ÷ 4를 여러 줄로 계산해 보세요.",
+          "engine": "E08",
+          "mode": "fraction-steps",
+          "cpa": "A",
+          "config": {
+            "mode": "fraction-steps",
+            "start": "5/8 ÷ 4",
+            "keypad": ["digits", "fraction", "mixed", "mul", "div", "add-line", "remove-line"],
+            "checkEachLine": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "allEquivalent", "value": true },
+              { "kind": "predicate", "name": "finalValueIs", "args": { "value": "5/32" } },
+              { "kind": "predicate", "name": "finalIrreducible" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "finalValue", "value": "5/2" },
+              "level": 1,
+              "say": "4명이 나누었는데 한 명 몫이 원래보다 많아졌을까?",
+              "backtrack": "g5s2u2.fraction-of-fraction"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction-steps" },
+              "level": 1,
+              "say": "5/8을 4명이 똑같이 나누면 한 명 몫은 5/8보다 클까, 작을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction-steps" },
+              "level": 2,
+              "say": "여러 줄의 값이 모두 같은 양인지 막대로 견주어 보세요.",
+              "show": { "engine": "E08", "overlay": "bar-check" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction-steps" },
+              "level": 3,
+              "backtrack": "g6s1u1.div-n-equals-times-unit"
+            }
+          ],
+          "concepts": ["g6s1u1.div-n-equals-times-unit"],
+          "submit": "button"
+        },
+        {
+          "id": "g6s1u1.A2.T6",
+          "prompt": "3 1/3 ÷ 5를 여러 줄로 계산해 보세요.",
+          "engine": "E08",
+          "mode": "fraction-steps",
+          "cpa": "A",
+          "config": {
+            "mode": "fraction-steps",
+            "start": "3 1/3 ÷ 5",
+            "keypad": ["digits", "fraction", "mixed", "mul", "div", "add-line", "remove-line"],
+            "checkEachLine": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "allEquivalent", "value": true },
+              { "kind": "predicate", "name": "finalValueIs", "args": { "value": "2/3" } },
+              { "kind": "predicate", "name": "finalIrreducible" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "finalValue", "value": "50/3" },
+              "level": 1,
+              "say": "5명이 나누었는데 한 명 몫이 원래보다 많아졌을까?",
+              "backtrack": "g5s2u2.fraction-of-fraction"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction-steps" },
+              "level": 1,
+              "say": "3 1/3을 가분수로 바꾸면 나누기 쉬울까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction-steps" },
+              "level": 2,
+              "say": "여러 줄의 값이 모두 같은 양인지 막대로 견주어 보세요.",
+              "show": { "engine": "E08", "overlay": "bar-check" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction-steps" },
+              "level": 3,
+              "backtrack": "g6s1u1.mixed-div-whole"
+            }
+          ],
+          "concepts": ["g6s1u1.mixed-div-whole"],
+          "submit": "button"
+        },
+        {
+          "id": "g6s1u1.A2.T7",
+          "prompt": "4/5 ÷ 3은 4/5보다 작아요. 왜 작아졌을까요?",
+          "engine": "E05",
+          "mode": "partition",
+          "cpa": "A",
+          "config": {
+            "mode": "partition",
+            "variant": "divide-whole",
+            "fraction": "4/5",
+            "divisor": 3,
+            "morphToMultiply": false
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.why.selected",
+            "value": ["split"]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.why.selected",
+                "value": ["always"]
+              },
+              "level": 1,
+              "say": "÷3이면 왜 작아졌을까? 3등분했기 때문일까, 나누기라서일까?",
+              "backtrack": "g6s1u1.div-n-equals-times-unit"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 1,
+              "say": "나눈 결과가 전체의 어느 만큼인지 그림으로 떠올려 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 2,
+              "say": "나누는 수가 3이라는 것과, 나누기라는 것 중 어느 쪽이 크기를 바꾸는 까닭일까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "partition" },
+              "level": 3,
+              "backtrack": "g6s1u1.div-n-equals-times-unit"
+            }
+          ],
+          "concepts": ["g6s1u1.div-n-equals-times-unit"],
+          "submit": "button",
+          "showEngine": false,
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "why",
+                "label": "작아진 까닭",
+                "multiple": false,
+                "options": [
+                  { "id": "split", "label": "4/5을 3등분한 것 중 하나라서" },
+                  { "id": "always", "label": "나누기를 하면 언제나 작아지니까" },
+                  { "id": "minus", "label": "3을 뺐으니까" }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
