@@ -503,7 +503,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
               "level": 2,
-              "say": "4개에 0개를 더하면 그대로예요. 다시 세어 볼까?"
+              "say": "빈 접시를 합치면 셈돌 수가 달라질까? 다시 세어 볼까?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
@@ -544,7 +544,7 @@
             {
               "when": { "kind": "equals", "path": "response.story.selected", "value": ["more"] },
               "level": 2,
-              "say": "더 오는 이야기는 빼기가 아니에요. 날아가는 이야기를 다시 볼까?"
+              "say": "이야기마다 새가 늘어나는지, 줄어드는지 다시 볼까?"
             },
             {
               "when": { "kind": "equals", "path": "response.story.selected", "value": ["more"] },
@@ -559,7 +559,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
               "level": 2,
-              "say": "새가 날아가는 이야기와 더 오는 이야기를 다시 볼까?"
+              "say": "5에서 3이 없어지는 이야기는 어느 것일까?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "part-whole" },

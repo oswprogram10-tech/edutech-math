@@ -209,20 +209,24 @@ test('A2 그림 이야기 극장 — 대표 오답 뒤 고쳐서 다섯 과제�
   await submit(page);
   await expectPassed(page);
 
-  // T4 — 3이라고 답해 틀린 뒤, 4로 고친다.
+  // T4 — 3이라고 답해 두 번 틀린 뒤, ②를 보고 4로 고친다.
   await typeNumber(page, 'n', ['3']);
   await submit(page);
   await expectFailedWithHint(page, '빈 접시에는 몇 개가 있나요?');
+  await submit(page);
+  await expectFailedWithHint(page, '빈 접시를 합치면 셈돌 수가 달라질까? 다시 세어 볼까?', 2);
   await clearNumber(page, 'n');
   await typeNumber(page, 'n', ['4']);
   await submit(page);
   await expectPassed(page);
 
-  // T5 — 엔진 없이 '더 왔어요'를 골라 틀린 뒤, 날아간 이야기로 고친다.
+  // T5 — 엔진 없이 '더 왔어요'를 골라 두 번 틀린 뒤, 날아간 이야기로 고친다.
   const pick = responseSlot(page);
   await pick.getByRole('button', { name: '새 5마리에 3마리가 더 왔어요' }).click();
   await submit(page);
   await expectFailedWithHint(page, '빼기는 없어지거나 줄어드는 이야기예요. 어느 이야기가 그럴까?');
+  await submit(page);
+  await expectFailedWithHint(page, '이야기마다 새가 늘어나는지, 줄어드는지 다시 볼까?', 2);
   await pick.getByRole('button', { name: '새 5마리 중 3마리가 날아갔어요' }).click();
   await submit(page);
   await expectPassed(page, true);
