@@ -616,7 +616,7 @@
             {
               "when": { "kind": "predicate", "name": "finalValueIs", "args": { "value": "1/2" } },
               "level": 2,
-              "say": "앞 줄과 지금 줄을 막대로 견주면 어떤 수를 뒤집었는지 알 수 있을까?"
+              "say": "앞 줄과 지금 줄의 값이 같은지 다시 계산해 볼까? 자는 어느 수였지?"
             },
             {
               "when": { "kind": "predicate", "name": "finalValueIs", "args": { "value": "1/2" } },
@@ -631,7 +631,7 @@
             {
               "when": { "kind": "predicate", "name": "finalValueIs", "args": { "value": "8/9" } },
               "level": 2,
-              "say": "앞 줄과 지금 줄을 막대로 견주면 어떤 수를 뒤집었는지 알 수 있을까?"
+              "say": "앞 줄과 지금 줄의 값이 같은지 다시 계산해 볼까? 자는 어느 수였지?"
             },
             {
               "when": { "kind": "predicate", "name": "finalValueIs", "args": { "value": "8/9" } },
@@ -686,7 +686,7 @@
             {
               "when": { "kind": "predicate", "name": "finalValueIs", "args": { "value": "1/10" } },
               "level": 2,
-              "say": "앞 줄과 지금 줄을 막대로 견주면 어떤 수를 뒤집었는지 알 수 있을까?"
+              "say": "앞 줄과 지금 줄의 값이 같은지 다시 계산해 볼까? 자는 어느 수였지?"
             },
             {
               "when": { "kind": "predicate", "name": "finalValueIs", "args": { "value": "1/10" } },
@@ -701,7 +701,7 @@
             {
               "when": { "kind": "predicate", "name": "finalValueIs", "args": { "value": "5/8" } },
               "level": 2,
-              "say": "앞 줄과 지금 줄을 막대로 견주면 어떤 수를 뒤집었는지 알 수 있을까?"
+              "say": "앞 줄과 지금 줄의 값이 같은지 다시 계산해 볼까? 자는 어느 수였지?"
             },
             {
               "when": { "kind": "predicate", "name": "finalValueIs", "args": { "value": "5/8" } },
@@ -756,7 +756,7 @@
             {
               "when": { "kind": "predicate", "name": "finalValueIs", "args": { "value": "1/2" } },
               "level": 2,
-              "say": "앞 줄과 지금 줄을 막대로 견주면 어떤 수를 뒤집었는지 알 수 있을까?"
+              "say": "앞 줄과 지금 줄의 값이 같은지 다시 계산해 볼까? 자는 어느 수였지?"
             },
             {
               "when": { "kind": "predicate", "name": "finalValueIs", "args": { "value": "1/2" } },
@@ -771,7 +771,7 @@
             {
               "when": { "kind": "predicate", "name": "finalValueIs", "args": { "value": "72/25" } },
               "level": 2,
-              "say": "앞 줄과 지금 줄을 막대로 견주면 어떤 수를 뒤집었는지 알 수 있을까?"
+              "say": "앞 줄과 지금 줄의 값이 같은지 다시 계산해 볼까? 자는 어느 수였지?"
             },
             {
               "when": { "kind": "predicate", "name": "finalValueIs", "args": { "value": "72/25" } },
