@@ -169,6 +169,10 @@ test('A1 겹친 넓이로 곱셈하기 — 대표 오답 뒤 고쳐서 다섯 �
   await typeFraction(page, 'ans', '2', '3');
   await submit(page);
   await expectFailedWithHint(page, '2/3이 4개 모이면 2/3과 크기가 같을까요', ['8/3', '2 2/3']);
+  // 같은 오답을 한 번 더 내면 오개념 힌트 ②의 그림이 함께 나온다.
+  await submit(page);
+  await expectFailedWithHint(page, '2/3 조각 4개를 겹친 그림에서 세어 볼까요', ['8/3', '2 2/3'], 2);
+  await expect(page.locator('[data-overlay="overlap-count"]')).toHaveCount(1);
   await clearNumber(page, 'ans');
   await typeFraction(page, 'ans', '8', '3');
   await submit(page);
@@ -229,13 +233,14 @@ test('A2 리본 길이 바꾸기 — 대표 오답 뒤 고쳐서 다섯 과제�
   await submit(page);
   await expectPassed(page);
 
-  // T2 — '짧아질까'로 예측해 힌트 ①을 본 뒤 '길어질까'로 고치고 5/4까지 옮긴다.
-  await engineAction(page, '짧아질까');
-  await typeInteger(page, 'len', '15');
-  await submit(page);
-  await expectFailedWithHint(page, '5/4은 1보다 클까, 작을까', ['15']);
+  // T2 — 예측을 맞게 하고 길이만 틀리면 일반 힌트 ①이 나온다.
   await engineAction(page, '길어질까');
   await engineActionTimes(page, '뒤 눈금', 5);
+  await typeInteger(page, 'len', '12');
+  await submit(page);
+  await expectFailedWithHint(page, '12m를 4도막으로 나눈 한 도막이 몇 개 있는 셈일까', ['15']);
+  await clearNumber(page, 'len');
+  await typeInteger(page, 'len', '15');
   await submit(page);
   await expectPassed(page);
 

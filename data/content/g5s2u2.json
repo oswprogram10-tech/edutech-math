@@ -34,6 +34,17 @@
               "say": "2/3이 4개 모이면 2/3과 크기가 같을까요? 분모도 4배가 되어야 하나요?"
             },
             {
+              "when": { "misconception": "MC-FRAC-MULT-WHOLE-BOTH" },
+              "level": 2,
+              "say": "2/3 조각 4개를 겹친 그림에서 세어 볼까요? 조각 하나는 전체의 얼마일까요?",
+              "show": { "engine": "E05", "overlay": "overlap-count" }
+            },
+            {
+              "when": { "misconception": "MC-FRAC-MULT-WHOLE-BOTH" },
+              "level": 3,
+              "backtrack": "g5s2u2.whole-times-fraction"
+            },
+            {
               "when": { "kind": "equals", "path": "mode", "value": "multiply" },
               "level": 1,
               "say": "칠한 조각이 모두 몇 개이고, 조각 하나는 전체의 얼마일까?"
@@ -99,6 +110,17 @@
               "say": "2/3의 3/4만큼인데, 분자끼리 더하고 분모끼리 더한 값이 맞을까요? 결과가 2/3보다 커졌나요?"
             },
             {
+              "when": { "misconception": "MC-FRAC-ADD-DENOM" },
+              "level": 2,
+              "say": "겹친 칸을 세어 보면 분자끼리 더한 값과 같을까요?",
+              "show": { "engine": "E05", "overlay": "overlap-count" }
+            },
+            {
+              "when": { "misconception": "MC-FRAC-ADD-DENOM" },
+              "level": 3,
+              "backtrack": "g4s2u1.unit-fraction-count"
+            },
+            {
               "when": { "kind": "equals", "path": "mode", "value": "multiply" },
               "level": 1,
               "say": "겹친 칸은 몇 칸이고, 전체는 몇 칸으로 나뉘었을까?"
@@ -112,7 +134,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "multiply" },
               "level": 3,
-              "backtrack": "g4s2u1.unit-fraction-count"
+              "backtrack": "g5s2u2.fraction-of-fraction"
             }
           ],
           "concepts": ["g5s2u2.fraction-of-fraction"],
@@ -158,22 +180,36 @@
           },
           "hints": [
             {
-              "when": {
-                "kind": "equals",
-                "path": "response.rule.selected",
-                "value": ["common"]
-              },
+              "when": { "kind": "equals", "path": "response.rule.selected", "value": ["common"] },
               "level": 1,
               "say": "통분은 조각 크기를 맞추려고 했지. 곱셈에서도 조각 크기를 맞춰야 할까?"
             },
             {
-              "when": {
-                "kind": "equals",
-                "path": "response.rule.selected",
-                "value": ["addden"]
-              },
+              "when": { "kind": "equals", "path": "response.rule.selected", "value": ["common"] },
+              "level": 2,
+              "say": "두 색이 겹친 칸은 몇 칸일까요? 통분한 그림과 견주어 볼까요?",
+              "show": { "engine": "E05", "overlay": "overlap-count" }
+            },
+            {
+              "when": { "kind": "equals", "path": "response.rule.selected", "value": ["common"] },
+              "level": 3,
+              "backtrack": "g5s2u2.fraction-of-fraction"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.rule.selected", "value": ["addden"] },
               "level": 1,
               "say": "1/2의 1/5만큼인데, 분자끼리 더하고 분모끼리 더한 값이 맞을까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.rule.selected", "value": ["addden"] },
+              "level": 2,
+              "say": "1/2과 1/5이 겹친 칸을 세어 볼까요?",
+              "show": { "engine": "E05", "overlay": "overlap-count" }
+            },
+            {
+              "when": { "kind": "equals", "path": "response.rule.selected", "value": ["addden"] },
+              "level": 3,
+              "backtrack": "g4s2u1.unit-fraction-count"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "multiply" },
@@ -293,6 +329,17 @@
               "say": "마지막 분수를 더 간단하게 나타낼 수 있을까?"
             },
             {
+              "when": { "kind": "equals", "path": "finalIrreducible", "value": false },
+              "level": 2,
+              "say": "여러 줄이 같은 양인지 막대로 견주고, 마지막 분수를 더 간단히 나타낼 수 있을까요?",
+              "show": { "engine": "E08", "overlay": "bar-check" }
+            },
+            {
+              "when": { "kind": "equals", "path": "finalIrreducible", "value": false },
+              "level": 3,
+              "backtrack": "g5s2u2.cross-simplify"
+            },
+            {
               "when": { "kind": "equals", "path": "mode", "value": "fraction-steps" },
               "level": 1,
               "say": "분자와 분모에 같은 수가 있으면 계산하기 전에 나눌 수 있을까?"
@@ -347,9 +394,31 @@
               "say": "12m의 3/4만큼이면 리본 전체보다 많을까?"
             },
             {
+              "when": { "kind": "equals", "path": "prediction", "value": "larger" },
+              "level": 2,
+              "say": "3/4만큼 자른 리본을 처음 리본과 견주어 볼까요?",
+              "show": { "engine": "E04", "overlay": "ribbon-cut" }
+            },
+            {
+              "when": { "kind": "equals", "path": "prediction", "value": "larger" },
+              "level": 3,
+              "backtrack": "g5s2u2.whole-times-fraction"
+            },
+            {
               "when": { "kind": "equals", "path": "prediction", "value": "same" },
               "level": 1,
               "say": "12m의 3/4만큼이면 리본 전체와 같을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "prediction", "value": "same" },
+              "level": 2,
+              "say": "3/4만큼 자른 리본이 처음과 같은 길이일까요?",
+              "show": { "engine": "E04", "overlay": "ribbon-cut" }
+            },
+            {
+              "when": { "kind": "equals", "path": "prediction", "value": "same" },
+              "level": 3,
+              "backtrack": "g5s2u2.whole-times-fraction"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "fraction-area" },
@@ -410,9 +479,24 @@
               "say": "5/4은 1보다 클까, 작을까?"
             },
             {
+              "when": { "kind": "equals", "path": "prediction", "value": "smaller" },
+              "level": 2,
+              "say": "5/4은 1보다 큰 수일까요? 그 수만큼 떠 보면 처음보다 길어질까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "prediction", "value": "smaller" },
+              "level": 3,
+              "backtrack": "g5s2u2.scaling-smaller"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "fraction-area" },
+              "level": 1,
+              "say": "12m를 4도막으로 나눈 한 도막이 몇 개 있는 셈일까?"
+            },
+            {
               "when": { "kind": "equals", "path": "mode", "value": "fraction-area" },
               "level": 2,
-              "say": "곱하는 수가 1보다 크면 리본은 처음보다 길어질까, 짧아질까?"
+              "say": "12m 리본에 5/4을 곱한 길이를 떠올려 보세요. 12m보다 길까, 짧을까?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "fraction-area" },
@@ -518,6 +602,17 @@
               "say": "마지막 분수를 더 간단하게 나타낼 수 있을까?"
             },
             {
+              "when": { "kind": "equals", "path": "finalIrreducible", "value": false },
+              "level": 2,
+              "say": "여러 줄이 같은 양인지 막대로 견주고, 마지막 분수를 더 간단히 나타낼 수 있을까요?",
+              "show": { "engine": "E08", "overlay": "bar-check" }
+            },
+            {
+              "when": { "kind": "equals", "path": "finalIrreducible", "value": false },
+              "level": 3,
+              "backtrack": "g5s2u2.cross-simplify"
+            },
+            {
               "when": { "kind": "equals", "path": "mode", "value": "fraction-steps" },
               "level": 1,
               "say": "분자와 분모에 같은 수가 있으면 계산하기 전에 나눌 수 있을까?"
@@ -563,14 +658,34 @@
               "say": "□의 7/8만큼이면 □보다 많을까?"
             },
             {
+              "when": { "kind": "equals", "path": "response.cmp.symbol", "value": ">" },
+              "level": 2,
+              "say": "7/8만큼 떠 낸 리본을 □와 나란히 놓으면 어느 쪽이 길까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.cmp.symbol", "value": ">" },
+              "level": 3,
+              "backtrack": "g5s2u2.scaling-smaller"
+            },
+            {
               "when": { "kind": "equals", "path": "response.cmp.symbol", "value": "=" },
               "level": 1,
               "say": "□의 7/8만큼이면 □와 같을까?"
             },
             {
+              "when": { "kind": "equals", "path": "response.cmp.symbol", "value": "=" },
+              "level": 2,
+              "say": "7/8만큼 떠 낸 리본이 □와 같아질까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.cmp.symbol", "value": "=" },
+              "level": 3,
+              "backtrack": "g5s2u2.scaling-smaller"
+            },
+            {
               "when": { "kind": "equals", "path": "mode", "value": "fraction-area" },
               "level": 2,
-              "say": "곱하는 수가 1보다 작으면 결과는 □보다 커질까, 작아질까?"
+              "say": "□의 7/8만큼인 리본을 떠올려 보세요. □보다 길까, 짧을까?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "fraction-area" },
