@@ -200,6 +200,51 @@ async function jump(panel: Locator, sizes: readonly string[]): Promise<void> {
   }
 }
 
+/**
+ * 힌트 ② hop-numbers 번호가 본 수직선 svg 상자 안, 출발 눈금 근처에 있는지 확인한다.
+ * 실행기 칸 전체가 아니라 수직선 svg에 맞춰 그려져야 눈금과 겹친다.
+ */
+async function expectHopNumbersAligned(
+  panel: Locator,
+  start: number,
+  viewMin: number,
+  viewMax: number,
+): Promise<void> {
+  const canvas = panel.getByTestId('number-line-canvas');
+  const overlay = panel.getByTestId('overlay-hop-numbers');
+  const canvasBox = await canvas.boundingBox();
+  const overlayBox = await overlay.boundingBox();
+  if (!canvasBox || !overlayBox) throw new Error('수직선·오버레이 크기를 알 수 없습니다.');
+  expect(Math.abs(overlayBox.x - canvasBox.x)).toBeLessThanOrEqual(1);
+  expect(Math.abs(overlayBox.y - canvasBox.y)).toBeLessThanOrEqual(1);
+  expect(Math.abs(overlayBox.width - canvasBox.width)).toBeLessThanOrEqual(1);
+  expect(Math.abs(overlayBox.height - canvasBox.height)).toBeLessThanOrEqual(1);
+
+  const first = overlay.locator('[data-hop-number="1"] text').first();
+  await expect(first).toBeVisible();
+  expect(Number(await first.getAttribute('font-size'))).toBeGreaterThanOrEqual(28);
+  // WebKit에서는 Playwright의 SVG text boundingBox가 SVG 원점 기준 상자를 돌려줘
+  // 실제 글자 자리와 다르다. 브라우저 안에서 직접 잰다.
+  const firstBox = await first.evaluate((node) => {
+    const rect = node.getBoundingClientRect();
+    return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+  });
+  if (firstBox.width === 0 || firstBox.height === 0) {
+    throw new Error('첫 번째 칸 번호를 찾지 못했습니다.');
+  }
+
+  // 첫 호는 출발 눈금에서 한 칸 사이를 잇는다. 번호 중심이 출발 눈금 근처여야 한다.
+  const scale = Math.min(canvasBox.width / 1000, canvasBox.height / 600);
+  const originX = canvasBox.x + (canvasBox.width - 1000 * scale) / 2;
+  const startX = originX + (100 + ((start - viewMin) / (viewMax - viewMin)) * 800) * scale;
+  const centerX = firstBox.x + firstBox.width / 2;
+  expect(Math.abs(centerX - startX)).toBeLessThanOrEqual(40);
+  expect(firstBox.y).toBeGreaterThanOrEqual(canvasBox.y - 1);
+  expect(firstBox.y + firstBox.height).toBeLessThanOrEqual(canvasBox.y + canvasBox.height + 1);
+  // 화면에서도 글자가 읽을 만한 높이인지(논리 32가 작은 판에서 줄어든 값).
+  expect(firstBox.height).toBeGreaterThanOrEqual(4);
+}
+
 test('A1 자석 스냅 수 모형 덧셈·뺄셈 — 대표 오답 뒤 고쳐서 다섯 과제를 통과한다', async ({
   page,
 }) => {
@@ -278,6 +323,7 @@ test('A2 수직선 개구리 점프 — 대표 오답 뒤 고쳐서 네 과제�
   await submit(page);
   await expectFailedWithHint(page, '점프마다 칸 사이를 세어 봤어요. 몇 칸 뛰었나요?', 2);
   await expect(panel.locator('[data-overlay="hop-numbers"]')).toBeVisible();
+  await expectHopNumbersAligned(panel, 35, 30, 60);
   await clearNumber(page, 'n');
   await typeNumber(page, 'n', ['5', '8']);
   await submit(page);
