@@ -207,7 +207,9 @@ describe('E07 소수 나눗셈 격자는 소수점을 그린다(T079)', () => {
       divisor: 4,
     });
     expect(pointMarks(container, 'dividend', 0)).toBe(1);
-    expect(container.querySelector('[aria-label="나누어지는 수 8.16"]')).not.toBeNull();
+    expect(
+      container.querySelector('[role="group"][aria-label="나누어지는 수 8.16"]'),
+    ).not.toBeNull();
   });
 
   it('3 ÷ 4는 0을 붙이기 전에는 점이 없고 하나 붙이면 생긴다', () => {

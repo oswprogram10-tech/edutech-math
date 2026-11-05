@@ -501,11 +501,13 @@ export function DivView({
               </div>
             ) : null}
 
-            <div className={`${styles.row} ${divStyles.dividendRow}`} style={rowsStyle}>
-              <span
-                className={`${styles.rowLabel} ${divStyles.divisorLabel}`}
-                aria-label={S.dividendRowLabel(dividendText)}
-              >
+            <div
+              className={`${styles.row} ${divStyles.dividendRow}`}
+              style={rowsStyle}
+              role="group"
+              aria-label={S.dividendRowLabel(dividendText)}
+            >
+              <span className={`${styles.rowLabel} ${divStyles.divisorLabel}`}>
                 <span className={divStyles.divisor}>{numbers.g.text}</span>
                 <span aria-hidden="true">)</span>
               </span>
