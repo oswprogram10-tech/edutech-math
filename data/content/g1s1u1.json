@@ -1,0 +1,793 @@
+{
+  "unit": "g1s1u1",
+  "title": "9까지의 수",
+  "activities": [
+    {
+      "id": "g1s1u1.A1",
+      "title": "손가락 수 소환 선반",
+      "tasks": [
+        {
+          "id": "g1s1u1.A1.T1",
+          "prompt": "사과 4개를 만들어요.",
+          "engine": "E02",
+          "mode": "summon",
+          "cpa": "C",
+          "config": {
+            "mode": "summon",
+            "max": 9,
+            "shelf": true,
+            "icon": "apple",
+            "input": ["multitouch", "tap", "buttons"],
+            "showNumeral": "never"
+          },
+          "goal": { "kind": "predicate", "name": "totalIs", "args": { "value": 4 } },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "summon" },
+              "level": 1,
+              "say": "하나씩 손으로 짚어 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "summon" },
+              "level": 2,
+              "say": "셈돌에 번호를 붙여 봤어요. 마지막 번호는 몇이었나요?",
+              "show": { "engine": "E02", "overlay": "count-ones" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "summon" },
+              "level": 3,
+              "backtrack": "g1s1u1.cardinality"
+            }
+          ],
+          "concepts": ["g1s1u1.one-to-one", "g1s1u1.cardinality"],
+          "submit": "button"
+        },
+        {
+          "id": "g1s1u1.A1.T2",
+          "prompt": "손가락 3개로 한 번에 눌러요. 몇 개 생겼나요?",
+          "engine": "E02",
+          "mode": "summon",
+          "cpa": "C",
+          "config": {
+            "mode": "summon",
+            "max": 9,
+            "shelf": true,
+            "icon": "dot",
+            "input": ["multitouch", "tap", "buttons"],
+            "showNumeral": "never"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "totalIs", "args": { "value": 3 } },
+              { "kind": "equals", "path": "response.n.value", "value": "3" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-COUNT-ONE-TO-ONE" },
+              "level": 1,
+              "say": "하나씩 손으로 짚어 볼까?"
+            },
+            {
+              "when": { "misconception": "MC-COUNT-ONE-TO-ONE" },
+              "level": 2,
+              "say": "번호가 붙은 셈돌을 다시 세어 볼까?",
+              "show": { "engine": "E02", "overlay": "count-ones" }
+            },
+            {
+              "when": { "misconception": "MC-COUNT-ONE-TO-ONE" },
+              "level": 3,
+              "backtrack": "g1s1u1.one-to-one"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "summon" },
+              "level": 1,
+              "say": "하나씩 손으로 짚어 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "summon" },
+              "level": 2,
+              "say": "셈돌에 번호를 붙여 봤어요. 마지막 번호는 몇이었나요?",
+              "show": { "engine": "E02", "overlay": "count-ones" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "summon" },
+              "level": 3,
+              "backtrack": "g1s1u1.cardinality"
+            }
+          ],
+          "concepts": ["g1s1u1.one-to-one", "g1s1u1.cardinality"],
+          "submit": "button",
+          "diagnose": [{ "code": "MC-COUNT-ONE-TO-ONE", "args": { "total": "3" } }],
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "n", "label": "몇 개", "forms": ["integer"] }
+            ]
+          }
+        },
+        {
+          "id": "g1s1u1.A1.T3",
+          "prompt": "딸기 7개를 만들어요.",
+          "engine": "E02",
+          "mode": "summon",
+          "cpa": "C",
+          "config": {
+            "mode": "summon",
+            "max": 9,
+            "shelf": true,
+            "icon": "strawberry",
+            "input": ["multitouch", "tap", "buttons"],
+            "showNumeral": "never"
+          },
+          "goal": { "kind": "predicate", "name": "totalIs", "args": { "value": 7 } },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "summon" },
+              "level": 1,
+              "say": "하나씩 손으로 짚어 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "summon" },
+              "level": 2,
+              "say": "셈돌에 번호를 붙여 봤어요. 마지막 번호는 몇이었나요?",
+              "show": { "engine": "E02", "overlay": "count-ones" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "summon" },
+              "level": 3,
+              "backtrack": "g1s1u1.cardinality"
+            }
+          ],
+          "concepts": ["g1s1u1.cardinality"],
+          "submit": "button"
+        },
+        {
+          "id": "g1s1u1.A1.T4",
+          "prompt": "그림 속 물고기와 같은 수만큼 놓아요. 🐟🐟🐟🐟🐟🐟",
+          "engine": "E02",
+          "mode": "summon",
+          "cpa": "C",
+          "config": {
+            "mode": "summon",
+            "max": 9,
+            "shelf": true,
+            "icon": "fish",
+            "input": ["multitouch", "tap", "buttons"],
+            "showNumeral": "never"
+          },
+          "goal": { "kind": "predicate", "name": "totalIs", "args": { "value": 6 } },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "summon" },
+              "level": 1,
+              "say": "물고기를 하나씩 짚으면서 셈돌을 놓아 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "summon" },
+              "level": 2,
+              "say": "셈돌에 번호를 붙여 봤어요. 물고기와 하나씩 짝지어 볼까?",
+              "show": { "engine": "E02", "overlay": "count-ones" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "summon" },
+              "level": 3,
+              "backtrack": "g1s1u1.one-to-one"
+            }
+          ],
+          "concepts": ["g1s1u1.one-to-one", "g1s1u1.cardinality"],
+          "submit": "button"
+        },
+        {
+          "id": "g1s1u1.A1.T5",
+          "prompt": "사과를 하나도 없게 만들어요.",
+          "engine": "E02",
+          "mode": "summon",
+          "cpa": "C",
+          "config": {
+            "mode": "summon",
+            "max": 9,
+            "shelf": true,
+            "icon": "apple",
+            "start": 3,
+            "input": ["multitouch", "tap", "buttons"],
+            "showNumeral": "never"
+          },
+          "goal": { "kind": "predicate", "name": "totalIs", "args": { "value": 0 } },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "summon" },
+              "level": 1,
+              "say": "휴지통에 사과를 넣어 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "summon" },
+              "level": 2,
+              "say": "하나씩 없애면 마지막에는 몇 개가 남을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "summon" },
+              "level": 3,
+              "backtrack": "g1s1u1.number-order"
+            }
+          ],
+          "concepts": ["g1s1u1.number-order", "g1s1u1.cardinality"],
+          "submit": "button"
+        },
+        {
+          "id": "g1s1u1.A1.T6",
+          "prompt": "🍎🍎🍎🍎🍎 사과는 몇 개인가요?",
+          "engine": "E02",
+          "mode": "summon",
+          "cpa": "A",
+          "config": {
+            "mode": "summon",
+            "max": 9,
+            "shelf": true,
+            "icon": "apple",
+            "input": ["multitouch", "tap", "buttons"],
+            "showNumeral": "never"
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.pick.selected",
+            "value": ["five"]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.pick.selected",
+                "value": ["four"]
+              },
+              "level": 1,
+              "say": "하나씩 손으로 짚어 볼까?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.pick.selected",
+                "value": ["four"]
+              },
+              "level": 2,
+              "say": "그림을 하나씩 짚으면서 다시 세어 볼까?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.pick.selected",
+                "value": ["four"]
+              },
+              "level": 3,
+              "backtrack": "g1s1u1.one-to-one"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.pick.selected",
+                "value": ["six"]
+              },
+              "level": 1,
+              "say": "하나씩 손으로 짚어 볼까?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.pick.selected",
+                "value": ["six"]
+              },
+              "level": 2,
+              "say": "그림을 하나씩 짚으면서 다시 세어 볼까?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.pick.selected",
+                "value": ["six"]
+              },
+              "level": 3,
+              "backtrack": "g1s1u1.one-to-one"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "summon" },
+              "level": 1,
+              "say": "그림을 하나씩 짚으면서 세어 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "summon" },
+              "level": 2,
+              "say": "사과를 하나씩 손으로 짚으며 다시 세어 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "summon" },
+              "level": 3,
+              "backtrack": "g1s1u1.cardinality"
+            }
+          ],
+          "concepts": ["g1s1u1.cardinality", "g1s1u1.one-to-one"],
+          "submit": "button",
+          "showEngine": false,
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "pick",
+                "label": "사과의 수",
+                "multiple": false,
+                "options": [
+                  { "id": "four", "label": "4" },
+                  { "id": "five", "label": "5" },
+                  { "id": "six", "label": "6" }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "g1s1u1.A2",
+      "title": "번쩍! 한눈에 세기",
+      "tasks": [
+        {
+          "id": "g1s1u1.A2.T1",
+          "prompt": "번쩍! 주사위 눈은 몇 개였나요?",
+          "engine": "E02",
+          "mode": "flash",
+          "cpa": "P",
+          "config": { "mode": "flash", "count": 3, "layout": "dice", "displayMs": 1500 },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "phase", "value": "hidden" },
+              { "kind": "equals", "path": "response.n.value", "value": "3" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-COUNT-ONE-TO-ONE" },
+              "level": 1,
+              "say": "몇 개씩 묶여 보였나요?"
+            },
+            {
+              "when": { "misconception": "MC-COUNT-ONE-TO-ONE" },
+              "level": 2,
+              "say": "주사위 눈을 다시 하나씩 떠올려 볼까?"
+            },
+            {
+              "when": { "misconception": "MC-COUNT-ONE-TO-ONE" },
+              "level": 3,
+              "backtrack": "g1s1u1.subitize"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "flash" },
+              "level": 1,
+              "say": "몇 개였는지 다시 떠올려 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "flash" },
+              "level": 2,
+              "say": "다시 한번 떠올려 볼까? 주사위 눈을 하나씩 그려 볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "flash" },
+              "level": 3,
+              "backtrack": "g1s1u1.subitize"
+            }
+          ],
+          "concepts": ["g1s1u1.subitize"],
+          "submit": "button",
+          "diagnose": [{ "code": "MC-COUNT-ONE-TO-ONE", "args": { "total": "3" } }],
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "n", "label": "몇 개", "forms": ["integer"] }
+            ]
+          }
+        },
+        {
+          "id": "g1s1u1.A2.T2",
+          "prompt": "번쩍! 주사위 눈은 몇 개였나요?",
+          "engine": "E02",
+          "mode": "flash",
+          "cpa": "P",
+          "config": { "mode": "flash", "count": 5, "layout": "dice", "displayMs": 1500 },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "phase", "value": "hidden" },
+              { "kind": "equals", "path": "response.n.value", "value": "5" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-COUNT-ONE-TO-ONE" },
+              "level": 1,
+              "say": "몇 개씩 묶여 보였나요?"
+            },
+            {
+              "when": { "misconception": "MC-COUNT-ONE-TO-ONE" },
+              "level": 2,
+              "say": "주사위 눈을 다시 하나씩 떠올려 볼까?"
+            },
+            {
+              "when": { "misconception": "MC-COUNT-ONE-TO-ONE" },
+              "level": 3,
+              "backtrack": "g1s1u1.subitize"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "flash" },
+              "level": 1,
+              "say": "몇 개였는지 다시 떠올려 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "flash" },
+              "level": 2,
+              "say": "다시 한번 떠올려 볼까? 주사위 눈을 하나씩 그려 볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "flash" },
+              "level": 3,
+              "backtrack": "g1s1u1.subitize"
+            }
+          ],
+          "concepts": ["g1s1u1.subitize"],
+          "submit": "button",
+          "diagnose": [{ "code": "MC-COUNT-ONE-TO-ONE", "args": { "total": "5" } }],
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "n", "label": "몇 개", "forms": ["integer"] }
+            ]
+          }
+        },
+        {
+          "id": "g1s1u1.A2.T3",
+          "prompt": "번쩍! 5와 몇인가요? 모두 몇 개예요?",
+          "engine": "E02",
+          "mode": "flash",
+          "cpa": "P",
+          "config": { "mode": "flash", "count": 7, "layout": "ten-frame", "displayMs": 1500 },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "phase", "value": "hidden" },
+              { "kind": "equals", "path": "response.n.value", "value": "7" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-COUNT-ONE-TO-ONE" },
+              "level": 1,
+              "say": "몇 개씩 묶여 보였나요?"
+            },
+            {
+              "when": { "misconception": "MC-COUNT-ONE-TO-ONE" },
+              "level": 2,
+              "say": "위 줄과 아래 줄을 나누어 다시 떠올려 볼까?"
+            },
+            {
+              "when": { "misconception": "MC-COUNT-ONE-TO-ONE" },
+              "level": 3,
+              "backtrack": "g1s1u1.subitize"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "flash" },
+              "level": 1,
+              "say": "5와 몇으로 보였나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "flash" },
+              "level": 2,
+              "say": "다시 한번 떠올려 볼까? 위 줄과 아래 줄은 각각 몇 개였나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "flash" },
+              "level": 3,
+              "backtrack": "g1s1u1.subitize"
+            }
+          ],
+          "concepts": ["g1s1u1.subitize", "g1s1u1.cardinality"],
+          "submit": "button",
+          "diagnose": [{ "code": "MC-COUNT-ONE-TO-ONE", "args": { "total": "7" } }],
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "n", "label": "모두 몇 개", "forms": ["integer"] }
+            ]
+          }
+        },
+        {
+          "id": "g1s1u1.A2.T4",
+          "prompt": "번쩍! 모두 몇 개였나요?",
+          "engine": "E02",
+          "mode": "flash",
+          "cpa": "P",
+          "config": { "mode": "flash", "count": 9, "layout": "ten-frame", "displayMs": 1500 },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "phase", "value": "hidden" },
+              { "kind": "equals", "path": "response.n.value", "value": "9" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-COUNT-ONE-TO-ONE" },
+              "level": 1,
+              "say": "몇 개씩 묶여 보였나요?" 
+            },
+            {
+              "when": { "misconception": "MC-COUNT-ONE-TO-ONE" },
+              "level": 2,
+              "say": "위 줄과 아래 줄을 나누어 다시 떠올려 볼까?"
+            },
+            {
+              "when": { "misconception": "MC-COUNT-ONE-TO-ONE" },
+              "level": 3,
+              "backtrack": "g1s1u1.subitize"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "flash" },
+              "level": 1,
+              "say": "5와 몇으로 보였나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "flash" },
+              "level": 2,
+              "say": "다시 한번 떠올려 볼까? 위 줄과 아래 줄은 각각 몇 개였나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "flash" },
+              "level": 3,
+              "backtrack": "g1s1u1.subitize"
+            }
+          ],
+          "concepts": ["g1s1u1.subitize", "g1s1u1.cardinality"],
+          "submit": "button",
+          "diagnose": [{ "code": "MC-COUNT-ONE-TO-ONE", "args": { "total": "9" } }],
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "n", "label": "모두 몇 개", "forms": ["integer"] }
+            ]
+          }
+        },
+        {
+          "id": "g1s1u1.A2.T5",
+          "prompt": "번쩍! 흩어진 점은 몇 개였나요?",
+          "engine": "E02",
+          "mode": "flash",
+          "cpa": "P",
+          "config": {
+            "mode": "flash",
+            "count": 4,
+            "layout": "random",
+            "seed": 1,
+            "displayMs": 1500
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "phase", "value": "hidden" },
+              { "kind": "equals", "path": "response.n.value", "value": "4" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-COUNT-ONE-TO-ONE" },
+              "level": 1,
+              "say": "몇 개씩 묶여 보였나요?"
+            },
+            {
+              "when": { "misconception": "MC-COUNT-ONE-TO-ONE" },
+              "level": 2,
+              "say": "점을 둘씩 짝지어 다시 떠올려 볼까?"
+            },
+            {
+              "when": { "misconception": "MC-COUNT-ONE-TO-ONE" },
+              "level": 3,
+              "backtrack": "g1s1u1.subitize"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "flash" },
+              "level": 1,
+              "say": "몇 개였는지 다시 떠올려 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "flash" },
+              "level": 2,
+              "say": "다시 한번 떠올려 볼까? 점을 둘씩 짝지어 볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "flash" },
+              "level": 3,
+              "backtrack": "g1s1u1.subitize"
+            }
+          ],
+          "concepts": ["g1s1u1.subitize"],
+          "submit": "button",
+          "diagnose": [{ "code": "MC-COUNT-ONE-TO-ONE", "args": { "total": "4" } }],
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "n", "label": "몇 개", "forms": ["integer"] }
+            ]
+          }
+        },
+        {
+          "id": "g1s1u1.A2.T6",
+          "prompt": "텐프레임에 6을 채워요.",
+          "engine": "E02",
+          "mode": "ten-frame",
+          "cpa": "P",
+          "config": {
+            "mode": "ten-frame",
+            "frames": 1,
+            "prefill": 0,
+            "trayCount": 10
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "frameFillIs",
+            "args": { "frame": 0, "value": 6 }
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "ten-frame" },
+              "level": 1,
+              "say": "위 줄을 다 채우면 몇 개일까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "ten-frame" },
+              "level": 2,
+              "say": "빈칸을 세어 보면 몇 개를 더 놓아야 할까?",
+              "show": { "engine": "E02", "overlay": "frame-gaps" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "ten-frame" },
+              "level": 3,
+              "backtrack": "g1s1u1.subitize"
+            }
+          ],
+          "concepts": ["g1s1u1.subitize", "g1s1u1.cardinality"],
+          "submit": "button"
+        }
+      ]
+    },
+    {
+      "id": "g1s1u1.A3",
+      "title": "수 징검다리",
+      "tasks": [
+        {
+          "id": "g1s1u1.A3.T1",
+          "prompt": "3, 6, 8 카드를 알맞은 눈금에 놓아요.",
+          "engine": "E03",
+          "mode": "integer",
+          "cpa": "P",
+          "config": {
+            "mode": "integer",
+            "min": 0,
+            "max": 9,
+            "unit": 1,
+            "labels": "partial",
+            "cards": ["3", "6", "8"]
+          },
+          "goal": { "kind": "predicate", "name": "cardsCorrect" },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "integer" },
+              "level": 1,
+              "say": "0부터 하나씩 세면서 눈금을 짚어 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "integer" },
+              "level": 2,
+              "say": "카드의 수만큼 0에서 오른쪽으로 짚어 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "integer" },
+              "level": 3,
+              "backtrack": "g1s1u1.number-order"
+            }
+          ],
+          "concepts": ["g1s1u1.number-order", "g1s1u1.cardinality"],
+          "submit": "button"
+        },
+        {
+          "id": "g1s1u1.A3.T2",
+          "prompt": "5보다 1 큰 수에 점을 찍어요.",
+          "engine": "E03",
+          "mode": "integer",
+          "cpa": "P",
+          "config": { "mode": "integer", "min": 0, "max": 9, "unit": 1, "labels": "partial" },
+          "goal": {
+            "kind": "predicate",
+            "name": "onlyPointAt",
+            "args": { "value": "6" }
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "integer" },
+              "level": 1,
+              "say": "5에서 오른쪽으로 한 칸 가면 어디일까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "integer" },
+              "level": 2,
+              "say": "0에서 점까지 얼마나 떨어져 있는지 보세요.",
+              "show": { "engine": "E03", "overlay": "distance-from-zero" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "integer" },
+              "level": 3,
+              "backtrack": "g1s1u1.number-order"
+            }
+          ],
+          "concepts": ["g1s1u1.number-order"],
+          "submit": "button"
+        },
+        {
+          "id": "g1s1u1.A3.T3",
+          "prompt": "7보다 1 작은 수에 점을 찍어요.",
+          "engine": "E03",
+          "mode": "integer",
+          "cpa": "P",
+          "config": { "mode": "integer", "min": 0, "max": 9, "unit": 1, "labels": "partial" },
+          "goal": {
+            "kind": "predicate",
+            "name": "onlyPointAt",
+            "args": { "value": "6" }
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "integer" },
+              "level": 1,
+              "say": "7에서 왼쪽으로 한 칸 가면 어디일까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "integer" },
+              "level": 2,
+              "say": "0에서 점까지 얼마나 떨어져 있는지 보세요.",
+              "show": { "engine": "E03", "overlay": "distance-from-zero" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "integer" },
+              "level": 3,
+              "backtrack": "g1s1u1.number-order"
+            }
+          ],
+          "concepts": ["g1s1u1.number-order"],
+          "submit": "button"
+        },
+        {
+          "id": "g1s1u1.A3.T4",
+          "prompt": "아무것도 없는 수에 점을 찍어요.",
+          "engine": "E03",
+          "mode": "integer",
+          "cpa": "A",
+          "config": { "mode": "integer", "min": 0, "max": 9, "unit": 1, "labels": "all" },
+          "goal": {
+            "kind": "predicate",
+            "name": "onlyPointAt",
+            "args": { "value": "0" }
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "integer" },
+              "level": 1,
+              "say": "사과가 하나도 없으면 몇 개라고 하지?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "integer" },
+              "level": 2,
+              "say": "수직선의 맨 왼쪽 끝을 살펴볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "integer" },
+              "level": 3,
+              "backtrack": "g1s1u1.number-order"
+            }
+          ],
+          "concepts": ["g1s1u1.number-order", "g1s1u1.cardinality"],
+          "submit": "button"
+        }
+      ]
+    }
+  ]
+}
