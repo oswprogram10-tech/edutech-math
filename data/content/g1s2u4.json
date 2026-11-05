@@ -1,0 +1,499 @@
+{
+  "unit": "g1s2u4",
+  "title": "덧셈과 뺄셈(2)",
+  "activities": [
+    {
+      "id": "g1s2u4.A1",
+      "title": "스마트 텐프레임 10 채우기",
+      "tasks": [
+        {
+          "id": "g1s2u4.A1.T1",
+          "prompt": "몇 개를 더 넣으면 10이 될까요? 수를 쓰고, 셈돌을 넣어 확인해요.",
+          "engine": "E02",
+          "mode": "ten-frame",
+          "cpa": "C",
+          "config": {
+            "mode": "ten-frame",
+            "frames": 1,
+            "prefill": 7,
+            "trayCount": 5,
+            "fillColor": "blue",
+            "showBond": "never"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "response.n.value", "value": "3" },
+              { "kind": "predicate", "name": "frameFillIs", "args": { "frame": 0, "value": 10 } }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-MAKE10-PAIR" },
+              "level": 1,
+              "say": "빈칸이 몇 개 보여?"
+            },
+            {
+              "when": { "misconception": "MC-MAKE10-PAIR" },
+              "level": 2,
+              "say": "빈칸에 점선 동그라미를 그렸어요. 몇 개인가요?",
+              "show": { "engine": "E02", "overlay": "frame-gaps" }
+            },
+            {
+              "when": { "misconception": "MC-MAKE10-PAIR" },
+              "level": 3,
+              "backtrack": "g1s2u4.make-ten-pairs"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "ten-frame" },
+              "level": 1,
+              "say": "10칸 중에 빈칸이 몇 개인지 세어 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "ten-frame" },
+              "level": 2,
+              "say": "빈칸에 점선 동그라미를 그렸어요. 몇 개인가요?",
+              "show": { "engine": "E02", "overlay": "frame-gaps" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "ten-frame" },
+              "level": 3,
+              "backtrack": "g1s2u4.make-ten-pairs"
+            }
+          ],
+          "concepts": ["g1s2u4.make-ten-pairs"],
+          "submit": "button",
+          "diagnose": [
+            { "code": "MC-MAKE10-PAIR", "args": { "expected": "3" }, "path": "response.n.value" }
+          ],
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "n", "label": "더 넣을 수", "forms": ["integer"] }
+            ]
+          }
+        },
+        {
+          "id": "g1s2u4.A1.T2",
+          "prompt": "셈돌 4개를 빼요. 몇 개 남았나요?",
+          "engine": "E02",
+          "mode": "ten-frame",
+          "cpa": "C",
+          "config": {
+            "mode": "ten-frame",
+            "frames": 1,
+            "prefill": 10,
+            "trayCount": 0,
+            "fillColor": "blue",
+            "showBond": "never",
+            "removable": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "frameFillIs", "args": { "frame": 0, "value": 6 } },
+              { "kind": "equals", "path": "response.n.value", "value": "6" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-SUB-DIRECTION" },
+              "level": 1,
+              "say": "뺀 뒤 남은 셈돌만 세어 볼까?"
+            },
+            {
+              "when": { "misconception": "MC-SUB-DIRECTION" },
+              "level": 2,
+              "say": "프레임에서 빠진 셈돌은 빼고, 남은 셈돌만 세어 볼까?",
+              "show": { "engine": "E02", "overlay": "frame-gaps" }
+            },
+            {
+              "when": { "misconception": "MC-SUB-DIRECTION" },
+              "level": 3,
+              "backtrack": "g1s2u4.ten-minus"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "ten-frame" },
+              "level": 1,
+              "say": "처음에 셈돌이 몇 개 있었나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "ten-frame" },
+              "level": 2,
+              "say": "남은 셈돌을 하나씩 세어 볼까?",
+              "show": { "engine": "E02", "overlay": "frame-gaps" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "ten-frame" },
+              "level": 3,
+              "backtrack": "g1s2u4.ten-minus"
+            }
+          ],
+          "concepts": ["g1s2u4.ten-minus"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-SUB-DIRECTION",
+              "args": { "a": "10", "b": "4" },
+              "path": "response.n.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "n", "label": "남은 수", "forms": ["integer"] }
+            ]
+          }
+        },
+        {
+          "id": "g1s2u4.A1.T3",
+          "prompt": "10을 두 접시로 나누는 방법을 5가지 기록해요.",
+          "engine": "E02",
+          "mode": "part-whole",
+          "cpa": "P",
+          "config": {
+            "mode": "part-whole",
+            "total": 10,
+            "parts": 2,
+            "gesture": ["pinch", "drag", "divider-button"],
+            "showBond": "structure",
+            "icon": "dot"
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "distinctSplitsAtLeast",
+            "args": { "count": 5, "total": 10 }
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 1,
+              "say": "한 접시에서 하나씩 옮기면 다른 방법이 생길까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 2,
+              "say": "접시마다 몇 개인지 나무에 그려 봤어요. 다시 세어 볼까?",
+              "show": { "engine": "E02", "overlay": "bond-tree" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 3,
+              "backtrack": "g1s2u4.make-ten-pairs"
+            }
+          ],
+          "concepts": ["g1s2u4.make-ten-pairs"],
+          "submit": "button"
+        },
+        {
+          "id": "g1s2u4.A1.T4",
+          "prompt": "4 + 6 + 3이에요. 먼저 10을 만들고, 모두 몇 개인지 써요.",
+          "engine": "E02",
+          "mode": "ten-frame",
+          "cpa": "C",
+          "config": {
+            "mode": "ten-frame",
+            "frames": 2,
+            "left": 4,
+            "right": 3,
+            "trayCount": 6,
+            "fillColor": "blue",
+            "showBond": "never"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "frameFillIs", "args": { "frame": 0, "value": 10 } },
+              { "kind": "predicate", "name": "frameFillIs", "args": { "frame": 1, "value": 3 } },
+              { "kind": "equals", "path": "response.n.value", "value": "13" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-THREE-ADDEND-SKIP" },
+              "level": 1,
+              "say": "수가 몇 개였지?"
+            },
+            {
+              "when": { "misconception": "MC-THREE-ADDEND-SKIP" },
+              "level": 2,
+              "say": "10이 된 프레임과 남은 셈돌을 다시 세어 볼까?",
+              "show": { "engine": "E02", "overlay": "frame-gaps" }
+            },
+            {
+              "when": { "misconception": "MC-THREE-ADDEND-SKIP" },
+              "level": 3,
+              "backtrack": "g1s2u4.three-addends"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "ten-frame" },
+              "level": 1,
+              "say": "어떤 두 수를 먼저 더하면 10이 될까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "ten-frame" },
+              "level": 2,
+              "say": "10이 된 프레임과 남은 셈돌을 다시 세어 볼까?",
+              "show": { "engine": "E02", "overlay": "frame-gaps" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "ten-frame" },
+              "level": 3,
+              "backtrack": "g1s2u4.three-addends"
+            }
+          ],
+          "concepts": ["g1s2u4.three-addends"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-THREE-ADDEND-SKIP",
+              "args": { "addends": ["4", "6", "3"] },
+              "path": "response.n.value"
+            }
+          ],
+          "response": {
+            "fields": [{ "kind": "number", "id": "n", "label": "답", "forms": ["integer"] }]
+          }
+        },
+        {
+          "id": "g1s2u4.A1.T5",
+          "prompt": "10 − □ = 2 에서 □는 얼마인가요?",
+          "engine": "E02",
+          "mode": "ten-frame",
+          "cpa": "A",
+          "config": {
+            "mode": "ten-frame",
+            "frames": 1,
+            "prefill": 10,
+            "trayCount": 0,
+            "fillColor": "blue",
+            "showBond": "never",
+            "removable": true
+          },
+          "goal": { "kind": "equals", "path": "response.n.value", "value": "8" },
+          "hints": [
+            {
+              "when": { "misconception": "MC-EQUAL-ANSWER" },
+              "level": 1,
+              "say": "10에서 몇을 빼면 2가 남을까?"
+            },
+            {
+              "when": { "misconception": "MC-EQUAL-ANSWER" },
+              "level": 2,
+              "say": "10개 중 2개가 남으려면 몇 개를 덜어 내야 할까?"
+            },
+            {
+              "when": { "misconception": "MC-EQUAL-ANSWER" },
+              "level": 3,
+              "backtrack": "g1s2u4.ten-minus"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "ten-frame" },
+              "level": 1,
+              "say": "10에서 2가 남게 빼 보려면 어떻게 할까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "ten-frame" },
+              "level": 2,
+              "say": "10개에서 하나씩 덜어 내며 세어 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "ten-frame" },
+              "level": 3,
+              "backtrack": "g1s2u4.ten-minus"
+            }
+          ],
+          "concepts": ["g1s2u4.ten-minus"],
+          "submit": "button",
+          "showEngine": false,
+          "diagnose": [
+            {
+              "code": "MC-EQUAL-ANSWER",
+              "args": { "a": "2", "b": "10" },
+              "path": "response.n.value"
+            }
+          ],
+          "response": {
+            "fields": [{ "kind": "number", "id": "n", "label": "□", "forms": ["integer"] }]
+          }
+        }
+      ]
+    },
+    {
+      "id": "g1s2u4.A2",
+      "title": "10 짝꿍 방울 터뜨리기",
+      "tasks": [
+        {
+          "id": "g1s2u4.A2.T1",
+          "prompt": "합이 10이 되는 방울 두 개를 눌러 4쌍을 터뜨려요.",
+          "engine": "E02",
+          "mode": "part-whole",
+          "cpa": "P",
+          "config": {
+            "mode": "part-whole",
+            "variant": "bubble-pairs",
+            "target": 10,
+            "face": "dots",
+            "bubbles": [1, 9, 2, 8, 3, 7, 4, 6],
+            "seed": 1,
+            "showSumOnMiss": true
+          },
+          "goal": { "kind": "predicate", "name": "popsAtLeast", "args": { "count": 4 } },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 1,
+              "say": "10이 되는 두 수를 먼저 찾아볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 2,
+              "say": "고른 방울만큼 점을 찍었어요. 빈칸은 몇 개인가요?",
+              "show": { "engine": "E02", "overlay": "bubble-frame" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 3,
+              "backtrack": "g1s2u4.make-ten-pairs"
+            }
+          ],
+          "concepts": ["g1s2u4.make-ten-pairs"],
+          "submit": "button"
+        },
+        {
+          "id": "g1s2u4.A2.T2",
+          "prompt": "5의 10 짝꿍은 얼마인가요?",
+          "engine": "E02",
+          "mode": "part-whole",
+          "cpa": "A",
+          "config": {
+            "mode": "part-whole",
+            "variant": "bubble-pairs",
+            "target": 10,
+            "face": "numeral",
+            "bubbles": [5, 5],
+            "seed": 1,
+            "showSumOnMiss": true
+          },
+          "goal": { "kind": "equals", "path": "response.n.value", "value": "5" },
+          "hints": [
+            {
+              "when": { "misconception": "MC-MAKE10-PAIR" },
+              "level": 1,
+              "say": "5에 몇을 더하면 10이 될까?"
+            },
+            {
+              "when": { "misconception": "MC-MAKE10-PAIR" },
+              "level": 2,
+              "say": "텐프레임에 5개를 놓고 빈칸을 세어 볼까?"
+            },
+            {
+              "when": { "misconception": "MC-MAKE10-PAIR" },
+              "level": 3,
+              "backtrack": "g1s2u4.make-ten-pairs"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 1,
+              "say": "손가락 5개를 펴고, 10이 되려면 몇 개 더 펴야 할까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 2,
+              "say": "5에서 10까지 하나씩 세어 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 3,
+              "backtrack": "g1s2u4.make-ten-pairs"
+            }
+          ],
+          "concepts": ["g1s2u4.make-ten-pairs"],
+          "submit": "button",
+          "showEngine": false,
+          "diagnose": [
+            { "code": "MC-MAKE10-PAIR", "args": { "expected": "5" }, "path": "response.n.value" }
+          ],
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "n", "label": "짝꿍", "forms": ["integer"] }
+            ]
+          }
+        },
+        {
+          "id": "g1s2u4.A2.T3",
+          "prompt": "방울 세 개로 10을 만들어 터뜨려요.",
+          "engine": "E02",
+          "mode": "part-whole",
+          "cpa": "P",
+          "config": {
+            "mode": "part-whole",
+            "variant": "bubble-pairs",
+            "target": 10,
+            "face": "dots",
+            "bubbles": [2, 3, 5],
+            "pickUpTo": 3,
+            "seed": 1,
+            "showSumOnMiss": true
+          },
+          "goal": { "kind": "predicate", "name": "popsAtLeast", "args": { "count": 1 } },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 1,
+              "say": "두 방울을 먼저 더하면 얼마일까? 10이 되려면 몇이 더 있어야 할까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 2,
+              "say": "고른 방울만큼 점을 찍었어요. 빈칸은 몇 개인가요?",
+              "show": { "engine": "E02", "overlay": "bubble-frame" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 3,
+              "backtrack": "g1s2u4.three-addends"
+            }
+          ],
+          "concepts": ["g1s2u4.three-addends"],
+          "submit": "button"
+        },
+        {
+          "id": "g1s2u4.A2.T4",
+          "prompt": "합이 10인 방울을 연달아 5쌍 터뜨려요.",
+          "engine": "E02",
+          "mode": "part-whole",
+          "cpa": "A",
+          "config": {
+            "mode": "part-whole",
+            "variant": "bubble-pairs",
+            "target": 10,
+            "face": "numeral",
+            "bubbles": [1, 9, 2, 8, 3, 7, 4, 6, 5, 5, 6, 4],
+            "seed": 2,
+            "showSumOnMiss": true
+          },
+          "goal": { "kind": "predicate", "name": "streakAtLeast", "args": { "count": 5 } },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 1,
+              "say": "합이 10이 되는 방울을 먼저 찾아볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 2,
+              "say": "고른 방울만큼 점을 찍었어요. 빈칸은 몇 개인가요?",
+              "show": { "engine": "E02", "overlay": "bubble-frame" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 3,
+              "backtrack": "g1s2u4.make-ten-pairs"
+            }
+          ],
+          "concepts": ["g1s2u4.make-ten-pairs"],
+          "submit": "button"
+        }
+      ]
+    }
+  ]
+}
