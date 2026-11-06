@@ -1,0 +1,593 @@
+{
+  "unit": "g1s2u1",
+  "title": "100까지의 수",
+  "activities": [
+    {
+      "id": "g1s2u1.A1",
+      "title": "십 모형으로 99와 100",
+      "tasks": [
+        {
+          "id": "g1s2u1.A1.T1",
+          "prompt": "블록으로 68을 만들어요.",
+          "engine": "E01",
+          "mode": "count",
+          "cpa": "C",
+          "config": {
+            "mode": "count",
+            "allowedBlocks": [1, 10],
+            "maxValue": 100,
+            "lasso": true,
+            "chart": ["tens", "ones"],
+            "chartFill": "auto",
+            "chartLabels": { "tens": "10개씩 묶음", "ones": "낱개" },
+            "allowHundredReveal": true,
+            "icon": "candy"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "valueIs", "args": { "value": 68 } },
+              { "kind": "predicate", "name": "canonical" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "canonical", "value": false },
+              "level": 1,
+              "say": "낱개 중에 또 묶을 수 있는 게 있을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "canonical", "value": false },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "ten-outline", "args": { "from": 1 } },
+              "say": "점선 칸에 낱개 10개가 들어가요. 몇 칸이 찼나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "canonical", "value": false },
+              "level": 3,
+              "backtrack": "g1s1u5.ten-as-unit"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "count" },
+              "level": 1,
+              "say": "10개씩 묶음은 몇 개, 낱개는 몇 개인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "count" },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "ten-outline", "args": { "from": 1 } },
+              "say": "점선 칸에 낱개 10개가 들어가요. 몇 칸이 찼나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "count" },
+              "level": 3,
+              "backtrack": "g1s2u1.tens-to-99"
+            }
+          ],
+          "concepts": ["g1s2u1.tens-to-99"],
+          "submit": "button"
+        },
+        {
+          "id": "g1s2u1.A1.T2",
+          "prompt": "75는 10개씩 묶음 몇 개인가요?",
+          "engine": "E01",
+          "mode": "count",
+          "cpa": "P",
+          "config": {
+            "mode": "count",
+            "render": "flat",
+            "start": { "value": "75" },
+            "allowedBlocks": [1, 10],
+            "maxValue": 100,
+            "lasso": true,
+            "chart": ["tens", "ones"],
+            "chartFill": "auto",
+            "chartLabels": { "tens": "10개씩 묶음", "ones": "낱개" },
+            "allowHundredReveal": true
+          },
+          "goal": { "kind": "equals", "path": "response.n.value", "value": "7" },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "count" },
+              "level": 1,
+              "say": "막대가 몇 개 있나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "count" },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "ten-outline", "args": { "from": 1 } },
+              "say": "점선 칸에 낱개 10개가 들어가요. 몇 칸이 찼나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "count" },
+              "level": 3,
+              "backtrack": "g1s2u1.tens-to-99"
+            }
+          ],
+          "concepts": ["g1s2u1.tens-to-99"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "n", "label": "묶음 수", "forms": ["integer"] }
+            ]
+          }
+        },
+        {
+          "id": "g1s2u1.A1.T3",
+          "prompt": "낱개 1개를 더 놓고 묶어 봐요. 모두 얼마인가요?",
+          "engine": "E01",
+          "mode": "regroup",
+          "cpa": "C",
+          "config": {
+            "mode": "regroup",
+            "start": { "tens": 9, "ones": 9 },
+            "allowedBlocks": [1, 10],
+            "maxValue": 100,
+            "lasso": true,
+            "chart": ["tens", "ones"],
+            "chartFill": "auto",
+            "chartLabels": { "tens": "10개씩 묶음", "ones": "낱개" },
+            "allowHundredReveal": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "countsAre", "args": { "tens": 10, "ones": 0 } },
+              { "kind": "equals", "path": "reachedHundred", "value": true },
+              { "kind": "equals", "path": "response.n.value", "value": "100" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-PV-NONCANON" },
+              "level": 1,
+              "say": "낱개 중에 또 묶을 수 있는 게 있을까?"
+            },
+            {
+              "when": { "misconception": "MC-PV-NONCANON" },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "ten-outline", "args": { "from": 1 } },
+              "say": "점선 칸에 낱개 10개가 들어가요. 몇 칸이 찼나요?"
+            },
+            {
+              "when": { "misconception": "MC-PV-NONCANON" },
+              "level": 3,
+              "backtrack": "g1s1u5.ten-as-unit"
+            },
+            {
+              "when": { "kind": "equals", "path": "canonical", "value": false },
+              "level": 1,
+              "say": "낱개 중에 또 묶을 수 있는 게 있을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "canonical", "value": false },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "ten-outline", "args": { "from": 1 } },
+              "say": "점선 칸에 낱개 10개가 들어가요. 몇 칸이 찼나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "canonical", "value": false },
+              "level": 3,
+              "backtrack": "g1s1u5.ten-as-unit"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 1,
+              "say": "낱개 10개를 묶으면 막대는 몇 개가 될까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "ten-outline", "args": { "from": 1 } },
+              "say": "점선 칸에 낱개 10개가 들어가요. 몇 칸이 찼나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 3,
+              "backtrack": "g1s2u1.hundred"
+            }
+          ],
+          "concepts": ["g1s2u1.hundred", "g1s2u1.tens-to-99"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-PV-NONCANON",
+              "args": { "parts": ["9", "10"] },
+              "path": "response.n.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "n", "label": "모두", "forms": ["integer"] }
+            ]
+          }
+        },
+        {
+          "id": "g1s2u1.A1.T4",
+          "prompt": "57과 75를 블록으로 만들어 비교해요. 더 큰 수를 골라요.",
+          "engine": "E01",
+          "mode": "count",
+          "cpa": "P",
+          "config": {
+            "mode": "count",
+            "allowedBlocks": [1, 10],
+            "maxValue": 100,
+            "lasso": true,
+            "chart": ["tens", "ones"],
+            "chartFill": "auto",
+            "chartLabels": { "tens": "10개씩 묶음", "ones": "낱개" },
+            "allowHundredReveal": true
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.big.selected",
+            "value": ["b"]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "response.big.selected", "value": ["a"] },
+              "level": 1,
+              "say": "막대가 더 많은 수는 어느 쪽일까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.big.selected", "value": ["a"] },
+              "level": 2,
+              "say": "두 수를 블록으로 만들어 막대 수를 견주어 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.big.selected", "value": ["a"] },
+              "level": 3,
+              "backtrack": "g1s2u1.chart-structure"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "count" },
+              "level": 1,
+              "say": "블록으로 두 수를 만들어 볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "count" },
+              "level": 2,
+              "say": "막대 수를 세어 볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "count" },
+              "level": 3,
+              "backtrack": "g1s2u1.tens-to-99"
+            }
+          ],
+          "concepts": ["g1s2u1.chart-structure"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "big",
+                "label": "더 큰 수",
+                "multiple": false,
+                "options": [
+                  { "id": "a", "label": "57" },
+                  { "id": "b", "label": "75" }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "g1s2u1.A3",
+      "title": "둘씩 짝짓기 행진",
+      "tasks": [
+        {
+          "id": "g1s2u1.A3.T1",
+          "prompt": "8명이 짝을 지어요. 짝 만들기를 누르고, 짝수인지 홀수인지 골라요.",
+          "engine": "E02",
+          "mode": "pairing",
+          "cpa": "C",
+          "config": {
+            "mode": "pairing",
+            "count": 8,
+            "predictFirst": false,
+            "icon": "child"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "pairedDone" },
+              { "kind": "equals", "path": "response.kind.selected", "value": ["even"] }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "response.kind.selected", "value": ["odd"] },
+              "level": 1,
+              "say": "둘씩 짝지어 보면 남을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.kind.selected", "value": ["odd"] },
+              "level": 2,
+              "show": { "engine": "E02", "overlay": "pair-march" },
+              "say": "짝 짓기를 다시 보여 줄게요. 남는 친구가 있나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.kind.selected", "value": ["odd"] },
+              "level": 3,
+              "backtrack": "g1s2u1.even-odd"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "pairing" },
+              "level": 1,
+              "say": "둘씩 손을 잡으면 혼자 남는 친구가 있을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "pairing" },
+              "level": 2,
+              "show": { "engine": "E02", "overlay": "pair-march" },
+              "say": "짝 짓기를 다시 보여 줄게요. 남는 친구가 있나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "pairing" },
+              "level": 3,
+              "backtrack": "g1s2u1.even-odd"
+            }
+          ],
+          "concepts": ["g1s2u1.even-odd"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "kind",
+                "label": "짝수인지 홀수인지",
+                "multiple": false,
+                "options": [
+                  { "id": "even", "label": "짝수" },
+                  { "id": "odd", "label": "홀수" }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g1s2u1.A3.T2",
+          "prompt": "13명이 짝을 지으면 혼자 남는 친구가 있을까요? 먼저 고르고 확인해요.",
+          "engine": "E02",
+          "mode": "pairing",
+          "cpa": "C",
+          "config": {
+            "mode": "pairing",
+            "count": 13,
+            "predictFirst": true,
+            "icon": "child"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "predictionIs", "args": { "value": 1 } },
+              { "kind": "predicate", "name": "pairedDone" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "prediction", "value": 0 },
+              "level": 1,
+              "say": "둘씩 짝지어 보면 남을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "prediction", "value": 0 },
+              "level": 2,
+              "show": { "engine": "E02", "overlay": "pair-march" },
+              "say": "짝 짓기를 다시 보여 줄게요. 남는 친구가 있나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "prediction", "value": 0 },
+              "level": 3,
+              "backtrack": "g1s2u1.even-odd"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "pairing" },
+              "level": 1,
+              "say": "둘씩 손을 잡으면 혼자 남는 친구가 있을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "pairing" },
+              "level": 2,
+              "show": { "engine": "E02", "overlay": "pair-march" },
+              "say": "짝 짓기를 다시 보여 줄게요. 남는 친구가 있나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "pairing" },
+              "level": 3,
+              "backtrack": "g1s2u1.even-odd"
+            }
+          ],
+          "concepts": ["g1s2u1.even-odd"],
+          "submit": "button"
+        },
+        {
+          "id": "g1s2u1.A3.T3",
+          "prompt": "점 16개를 둘씩 짝지으면 남을까요? 먼저 고르고 확인해요.",
+          "engine": "E02",
+          "mode": "pairing",
+          "cpa": "P",
+          "config": {
+            "mode": "pairing",
+            "count": 16,
+            "predictFirst": true,
+            "icon": "dot"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "predictionIs", "args": { "value": 0 } },
+              { "kind": "predicate", "name": "pairedDone" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "prediction", "value": 1 },
+              "level": 1,
+              "say": "둘씩 짝지어 보면 남을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "prediction", "value": 1 },
+              "level": 2,
+              "show": { "engine": "E02", "overlay": "pair-march" },
+              "say": "짝 짓기를 다시 보여 줄게요. 남는 친구가 있나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "prediction", "value": 1 },
+              "level": 3,
+              "backtrack": "g1s2u1.even-odd"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "pairing" },
+              "level": 1,
+              "say": "둘씩 손을 잡으면 혼자 남는 친구가 있을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "pairing" },
+              "level": 2,
+              "show": { "engine": "E02", "overlay": "pair-march" },
+              "say": "짝 짓기를 다시 보여 줄게요. 남는 친구가 있나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "pairing" },
+              "level": 3,
+              "backtrack": "g1s2u1.even-odd"
+            }
+          ],
+          "concepts": ["g1s2u1.even-odd"],
+          "submit": "button"
+        },
+        {
+          "id": "g1s2u1.A3.T4",
+          "prompt": "11부터 20까지 중에서 짝수를 모두 골라요.",
+          "engine": "E02",
+          "mode": "pairing",
+          "cpa": "A",
+          "config": {
+            "mode": "pairing",
+            "count": 16,
+            "predictFirst": true,
+            "icon": "dot"
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.evens.selected",
+            "value": ["n12", "n14", "n16", "n18", "n20"]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "pairing" },
+              "level": 1,
+              "say": "각 수를 둘씩 짝지으면 남는 것이 있을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "pairing" },
+              "level": 2,
+              "say": "수를 둘씩 묶어 보고 남는 수를 살펴볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "pairing" },
+              "level": 3,
+              "backtrack": "g1s2u1.even-odd"
+            }
+          ],
+          "concepts": ["g1s2u1.even-odd"],
+          "submit": "button",
+          "showEngine": false,
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "evens",
+                "label": "고른 수",
+                "multiple": true,
+                "options": [
+                  { "id": "n11", "label": "11" },
+                  { "id": "n12", "label": "12" },
+                  { "id": "n13", "label": "13" },
+                  { "id": "n14", "label": "14" },
+                  { "id": "n15", "label": "15" },
+                  { "id": "n16", "label": "16" },
+                  { "id": "n17", "label": "17" },
+                  { "id": "n18", "label": "18" },
+                  { "id": "n19", "label": "19" },
+                  { "id": "n20", "label": "20" }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g1s2u1.A3.T5",
+          "prompt": "끝자리가 7인 수는 짝수일까요, 홀수일까요?",
+          "engine": "E02",
+          "mode": "pairing",
+          "cpa": "A",
+          "config": {
+            "mode": "pairing",
+            "count": 8,
+            "predictFirst": false,
+            "icon": "child"
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.kind.selected",
+            "value": ["odd"]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "response.kind.selected", "value": ["even"] },
+              "level": 1,
+              "say": "둘씩 짝지어 보면 남을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.kind.selected", "value": ["even"] },
+              "level": 2,
+              "say": "7을 둘씩 짝지으면 남을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.kind.selected", "value": ["even"] },
+              "level": 3,
+              "backtrack": "g1s2u1.even-odd"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "pairing" },
+              "level": 1,
+              "say": "각 수를 둘씩 짝지으면 남는 것이 있을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "pairing" },
+              "level": 2,
+              "say": "끝자리 수를 둘씩 짝지어 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "pairing" },
+              "level": 3,
+              "backtrack": "g1s2u1.even-odd"
+            }
+          ],
+          "concepts": ["g1s2u1.even-odd"],
+          "submit": "button",
+          "showEngine": false,
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "kind",
+                "label": "짝수인지 홀수인지",
+                "multiple": false,
+                "options": [
+                  { "id": "even", "label": "짝수" },
+                  { "id": "odd", "label": "홀수" }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
