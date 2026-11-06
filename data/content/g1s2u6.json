@@ -1,0 +1,603 @@
+{
+  "unit": "g1s2u6",
+  "title": "덧셈과 뺄셈(3)",
+  "activities": [
+    {
+      "id": "g1s2u6.A1",
+      "title": "이중 텐프레임 10 채우기",
+      "tasks": [
+        {
+          "id": "g1s2u6.A1.T1",
+          "prompt": "8 + 5예요. 오른쪽 셈돌을 왼쪽으로 넘겨 10을 만들고, 모두 몇인지 써요.",
+          "engine": "E02",
+          "mode": "ten-frame",
+          "cpa": "C",
+          "config": {
+            "mode": "ten-frame",
+            "frames": 2,
+            "left": 8,
+            "right": 5,
+            "trayCount": 0,
+            "fillColor": "blue",
+            "swipeFill": true,
+            "showBond": "after-move"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "frameFillIs", "args": { "frame": 0, "value": 10 } },
+              { "kind": "predicate", "name": "frameFillIs", "args": { "frame": 1, "value": 3 } },
+              { "kind": "equals", "path": "response.n.value", "value": "13" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-ADD-BRIDGE-OFF-BY-ONE" },
+              "level": 1,
+              "say": "오른쪽에 남은 셈돌을 세어 볼까?"
+            },
+            {
+              "when": { "misconception": "MC-ADD-BRIDGE-OFF-BY-ONE" },
+              "level": 2,
+              "say": "남은 셈돌에 번호를 붙였어요.",
+              "show": { "engine": "E02", "overlay": "count-ones" }
+            },
+            {
+              "when": { "misconception": "MC-ADD-BRIDGE-OFF-BY-ONE" },
+              "level": 3,
+              "backtrack": "g1s2u6.add-bridge-ten"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "ten-frame" },
+              "level": 1,
+              "say": "왼쪽을 10으로 채우려면 몇 개가 더 필요할까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "ten-frame" },
+              "level": 2,
+              "say": "빈칸에 점선 동그라미를 그렸어요. 몇 개인가요?",
+              "show": { "engine": "E02", "overlay": "frame-gaps" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "ten-frame" },
+              "level": 3,
+              "backtrack": "g1s2u6.add-bridge-ten"
+            }
+          ],
+          "concepts": ["g1s2u6.add-bridge-ten"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-ADD-BRIDGE-OFF-BY-ONE",
+              "args": { "a": "8", "b": "5" },
+              "path": "response.n.value"
+            }
+          ],
+          "response": {
+            "fields": [{ "kind": "number", "id": "n", "label": "모두", "forms": ["integer"] }]
+          }
+        },
+        {
+          "id": "g1s2u6.A1.T2",
+          "prompt": "9 + 6이에요. 넘긴 셈돌 수와 모두 몇인지 써요.",
+          "engine": "E02",
+          "mode": "ten-frame",
+          "cpa": "C",
+          "config": {
+            "mode": "ten-frame",
+            "frames": 2,
+            "left": 9,
+            "right": 6,
+            "trayCount": 0,
+            "fillColor": "blue",
+            "swipeFill": true,
+            "showBond": "after-move"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "bond", "value": [6, 1, 5] },
+              { "kind": "equals", "path": "response.x.value", "value": "1" },
+              { "kind": "equals", "path": "response.n.value", "value": "15" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-MAKE10-SPLIT" },
+              "level": 1,
+              "say": "10이 되려면 몇 개가 더 필요해?"
+            },
+            {
+              "when": { "misconception": "MC-MAKE10-SPLIT" },
+              "level": 2,
+              "say": "왼쪽 프레임의 빈칸에 점선 동그라미를 그렸어요.",
+              "show": { "engine": "E02", "overlay": "frame-gaps" }
+            },
+            {
+              "when": { "misconception": "MC-MAKE10-SPLIT" },
+              "level": 3,
+              "backtrack": "g1s2u4.make-ten-pairs"
+            },
+            {
+              "when": { "misconception": "MC-ADD-BRIDGE-OFF-BY-ONE" },
+              "level": 1,
+              "say": "오른쪽에 남은 셈돌을 세어 볼까?"
+            },
+            {
+              "when": { "misconception": "MC-ADD-BRIDGE-OFF-BY-ONE" },
+              "level": 2,
+              "say": "남은 셈돌에 번호를 붙였어요.",
+              "show": { "engine": "E02", "overlay": "count-ones" }
+            },
+            {
+              "when": { "misconception": "MC-ADD-BRIDGE-OFF-BY-ONE" },
+              "level": 3,
+              "backtrack": "g1s2u6.add-bridge-ten"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "ten-frame" },
+              "level": 1,
+              "say": "왼쪽을 10으로 채우려면 몇 개가 더 필요할까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "ten-frame" },
+              "level": 2,
+              "say": "빈칸에 점선 동그라미를 그렸어요. 몇 개인가요?",
+              "show": { "engine": "E02", "overlay": "frame-gaps" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "ten-frame" },
+              "level": 3,
+              "backtrack": "g1s2u6.add-bridge-ten"
+            }
+          ],
+          "concepts": ["g1s2u6.add-bridge-ten"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-MAKE10-SPLIT",
+              "args": { "left": "9", "addend": "6" },
+              "path": "response.x.value"
+            },
+            {
+              "code": "MC-ADD-BRIDGE-OFF-BY-ONE",
+              "args": { "a": "9", "b": "6" },
+              "path": "response.n.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "x", "label": "넘긴 수", "forms": ["integer"] },
+              { "kind": "number", "id": "n", "label": "모두", "forms": ["integer"] }
+            ]
+          }
+        },
+        {
+          "id": "g1s2u6.A1.T3",
+          "prompt": "7 + 6이에요. 어느 쪽으로 넘겨도 돼요. 모두 몇인가요?",
+          "engine": "E02",
+          "mode": "ten-frame",
+          "cpa": "P",
+          "config": {
+            "mode": "ten-frame",
+            "frames": 2,
+            "left": 7,
+            "right": 6,
+            "trayCount": 0,
+            "fillColor": "blue",
+            "swipeFill": true,
+            "showBond": "after-move"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "response.n.value", "value": "13" },
+              {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "predicate",
+                        "name": "frameFillIs",
+                        "args": { "frame": 0, "value": 10 }
+                      },
+                      {
+                        "kind": "predicate",
+                        "name": "frameFillIs",
+                        "args": { "frame": 1, "value": 3 }
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "predicate",
+                        "name": "frameFillIs",
+                        "args": { "frame": 0, "value": 3 }
+                      },
+                      {
+                        "kind": "predicate",
+                        "name": "frameFillIs",
+                        "args": { "frame": 1, "value": 10 }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-ADD-BRIDGE-OFF-BY-ONE" },
+              "level": 1,
+              "say": "오른쪽에 남은 셈돌을 세어 볼까?"
+            },
+            {
+              "when": { "misconception": "MC-ADD-BRIDGE-OFF-BY-ONE" },
+              "level": 2,
+              "say": "남은 셈돌에 번호를 붙였어요.",
+              "show": { "engine": "E02", "overlay": "count-ones" }
+            },
+            {
+              "when": { "misconception": "MC-ADD-BRIDGE-OFF-BY-ONE" },
+              "level": 3,
+              "backtrack": "g1s2u6.add-bridge-ten"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "ten-frame" },
+              "level": 1,
+              "say": "왼쪽을 10으로 채우려면 몇 개가 더 필요할까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "ten-frame" },
+              "level": 2,
+              "say": "빈칸에 점선 동그라미를 그렸어요. 몇 개인가요?",
+              "show": { "engine": "E02", "overlay": "frame-gaps" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "ten-frame" },
+              "level": 3,
+              "backtrack": "g1s2u6.add-bridge-ten"
+            }
+          ],
+          "concepts": ["g1s2u6.add-bridge-ten"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-ADD-BRIDGE-OFF-BY-ONE",
+              "args": { "a": "7", "b": "6" },
+              "path": "response.n.value"
+            }
+          ],
+          "response": {
+            "fields": [{ "kind": "number", "id": "n", "label": "모두", "forms": ["integer"] }]
+          }
+        },
+        {
+          "id": "g1s2u6.A1.T4",
+          "prompt": "13개에서 5개를 빼요. 몇 개 남았나요?",
+          "engine": "E02",
+          "mode": "ten-frame",
+          "cpa": "C",
+          "config": {
+            "mode": "ten-frame",
+            "frames": 2,
+            "left": 10,
+            "right": 3,
+            "trayCount": 0,
+            "fillColor": "blue",
+            "swipeFill": false,
+            "removable": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "totalIs", "args": { "value": 8 } },
+              { "kind": "equals", "path": "response.n.value", "value": "8" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-SUB-DIRECTION" },
+              "level": 1,
+              "say": "3개에서 5개를 뺄 수 있어?"
+            },
+            {
+              "when": { "misconception": "MC-SUB-DIRECTION" },
+              "level": 2,
+              "say": "낱개 3개를 빼고 나면 몇 개를 더 빼야 할까?",
+              "show": { "engine": "E02", "overlay": "frame-gaps" }
+            },
+            {
+              "when": { "misconception": "MC-SUB-DIRECTION" },
+              "level": 3,
+              "backtrack": "g1s2u6.sub-bridge-ten"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.n.value", "value": "12" },
+              "level": 1,
+              "say": "3개에서 5개를 뺄 수 있어?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.n.value", "value": "12" },
+              "level": 2,
+              "say": "낱개 3개를 빼고 나면 몇 개를 더 빼야 할까?",
+              "show": { "engine": "E02", "overlay": "frame-gaps" }
+            },
+            {
+              "when": { "kind": "equals", "path": "response.n.value", "value": "12" },
+              "level": 3,
+              "backtrack": "g1s2u6.sub-bridge-ten"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "ten-frame" },
+              "level": 1,
+              "say": "10개가 있는 쪽에서 먼저 빼 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "ten-frame" },
+              "level": 2,
+              "say": "점선 동그라미를 그린 칸을 세어 볼까?",
+              "show": { "engine": "E02", "overlay": "frame-gaps" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "ten-frame" },
+              "level": 3,
+              "backtrack": "g1s2u6.sub-bridge-ten"
+            }
+          ],
+          "concepts": ["g1s2u6.sub-bridge-ten"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-SUB-DIRECTION",
+              "args": { "a": "13", "b": "5" },
+              "path": "response.n.value"
+            }
+          ],
+          "response": {
+            "fields": [{ "kind": "number", "id": "n", "label": "남은 수", "forms": ["integer"] }]
+          }
+        },
+        {
+          "id": "g1s2u6.A1.T5",
+          "prompt": "□ + 7 = 15에서 □는 얼마인가요?",
+          "engine": "E02",
+          "mode": "ten-frame",
+          "cpa": "A",
+          "config": {
+            "mode": "ten-frame",
+            "frames": 2,
+            "left": 8,
+            "right": 5,
+            "trayCount": 0,
+            "fillColor": "blue",
+            "swipeFill": true,
+            "showBond": "after-move"
+          },
+          "goal": { "kind": "equals", "path": "response.n.value", "value": "8" },
+          "hints": [
+            {
+              "when": { "misconception": "MC-EQUAL-ANSWER" },
+              "level": 1,
+              "say": "양쪽이 같아야 해. 7에 얼마를 더하면 15가 될까?"
+            },
+            {
+              "when": { "misconception": "MC-EQUAL-ANSWER" },
+              "level": 2,
+              "say": "7에서 15까지 하나씩 세어 볼까?"
+            },
+            {
+              "when": { "misconception": "MC-EQUAL-ANSWER" },
+              "level": 3,
+              "backtrack": "g1s2u6.add-sub-relation"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "ten-frame" },
+              "level": 1,
+              "say": "15에서 7을 빼면 얼마일까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "ten-frame" },
+              "level": 2,
+              "say": "7에서 15까지 하나씩 세어 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "ten-frame" },
+              "level": 3,
+              "backtrack": "g1s2u6.add-sub-relation"
+            }
+          ],
+          "concepts": ["g1s2u6.add-sub-relation"],
+          "submit": "button",
+          "showEngine": false,
+          "diagnose": [
+            {
+              "code": "MC-EQUAL-ANSWER",
+              "args": { "a": "7", "b": "15" },
+              "path": "response.n.value"
+            }
+          ],
+          "response": {
+            "fields": [{ "kind": "number", "id": "n", "label": "□", "forms": ["integer"] }]
+          }
+        }
+      ]
+    },
+    {
+      "id": "g1s2u6.A2",
+      "title": "블록 다리 건설",
+      "tasks": [
+        {
+          "id": "g1s2u6.A2.T1",
+          "prompt": "막대 두 개로 다리를 놓아요.",
+          "engine": "E02",
+          "mode": "part-whole",
+          "cpa": "P",
+          "config": {
+            "mode": "part-whole",
+            "variant": "bridge",
+            "gap": 13,
+            "rods": [9, 8, 7, 6, 5, 4],
+            "maxRods": 2,
+            "tenMarker": true,
+            "noText": true,
+            "face": "cells"
+          },
+          "goal": { "kind": "predicate", "name": "bridgeFits" },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 1,
+              "say": "10칸 표시선까지 몇 칸이 남았을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 2,
+              "say": "10칸 표시선까지 빈칸을 점선으로 그렸어요.",
+              "show": { "engine": "E02", "overlay": "ten-gap" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 3,
+              "backtrack": "g1s2u6.add-bridge-ten"
+            }
+          ],
+          "concepts": ["g1s2u6.add-bridge-ten"],
+          "submit": "button"
+        },
+        {
+          "id": "g1s2u6.A2.T2",
+          "prompt": "남은 틈에 맞는 막대를 놓아요.",
+          "engine": "E02",
+          "mode": "part-whole",
+          "cpa": "P",
+          "config": {
+            "mode": "part-whole",
+            "variant": "bridge",
+            "gap": 15,
+            "rods": [9, 8, 7, 6, 5],
+            "preset": [9],
+            "presetLocked": true,
+            "maxRods": 2,
+            "tenMarker": true,
+            "noText": true,
+            "face": "cells"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "bridgeFits" },
+              { "kind": "predicate", "name": "placedInclude", "args": { "length": 6 } }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 1,
+              "say": "10칸 표시선까지 몇 칸이 남았을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 2,
+              "say": "10칸 표시선까지 빈칸을 점선으로 그렸어요.",
+              "show": { "engine": "E02", "overlay": "ten-gap" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 3,
+              "backtrack": "g1s2u6.add-bridge-ten"
+            }
+          ],
+          "concepts": ["g1s2u6.add-bridge-ten"],
+          "submit": "button"
+        },
+        {
+          "id": "g1s2u6.A2.T3",
+          "prompt": "다리를 놓는 방법 두 가지를 찾아 기록해요.",
+          "engine": "E02",
+          "mode": "part-whole",
+          "cpa": "P",
+          "config": {
+            "mode": "part-whole",
+            "variant": "bridge",
+            "gap": 11,
+            "rods": [9, 8, 7, 6, 5, 4, 3, 2],
+            "maxRods": 2,
+            "tenMarker": true,
+            "noText": true,
+            "face": "cells"
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "distinctBridgesAtLeast",
+            "args": { "count": 2 }
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 1,
+              "say": "막대 하나를 바꾸면 다른 방법이 생길까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 2,
+              "say": "10칸 표시선까지 빈칸을 점선으로 그렸어요.",
+              "show": { "engine": "E02", "overlay": "ten-gap" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 3,
+              "backtrack": "g1s2u6.add-bridge-ten"
+            }
+          ],
+          "concepts": ["g1s2u6.add-bridge-ten"],
+          "submit": "button"
+        },
+        {
+          "id": "g1s2u6.A2.T4",
+          "prompt": "다리가 너무 길어요. 막대 하나를 바꿔요.",
+          "engine": "E02",
+          "mode": "part-whole",
+          "cpa": "A",
+          "config": {
+            "mode": "part-whole",
+            "variant": "bridge",
+            "gap": 14,
+            "rods": [9, 7, 8, 6, 5],
+            "preset": [9, 7],
+            "presetLocked": false,
+            "maxRods": 2,
+            "tenMarker": true,
+            "noText": true,
+            "face": "numeral"
+          },
+          "goal": { "kind": "predicate", "name": "bridgeFits" },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 1,
+              "say": "어느 막대가 너무 길까? 몇 칸이 튀어나왔지?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 2,
+              "say": "10칸 표시선까지 빈칸을 점선으로 그렸어요.",
+              "show": { "engine": "E02", "overlay": "ten-gap" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
+              "level": 3,
+              "backtrack": "g1s2u6.add-bridge-ten"
+            }
+          ],
+          "concepts": ["g1s2u6.add-bridge-ten"],
+          "submit": "button"
+        }
+      ]
+    }
+  ]
+}
