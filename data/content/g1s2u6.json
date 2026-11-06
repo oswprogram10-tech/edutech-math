@@ -585,8 +585,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
               "level": 2,
-              "say": "10칸 표시선까지 빈칸을 점선으로 그렸어요.",
-              "show": { "engine": "E02", "overlay": "ten-gap" }
+              "say": "막대 하나를 빼고 다른 막대를 놓아 볼까? 다리 끝이 어디에 닿는지 봐요."
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "part-whole" },
