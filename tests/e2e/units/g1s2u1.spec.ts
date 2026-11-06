@@ -87,33 +87,27 @@ async function screenshot(page: Page, name: string): Promise<void> {
 }
 
 /**
- * 힌트 ② 오버레이가 엔진 판 위에 놓였는지 확인한다.
- *
- * 알려진 문제(T052 메모): 실행기가 오버레이를 `.viewport` 안이 아니라 패널의
- * 형제로 그려서, 오버레이 SVG가 캔버스가 아니라 패널 크기에 맞춰 확대된다.
- * 그래서 '오버레이 가운데가 캔버스 안'이라는 검사는 E02에서 실패한다.
- * 여기서는 오버레이가 패널 안에 있고 엔진 캔버스를 모두 덮는지만 본다.
+ * 힌트 ② 오버레이가 엔진의 본 캔버스 svg와 같은 자리·크기에 놓였는지 확인한다.
+ * 실행기 칸 전체(버튼·안내 문구 포함)가 아니라 캔버스 상자와 1px 이내로 겹쳐야 한다(T081).
  */
 async function expectOverlayOverCanvas(panel: Locator, overlayName: string, canvasTestId: string) {
   const overlay = panel.locator(`[data-overlay="${overlayName}"]`);
   await expect(overlay).toBeVisible();
-  const overlayBox = await overlay.boundingBox();
-  const canvasBox = await panel.getByTestId(canvasTestId).boundingBox();
-  const panelBox = await panel.boundingBox();
-  if (!overlayBox || !canvasBox || !panelBox) {
-    throw new Error('오버레이 또는 엔진 판의 위치를 알 수 없습니다.');
-  }
-  // 오버레이는 패널 안에 있고, 엔진 캔버스를 모두 덮어야 한다.
-  expect(overlayBox.x).toBeGreaterThanOrEqual(panelBox.x - 1);
-  expect(overlayBox.y).toBeGreaterThanOrEqual(panelBox.y - 1);
-  expect(overlayBox.x + overlayBox.width).toBeLessThanOrEqual(panelBox.x + panelBox.width + 1);
-  expect(overlayBox.y + overlayBox.height).toBeLessThanOrEqual(panelBox.y + panelBox.height + 1);
-  expect(overlayBox.x).toBeLessThanOrEqual(canvasBox.x + 1);
-  expect(overlayBox.y).toBeLessThanOrEqual(canvasBox.y + 1);
-  expect(overlayBox.x + overlayBox.width).toBeGreaterThanOrEqual(canvasBox.x + canvasBox.width - 1);
-  expect(overlayBox.y + overlayBox.height).toBeGreaterThanOrEqual(
-    canvasBox.y + canvasBox.height - 1,
-  );
+  const canvas = panel.getByTestId(canvasTestId);
+  // 오버레이는 힌트가 뜬 뒤 효과에서 본 svg를 재어 상자를 맞춘다. 잠깐 기다린다.
+  await expect
+    .poll(async () => {
+      const overlayBox = await overlay.locator('svg').boundingBox();
+      const canvasBox = await canvas.boundingBox();
+      if (!overlayBox || !canvasBox) return Number.POSITIVE_INFINITY;
+      return Math.max(
+        Math.abs(overlayBox.x - canvasBox.x),
+        Math.abs(overlayBox.y - canvasBox.y),
+        Math.abs(overlayBox.width - canvasBox.width),
+        Math.abs(overlayBox.height - canvasBox.height),
+      );
+    })
+    .toBeLessThanOrEqual(1);
   // 오버레이가 실제로 무언가를 그렸는지도 확인한다(빈 레이어 통과 방지).
   await expect(overlay.locator('svg')).toHaveCount(1);
 }

@@ -1,5 +1,6 @@
 /** 힌트 ②: bridge에서 10칸 표시선까지 남은 빈칸을 점선 동그라미로 보여 준다. */
 import type { OverlayProps } from '../../../core/engine-sdk';
+import { CanvasAlignedOverlay } from '../../../core/engine-sdk';
 import { bridgeCellWidth, BRIDGE_GROUND_Y, BRIDGE_START_X } from '../layout';
 import type { CountersConfig, CountersState } from '../types';
 
@@ -13,7 +14,11 @@ export function TenGapOverlay({ config, state }: OverlayProps<CountersConfig, Co
   const cell = bridgeCellWidth(Math.max(state.gap, sum, 10));
   const remaining = 10 - sum;
   return (
-    <svg viewBox="0 0 1000 600" width="100%" height="100%" aria-hidden="true">
+    <CanvasAlignedOverlay
+      canvasSelector={'svg[data-testid="counters-canvas"]'}
+      logicalWidth={1000}
+      logicalHeight={600}
+    >
       {Array.from({ length: remaining }, (_, index) => (
         <circle
           key={`gap-${index}`}
@@ -26,6 +31,6 @@ export function TenGapOverlay({ config, state }: OverlayProps<CountersConfig, Co
           strokeDasharray="6 5"
         />
       ))}
-    </svg>
+    </CanvasAlignedOverlay>
   );
 }

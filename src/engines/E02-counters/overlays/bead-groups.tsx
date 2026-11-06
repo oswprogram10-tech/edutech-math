@@ -1,5 +1,6 @@
 /** 힌트 ②: rekenrek에서 민 구슬을 5개·10개 묶음 윤곽으로 보여 준다. 목표 수는 쓰지 않는다. */
 import type { OverlayProps } from '../../../core/engine-sdk';
+import { CanvasAlignedOverlay } from '../../../core/engine-sdk';
 import { REKENREK_BEAD_GAP, REKENREK_LEFT_X, REKENREK_RIGHT_X, rekenrekRowY } from '../layout';
 import type { CountersConfig, CountersState } from '../types';
 
@@ -31,7 +32,11 @@ export function BeadGroupsOverlay({ state }: OverlayProps<CountersConfig, Counte
   });
   if (shapes.length === 0) return null;
   return (
-    <svg viewBox="0 0 1000 600" width="100%" height="100%" aria-hidden="true">
+    <CanvasAlignedOverlay
+      canvasSelector={'svg[data-testid="counters-canvas"]'}
+      logicalWidth={1000}
+      logicalHeight={600}
+    >
       {shapes.map((shape) => (
         <rect
           key={shape.key}
@@ -46,6 +51,6 @@ export function BeadGroupsOverlay({ state }: OverlayProps<CountersConfig, Counte
           strokeDasharray="9 6"
         />
       ))}
-    </svg>
+    </CanvasAlignedOverlay>
   );
 }

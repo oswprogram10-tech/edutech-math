@@ -10,7 +10,7 @@ import { frogSteps } from '../frog';
 import { rowsOf } from '../reduce';
 import { parseValue, xOfValue } from '../ticks';
 import type { NumberLineConfig, NumberLineState } from '../types';
-import { CanvasAlignedOverlay } from './canvas-frame';
+import { CanvasAlignedOverlay } from '../../../core/engine-sdk';
 
 interface GapArc {
   readonly key: string;
@@ -79,7 +79,12 @@ export function HopNumbersOverlay({ state }: OverlayProps<NumberLineConfig, Numb
   if (arcs.length === 0) return null;
 
   return (
-    <CanvasAlignedOverlay testId="overlay-hop-numbers">
+    <CanvasAlignedOverlay
+      testId="overlay-hop-numbers"
+      canvasSelector={'svg[data-testid="number-line-canvas"]'}
+      logicalWidth={1000}
+      logicalHeight={600}
+    >
       {arcs.map((arc) => {
         const mid = (arc.x1 + arc.x2) / 2;
         const top = arc.y - arc.lift;

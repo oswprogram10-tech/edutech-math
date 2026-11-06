@@ -2,6 +2,7 @@
  * 힌트 ②: 고른 상위 블록을 풀면 생길 열 조각을 흐리게 미리 보여 준다.
  */
 import type { OverlayProps } from '../../../core/engine-sdk';
+import { CanvasAlignedOverlay } from '../../../core/engine-sdk';
 import { blockRect, blockSize, fanPoints } from '../layout';
 import type { BaseTenConfig, BaseTenState, BlockValue } from '../types';
 import { BLOCK_VALUES } from '../types';
@@ -40,7 +41,11 @@ export function BreakPreviewOverlay({ state, args }: OverlayProps<BaseTenConfig,
   const original = blockRect(target);
 
   return (
-    <svg viewBox="0 0 1000 600" width="100%" height="100%" aria-hidden="true">
+    <CanvasAlignedOverlay
+      canvasSelector={'svg[data-testid="base-ten-canvas"]'}
+      logicalWidth={1000}
+      logicalHeight={600}
+    >
       <rect
         x={original.x}
         y={original.y}
@@ -67,6 +72,6 @@ export function BreakPreviewOverlay({ state, args }: OverlayProps<BaseTenConfig,
           strokeDasharray="6 5"
         />
       ))}
-    </svg>
+    </CanvasAlignedOverlay>
   );
 }

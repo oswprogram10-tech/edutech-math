@@ -3,6 +3,7 @@
  * 접시 번호나 값은 쓰지 않는다.
  */
 import type { OverlayProps } from '../../../core/engine-sdk';
+import { CanvasAlignedOverlay } from '../../../core/engine-sdk';
 import { dividePlateRects } from '../layout';
 import type { BaseTenConfig, BaseTenState, BlockValue } from '../types';
 
@@ -20,7 +21,11 @@ export function EmptyPlateOverlay({ state }: OverlayProps<BaseTenConfig, BaseTen
 
   const rects = dividePlateRects(plates);
   return (
-    <svg viewBox="0 0 1000 600" width="100%" height="100%" aria-hidden="true">
+    <CanvasAlignedOverlay
+      canvasSelector={'svg[data-testid="base-ten-canvas"]'}
+      logicalWidth={1000}
+      logicalHeight={600}
+    >
       {rects.map((rect, index) => {
         const hasBlock = state.blocks.some(
           (block) => block.plate === index && block.value === focus,
@@ -42,6 +47,6 @@ export function EmptyPlateOverlay({ state }: OverlayProps<BaseTenConfig, BaseTen
           />
         );
       })}
-    </svg>
+    </CanvasAlignedOverlay>
   );
 }

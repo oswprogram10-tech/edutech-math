@@ -232,6 +232,92 @@ export function blockRect(block: {
   };
 }
 
+/** 같은 값 블록 열 개 자리. 실제 블록 자리를 그대로 쓰고, 모자라면 그 줄 간격으로 이어 그린다. */
+export function tenOutlineRects(state: BaseTenState, value: BlockValue): Rect[] {
+  const slots = 10;
+  const size = blockSize(value);
+  const anchors = state.blocks
+    .filter((block) => block.value === value)
+    .slice()
+    .sort((a, b) => a.y - b.y || a.x - b.x)
+    .slice(0, slots)
+    .map((block) => blockRect(block));
+
+  if (anchors.length === 0) {
+    // 블록이 없을 때만 판 가운데에 옛 격자로 열 자리를 보여 준다.
+    const stepX = size.width + 26;
+    const stepY = size.height + 22;
+    const originX = LOGICAL_WIDTH / 2 - (4 * stepX) / 2;
+    return Array.from({ length: slots }, (_, index) => ({
+      x: originX + (index % 5) * stepX - size.width / 2,
+      y: 250 + Math.floor(index / 5) * stepY - size.height / 2,
+      width: size.width,
+      height: size.height,
+    }));
+  }
+
+  const rects = [...anchors];
+  const stepX = rowStepOf(rects, size) ?? size.width + 22;
+  const stepY = columnStepOf(rects, size) ?? size.height + 22;
+  const first = anchors[0] as Rect;
+  while (rects.length < slots) {
+    const last = rects[rects.length - 1] as Rect;
+    let x = last.x + stepX;
+    let y = last.y;
+    if (x + size.width > LOGICAL_WIDTH - 8) {
+      x = first.x;
+      y = Math.min(LOGICAL_HEIGHT - size.height - 8, last.y + stepY);
+    }
+    rects.push({ x, y, width: size.width, height: size.height });
+  }
+  return rects;
+}
+
+function medianOf(values: readonly number[]): number | null {
+  if (values.length === 0) return null;
+  const sorted = [...values].sort((a, b) => a - b);
+  return sorted[Math.floor(sorted.length / 2)] ?? null;
+}
+
+/** 실제 블록을 가로 줄로 묶는다(세로로 흩어진 흔들림은 같은 줄로 본다). */
+function rowsOfRects(rects: readonly Rect[], size: BlockSize): Rect[][] {
+  const rows: Rect[][] = [];
+  const tolerance = Math.max(size.height, 20);
+  for (const rect of [...rects].sort((a, b) => a.y - b.y)) {
+    const row = rows.find((candidate) => Math.abs((candidate[0] as Rect).y - rect.y) <= tolerance);
+    if (row) row.push(rect);
+    else rows.push([rect]);
+  }
+  for (const row of rows) row.sort((a, b) => a.x - b.x);
+  return rows;
+}
+
+/** 같은 줄에서 이웃한 블록 사이의 가로 간격. */
+function rowStepOf(rects: readonly Rect[], size: BlockSize): number | null {
+  const diffs: number[] = [];
+  for (const row of rowsOfRects(rects, size)) {
+    for (let index = 1; index < row.length; index += 1) {
+      const diff = (row[index] as Rect).x - (row[index - 1] as Rect).x;
+      if (diff > 1) diffs.push(diff);
+    }
+  }
+  return medianOf(diffs);
+}
+
+/** 이웃한 두 줄 사이의 세로 간격. */
+function columnStepOf(rects: readonly Rect[], size: BlockSize): number | null {
+  const rows = rowsOfRects(rects, size);
+  const diffs: number[] = [];
+  for (let index = 1; index < rows.length; index += 1) {
+    const current = rows[index]?.[0];
+    const previous = rows[index - 1]?.[0];
+    if (!current || !previous) continue;
+    const diff = current.y - previous.y;
+    if (diff > 1) diffs.push(diff);
+  }
+  return medianOf(diffs);
+}
+
 /** 캔버스를 4개의 자릿값 띠로 나눈다(높은 자리부터, whole 기준). */
 export function bandsFor(rect: Rect): Band[] {
   const width = rect.width / 4;

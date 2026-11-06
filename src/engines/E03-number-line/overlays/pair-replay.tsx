@@ -7,7 +7,7 @@ import { pairOps } from '../double';
 import { numberLineStrings } from '../strings.ko';
 import { parseValue, xOfValue } from '../ticks';
 import type { NumberLineConfig, NumberLineState } from '../types';
-import { CanvasAlignedOverlay } from './canvas-frame';
+import { CanvasAlignedOverlay } from '../../../core/engine-sdk';
 
 const TOP_Y = 245;
 const BOTTOM_Y = 415;
@@ -58,7 +58,12 @@ export function PairReplayOverlay({
   });
 
   return (
-    <CanvasAlignedOverlay testId="overlay-pair-replay">
+    <CanvasAlignedOverlay
+      testId="overlay-pair-replay"
+      canvasSelector={'svg[data-testid="number-line-canvas"]'}
+      logicalWidth={1000}
+      logicalHeight={600}
+    >
       <defs>
         <marker
           id="e03-pair-replay-arrow"

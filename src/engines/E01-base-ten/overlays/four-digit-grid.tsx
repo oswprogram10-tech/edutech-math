@@ -1,5 +1,6 @@
 /** 힌트 ②: 오른쪽부터 네 자리마다 흐린 세로선을 긋는다(이름표 없이). */
 import type { OverlayProps } from '../../../core/engine-sdk';
+import { CanvasAlignedOverlay } from '../../../core/engine-sdk';
 import { BIG_STRIP, bigDigitRects } from '../layout';
 import type { BaseTenConfig, BaseTenState } from '../types';
 
@@ -9,7 +10,11 @@ export function FourDigitGridOverlay({ state }: OverlayProps<BaseTenConfig, Base
   const rects = bigDigitRects(big.value.length);
 
   return (
-    <svg viewBox="0 0 1000 600" width="100%" height="100%" aria-hidden="true">
+    <CanvasAlignedOverlay
+      canvasSelector={'svg[data-testid="base-ten-canvas"]'}
+      logicalWidth={1000}
+      logicalHeight={600}
+    >
       {rects.map((rect, index) => {
         const position = rects.length - 1 - index;
         if (position % 4 !== 0 || index >= rects.length - 1) return null;
@@ -30,6 +35,6 @@ export function FourDigitGridOverlay({ state }: OverlayProps<BaseTenConfig, Base
           />
         );
       })}
-    </svg>
+    </CanvasAlignedOverlay>
   );
 }
