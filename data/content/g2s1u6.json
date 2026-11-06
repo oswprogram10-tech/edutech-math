@@ -33,7 +33,7 @@
             {
               "when": { "kind": "equals", "path": "groupSize", "value": 4 },
               "level": 1,
-              "say": "한 접시에 몇 개씩이야?"
+              "say": "한 봉지에 몇 개씩이야?"
             },
             {
               "when": { "kind": "equals", "path": "groupSize", "value": 4 },
@@ -48,7 +48,7 @@
             {
               "when": { "kind": "equals", "path": "response.g.value", "value": "3" },
               "level": 1,
-              "say": "한 접시에 몇 개씩이야?"
+              "say": "한 봉지에 몇 개씩이야?"
             },
             {
               "when": { "kind": "equals", "path": "response.g.value", "value": "3" },
@@ -109,7 +109,7 @@
             {
               "when": { "kind": "equals", "path": "groupSize", "value": 3 },
               "level": 1,
-              "say": "한 접시에 몇 개씩이야?"
+              "say": "한 봉지에 몇 개씩이야?"
             },
             {
               "when": { "kind": "equals", "path": "groupSize", "value": 3 },
@@ -124,7 +124,7 @@
             {
               "when": { "kind": "equals", "path": "response.g.value", "value": "4" },
               "level": 1,
-              "say": "한 접시에 몇 개씩이야?"
+              "say": "한 봉지에 몇 개씩이야?"
             },
             {
               "when": { "kind": "equals", "path": "response.g.value", "value": "4" },
@@ -253,7 +253,7 @@
             {
               "when": { "kind": "equals", "path": "response.b.value", "value": "3" },
               "level": 1,
-              "say": "모든 접시가 똑같아?"
+              "say": "모든 봉지가 똑같아?"
             },
             {
               "when": { "kind": "equals", "path": "response.b.value", "value": "3" },
@@ -268,7 +268,7 @@
             {
               "when": { "kind": "equals", "path": "lastAttempt", "value": { "count": 2, "ok": false } },
               "level": 1,
-              "say": "모든 접시가 똑같아?"
+              "say": "모든 봉지가 똑같아?"
             },
             {
               "when": { "kind": "equals", "path": "lastAttempt", "value": { "count": 2, "ok": false } },
@@ -874,7 +874,7 @@
             {
               "when": { "kind": "equals", "path": "response.pick.selected", "value": ["a", "b", "c", "d"] },
               "level": 1,
-              "say": "모든 접시가 똑같아?"
+              "say": "모든 묶음이 똑같아?"
             },
             {
               "when": { "kind": "equals", "path": "response.pick.selected", "value": ["a", "b", "c", "d"] },
@@ -904,7 +904,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "skip-count" },
               "level": 1,
-              "say": "그림마다 몇씩 몇 묶음인지 세어 볼까?"
+              "say": "보기마다 몇씩 몇 묶음인지 세어 볼까?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "skip-count" },

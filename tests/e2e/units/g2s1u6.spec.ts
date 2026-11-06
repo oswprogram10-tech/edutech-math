@@ -22,17 +22,6 @@ function field(page: Page, id: string): Locator {
   return responseSlot(page).locator(`[data-response-field="${id}"]`);
 }
 
-async function setSmallTarget(page: Page): Promise<void> {
-  // 카드 공통 2: 2학년은 48px 기본. 앱은 g1·g2를 저학년으로 보아 64px을 켜므로
-  // 이 단원 E2E에서는 '큰 버튼'을 끄고 카드 기준(48px)으로 확인한다.
-  await page.getByRole('button', { name: '설정' }).click();
-  const toggle = page.getByRole('menuitemcheckbox', { name: '큰 버튼' });
-  await expect(toggle).toBeVisible();
-  if ((await toggle.getAttribute('aria-checked')) === 'true') await toggle.click();
-  await expect(toggle).toHaveAttribute('aria-checked', 'false');
-  await page.getByRole('button', { name: '설정' }).click();
-}
-
 async function openActivity(page: Page, activityId: string, title: string): Promise<void> {
   await page.goto('/');
   await page.getByRole('button', { name: '1번', exact: true }).click();
@@ -41,7 +30,6 @@ async function openActivity(page: Page, activityId: string, title: string): Prom
   await page.goto(`/#/activity/${activityId}`);
   await expect(page.getByRole('heading', { name: title })).toBeVisible();
   await expect(page.getByRole('button', { name: '확인하기' })).toBeVisible();
-  await setSmallTarget(page);
 }
 
 async function typeNumber(page: Page, id: string, keys: readonly string[]): Promise<void> {
@@ -135,7 +123,7 @@ test('A1 묶어 세기 — 대표 오답 뒤 고쳐서 네 과제를 통과한�
   // T1 — 4개씩 고르고 제출해 MC-MUL-GROUP-SIZE ①을 만난 뒤, 3개씩 4묶음으로 고친다.
   await chooseSize(page, 4);
   await submit(page);
-  await expectFailedWithHint(page, '한 접시에 몇 개씩이야?');
+  await expectFailedWithHint(page, '한 봉지에 몇 개씩이야?');
   await chooseSize(page, 3);
   await bagTimes(page, 3, 4);
   await typeNumber(page, 'g', ['4']);
@@ -147,7 +135,7 @@ test('A1 묶어 세기 — 대표 오답 뒤 고쳐서 네 과제를 통과한�
   await bagTimes(page, 3, 4);
   await typeNumber(page, 'g', ['4']);
   await submit(page);
-  await expectFailedWithHint(page, '한 접시에 몇 개씩이야?');
+  await expectFailedWithHint(page, '한 봉지에 몇 개씩이야?');
   await chooseSize(page, 4);
   await bagTimes(page, 4, 3);
   await clearNumber(page, 'g');
@@ -172,7 +160,7 @@ test('A1 묶어 세기 — 대표 오답 뒤 고쳐서 네 과제를 통과한�
   await typeNumber(page, 'b', ['3']);
   await typeNumber(page, 'r', ['2']);
   await submit(page);
-  await expectFailedWithHint(page, '모든 접시가 똑같아?');
+  await expectFailedWithHint(page, '모든 봉지가 똑같아?');
   await clearNumber(page, 'b');
   await typeNumber(page, 'b', ['2']);
   await submit(page);
@@ -277,7 +265,7 @@ test('A3 수직선 뛰어 세기 — 대표 오답 뒤 고쳐서 세 과제를 �
   await toggleChoice(page, 'pick', '3줄에 4개씩');
   await toggleChoice(page, 'pick', '0부터 4씩 3번 뛰기');
   await submit(page);
-  await expectFailedWithHint(page, '모든 접시가 똑같아?');
+  await expectFailedWithHint(page, '모든 묶음이 똑같아?');
   await toggleChoice(page, 'pick', '5개, 4개, 3개 묶음');
   await submit(page);
   await expectPassed(page, true);
@@ -290,9 +278,9 @@ test('크롬북·전자칠판 첫 화면에 엔진·응답 칸·확인하기가 
   );
 
   const cases = [
-    { id: 'g2s1u6.A1', title: '묶어 세기' },
-    { id: 'g2s1u6.A2', title: '과수원 배열 90° 회전' },
-    { id: 'g2s1u6.A3', title: '수직선 뛰어 세기' },
+    { id: 'g2s1u6.A1', title: '묶어 세기', control: '3개 덜어 내기' },
+    { id: 'g2s1u6.A2', title: '과수원 배열 90° 회전', control: '줄 하나 늘리기' },
+    { id: 'g2s1u6.A3', title: '수직선 뛰어 세기', control: '한 번 뛰기' },
   ] as const;
 
   for (const item of cases) {
@@ -301,6 +289,31 @@ test('크롬북·전자칠판 첫 화면에 엔진·응답 칸·확인하기가 
     await expect(page.getByRole('button', { name: '확인하기' })).toBeInViewport({ ratio: 1 });
     await expect(slot(page, 'main')).toBeInViewport({ ratio: 1 });
     await expect(responseSlot(page)).toBeInViewport({ ratio: 1 });
+    const boxes = await page.evaluate(() => {
+      const boxOf = (selector: string): DOMRect | null => {
+        const element = document.querySelector(selector);
+        return element ? element.getBoundingClientRect() : null;
+      };
+      const rect = (value: DOMRect | null): { top: number; bottom: number } | null =>
+        value ? { top: Math.round(value.top), bottom: Math.round(value.bottom) } : null;
+      return {
+        viewportHeight: window.innerHeight,
+        main: rect(boxOf('[data-testid="runner-slot-main"]')),
+        response: rect(boxOf('[data-testid="runner-slot-response"]')),
+      };
+    });
+    const controlBox = await slot(page, 'main')
+      .getByRole('button', { name: item.control })
+      .first()
+      .boundingBox();
+    const submitBox = await page.getByRole('button', { name: '확인하기' }).boundingBox();
+    console.log('first screen at 64px', {
+      project: testInfo.project.name,
+      activity: item.id,
+      ...boxes,
+      controlBottom: controlBox ? Math.round(controlBox.y + controlBox.height) : null,
+      submitBottom: submitBox ? Math.round(submitBox.y + submitBox.height) : null,
+    });
   }
 });
 
