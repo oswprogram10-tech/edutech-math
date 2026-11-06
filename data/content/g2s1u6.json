@@ -1,0 +1,943 @@
+{
+  "unit": "g2s1u6",
+  "title": "곱셈",
+  "activities": [
+    {
+      "id": "g2s1u6.A1",
+      "title": "묶어 세기",
+      "tasks": [
+        {
+          "id": "g2s1u6.A1.T1",
+          "prompt": "딸기 12개를 3개씩 덜어 내요. 3씩 몇 묶음인가요?",
+          "engine": "E02",
+          "mode": "measure-out",
+          "cpa": "C",
+          "config": {
+            "mode": "measure-out",
+            "total": 12,
+            "showRemainder": true,
+            "seed": 1,
+            "icon": "strawberry",
+            "groupSizeChoices": [2, 3, 4, 6]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "groupSizeIs", "args": { "value": 3 } },
+              { "kind": "predicate", "name": "bagsIs", "args": { "value": 4 } },
+              { "kind": "predicate", "name": "looseIs", "args": { "value": 0 } },
+              { "kind": "equals", "path": "response.g.value", "value": "4" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "groupSize", "value": 4 },
+              "level": 1,
+              "say": "한 봉지에 몇 개씩이야?"
+            },
+            {
+              "when": { "kind": "equals", "path": "groupSize", "value": 4 },
+              "level": 2,
+              "say": "발문에서 한 봉지에 몇 개씩 담으라고 했는지 다시 읽어 봐요."
+            },
+            {
+              "when": { "kind": "equals", "path": "groupSize", "value": 4 },
+              "level": 3,
+              "backtrack": "g2s1u6.equal-groups"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.g.value", "value": "3" },
+              "level": 1,
+              "say": "한 봉지에 몇 개씩이야?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.g.value", "value": "3" },
+              "level": 2,
+              "say": "발문에서 한 봉지에 몇 개씩 담으라고 했는지 다시 읽어 봐요."
+            },
+            {
+              "when": { "kind": "equals", "path": "response.g.value", "value": "3" },
+              "level": 3,
+              "backtrack": "g2s1u6.equal-groups"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "measure-out" },
+              "level": 1,
+              "say": "한 봉지에 몇 개씩 담았는지 세어 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "measure-out" },
+              "level": 2,
+              "say": "봉지를 하나씩 짚으며 세어 봐요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "measure-out" },
+              "level": 3,
+              "backtrack": "g2s1u6.equal-groups"
+            }
+          ],
+          "concepts": ["g2s1u6.equal-groups"],
+          "submit": "button",
+          "response": {
+            "fields": [{ "kind": "number", "id": "g", "label": "묶음 수", "forms": ["integer"] }]
+          }
+        },
+        {
+          "id": "g2s1u6.A1.T2",
+          "prompt": "같은 딸기 12개를 이번에는 4개씩 덜어 내요. 몇 묶음인가요?",
+          "engine": "E02",
+          "mode": "measure-out",
+          "cpa": "C",
+          "config": {
+            "mode": "measure-out",
+            "total": 12,
+            "showRemainder": true,
+            "seed": 1,
+            "icon": "strawberry",
+            "groupSizeChoices": [2, 3, 4, 6]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "groupSizeIs", "args": { "value": 4 } },
+              { "kind": "predicate", "name": "bagsIs", "args": { "value": 3 } },
+              { "kind": "predicate", "name": "looseIs", "args": { "value": 0 } },
+              { "kind": "equals", "path": "response.g.value", "value": "3" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "groupSize", "value": 3 },
+              "level": 1,
+              "say": "한 봉지에 몇 개씩이야?"
+            },
+            {
+              "when": { "kind": "equals", "path": "groupSize", "value": 3 },
+              "level": 2,
+              "say": "발문에서 한 봉지에 몇 개씩 담으라고 했는지 다시 읽어 봐요."
+            },
+            {
+              "when": { "kind": "equals", "path": "groupSize", "value": 3 },
+              "level": 3,
+              "backtrack": "g2s1u6.equal-groups"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.g.value", "value": "4" },
+              "level": 1,
+              "say": "한 봉지에 몇 개씩이야?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.g.value", "value": "4" },
+              "level": 2,
+              "say": "발문에서 한 봉지에 몇 개씩 담으라고 했는지 다시 읽어 봐요."
+            },
+            {
+              "when": { "kind": "equals", "path": "response.g.value", "value": "4" },
+              "level": 3,
+              "backtrack": "g2s1u6.equal-groups"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "measure-out" },
+              "level": 1,
+              "say": "한 봉지에 몇 개씩 담았는지 세어 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "measure-out" },
+              "level": 2,
+              "say": "봉지를 하나씩 짚으며 세어 봐요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "measure-out" },
+              "level": 3,
+              "backtrack": "g2s1u6.equal-groups"
+            }
+          ],
+          "concepts": ["g2s1u6.equal-groups"],
+          "submit": "button",
+          "response": {
+            "fields": [{ "kind": "number", "id": "g", "label": "묶음 수", "forms": ["integer"] }]
+          }
+        },
+        {
+          "id": "g2s1u6.A1.T3",
+          "prompt": "2개씩 6묶음을 덜어 내요. 묶음에 든 점은 모두 몇 개인가요?",
+          "engine": "E02",
+          "mode": "measure-out",
+          "cpa": "P",
+          "config": {
+            "mode": "measure-out",
+            "total": 16,
+            "showRemainder": true,
+            "seed": 1,
+            "icon": "dot",
+            "groupSize": 2
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "groupSizeIs", "args": { "value": 2 } },
+              { "kind": "predicate", "name": "bagsIs", "args": { "value": 6 } },
+              { "kind": "equals", "path": "response.n.value", "value": "12" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-MUL-ADD-CONFUSE" },
+              "level": 1,
+              "say": "2가 몇 번 있어?"
+            },
+            {
+              "when": { "misconception": "MC-MUL-ADD-CONFUSE" },
+              "level": 2,
+              "say": "묶음마다 2를 하나씩 말하며 세어 봐요."
+            },
+            {
+              "when": { "misconception": "MC-MUL-ADD-CONFUSE" },
+              "level": 3,
+              "backtrack": "g2s1u6.equal-groups"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "measure-out" },
+              "level": 1,
+              "say": "묶음을 몇 개 만들었는지 먼저 세어 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "measure-out" },
+              "level": 2,
+              "say": "봉지마다 2개씩 들어 있는지 세어 봐요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "measure-out" },
+              "level": 3,
+              "backtrack": "g2s1u6.repeated-addition"
+            }
+          ],
+          "concepts": ["g2s1u6.equal-groups", "g2s1u6.repeated-addition"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-MUL-ADD-CONFUSE",
+              "args": { "a": "2", "b": "6" },
+              "path": "response.n.value"
+            }
+          ],
+          "response": {
+            "fields": [{ "kind": "number", "id": "n", "label": "모두", "forms": ["integer"] }]
+          }
+        },
+        {
+          "id": "g2s1u6.A1.T4",
+          "prompt": "딸기 12개를 5개씩 덜어 내면 남는 것이 있을까요? 덜어 내 보고 답해요.",
+          "engine": "E02",
+          "mode": "measure-out",
+          "cpa": "C",
+          "config": {
+            "mode": "measure-out",
+            "total": 12,
+            "showRemainder": true,
+            "seed": 1,
+            "icon": "strawberry",
+            "groupSize": 5
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "bagsIs", "args": { "value": 2 } },
+              { "kind": "predicate", "name": "looseIs", "args": { "value": 2 } },
+              { "kind": "equals", "path": "response.left.selected", "value": ["yes"] },
+              { "kind": "equals", "path": "response.b.value", "value": "2" },
+              { "kind": "equals", "path": "response.r.value", "value": "2" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "response.b.value", "value": "3" },
+              "level": 1,
+              "say": "모든 봉지가 똑같아?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.b.value", "value": "3" },
+              "level": 2,
+              "say": "남은 딸기를 세어 봐요. 5개가 되나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.b.value", "value": "3" },
+              "level": 3,
+              "backtrack": "g2s1u6.equal-groups"
+            },
+            {
+              "when": { "kind": "equals", "path": "lastAttempt", "value": { "count": 2, "ok": false } },
+              "level": 1,
+              "say": "모든 봉지가 똑같아?"
+            },
+            {
+              "when": { "kind": "equals", "path": "lastAttempt", "value": { "count": 2, "ok": false } },
+              "level": 2,
+              "say": "남은 딸기를 세어 봐요. 5개가 되나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "lastAttempt", "value": { "count": 2, "ok": false } },
+              "level": 3,
+              "backtrack": "g2s1u6.equal-groups"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "measure-out" },
+              "level": 1,
+              "say": "5개씩 덜어 내고 남은 딸기를 세어 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "measure-out" },
+              "level": 2,
+              "say": "봉지에 5개씩 들어 있는지, 남은 딸기는 몇 개인지 세어 봐요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "measure-out" },
+              "level": 3,
+              "backtrack": "g2s1u6.equal-groups"
+            }
+          ],
+          "concepts": ["g2s1u6.equal-groups"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "left",
+                "label": "남는 딸기가 있나요?",
+                "multiple": false,
+                "options": [
+                  { "id": "yes", "label": "있어요" },
+                  { "id": "no", "label": "없어요" }
+                ]
+              },
+              { "kind": "number", "id": "b", "label": "5개씩 묶음 수", "forms": ["integer"] },
+              { "kind": "number", "id": "r", "label": "남은 딸기 수", "forms": ["integer"] }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "g2s1u6.A2",
+      "title": "과수원 배열 90° 회전",
+      "tasks": [
+        {
+          "id": "g2s1u6.A2.T1",
+          "prompt": "한 줄에 4그루씩 3줄을 심어요. 나무 수를 나타내는 덧셈식을 골라요.",
+          "engine": "E04",
+          "mode": "dot-array",
+          "cpa": "C",
+          "config": {
+            "mode": "dot-array",
+            "maxRows": 6,
+            "maxCols": 9,
+            "icon": "tree",
+            "rotate": false,
+            "showSentence": "dims"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "dimsAre", "args": { "rows": 3, "cols": 4 } },
+              { "kind": "equals", "path": "response.sum.selected", "value": ["rep"] }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "response.sum.selected", "value": ["add"] },
+              "level": 1,
+              "say": "4가 몇 번 있어?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.sum.selected", "value": ["add"] },
+              "level": 2,
+              "say": "줄마다 4그루씩 있어요. 몇 줄인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.sum.selected", "value": ["add"] },
+              "level": 3,
+              "backtrack": "g2s1u6.equal-groups"
+            },
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  { "kind": "equals", "path": "rows", "value": 4 },
+                  { "kind": "equals", "path": "cols", "value": 3 }
+                ]
+              },
+              "level": 1,
+              "say": "한 줄에 몇 그루씩이야?"
+            },
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  { "kind": "equals", "path": "rows", "value": 4 },
+                  { "kind": "equals", "path": "cols", "value": 3 }
+                ]
+              },
+              "level": 2,
+              "say": "줄마다 하나씩 짚으며 세어 봐요. 한 줄에는 몇 그루인가요?"
+            },
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  { "kind": "equals", "path": "rows", "value": 4 },
+                  { "kind": "equals", "path": "cols", "value": 3 }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g2s1u6.equal-groups"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.sum.selected", "value": ["swap"] },
+              "level": 1,
+              "say": "한 줄에 몇 그루씩이야?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.sum.selected", "value": ["swap"] },
+              "level": 2,
+              "say": "줄마다 하나씩 짚으며 세어 봐요. 한 줄에는 몇 그루인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.sum.selected", "value": ["swap"] },
+              "level": 3,
+              "backtrack": "g2s1u6.equal-groups"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "dot-array" },
+              "level": 1,
+              "say": "한 줄에 몇 그루인지, 몇 줄인지 세어 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "dot-array" },
+              "level": 2,
+              "say": "줄을 하나씩 짚으며 세어 봐요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "dot-array" },
+              "level": 3,
+              "backtrack": "g2s1u6.array"
+            }
+          ],
+          "concepts": ["g2s1u6.equal-groups", "g2s1u6.array"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "sum",
+                "label": "덧셈식",
+                "multiple": false,
+                "options": [
+                  { "id": "add", "label": "4 + 3" },
+                  { "id": "rep", "label": "4 + 4 + 4" },
+                  { "id": "swap", "label": "3 + 3 + 3" }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g2s1u6.A2.T2",
+          "prompt": "이 배열을 곱셈식 □ × ○ = △로 나타내요.",
+          "engine": "E04",
+          "mode": "dot-array",
+          "cpa": "P",
+          "config": {
+            "mode": "dot-array",
+            "rows": 3,
+            "cols": 4,
+            "maxRows": 6,
+            "maxCols": 9,
+            "icon": "dot",
+            "rotate": false,
+            "showSentence": "none"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "totalIs", "args": { "value": 12 } },
+              {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "all",
+                    "of": [
+                      { "kind": "equals", "path": "response.a.value", "value": "4" },
+                      { "kind": "equals", "path": "response.b.value", "value": "3" }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      { "kind": "equals", "path": "response.a.value", "value": "3" },
+                      { "kind": "equals", "path": "response.b.value", "value": "4" }
+                    ]
+                  }
+                ]
+              },
+              { "kind": "equals", "path": "response.p.value", "value": "12" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-MUL-ADD-CONFUSE" },
+              "level": 1,
+              "say": "4가 몇 번 있어?"
+            },
+            {
+              "when": { "misconception": "MC-MUL-ADD-CONFUSE" },
+              "level": 2,
+              "say": "줄마다 4개씩 있어요. 몇 줄인가요?"
+            },
+            {
+              "when": { "misconception": "MC-MUL-ADD-CONFUSE" },
+              "level": 3,
+              "backtrack": "g2s1u6.equal-groups"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "dot-array" },
+              "level": 1,
+              "say": "한 줄에 몇 개씩, 몇 줄인지 식에 써 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "dot-array" },
+              "level": 2,
+              "say": "배열의 줄과 칸을 하나씩 짚으며 세어 봐요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "dot-array" },
+              "level": 3,
+              "backtrack": "g2s1u6.mult-sentence"
+            }
+          ],
+          "concepts": ["g2s1u6.array", "g2s1u6.mult-sentence"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-MUL-ADD-CONFUSE",
+              "args": { "a": "4", "b": "3" },
+              "path": "response.p.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "a", "label": "□", "forms": ["integer"] },
+              { "kind": "number", "id": "b", "label": "○", "forms": ["integer"] },
+              { "kind": "number", "id": "p", "label": "△", "forms": ["integer"] }
+            ]
+          }
+        },
+        {
+          "id": "g2s1u6.A2.T3",
+          "prompt": "과수원을 돌리면 나무 수는 어떻게 될까요? 먼저 고르고, '돌리기'를 눌러 확인해요.",
+          "engine": "E04",
+          "mode": "dot-array",
+          "cpa": "C",
+          "config": {
+            "mode": "dot-array",
+            "rows": 3,
+            "cols": 4,
+            "maxRows": 6,
+            "maxCols": 9,
+            "icon": "tree",
+            "rotate": true,
+            "showSentence": "dims"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "dimsAre", "args": { "rows": 4, "cols": 3 } },
+              {
+                "kind": "any",
+                "of": [
+                  { "kind": "equals", "path": "rotations", "value": 1 },
+                  { "kind": "equals", "path": "rotations", "value": 3 }
+                ]
+              },
+              { "kind": "predicate", "name": "totalIs", "args": { "value": 12 } },
+              { "kind": "equals", "path": "response.pred.selected", "value": ["same"] }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "dot-array" },
+              "level": 1,
+              "say": "돌리기 전과 뒤에 나무를 한 줄씩 세어 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "dot-array" },
+              "level": 2,
+              "say": "줄 수와 한 줄의 나무 수가 어떻게 바뀌었나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "dot-array" },
+              "level": 3,
+              "backtrack": "g2s1u6.array"
+            }
+          ],
+          "concepts": ["g2s1u6.array"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "pred",
+                "label": "돌리면 나무 수는?",
+                "multiple": false,
+                "options": [
+                  { "id": "less", "label": "적어져요" },
+                  { "id": "more", "label": "많아져요" },
+                  { "id": "same", "label": "그대로예요" }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g2s1u6.A2.T4",
+          "prompt": "점 18개로 서로 다른 배열 두 가지를 만들어요. 만들 때마다 '배열 기록하기'를 눌러요.",
+          "engine": "E04",
+          "mode": "dot-array",
+          "cpa": "P",
+          "config": {
+            "mode": "dot-array",
+            "maxRows": 6,
+            "maxCols": 9,
+            "icon": "dot",
+            "rotate": true,
+            "showSentence": "dims"
+          },
+          "goal": {
+            "kind": "any",
+            "of": [
+              {
+                "kind": "equals",
+                "path": "recorded",
+                "value": [
+                  { "rows": 2, "cols": 9 },
+                  { "rows": 3, "cols": 6 }
+                ]
+              },
+              {
+                "kind": "equals",
+                "path": "recorded",
+                "value": [
+                  { "rows": 2, "cols": 9 },
+                  { "rows": 6, "cols": 3 }
+                ]
+              },
+              {
+                "kind": "equals",
+                "path": "recorded",
+                "value": [
+                  { "rows": 3, "cols": 6 },
+                  { "rows": 2, "cols": 9 }
+                ]
+              },
+              {
+                "kind": "equals",
+                "path": "recorded",
+                "value": [
+                  { "rows": 6, "cols": 3 },
+                  { "rows": 2, "cols": 9 }
+                ]
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "distinctArrangements", "value": 1 },
+              "level": 1,
+              "say": "돌려서 같아지는 배열은 한 가지예요. 다른 배열이 있을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "distinctArrangements", "value": 1 },
+              "level": 2,
+              "say": "기록한 배열을 돌려 보면 같은 배열인지 알 수 있어요."
+            },
+            {
+              "when": { "kind": "equals", "path": "distinctArrangements", "value": 1 },
+              "level": 3,
+              "backtrack": "g2s1u6.array"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "dot-array" },
+              "level": 1,
+              "say": "기록한 배열마다 점이 18개인지 세어 볼까? 잘못 기록했으면 '되돌리기'를 눌러요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "dot-array" },
+              "level": 2,
+              "say": "줄을 하나씩 짚으며 세어 봐요. 한 줄에 몇 개씩 있나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "dot-array" },
+              "level": 3,
+              "backtrack": "g2s1u6.array"
+            }
+          ],
+          "concepts": ["g2s1u6.array"],
+          "submit": "button"
+        }
+      ]
+    },
+    {
+      "id": "g2s1u6.A3",
+      "title": "수직선 뛰어 세기",
+      "tasks": [
+        {
+          "id": "g2s1u6.A3.T1",
+          "prompt": "5씩 4번 뛰어 봐요. 곱셈식 □ × ○ = △로 써요.",
+          "engine": "E03",
+          "mode": "skip-count",
+          "cpa": "P",
+          "config": {
+            "mode": "skip-count",
+            "min": 0,
+            "max": 30,
+            "stepChoices": [2, 3, 4, 5]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "stepIs", "args": { "value": "5" } },
+              { "kind": "predicate", "name": "hopCountIs", "args": { "count": 4 } },
+              { "kind": "predicate", "name": "landingIs", "args": { "value": "20" } },
+              { "kind": "equals", "path": "response.a.value", "value": "5" },
+              { "kind": "equals", "path": "response.b.value", "value": "4" },
+              { "kind": "equals", "path": "response.p.value", "value": "20" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-MUL-ADD-CONFUSE" },
+              "level": 1,
+              "say": "5가 몇 번 있어?"
+            },
+            {
+              "when": { "misconception": "MC-MUL-ADD-CONFUSE" },
+              "level": 2,
+              "say": "뛴 호마다 5라고 말하며 세어 봐요."
+            },
+            {
+              "when": { "misconception": "MC-MUL-ADD-CONFUSE" },
+              "level": 3,
+              "backtrack": "g2s1u6.equal-groups"
+            },
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  { "kind": "equals", "path": "response.a.value", "value": "4" },
+                  { "kind": "equals", "path": "response.b.value", "value": "5" }
+                ]
+              },
+              "level": 1,
+              "say": "한 번에 몇씩 뛰었어?"
+            },
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  { "kind": "equals", "path": "response.a.value", "value": "4" },
+                  { "kind": "equals", "path": "response.b.value", "value": "5" }
+                ]
+              },
+              "level": 2,
+              "say": "□에는 한 번에 뛴 크기, ○에는 뛴 횟수를 써요."
+            },
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  { "kind": "equals", "path": "response.a.value", "value": "4" },
+                  { "kind": "equals", "path": "response.b.value", "value": "5" }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g2s1u6.equal-groups"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "skip-count" },
+              "level": 1,
+              "say": "한 번 뛸 때마다 몇씩 커지는지 세어 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "skip-count" },
+              "level": 2,
+              "say": "뛴 호를 하나씩 짚으며 '한 번, 두 번' 세어 봐요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "skip-count" },
+              "level": 3,
+              "backtrack": "g2s1u6.mult-sentence"
+            }
+          ],
+          "concepts": ["g2s1u6.repeated-addition", "g2s1u6.mult-sentence"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-MUL-ADD-CONFUSE",
+              "args": { "a": "5", "b": "4" },
+              "path": "response.p.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "a", "label": "□", "forms": ["integer"] },
+              { "kind": "number", "id": "b", "label": "○", "forms": ["integer"] },
+              { "kind": "number", "id": "p", "label": "△", "forms": ["integer"] }
+            ]
+          }
+        },
+        {
+          "id": "g2s1u6.A3.T2",
+          "prompt": "3씩 뛰어 18에 도착해요. 몇 번 뛰었나요?",
+          "engine": "E03",
+          "mode": "skip-count",
+          "cpa": "P",
+          "config": {
+            "mode": "skip-count",
+            "min": 0,
+            "max": 30,
+            "stepChoices": [2, 3, 4, 5]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "stepIs", "args": { "value": "3" } },
+              { "kind": "predicate", "name": "landingIs", "args": { "value": "18" } },
+              { "kind": "predicate", "name": "hopCountIs", "args": { "count": 6 } },
+              { "kind": "equals", "path": "response.n.value", "value": "6" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "response.n.value", "value": "15" },
+              "level": 1,
+              "say": "3을 몇 번 더했어?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.n.value", "value": "15" },
+              "level": 2,
+              "say": "뛴 호를 하나씩 세어 봐요."
+            },
+            {
+              "when": { "kind": "equals", "path": "response.n.value", "value": "15" },
+              "level": 3,
+              "backtrack": "g2s1u6.repeated-addition"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "skip-count" },
+              "level": 1,
+              "say": "한 번 뛸 때마다 몇씩 커지는지 세어 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "skip-count" },
+              "level": 2,
+              "say": "뛴 호를 하나씩 짚으며 세어 봐요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "skip-count" },
+              "level": 3,
+              "backtrack": "g2s1u6.repeated-addition"
+            }
+          ],
+          "concepts": ["g2s1u6.repeated-addition"],
+          "submit": "button",
+          "response": {
+            "fields": [{ "kind": "number", "id": "n", "label": "뛴 횟수", "forms": ["integer"] }]
+          }
+        },
+        {
+          "id": "g2s1u6.A3.T3",
+          "prompt": "4 × 3을 나타내는 것을 모두 골라요.",
+          "engine": "E03",
+          "mode": "skip-count",
+          "cpa": "P",
+          "config": {
+            "mode": "skip-count",
+            "min": 0,
+            "max": 30,
+            "stepChoices": [2, 3, 4, 5]
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.pick.selected",
+            "value": ["a", "c", "d"]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "response.pick.selected", "value": ["a", "b", "c", "d"] },
+              "level": 1,
+              "say": "모든 묶음이 똑같아?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.pick.selected", "value": ["a", "b", "c", "d"] },
+              "level": 2,
+              "say": "5개, 4개, 3개로 나뉜 묶음이 같은 크기인지 세어 봐요."
+            },
+            {
+              "when": { "kind": "equals", "path": "response.pick.selected", "value": ["a", "b", "c", "d"] },
+              "level": 3,
+              "backtrack": "g2s1u6.equal-groups"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.pick.selected", "value": ["a", "c", "d", "e"] },
+              "level": 1,
+              "say": "4가 몇 번 있어?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.pick.selected", "value": ["a", "c", "d", "e"] },
+              "level": 2,
+              "say": "4개와 3개 묶음에 4가 몇 번 있는지 세어 봐요."
+            },
+            {
+              "when": { "kind": "equals", "path": "response.pick.selected", "value": ["a", "c", "d", "e"] },
+              "level": 3,
+              "backtrack": "g2s1u6.equal-groups"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "skip-count" },
+              "level": 1,
+              "say": "보기마다 몇씩 몇 묶음인지 세어 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "skip-count" },
+              "level": 2,
+              "say": "고른 것마다 묶음 크기와 묶음 수를 하나씩 짚어 봐요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "skip-count" },
+              "level": 3,
+              "backtrack": "g2s1u6.equal-groups"
+            }
+          ],
+          "concepts": ["g2s1u6.array", "g2s1u6.equal-groups"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "pick",
+                "label": "4 × 3을 나타내는 것",
+                "multiple": true,
+                "options": [
+                  { "id": "a", "label": "4개씩 3묶음" },
+                  { "id": "b", "label": "5개, 4개, 3개 묶음" },
+                  { "id": "c", "label": "3줄에 4개씩" },
+                  { "id": "d", "label": "0부터 4씩 3번 뛰기" },
+                  { "id": "e", "label": "4개와 3개 묶음" }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
