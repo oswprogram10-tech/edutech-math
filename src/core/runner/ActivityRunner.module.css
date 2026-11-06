@@ -298,10 +298,34 @@
   .panels {
     flex: 1 1 auto;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    grid-auto-rows: minmax(0, 1fr);
+    /* 'content' 판은 내용 높이 밑으로 줄어들지 않고, 'fit' 판은 지금처럼 남는 높이에 맞춘다. */
+    grid-auto-rows: minmax(auto, 1fr);
+  }
+
+  /* content 판이 있으면 .panels의 min-height: 0이 그 판을 누르지 않게 한다. */
+  .panels[data-has-content='true'] {
+    min-height: auto;
   }
 
   .panel:not([data-slot='response']) .viewport {
+    height: auto;
+  }
+}
+
+/* 내용 높이를 쓰는 판(세로셈·줄 풀이·응답 칸): 판 안 스크롤 대신 페이지가 스크롤된다. */
+.panel[data-layout='content'] {
+  overflow: visible;
+}
+
+.panels .panel[data-layout='content'] .viewport {
+  flex: none;
+  height: auto;
+  overflow: visible;
+}
+
+/* 좁은 화면의 판별 높이 제한(46dvh·30dvh)보다 content 판의 height: auto가 이긴다. */
+@media (max-width: 1023px) {
+  .panels[data-panel-count] .panel[data-layout='content'] .viewport {
     height: auto;
   }
 }

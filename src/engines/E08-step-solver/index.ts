@@ -12,6 +12,7 @@ const definition: EngineDefinition<StepSolverConfig, StepSolverState, StepSolver
   id: 'E08',
   name: stepSolverStrings.name,
   modes: ['lines', 'fraction-steps', 'debug'],
+  layout: 'content',
   createInitialState,
   reduce,
   View: StepSolverView,

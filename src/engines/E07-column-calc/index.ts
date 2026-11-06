@@ -29,6 +29,7 @@ const definition: EngineDefinition<ColumnCalcConfig, ColumnCalcState, ColumnCalc
   id: 'E07',
   name: columnCalcStrings.name,
   modes: ['add', 'sub', 'decimal', 'mul', 'estimate', 'div'],
+  layout: 'content',
   createInitialState,
   reduce,
   View: ColumnCalcView,

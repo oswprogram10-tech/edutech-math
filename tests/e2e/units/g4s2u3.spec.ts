@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 import { PREVIEW_URL } from '../../../playwright.config';
 import { logicalToScreen } from '../canvas-point';
+import { expectContentPanelsReachable } from '../panel-layout';
 
 /**
  * T023 g4s2u3 「소수의 덧셈과 뺄셈」 단원 E2E.
@@ -324,7 +325,9 @@ test('세 뷰포트에서 세로셈 판의 결과 줄 칸이 화면 안에 보�
   expect(clipped).toBeLessThanOrEqual(1);
 });
 
-test('크롬북·전자칠판 첫 화면에 엔진 입력과 확인하기가 들어온다', async ({ page }, testInfo) => {
+test('크롬북·전자칠판에서 판 안 스크롤 없이 엔진 입력과 확인하기에 닿는다', async ({
+  page,
+}, testInfo) => {
   test.skip(
     testInfo.project.name === 'ipad',
     '아이패드는 판을 위아래로 두어 짧은 스크롤을 허용한다',
@@ -338,8 +341,8 @@ test('크롬북·전자칠판 첫 화면에 엔진 입력과 확인하기가 들
   for (const item of cases) {
     await openActivity(page, item.id, item.title);
     await page.evaluate(() => window.scrollTo(0, 0));
-    await expect(page.getByRole('button', { name: '확인하기' })).toBeInViewport({ ratio: 1 });
-    await expect(slot(page, 'main')).toBeInViewport({ ratio: 1 });
+    // E07 세로셈 판은 내용 높이를 쓰므로 판 안 스크롤 대신 페이지 스크롤로 확인한다.
+    await expectContentPanelsReachable(page);
   }
 });
 

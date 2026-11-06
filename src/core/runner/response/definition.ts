@@ -15,6 +15,7 @@ const definition: EngineDefinition<ResponseConfig, ResponseState, ResponseAction
   id: 'response' as EngineId,
   name: responseStrings.name,
   modes: ['response'],
+  layout: 'content',
   createInitialState,
   reduce,
   View: ResponseView,
