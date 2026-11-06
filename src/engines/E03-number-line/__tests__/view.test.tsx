@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createInitialState, reduce } from '../reduce';
 import { numberLineStrings } from '../strings.ko';
+import { HopNumbersOverlay } from '../overlays/hop-numbers';
 import type { NumberLineAction, NumberLineConfig, NumberLineState } from '../types';
 import { NumberLineView } from '../View';
 
@@ -323,5 +324,110 @@ describe('T048 기존 모드 유지', () => {
     const state = createInitialState(config);
     const view = renderView(config, state, () => {}, 64);
     expect(view.container.querySelector('[data-target-size="64"]')).not.toBeNull();
+  });
+});
+
+describe('T080 integer 개구리 화면', () => {
+  const config: NumberLineConfig = {
+    mode: 'integer',
+    min: 0,
+    max: 100,
+    unit: 1,
+    labels: 'partial',
+    jumpButtons: [10, 1, -1, -10],
+    jumpStart: 35,
+  };
+
+  function jumped(): NumberLineState {
+    return ['10', '10', '1', '1', '1'].reduce(
+      (state, size) => reduce(state, { type: 'frog-jump', size }),
+      createInitialState(config),
+    );
+  }
+
+  it('개구리 위치·도착 값을 글자·aria-label·title로 쓰지 않는다', () => {
+    const view = renderView(config, jumped());
+    const text = view.container.textContent ?? '';
+    expect(text).not.toContain('58');
+    for (const element of view.container.querySelectorAll('[aria-label], [title]')) {
+      expect(element.getAttribute('aria-label') ?? '').not.toContain('58');
+      expect(element.getAttribute('title') ?? '').not.toContain('58');
+    }
+    // 점프 기록 띠는 출발 값과 누른 크기만 쓴다.
+    expect(view.getByTestId('frog-log').textContent).toBe('출발 35 → +10 → +10 → +1 → +1 → +1');
+    expect(view.getByTestId('frog').getAttribute('aria-label')).toBe('개구리');
+  });
+
+  it('점프 버튼과 되돌리기·처음부터 버튼이 Action을 보낸다', () => {
+    const state = jumped();
+    const onDispatch = vi.fn();
+    const view = renderView(config, state, onDispatch);
+
+    expect(view.getByRole('button', { name: '+10' })).toBeTruthy();
+    expect(view.getByRole('button', { name: '−1' })).toBeTruthy();
+    fireEvent.click(view.getByRole('button', { name: '+10' }));
+    expect(onDispatch).toHaveBeenLastCalledWith({ type: 'frog-jump', size: '10' });
+    fireEvent.click(view.getByRole('button', { name: numberLineStrings.frog.undo }));
+    expect(onDispatch).toHaveBeenLastCalledWith({ type: 'frog-undo' });
+    fireEvent.click(view.getByRole('button', { name: numberLineStrings.frog.reset }));
+    expect(onDispatch).toHaveBeenLastCalledWith({ type: 'frog-reset' });
+  });
+
+  it('점프마다 호를 그리고 도착 값은 쓰지 않는다', () => {
+    const view = renderView(config, jumped());
+    const arcs = view.container.querySelectorAll('[data-testid="frog-jump-arc"]');
+    expect(arcs).toHaveLength(5);
+    expect(arcs[0]?.getAttribute('data-jump-size')).toBe('10');
+    const path = arcs[0]?.querySelector('path');
+    expect(path?.getAttribute('d')).toBeTruthy();
+  });
+
+  it('설정이 없으면 개구리와 버튼을 그리지 않는다', () => {
+    const plainConfig: NumberLineConfig = { mode: 'integer', min: 0, max: 100 };
+    const view = renderView(plainConfig, createInitialState(plainConfig));
+    expect(view.queryByTestId('frog')).toBeNull();
+    expect(view.queryByTestId('frog-controls')).toBeNull();
+    expect(view.queryByRole('button', { name: '+10' })).toBeNull();
+  });
+
+  it('hop-numbers 오버레이는 점프마다 지나간 눈금 칸에 1~N을 그린다', () => {
+    const state = ['1', '1', '1'].reduce(
+      (current, size) => reduce(current, { type: 'frog-jump', size }),
+      createInitialState(config),
+    );
+    const view = render(<HopNumbersOverlay config={config} state={state} />);
+    const numbers = view.container.querySelectorAll('[data-hop-number]');
+    expect(numbers).toHaveLength(3);
+    // +1 점프 세 번은 점프마다 1번 칸부터 다시 센다.
+    expect([...numbers].map((node) => node.getAttribute('data-hop-number'))).toEqual([
+      '1',
+      '1',
+      '1',
+    ]);
+    expect(view.container.textContent ?? '').not.toContain('38');
+    // 수직선이 작게 줄어도 읽을 수 있게 번호는 논리 28 이상이어야 한다.
+    for (const label of view.container.querySelectorAll('[data-hop-number] text')) {
+      expect(Number(label.getAttribute('font-size'))).toBeGreaterThanOrEqual(28);
+    }
+
+    // +10 점프가 눈금 한 칸이면 호 하나, 눈금이 1이면 1~10까지 센다.
+    const denseConfig: NumberLineConfig = { ...config, max: 20, jumpStart: 0 };
+    const ten = render(
+      <HopNumbersOverlay
+        config={denseConfig}
+        state={reduce(createInitialState(denseConfig), { type: 'frog-jump', size: '10' })}
+      />,
+    );
+    expect(
+      [...ten.container.querySelectorAll('[data-hop-number]')].map((node) =>
+        node.getAttribute('data-hop-number'),
+      ),
+    ).toEqual(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']);
+
+    const plainConfig: NumberLineConfig = { mode: 'integer', min: 0, max: 100 };
+    const empty = render(
+      <HopNumbersOverlay config={plainConfig} state={createInitialState(plainConfig)} />,
+    );
+    expect(empty.container.querySelector('[data-hop-number]')).toBeNull();
   });
 });

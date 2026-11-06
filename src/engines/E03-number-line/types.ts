@@ -56,6 +56,12 @@ export interface NumberLineConfig {
   readonly labels?: 'all' | 'partial' | 'none' | 'expression' | 'values';
   readonly character?: string;
 
+  // ── T080 integer 개구리 점프 ────────────────────────────────
+  /** 고를 수 있는 점프 크기(부호 있는 정수). 있으면 개구리 기능이 켜진다. */
+  readonly jumpButtons?: readonly (number | string)[];
+  /** 개구리 처음 위치. 없으면 min. */
+  readonly jumpStart?: number | string;
+
   // ── skip-count · log-zoom 뛰어 세기 ─────────────────────────
   /** skip-count 시작 값(기본 min). log-zoom 뛰어 세기 시작 값에도 쓴다. */
   readonly start?: number | string;
@@ -185,6 +191,21 @@ export interface DoubleLineState {
   readonly topMax: string;
 }
 
+/**
+ * T080 개구리 점프 상태.
+ * `start`·`jumps`는 Rational의 정규 문자열이다. 개구리 위치는 저장하지 않고
+ * `start + jumps 합`으로 다시 계산한다(정답을 상태에 따로 두지 않는다).
+ */
+export interface NumberLineFrogState {
+  readonly start: string;
+  readonly jumps: readonly string[];
+  /**
+   * 설정의 점프 크기 목록. reduce가 목록 밖 크기를 무시하려면 상태에 있어야 한다.
+   * (reduce는 config를 받지 않는다.)
+   */
+  readonly sizes: readonly string[];
+}
+
 export interface NumberLineState {
   readonly mode: NumberLineMode;
   readonly min: string;
@@ -220,6 +241,8 @@ export interface NumberLineState {
   readonly rounding: RoundingState | null;
   readonly logZoom: LogZoomState | null;
   readonly double: DoubleLineState | null;
+  /** T080 integer 개구리. 다른 모드·설정 없음이면 null. */
+  readonly frog: NumberLineFrogState | null;
 }
 
 export type NumberLineAction =
@@ -251,7 +274,11 @@ export type NumberLineAction =
   // double
   | { readonly type: 'select-pair'; readonly index: number }
   | { readonly type: 'scale-pair'; readonly kind: DoubleOpKind; readonly factor: number }
-  | { readonly type: 'remove-pair' };
+  | { readonly type: 'remove-pair' }
+  // T080 integer 개구리 점프
+  | { readonly type: 'frog-jump'; readonly size: string }
+  | { readonly type: 'frog-undo' }
+  | { readonly type: 'frog-reset' };
 
 export const LOGICAL_WIDTH = 1000;
 export const LOGICAL_HEIGHT = 600;

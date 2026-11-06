@@ -38,6 +38,18 @@ export const numberLineStrings = {
   jumpSize: (size: string) => `점프 ${size}`,
   overlayDistance: (value: string, distance: string) => `${value}까지 ${distance}`,
 
+  frog: {
+    aria: '개구리',
+    group: '점프 크기',
+    jump: (size: string) => `${size.startsWith('-') ? '−' : '+'}${size.replace('-', '')}`,
+    undo: '되돌리기',
+    reset: '처음부터',
+    start: (value: string) => `출발 ${value}`,
+    logArrow: ' → ',
+    logLabel: '점프 기록',
+    instruction: '개구리를 점프시켜 수직선 위에서 움직여 보세요.',
+  },
+
   skip: {
     stepGroup: '몇씩 뛸까요',
     stepChoice: (step: string) => `${step}씩`,

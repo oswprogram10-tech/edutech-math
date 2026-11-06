@@ -5,6 +5,7 @@
  */
 import { Rational } from '../../core/math/rational';
 import type { EngineEvent, EnginePredicate, JsonValue, Observation } from '../../core/engine-sdk';
+import { frogAt } from './frog';
 import { parseValue } from './ticks';
 import type { NumberLineAction, NumberLineState } from './types';
 
@@ -143,6 +144,17 @@ export function emit(
       return [{ name: 'pair-added', payload: { top: pair.top, bottom: pair.bottom } }];
     }
 
+    case 'frog-jump': {
+      const frog = next.frog;
+      const before = prev.frog;
+      if (!frog || !before || frog.jumps.length === before.jumps.length) return [];
+      const size = frog.jumps[frog.jumps.length - 1];
+      if (size === undefined) return [];
+      const from = frogAt(before).toJSON();
+      const to = frogAt(frog).toJSON();
+      return [{ name: 'jumped', payload: { from, to, size } }, ...valuePayload(to)];
+    }
+
     default:
       return [];
   }
@@ -255,6 +267,51 @@ export const jumpTotalIs: EnginePredicate = (
   const expected = parseValue(value ?? undefined);
   if (!expected) return false;
   return sameRational(observation, 'jumpTotal', expected);
+};
+
+// ── T080 개구리 점프 predicates ─────────────────────────────
+
+/** args `{ value }`: 개구리 위치가 그 값인가. */
+export const frogAtIs: EnginePredicate = (
+  observation: Observation,
+  args: JsonValue | undefined,
+): boolean => {
+  const record = payloadRecord(args);
+  if (!record) return false;
+  const expected = parseValue(stringField(record, 'value') ?? undefined);
+  if (!expected) return false;
+  return sameRational(observation, 'frogAt', expected);
+};
+
+/** args `{ size, count }`: 그 크기의 점프가 정확히 count번인가. */
+export const frogJumpCountIs: EnginePredicate = (
+  observation: Observation,
+  args: JsonValue | undefined,
+): boolean => {
+  const record = payloadRecord(args);
+  if (!record) return false;
+  const size = parseValue(stringField(record, 'size') ?? undefined);
+  const count = numberField(record, 'count');
+  if (!size || count === null) return false;
+  const jumps = observation['frogJumps'];
+  if (!Array.isArray(jumps)) return false;
+  let matches = 0;
+  for (const jump of jumps) {
+    if (typeof jump === 'string' && parseValue(jump)?.equals(size)) matches += 1;
+  }
+  return matches === count;
+};
+
+/** args `{ value }`: 누른 점프 크기의 합이 그 값인가. */
+export const frogJumpTotalIs: EnginePredicate = (
+  observation: Observation,
+  args: JsonValue | undefined,
+): boolean => {
+  const record = payloadRecord(args);
+  if (!record) return false;
+  const expected = parseValue(stringField(record, 'value') ?? undefined);
+  if (!expected) return false;
+  return sameRational(observation, 'frogJumpTotal', expected);
 };
 
 // ── T048 새 모드 predicates ─────────────────────────────────
@@ -423,6 +480,10 @@ export const predicates: Readonly<Record<string, EnginePredicate>> = {
   cardsCorrect,
   samePoint,
   jumpTotalIs,
+  // T080
+  frogAtIs,
+  frogJumpCountIs,
+  frogJumpTotalIs,
   // T048
   landingIs,
   hopCountIs,

@@ -20,6 +20,10 @@ interface ObservationRecord {
   readonly cards?: Readonly<Record<string, string | null>>;
   readonly landing?: string | null;
   readonly hopCount?: number | null;
+  readonly frogAt?: string | null;
+  readonly frogStart?: string | null;
+  readonly frogJumps?: readonly string[] | null;
+  readonly frogJumpTotal?: string | null;
   readonly level?: number | null;
   readonly pairs?: ReadonlyArray<{ readonly top?: string; readonly bottom?: string }>;
   readonly doubleOps?: readonly string[];
@@ -325,4 +329,66 @@ test('double에서 ÷2 뒤 ×3을 하면 1↔3/2 쌍이 생긴다', async ({ pag
   const observation = await readObservation(page);
   expect(observation.pairs?.[2]).toEqual({ top: '1', bottom: '3/2' });
   expect(observation.doubleOps).toEqual(['divide:2', 'multiply:3']);
+});
+
+test('integer 개구리를 키보드로 +10 두 번, +1 세 번 뛰면 위치가 58이다', async ({ page }) => {
+  await openNumberLine(page, {
+    mode: 'integer',
+    min: 0,
+    max: 100,
+    unit: 1,
+    labels: 'partial',
+    jumpButtons: [10, 1, -1, -10],
+    jumpStart: 35,
+  });
+
+  const plusTen = page.getByRole('button', { name: '+10', exact: true });
+  const plusOne = page.getByRole('button', { name: '+1', exact: true });
+  await expect(plusTen).toBeVisible();
+  await expect(plusOne).toBeVisible();
+
+  // 마우스 없이 키보드(Enter·Space)로만 점프한다.
+  for (let count = 0; count < 2; count += 1) {
+    await plusTen.focus();
+    await page.keyboard.press('Enter');
+  }
+  for (let count = 0; count < 3; count += 1) {
+    await plusOne.focus();
+    await page.keyboard.press('Space');
+  }
+  await pollObservation(page, (observation) => observation.frogAt === '58');
+
+  const observation = await readObservation(page);
+  expect(observation.frogStart).toBe('35');
+  expect(observation.frogJumps).toEqual(['10', '10', '1', '1', '1']);
+  expect(observation.frogJumpTotal).toBe('23');
+  await expect(page.getByTestId('frog-log')).toHaveText('출발 35 → +10 → +10 → +1 → +1 → +1');
+});
+
+test('힌트 ② 오버레이는 본 수직선 svg와 같은 자리·크기에 겹친다', async ({ page }) => {
+  const { canvas, at } = await openNumberLine(page, { mode: 'integer', min: 0, max: 100 });
+  await tapAt(page, at, 700, 300);
+  await pollObservation(page, (observation) => observation.points?.length === 1);
+
+  await page.getByRole('button', { name: '힌트 겹쳐 보기' }).click();
+  const overlay = page.getByTestId('overlay-distance-from-zero');
+  await expect(overlay).toBeVisible();
+
+  const canvasBox = await canvas.boundingBox();
+  const overlayBox = await overlay.boundingBox();
+  if (!canvasBox || !overlayBox) throw new Error('오버레이 크기를 알 수 없습니다.');
+  // 실행기 칸 전체가 아니라 본 수직선 svg와 같은 상자여야 눈금과 겹친다.
+  expect(Math.abs(overlayBox.x - canvasBox.x)).toBeLessThanOrEqual(1);
+  expect(Math.abs(overlayBox.y - canvasBox.y)).toBeLessThanOrEqual(1);
+  expect(Math.abs(overlayBox.width - canvasBox.width)).toBeLessThanOrEqual(1);
+  expect(Math.abs(overlayBox.height - canvasBox.height)).toBeLessThanOrEqual(1);
+
+  // 오버레이가 그린 막대도 수직선 상자 안, 수직선 위쪽에 있다.
+  const bar = overlay.locator('[data-distance-value] line').first();
+  const barBox = await bar.boundingBox();
+  if (!barBox) throw new Error('거리 막대를 찾지 못했습니다.');
+  expect(barBox.x).toBeGreaterThanOrEqual(canvasBox.x - 1);
+  expect(barBox.x + barBox.width).toBeLessThanOrEqual(canvasBox.x + canvasBox.width + 1);
+  expect(barBox.y).toBeGreaterThanOrEqual(canvasBox.y - 1);
+  expect(barBox.y).toBeLessThanOrEqual(canvasBox.y + canvasBox.height);
 });

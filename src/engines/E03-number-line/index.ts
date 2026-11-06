@@ -10,6 +10,7 @@ import { numberLineStrings } from './strings.ko';
 import type { NumberLineAction, NumberLineConfig, NumberLineState } from './types';
 import { NumberLineView } from './View';
 import { DistanceFromZeroOverlay } from './overlays/distance-from-zero';
+import { HopNumbersOverlay } from './overlays/hop-numbers';
 import { PairReplayOverlay } from './overlays/pair-replay';
 import { PrevBandOverlay } from './overlays/prev-band';
 import { SamePointOverlay } from './overlays/same-point';
@@ -43,6 +44,7 @@ const definition: EngineDefinition<NumberLineConfig, NumberLineState, NumberLine
     'two-ticks': TwoTicksOverlay,
     'pair-replay': PairReplayOverlay,
     'prev-band': PrevBandOverlay,
+    'hop-numbers': HopNumbersOverlay,
   },
 };
 

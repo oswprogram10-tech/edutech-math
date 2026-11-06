@@ -126,5 +126,6 @@ export function makeBaseState(input: BaseStateInput): NumberLineState {
     rounding: input.rounding ?? null,
     logZoom: input.logZoom ?? null,
     double: input.double ?? null,
+    frog: null,
   };
 }

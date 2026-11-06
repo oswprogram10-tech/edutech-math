@@ -4,6 +4,7 @@
  */
 import { Rational } from '../../core/math/rational';
 import type { JsonValue, Observation } from '../../core/engine-sdk';
+import { frogAt, frogJumpTotal } from './frog';
 import { parseValue } from './ticks';
 import { rowsOf } from './reduce';
 import type { NumberLineState } from './types';
@@ -184,6 +185,7 @@ export function observe(state: NumberLineState): Observation {
   const skip = skipObservation(state);
   const rounding = roundingObservation(state);
   const double = doubleObservation(state);
+  const frog = state.frog;
 
   return {
     mode: state.mode,
@@ -230,5 +232,10 @@ export function observe(state: NumberLineState): Observation {
     levels: state.logZoom ? [...state.logZoom.levels] : null,
     pairs: double.pairs,
     doubleOps: double.ops,
+    // T080 개구리. 설정이 없으면 모두 null이다.
+    frogAt: frog ? frogAt(frog).toJSON() : null,
+    frogStart: frog ? frog.start : null,
+    frogJumps: frog ? [...frog.jumps] : null,
+    frogJumpTotal: frog ? frogJumpTotal(frog).toJSON() : null,
   };
 }

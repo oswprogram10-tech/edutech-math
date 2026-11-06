@@ -391,3 +391,57 @@
   font-weight: 700;
   text-align: center;
 }
+
+/* ── T080 integer 개구리 점프 ─────────────────────────────── */
+
+.frog {
+  font-size: 42px;
+  text-anchor: middle;
+  user-select: none;
+}
+
+.frogJump {
+  stroke: #b35c00;
+  stroke-width: 3.5;
+}
+
+.frogJumpLabel {
+  fill: #8a4600;
+  font-size: 19px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.frogPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.frogButtons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.frogButtons .button {
+  border-color: #b35c00;
+  font-variant-numeric: tabular-nums;
+}
+
+.frogLog {
+  min-height: 48px;
+  margin: 0;
+  padding: 0.35rem 0.7rem;
+  border: 2px dashed #b35c00;
+  border-radius: 12px;
+  background: #fff8ef;
+  color: #6b3a00;
+  font-size: 1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  font-variant-numeric: tabular-nums;
+}

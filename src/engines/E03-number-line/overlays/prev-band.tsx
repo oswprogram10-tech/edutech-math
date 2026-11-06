@@ -5,9 +5,10 @@
 import type { OverlayProps } from '../../../core/engine-sdk';
 import { numberLineStrings } from '../strings.ko';
 import { parseValue, xOfValue } from '../ticks';
-import { LINE_LEFT, LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../types';
+import { LINE_LEFT } from '../types';
 import type { NumberLineConfig, NumberLineState } from '../types';
 import styles from '../View.module.css';
+import { CanvasAlignedOverlay } from './canvas-frame';
 
 const LINE_Y = 380;
 
@@ -21,13 +22,7 @@ export function PrevBandOverlay({ state }: OverlayProps<NumberLineConfig, Number
   const width = Math.max(0, right - LINE_LEFT);
   if (width <= 0) return null;
   return (
-    <svg
-      viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
-      width="100%"
-      height="100%"
-      data-testid="overlay-prev-band"
-      aria-hidden="true"
-    >
+    <CanvasAlignedOverlay testId="overlay-prev-band">
       <defs>
         <pattern
           id="e03-overlay-prev-hatch"
@@ -53,6 +48,6 @@ export function PrevBandOverlay({ state }: OverlayProps<NumberLineConfig, Number
       <text x={LINE_LEFT + 8} y={LINE_Y - 148} fill="#1d2330" fontSize={17} fontWeight={700}>
         {numberLineStrings.logZoom.pastBand}
       </text>
-    </svg>
+    </CanvasAlignedOverlay>
   );
 }
