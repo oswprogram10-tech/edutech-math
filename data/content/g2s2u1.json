@@ -1,0 +1,617 @@
+{
+  "unit": "g2s2u1",
+  "title": "네 자리 수",
+  "activities": [
+    {
+      "id": "g2s2u1.A1",
+      "title": "1000 큐브 적층 스튜디오",
+      "tasks": [
+        {
+          "id": "g2s2u1.A1.T1",
+          "prompt": "판을 더 놓아서 큐브 하나를 만들고, 모두 몇인지 써 보세요.",
+          "engine": "E01",
+          "mode": "regroup",
+          "cpa": "C",
+          "config": {
+            "mode": "regroup",
+            "allowedBlocks": [100],
+            "start": { "hundreds": 7 },
+            "lasso": true,
+            "chart": ["thousands", "hundreds", "tens", "ones"]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "countsAre", "args": { "thousands": 1, "hundreds": 0 } },
+              { "kind": "predicate", "name": "groupedAtLeast", "args": { "from": 100, "count": 1 } },
+              { "kind": "equals", "path": "response.ans.value", "value": "1000" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 1,
+              "say": "판이 몇 장 모이면 한 덩어리로 묶을 수 있을까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "ten-outline", "args": { "from": 100 } },
+              "say": "판 자리를 점선으로 그렸어요. 빈자리가 몇 개인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 3,
+              "backtrack": "g2s1u1.hundred-unit"
+            }
+          ],
+          "concepts": ["g2s2u1.thousand-unit"],
+          "submit": "button",
+          "response": {
+            "fields": [{ "kind": "number", "id": "ans", "label": "모두 몇인지", "forms": ["integer"] }]
+          }
+        },
+        {
+          "id": "g2s2u1.A1.T2",
+          "prompt": "2천 4백 3십 6을 블록으로 만들어 보세요.",
+          "engine": "E01",
+          "mode": "regroup",
+          "cpa": "C",
+          "config": {
+            "mode": "regroup",
+            "allowedBlocks": [1, 10, 100, 1000],
+            "lasso": true,
+            "chartFill": "auto",
+            "chart": ["thousands", "hundreds", "tens", "ones"]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "valueIs", "args": { "value": 2436 } },
+              { "kind": "predicate", "name": "canonical" }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  { "kind": "equals", "path": "canonical", "value": false },
+                  { "kind": "predicate", "name": "blocksAtLeast", "args": { "value": 100, "min": 10 } }
+                ]
+              },
+              "level": 1,
+              "say": "판 10장으로 무엇을 만들까?"
+            },
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  { "kind": "equals", "path": "canonical", "value": false },
+                  { "kind": "predicate", "name": "blocksAtLeast", "args": { "value": 100, "min": 10 } }
+                ]
+              },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "ten-outline", "args": { "from": 100 } },
+              "say": "판 열 장 자리를 점선으로 그렸어요."
+            },
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  { "kind": "equals", "path": "canonical", "value": false },
+                  { "kind": "predicate", "name": "blocksAtLeast", "args": { "value": 100, "min": 10 } }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g2s2u1.thousand-unit"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 1,
+              "say": "천·백·십·일 블록이 각각 몇 개씩 있어야 할까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "place-value" },
+              "say": "자리마다 지금 놓인 블록이 얼마인지 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 3,
+              "backtrack": "g2s2u1.thousand-unit"
+            }
+          ],
+          "concepts": ["g2s2u1.four-digit"],
+          "submit": "button"
+        },
+        {
+          "id": "g2s2u1.A1.T3",
+          "prompt": "큐브 1개, 판 10장, 막대 3개, 낱개 5개를 정리하고 모두 몇인지 써 보세요.",
+          "engine": "E01",
+          "mode": "regroup",
+          "cpa": "C",
+          "config": {
+            "mode": "regroup",
+            "allowedBlocks": [1, 10, 100, 1000],
+            "start": { "thousands": 1, "hundreds": 10, "tens": 3, "ones": 5 },
+            "lasso": true,
+            "chart": ["thousands", "hundreds", "tens", "ones"]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "canonical" },
+              { "kind": "predicate", "name": "countsAre", "args": { "thousands": 2, "hundreds": 0, "tens": 3, "ones": 5 } },
+              { "kind": "equals", "path": "response.ans.value", "value": "2035" }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  { "kind": "equals", "path": "canonical", "value": false },
+                  { "kind": "predicate", "name": "blocksAtLeast", "args": { "value": 100, "min": 10 } }
+                ]
+              },
+              "level": 1,
+              "say": "판 10장으로 무엇을 만들까?"
+            },
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  { "kind": "equals", "path": "canonical", "value": false },
+                  { "kind": "predicate", "name": "blocksAtLeast", "args": { "value": 100, "min": 10 } }
+                ]
+              },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "ten-outline", "args": { "from": 100 } },
+              "say": "판 열 장 자리를 점선으로 그렸어요."
+            },
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  { "kind": "equals", "path": "canonical", "value": false },
+                  { "kind": "predicate", "name": "blocksAtLeast", "args": { "value": 100, "min": 10 } }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g2s2u1.thousand-unit"
+            },
+            {
+              "when": { "misconception": "MC-PV-ZERO" },
+              "level": 1,
+              "say": "판이 하나도 없으면 그 자리에는 뭐라고 쓸까?"
+            },
+            {
+              "when": { "misconception": "MC-PV-ZERO" },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "place-value" },
+              "say": "자리마다 놓인 블록이 얼마인지 보세요."
+            },
+            {
+              "when": { "misconception": "MC-PV-ZERO" },
+              "level": 3,
+              "backtrack": "g2s1u1.digit-value"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 1,
+              "say": "같은 블록이 10개 모인 곳이 있나요? 정리하면 자리마다 몇 개가 될까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "ten-outline", "args": { "from": 100 } },
+              "say": "판 열 장 자리를 점선으로 그렸어요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 3,
+              "backtrack": "g2s2u1.thousand-unit"
+            }
+          ],
+          "concepts": ["g2s2u1.thousand-unit", "g2s2u1.four-digit"],
+          "submit": "button",
+          "diagnose": [
+            { "code": "MC-PV-NONCANON", "args": { "parts": ["1", "10", "3", "5"] } },
+            { "code": "MC-PV-ZERO", "args": { "expected": "2035" } }
+          ],
+          "response": {
+            "fields": [{ "kind": "number", "id": "ans", "label": "모두 몇인지", "forms": ["integer"] }]
+          }
+        },
+        {
+          "id": "g2s2u1.A1.T4",
+          "prompt": "블록이 나타내는 수를 써 보세요.",
+          "engine": "E01",
+          "mode": "regroup",
+          "cpa": "P",
+          "config": {
+            "mode": "regroup",
+            "allowedBlocks": [1, 10, 100, 1000],
+            "start": { "thousands": 3, "tens": 5, "ones": 8 },
+            "lasso": true,
+            "chart": ["thousands", "hundreds", "tens", "ones"]
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.ans.value",
+            "value": "3058"
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-PV-ZERO" },
+              "level": 1,
+              "say": "판이 하나도 없으면 그 자리에는 뭐라고 쓸까?"
+            },
+            {
+              "when": { "misconception": "MC-PV-ZERO" },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "place-value" },
+              "say": "자리마다 놓인 블록이 얼마인지 보세요."
+            },
+            {
+              "when": { "misconception": "MC-PV-ZERO" },
+              "level": 3,
+              "backtrack": "g2s1u1.digit-value"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 1,
+              "say": "큐브·판·막대·낱개가 각각 몇 개인지 세어 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "place-value" },
+              "say": "자리마다 놓인 블록이 얼마인지 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 3,
+              "backtrack": "g2s1u1.digit-value"
+            }
+          ],
+          "concepts": ["g2s2u1.four-digit"],
+          "submit": "button",
+          "diagnose": [{ "code": "MC-PV-ZERO", "args": { "expected": "3058" } }],
+          "response": {
+            "fields": [{ "kind": "number", "id": "ans", "label": "나타내는 수", "forms": ["integer"] }]
+          }
+        },
+        {
+          "id": "g2s2u1.A1.T5",
+          "prompt": "큐브 하나를 풀어 판으로 바꿔도 수가 그대로인지 확인해 보세요.",
+          "engine": "E01",
+          "mode": "regroup",
+          "cpa": "C",
+          "config": {
+            "mode": "regroup",
+            "allowedBlocks": [1, 10, 100, 1000],
+            "start": { "thousands": 3, "tens": 2, "ones": 1 },
+            "lasso": true,
+            "chartFill": "auto",
+            "chart": ["thousands", "hundreds", "tens", "ones"]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "brokeAtLeast", "args": { "from": 1000, "count": 1 } },
+              {
+                "kind": "predicate",
+                "name": "countsAre",
+                "args": { "thousands": 2, "hundreds": 10, "tens": 2, "ones": 1 }
+              },
+              { "kind": "predicate", "name": "valueIs", "args": { "value": 3021 } }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 1,
+              "say": "큐브 하나를 풀면 판이 몇 장 생길까요? 풀기 전과 후의 수를 비교해 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "break-preview", "args": { "id": "b1" } },
+              "say": "풀면 생길 판을 흐리게 보여 줬어요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 3,
+              "backtrack": "g2s2u1.thousand-unit"
+            }
+          ],
+          "concepts": ["g2s2u1.thousand-unit"],
+          "submit": "button"
+        }
+      ]
+    },
+    {
+      "id": "g2s2u1.A2",
+      "title": "핀치 줌아웃 수직선",
+      "tasks": [
+        {
+          "id": "g2s2u1.A2.T1",
+          "prompt": "넓게 보기로 수직선을 늘려 500 카드를 알맞은 자리에 놓아 보세요.",
+          "engine": "E03",
+          "mode": "log-zoom",
+          "cpa": "P",
+          "config": {
+            "mode": "log-zoom",
+            "levels": [10, 100, 1000, 10000],
+            "startLevel": 0,
+            "cards": [500]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "levelIs", "args": { "level": 2 } },
+              { "kind": "predicate", "name": "hasPointNear", "args": { "value": "500", "within": "100" } }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "log-zoom" },
+              "level": 1,
+              "say": "500이 보이려면 수직선을 얼마나 넓게 봐야 할까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "log-zoom" },
+              "level": 2,
+              "say": "넓게 보기를 한 번 누를 때마다 눈금 수가 어떻게 바뀌는지 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "log-zoom" },
+              "level": 3,
+              "backtrack": "g2s2u1.thousand-unit"
+            }
+          ],
+          "concepts": ["g2s2u1.magnitude"],
+          "submit": "button"
+        },
+        {
+          "id": "g2s2u1.A2.T2",
+          "prompt": "0부터 10000까지 보이게 하고 1000과 2500 카드를 놓아 보세요.",
+          "engine": "E03",
+          "mode": "log-zoom",
+          "cpa": "P",
+          "config": {
+            "mode": "log-zoom",
+            "levels": [10, 100, 1000, 10000],
+            "startLevel": 2,
+            "cards": [1000, 2500]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "levelIs", "args": { "level": 3 } },
+              { "kind": "predicate", "name": "hasPointNear", "args": { "value": "1000", "within": "500" } },
+              { "kind": "predicate", "name": "hasPointNear", "args": { "value": "2500", "within": "500" } }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "log-zoom" },
+              "level": 1,
+              "say": "1000은 0과 10000 사이 어디쯤일까요? 2500은 1000의 몇 배쯤일까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "log-zoom" },
+              "level": 2,
+              "show": { "engine": "E03", "overlay": "prev-band" },
+              "say": "앞에서 보던 구간을 띠로 보여 줬어요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "log-zoom" },
+              "level": 3,
+              "backtrack": "g2s2u1.four-digit"
+            }
+          ],
+          "concepts": ["g2s2u1.magnitude"],
+          "submit": "button"
+        },
+        {
+          "id": "g2s2u1.A2.T3",
+          "prompt": "3200부터 1000씩 세 번 뛰어 보고, 뛴 수를 차례로 써 보세요.",
+          "engine": "E03",
+          "mode": "log-zoom",
+          "cpa": "P",
+          "config": {
+            "mode": "log-zoom",
+            "levels": [10, 100, 1000, 10000],
+            "startLevel": 3,
+            "start": "3200",
+            "step": "1000"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "hopCountIs", "args": { "count": 3 } },
+              { "kind": "predicate", "name": "landingIs", "args": { "value": "6200" } },
+              { "kind": "equals", "path": "response.n1.value", "value": "4200" },
+              { "kind": "equals", "path": "response.n2.value", "value": "5200" },
+              { "kind": "equals", "path": "response.n3.value", "value": "6200" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "log-zoom" },
+              "level": 1,
+              "say": "1000씩 뛰면 어느 자리 숫자가 바뀔까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "log-zoom" },
+              "level": 2,
+              "say": "큰 눈금 한 칸이 얼마인지 보고, 뛴 곳을 하나씩 읽어 볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "log-zoom" },
+              "level": 3,
+              "backtrack": "g2s1u1.compare-skip"
+            }
+          ],
+          "concepts": ["g2s2u1.magnitude"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "n1", "label": "한 번 뛴 수", "forms": ["integer"] },
+              { "kind": "number", "id": "n2", "label": "두 번 뛴 수", "forms": ["integer"] },
+              { "kind": "number", "id": "n3", "label": "세 번 뛴 수", "forms": ["integer"] }
+            ]
+          }
+        },
+        {
+          "id": "g2s2u1.A2.T4",
+          "prompt": "두 수의 크기를 비교하고, 네 수를 작은 수부터 차례로 놓아 보세요.",
+          "engine": "E03",
+          "mode": "log-zoom",
+          "cpa": "A",
+          "config": {
+            "mode": "log-zoom",
+            "levels": [10, 100, 1000, 10000],
+            "startLevel": 3
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "response.cmp.symbol", "value": "<" },
+              {
+                "kind": "equals",
+                "path": "response.ord.order",
+                "value": ["c", "a", "b", "d"]
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-COMPARE-DIGIT-COUNT" },
+              "level": 1,
+              "say": "천의 자리부터 비교해 볼까?"
+            },
+            {
+              "when": { "misconception": "MC-COMPARE-DIGIT-COUNT" },
+              "level": 2,
+              "say": "두 수를 위아래로 맞춰 쓰고 같은 자리끼리 견주어 보세요."
+            },
+            {
+              "when": { "misconception": "MC-COMPARE-DIGIT-COUNT" },
+              "level": 3,
+              "backtrack": "g2s2u1.four-digit"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.ord.order",
+                    "value": ["b", "d", "a", "c"]
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.ord.order",
+                    "value": ["d", "b", "a", "c"]
+                  }
+                ]
+              },
+              "level": 1,
+              "say": "천의 자리부터 비교해 볼까?"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.ord.order",
+                    "value": ["b", "d", "a", "c"]
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.ord.order",
+                    "value": ["d", "b", "a", "c"]
+                  }
+                ]
+              },
+              "level": 2,
+              "say": "두 수를 위아래로 맞춰 쓰고 같은 자리끼리 견주어 보세요."
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.ord.order",
+                    "value": ["b", "d", "a", "c"]
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.ord.order",
+                    "value": ["d", "b", "a", "c"]
+                  }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g2s2u1.four-digit"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "log-zoom" },
+              "level": 1,
+              "say": "네 수의 천의 자리 숫자를 먼저 살펴볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "log-zoom" },
+              "level": 2,
+              "say": "천의 자리가 같은 수끼리는 어느 자리를 견주어야 할까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "log-zoom" },
+              "level": 3,
+              "backtrack": "g2s2u1.four-digit"
+            }
+          ],
+          "concepts": ["g2s2u1.four-digit", "g2s2u1.magnitude"],
+          "submit": "button",
+          "showEngine": false,
+          "diagnose": [
+            {
+              "code": "MC-COMPARE-DIGIT-COUNT",
+              "path": "response.cmp.symbol",
+              "args": { "left": "2987", "right": "3010" }
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "compare",
+                "id": "cmp",
+                "label": "두 수 비교",
+                "left": "2987",
+                "right": "3010"
+              },
+              {
+                "kind": "order",
+                "id": "ord",
+                "label": "작은 수부터",
+                "items": [
+                  { "id": "a", "label": "2987" },
+                  { "id": "b", "label": "3010" },
+                  { "id": "c", "label": "2899" },
+                  { "id": "d", "label": "3100" }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
