@@ -23,17 +23,6 @@ function field(page: Page, id: string): Locator {
   return responseSlot(page).locator(`[data-response-field="${id}"]`);
 }
 
-async function setSmallTarget(page: Page): Promise<void> {
-  // 카드 공통 2: 2학년은 48px 기본. 앱은 g1·g2를 저학년으로 보아 64px을 켜므로
-  // 이 단원 E2E에서는 '큰 버튼'을 끄고 카드 기준(48px)으로 확인한다.
-  await page.getByRole('button', { name: '설정' }).click();
-  const toggle = page.getByRole('menuitemcheckbox', { name: '큰 버튼' });
-  await expect(toggle).toBeVisible();
-  if ((await toggle.getAttribute('aria-checked')) === 'true') await toggle.click();
-  await expect(toggle).toHaveAttribute('aria-checked', 'false');
-  await page.getByRole('button', { name: '설정' }).click();
-}
-
 async function openActivity(page: Page, activityId: string, title: string): Promise<void> {
   await page.goto('/');
   await page.getByRole('button', { name: '1번', exact: true }).click();
@@ -42,7 +31,6 @@ async function openActivity(page: Page, activityId: string, title: string): Prom
   await page.goto(`/#/activity/${activityId}`);
   await expect(page.getByRole('heading', { name: title })).toBeVisible();
   await expect(page.getByRole('button', { name: '확인하기' })).toBeVisible();
-  await setSmallTarget(page);
 }
 
 async function typeNumber(page: Page, id: string, keys: readonly string[]): Promise<void> {
@@ -193,16 +181,45 @@ test('A1 1000 큐브 적층 스튜디오 — 대표 오답 뒤 고쳐서 다섯 
   // T3 — 처음부터 판 10장이 모두 보이는지 확인하고, 11035라고 써서
   // MC-PV-NONCANON ①을 만난 뒤 판을 묶고 2035로 고친다.
   await expect(main.locator('[data-block-value="100"]')).toHaveCount(10);
+  // 64px에서는 앞 과제의 되먹임 줄 때문에 페이지가 아래로 스크롤된 채일 수 있다.
+  // 겹침을 보는 검사이므로 판이 화면 안에 오도록 맨 위로 올린다.
+  await page.evaluate(() => window.scrollTo(0, 0));
+  // 64px에서는 블록의 투명 터치 영역이 커져 elementFromPoint가 이웃 블록에 잡힌다.
+  // 그래서 판 사각형끼리만 보고, 판 안을 격자로 훑어 다른 판에 덮이지 않은 점이
+  // 하나라도 있으면 "완전히 가려지지 않았다"로 본다(카드 기준: 한 장이라도 완전히
+  // 가려지면 멈춘다).
   const allPlatesVisible = await page.evaluate(() => {
     const plates = Array.from(
       document.querySelectorAll('[data-testid="runner-slot-main"] [data-block-value="100"]'),
-    );
-    return plates.map((element) => {
-      const rect = element.getBoundingClientRect();
-      const hit = document.elementFromPoint(rect.x + rect.width / 2, rect.y + 4);
-      return hit !== null && (hit === element || element.contains(hit));
+    ).map((element) => {
+      // <g>에는 손가락 터치용 투명 여백이 있어 bbox가 실제 판보다 훨씬 크다.
+      // 보이는 앞면 rect만 골라 판끼리의 겹침을 본다.
+      const face = element.querySelector('rect:not([fill="transparent"])') ?? element;
+      const rect = face.getBoundingClientRect();
+      return { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom };
+    });
+    const covered = (x: number, y: number, index: number): boolean =>
+      plates.some(
+        (other, otherIndex) =>
+          otherIndex !== index &&
+          x > other.left &&
+          x < other.right &&
+          y > other.top &&
+          y < other.bottom,
+      );
+    return plates.map((rect, index) => {
+      const steps = 6;
+      for (let row = 0; row <= steps; row += 1) {
+        for (let column = 0; column <= steps; column += 1) {
+          const x = rect.left + 2 + ((rect.right - rect.left - 4) * column) / steps;
+          const y = rect.top + 2 + ((rect.bottom - rect.top - 4) * row) / steps;
+          if (!covered(x, y, index)) return true;
+        }
+      }
+      return false;
     });
   });
+  console.log('plate visibility', allPlatesVisible);
   expect(allPlatesVisible).toHaveLength(10);
   expect(allPlatesVisible.every(Boolean)).toBe(true);
   await screenshot(page, 'g2s2u1-a1-t3.png');
@@ -315,8 +332,8 @@ test('크롬북·전자칠판 첫 화면에 엔진·응답 칸·확인하기가 
   );
 
   const cases = [
-    { id: 'g2s2u1.A1', title: '1000 큐브 적층 스튜디오', response: true },
-    { id: 'g2s2u1.A2', title: '핀치 줌아웃 수직선', response: false },
+    { id: 'g2s2u1.A1', title: '1000 큐브 적층 스튜디오', response: true, control: '백 블록 놓기' },
+    { id: 'g2s2u1.A2', title: '핀치 줌아웃 수직선', response: false, control: '한 단계 넓게 보기' },
   ] as const;
 
   for (const item of cases) {
@@ -325,6 +342,31 @@ test('크롬북·전자칠판 첫 화면에 엔진·응답 칸·확인하기가 
     await expect(page.getByRole('button', { name: '확인하기' })).toBeInViewport({ ratio: 1 });
     await expect(slot(page, 'main')).toBeInViewport({ ratio: 1 });
     if (item.response) await expect(responseSlot(page)).toBeInViewport({ ratio: 1 });
+    const boxes = await page.evaluate(() => {
+      const boxOf = (selector: string): DOMRect | null => {
+        const element = document.querySelector(selector);
+        return element ? element.getBoundingClientRect() : null;
+      };
+      const rect = (value: DOMRect | null): { top: number; bottom: number } | null =>
+        value ? { top: Math.round(value.top), bottom: Math.round(value.bottom) } : null;
+      return {
+        viewportHeight: window.innerHeight,
+        main: rect(boxOf('[data-testid="runner-slot-main"]')),
+        response: rect(boxOf('[data-testid="runner-slot-response"]')),
+      };
+    });
+    const controlBox = await slot(page, 'main')
+      .getByRole('button', { name: item.control })
+      .first()
+      .boundingBox();
+    const submitBox = await page.getByRole('button', { name: '확인하기' }).boundingBox();
+    console.log('first screen at 64px', {
+      project: testInfo.project.name,
+      activity: item.id,
+      ...boxes,
+      controlBottom: controlBox ? Math.round(controlBox.y + controlBox.height) : null,
+      submitBottom: submitBox ? Math.round(submitBox.y + submitBox.height) : null,
+    });
   }
 });
 

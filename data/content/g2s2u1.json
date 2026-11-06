@@ -201,12 +201,13 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "regroup" },
               "level": 1,
-              "say": "10장이 넘는 블록이 있나요? 정리하면 자리마다 몇 개가 될까요?"
+              "say": "같은 블록이 10개 모인 곳이 있나요? 정리하면 자리마다 몇 개가 될까요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "regroup" },
               "level": 2,
-              "show": { "engine": "E01", "overlay": "ten-outline", "args": { "from": 100 } }
+              "show": { "engine": "E01", "overlay": "ten-outline", "args": { "from": 100 } },
+              "say": "판 열 장 자리를 점선으로 그렸어요."
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "regroup" },
@@ -267,7 +268,8 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "regroup" },
               "level": 2,
-              "show": { "engine": "E01", "overlay": "place-value" }
+              "show": { "engine": "E01", "overlay": "place-value" },
+              "say": "자리마다 놓인 블록이 얼마인지 보세요."
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "regroup" },
