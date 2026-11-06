@@ -199,7 +199,7 @@ test('A1 백·십·일 블록과 세로셈 — 대표 오답 뒤 고쳐서 다�
   await writeRegroup(main, 1, '9');
   await writeResult(main, { 0: '5', 1: '4', 2: '3' });
   await submit(page);
-  await expectFailedWithHint(page, '백 블록을 풀었지?');
+  await expectFailedWithHint(page, '백의 자리에서 하나를 내려 주었지?');
   await writeResult(main, { 0: '5', 1: '4', 2: '2' });
   await submit(page);
   await expectPassed(page, true);
