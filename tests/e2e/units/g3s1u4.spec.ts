@@ -120,6 +120,14 @@ async function splitAreaAt(page: Page, panel: Locator, base: number, steps: numb
   }
 }
 
+/** 교구(SVG)의 글자에 조각의 곱이 그대로 적혀 있지 않은지. `dims`는 가로×세로만 쓴다. */
+async function expectNoPieceProducts(panel: Locator, products: readonly string[]): Promise<void> {
+  const texts = (await panel.locator('svg text').allTextContents()).map((text) => text.trim());
+  for (const product of products) {
+    expect(texts, `교구에 조각의 곱 ${product}이(가) 보입니다.`).not.toContain(product);
+  }
+}
+
 async function estimate(panel: Locator, digits: readonly string[]): Promise<void> {
   await panel.getByTestId('estimate-cell').click();
   for (const digit of digits) {
@@ -135,6 +143,8 @@ test('A1 넓이 모델과 곱셈 — 대표 오답 뒤 고쳐서 다섯 과제�
   // T1 — 20|3으로 나누고 total만 20으로 써서 NO-PLACE-VALUE를 만난 뒤 92로 고친다.
   const area = slot(page, 'main');
   await splitAreaAt(page, area, 11, 9);
+  // T1 — 나눈 뒤에도 조각의 곱(80·12)이 교구에 적히지 않는다.
+  await expectNoPieceProducts(area, ['80', '12']);
   await typeNumber(page, 'p1', ['8', '0']);
   await typeNumber(page, 'p2', ['1', '2']);
   await typeNumber(page, 'total', ['2', '0']);
@@ -156,7 +166,11 @@ test('A1 넓이 모델과 곱셈 — 대표 오답 뒤 고쳐서 다섯 과제�
   // T3 — E04를 40에서 나누고 부분곱 30·200, 결과 30으로 PARTIAL-MISSING을 만난 뒤 230으로 고친다.
   const left = slot(page, 'left');
   const right = slot(page, 'right');
+  // T3 첫 화면 — 연결된 E04가 부분곱 답(30·200)을 미리 적지 않는다.
+  await expectNoPieceProducts(left, ['30', '200']);
   await splitAreaAt(page, left, 23, 17);
+  // T3 — 40에서 나눈 뒤에도 조각의 곱(30·200)이 교구에 적히지 않는다.
+  await expectNoPieceProducts(left, ['30', '200']);
   const rowColor0 = await right
     .locator('[data-row="partial"][data-index="0"]')
     .first()
@@ -188,6 +202,8 @@ test('A1 넓이 모델과 곱셈 — 대표 오답 뒤 고쳐서 다섯 과제�
   await submit(page);
   await expectPassed(page);
   await screenshot(page, 'g3s1u4-a1-t5.png');
+  // T5 첫 화면 — 미리 놓인 백·십·일 조각이 곱(900·30·6)을 적지 않는다.
+  await expectNoPieceProducts(slot(page, 'main'), ['900', '30', '6']);
 
   // T5 — 조각 넓이 900·30·6, total만 18로 써서 NO-PLACE-VALUE를 만난 뒤 936으로 고친다.
   await typeNumber(page, 'p1', ['9', '0', '0']);
