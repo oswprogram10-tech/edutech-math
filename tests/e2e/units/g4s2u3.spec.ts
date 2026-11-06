@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 import { PREVIEW_URL } from '../../../playwright.config';
+import { expectContentPanelsReachable, expectNoPanelInnerScroll } from '../panel-layout';
 import { logicalToScreen } from '../canvas-point';
 
 /**
@@ -338,6 +339,12 @@ test('크롬북·전자칠판 첫 화면에 엔진 입력과 확인하기가 들
   for (const item of cases) {
     await openActivity(page, item.id, item.title);
     await page.evaluate(() => window.scrollTo(0, 0));
+    await expectNoPanelInnerScroll(page);
+    if (item.id === 'g4s2u3.A2') {
+      // A2는 크롬북에서 첫 화면(672px)을 넘는다. 판 안 스크롤 없이 페이지 스크롤로 확인한다.
+      await expectContentPanelsReachable(page);
+      continue;
+    }
     await expect(page.getByRole('button', { name: '확인하기' })).toBeInViewport({ ratio: 1 });
     await expect(slot(page, 'main')).toBeInViewport({ ratio: 1 });
   }

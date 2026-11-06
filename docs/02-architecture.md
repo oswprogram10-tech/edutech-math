@@ -91,6 +91,8 @@ export interface EngineDefinition<Config, State, Action> {
   id: EngineId;
   name: string;                         // "분수 모델"
   modes: string[];                      // ["bar", "area", "overlay-slicer", ...]
+  /** 실행기 판 크기 방식. 'fit'(기본): 남는 높이에 맞춰 줄어든다. 'content': 내용 높이보다 작아지지 않는다 */
+  layout?: 'fit' | 'content';
   createInitialState(config: Config): State;
   reduce(state: State, action: Action): State;   // 순수 함수. 모든 조작은 Action으로 기록
   View: React.ComponentType<EngineViewProps<Config, State, Action>>;

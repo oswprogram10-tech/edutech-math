@@ -118,6 +118,33 @@ async function measureKeypad(panel: Locator, project: string): Promise<KeypadVis
   return result;
 }
 
+/** 판 안쪽 스크롤이 없어야 한다(T082: content 판은 페이지가 스크롤된다). */
+async function expectNoPanelScroll(panel: Locator): Promise<void> {
+  const overflow = await panel
+    .locator(':scope > div')
+    .first()
+    .evaluate((element) => element.scrollHeight - element.clientHeight);
+  expect(overflow).toBeLessThanOrEqual(1);
+}
+
+/** 앱의 스크롤 영역(ActivityRunner의 main) 안에 완전히 들어오는지 확인한다. */
+async function expectReachable(target: Locator): Promise<void> {
+  await target.scrollIntoViewIfNeeded();
+  const clipped = await target.evaluate((element) => {
+    const scroller = element.closest('main');
+    if (!scroller) throw new Error('스크롤 영역(main)을 찾지 못했습니다.');
+    const rect = element.getBoundingClientRect();
+    const host = scroller.getBoundingClientRect();
+    return {
+      above: rect.top < host.top - 1,
+      below: rect.bottom > host.bottom + 1,
+      left: rect.left < host.left - 1,
+      right: rect.right > host.right + 1,
+    };
+  });
+  expect(clipped).toEqual({ above: false, below: false, left: false, right: false });
+}
+
 /** 오버레이 svg 상자가 E01 본 캔버스 상자와 1px 이내로 같고 그림이 캔버스 안에 있는지. */
 async function expectOverlayAligned(
   panel: Locator,
@@ -175,20 +202,19 @@ test('A1 블록과 세로셈 — 대표 오답 뒤 고쳐서 다섯 과제를 �
   const left = slot(page, 'left');
   const right = slot(page, 'right');
 
-  // 2학년도 저학년 모드(64px)가 기본이다. 64px에서는 E07 키패드 둘째 줄(6~0)과
-  // '지우기' 줄이 판 안쪽 스크롤 아래로 숨는다. 숨은 키도 스크롤해 누르면
-  // 동작하는지 여기서 먼저 확인한다(판 높이는 core CSS가 정한다).
-  await measureKeypad(right, testInfo.project.name);
+  // 2학년도 저학년 모드(64px)가 기본이다. T082부터 E07 판은 내용 높이를 쓰므로
+  // 키패드가 판 안쪽 스크롤 아래로 숨지 않는다. 판 안 스크롤이 없는지 확인하고,
+  // 페이지 스크롤로 키를 눌렀을 때 값이 들어가는지 본다.
+  const keypad = await measureKeypad(right, testInfo.project.name);
+  expect(keypad.row6Fits).toBe(true);
+  expect(keypad.clearFits).toBe(true);
+  await expectNoPanelScroll(right);
   await cell(right, 'result', 0).click();
-  const hiddenDigit = right.getByRole('button', { name: '6 쓰기' });
-  await hiddenDigit.scrollIntoViewIfNeeded();
-  await hiddenDigit.click();
+  await right.getByRole('button', { name: '6 쓰기' }).click();
   await expect(cell(right, 'result', 0)).toHaveText('6');
   // 숫자를 쓰면 다음 칸으로 선택이 옮겨 가므로, 지울 칸을 다시 고른 뒤 '지우기'를 누른다.
   await cell(right, 'result', 0).click();
-  const hiddenClear = right.getByRole('button', { name: '이 칸 지우기' });
-  await hiddenClear.scrollIntoViewIfNeeded();
-  await hiddenClear.click();
+  await right.getByRole('button', { name: '이 칸 지우기' }).click();
   await expect(cell(right, 'result', 0)).toHaveText('');
 
   // T1 — 받아올림을 적지 않고 63만 써서 '기록 빠짐' 힌트를 만난 뒤,
@@ -278,31 +304,63 @@ test('A1 블록과 세로셈 — 대표 오답 뒤 고쳐서 다섯 과제를 �
   await expectPassed(page, true);
 });
 
-test('크롬북·전자칠판 첫 화면에 두 판과 확인하기가 들어온다', async ({ page }, testInfo) => {
-  test.skip(
-    testInfo.project.name === 'ipad',
-    '아이패드는 판을 위아래로 두어 짧은 스크롤을 허용한다',
-  );
-
+test('E07 판은 판 안 스크롤 없이 페이지 스크롤로 확인하기와 키패드에 닿는다', async ({
+  page,
+}, testInfo) => {
   await openActivity(page, 'g2s1u3.A1', '블록과 세로셈');
-  await page.evaluate(() => window.scrollTo(0, 0));
-  await expect(page.getByRole('button', { name: '확인하기' })).toBeInViewport({ ratio: 1 });
-  await expect(slot(page, 'left')).toBeInViewport({ ratio: 1 });
-  await expect(slot(page, 'right')).toBeInViewport({ ratio: 1 });
-  // E07 키패드는 두 판이 나란히 놓이면 아래쪽 일부가 판 안에서 스크롤된다.
-  // 첫 화면에서 조작할 수 있는지만 확인하고, 실제 보이는 비율은 로그로 남긴다.
-  await measureKeypad(slot(page, 'right'), testInfo.project.name);
-  const keypadButton = slot(page, 'right').getByRole('button', { name: '3 쓰기' });
-  await expect(keypadButton).toBeVisible();
-  const ratio = await keypadButton.evaluate((element) => {
-    const box = element.getBoundingClientRect();
-    const visible =
-      Math.max(0, Math.min(box.bottom, window.innerHeight) - Math.max(box.top, 0)) /
-      Math.max(box.height, 1);
-    return Math.round(visible * 100) / 100;
+  const left = slot(page, 'left');
+  const right = slot(page, 'right');
+  await expect(left).toHaveAttribute('data-layout', 'fit');
+  await expect(right).toHaveAttribute('data-layout', 'content');
+  await expectNoPanelScroll(right);
+
+  // 페이지 스크롤로 E07 결과 칸에도 닿는다.
+  await expectReachable(cell(right, 'result', 0));
+
+  // 키패드 모든 키를 페이지 스크롤로 눌러 결과 칸에 들어가는지 확인한다.
+  for (const digit of ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']) {
+    await cell(right, 'result', 0).click();
+    const key = right.getByRole('button', { name: `${digit} 쓰기` });
+    await expectReachable(key);
+    await key.click();
+    await expect(cell(right, 'result', 0)).toHaveText(digit);
+  }
+  await cell(right, 'result', 0).click();
+  const clear = right.getByRole('button', { name: '이 칸 지우기' });
+  await expectReachable(clear);
+  await clear.click();
+  await expect(cell(right, 'result', 0)).toHaveText('');
+
+  // '확인하기'도 페이지 스크롤로 닿는다.
+  const submit = page.getByRole('button', { name: '확인하기' });
+  await expectReachable(submit);
+  await expectNoPanelScroll(right);
+
+  const metrics = await page.evaluate(() => {
+    const panel = document.querySelector('[data-testid="runner-slot-right"]');
+    const scroller = document.querySelector('main');
+    const button = Array.from(document.querySelectorAll('button')).find(
+      (element) => element.textContent === '확인하기',
+    );
+    if (
+      !(panel instanceof HTMLElement) ||
+      !(scroller instanceof HTMLElement) ||
+      !(button instanceof HTMLElement)
+    ) {
+      return null;
+    }
+    const panelBox = panel.getBoundingClientRect();
+    const buttonBox = button.getBoundingClientRect();
+    const hostBox = scroller.getBoundingClientRect();
+    return {
+      pageHeight: scroller.scrollHeight,
+      viewportHeight: scroller.clientHeight,
+      panelHeight: panelBox.height,
+      submitTop: buttonBox.top - hostBox.top + scroller.scrollTop,
+      submitBottom: buttonBox.bottom - hostBox.top + scroller.scrollTop,
+    };
   });
-  console.log('E07 keypad button visible ratio', ratio);
-  expect(ratio).toBeGreaterThan(0.5);
+  console.log('g2s1u3 E07 layout', { project: testInfo.project.name, ...metrics });
 });
 
 test('오프라인에서도 g2s1u3.A1 활동이 열린다', async ({ page, context }) => {

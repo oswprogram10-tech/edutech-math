@@ -121,6 +121,25 @@ function studentRawOf(task: ContentTask, observation: Observation): string | und
   return found.found && typeof found.value === 'string' ? found.value : undefined;
 }
 
+/**
+ * 세로로 스크롤되는 가장 가까운 조상. 앱의 스크롤 영역이나 부스터 모달을 찾는다.
+ * core가 app의 클래스 이름을 알지 않도록 실제 스크롤 가능 여부만 본다.
+ */
+function verticalScrollParent(node: HTMLElement): HTMLElement | null {
+  let element = node.parentElement;
+  while (element) {
+    const overflowY = window.getComputedStyle(element).overflowY;
+    if (
+      (overflowY === 'auto' || overflowY === 'scroll') &&
+      element.scrollHeight > element.clientHeight
+    ) {
+      return element;
+    }
+    element = element.parentElement;
+  }
+  return null;
+}
+
 interface TaskStageProps {
   readonly content: UnitContent;
   readonly activity: ContentActivity;
@@ -175,6 +194,7 @@ function TaskStage({
   const [shareError, setShareError] = useState<string | null>(null);
   const shareActionsRef = useRef<ShareAction[]>([]);
   const taskRef = useRef<HTMLElement>(null);
+  const hintRef = useRef<HTMLElement>(null);
   const historiesRef = useRef(histories);
   const startedRef = useRef(false);
   const passedRef = useRef(false);
@@ -440,6 +460,38 @@ function TaskStage({
     show !== undefined &&
     overlayTarget !== undefined &&
     displaySlots.some((slot) => slot.slot === overlayTarget.slot);
+  const hasContentPanel = displaySlots.some(
+    (slot) => (slot.definition.layout ?? 'fit') === 'content',
+  );
+
+  // 새 힌트(단계가 바뀔 때)가 화면 밖이면 보이게 한다.
+  // 기준은 가장 가까운 세로 스크롤 조상(앱의 main, 부스터 모달 등)이고, 없으면 창이다.
+  const hintLevel = hint?.level ?? null;
+  useEffect(() => {
+    if (hintLevel === null) return;
+    const node = hintRef.current;
+    if (!node) return;
+    const rect = node.getBoundingClientRect();
+    const scroller = verticalScrollParent(node);
+    const bounds = scroller?.getBoundingClientRect();
+    const top = bounds?.top ?? 0;
+    const bottom = bounds?.bottom ?? window.innerHeight;
+    if (rect.top >= top && rect.bottom <= bottom) return;
+
+    const reduced =
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const behavior: ScrollBehavior = reduced ? 'auto' : 'smooth';
+    const delta = rect.top < top ? rect.top - top - 8 : rect.bottom - bottom + 8;
+
+    if (scroller) {
+      if (typeof scroller.scrollBy !== 'function') return;
+      scroller.scrollBy({ top: delta, behavior });
+      return;
+    }
+    if (typeof node.scrollIntoView !== 'function') return;
+    node.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior });
+  }, [hintLevel]);
 
   return (
     <section ref={taskRef} className={styles.task} data-paused={paused ? 'true' : undefined}>
@@ -448,7 +500,11 @@ function TaskStage({
         <h2 className={styles.prompt}>{task.prompt}</h2>
       </div>
 
-      <div className={styles.panels} data-panel-count={displaySlots.length}>
+      <div
+        className={styles.panels}
+        data-panel-count={displaySlots.length}
+        data-has-content={hasContentPanel ? 'true' : undefined}
+      >
         {displaySlots.map((slot) => {
           const state = histories.present[slot.slot];
           // 엔진 View는 자기 props만 쓰고, 응답 View만 definitions를 읽는다.
@@ -458,6 +514,7 @@ function TaskStage({
               key={slot.slot}
               className={styles.panel}
               data-slot={slot.slot}
+              data-layout={slot.definition.layout ?? 'fit'}
               data-testid={`runner-slot-${slot.slot}`}
               aria-label={runnerStrings.slotLabel(slot.slot)}
             >
@@ -518,6 +575,7 @@ function TaskStage({
         ) : null}
         {hint && status !== 'passed' ? (
           <section
+            ref={hintRef}
             className={styles.hint}
             data-testid="hint"
             data-hint-level={hint.level}

@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 import { PREVIEW_URL } from '../../../playwright.config';
+import { expectNoPanelInnerScroll } from '../panel-layout';
 
 /**
  * T052 g1s1u5 「50까지의 수」 단원 E2E.
@@ -120,13 +121,20 @@ async function lassoOneBlock(page: Page, panel: Locator): Promise<void> {
     const box = element.getBoundingClientRect();
     return { x: box.x, y: box.y, width: box.width, height: box.height };
   });
+  const svgBox = await panel.locator('svg').first().boundingBox();
+  if (!svgBox) throw new Error('수 모형 캔버스 크기를 알 수 없습니다.');
   const pad = 8;
+  // 블록이 캔버스 가장자리에 있어도 올가미 시작점이 svg 밖으로 나가지 않게 자른다.
+  const left = Math.max(svgBox.x + 2, rect.x - pad);
+  const top = Math.max(svgBox.y + 2, rect.y - pad);
+  const right = Math.min(svgBox.x + svgBox.width - 2, rect.x + rect.width + pad);
+  const bottom = Math.min(svgBox.y + svgBox.height - 2, rect.y + rect.height + pad);
   const points = [
-    { x: rect.x - pad, y: rect.y - pad },
-    { x: rect.x + rect.width + pad, y: rect.y - pad },
-    { x: rect.x + rect.width + pad, y: rect.y + rect.height + pad },
-    { x: rect.x - pad, y: rect.y + rect.height + pad },
-    { x: rect.x - pad, y: rect.y - pad },
+    { x: left, y: top },
+    { x: right, y: top },
+    { x: right, y: bottom },
+    { x: left, y: bottom },
+    { x: left, y: top },
   ];
   const first = points[0];
   if (!first) throw new Error('올가미 시작점이 없습니다.');
@@ -311,6 +319,7 @@ test('크롬북·전자칠판 첫 화면에 엔진·응답 칸·확인하기가 
   for (const item of cases) {
     await openActivity(page, item.id, item.title);
     await page.evaluate(() => window.scrollTo(0, 0));
+    await expectNoPanelInnerScroll(page);
 
     // 64px 타깃이 켜진 상태에서 엔진 조작·확인하기가 모두 보여야 한다.
     await expect(slot(page, 'main')).toBeInViewport({ ratio: 1 });

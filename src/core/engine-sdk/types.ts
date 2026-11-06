@@ -106,6 +106,11 @@ export interface EngineDefinition<Config, State, Action> {
   name: string;
   /** 이 엔진이 지원하는 모드. 첫 값이 기본 모드다. */
   modes: string[];
+  /**
+   * 실행기 판에서의 크기 방식. 'fit'(기본): 남는 높이에 맞춰 줄어든다(SVG 교구).
+   * 'content': 내용 높이보다 작아지지 않는다. 판이 커지면 페이지가 스크롤된다(세로셈·줄 풀이·키패드).
+   */
+  layout?: 'fit' | 'content';
   createInitialState(config: Config): State;
   /** 순수 함수. 모든 조작은 Action으로만 기록한다. */
   reduce(state: State, action: Action): State;

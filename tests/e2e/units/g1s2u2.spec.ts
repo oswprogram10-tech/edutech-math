@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 import { PREVIEW_URL } from '../../../playwright.config';
+import { expectNoPanelInnerScroll } from '../panel-layout';
 import { logicalToScreen } from '../canvas-point';
 import type { Box } from '../canvas-point';
 
@@ -385,6 +386,7 @@ test('크롬북·전자칠판 첫 화면에 엔진·응답 칸·확인하기가 
   for (const item of cases) {
     await openActivity(page, item.id, item.title);
     await page.evaluate(() => window.scrollTo(0, 0));
+    await expectNoPanelInnerScroll(page);
 
     // 64px 타깃이 켜진 상태에서 엔진 조작·확인하기가 모두 보여야 한다.
     await expect(slot(page, 'main')).toBeInViewport({ ratio: 1 });
