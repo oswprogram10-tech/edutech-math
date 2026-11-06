@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 import { PREVIEW_URL } from '../../../playwright.config';
-import { expectContentPanelsReachable, expectInsideScroller } from '../panel-layout';
+import { expectNoPanelInnerScroll } from '../panel-layout';
 
 /**
  * T059 g2s1u6 「곱셈」 단원 E2E.
@@ -287,12 +287,10 @@ test('크롬북·전자칠판 첫 화면에 엔진·응답 칸·확인하기가 
   for (const item of cases) {
     await openActivity(page, item.id, item.title);
     await page.evaluate(() => window.scrollTo(0, 0));
-    // 응답 칸은 내용 높이를 쓰므로 판 안 스크롤 대신 페이지 스크롤로 확인한다.
-    await expectContentPanelsReachable(page);
-    await expect(responseSlot(page)).toBeVisible();
-    await expectInsideScroller(
-      slot(page, 'main').getByRole('button', { name: item.control }).first(),
-    );
+    await expectNoPanelInnerScroll(page);
+    await expect(page.getByRole('button', { name: '확인하기' })).toBeInViewport({ ratio: 1 });
+    await expect(slot(page, 'main')).toBeInViewport({ ratio: 1 });
+    await expect(responseSlot(page)).toBeInViewport({ ratio: 1 });
     const boxes = await page.evaluate(() => {
       const boxOf = (selector: string): DOMRect | null => {
         const element = document.querySelector(selector);

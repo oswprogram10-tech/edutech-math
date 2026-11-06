@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 import { PREVIEW_URL } from '../../../playwright.config';
-import { expectContentPanelsReachable, expectInsideScroller } from '../panel-layout';
+import { expectNoPanelInnerScroll } from '../panel-layout';
 
 /**
  * T052 g1s1u5 「50까지의 수」 단원 E2E.
@@ -319,22 +319,18 @@ test('크롬북·전자칠판 첫 화면에 엔진·응답 칸·확인하기가 
   for (const item of cases) {
     await openActivity(page, item.id, item.title);
     await page.evaluate(() => window.scrollTo(0, 0));
-
-    if (item.hasResponse) {
-      // 응답 칸은 내용 높이를 쓰므로 판 안 스크롤 대신 페이지 스크롤로 확인한다.
-      await expectContentPanelsReachable(page);
-      await expect(responseSlot(page)).toBeVisible();
-      await expectInsideScroller(item.engine(slot(page, 'main')));
-      await expectInsideScroller(
-        responseSlot(page).getByRole('button', { name: '1', exact: true }),
-      );
-      continue;
-    }
+    await expectNoPanelInnerScroll(page);
 
     // 64px 타깃이 켜진 상태에서 엔진 조작·확인하기가 모두 보여야 한다.
     await expect(slot(page, 'main')).toBeInViewport({ ratio: 1 });
     await expect(page.getByRole('button', { name: '확인하기' })).toBeInViewport({ ratio: 1 });
     await expect(item.engine(slot(page, 'main'))).toBeInViewport({ ratio: 1 });
+    if (item.hasResponse) {
+      await expect(responseSlot(page)).toBeInViewport({ ratio: 1 });
+      await expect(
+        responseSlot(page).getByRole('button', { name: '1', exact: true }),
+      ).toBeInViewport({ ratio: 1 });
+    }
   }
 });
 

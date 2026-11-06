@@ -1,8 +1,8 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 import { PREVIEW_URL } from '../../../playwright.config';
+import { expectNoPanelInnerScroll } from '../panel-layout';
 import { logicalToScreen } from '../canvas-point';
-import { expectContentPanelsReachable } from '../panel-layout';
 
 /**
  * T022 g4s2u1 「분수의 덧셈과 뺄셈」 단원 E2E.
@@ -394,9 +394,7 @@ test('A3 줄 단위 풀이 진단 — 대표 오답 뒤 고쳐서 다섯 과제�
   await expectPassed(page, true);
 });
 
-test('크롬북·전자칠판에서 판 안 스크롤 없이 응답 칸과 확인하기에 닿는다', async ({
-  page,
-}, testInfo) => {
+test('크롬북·전자칠판 첫 화면에 응답 칸과 확인하기가 들어온다', async ({ page }, testInfo) => {
   test.skip(
     testInfo.project.name === 'ipad',
     '아이패드는 판을 위아래로 두어 짧은 스크롤을 허용한다',
@@ -411,10 +409,12 @@ test('크롬북·전자칠판에서 판 안 스크롤 없이 응답 칸과 확�
   for (const item of cases) {
     await openActivity(page, item.id, item.title);
     await page.evaluate(() => window.scrollTo(0, 0));
-    // E08·응답 칸은 내용 높이를 쓰므로 판 안 스크롤 대신 페이지 스크롤로 확인한다.
-    await expectContentPanelsReachable(page);
+    await expectNoPanelInnerScroll(page);
+    await expect(page.getByRole('button', { name: '확인하기' })).toBeInViewport({ ratio: 1 });
     // A3은 엔진 줄이 곧 답이라 응답 칸이 없다.
-    if (item.hasResponse) await expect(responseSlot(page)).toBeVisible();
+    if (item.hasResponse) {
+      await expect(responseSlot(page)).toBeInViewport({ ratio: 1 });
+    }
   }
 });
 

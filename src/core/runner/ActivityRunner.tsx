@@ -121,6 +121,25 @@ function studentRawOf(task: ContentTask, observation: Observation): string | und
   return found.found && typeof found.value === 'string' ? found.value : undefined;
 }
 
+/**
+ * 세로로 스크롤되는 가장 가까운 조상. 앱의 스크롤 영역이나 부스터 모달을 찾는다.
+ * core가 app의 클래스 이름을 알지 않도록 실제 스크롤 가능 여부만 본다.
+ */
+function verticalScrollParent(node: HTMLElement): HTMLElement | null {
+  let element = node.parentElement;
+  while (element) {
+    const overflowY = window.getComputedStyle(element).overflowY;
+    if (
+      (overflowY === 'auto' || overflowY === 'scroll') &&
+      element.scrollHeight > element.clientHeight
+    ) {
+      return element;
+    }
+    element = element.parentElement;
+  }
+  return null;
+}
+
 interface TaskStageProps {
   readonly content: UnitContent;
   readonly activity: ContentActivity;
@@ -445,15 +464,16 @@ function TaskStage({
     (slot) => (slot.definition.layout ?? 'fit') === 'content',
   );
 
-  // 새 힌트(단계가 바뀔 때)가 화면 밖이면 보이게 한다. 부스터 모달 안에서는 모달만 스크롤한다.
+  // 새 힌트(단계가 바뀔 때)가 화면 밖이면 보이게 한다.
+  // 기준은 가장 가까운 세로 스크롤 조상(앱의 main, 부스터 모달 등)이고, 없으면 창이다.
   const hintLevel = hint?.level ?? null;
   useEffect(() => {
     if (hintLevel === null) return;
     const node = hintRef.current;
     if (!node) return;
     const rect = node.getBoundingClientRect();
-    const dialog = node.closest<HTMLElement>('[role="dialog"][aria-modal="true"]');
-    const bounds = dialog?.getBoundingClientRect();
+    const scroller = verticalScrollParent(node);
+    const bounds = scroller?.getBoundingClientRect();
     const top = bounds?.top ?? 0;
     const bottom = bounds?.bottom ?? window.innerHeight;
     if (rect.top >= top && rect.bottom <= bottom) return;
@@ -462,11 +482,11 @@ function TaskStage({
       typeof window.matchMedia === 'function' &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const behavior: ScrollBehavior = reduced ? 'auto' : 'smooth';
+    const delta = rect.top < top ? rect.top - top - 8 : rect.bottom - bottom + 8;
 
-    if (dialog) {
-      if (typeof dialog.scrollBy !== 'function') return;
-      const delta = rect.top < top ? rect.top - top - 8 : rect.bottom - bottom + 8;
-      dialog.scrollBy({ top: delta, behavior });
+    if (scroller) {
+      if (typeof scroller.scrollBy !== 'function') return;
+      scroller.scrollBy({ top: delta, behavior });
       return;
     }
     if (typeof node.scrollIntoView !== 'function') return;

@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 import { PREVIEW_URL } from '../../../playwright.config';
-import { expectContentPanelsReachable } from '../panel-layout';
+import { expectContentPanelsReachable, expectNoPanelInnerScroll } from '../panel-layout';
 
 /**
  * T075 g6s2u2 「소수의 나눗셈」 단원 E2E.
@@ -255,9 +255,7 @@ test('A2 리본 자르기와 나머지 — 대표 오답 뒤 고쳐서 네 과�
   await expectPassed(page, true);
 });
 
-test('크롬북·전자칠판에서 판 안 스크롤 없이 응답 칸과 확인하기에 닿는다', async ({
-  page,
-}, testInfo) => {
+test('크롬북·전자칠판 첫 화면에 응답 칸과 확인하기가 들어온다', async ({ page }, testInfo) => {
   test.skip(
     testInfo.project.name === 'ipad',
     '아이패드는 판을 위아래로 두어 짧은 스크롤을 허용한다',
@@ -271,9 +269,14 @@ test('크롬북·전자칠판에서 판 안 스크롤 없이 응답 칸과 확�
   for (const item of cases) {
     await openActivity(page, item.id, item.title);
     await page.evaluate(() => window.scrollTo(0, 0));
-    // E07·응답 칸은 내용 높이를 쓰므로 판 안 스크롤 대신 페이지 스크롤로 확인한다.
-    await expectContentPanelsReachable(page);
-    if (item.hasResponse) await expect(responseSlot(page)).toBeVisible();
+    await expectNoPanelInnerScroll(page);
+    if (item.id === 'g6s2u2.A1') {
+      // A1은 크롬북·전자칠판에서 첫 화면을 넘는다. 판 안 스크롤 없이 페이지 스크롤로 확인한다.
+      await expectContentPanelsReachable(page);
+      continue;
+    }
+    await expect(page.getByRole('button', { name: '확인하기' })).toBeInViewport({ ratio: 1 });
+    if (item.hasResponse) await expect(responseSlot(page)).toBeInViewport({ ratio: 1 });
   }
 });
 

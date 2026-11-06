@@ -169,6 +169,33 @@ test('응답 content 판은 힌트 ② 뒤에도 판 안 스크롤 없이 모든
   await expectNoInnerScroll(response);
 });
 
+test('힌트 ②는 앱의 스크롤 영역(main) 안에 완전히 들어온다', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === 'ipad', '크롬북·전자칠판의 main 스크롤 영역에서 확인한다');
+  await openActivity(page, 'g1s2u6.A1', '이중 텐프레임 10 채우기');
+
+  await page.getByRole('button', { name: '확인하기' }).click();
+  await expect(page.getByTestId('hint')).toHaveAttribute('data-hint-level', '1');
+  await page.getByRole('button', { name: '확인하기' }).click();
+  await expect(page.getByTestId('hint')).toHaveAttribute('data-hint-level', '2');
+
+  await expect
+    .poll(
+      async () =>
+        page.evaluate(() => {
+          const hint = document.querySelector('[data-testid="hint"]');
+          const scroller = hint?.closest('main');
+          if (!(hint instanceof HTMLElement) || !(scroller instanceof HTMLElement)) {
+            return false;
+          }
+          const hintBox = hint.getBoundingClientRect();
+          const hostBox = scroller.getBoundingClientRect();
+          return hintBox.top >= hostBox.top - 1 && hintBox.bottom <= hostBox.bottom + 1;
+        }),
+      { message: '힌트 ②가 main 스크롤 영역 밖에 있습니다.' },
+    )
+    .toBe(true);
+});
+
 test("'fit' 판만 있는 과제는 페이지 높이가 뷰포트를 넘지 않는다", async ({ page }) => {
   await openActivity(page, 'g1s1u1.A1', '손가락 수 소환 선반');
   const main = slot(page, 'main');

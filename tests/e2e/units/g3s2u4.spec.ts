@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 import { PREVIEW_URL } from '../../../playwright.config';
-import { expectContentPanelsReachable } from '../panel-layout';
+import { expectNoPanelInnerScroll } from '../panel-layout';
 import { logicalToScreen } from '../canvas-point';
 
 /**
@@ -353,14 +353,13 @@ test('크롬북·전자칠판 첫 화면에 응답 칸과 확인하기가 들어
   for (const item of cases) {
     await openActivity(page, item.id, item.title);
     await page.evaluate(() => window.scrollTo(0, 0));
-    if (item.response) {
-      // 응답 칸은 내용 높이를 쓰므로 판 안 스크롤 대신 페이지 스크롤로 확인한다.
-      await expectContentPanelsReachable(page);
-      await expect(responseSlot(page)).toBeVisible();
-      continue;
-    }
+    await expectNoPanelInnerScroll(page);
     await expect(page.getByRole('button', { name: '확인하기' })).toBeInViewport({ ratio: 1 });
-    await expect(slot(page, 'main')).toBeInViewport({ ratio: 1 });
+    if (item.response) {
+      await expect(responseSlot(page)).toBeInViewport({ ratio: 1 });
+    } else {
+      await expect(slot(page, 'main')).toBeInViewport({ ratio: 1 });
+    }
   }
 });
 

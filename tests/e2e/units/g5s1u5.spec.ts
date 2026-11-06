@@ -1,7 +1,11 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 import { PREVIEW_URL } from '../../../playwright.config';
-import { expectContentPanelsReachable, expectInsideScroller } from '../panel-layout';
+import {
+  expectContentPanelsReachable,
+  expectInsideScroller,
+  expectNoPanelInnerScroll,
+} from '../panel-layout';
 
 /**
  * T025 g5s1u5 「분수의 덧셈과 뺄셈」 단원 E2E.
@@ -387,9 +391,7 @@ test('크롬북에서 단계 이름표가 있어도 + 줄 키가 화면 안에 �
   );
 });
 
-test('크롬북·전자칠판에서 판 안 스크롤 없이 입력 칸과 확인하기에 닿는다', async ({
-  page,
-}, testInfo) => {
+test('크롬북·전자칠판 첫 화면에 입력 칸과 확인하기가 들어온다', async ({ page }, testInfo) => {
   test.skip(
     testInfo.project.name === 'ipad',
     '아이패드는 판을 위아래로 두어 짧은 스크롤을 허용한다',
@@ -404,23 +406,21 @@ test('크롬북·전자칠판에서 판 안 스크롤 없이 입력 칸과 확�
   for (const item of cases) {
     await openActivity(page, item.id, item.title);
     await page.evaluate(() => window.scrollTo(0, 0));
+    await expectNoPanelInnerScroll(page);
+    if (item.id === 'g5s1u5.A2') {
+      // E08 A2는 크롬북에서 첫 화면(672px)을 넘는다. 판 안 스크롤 없이 페이지 스크롤로 확인한다.
+      await expectContentPanelsReachable(page);
+      await expectInsideScroller(page.getByTestId('line-1'));
+      continue;
+    }
+    await expect(page.getByRole('button', { name: '확인하기' })).toBeInViewport({ ratio: 1 });
     if (item.id === 'g5s1u5.A3') {
-      // A3은 'fit' 판이라 기존 첫 화면 검사를 그대로 둔다.
-      await expect(page.getByRole('button', { name: '확인하기' })).toBeInViewport({
-        ratio: 1,
-      });
+      // A3 첫 과제는 막대를 푸는 조작이 답 입력이다.
       await expect(
         (await engineSlot(page)).getByRole('button', { name: '자연수 1 풀기' }),
       ).toBeInViewport({ ratio: 1 });
-      continue;
-    }
-    // 응답 칸·E08은 내용 높이를 쓰므로 판 안 스크롤 대신 페이지 스크롤로 확인한다.
-    await expectContentPanelsReachable(page);
-    if (item.id === 'g5s1u5.A2') {
-      // E08은 줄 입력이 곧 답 입력이다.
-      await expectInsideScroller(page.getByTestId('line-1'));
     } else {
-      await expect(responseSlot(page)).toBeVisible();
+      await expect(responseSlot(page)).toBeInViewport({ ratio: 1 });
     }
   }
 });

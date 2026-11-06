@@ -307,6 +307,11 @@
     min-height: auto;
   }
 
+  /* 같은 줄의 'fit' 판 내용 높이가 줄 높이를 늘리지 않게 한다. 줄 높이는 content 판과 남는 높이로 정한다. */
+  .panels[data-has-content='true'] > .panel[data-layout='fit'] {
+    contain: size;
+  }
+
   .panel:not([data-slot='response']) .viewport {
     height: auto;
   }
