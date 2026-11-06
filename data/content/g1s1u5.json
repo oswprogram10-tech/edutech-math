@@ -1,0 +1,770 @@
+{
+  "unit": "g1s1u5",
+  "title": "50까지의 수",
+  "activities": [
+    {
+      "id": "g1s1u5.A1",
+      "title": "10개씩 올가미 묶기",
+      "tasks": [
+        {
+          "id": "g1s1u5.A1.T1",
+          "prompt": "사탕을 10개씩 묶어요. 모두 몇 개인가요?",
+          "engine": "E01",
+          "mode": "regroup",
+          "cpa": "C",
+          "config": {
+            "mode": "regroup",
+            "start": { "ones": 20, "scattered": true, "seed": 1 },
+            "allowedBlocks": [1, 10],
+            "lasso": true,
+            "chart": ["tens", "ones"],
+            "chartFill": "auto",
+            "chartLabels": { "tens": "10개씩 묶음", "ones": "낱개" },
+            "icon": "candy"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "countsAre", "args": { "tens": 2, "ones": 0 } },
+              { "kind": "equals", "path": "response.n.value", "value": "20" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "canonical", "value": false },
+              "level": 1,
+              "say": "낱개 중에 또 묶을 수 있는 게 있을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "canonical", "value": false },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "ten-outline", "args": { "from": 1 } },
+              "say": "점선 칸에 낱개 10개가 들어가요. 몇 칸이 찼나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "canonical", "value": false },
+              "level": 3,
+              "backtrack": "g1s1u5.ten-as-unit"
+            },
+            {
+              "when": { "kind": "equals", "path": "lastAttempt.ok", "value": false },
+              "level": 1,
+              "say": "몇 개 들어갔는지 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "lastAttempt.ok", "value": false },
+              "level": 2,
+              "say": "올가미 안 블록을 하나씩 짚으며 세어 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "lastAttempt.ok", "value": false },
+              "level": 3,
+              "backtrack": "g1s1u1.one-to-one"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 1,
+              "say": "10개씩 묶음은 몇 개, 낱개는 몇 개인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "ten-outline", "args": { "from": 1 } },
+              "say": "점선 칸에 낱개 10개가 들어가요. 몇 칸이 찼나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 3,
+              "backtrack": "g1s1u5.ten-as-unit"
+            }
+          ],
+          "concepts": ["g1s1u5.ten-as-unit"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "n", "label": "모두 몇 개", "forms": ["integer"] }
+            ]
+          }
+        },
+        {
+          "id": "g1s1u5.A1.T2",
+          "prompt": "사탕을 10개씩 묶어 세어요. 모두 몇 개인가요?",
+          "engine": "E01",
+          "mode": "regroup",
+          "cpa": "C",
+          "config": {
+            "mode": "regroup",
+            "start": { "ones": 34, "scattered": true, "seed": 2 },
+            "allowedBlocks": [1, 10],
+            "lasso": true,
+            "chart": ["tens", "ones"],
+            "chartFill": "auto",
+            "chartLabels": { "tens": "10개씩 묶음", "ones": "낱개" },
+            "icon": "candy"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "canonical" },
+              { "kind": "predicate", "name": "countsAre", "args": { "tens": 3, "ones": 4 } },
+              { "kind": "equals", "path": "response.n.value", "value": "34" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "canonical", "value": false },
+              "level": 1,
+              "say": "낱개 중에 또 묶을 수 있는 게 있을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "canonical", "value": false },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "ten-outline", "args": { "from": 1 } },
+              "say": "점선 칸에 낱개 10개가 들어가요. 몇 칸이 찼나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "canonical", "value": false },
+              "level": 3,
+              "backtrack": "g1s1u5.ten-as-unit"
+            },
+            {
+              "when": { "kind": "equals", "path": "lastAttempt.ok", "value": false },
+              "level": 1,
+              "say": "몇 개 들어갔는지 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "lastAttempt.ok", "value": false },
+              "level": 2,
+              "say": "올가미 안 블록을 하나씩 짚으며 세어 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "lastAttempt.ok", "value": false },
+              "level": 3,
+              "backtrack": "g1s1u1.one-to-one"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 1,
+              "say": "10개씩 묶음은 몇 개, 낱개는 몇 개인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "ten-outline", "args": { "from": 1 } },
+              "say": "점선 칸에 낱개 10개가 들어가요. 몇 칸이 찼나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 3,
+              "backtrack": "g1s1u5.ten-as-unit"
+            }
+          ],
+          "concepts": ["g1s1u5.ten-as-unit", "g1s1u5.tens-and-ones"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "n", "label": "모두 몇 개", "forms": ["integer"] }
+            ]
+          }
+        },
+        {
+          "id": "g1s1u5.A1.T3",
+          "prompt": "10개씩 묶음 4개와 낱개 7개를 만들어요.",
+          "engine": "E01",
+          "mode": "count",
+          "cpa": "P",
+          "config": {
+            "mode": "count",
+            "render": "flat",
+            "allowedBlocks": [1, 10],
+            "lasso": true,
+            "chart": ["tens", "ones"],
+            "chartFill": "auto",
+            "chartLabels": { "tens": "10개씩 묶음", "ones": "낱개" }
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "countsAre",
+            "args": { "tens": 4, "ones": 7 }
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "canonical", "value": false },
+              "level": 1,
+              "say": "낱개 중에 또 묶을 수 있는 게 있을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "canonical", "value": false },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "ten-outline", "args": { "from": 1 } },
+              "say": "점선 칸에 낱개 10개가 들어가요. 몇 칸이 찼나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "canonical", "value": false },
+              "level": 3,
+              "backtrack": "g1s1u5.ten-as-unit"
+            },
+            {
+              "when": { "kind": "equals", "path": "lastAttempt.ok", "value": false },
+              "level": 1,
+              "say": "몇 개 들어갔는지 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "lastAttempt.ok", "value": false },
+              "level": 2,
+              "say": "올가미 안 블록을 하나씩 짚으며 세어 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "lastAttempt.ok", "value": false },
+              "level": 3,
+              "backtrack": "g1s1u1.one-to-one"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "count" },
+              "level": 1,
+              "say": "10개씩 묶음은 몇 개, 낱개는 몇 개인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "count" },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "ten-outline", "args": { "from": 1 } },
+              "say": "점선 칸에 낱개 10개가 들어가요. 몇 칸이 찼나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "count" },
+              "level": 3,
+              "backtrack": "g1s1u5.ten-as-unit"
+            }
+          ],
+          "concepts": ["g1s1u5.tens-and-ones"],
+          "submit": "button"
+        },
+        {
+          "id": "g1s1u5.A1.T4",
+          "prompt": "수 카드 29만큼 블록을 놓아요.",
+          "engine": "E01",
+          "mode": "count",
+          "cpa": "P",
+          "config": {
+            "mode": "count",
+            "render": "flat",
+            "allowedBlocks": [1, 10],
+            "lasso": true,
+            "chart": ["tens", "ones"],
+            "chartFill": "auto",
+            "chartLabels": { "tens": "10개씩 묶음", "ones": "낱개" }
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "valueIs", "args": { "value": 29 } },
+              { "kind": "predicate", "name": "canonical" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "canonical", "value": false },
+              "level": 1,
+              "say": "낱개 중에 또 묶을 수 있는 게 있을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "canonical", "value": false },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "ten-outline", "args": { "from": 1 } },
+              "say": "점선 칸에 낱개 10개가 들어가요. 몇 칸이 찼나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "canonical", "value": false },
+              "level": 3,
+              "backtrack": "g1s1u5.ten-as-unit"
+            },
+            {
+              "when": { "kind": "equals", "path": "lastAttempt.ok", "value": false },
+              "level": 1,
+              "say": "몇 개 들어갔는지 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "lastAttempt.ok", "value": false },
+              "level": 2,
+              "say": "올가미 안 블록을 하나씩 짚으며 세어 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "lastAttempt.ok", "value": false },
+              "level": 3,
+              "backtrack": "g1s1u1.one-to-one"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "count" },
+              "level": 1,
+              "say": "10개씩 묶음은 몇 개, 낱개는 몇 개인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "count" },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "ten-outline", "args": { "from": 1 } },
+              "say": "점선 칸에 낱개 10개가 들어가요. 몇 칸이 찼나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "count" },
+              "level": 3,
+              "backtrack": "g1s1u5.ten-as-unit"
+            }
+          ],
+          "concepts": ["g1s1u5.tens-and-ones"],
+          "submit": "button"
+        },
+        {
+          "id": "g1s1u5.A1.T5",
+          "prompt": "더 묶을 수 있을까요? 묶고 모두 몇인지 써요.",
+          "engine": "E01",
+          "mode": "regroup",
+          "cpa": "P",
+          "config": {
+            "mode": "regroup",
+            "render": "flat",
+            "start": { "tens": 2, "ones": 15 },
+            "allowedBlocks": [1, 10],
+            "lasso": true,
+            "chart": ["tens", "ones"],
+            "chartFill": "auto",
+            "chartLabels": { "tens": "10개씩 묶음", "ones": "낱개" }
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "canonical" },
+              { "kind": "predicate", "name": "countsAre", "args": { "tens": 3, "ones": 5 } },
+              { "kind": "equals", "path": "response.n.value", "value": "35" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-PV-NONCANON" },
+              "level": 1,
+              "say": "낱개 중에 또 묶을 수 있는 게 있을까?"
+            },
+            {
+              "when": { "misconception": "MC-PV-NONCANON" },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "ten-outline", "args": { "from": 1 } },
+              "say": "점선 칸에 낱개 10개가 들어가요. 몇 칸이 찼나요?"
+            },
+            {
+              "when": { "misconception": "MC-PV-NONCANON" },
+              "level": 3,
+              "backtrack": "g1s1u5.ten-as-unit"
+            },
+            {
+              "when": { "kind": "equals", "path": "canonical", "value": false },
+              "level": 1,
+              "say": "낱개 중에 또 묶을 수 있는 게 있을까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "canonical", "value": false },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "ten-outline", "args": { "from": 1 } },
+              "say": "점선 칸에 낱개 10개가 들어가요. 몇 칸이 찼나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "canonical", "value": false },
+              "level": 3,
+              "backtrack": "g1s1u5.ten-as-unit"
+            },
+            {
+              "when": { "kind": "equals", "path": "lastAttempt.ok", "value": false },
+              "level": 1,
+              "say": "몇 개 들어갔는지 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "lastAttempt.ok", "value": false },
+              "level": 2,
+              "say": "올가미 안 블록을 하나씩 짚으며 세어 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "lastAttempt.ok", "value": false },
+              "level": 3,
+              "backtrack": "g1s1u1.one-to-one"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 1,
+              "say": "10개씩 묶음은 몇 개, 낱개는 몇 개인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "ten-outline", "args": { "from": 1 } },
+              "say": "점선 칸에 낱개 10개가 들어가요. 몇 칸이 찼나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 3,
+              "backtrack": "g1s1u5.ten-as-unit"
+            }
+          ],
+          "concepts": ["g1s1u5.ten-as-unit", "g1s1u5.tens-and-ones"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-PV-NONCANON",
+              "args": { "parts": ["2", "15"] },
+              "path": "response.n.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "n", "label": "모두 몇", "forms": ["integer"] }
+            ]
+          }
+        },
+        {
+          "id": "g1s1u5.A1.T6",
+          "prompt": "10개씩 묶음 3개와 낱개 12개는 모두 얼마인가요?",
+          "engine": "E01",
+          "mode": "regroup",
+          "cpa": "A",
+          "config": {
+            "mode": "regroup",
+            "render": "flat",
+            "start": { "tens": 2, "ones": 15 },
+            "allowedBlocks": [1, 10],
+            "lasso": true,
+            "chart": ["tens", "ones"],
+            "chartFill": "auto",
+            "chartLabels": { "tens": "10개씩 묶음", "ones": "낱개" }
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.n.value",
+            "value": "42"
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-PV-NONCANON" },
+              "level": 1,
+              "say": "낱개 중에 또 묶을 수 있는 게 있을까?"
+            },
+            {
+              "when": { "misconception": "MC-PV-NONCANON" },
+              "level": 2,
+              "say": "낱개 12개 중 10개를 묶으면 묶음은 몇 개가 될까?"
+            },
+            {
+              "when": { "misconception": "MC-PV-NONCANON" },
+              "level": 3,
+              "backtrack": "g1s1u5.ten-as-unit"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 1,
+              "say": "10개씩 묶음과 낱개를 어떻게 정리하면 좋을까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 2,
+              "say": "낱개가 10개보다 많으면 10개씩 묶어 보세요. 묶음은 모두 몇 개가 될까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "regroup" },
+              "level": 3,
+              "backtrack": "g1s1u5.ten-as-unit"
+            }
+          ],
+          "concepts": ["g1s1u5.ten-as-unit", "g1s1u5.tens-and-ones"],
+          "submit": "button",
+          "showEngine": false,
+          "diagnose": [
+            {
+              "code": "MC-PV-NONCANON",
+              "args": { "parts": ["3", "12"] },
+              "path": "response.n.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "n", "label": "모두 몇", "forms": ["integer"] }
+            ]
+          }
+        },
+        {
+          "id": "g1s1u5.A1.T7",
+          "prompt": "34에서 3은 무엇이 3개라는 뜻일까요?",
+          "engine": "E01",
+          "mode": "count",
+          "cpa": "A",
+          "config": { "mode": "count" },
+          "goal": {
+            "kind": "equals",
+            "path": "response.what.selected",
+            "value": ["tens"]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "response.what.selected", "value": ["ones"] },
+              "level": 1,
+              "say": "3은 무엇이 3개라는 뜻일까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.what.selected", "value": ["ones"] },
+              "level": 2,
+              "say": "34를 블록으로 놓으면 막대는 몇 개일까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.what.selected", "value": ["ones"] },
+              "level": 3,
+              "backtrack": "g1s1u5.tens-and-ones"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "count" },
+              "level": 1,
+              "say": "34를 블록으로 놓으면 막대와 낱개가 각각 몇 개일까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "count" },
+              "level": 2,
+              "say": "3이 어느 자리에 있는지 살펴보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "count" },
+              "level": 3,
+              "backtrack": "g1s1u5.tens-and-ones"
+            }
+          ],
+          "concepts": ["g1s1u5.tens-and-ones"],
+          "submit": "button",
+          "showEngine": false,
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "what",
+                "label": "3이 뜻하는 것",
+                "multiple": false,
+                "options": [
+                  { "id": "tens", "label": "10개씩 묶음 3개" },
+                  { "id": "ones", "label": "낱개 3개" }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "g1s1u5.A2",
+      "title": "구슬셈판 뛰어 세기",
+      "tasks": [
+        {
+          "id": "g1s1u5.A2.T1",
+          "prompt": "구슬 32개를 왼쪽으로 밀어요.",
+          "engine": "E02",
+          "mode": "rekenrek",
+          "cpa": "P",
+          "config": {
+            "mode": "rekenrek",
+            "rows": 5,
+            "perRow": 10,
+            "colorBreak": 5,
+            "skipBy": [1, 2, 5, 10]
+          },
+          "goal": { "kind": "predicate", "name": "totalIs", "args": { "value": 32 } },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "rekenrek" },
+              "level": 1,
+              "say": "한 줄에 구슬이 몇 개 있지? 몇 줄을 밀면 될까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "rekenrek" },
+              "level": 2,
+              "show": { "engine": "E02", "overlay": "bead-groups" },
+              "say": "민 구슬을 5개·10개씩 묶어 봤어요. 다시 세어 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "rekenrek" },
+              "level": 3,
+              "backtrack": "g1s1u5.tens-and-ones"
+            }
+          ],
+          "concepts": ["g1s1u5.order-to-50", "g1s1u5.tens-and-ones"],
+          "submit": "button"
+        },
+        {
+          "id": "g1s1u5.A2.T2",
+          "prompt": "10씩 뛰어 세며 50까지 가요.",
+          "engine": "E02",
+          "mode": "rekenrek",
+          "cpa": "P",
+          "config": {
+            "mode": "rekenrek",
+            "rows": 5,
+            "perRow": 10,
+            "colorBreak": 5,
+            "skipBy": [1, 10]
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "historyIncludesInOrder",
+            "args": { "values": [10, 20, 30, 40, 50] }
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "rekenrek" },
+              "level": 1,
+              "say": "한 줄을 통째로 밀면 몇 개가 늘어날까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "rekenrek" },
+              "level": 2,
+              "show": { "engine": "E02", "overlay": "bead-groups" },
+              "say": "민 구슬을 5개·10개씩 묶어 봤어요. 다시 세어 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "rekenrek" },
+              "level": 3,
+              "backtrack": "g1s1u5.order-to-50"
+            }
+          ],
+          "concepts": ["g1s1u5.order-to-50"],
+          "submit": "button"
+        },
+        {
+          "id": "g1s1u5.A2.T3",
+          "prompt": "2씩 뛰어 세며 20까지 가요.",
+          "engine": "E02",
+          "mode": "rekenrek",
+          "cpa": "P",
+          "config": {
+            "mode": "rekenrek",
+            "rows": 5,
+            "perRow": 10,
+            "colorBreak": 5,
+            "skipBy": [2]
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "historyIncludesInOrder",
+            "args": {
+              "values": [2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
+            }
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "rekenrek" },
+              "level": 1,
+              "say": "구슬을 2개씩 밀어 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "rekenrek" },
+              "level": 2,
+              "show": { "engine": "E02", "overlay": "bead-groups" },
+              "say": "민 구슬을 5개·10개씩 묶어 봤어요. 다시 세어 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "rekenrek" },
+              "level": 3,
+              "backtrack": "g1s1u5.order-to-50"
+            }
+          ],
+          "concepts": ["g1s1u5.order-to-50"],
+          "submit": "button"
+        },
+        {
+          "id": "g1s1u5.A2.T4",
+          "prompt": "27과 31을 차례로 만들어 보고, 더 큰 수를 골라요.",
+          "engine": "E02",
+          "mode": "rekenrek",
+          "cpa": "P",
+          "config": {
+            "mode": "rekenrek",
+            "rows": 5,
+            "perRow": 10,
+            "colorBreak": 5,
+            "skipBy": [1, 10]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "reachedAll", "args": { "values": [27, 31] } },
+              { "kind": "equals", "path": "response.big.selected", "value": ["b"] }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "rekenrek" },
+              "level": 1,
+              "say": "10개씩 묶음이 더 많은 수는 어느 쪽일까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "rekenrek" },
+              "level": 2,
+              "show": { "engine": "E02", "overlay": "bead-groups" },
+              "say": "민 구슬을 5개·10개씩 묶어 봤어요. 다시 세어 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "rekenrek" },
+              "level": 3,
+              "backtrack": "g1s1u5.tens-and-ones"
+            }
+          ],
+          "concepts": ["g1s1u5.order-to-50", "g1s1u5.tens-and-ones"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "big",
+                "label": "더 큰 수",
+                "multiple": false,
+                "options": [
+                  { "id": "a", "label": "27" },
+                  { "id": "b", "label": "31" }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g1s1u5.A2.T5",
+          "prompt": "29 다음 수는 얼마인가요?",
+          "engine": "E02",
+          "mode": "rekenrek",
+          "cpa": "A",
+          "config": {
+            "mode": "rekenrek",
+            "rows": 5,
+            "perRow": 10,
+            "colorBreak": 5,
+            "skipBy": [1, 2, 5, 10]
+          },
+          "goal": { "kind": "equals", "path": "response.n.value", "value": "30" },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "rekenrek" },
+              "level": 1,
+              "say": "29에서 구슬 하나를 더 밀면 한 줄이 어떻게 될까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "rekenrek" },
+              "level": 2,
+              "say": "한 줄이 가득 차면 다음 줄로 넘어가요. 29 다음 수를 세어 볼까?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "rekenrek" },
+              "level": 3,
+              "backtrack": "g1s1u5.order-to-50"
+            }
+          ],
+          "concepts": ["g1s1u5.order-to-50"],
+          "submit": "button",
+          "showEngine": false,
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "n", "label": "29 다음 수", "forms": ["integer"] }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
