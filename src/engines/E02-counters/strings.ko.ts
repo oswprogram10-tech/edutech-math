@@ -117,6 +117,7 @@ export const countersStrings = {
   pile: '무더기',
   dealRound: '한 바퀴씩 나누기',
   takeBack: (plate: number) => `${plate + 1}번 접시에서 하나 되돌리기`,
+  takeBackShort: '하나 빼기',
   shareHint: '접시마다 같은 수가 되도록 나누어 보세요.',
 
   measureChoose: '몇 개씩 덜어 낼까요?',

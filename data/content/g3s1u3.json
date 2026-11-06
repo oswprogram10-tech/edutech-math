@@ -1,0 +1,846 @@
+{
+  "unit": "g3s1u3",
+  "title": "나눗셈",
+  "activities": [
+    {
+      "id": "g3s1u3.A1",
+      "title": "나누어 주기와 덜어 내기",
+      "tasks": [
+        {
+          "id": "g3s1u3.A1.T1",
+          "prompt": "사탕 12개를 접시 3개에 똑같이 나누어 주어요.",
+          "engine": "E02",
+          "mode": "share",
+          "cpa": "C",
+          "config": {
+            "mode": "share",
+            "total": 12,
+            "groups": 3,
+            "icon": "candy"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "platesAre",
+                "args": {
+                  "values": [
+                    4,
+                    4,
+                    4
+                  ]
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "pileIs",
+                "args": {
+                  "value": 0
+                }
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "pileIs",
+                    "args": {
+                      "value": 0
+                    }
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "equal",
+                    "value": false
+                  }
+                ]
+              },
+              "level": 1,
+              "say": "접시마다 사탕 수가 모두 같아?"
+            },
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "pileIs",
+                    "args": {
+                      "value": 0
+                    }
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "equal",
+                    "value": false
+                  }
+                ]
+              },
+              "level": 2,
+              "show": {
+                "engine": "E02",
+                "overlay": "plate-bars"
+              },
+              "say": "접시마다 사탕 수를 막대로 세워 보았어요."
+            },
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "pileIs",
+                    "args": {
+                      "value": 0
+                    }
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "equal",
+                    "value": false
+                  }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g2s2u2.facts-by-table"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "share"
+              },
+              "level": 1,
+              "say": "사탕이 아직 남았나요? 접시마다 하나씩 차례로 놓아 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "share"
+              },
+              "level": 2,
+              "show": {
+                "engine": "E02",
+                "overlay": "plate-bars"
+              },
+              "say": "접시마다 지금 몇 개인지 막대로 보았어요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "share"
+              },
+              "level": 3,
+              "backtrack": "g2s2u2.facts-by-table"
+            }
+          ],
+          "concepts": [
+            "g3s1u3.partitive-division"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g3s1u3.A1.T2",
+          "prompt": "사탕 12개를 4개씩 봉지에 담아요. 봉지는 몇 개가 될까요?",
+          "engine": "E02",
+          "mode": "measure-out",
+          "cpa": "C",
+          "config": {
+            "mode": "measure-out",
+            "total": 12,
+            "groupSize": 4,
+            "icon": "candy"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "bagsIs",
+                "args": {
+                  "value": 3
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "looseIs",
+                "args": {
+                  "value": 0
+                }
+              },
+              {
+                "kind": "equals",
+                "path": "response.bags.value",
+                "value": "3"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "measure-out"
+              },
+              "level": 1,
+              "say": "남은 사탕이 있나요? 4개씩 더 담을 수 있을까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "measure-out"
+              },
+              "level": 2,
+              "say": "봉지 하나에 몇 개씩 담겼는지 세어 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "measure-out"
+              },
+              "level": 3,
+              "backtrack": "g2s2u2.facts-by-table"
+            }
+          ],
+          "concepts": [
+            "g3s1u3.quotitive-division"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "bags",
+                "label": "봉지 수",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s1u3.A1.T3",
+          "prompt": "이야기 카드를 '나누어 주기'와 '덜어 내기'로 나누어 보세요.",
+          "engine": "E02",
+          "mode": "share",
+          "cpa": "A",
+          "config": {
+            "mode": "share",
+            "total": 12,
+            "groups": 3
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "equals",
+                "path": "response.sort.bins.share",
+                "value": [
+                  "c1",
+                  "c3"
+                ]
+              },
+              {
+                "kind": "equals",
+                "path": "response.sort.bins.measure",
+                "value": [
+                  "c2",
+                  "c4"
+                ]
+              },
+              {
+                "kind": "equals",
+                "path": "response.sort.unsorted",
+                "value": []
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "share"
+              },
+              "level": 1,
+              "say": "이 이야기에서 알고 있는 건 '몇 묶음'이야, '한 묶음에 몇 개'야?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "share"
+              },
+              "level": 2,
+              "say": "카드마다 무엇을 알고 무엇을 묻는지 밑줄 그어 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "share"
+              },
+              "level": 3,
+              "backtrack": "g3s1u3.quotitive-division"
+            }
+          ],
+          "concepts": [
+            "g3s1u3.quotitive-division",
+            "g3s1u3.partitive-division"
+          ],
+          "submit": "button",
+          "showEngine": false,
+          "response": {
+            "fields": [
+              {
+                "kind": "sort",
+                "id": "sort",
+                "label": "이야기 나누기",
+                "bins": [
+                  {
+                    "id": "share",
+                    "label": "나누어 주기"
+                  },
+                  {
+                    "id": "measure",
+                    "label": "덜어 내기"
+                  }
+                ],
+                "cards": [
+                  {
+                    "id": "c1",
+                    "label": "사탕 12개를 3명에게 똑같이 나누어 주면 한 명에게 몇 개일까요?"
+                  },
+                  {
+                    "id": "c2",
+                    "label": "사탕 12개를 4개씩 봉지에 담으면 몇 봉지일까요?"
+                  },
+                  {
+                    "id": "c3",
+                    "label": "연필 15자루를 5명이 똑같이 나누어 가지면 한 명이 몇 자루일까요?"
+                  },
+                  {
+                    "id": "c4",
+                    "label": "쿠키 20개를 한 접시에 5개씩 담으면 몇 접시일까요?"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s1u3.A1.T4",
+          "prompt": "점 15개를 5개씩 덜어 내 보세요. 그리고 나눗셈식을 □ ÷ ○ = △ 칸에 써요.",
+          "engine": "E02",
+          "mode": "measure-out",
+          "cpa": "P",
+          "config": {
+            "mode": "measure-out",
+            "total": 15,
+            "groupSize": 5,
+            "icon": "dot"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "bagsIs",
+                "args": {
+                  "value": 3
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "looseIs",
+                "args": {
+                  "value": 0
+                }
+              },
+              {
+                "kind": "equals",
+                "path": "response.a.value",
+                "value": "15"
+              },
+              {
+                "kind": "equals",
+                "path": "response.b.value",
+                "value": "5"
+              },
+              {
+                "kind": "equals",
+                "path": "response.q.value",
+                "value": "3"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.a.value",
+                    "value": "5"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.b.value",
+                    "value": "15"
+                  }
+                ]
+              },
+              "level": 1,
+              "say": "전체가 몇 개였지? 식의 맨 앞에 무엇이 와야 할까?"
+            },
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.a.value",
+                    "value": "5"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.b.value",
+                    "value": "15"
+                  }
+                ]
+              },
+              "level": 2,
+              "say": "식의 수마다 그림의 어느 부분인지 짚어 보세요."
+            },
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.a.value",
+                    "value": "5"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.b.value",
+                    "value": "15"
+                  }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g3s1u3.mul-div-relation"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "measure-out"
+              },
+              "level": 1,
+              "say": "점을 5개씩 모두 덜어 냈나요? 봉지가 몇 개인가요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "measure-out"
+              },
+              "level": 2,
+              "say": "봉지 수와 한 봉지의 점 수를 식에 견주어 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "measure-out"
+              },
+              "level": 3,
+              "backtrack": "g3s1u3.quotitive-division"
+            }
+          ],
+          "concepts": [
+            "g3s1u3.mul-div-relation"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "a",
+                "label": "나누어지는 수",
+                "forms": [
+                  "integer"
+                ]
+              },
+              {
+                "kind": "number",
+                "id": "b",
+                "label": "나누는 수",
+                "forms": [
+                  "integer"
+                ]
+              },
+              {
+                "kind": "number",
+                "id": "q",
+                "label": "몫",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "g3s1u3.A2",
+      "title": "곱셈과 나눗셈 가족",
+      "tasks": [
+        {
+          "id": "g3s1u3.A2.T1",
+          "prompt": "점 배열을 보고 만들 수 있는 식을 모두 골라요.",
+          "engine": "E04",
+          "mode": "dot-array",
+          "cpa": "P",
+          "config": {
+            "mode": "dot-array",
+            "rows": 3,
+            "cols": 5,
+            "factFamily": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "dimsAre",
+                "args": {
+                  "rows": 3,
+                  "cols": 5,
+                  "either": true
+                }
+              },
+              {
+                "kind": "equals",
+                "path": "response.facts.selected",
+                "value": [
+                  "a",
+                  "b",
+                  "c",
+                  "d"
+                ]
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "dot-array"
+              },
+              "level": 1,
+              "say": "한 줄에 몇 개, 몇 줄인가요? 나눗셈식도 있을까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "dot-array"
+              },
+              "level": 2,
+              "say": "15개를 3줄로 나누면 한 줄에 몇 개인지 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "dot-array"
+              },
+              "level": 3,
+              "backtrack": "g2s2u2.facts-by-table"
+            }
+          ],
+          "concepts": [
+            "g3s1u3.mul-div-relation"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "facts",
+                "label": "이 배열로 만들 수 있는 식",
+                "multiple": true,
+                "options": [
+                  {
+                    "id": "a",
+                    "label": "3 × 5 = 15"
+                  },
+                  {
+                    "id": "b",
+                    "label": "5 × 3 = 15"
+                  },
+                  {
+                    "id": "c",
+                    "label": "15 ÷ 3 = 5"
+                  },
+                  {
+                    "id": "d",
+                    "label": "15 ÷ 5 = 3"
+                  },
+                  {
+                    "id": "e",
+                    "label": "3 + 5 = 8"
+                  },
+                  {
+                    "id": "f",
+                    "label": "15 − 3 = 12"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s1u3.A2.T2",
+          "prompt": "점 24개를 6줄로(또는 한 줄에 6개씩) 놓아 보고 24 ÷ 6의 몫을 써요.",
+          "engine": "E04",
+          "mode": "dot-array",
+          "cpa": "P",
+          "config": {
+            "mode": "dot-array",
+            "rows": 0,
+            "cols": 0,
+            "maxRows": 8,
+            "maxCols": 8,
+            "showSentence": "dims"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "dimsAre",
+                "args": {
+                  "rows": 6,
+                  "cols": 4,
+                  "either": true
+                }
+              },
+              {
+                "kind": "equals",
+                "path": "response.q.value",
+                "value": "4"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "dot-array"
+              },
+              "level": 1,
+              "say": "점이 모두 24개인가요? 한 줄에 몇 개씩인가요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "dot-array"
+              },
+              "level": 2,
+              "say": "줄 수와 한 줄의 점 수를 곱해 24가 되는지 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "dot-array"
+              },
+              "level": 3,
+              "backtrack": "g2s2u2.facts-by-table"
+            }
+          ],
+          "concepts": [
+            "g3s1u3.mul-div-relation"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "q",
+                "label": "몫",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s1u3.A2.T3",
+          "prompt": "삼각형 카드에 7과 56이 있고 한 수가 가려졌어요. 가려진 수를 찾는 곱셈구구를 골라요.",
+          "engine": "E04",
+          "mode": "dot-array",
+          "cpa": "A",
+          "config": {
+            "mode": "dot-array",
+            "rows": 8,
+            "cols": 7,
+            "factFamily": true,
+            "factHide": "rows"
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.fact.selected",
+            "value": [
+              "b"
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "dot-array"
+              },
+              "level": 1,
+              "say": "7단에서 56이 나오는 곳을 찾아볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "dot-array"
+              },
+              "level": 2,
+              "say": "7에 몇을 곱하면 56이 되는지 생각해 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "dot-array"
+              },
+              "level": 3,
+              "backtrack": "g2s2u2.facts-by-table"
+            }
+          ],
+          "concepts": [
+            "g3s1u3.quotient-by-times-table"
+          ],
+          "submit": "button",
+          "showEngine": false,
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "fact",
+                "label": "가려진 수를 찾는 곱셈구구",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "a",
+                    "label": "7 × 6 = 42"
+                  },
+                  {
+                    "id": "b",
+                    "label": "7 × 8 = 56"
+                  },
+                  {
+                    "id": "c",
+                    "label": "7 × 9 = 63"
+                  },
+                  {
+                    "id": "d",
+                    "label": "56 − 7 = 49"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s1u3.A2.T4",
+          "prompt": "36 ÷ 9의 몫을 곱셈구구로 구해요.",
+          "engine": "E04",
+          "mode": "dot-array",
+          "cpa": "A",
+          "config": {
+            "mode": "dot-array",
+            "rows": 4,
+            "cols": 9
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.q.value",
+            "value": "4"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "dot-array"
+              },
+              "level": 1,
+              "say": "9단 곱셈구구에서 36이 나오는 곳을 찾아볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "dot-array"
+              },
+              "level": 2,
+              "say": "9 × □ = 36에서 □를 찾아요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "dot-array"
+              },
+              "level": 3,
+              "backtrack": "g2s2u2.facts-by-table"
+            }
+          ],
+          "concepts": [
+            "g3s1u3.quotient-by-times-table"
+          ],
+          "submit": "button",
+          "showEngine": false,
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "q",
+                "label": "몫",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
