@@ -14,17 +14,6 @@ function slot(page: Page, name: string): Locator {
   return page.getByTestId(`runner-slot-${name}`);
 }
 
-async function setSmallTarget(page: Page): Promise<void> {
-  // 카드 공통 2: 2학년은 48px 기본. 앱은 g1·g2를 저학년으로 보아 64px을 켜므로
-  // 이 단원 E2E에서는 '큰 버튼'을 끄고 카드 기준(48px)으로 확인한다.
-  await page.getByRole('button', { name: '설정' }).click();
-  const toggle = page.getByRole('menuitemcheckbox', { name: '큰 버튼' });
-  await expect(toggle).toBeVisible();
-  if ((await toggle.getAttribute('aria-checked')) === 'true') await toggle.click();
-  await expect(toggle).toHaveAttribute('aria-checked', 'false');
-  await page.getByRole('button', { name: '설정' }).click();
-}
-
 async function openActivity(page: Page, activityId: string, title: string): Promise<void> {
   await page.goto('/');
   await page.getByRole('button', { name: '1번', exact: true }).click();
@@ -33,7 +22,6 @@ async function openActivity(page: Page, activityId: string, title: string): Prom
   await page.goto(`/#/activity/${activityId}`);
   await expect(page.getByRole('heading', { name: title })).toBeVisible();
   await expect(page.getByRole('button', { name: '확인하기' })).toBeVisible();
-  await setSmallTarget(page);
 }
 
 async function submit(page: Page): Promise<void> {
@@ -100,6 +88,36 @@ async function breakOneTen(page: Page, panel: Locator): Promise<void> {
   await page.keyboard.press('Enter');
 }
 
+interface KeypadVisibility {
+  readonly panelBottom: number;
+  readonly key6Top: number;
+  readonly key6Bottom: number;
+  readonly clearTop: number;
+  readonly clearBottom: number;
+  readonly row6Fits: boolean;
+  readonly clearFits: boolean;
+}
+
+/** 64px에서 E07 키패드 둘째 줄(6~0)과 '지우기' 줄이 판 안쪽 스크롤 아래로 숨는지 잰다. */
+async function measureKeypad(panel: Locator, project: string): Promise<KeypadVisibility> {
+  const panelBox = await panel.boundingBox();
+  const key6 = await panel.getByRole('button', { name: '6 쓰기' }).boundingBox();
+  const clear = await panel.getByRole('button', { name: '이 칸 지우기' }).boundingBox();
+  if (!panelBox || !key6 || !clear) throw new Error('E07 키패드 위치를 알 수 없습니다.');
+  const panelBottom = panelBox.y + panelBox.height;
+  const result: KeypadVisibility = {
+    panelBottom,
+    key6Top: key6.y,
+    key6Bottom: key6.y + key6.height,
+    clearTop: clear.y,
+    clearBottom: clear.y + clear.height,
+    row6Fits: key6.y + key6.height <= panelBottom + 1,
+    clearFits: clear.y + clear.height <= panelBottom + 1,
+  };
+  console.log('E07 keypad at 64px', { project, ...result });
+  return result;
+}
+
 /** 오버레이 svg 상자가 E01 본 캔버스 상자와 1px 이내로 같고 그림이 캔버스 안에 있는지. */
 async function expectOverlayAligned(
   panel: Locator,
@@ -157,6 +175,22 @@ test('A1 블록과 세로셈 — 대표 오답 뒤 고쳐서 다섯 과제를 �
   const left = slot(page, 'left');
   const right = slot(page, 'right');
 
+  // 2학년도 저학년 모드(64px)가 기본이다. 64px에서는 E07 키패드 둘째 줄(6~0)과
+  // '지우기' 줄이 판 안쪽 스크롤 아래로 숨는다. 숨은 키도 스크롤해 누르면
+  // 동작하는지 여기서 먼저 확인한다(판 높이는 core CSS가 정한다).
+  await measureKeypad(right, testInfo.project.name);
+  await cell(right, 'result', 0).click();
+  const hiddenDigit = right.getByRole('button', { name: '6 쓰기' });
+  await hiddenDigit.scrollIntoViewIfNeeded();
+  await hiddenDigit.click();
+  await expect(cell(right, 'result', 0)).toHaveText('6');
+  // 숫자를 쓰면 다음 칸으로 선택이 옮겨 가므로, 지울 칸을 다시 고른 뒤 '지우기'를 누른다.
+  await cell(right, 'result', 0).click();
+  const hiddenClear = right.getByRole('button', { name: '이 칸 지우기' });
+  await hiddenClear.scrollIntoViewIfNeeded();
+  await hiddenClear.click();
+  await expect(cell(right, 'result', 0)).toHaveText('');
+
   // T1 — 받아올림을 적지 않고 63만 써서 '기록 빠짐' 힌트를 만난 뒤,
   // 블록을 묶어 받아올림 칸을 채우고 통과한다.
   await writeResult(right, { 0: '3', 1: '6' });
@@ -168,29 +202,19 @@ test('A1 블록과 세로셈 — 대표 오답 뒤 고쳐서 다섯 과제를 �
   await submit(page);
   await expect(page.getByText('좋아요, 통과했어요!')).toBeVisible();
 
-  // T1의 두 판 화면에서 E07 키패드와 결과 칸이 판 밖으로 잘리지 않는지 본다.
-  // (아이패드 세로에서 두 판이 위아래로 쌓일 때가 가장 좁다.)
+  // T1의 두 판 화면에서 결과 칸은 판 안에 보여야 한다. 키패드 둘째 줄·'지우기' 줄은
+  // 판 높이가 고정이라 안쪽 스크롤로 숨는다(위에서 숨은 키를 눌러 통과를 확인했다).
   const panelBox = await right.boundingBox();
   if (!panelBox) throw new Error('E07 판 크기를 알 수 없습니다.');
-  const keypadBox = await right.getByRole('group', { name: '숫자 키패드' }).boundingBox();
   const resultBox = await cell(right, 'result', 0).boundingBox();
-  expect(keypadBox).not.toBeNull();
   expect(resultBox).not.toBeNull();
-  if (keypadBox && resultBox) {
-    const keypadFits = keypadBox.y + keypadBox.height <= panelBox.y + panelBox.height + 1;
-    const resultFits = resultBox.y + resultBox.height <= panelBox.y + panelBox.height + 1;
-    console.log('E07 panel fit', {
+  if (resultBox) {
+    console.log('E07 result cell fit', {
       project: testInfo.project.name,
-      keypadFits,
-      resultFits,
       panelBottom: panelBox.y + panelBox.height,
-      keypadBottom: keypadBox.y + keypadBox.height,
       resultBottom: resultBox.y + resultBox.height,
     });
-    if (testInfo.project.name === 'ipad') {
-      expect(keypadFits).toBe(true);
-      expect(resultFits).toBe(true);
-    }
+    expect(resultBox.y + resultBox.height).toBeLessThanOrEqual(panelBox.y + panelBox.height + 1);
   }
 
   await expectPassed(page);
@@ -267,6 +291,7 @@ test('크롬북·전자칠판 첫 화면에 두 판과 확인하기가 들어온
   await expect(slot(page, 'right')).toBeInViewport({ ratio: 1 });
   // E07 키패드는 두 판이 나란히 놓이면 아래쪽 일부가 판 안에서 스크롤된다.
   // 첫 화면에서 조작할 수 있는지만 확인하고, 실제 보이는 비율은 로그로 남긴다.
+  await measureKeypad(slot(page, 'right'), testInfo.project.name);
   const keypadButton = slot(page, 'right').getByRole('button', { name: '3 쓰기' });
   await expect(keypadButton).toBeVisible();
   const ratio = await keypadButton.evaluate((element) => {
