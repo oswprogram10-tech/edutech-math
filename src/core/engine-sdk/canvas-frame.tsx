@@ -1,15 +1,16 @@
 /**
- * 힌트 ② 오버레이를 엔진의 본 수직선 svg와 같은 자리·크기에 놓기 위한 측정 훅.
+ * 힌트 ② 오버레이를 엔진의 본 캔버스 svg와 같은 자리·크기에 놓기 위한 공용 도우미.
  *
- * 실행기(ActivityRunner)는 오버레이를 엔진 칸 전체(점프 버튼·기록 줄·안내 문구 포함) 위에
+ * 실행기(ActivityRunner)는 오버레이를 엔진 칸 전체(버튼·안내 문구 포함) 위에
  * `inset: 0`으로 펼친다. 그래서 오버레이 svg에 viewBox 1000×600을 그대로 펴면
- * 본 수직선 svg보다 큰 상자에 그려져 눈금과 어긋난다.
+ * 본 캔버스 svg보다 큰 상자에 그려져 엔진 그림과 어긋난다.
  *
- * 오버레이 상자 안에서 본 수직선 svg(`data-testid="number-line-canvas"`)를 찾아
+ * 오버레이 상자 안에서 본 캔버스 svg(`canvasSelector`)를 찾아
  * getBoundingClientRect 차이만큼 옮기고 같은 크기로 맞춘다. 두 svg의 viewBox와
  * preserveAspectRatio가 같으므로 논리 좌표가 화면에서도 정확히 겹친다.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 
 export interface CanvasFrame {
   readonly left: number;
@@ -17,8 +18,6 @@ export interface CanvasFrame {
   readonly width: number;
   readonly height: number;
 }
-
-const CANVAS_SELECTOR = 'svg[data-testid="number-line-canvas"]';
 
 function sameFrame(a: CanvasFrame | null, b: CanvasFrame | null): boolean {
   if (a === null || b === null) return a === b;
@@ -30,7 +29,7 @@ function sameFrame(a: CanvasFrame | null, b: CanvasFrame | null): boolean {
   );
 }
 
-export function useCanvasFrame(): {
+function useCanvasFrame(canvasSelector: string): {
   readonly hostRef: (node: HTMLDivElement | null) => void;
   readonly frame: CanvasFrame | null;
 } {
@@ -43,7 +42,7 @@ export function useCanvasFrame(): {
     // element = 오버레이 칸 전체(inset 0) → 부모 = OverlayLayer(inset 0) → 부모의 부모가
     // 엔진 View와 오버레이를 함께 담는 실행기 패널(또는 샌드박스 판)이다.
     const container = element.parentElement?.parentElement;
-    const canvas = container?.querySelector(CANVAS_SELECTOR);
+    const canvas = container?.querySelector(canvasSelector);
     if (!(canvas instanceof SVGSVGElement)) {
       setFrame((current) => (current === null ? current : null));
       return;
@@ -58,7 +57,7 @@ export function useCanvasFrame(): {
       height: canvasBox.height,
     };
     setFrame((current) => (sameFrame(current, next) ? current : next));
-  }, []);
+  }, [canvasSelector]);
 
   const hostRef = useCallback((node: HTMLDivElement | null) => {
     host.current = node;
@@ -72,7 +71,7 @@ export function useCanvasFrame(): {
   useEffect(() => {
     const element = host.current;
     const container = element?.parentElement?.parentElement;
-    const canvas = container?.querySelector(CANVAS_SELECTOR) ?? null;
+    const canvas = container?.querySelector(canvasSelector) ?? null;
     const observer =
       typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(() => measure());
     if (container) observer?.observe(container);
@@ -85,7 +84,56 @@ export function useCanvasFrame(): {
       window.removeEventListener('resize', measure);
       window.removeEventListener('scroll', measure, true);
     };
-  }, [measure]);
+  }, [measure, canvasSelector]);
 
   return { hostRef, frame };
+}
+
+export interface CanvasAlignedOverlayProps {
+  /** 기존 오버레이 svg가 쓰던 `data-testid`. 없으면 붙이지 않는다. */
+  readonly testId?: string;
+  /** 본 캔버스 svg를 찾을 선택자(예: `svg[data-testid="base-ten-canvas"]`). */
+  readonly canvasSelector: string;
+  readonly logicalWidth: number;
+  readonly logicalHeight: number;
+  readonly children: ReactNode;
+}
+
+/**
+ * 본 캔버스 svg 자리에 맞춘 오버레이 svg.
+ * 본 svg를 찾지 못하면(엔진을 숨긴 과제의 힌트 칸) 예전처럼 칸 전체에 펼친다.
+ */
+export function CanvasAlignedOverlay({
+  testId,
+  canvasSelector,
+  logicalWidth,
+  logicalHeight,
+  children,
+}: CanvasAlignedOverlayProps) {
+  const { hostRef, frame } = useCanvasFrame(canvasSelector);
+  const box: CSSProperties = frame
+    ? {
+        position: 'absolute',
+        left: frame.left,
+        top: frame.top,
+        width: frame.width,
+        height: frame.height,
+      }
+    : { position: 'absolute', inset: 0 };
+  return (
+    <div ref={hostRef} style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+      <div style={box}>
+        <svg
+          viewBox={`0 0 ${logicalWidth} ${logicalHeight}`}
+          width="100%"
+          height="100%"
+          data-testid={testId}
+          aria-hidden="true"
+          style={{ display: 'block' }}
+        >
+          {children}
+        </svg>
+      </div>
+    </div>
+  );
 }

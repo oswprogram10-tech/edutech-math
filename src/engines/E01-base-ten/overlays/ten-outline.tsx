@@ -1,10 +1,12 @@
 /**
  * 힌트 ②: 같은 값 블록 열 개 자리를 점선 윤곽으로 보여 준다.
+ * 실제 블록 자리에 윤곽을 맞추고, 모자라는 자리는 그 줄 간격으로 이어 빈 윤곽을 그린다.
  * 이미 있는 블록 수만큼은 옅게 채워, 몇 개가 모자라는지 눈으로 보게 한다.
  * 목표 수나 정답 숫자는 쓰지 않는다.
  */
 import type { OverlayProps } from '../../../core/engine-sdk';
-import { blockSize } from '../layout';
+import { CanvasAlignedOverlay } from '../../../core/engine-sdk';
+import { tenOutlineRects } from '../layout';
 import type { BaseTenConfig, BaseTenState, BlockValue } from '../types';
 import { BLOCK_VALUES } from '../types';
 
@@ -22,28 +24,23 @@ function chosenValue(state: BaseTenState, args: unknown): BlockValue {
 export function TenOutlineOverlay({ state, args }: OverlayProps<BaseTenConfig, BaseTenState>) {
   const value = chosenValue(state, args);
   const count = state.blocks.filter((block) => block.value === value).length;
-  const size = blockSize(value);
-  const columns = 5;
-  const stepX = size.width + 26;
-  const stepY = size.height + 22;
-  const originX = 500 - ((columns - 1) * stepX) / 2;
-  const originY = 250;
+  const rects = tenOutlineRects(state, value);
 
   return (
-    <svg viewBox="0 0 1000 600" width="100%" height="100%" aria-hidden="true">
-      {Array.from({ length: 10 }, (_, index) => {
-        const column = index % columns;
-        const row = Math.floor(index / columns);
-        const x = originX + column * stepX - size.width / 2;
-        const y = originY + row * stepY - size.height / 2;
+    <CanvasAlignedOverlay
+      canvasSelector={'svg[data-testid="base-ten-canvas"]'}
+      logicalWidth={1000}
+      logicalHeight={600}
+    >
+      {rects.map((rect, index) => {
         const filled = index < Math.min(count, 10);
         return (
           <rect
             key={`ten-${index}`}
-            x={x}
-            y={y}
-            width={size.width}
-            height={size.height}
+            x={rect.x}
+            y={rect.y}
+            width={rect.width}
+            height={rect.height}
             rx={6}
             fill={filled ? '#2f6fde' : 'none'}
             fillOpacity={filled ? 0.16 : 0}
@@ -54,6 +51,6 @@ export function TenOutlineOverlay({ state, args }: OverlayProps<BaseTenConfig, B
           />
         );
       })}
-    </svg>
+    </CanvasAlignedOverlay>
   );
 }

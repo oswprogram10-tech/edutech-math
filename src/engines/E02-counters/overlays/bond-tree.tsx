@@ -1,5 +1,6 @@
 /** 힌트 ②: 지금 접시 수 그대로 가르기 나무를 그린다(정답이 아니라 학생 상태). */
 import type { OverlayProps } from '../../../core/engine-sdk';
+import { CanvasAlignedOverlay } from '../../../core/engine-sdk';
 import { platesOf } from '../reduce';
 import { countersStrings as S } from '../strings.ko';
 import type { CountersConfig, CountersState } from '../types';
@@ -14,7 +15,11 @@ export function BondTreeOverlay({ state }: OverlayProps<CountersConfig, Counters
   const step = plates.length > 1 ? width / (plates.length - 1) : 0;
 
   return (
-    <svg viewBox="0 0 1000 600" width="100%" height="100%" aria-hidden="true">
+    <CanvasAlignedOverlay
+      canvasSelector={'svg[data-testid="counters-canvas"]'}
+      logicalWidth={1000}
+      logicalHeight={600}
+    >
       <text x={500} y={180} textAnchor="middle" fontSize={18} fill="#5b6577">
         {S.bondTitle}
       </text>
@@ -34,6 +39,6 @@ export function BondTreeOverlay({ state }: OverlayProps<CountersConfig, Counters
           </g>
         );
       })}
-    </svg>
+    </CanvasAlignedOverlay>
   );
 }

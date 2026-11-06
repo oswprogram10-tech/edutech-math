@@ -1,5 +1,6 @@
 /** 힌트 ②: 지금 고른 방울 수만큼 텐프레임에 점을 찍고 빈칸을 점선으로 보여 준다. */
 import type { OverlayProps } from '../../../core/engine-sdk';
+import { CanvasAlignedOverlay } from '../../../core/engine-sdk';
 import type { CountersConfig, CountersState } from '../types';
 
 const CELL = 34;
@@ -13,7 +14,11 @@ export function BubbleFrameOverlay({ state }: OverlayProps<CountersConfig, Count
   }
   const selected = state.selected.length;
   return (
-    <svg viewBox="0 0 1000 600" width="100%" height="100%" aria-hidden="true">
+    <CanvasAlignedOverlay
+      canvasSelector={'svg[data-testid="counters-canvas"]'}
+      logicalWidth={1000}
+      logicalHeight={600}
+    >
       <rect
         x={LEFT - 8}
         y={TOP - 8}
@@ -44,6 +49,6 @@ export function BubbleFrameOverlay({ state }: OverlayProps<CountersConfig, Count
           />
         );
       })}
-    </svg>
+    </CanvasAlignedOverlay>
   );
 }

@@ -58,4 +58,7 @@ export type { UseMultiTouchCountResult } from './useMultiTouchCount';
 export { OverlayLayer } from './overlay';
 export type { OverlayLayerProps } from './overlay';
 
+export { CanvasAlignedOverlay } from './canvas-frame';
+export type { CanvasAlignedOverlayProps } from './canvas-frame';
+
 export { hasEngine, listEngineIds, loadEngine } from './registry';

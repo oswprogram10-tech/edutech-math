@@ -8,7 +8,7 @@ import { roundingPlaceOf } from '../reduce-rounding';
 import { parseValue, xOfValue } from '../ticks';
 import { LINE_LEFT, LINE_RIGHT } from '../types';
 import type { NumberLineConfig, NumberLineState } from '../types';
-import { CanvasAlignedOverlay } from './canvas-frame';
+import { CanvasAlignedOverlay } from '../../../core/engine-sdk';
 
 const LINE_Y = 330;
 
@@ -32,7 +32,12 @@ export function TwoTicksOverlay({ state }: OverlayProps<NumberLineConfig, Number
     .filter((item): item is NonNullable<typeof item> => item !== null);
   if (items.length === 0) return null;
   return (
-    <CanvasAlignedOverlay testId="overlay-two-ticks">
+    <CanvasAlignedOverlay
+      testId="overlay-two-ticks"
+      canvasSelector={'svg[data-testid="number-line-canvas"]'}
+      logicalWidth={1000}
+      logicalHeight={600}
+    >
       <rect
         x={LINE_LEFT - 8}
         y={LINE_Y - 40}

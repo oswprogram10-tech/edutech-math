@@ -1,5 +1,6 @@
 /** 힌트 ②: share에서 접시마다 담긴 수를 숫자 없이 높이 막대로 나란히 보여 준다. */
 import type { OverlayProps } from '../../../core/engine-sdk';
+import { CanvasAlignedOverlay } from '../../../core/engine-sdk';
 import { sharePlateCenter } from '../layout';
 import type { CountersConfig, CountersState } from '../types';
 
@@ -11,7 +12,11 @@ export function PlateBarsOverlay({ state }: OverlayProps<CountersConfig, Counter
   if (state.mode !== 'share') return null;
   const max = Math.max(1, ...state.plates);
   return (
-    <svg viewBox="0 0 1000 600" width="100%" height="100%" aria-hidden="true">
+    <CanvasAlignedOverlay
+      canvasSelector={'svg[data-testid="counters-canvas"]'}
+      logicalWidth={1000}
+      logicalHeight={600}
+    >
       {state.plates.map((count, plate) => {
         const center = sharePlateCenter(state.groups, plate);
         const height = count === 0 ? 4 : Math.max(12, Math.round((count / max) * MAX_HEIGHT));
@@ -38,6 +43,6 @@ export function PlateBarsOverlay({ state }: OverlayProps<CountersConfig, Counter
         strokeWidth={3}
         strokeLinecap="round"
       />
-    </svg>
+    </CanvasAlignedOverlay>
   );
 }

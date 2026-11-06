@@ -1,5 +1,6 @@
 /** 힌트 ②: 텐프레임의 빈칸에 점선 동그라미를 그린다. */
 import type { OverlayProps } from '../../../core/engine-sdk';
+import { CanvasAlignedOverlay } from '../../../core/engine-sdk';
 import { frameCellPoint } from '../layout';
 import { FRAME_COLS, FRAME_ROWS } from '../types';
 import type { CountersConfig, CountersState } from '../types';
@@ -20,7 +21,11 @@ export function FrameGapsOverlay({ state }: OverlayProps<CountersConfig, Counter
     }
   }
   return (
-    <svg viewBox="0 0 1000 600" width="100%" height="100%" aria-hidden="true">
+    <CanvasAlignedOverlay
+      canvasSelector={'svg[data-testid="counters-canvas"]'}
+      logicalWidth={1000}
+      logicalHeight={600}
+    >
       {gaps.map((point, index) => (
         <circle
           key={`gap-${index}`}
@@ -34,6 +39,6 @@ export function FrameGapsOverlay({ state }: OverlayProps<CountersConfig, Counter
           opacity={0.75}
         />
       ))}
-    </svg>
+    </CanvasAlignedOverlay>
   );
 }

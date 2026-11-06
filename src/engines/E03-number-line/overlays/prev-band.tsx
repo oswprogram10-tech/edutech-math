@@ -8,7 +8,7 @@ import { parseValue, xOfValue } from '../ticks';
 import { LINE_LEFT } from '../types';
 import type { NumberLineConfig, NumberLineState } from '../types';
 import styles from '../View.module.css';
-import { CanvasAlignedOverlay } from './canvas-frame';
+import { CanvasAlignedOverlay } from '../../../core/engine-sdk';
 
 const LINE_Y = 380;
 
@@ -22,7 +22,12 @@ export function PrevBandOverlay({ state }: OverlayProps<NumberLineConfig, Number
   const width = Math.max(0, right - LINE_LEFT);
   if (width <= 0) return null;
   return (
-    <CanvasAlignedOverlay testId="overlay-prev-band">
+    <CanvasAlignedOverlay
+      testId="overlay-prev-band"
+      canvasSelector={'svg[data-testid="number-line-canvas"]'}
+      logicalWidth={1000}
+      logicalHeight={600}
+    >
       <defs>
         <pattern
           id="e03-overlay-prev-hatch"

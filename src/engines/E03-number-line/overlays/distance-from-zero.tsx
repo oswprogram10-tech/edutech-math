@@ -8,7 +8,7 @@ import { rowsOf } from '../reduce';
 import { parseValue, xOfValue } from '../ticks';
 import { numberLineStrings } from '../strings.ko';
 import type { NumberLineConfig, NumberLineState } from '../types';
-import { CanvasAlignedOverlay } from './canvas-frame';
+import { CanvasAlignedOverlay } from '../../../core/engine-sdk';
 
 function formatDistance(value: Rational): string {
   try {
@@ -37,7 +37,12 @@ export function DistanceFromZeroOverlay({
   const startX = xOfValue(startValue, viewMin, viewMax);
 
   return (
-    <CanvasAlignedOverlay testId="overlay-distance-from-zero">
+    <CanvasAlignedOverlay
+      testId="overlay-distance-from-zero"
+      canvasSelector={'svg[data-testid="number-line-canvas"]'}
+      logicalWidth={1000}
+      logicalHeight={600}
+    >
       {state.points.map((point, index) => {
         const value = parseValue(point.value);
         if (!value) return null;

@@ -4,6 +4,7 @@
  */
 import { Rational } from '../../../core/math';
 import type { OverlayProps } from '../../../core/engine-sdk';
+import { CanvasAlignedOverlay } from '../../../core/engine-sdk';
 import { dividePlateRects } from '../layout';
 import type { BaseTenConfig, BaseTenState } from '../types';
 import { rationalOfShape } from '../value';
@@ -30,7 +31,11 @@ export function PlateLevelsOverlay({ state }: OverlayProps<BaseTenConfig, BaseTe
   const rects = dividePlateRects(plates);
 
   return (
-    <svg viewBox="0 0 1000 600" width="100%" height="100%" aria-hidden="true">
+    <CanvasAlignedOverlay
+      canvasSelector={'svg[data-testid="base-ten-canvas"]'}
+      logicalWidth={1000}
+      logicalHeight={600}
+    >
       {rects.map((rect, index) => {
         const total = totals[index] ?? Rational.of(0);
         const fraction = max.isZero() ? Rational.of(0) : total.div(max);
@@ -65,6 +70,6 @@ export function PlateLevelsOverlay({ state }: OverlayProps<BaseTenConfig, BaseTe
           </g>
         );
       })}
-    </svg>
+    </CanvasAlignedOverlay>
   );
 }

@@ -1,5 +1,6 @@
 /** 힌트 ②: 학생이 놓은 셈돌에 1, 2, 3 … 순서 번호를 붙인다. 목표 수는 쓰지 않는다. */
 import type { OverlayProps } from '../../../core/engine-sdk';
+import { CanvasAlignedOverlay } from '../../../core/engine-sdk';
 import { frameCellPoint, plateSlotPoint, sharePlateCenter } from '../layout';
 import type { CountersConfig, CountersState } from '../types';
 
@@ -57,7 +58,11 @@ export function CountOnesOverlay({ state }: OverlayProps<CountersConfig, Counter
   if (points.length === 0) return null;
 
   return (
-    <svg viewBox="0 0 1000 600" width="100%" height="100%" aria-hidden="true">
+    <CanvasAlignedOverlay
+      canvasSelector={'svg[data-testid="counters-canvas"]'}
+      logicalWidth={1000}
+      logicalHeight={600}
+    >
       {points.map((point, index) => (
         <g key={`count-${index}`}>
           <circle cx={point.x} cy={point.y} r={15} fill="#ffffff" opacity={0.92} />
@@ -73,6 +78,6 @@ export function CountOnesOverlay({ state }: OverlayProps<CountersConfig, Counter
           </text>
         </g>
       ))}
-    </svg>
+    </CanvasAlignedOverlay>
   );
 }
