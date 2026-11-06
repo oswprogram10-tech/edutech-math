@@ -1,0 +1,626 @@
+{
+  "unit": "g2s1u3",
+  "title": "덧셈과 뺄셈",
+  "activities": [
+    {
+      "id": "g2s1u3.A1",
+      "title": "블록과 세로셈",
+      "tasks": [
+        {
+          "id": "g2s1u3.A1.T1",
+          "prompt": "38 + 25를 블록으로 해 보고 세로셈을 완성해요. 블록에서 한 일이 세로셈에 적혀요.",
+          "engine": "E07",
+          "mode": "add",
+          "cpa": "C",
+          "config": { "mode": "add", "a": 38, "b": 25, "linkMarks": "auto" },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "resultIs", "args": { "value": "63" } },
+              { "kind": "predicate", "name": "noErrors" },
+              { "kind": "equals", "path": "carries.1", "value": "1" }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": { "code": "MC-PV-NO-CARRY" }
+              },
+              "level": 1,
+              "say": "낱개가 10개 넘었어. 어떻게 하지?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": { "code": "MC-PV-NO-CARRY" }
+              },
+              "level": 2,
+              "show": { "engine": "E07", "overlay": "column-sum", "args": { "column": 0 } },
+              "say": "일의 자리 블록을 모아 보았어요. 몇 개인가요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": { "code": "MC-PV-NO-CARRY" }
+              },
+              "level": 3,
+              "backtrack": "g1s2u6.add-bridge-ten"
+            },
+            {
+              "when": { "kind": "predicate", "name": "noErrors" },
+              "level": 1,
+              "say": "블록에서 한 일을 세로셈에도 적었나요? 작은 칸을 살펴봐요."
+            },
+            {
+              "when": { "kind": "predicate", "name": "noErrors" },
+              "level": 2,
+              "say": "10개를 묶은 것은 세로셈의 어디에 적을까요?"
+            },
+            {
+              "when": { "kind": "predicate", "name": "noErrors" },
+              "level": 3,
+              "backtrack": "g2s1u3.column-record"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "add" },
+              "level": 1,
+              "say": "일의 자리 블록부터 모아 볼까요? 몇 개가 되었나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "add" },
+              "level": 2,
+              "show": { "engine": "E07", "overlay": "place-value" },
+              "say": "자리마다 숫자가 나타내는 수를 보여 줘요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "add" },
+              "level": 3,
+              "backtrack": "g1s2u6.add-bridge-ten"
+            }
+          ],
+          "concepts": ["g2s1u3.add-carry", "g2s1u3.column-record"],
+          "submit": "button",
+          "views": [
+            {
+              "slot": "right",
+              "engine": "E07",
+              "mode": "add",
+              "cpa": "C",
+              "config": { "mode": "add", "a": 38, "b": 25, "linkMarks": "auto" }
+            },
+            {
+              "slot": "left",
+              "engine": "E01",
+              "mode": "add-sub",
+              "cpa": "C",
+              "config": { "mode": "add-sub", "op": "add", "a": 38, "b": 25 }
+            }
+          ],
+          "links": [
+            { "from": "left", "event": "grouped", "to": "right" },
+            { "from": "left", "event": "broken", "to": "right" }
+          ]
+        },
+        {
+          "id": "g2s1u3.A1.T2",
+          "prompt": "52 − 27을 블록으로 해 보고 세로셈을 완성해요. 블록에서 한 일이 세로셈에 적혀요.",
+          "engine": "E07",
+          "mode": "sub",
+          "cpa": "C",
+          "config": { "mode": "sub", "a": 52, "b": 27, "linkMarks": "auto" },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "resultIs", "args": { "value": "25" } },
+              { "kind": "predicate", "name": "noErrors" },
+              { "kind": "equals", "path": "regroups.1", "value": "4" }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "hasMisconception",
+                    "args": { "code": "MC-SUB-SMALLER-FROM-LARGER" }
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "predicate",
+                        "name": "hasMisconception",
+                        "args": { "code": "MC-PV-BORROW-NO-DECREMENT" }
+                      },
+                      { "kind": "equals", "path": "regroups", "value": {} }
+                    ]
+                  }
+                ]
+              },
+              "level": 1,
+              "say": "2개에서 7개를 뺄 수 있어?"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "hasMisconception",
+                    "args": { "code": "MC-SUB-SMALLER-FROM-LARGER" }
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "predicate",
+                        "name": "hasMisconception",
+                        "args": { "code": "MC-PV-BORROW-NO-DECREMENT" }
+                      },
+                      { "kind": "equals", "path": "regroups", "value": {} }
+                    ]
+                  }
+                ]
+              },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "break-preview" },
+              "say": "십 막대 하나를 풀면 낱개가 이렇게 생겨요."
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "hasMisconception",
+                    "args": { "code": "MC-SUB-SMALLER-FROM-LARGER" }
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "predicate",
+                        "name": "hasMisconception",
+                        "args": { "code": "MC-PV-BORROW-NO-DECREMENT" }
+                      },
+                      { "kind": "equals", "path": "regroups", "value": {} }
+                    ]
+                  }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g1s2u6.sub-bridge-ten"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": { "code": "MC-PV-BORROW-NO-DECREMENT" }
+              },
+              "level": 1,
+              "say": "십 막대 하나를 풀었지? 지금 몇 개 남았어?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": { "code": "MC-PV-BORROW-NO-DECREMENT" }
+              },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "place-value" },
+              "say": "지금 블록이 자리마다 얼마인지 보여 줘요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": { "code": "MC-PV-BORROW-NO-DECREMENT" }
+              },
+              "level": 3,
+              "backtrack": "g2s1u3.column-record"
+            },
+            {
+              "when": { "kind": "predicate", "name": "noErrors" },
+              "level": 1,
+              "say": "블록에서 한 일을 세로셈에도 적었나요? 작은 칸을 살펴봐요."
+            },
+            {
+              "when": { "kind": "predicate", "name": "noErrors" },
+              "level": 2,
+              "say": "십 막대를 푼 것은 세로셈의 어디에 적을까요?"
+            },
+            {
+              "when": { "kind": "predicate", "name": "noErrors" },
+              "level": 3,
+              "backtrack": "g2s1u3.column-record"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "sub" },
+              "level": 1,
+              "say": "일의 자리끼리 뺄 수 있는지 먼저 볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "sub" },
+              "level": 2,
+              "show": { "engine": "E07", "overlay": "column-sum", "args": { "column": 0 } },
+              "say": "일의 자리 윗수와 아랫수를 블록으로 보았어요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "sub" },
+              "level": 3,
+              "backtrack": "g1s2u6.sub-bridge-ten"
+            }
+          ],
+          "concepts": ["g2s1u3.sub-borrow", "g2s1u3.column-record"],
+          "submit": "button",
+          "views": [
+            {
+              "slot": "right",
+              "engine": "E07",
+              "mode": "sub",
+              "cpa": "C",
+              "config": { "mode": "sub", "a": 52, "b": 27, "linkMarks": "auto" }
+            },
+            {
+              "slot": "left",
+              "engine": "E01",
+              "mode": "add-sub",
+              "cpa": "C",
+              "config": {
+                "mode": "add-sub",
+                "op": "sub",
+                "a": 52,
+                "b": 27,
+                "regroupAllowed": true
+              }
+            }
+          ],
+          "links": [
+            { "from": "left", "event": "grouped", "to": "right" },
+            { "from": "left", "event": "broken", "to": "right" }
+          ]
+        },
+        {
+          "id": "g2s1u3.A1.T3",
+          "prompt": "70 − 34예요. 블록을 풀면 세로셈에 고칠 칸이 표시돼요. 작은 칸과 결과를 직접 써요.",
+          "engine": "E07",
+          "mode": "sub",
+          "cpa": "P",
+          "config": { "mode": "sub", "a": 70, "b": 34, "linkMarks": "hint" },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "resultIs", "args": { "value": "36" } },
+              { "kind": "predicate", "name": "noErrors" },
+              { "kind": "equals", "path": "regroups.1", "value": "6" }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": { "code": "MC-SUB-SMALLER-FROM-LARGER" }
+              },
+              "level": 1,
+              "say": "0개에서 4개를 뺄 수 있어?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": { "code": "MC-SUB-SMALLER-FROM-LARGER" }
+              },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "break-preview" },
+              "say": "십 막대 하나를 풀면 낱개가 이렇게 생겨요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": { "code": "MC-SUB-SMALLER-FROM-LARGER" }
+              },
+              "level": 3,
+              "backtrack": "g1s2u6.sub-bridge-ten"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": { "code": "MC-PV-BORROW-NO-DECREMENT" }
+              },
+              "level": 1,
+              "say": "십 막대 하나를 풀었지? 지금 몇 개 남았어?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": { "code": "MC-PV-BORROW-NO-DECREMENT" }
+              },
+              "level": 2,
+              "show": { "engine": "E01", "overlay": "place-value" },
+              "say": "지금 블록이 자리마다 얼마인지 보여 줘요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": { "code": "MC-PV-BORROW-NO-DECREMENT" }
+              },
+              "level": 3,
+              "backtrack": "g2s1u3.column-record"
+            },
+            {
+              "when": { "kind": "predicate", "name": "noErrors" },
+              "level": 1,
+              "say": "블록에서 한 일을 세로셈에도 적었나요? 작은 칸을 살펴봐요."
+            },
+            {
+              "when": { "kind": "predicate", "name": "noErrors" },
+              "level": 2,
+              "say": "십 막대를 푼 것은 세로셈의 어디에 적을까요?"
+            },
+            {
+              "when": { "kind": "predicate", "name": "noErrors" },
+              "level": 3,
+              "backtrack": "g2s1u3.column-record"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "sub" },
+              "level": 1,
+              "say": "일의 자리끼리 뺄 수 있는지 먼저 볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "sub" },
+              "level": 2,
+              "show": { "engine": "E07", "overlay": "column-sum", "args": { "column": 0 } },
+              "say": "일의 자리 윗수와 아랫수를 블록으로 보았어요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "sub" },
+              "level": 3,
+              "backtrack": "g1s2u6.sub-bridge-ten"
+            }
+          ],
+          "concepts": ["g2s1u3.sub-borrow", "g2s1u3.column-record"],
+          "submit": "button",
+          "views": [
+            {
+              "slot": "right",
+              "engine": "E07",
+              "mode": "sub",
+              "cpa": "P",
+              "config": { "mode": "sub", "a": 70, "b": 34, "linkMarks": "hint" }
+            },
+            {
+              "slot": "left",
+              "engine": "E01",
+              "mode": "add-sub",
+              "cpa": "P",
+              "config": {
+                "mode": "add-sub",
+                "op": "sub",
+                "a": 70,
+                "b": 34,
+                "regroupAllowed": true
+              }
+            }
+          ],
+          "links": [
+            { "from": "left", "event": "grouped", "to": "right" },
+            { "from": "left", "event": "broken", "to": "right" }
+          ]
+        },
+        {
+          "id": "g2s1u3.A1.T4",
+          "prompt": "46 + 37을 세로셈으로 계산해요.",
+          "engine": "E07",
+          "mode": "add",
+          "cpa": "A",
+          "config": { "mode": "add", "a": 46, "b": 37 },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "resultIs", "args": { "value": "83" } },
+              { "kind": "predicate", "name": "noErrors" }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": { "code": "MC-PV-NO-CARRY" }
+              },
+              "level": 1,
+              "say": "낱개가 10개 넘었어. 어떻게 하지?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": { "code": "MC-PV-NO-CARRY" }
+              },
+              "level": 2,
+              "show": { "engine": "E07", "overlay": "column-sum", "args": { "column": 0 } },
+              "say": "일의 자리 블록을 모아 보았어요. 몇 개인가요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": { "code": "MC-PV-NO-CARRY" }
+              },
+              "level": 3,
+              "backtrack": "g1s2u6.add-bridge-ten"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "add" },
+              "level": 1,
+              "say": "일의 자리부터 계산해 볼까요? 받아올림 칸도 살펴봐요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "add" },
+              "level": 2,
+              "show": { "engine": "E07", "overlay": "place-value" },
+              "say": "자리마다 숫자가 나타내는 수를 보여 줘요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "add" },
+              "level": 3,
+              "backtrack": "g1s2u6.add-bridge-ten"
+            }
+          ],
+          "concepts": ["g2s1u3.add-carry"],
+          "submit": "button"
+        },
+        {
+          "id": "g2s1u3.A1.T5",
+          "prompt": "81 − 56을 세로셈으로 계산해요.",
+          "engine": "E07",
+          "mode": "sub",
+          "cpa": "A",
+          "config": { "mode": "sub", "a": 81, "b": 56 },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "resultIs", "args": { "value": "25" } },
+              { "kind": "predicate", "name": "noErrors" }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "hasMisconception",
+                    "args": { "code": "MC-SUB-SMALLER-FROM-LARGER" }
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "predicate",
+                        "name": "hasMisconception",
+                        "args": { "code": "MC-PV-BORROW-NO-DECREMENT" }
+                      },
+                      { "kind": "equals", "path": "regroups", "value": {} }
+                    ]
+                  }
+                ]
+              },
+              "level": 1,
+              "say": "1개에서 6개를 뺄 수 있어?"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "hasMisconception",
+                    "args": { "code": "MC-SUB-SMALLER-FROM-LARGER" }
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "predicate",
+                        "name": "hasMisconception",
+                        "args": { "code": "MC-PV-BORROW-NO-DECREMENT" }
+                      },
+                      { "kind": "equals", "path": "regroups", "value": {} }
+                    ]
+                  }
+                ]
+              },
+              "level": 2,
+              "show": { "engine": "E07", "overlay": "column-sum", "args": { "column": 0 } },
+              "say": "일의 자리 윗수와 아랫수를 블록으로 보았어요."
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "hasMisconception",
+                    "args": { "code": "MC-SUB-SMALLER-FROM-LARGER" }
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "predicate",
+                        "name": "hasMisconception",
+                        "args": { "code": "MC-PV-BORROW-NO-DECREMENT" }
+                      },
+                      { "kind": "equals", "path": "regroups", "value": {} }
+                    ]
+                  }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g1s2u6.sub-bridge-ten"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": { "code": "MC-PV-BORROW-NO-DECREMENT" }
+              },
+              "level": 1,
+              "say": "십의 자리에서 하나를 내려 주었지? 지금 십의 자리 윗수는 몇일까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": { "code": "MC-PV-BORROW-NO-DECREMENT" }
+              },
+              "level": 2,
+              "say": "고친 수 칸에 십의 자리 윗수를 다시 써 보았나요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": { "code": "MC-PV-BORROW-NO-DECREMENT" }
+              },
+              "level": 3,
+              "backtrack": "g2s1u3.column-record"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "sub" },
+              "level": 1,
+              "say": "일의 자리끼리 뺄 수 있는지 먼저 볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "sub" },
+              "level": 2,
+              "show": { "engine": "E07", "overlay": "column-sum", "args": { "column": 0 } },
+              "say": "일의 자리 윗수와 아랫수를 블록으로 보았어요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "sub" },
+              "level": 3,
+              "backtrack": "g1s2u6.sub-bridge-ten"
+            }
+          ],
+          "concepts": ["g2s1u3.sub-borrow"],
+          "submit": "button"
+        }
+      ]
+    }
+  ]
+}
