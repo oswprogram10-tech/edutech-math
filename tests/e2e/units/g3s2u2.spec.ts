@@ -223,7 +223,7 @@ test('A1 십모형 해체 분배 — 대표 오답 뒤 고쳐서 다섯 과제�
   await writeProduct(third, 0, { 1: '1', 0: '2' });
   await writeDiff(third, 0, { 0: '5' });
   await submit(page);
-  await expectFailedWithHint(page, '남은 블록으로 접시마다 하나씩 더 줄 수 있을까?');
+  await expectFailedWithHint(page, '남은 수로 3을 한 번 더 나눌 수 있을까?');
   await writeQuotient(third, { 0: '5' });
   await writeProduct(third, 0, { 0: '5' });
   await writeDiff(third, 0, { 0: '2' });
@@ -240,7 +240,10 @@ test('A1 십모형 해체 분배 — 대표 오답 뒤 고쳐서 다섯 과제�
   const fifth = slot(page, 'main');
   await writeQuotient(fifth, { 2: '1', 0: '2' });
   await submit(page);
-  await expectFailedWithHint(page, '십의 자리에서 접시마다 십 블록이 몇 개씩 갔어?');
+  await expectFailedWithHint(
+    page,
+    '십의 자리에서 4로 나눌 수 있는 수가 없으면 몫의 그 자리에는 무엇을 쓸까요?',
+  );
   await submit(page);
   await expectFailedWithHint(page, '몫의 빈 자리를 깜빡여 보았어요.', 2);
   await expectOverlayInPanel(fifth, '[data-overlay="quotient-gap"]');
@@ -265,19 +268,21 @@ test('A2 나머지 경고등과 되감기 검산 — 대표 오답 뒤 고쳐서
   await writeProduct(first, 1, { 1: '6' });
   await writeDiff(first, 1, { 1: '2' });
   await submit(page);
-  await expectFailedWithHint(page, '남은 십 블록 하나는 어디로 갔어?');
+  await expectFailedWithHint(page, '남은 수는 다음 자리로 내려 썼나요?');
   await writeDiff(first, 1, { 1: '2', 0: '3' });
   await writeProduct(first, 0, { 1: '1', 0: '8' });
   await writeDiff(first, 0, { 1: '0', 0: '5' });
   await submit(page);
   await expectPassed(page);
 
-  // T2 — 미리 채운 12 … 11에서 이유를 잘못 골라 ①을 본 뒤 맞는 이유를 고른다.
+  // T2 — 미리 채운 12 … 11에서 이유를 잘못 골라 ①·②를 본 뒤 맞는 이유를 고른다.
   const why = field(page, 'why');
-  await why.getByRole('button', { name: '몫의 일의 자리를 잘못 썼어요', exact: true }).click();
+  await why.getByRole('button', { name: '나누는 수가 너무 커요', exact: true }).click();
   await submit(page);
-  await expectFailedWithHint(page, '나머지는 나누는 수보다 작아야 해요.');
-  await why.getByRole('button', { name: '몫의 일의 자리를 잘못 썼어요', exact: true }).click();
+  await expectFailedWithHint(page, '남은 11로 6접시에 하나씩 더 줄 수 있을까?');
+  await submit(page);
+  await expectFailedWithHint(page, '남은 수로 6을 한 번 더 나눌 수 있는지 보세요.', 2);
+  await why.getByRole('button', { name: '나누는 수가 너무 커요', exact: true }).click();
   await why.getByRole('button', { name: '나머지가 6보다 커요', exact: true }).click();
   await submit(page);
   await expectPassed(page);
@@ -299,7 +304,7 @@ test('A2 나머지 경고등과 되감기 검산 — 대표 오답 뒤 고쳐서
   const remainders = field(page, 'remainders');
   await remainders.getByRole('button', { name: '7', exact: true }).click();
   await submit(page);
-  await expectFailedWithHint(page, '나머지는 나누는 수보다 작아야 해요.');
+  await expectFailedWithHint(page, '나머지가 7이면 7로 한 번 더 나눌 수 있을까?');
   await remainders.getByRole('button', { name: '7', exact: true }).click();
   for (const digit of ['1', '2', '3', '4', '5', '6']) {
     await remainders.getByRole('button', { name: digit, exact: true }).click();
