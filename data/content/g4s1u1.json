@@ -1,0 +1,915 @@
+{
+  "unit": "g4s1u1",
+  "title": "큰 수",
+  "activities": [
+    {
+      "id": "g4s1u1.A1",
+      "title": "4자리 컬러 슬라이서",
+      "tasks": [
+        {
+          "id": "g4s1u1.A1.T1",
+          "prompt": "52840000을 네 자리씩 잘라 읽어요.",
+          "engine": "E01",
+          "mode": "big-number",
+          "cpa": "P",
+          "config": {
+            "mode": "big-number",
+            "value": "52840000",
+            "slicer": "student"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "cutsCorrect"
+              },
+              {
+                "kind": "equals",
+                "path": "response.read.selected",
+                "value": [
+                  "a"
+                ]
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "cutsAre",
+                    "args": {
+                      "positions": [
+                        3
+                      ]
+                    }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "cutsAre",
+                    "args": {
+                      "positions": [
+                        3,
+                        6
+                      ]
+                    }
+                  }
+                ]
+              },
+              "level": 1,
+              "say": "우리말로 읽을 때는 몇 자리마다 새 이름이 붙었지?"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "cutsAre",
+                    "args": {
+                      "positions": [
+                        3
+                      ]
+                    }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "cutsAre",
+                    "args": {
+                      "positions": [
+                        3,
+                        6
+                      ]
+                    }
+                  }
+                ]
+              },
+              "level": 2,
+              "show": {
+                "engine": "E01",
+                "overlay": "four-digit-grid"
+              },
+              "say": "네 자리 덩어리와 세 자리 쉼표가 어긋난 곳을 보았어요."
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "cutsAre",
+                    "args": {
+                      "positions": [
+                        3
+                      ]
+                    }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "cutsAre",
+                    "args": {
+                      "positions": [
+                        3,
+                        6
+                      ]
+                    }
+                  }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g4s1u1.four-digit-groups"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "big-number"
+              },
+              "level": 1,
+              "say": "오른쪽부터 네 자리씩 끊어 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "big-number"
+              },
+              "level": 2,
+              "say": "네 자리씩 끊으면 만·억·조 이름이 붙어요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "big-number"
+              },
+              "level": 3,
+              "backtrack": "g4s1u1.four-digit-groups"
+            }
+          ],
+          "concepts": [
+            "g4s1u1.four-digit-groups"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "read",
+                "label": "어떻게 읽을까요?",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "a",
+                    "label": "오천이백팔십사만"
+                  },
+                  {
+                    "id": "b",
+                    "label": "오십이만 팔천사백"
+                  },
+                  {
+                    "id": "c",
+                    "label": "오억 이천팔백사십만"
+                  },
+                  {
+                    "id": "d",
+                    "label": "오천이백팔십사억"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g4s1u1.A1.T2",
+          "prompt": "이천삼십만 오를 자릿값 표에 숫자 카드로 만들어요. 빈 자리에는 0을 놓아요.",
+          "engine": "E01",
+          "mode": "big-number",
+          "cpa": "P",
+          "config": {
+            "mode": "big-number",
+            "reverse": {
+              "spoken": "이천삼십만 오"
+            }
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "builtIs",
+            "args": {
+              "value": "20300005"
+            }
+          },
+          "hints": [
+            {
+              "when": {
+                "misconception": "MC-BIGNUM-ZERO-PLACE"
+              },
+              "level": 1,
+              "say": "만 덩어리와 일 덩어리는 각각 몇 자리였지?"
+            },
+            {
+              "when": {
+                "misconception": "MC-BIGNUM-ZERO-PLACE"
+              },
+              "level": 2,
+              "say": "자릿값 표의 빈 칸을 다시 살펴보세요."
+            },
+            {
+              "when": {
+                "misconception": "MC-BIGNUM-ZERO-PLACE"
+              },
+              "level": 3,
+              "backtrack": "g4s1u1.place-value-big"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "big-number"
+              },
+              "level": 1,
+              "say": "빈 자리에는 0을 놓아요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "big-number"
+              },
+              "level": 2,
+              "say": "자릿값 표의 칸을 하나씩 채워 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "big-number"
+              },
+              "level": 3,
+              "backtrack": "g4s1u1.four-digit-groups"
+            }
+          ],
+          "concepts": [
+            "g4s1u1.place-value-big",
+            "g4s1u1.four-digit-groups"
+          ],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-BIGNUM-ZERO-PLACE",
+              "args": {
+                "expected": "20300005"
+              },
+              "path": "built"
+            }
+          ]
+        },
+        {
+          "id": "g4s1u1.A1.T3",
+          "prompt": "3528007140000에서 숫자 5가 나타내는 값을 골라요.",
+          "engine": "E01",
+          "mode": "big-number",
+          "cpa": "P",
+          "config": {
+            "mode": "big-number",
+            "value": "3528007140000",
+            "slicer": "student"
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.place.selected",
+            "value": [
+              "d"
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "big-number"
+              },
+              "level": 1,
+              "say": "5는 어느 덩어리의 어느 자리인가요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "big-number"
+              },
+              "level": 2,
+              "say": "오른쪽부터 네 자리씩 끊어 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "big-number"
+              },
+              "level": 3,
+              "backtrack": "g4s1u1.place-value-big"
+            }
+          ],
+          "concepts": [
+            "g4s1u1.place-value-big"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "place",
+                "label": "5가 나타내는 값",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "a",
+                    "label": "5억"
+                  },
+                  {
+                    "id": "b",
+                    "label": "50억"
+                  },
+                  {
+                    "id": "c",
+                    "label": "500억"
+                  },
+                  {
+                    "id": "d",
+                    "label": "5000억"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g4s1u1.A1.T4",
+          "prompt": "억이 10000개인 수를 자릿값 표에 만들어요.",
+          "engine": "E01",
+          "mode": "big-number",
+          "cpa": "A",
+          "config": {
+            "mode": "big-number",
+            "reverse": {
+              "spoken": "일조"
+            }
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "builtIs",
+            "args": {
+              "value": "1000000000000"
+            }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "big-number"
+              },
+              "level": 1,
+              "say": "억 덩어리가 10000개 모이면 다음 이름은 무엇일까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "big-number"
+              },
+              "level": 2,
+              "say": "조 자리부터 1을 놓고 빈 자리는 0으로 채워요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "big-number"
+              },
+              "level": 3,
+              "backtrack": "g4s1u1.four-digit-groups"
+            }
+          ],
+          "concepts": [
+            "g4s1u1.four-digit-groups",
+            "g4s1u1.place-value-big"
+          ],
+          "submit": "button"
+        }
+      ]
+    },
+    {
+      "id": "g4s1u1.A2",
+      "title": "스케일 줌 수직선",
+      "tasks": [
+        {
+          "id": "g4s1u1.A2.T1",
+          "prompt": "234만에서 10만씩 5번 뛰어 세어요. 어느 자리가 바뀌는지 골라요.",
+          "engine": "E03",
+          "mode": "log-zoom",
+          "cpa": "P",
+          "config": {
+            "mode": "log-zoom",
+            "levels": [
+              "10000",
+              "100000",
+              "1000000",
+              "10000000",
+              "100000000",
+              "1000000000",
+              "10000000000",
+              "100000000000",
+              "1000000000000",
+              "10000000000000"
+            ],
+            "startLevel": 3,
+            "labelStyle": "korean",
+            "start": "2340000",
+            "step": "100000"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "hopCountIs",
+                "args": {
+                  "count": 5
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "landingIs",
+                "args": {
+                  "value": "2840000"
+                }
+              },
+              {
+                "kind": "equals",
+                "path": "response.place.selected",
+                "value": [
+                  "sipman"
+                ]
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "log-zoom"
+              },
+              "level": 1,
+              "say": "10만씩 뛰면 어느 자리 숫자가 바뀌나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "log-zoom"
+              },
+              "level": 2,
+              "say": "뛴 횟수만큼 10만씩 더해 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "log-zoom"
+              },
+              "level": 3,
+              "backtrack": "g4s1u1.ten-times"
+            }
+          ],
+          "concepts": [
+            "g4s1u1.ten-times"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "place",
+                "label": "바뀌는 자리",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "man",
+                    "label": "만 자리"
+                  },
+                  {
+                    "id": "sipman",
+                    "label": "십만 자리"
+                  },
+                  {
+                    "id": "baekman",
+                    "label": "백만 자리"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g4s1u1.A2.T2",
+          "prompt": "이정표 세 개를 작은 수부터 차례대로 놓아요. 수직선을 넓게 보며 찾아보세요.",
+          "engine": "E03",
+          "mode": "log-zoom",
+          "cpa": "P",
+          "config": {
+            "mode": "log-zoom",
+            "levels": [
+              "10000",
+              "100000",
+              "1000000",
+              "10000000",
+              "100000000",
+              "1000000000",
+              "10000000000",
+              "100000000000",
+              "1000000000000",
+              "10000000000000"
+            ],
+            "startLevel": 0,
+            "labelStyle": "korean",
+            "landmarks": [
+              {
+                "value": 9400000,
+                "label": "서울 인구 약 940만"
+              },
+              {
+                "value": 51000000,
+                "label": "대한민국 인구 약 5100만"
+              },
+              {
+                "value": 150000000,
+                "label": "지구에서 태양까지 약 1억 5000만 km"
+              }
+            ]
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.order.order",
+            "value": [
+              "seoul",
+              "korea",
+              "sun"
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "log-zoom"
+              },
+              "level": 1,
+              "say": "작은 수부터 비교하려면 자릿수를 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "log-zoom"
+              },
+              "level": 2,
+              "say": "오른쪽으로 갈수록 큰 수예요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "log-zoom"
+              },
+              "level": 3,
+              "backtrack": "g4s1u1.compare-big"
+            }
+          ],
+          "concepts": [
+            "g4s1u1.compare-big"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "order",
+                "id": "order",
+                "label": "작은 수부터",
+                "items": [
+                  {
+                    "id": "sun",
+                    "label": "지구에서 태양까지 약 1억 5000만 km"
+                  },
+                  {
+                    "id": "seoul",
+                    "label": "서울 인구 약 940만"
+                  },
+                  {
+                    "id": "korea",
+                    "label": "대한민국 인구 약 5100만"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g4s1u1.A2.T3",
+          "prompt": "4억 2천만과 42억을 비교해 알맞은 부등호를 골라요.",
+          "engine": "E03",
+          "mode": "log-zoom",
+          "cpa": "A",
+          "config": {
+            "mode": "log-zoom",
+            "levels": [
+              "10000",
+              "100000",
+              "1000000",
+              "10000000",
+              "100000000",
+              "1000000000",
+              "10000000000",
+              "100000000000",
+              "1000000000000",
+              "10000000000000"
+            ],
+            "startLevel": 0
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.cmp.symbol",
+            "value": "<"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.cmp.symbol",
+                    "value": ">"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.cmp.symbol",
+                    "value": "="
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.cmp.symbol",
+                    "value": null
+                  }
+                ]
+              },
+              "level": 1,
+              "say": "두 수는 각각 몇 자리 수야?"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.cmp.symbol",
+                    "value": ">"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.cmp.symbol",
+                    "value": "="
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.cmp.symbol",
+                    "value": null
+                  }
+                ]
+              },
+              "level": 2,
+              "say": "두 수를 자릿값 표에 오른쪽을 맞추어 놓는다고 생각해 보세요."
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.cmp.symbol",
+                    "value": ">"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.cmp.symbol",
+                    "value": "="
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.cmp.symbol",
+                    "value": null
+                  }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g4s1u1.compare-big"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "log-zoom"
+              },
+              "level": 1,
+              "say": "두 수는 각각 몇 자리 수야?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "log-zoom"
+              },
+              "level": 2,
+              "say": "두 수를 자릿값 표에 오른쪽을 맞추어 놓는다고 생각해 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "log-zoom"
+              },
+              "level": 3,
+              "backtrack": "g4s1u1.compare-big"
+            }
+          ],
+          "concepts": [
+            "g4s1u1.compare-big"
+          ],
+          "submit": "button",
+          "showEngine": false,
+          "response": {
+            "fields": [
+              {
+                "kind": "compare",
+                "id": "cmp",
+                "label": "부등호",
+                "left": "4억 2천만",
+                "right": "42억"
+              }
+            ]
+          }
+        },
+        {
+          "id": "g4s1u1.A2.T4",
+          "prompt": "7억 3500만과 7억 5300만을 비교해요.",
+          "engine": "E03",
+          "mode": "log-zoom",
+          "cpa": "A",
+          "config": {
+            "mode": "log-zoom",
+            "levels": [
+              "10000",
+              "100000",
+              "1000000",
+              "10000000",
+              "100000000",
+              "1000000000",
+              "10000000000",
+              "100000000000",
+              "1000000000000",
+              "10000000000000"
+            ],
+            "startLevel": 0
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.cmp.symbol",
+            "value": "<"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.cmp.symbol",
+                    "value": ">"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.cmp.symbol",
+                    "value": "="
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.cmp.symbol",
+                    "value": null
+                  }
+                ]
+              },
+              "level": 1,
+              "say": "두 수 모두 억이 7개예요. 어느 자리부터 비교할까요?"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.cmp.symbol",
+                    "value": ">"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.cmp.symbol",
+                    "value": "="
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.cmp.symbol",
+                    "value": null
+                  }
+                ]
+              },
+              "level": 2,
+              "say": "높은 자리부터 차례대로 비교해 보세요."
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.cmp.symbol",
+                    "value": ">"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.cmp.symbol",
+                    "value": "="
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.cmp.symbol",
+                    "value": null
+                  }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g4s1u1.compare-big"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "log-zoom"
+              },
+              "level": 1,
+              "say": "두 수 모두 억이 7개예요. 어느 자리부터 비교할까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "log-zoom"
+              },
+              "level": 2,
+              "say": "높은 자리부터 차례대로 비교해 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "log-zoom"
+              },
+              "level": 3,
+              "backtrack": "g4s1u1.compare-big"
+            }
+          ],
+          "concepts": [
+            "g4s1u1.compare-big"
+          ],
+          "submit": "button",
+          "showEngine": false,
+          "response": {
+            "fields": [
+              {
+                "kind": "compare",
+                "id": "cmp",
+                "label": "부등호",
+                "left": "7억 3500만",
+                "right": "7억 5300만"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
