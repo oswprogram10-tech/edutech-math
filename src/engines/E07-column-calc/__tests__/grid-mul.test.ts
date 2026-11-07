@@ -135,6 +135,46 @@ describe('E07 곱셈 격자 계획', () => {
     expect(plan.rows[1]?.columns).toEqual([0, 1, 2]);
   });
 
+  it('partial-products 기대 칸은 자리 밀기가 아니라 값의 실제 자리에 놓인다', () => {
+    const plan23 = computeMulPlan(mulState({ a: 23, b: 4, style: 'partial-products' }));
+    expect(plan23?.rows[0]?.expectedDigits).toEqual({ '1': '1', '0': '2' });
+    expect(plan23?.rows[1]?.expectedDigits).toEqual({ '1': '8', '0': '0' });
+
+    const plan312 = computeMulPlan(mulState({ a: 312, b: 3, style: 'partial-products' }));
+    expect(plan312?.rows.map((row) => row.value)).toEqual([6n, 30n, 900n]);
+    expect(plan312?.rows.map((row) => row.expectedDigits)).toEqual([
+      { '0': '6' },
+      { '1': '3', '0': '0' },
+      { '2': '9', '1': '0', '0': '0' },
+    ]);
+
+    const plan213 = computeMulPlan(mulState({ a: 213, b: 4, style: 'partial-products' }));
+    expect(plan213?.rows.map((row) => row.value)).toEqual([12n, 40n, 800n]);
+    expect(plan213?.rows.map((row) => row.expectedDigits)).toEqual([
+      { '1': '1', '0': '2' },
+      { '1': '4', '0': '0' },
+      { '2': '8', '1': '0', '0': '0' },
+    ]);
+  });
+
+  it('23×4에 바른 부분곱 12·80을 쓰면 complete와 result 92가 된다', () => {
+    const state = mulState({ a: 23, b: 4, style: 'partial-products' });
+    const plan = computeMulPlan(state);
+    expect(plan).not.toBeNull();
+    if (!plan) return;
+
+    let filled = enterDigits(state, 'partial', { 1: '1', 0: '2' }, 0);
+    filled = enterDigits(filled, 'partial', { 1: '8', 0: '0' }, 1);
+    filled = enterDigits(filled, 'result', { 1: '9', 0: '2' });
+
+    expect(rowsComplete(filled, plan)).toBe(true);
+    const observation = observe(filled);
+    expect(observation['partials']).toEqual(['12', '80']);
+    expect(observation['complete']).toBe(true);
+    expect(observation['result']).toBe('92');
+    expect(observation['misconceptions']).toEqual([]);
+  });
+
   it('46×5 partial-products는 30·200 부분곱과 합 230을 만든다', () => {
     const state = mulState({ a: 46, b: 5, style: 'partial-products' });
     const plan = computeMulPlan(state);

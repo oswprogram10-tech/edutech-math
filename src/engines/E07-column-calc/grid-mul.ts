@@ -127,7 +127,8 @@ function placeProductRow(
   const end = place + bIntDigits;
   const expectedDigits: Record<string, string> = {};
   for (let offset = 0; offset < digits.length; offset += 1) {
-    expectedDigits[String(end - offset)] = digits[offset] ?? '0';
+    // 자리 밀기(end)가 아니라 값의 실제 자리에 놓는다(23×4의 80 → 십·일).
+    expectedDigits[String(digits.length - 1 - offset)] = digits[offset] ?? '0';
   }
   return {
     index,
