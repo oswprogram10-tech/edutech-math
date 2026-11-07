@@ -272,8 +272,12 @@ test('A2 자릿값 누락 교정기 — 대표 오답 뒤 고쳐서 네 과제�
   await submit(page);
   await expectPassed(page);
 
-  // T2 — 미리 채운 322·92·414에서 틀린 칸(둘째 줄 일의 자리)을 표시한다.
+  // T2 — 미리 채운 322·92·414에서 이유 힌트 ①·②를 본 뒤 틀린 칸을 표시한다.
   const debug = slot(page, 'main');
+  await submit(page);
+  await expectFailedWithHint(page, '27의 2는 얼마를 나타낼까요?');
+  await submit(page);
+  await expectFailedWithHint(page, '46 × 20은 얼마일까요? 표시된 줄들과 견주어 보세요.', 2);
   await tap(cell(debug, 'partial', 0, 1));
   await debug.getByRole('button', { name: /틀린 칸을 골라/ }).click();
   await submit(page);
