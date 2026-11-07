@@ -155,6 +155,10 @@ test('A1 4자리 컬러 슬라이서 — 대표 오답 뒤 고쳐서 네 과제�
 
   // T4 — 억 10000개를 조 자리 1과 0으로 만든다.
   const fourth = slot(page, 'main');
+  await submit(page);
+  await expectFailedWithHint(page, '억 덩어리가 10000개 모이면 다음 이름은 무엇일까요?');
+  await submit(page);
+  await expectFailedWithHint(page, '억이 10개, 100개, 1000개면 각각 몇 억일까요? 그다음은요?', 2);
   const zeros: Record<number, string> = { 3: '1' };
   for (let cell = 4; cell < 16; cell += 1) zeros[cell] = '0';
   await fillReverse(page, fourth, zeros);
