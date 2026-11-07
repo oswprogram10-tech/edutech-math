@@ -1,0 +1,1062 @@
+{
+  "unit": "g3s2u1",
+  "title": "곱셈",
+  "activities": [
+    {
+      "id": "g3s2u1.A1",
+      "title": "넓이 퍼즐",
+      "tasks": [
+        {
+          "id": "g3s2u1.A1.T1",
+          "prompt": "30 × 20 직사각형을 10 × 10 조각으로 나눠요. 조각 수와 전체 넓이를 써요.",
+          "engine": "E04",
+          "mode": "area-model",
+          "cpa": "C",
+          "config": {
+            "mode": "area-model",
+            "a": 30,
+            "b": 20,
+            "splitA": "free",
+            "splitB": "free",
+            "showGrid": "C-only",
+            "showPartials": "dims"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "piecesAre",
+                "args": {
+                  "products": [
+                    100,
+                    100,
+                    100,
+                    100,
+                    100,
+                    100
+                  ]
+                }
+              },
+              {
+                "kind": "equals",
+                "path": "response.count.value",
+                "value": "6"
+              },
+              {
+                "kind": "equals",
+                "path": "response.total.value",
+                "value": "600"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "area-model"
+              },
+              "level": 1,
+              "say": "가로와 세로를 10씩 나누어 보았나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "area-model"
+              },
+              "level": 2,
+              "say": "조각 하나는 가로 10, 세로 10인 정사각형이에요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "area-model"
+              },
+              "level": 3,
+              "backtrack": "g3s1u4.area-model-split"
+            }
+          ],
+          "concepts": [
+            "g3s2u1.mul-by-tens",
+            "g3s2u1.area-4-split"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "count",
+                "label": "조각 수",
+                "forms": [
+                  "integer"
+                ]
+              },
+              {
+                "kind": "number",
+                "id": "total",
+                "label": "전체 넓이",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s2u1.A1.T2",
+          "prompt": "23 × 14 직사각형을 가로는 20과 3, 세로는 10과 4로 나누어요. 네 조각의 넓이와 전체 넓이를 써요.",
+          "engine": "E04",
+          "mode": "area-model",
+          "cpa": "C",
+          "config": {
+            "mode": "area-model",
+            "a": 23,
+            "b": 14,
+            "splitA": "free",
+            "splitB": "free",
+            "showGrid": "C-only",
+            "showPartials": "dims"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "equals",
+                "path": "splitsA",
+                "value": [
+                  20
+                ]
+              },
+              {
+                "kind": "equals",
+                "path": "splitsB",
+                "value": [
+                  10
+                ]
+              },
+              {
+                "kind": "equals",
+                "path": "response.p1.value",
+                "value": "200"
+              },
+              {
+                "kind": "equals",
+                "path": "response.p2.value",
+                "value": "30"
+              },
+              {
+                "kind": "equals",
+                "path": "response.p3.value",
+                "value": "80"
+              },
+              {
+                "kind": "equals",
+                "path": "response.p4.value",
+                "value": "12"
+              },
+              {
+                "kind": "equals",
+                "path": "response.total.value",
+                "value": "322"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "misconception": "MC-MUL-PARTIAL-MISSING"
+              },
+              "level": 1,
+              "say": "직사각형 조각 중 아직 넓이를 안 센 조각이 있을까?"
+            },
+            {
+              "when": {
+                "misconception": "MC-MUL-PARTIAL-MISSING"
+              },
+              "level": 2,
+              "say": "넓이를 더하지 않은 조각이 있는지 다시 살펴보세요."
+            },
+            {
+              "when": {
+                "misconception": "MC-MUL-PARTIAL-MISSING"
+              },
+              "level": 3,
+              "backtrack": "g3s1u4.area-model-split"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "area-model"
+              },
+              "level": 1,
+              "say": "가로는 20과 3, 세로는 10과 4로 나누었나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "area-model"
+              },
+              "level": 2,
+              "say": "조각 하나의 넓이는 가로 × 세로예요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "area-model"
+              },
+              "level": 3,
+              "backtrack": "g2s2u2.split-strategy"
+            }
+          ],
+          "concepts": [
+            "g3s2u1.area-4-split"
+          ],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-MUL-PARTIAL-MISSING",
+              "args": {
+                "a": "23",
+                "b": "14"
+              },
+              "path": "response.total.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "p1",
+                "label": "왼쪽 위 조각",
+                "forms": [
+                  "integer"
+                ]
+              },
+              {
+                "kind": "number",
+                "id": "p2",
+                "label": "오른쪽 위 조각",
+                "forms": [
+                  "integer"
+                ]
+              },
+              {
+                "kind": "number",
+                "id": "p3",
+                "label": "왼쪽 아래 조각",
+                "forms": [
+                  "integer"
+                ]
+              },
+              {
+                "kind": "number",
+                "id": "p4",
+                "label": "오른쪽 아래 조각",
+                "forms": [
+                  "integer"
+                ]
+              },
+              {
+                "kind": "number",
+                "id": "total",
+                "label": "전체 넓이",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s2u1.A1.T3",
+          "prompt": "섞인 조각을 조립판에 놓아 32 × 23 직사각형을 만들어요. 곱셈식도 써요.",
+          "engine": "E04",
+          "mode": "area-model",
+          "cpa": "P",
+          "config": {
+            "mode": "area-model",
+            "a": 32,
+            "b": 23,
+            "puzzle": {
+              "splitsA": [
+                30
+              ],
+              "splitsB": [
+                20
+              ],
+              "seed": 1,
+              "label": "dims"
+            },
+            "showPartials": "dims"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "puzzleAssembled"
+              },
+              {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "response.fa.value",
+                        "value": "32"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.fb.value",
+                        "value": "23"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "response.fa.value",
+                        "value": "23"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.fb.value",
+                        "value": "32"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "equals",
+                "path": "response.val.value",
+                "value": "736"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "area-model"
+              },
+              "level": 1,
+              "say": "조각을 모두 조립판에 놓았나요? 변의 길이를 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "area-model"
+              },
+              "level": 2,
+              "say": "30×20, 2×20, 30×3, 2×3 조각을 변에 맞게 놓아요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "area-model"
+              },
+              "level": 3,
+              "backtrack": "g3s1u4.area-model-split"
+            }
+          ],
+          "concepts": [
+            "g3s2u1.area-4-split",
+            "g3s2u1.column-2x2"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "fa",
+                "label": "가로",
+                "forms": [
+                  "integer"
+                ]
+              },
+              {
+                "kind": "number",
+                "id": "fb",
+                "label": "세로",
+                "forms": [
+                  "integer"
+                ]
+              },
+              {
+                "kind": "number",
+                "id": "val",
+                "label": "곱",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s2u1.A1.T4",
+          "prompt": "37 × 26을 넓이 모델로 나누어 전체 넓이를 구해요.",
+          "engine": "E04",
+          "mode": "area-model",
+          "cpa": "P",
+          "config": {
+            "mode": "area-model",
+            "a": 37,
+            "b": 26,
+            "splitA": "place-value",
+            "splitB": "place-value",
+            "showGrid": "never",
+            "showPartials": "dims"
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.total.value",
+            "value": "962"
+          },
+          "hints": [
+            {
+              "when": {
+                "misconception": "MC-MUL-PARTIAL-MISSING"
+              },
+              "level": 1,
+              "say": "직사각형 조각 중 아직 넓이를 안 센 조각이 있을까?"
+            },
+            {
+              "when": {
+                "misconception": "MC-MUL-PARTIAL-MISSING"
+              },
+              "level": 2,
+              "say": "넓이를 더하지 않은 조각이 있는지 다시 살펴보세요."
+            },
+            {
+              "when": {
+                "misconception": "MC-MUL-PARTIAL-MISSING"
+              },
+              "level": 3,
+              "backtrack": "g3s1u4.area-model-split"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "area-model"
+              },
+              "level": 1,
+              "say": "가로는 30과 7, 세로는 20과 6으로 나뉘었어요. 네 조각을 모두 더했나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "area-model"
+              },
+              "level": 2,
+              "say": "조각 하나의 넓이는 가로 × 세로예요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "area-model"
+              },
+              "level": 3,
+              "backtrack": "g2s2u2.split-strategy"
+            }
+          ],
+          "concepts": [
+            "g3s2u1.area-4-split",
+            "g3s2u1.column-2x2"
+          ],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-MUL-PARTIAL-MISSING",
+              "args": {
+                "a": "37",
+                "b": "26"
+              },
+              "path": "response.total.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "total",
+                "label": "전체 넓이",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "g3s2u1.A2",
+      "title": "자릿값 누락 교정기",
+      "tasks": [
+        {
+          "id": "g3s2u1.A2.T1",
+          "prompt": "46 × 27을 세로셈으로 계산해요. 넓이 조각의 색과 부분곱 줄을 견주어 보세요.",
+          "engine": "E07",
+          "mode": "mul",
+          "cpa": "P",
+          "config": {
+            "mode": "mul",
+            "a": 46,
+            "b": 27,
+            "style": "carry",
+            "showZeroPlaceholder": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "partialsAre",
+                "args": {
+                  "values": [
+                    "322",
+                    "920"
+                  ]
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "resultIs",
+                "args": {
+                  "value": "1242"
+                }
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-MUL-PARTIAL-SHIFT"
+                }
+              },
+              "level": 1,
+              "say": "둘째 줄은 46 × 2를 한 걸까, 46 × 20을 한 걸까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-MUL-PARTIAL-SHIFT"
+                }
+              },
+              "level": 2,
+              "show": {
+                "engine": "E07",
+                "overlay": "partial-shift"
+              },
+              "say": "둘째 줄의 빈 일의 자리를 점선으로 보았어요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-MUL-PARTIAL-SHIFT"
+                }
+              },
+              "level": 3,
+              "backtrack": "g3s2u1.mul-by-tens"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PV-NO-CARRY"
+                }
+              },
+              "level": 1,
+              "say": "이 칸에서 10이 넘었는데 어디로 갔을까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PV-NO-CARRY"
+                }
+              },
+              "level": 2,
+              "say": "받아올린 수를 작은 칸에 적었나요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PV-NO-CARRY"
+                }
+              },
+              "level": 3,
+              "backtrack": "g3s1u4.column-mul-carry"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-MUL-PARTIAL-MISSING"
+                }
+              },
+              "level": 1,
+              "say": "직사각형 조각 중 아직 넓이를 안 센 조각이 있을까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-MUL-PARTIAL-MISSING"
+                }
+              },
+              "level": 2,
+              "say": "두 부분곱 줄을 모두 더했나요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-MUL-PARTIAL-MISSING"
+                }
+              },
+              "level": 3,
+              "backtrack": "g3s1u4.area-model-split"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "mul"
+              },
+              "level": 1,
+              "say": "일의 자리부터 곱하고, 둘째 줄은 한 칸 왼쪽부터 써요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "mul"
+              },
+              "level": 2,
+              "show": {
+                "engine": "E07",
+                "overlay": "partial-split"
+              },
+              "say": "46을 40과 6으로 나누어 보았어요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "mul"
+              },
+              "level": 3,
+              "backtrack": "g3s1u4.partial-products"
+            }
+          ],
+          "concepts": [
+            "g3s2u1.column-2x2",
+            "g3s2u1.mul-by-tens"
+          ],
+          "submit": "button",
+          "views": [
+            {
+              "slot": "right",
+              "engine": "E07",
+              "mode": "mul",
+              "cpa": "P",
+              "config": {
+                "mode": "mul",
+                "a": 46,
+                "b": 27,
+                "style": "carry",
+                "showZeroPlaceholder": true
+              }
+            },
+            {
+              "slot": "left",
+              "engine": "E04",
+              "mode": "area-model",
+              "cpa": "P",
+              "config": {
+                "mode": "area-model",
+                "a": 46,
+                "b": 27,
+                "splitA": "none",
+                "splitB": "free",
+                "showGrid": "never",
+                "showPartials": "dims"
+              }
+            }
+          ],
+          "links": [
+            {
+              "from": "left",
+              "event": "partial-product-changed",
+              "to": "right"
+            }
+          ]
+        },
+        {
+          "id": "g3s2u1.A2.T2",
+          "prompt": "누군가 46 × 27 = 414라고 계산했어요. 틀린 칸을 골라 표시해요.",
+          "engine": "E07",
+          "mode": "mul",
+          "cpa": "P",
+          "config": {
+            "mode": "mul",
+            "a": 46,
+            "b": 27,
+            "style": "carry",
+            "debugSample": {
+              "rows": [
+                "322",
+                "92"
+              ],
+              "sum": "414"
+            }
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "flaggedCell",
+                "args": {
+                  "row": "partial",
+                  "index": 1,
+                  "column": 0
+                }
+              },
+              {
+                "kind": "equals",
+                "path": "flaggedCells",
+                "value": [
+                  {
+                    "row": "partial",
+                    "column": 0,
+                    "index": 1
+                  }
+                ]
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "mul"
+              },
+              "level": 1,
+              "say": "둘째 줄은 46 × 2를 한 값이에요. 어느 자리부터 써야 할까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "mul"
+              },
+              "level": 2,
+              "say": "둘째 줄의 일의 자리 칸을 살펴보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "mul"
+              },
+              "level": 3,
+              "backtrack": "g3s2u1.mul-by-tens"
+            }
+          ],
+          "concepts": [
+            "g3s2u1.column-2x2",
+            "g3s2u1.mul-by-tens"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g3s2u1.A2.T3",
+          "prompt": "58 × 34를 세로셈으로 계산해요. 받아올림을 빠뜨리지 않아요.",
+          "engine": "E07",
+          "mode": "mul",
+          "cpa": "A",
+          "config": {
+            "mode": "mul",
+            "a": 58,
+            "b": 34,
+            "style": "carry",
+            "showZeroPlaceholder": false
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "resultIs",
+                "args": {
+                  "value": "1972"
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "complete"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PV-NO-CARRY"
+                }
+              },
+              "level": 1,
+              "say": "이 칸에서 10이 넘었는데 어디로 갔을까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PV-NO-CARRY"
+                }
+              },
+              "level": 2,
+              "say": "받아올린 수를 작은 칸에 적었나요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PV-NO-CARRY"
+                }
+              },
+              "level": 3,
+              "backtrack": "g3s1u4.column-mul-carry"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-MUL-PARTIAL-SHIFT"
+                }
+              },
+              "level": 1,
+              "say": "둘째 줄은 58 × 3을 한 걸까, 58 × 30을 한 걸까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-MUL-PARTIAL-SHIFT"
+                }
+              },
+              "level": 2,
+              "show": {
+                "engine": "E07",
+                "overlay": "partial-shift"
+              },
+              "say": "둘째 줄의 빈 일의 자리를 점선으로 보았어요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-MUL-PARTIAL-SHIFT"
+                }
+              },
+              "level": 3,
+              "backtrack": "g3s2u1.mul-by-tens"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-MUL-PARTIAL-MISSING"
+                }
+              },
+              "level": 1,
+              "say": "두 부분곱 줄을 모두 더했나요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-MUL-PARTIAL-MISSING"
+                }
+              },
+              "level": 2,
+              "say": "부분곱 줄을 하나씩 확인해요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-MUL-PARTIAL-MISSING"
+                }
+              },
+              "level": 3,
+              "backtrack": "g3s1u4.area-model-split"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "mul"
+              },
+              "level": 1,
+              "say": "일의 자리부터 곱해요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "mul"
+              },
+              "level": 2,
+              "show": {
+                "engine": "E07",
+                "overlay": "place-value"
+              },
+              "say": "자리마다 숫자가 나타내는 수를 보여 줘요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "mul"
+              },
+              "level": 3,
+              "backtrack": "g3s1u4.partial-products"
+            }
+          ],
+          "concepts": [
+            "g3s2u1.column-2x2"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g3s2u1.A2.T4",
+          "prompt": "46 × 27을 몇십 × 몇십으로 어림하고, 세로셈으로 계산해 신호등을 확인해요.",
+          "engine": "E07",
+          "mode": "estimate",
+          "cpa": "A",
+          "config": {
+            "mode": "estimate",
+            "op": "mul",
+            "a": 46,
+            "b": 27,
+            "roundTo": 10,
+            "tolerance": {
+              "green": 300,
+              "yellow": 600
+            }
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "estimateIs",
+                "args": {
+                  "value": "1500"
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "resultIs",
+                "args": {
+                  "value": "1242"
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "noErrors"
+              },
+              {
+                "kind": "predicate",
+                "name": "signalIs",
+                "args": {
+                  "value": "green"
+                }
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "estimate"
+              },
+              "level": 1,
+              "say": "46과 27은 각각 몇십에 가까운가요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "estimate"
+              },
+              "level": 2,
+              "say": "어림값과 계산 결과를 견주어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "estimate"
+              },
+              "level": 3,
+              "backtrack": "g2s2u2.facts-by-table"
+            }
+          ],
+          "concepts": [
+            "g3s2u1.mul-by-tens",
+            "g3s2u1.column-2x2"
+          ],
+          "submit": "button"
+        }
+      ]
+    }
+  ]
+}
