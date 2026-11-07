@@ -186,6 +186,15 @@ describe('E02 T041 새 모드도 기본 설정에서 정답 숫자를 쓰지 않
     expect(container.textContent ?? '').not.toContain('지금 12개');
   });
 
+  it('share 접시의 되돌리기 버튼 글자는 "하나 빼기"다', () => {
+    const config: CountersConfig = { mode: 'share', total: 12, groups: 3 };
+    const state = reduce(createInitialState(config), { type: 'deal-round' });
+    const { container } = renderView(config, state);
+    const button = container.querySelector(`button[aria-label="${S.takeBack(0)}"]`);
+    expect(button?.textContent).toBe(S.takeBackShort);
+    expect(S.takeBackShort).toBe('하나 빼기');
+  });
+
   it('measure-out은 봉지 수·남은 수를 숫자로 쓰지 않는다', () => {
     const config: CountersConfig = { mode: 'measure-out', total: 12, groupSize: 4 };
     const state = reduce(createInitialState(config), { type: 'bag-next' });

@@ -1,4 +1,4 @@
-﻿/** ?깅텇?? 臾대뜑湲곗쓽 ?덈룎???묒떆???섎굹???섎늿?? */
+﻿/** 등분제: 무더기의 셈돌을 접시에 하나씩 나누는 화면. */
 import { useRef, useState } from 'react';
 import type { KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent } from 'react';
 import { distance, pointerToLogical, useDrag } from '../../../core/engine-sdk';
@@ -195,7 +195,7 @@ export function ShareView({
               disabled={readOnly || (share.plates[plate] ?? 0) <= 0}
               aria-label={S.takeBack(plate)}
             >
-              ??
+              {S.takeBackShort}
             </button>
           </div>
         ))}
