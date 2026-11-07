@@ -1,0 +1,1117 @@
+{
+  "unit": "g3s2u2",
+  "title": "나눗셈",
+  "activities": [
+    {
+      "id": "g3s2u2.A1",
+      "title": "십모형 해체 분배",
+      "tasks": [
+        {
+          "id": "g3s2u2.A1.T1",
+          "prompt": "52 ÷ 4를 블록으로 나누어요. 블록을 나누면 세로셈 몫 칸에 채워져요.",
+          "engine": "E01",
+          "mode": "divide",
+          "cpa": "C",
+          "config": {
+            "mode": "divide",
+            "dividend": 52,
+            "divisor": 4
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "platesEqual"
+              },
+              {
+                "kind": "predicate",
+                "name": "plateValueIs",
+                "args": {
+                  "value": 13
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "pileValueIs",
+                "args": {
+                  "value": 0
+                }
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "divide"
+              },
+              "level": 1,
+              "say": "접시마다 블록을 하나씩 나누어 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "divide"
+              },
+              "level": 2,
+              "show": {
+                "engine": "E01",
+                "overlay": "plate-levels"
+              },
+              "say": "접시마다 블록 수를 막대로 보았어요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "divide"
+              },
+              "level": 3,
+              "backtrack": "g3s1u3.partitive-division"
+            }
+          ],
+          "concepts": [
+            "g3s2u2.divide-by-place"
+          ],
+          "submit": "button",
+          "views": [
+            {
+              "slot": "left",
+              "engine": "E01",
+              "mode": "divide",
+              "cpa": "C",
+              "config": {
+                "mode": "divide",
+                "dividend": 52,
+                "divisor": 4
+              }
+            },
+            {
+              "slot": "right",
+              "engine": "E07",
+              "mode": "div",
+              "cpa": "C",
+              "config": {
+                "mode": "div",
+                "dividend": 52,
+                "divisor": 4,
+                "linkMarks": "auto"
+              }
+            }
+          ],
+          "links": [
+            {
+              "from": "left",
+              "event": "divide-progress",
+              "to": "right"
+            }
+          ]
+        },
+        {
+          "id": "g3s2u2.A1.T2",
+          "prompt": "75 ÷ 3을 세로셈으로 계산해요. 왼쪽 블록의 몫 강조를 보고 칸을 채워요.",
+          "engine": "E07",
+          "mode": "div",
+          "cpa": "P",
+          "config": {
+            "mode": "div",
+            "dividend": 75,
+            "divisor": 3,
+            "linkMarks": "hint"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "quotientIs",
+                "args": {
+                  "value": "25"
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "complete"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-REMAINDER-TOO-BIG"
+                }
+              },
+              "level": 1,
+              "say": "남은 블록으로 접시마다 하나씩 더 줄 수 있을까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-REMAINDER-TOO-BIG"
+                }
+              },
+              "level": 2,
+              "show": {
+                "engine": "E07",
+                "overlay": "remainder-vs-divisor"
+              },
+              "say": "나머지와 나누는 수를 나란히 보았어요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-REMAINDER-TOO-BIG"
+                }
+              },
+              "level": 3,
+              "backtrack": "g3s2u2.remainder"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-BRING-DOWN"
+                }
+              },
+              "level": 1,
+              "say": "남은 십 블록 하나는 어디로 갔어?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-BRING-DOWN"
+                }
+              },
+              "level": 2,
+              "show": {
+                "engine": "E07",
+                "overlay": "leftover-blink"
+              },
+              "say": "남은 블록이 어디에 있는지 깜빡여 보았어요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-BRING-DOWN"
+                }
+              },
+              "level": 3,
+              "backtrack": "g3s2u2.long-division-steps"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "div"
+              },
+              "level": 1,
+              "say": "높은 자리부터 나누고, 몫·곱·빼기·내리기 순서로 써요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "div"
+              },
+              "level": 2,
+              "say": "몫 칸부터 한 단계씩 채워 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "div"
+              },
+              "level": 3,
+              "backtrack": "g3s2u2.long-division-steps"
+            }
+          ],
+          "concepts": [
+            "g3s2u2.divide-by-place",
+            "g3s2u2.long-division-steps"
+          ],
+          "submit": "button",
+          "views": [
+            {
+              "slot": "right",
+              "engine": "E07",
+              "mode": "div",
+              "cpa": "P",
+              "config": {
+                "mode": "div",
+                "dividend": 75,
+                "divisor": 3,
+                "linkMarks": "hint"
+              }
+            },
+            {
+              "slot": "left",
+              "engine": "E01",
+              "mode": "divide",
+              "cpa": "C",
+              "config": {
+                "mode": "divide",
+                "dividend": 75,
+                "divisor": 3
+              }
+            }
+          ],
+          "links": [
+            {
+              "from": "left",
+              "event": "divide-progress",
+              "to": "right"
+            }
+          ]
+        },
+        {
+          "id": "g3s2u2.A1.T3",
+          "prompt": "47 ÷ 3의 몫과 나머지를 세로셈으로 구해요.",
+          "engine": "E07",
+          "mode": "div",
+          "cpa": "P",
+          "config": {
+            "mode": "div",
+            "dividend": 47,
+            "divisor": 3
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "quotientIs",
+                "args": {
+                  "value": "15"
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "remainderIs",
+                "args": {
+                  "value": "2"
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "complete"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-REMAINDER-TOO-BIG"
+                }
+              },
+              "level": 1,
+              "say": "남은 블록으로 접시마다 하나씩 더 줄 수 있을까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-REMAINDER-TOO-BIG"
+                }
+              },
+              "level": 2,
+              "show": {
+                "engine": "E07",
+                "overlay": "remainder-vs-divisor"
+              },
+              "say": "나머지와 나누는 수를 나란히 보았어요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-REMAINDER-TOO-BIG"
+                }
+              },
+              "level": 3,
+              "backtrack": "g3s2u2.remainder"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-BRING-DOWN"
+                }
+              },
+              "level": 1,
+              "say": "남은 십 블록 하나는 어디로 갔어?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-BRING-DOWN"
+                }
+              },
+              "level": 2,
+              "show": {
+                "engine": "E07",
+                "overlay": "leftover-blink"
+              },
+              "say": "남은 블록이 어디에 있는지 깜빡여 보았어요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-BRING-DOWN"
+                }
+              },
+              "level": 3,
+              "backtrack": "g3s2u2.long-division-steps"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "div"
+              },
+              "level": 1,
+              "say": "몫을 쓴 뒤 곱하고 빼고 내리는 순서를 따라가요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "div"
+              },
+              "level": 2,
+              "say": "나머지가 나누는 수보다 작은지 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "div"
+              },
+              "level": 3,
+              "backtrack": "g3s2u2.long-division-steps"
+            }
+          ],
+          "concepts": [
+            "g3s2u2.remainder",
+            "g3s2u2.long-division-steps"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g3s2u2.A1.T4",
+          "prompt": "312 ÷ 6을 블록으로 나누어요. 백 블록을 풀어 십 블록으로 바꾸어 나눠요.",
+          "engine": "E01",
+          "mode": "divide",
+          "cpa": "C",
+          "config": {
+            "mode": "divide",
+            "dividend": 312,
+            "divisor": 6
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "plateValueIs",
+                "args": {
+                  "value": 52
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "pileValueIs",
+                "args": {
+                  "value": 0
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "brokeAtLeast",
+                "args": {
+                  "from": 100,
+                  "count": 3
+                }
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "divide"
+              },
+              "level": 1,
+              "say": "백 블록 3개를 모두 십 블록으로 풀어 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "divide"
+              },
+              "level": 2,
+              "show": {
+                "engine": "E01",
+                "overlay": "plate-levels"
+              },
+              "say": "접시마다 블록 수를 막대로 보았어요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "divide"
+              },
+              "level": 3,
+              "backtrack": "g3s2u2.divide-by-place"
+            }
+          ],
+          "concepts": [
+            "g3s2u2.divide-by-place"
+          ],
+          "submit": "button",
+          "views": [
+            {
+              "slot": "left",
+              "engine": "E01",
+              "mode": "divide",
+              "cpa": "C",
+              "config": {
+                "mode": "divide",
+                "dividend": 312,
+                "divisor": 6
+              }
+            },
+            {
+              "slot": "right",
+              "engine": "E07",
+              "mode": "div",
+              "cpa": "C",
+              "config": {
+                "mode": "div",
+                "dividend": 312,
+                "divisor": 6,
+                "linkMarks": "hint"
+              }
+            }
+          ],
+          "links": [
+            {
+              "from": "left",
+              "event": "divide-progress",
+              "to": "right"
+            }
+          ]
+        },
+        {
+          "id": "g3s2u2.A1.T5",
+          "prompt": "408 ÷ 4를 세로셈으로 계산해요. 몫의 가운데 자리를 비우지 않아요.",
+          "engine": "E07",
+          "mode": "div",
+          "cpa": "A",
+          "config": {
+            "mode": "div",
+            "dividend": 408,
+            "divisor": 4,
+            "flagSkippedZero": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "quotientIs",
+                "args": {
+                  "value": "102"
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "quotientCellIs",
+                "args": {
+                  "column": 1,
+                  "digit": "0"
+                }
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-QUOTIENT-ZERO"
+                }
+              },
+              "level": 1,
+              "say": "십의 자리에서 접시마다 십 블록이 몇 개씩 갔어?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-QUOTIENT-ZERO"
+                }
+              },
+              "level": 2,
+              "show": {
+                "engine": "E07",
+                "overlay": "quotient-gap"
+              },
+              "say": "몫의 빈 자리를 깜빡여 보았어요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-QUOTIENT-ZERO"
+                }
+              },
+              "level": 3,
+              "backtrack": "g3s2u2.divide-by-place"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "div"
+              },
+              "level": 1,
+              "say": "몫의 가운데 자리도 빠뜨리지 말고 써요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "div"
+              },
+              "level": 2,
+              "say": "각 자리 몫을 하나씩 확인해요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "div"
+              },
+              "level": 3,
+              "backtrack": "g3s2u2.long-division-steps"
+            }
+          ],
+          "concepts": [
+            "g3s2u2.divide-by-place",
+            "g3s2u2.long-division-steps"
+          ],
+          "submit": "button"
+        }
+      ]
+    },
+    {
+      "id": "g3s2u2.A2",
+      "title": "나머지 경고등과 되감기 검산",
+      "tasks": [
+        {
+          "id": "g3s2u2.A2.T1",
+          "prompt": "83 ÷ 6의 몫과 나머지를 구하고 경고등을 확인해요.",
+          "engine": "E07",
+          "mode": "div",
+          "cpa": "P",
+          "config": {
+            "mode": "div",
+            "dividend": 83,
+            "divisor": 6,
+            "remainderAlarm": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "quotientIs",
+                "args": {
+                  "value": "13"
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "remainderIs",
+                "args": {
+                  "value": "5"
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "alarmIs",
+                "args": {
+                  "value": false
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "complete"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-REMAINDER-TOO-BIG"
+                }
+              },
+              "level": 1,
+              "say": "남은 블록으로 접시마다 하나씩 더 줄 수 있을까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-REMAINDER-TOO-BIG"
+                }
+              },
+              "level": 2,
+              "show": {
+                "engine": "E07",
+                "overlay": "remainder-vs-divisor"
+              },
+              "say": "나머지와 나누는 수를 나란히 보았어요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-REMAINDER-TOO-BIG"
+                }
+              },
+              "level": 3,
+              "backtrack": "g3s2u2.remainder"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-BRING-DOWN"
+                }
+              },
+              "level": 1,
+              "say": "남은 십 블록 하나는 어디로 갔어?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-BRING-DOWN"
+                }
+              },
+              "level": 2,
+              "show": {
+                "engine": "E07",
+                "overlay": "leftover-blink"
+              },
+              "say": "남은 블록이 어디에 있는지 깜빡여 보았어요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-BRING-DOWN"
+                }
+              },
+              "level": 3,
+              "backtrack": "g3s2u2.long-division-steps"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "div"
+              },
+              "level": 1,
+              "say": "몫을 쓴 뒤 곱하고 빼고 내리는 순서를 따라가요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "div"
+              },
+              "level": 2,
+              "say": "나머지가 나누는 수보다 작은지 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "div"
+              },
+              "level": 3,
+              "backtrack": "g3s2u2.long-division-steps"
+            }
+          ],
+          "concepts": [
+            "g3s2u2.remainder",
+            "g3s2u2.long-division-steps"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g3s2u2.A2.T2",
+          "prompt": "누군가 83 ÷ 6 = 12 … 11이라고 했어요. 왜 틀렸는지 골라요.",
+          "engine": "E07",
+          "mode": "div",
+          "cpa": "P",
+          "config": {
+            "mode": "div",
+            "dividend": 83,
+            "divisor": 6,
+            "remainderAlarm": true,
+            "debugSample": {
+              "quotient": "12"
+            }
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.why.selected",
+            "value": [
+              "a"
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "div"
+              },
+              "level": 1,
+              "say": "나머지는 나누는 수보다 작아야 해요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "div"
+              },
+              "level": 2,
+              "say": "남은 수로 6을 한 번 더 나눌 수 있는지 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "div"
+              },
+              "level": 3,
+              "backtrack": "g3s2u2.remainder"
+            }
+          ],
+          "concepts": [
+            "g3s2u2.remainder"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "why",
+                "label": "왜 틀렸을까요?",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "a",
+                    "label": "나머지가 6보다 커요"
+                  },
+                  {
+                    "id": "b",
+                    "label": "몫의 일의 자리를 잘못 썼어요"
+                  },
+                  {
+                    "id": "c",
+                    "label": "나누는 수를 잘못 놓았어요"
+                  },
+                  {
+                    "id": "d",
+                    "label": "빼기를 하지 않았어요"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s2u2.A2.T3",
+          "prompt": "블록을 6접시에 똑같이 나눈 뒤 되감기로 다시 모아요. 13 × 6 + 5는 얼마일까요?",
+          "engine": "E01",
+          "mode": "divide",
+          "cpa": "P",
+          "config": {
+            "mode": "divide",
+            "dividend": 83,
+            "divisor": 6,
+            "rewindCheck": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "rewound"
+              },
+              {
+                "kind": "equals",
+                "path": "response.result.value",
+                "value": "83"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "misconception": "MC-DIV-CHECK-NO-REMAINDER"
+              },
+              "level": 1,
+              "say": "되감기에서 나머지 블록도 다시 합쳐졌을까?"
+            },
+            {
+              "when": {
+                "misconception": "MC-DIV-CHECK-NO-REMAINDER"
+              },
+              "level": 2,
+              "say": "몫 × 나누는 수에 나머지를 더해요."
+            },
+            {
+              "when": {
+                "misconception": "MC-DIV-CHECK-NO-REMAINDER"
+              },
+              "level": 3,
+              "backtrack": "g3s2u2.check-division"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "divide"
+              },
+              "level": 1,
+              "say": "접시에 나눈 블록을 모두 무더기로 모아 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "divide"
+              },
+              "level": 2,
+              "show": {
+                "engine": "E01",
+                "overlay": "plate-levels"
+              },
+              "say": "접시마다 블록 수를 막대로 보았어요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "divide"
+              },
+              "level": 3,
+              "backtrack": "g3s2u2.check-division"
+            }
+          ],
+          "concepts": [
+            "g3s2u2.check-division"
+          ],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-DIV-CHECK-NO-REMAINDER",
+              "args": {
+                "quotient": "13",
+                "divisor": "6",
+                "remainder": "5"
+              },
+              "path": "response.result.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "result",
+                "label": "검산한 수",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s2u2.A2.T4",
+          "prompt": "나누는 수가 7일 때 나머지가 될 수 있는 수를 모두 골라요.",
+          "engine": "E07",
+          "mode": "div",
+          "cpa": "A",
+          "config": {
+            "mode": "div",
+            "dividend": 7,
+            "divisor": 7
+          },
+          "goal": {
+            "kind": "any",
+            "of": [
+              {
+                "kind": "equals",
+                "path": "response.remainders.selected",
+                "value": [
+                  "1",
+                  "2",
+                  "3",
+                  "4",
+                  "5",
+                  "6"
+                ]
+              },
+              {
+                "kind": "equals",
+                "path": "response.remainders.selected",
+                "value": [
+                  "0",
+                  "1",
+                  "2",
+                  "3",
+                  "4",
+                  "5",
+                  "6"
+                ]
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "div"
+              },
+              "level": 1,
+              "say": "나머지는 나누는 수보다 작아야 해요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "div"
+              },
+              "level": 2,
+              "say": "남은 수로 7을 한 번 더 나눌 수 있는지 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "div"
+              },
+              "level": 3,
+              "backtrack": "g3s2u2.remainder"
+            }
+          ],
+          "concepts": [
+            "g3s2u2.remainder"
+          ],
+          "submit": "button",
+          "showEngine": false,
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "remainders",
+                "label": "나머지가 될 수 있는 수",
+                "multiple": true,
+                "options": [
+                  {
+                    "id": "0",
+                    "label": "0"
+                  },
+                  {
+                    "id": "1",
+                    "label": "1"
+                  },
+                  {
+                    "id": "2",
+                    "label": "2"
+                  },
+                  {
+                    "id": "3",
+                    "label": "3"
+                  },
+                  {
+                    "id": "4",
+                    "label": "4"
+                  },
+                  {
+                    "id": "5",
+                    "label": "5"
+                  },
+                  {
+                    "id": "6",
+                    "label": "6"
+                  },
+                  {
+                    "id": "7",
+                    "label": "7"
+                  },
+                  {
+                    "id": "8",
+                    "label": "8"
+                  },
+                  {
+                    "id": "9",
+                    "label": "9"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
