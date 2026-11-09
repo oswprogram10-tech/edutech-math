@@ -3,9 +3,11 @@
  * 다시 보여 준다. 전체 곱은 쓰지 않는다.
  */
 import type { OverlayProps } from '../../../core/engine-sdk';
+import { CanvasAlignedOverlay } from '../../../core/engine-sdk';
 import { boundariesFor } from '../area';
 import { areaPieceRects, areaRect, arrayRect, splitPieceRects } from '../layout';
 import type { ArrayAreaConfig, ArrayAreaState } from '../types';
+import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../types';
 
 function pieceIndex(args: unknown): number {
   if (args !== null && typeof args === 'object' && 'index' in args) {
@@ -40,7 +42,11 @@ export function KnownFactOverlay({ state, args }: OverlayProps<ArrayAreaConfig, 
   if (!piece) return null;
 
   return (
-    <svg viewBox="0 0 1000 600" width="100%" height="100%" aria-hidden="true">
+    <CanvasAlignedOverlay
+      canvasSelector={'svg[data-testid="array-canvas"]'}
+      logicalWidth={LOGICAL_WIDTH}
+      logicalHeight={LOGICAL_HEIGHT}
+    >
       <rect
         x={piece.x + 3}
         y={piece.y + 3}
@@ -64,6 +70,6 @@ export function KnownFactOverlay({ state, args }: OverlayProps<ArrayAreaConfig, 
           ? `${piece.cols}×${piece.rows}`
           : `${piece.rows}×${piece.cols}`}
       </text>
-    </svg>
+    </CanvasAlignedOverlay>
   );
 }

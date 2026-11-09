@@ -3,9 +3,11 @@
  * 덮이는지 여부·남는 칸 수는 쓰지 않는다.
  */
 import type { OverlayProps } from '../../../core/engine-sdk';
+import { CanvasAlignedOverlay } from '../../../core/engine-sdk';
 import { tilingRoomRects } from '../layout';
 import type { TileRoomRect } from '../layout';
 import type { ArrayAreaConfig, ArrayAreaState } from '../types';
+import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../types';
 
 function leftovers(
   rect: TileRoomRect,
@@ -61,7 +63,11 @@ export function LeftoverStripOverlay({ state }: OverlayProps<ArrayAreaConfig, Ar
   if (strips.length === 0) return null;
 
   return (
-    <svg viewBox="0 0 1000 600" width="100%" height="100%" aria-hidden="true">
+    <CanvasAlignedOverlay
+      canvasSelector={'svg[data-testid="array-canvas"]'}
+      logicalWidth={LOGICAL_WIDTH}
+      logicalHeight={LOGICAL_HEIGHT}
+    >
       <defs>
         <pattern
           id="e04-leftover-hint"
@@ -94,6 +100,6 @@ export function LeftoverStripOverlay({ state }: OverlayProps<ArrayAreaConfig, Ar
           />
         </rect>
       ))}
-    </svg>
+    </CanvasAlignedOverlay>
   );
 }

@@ -3,9 +3,11 @@
  * 곱은 쓰지 않고 학생이 만든 칸을 세어 보게 한다.
  */
 import type { OverlayProps } from '../../../core/engine-sdk';
+import { CanvasAlignedOverlay } from '../../../core/engine-sdk';
 import { decimalTenthsOf } from '../area';
 import { decimalBoardRect, fractionSquareRect } from '../layout';
 import type { ArrayAreaConfig, ArrayAreaState } from '../types';
+import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../types';
 
 export function OverlapCountOverlay({ state }: OverlayProps<ArrayAreaConfig, ArrayAreaState>) {
   if (state.mode === 'decimal-area' && state.decimal !== null) {
@@ -13,7 +15,11 @@ export function OverlapCountOverlay({ state }: OverlayProps<ArrayAreaConfig, Arr
     const aCells = decimalTenthsOf(state.decimal.a);
     const bCells = decimalTenthsOf(state.decimal.b);
     return (
-      <svg viewBox="0 0 1000 600" width="100%" height="100%" aria-hidden="true">
+      <CanvasAlignedOverlay
+        canvasSelector={'svg[data-testid="array-canvas"]'}
+        logicalWidth={LOGICAL_WIDTH}
+        logicalHeight={LOGICAL_HEIGHT}
+      >
         {Array.from({ length: aCells }, (_, col) =>
           Array.from({ length: bCells }, (_, row) => {
             const number = col * bCells + row + 1;
@@ -32,7 +38,7 @@ export function OverlapCountOverlay({ state }: OverlayProps<ArrayAreaConfig, Arr
             );
           }),
         )}
-      </svg>
+      </CanvasAlignedOverlay>
     );
   }
 
@@ -42,7 +48,11 @@ export function OverlapCountOverlay({ state }: OverlayProps<ArrayAreaConfig, Arr
     const cellWidth = square.width / fraction.a.n;
     const cellHeight = square.height / fraction.b.n;
     return (
-      <svg viewBox="0 0 1000 600" width="100%" height="100%" aria-hidden="true">
+      <CanvasAlignedOverlay
+        canvasSelector={'svg[data-testid="array-canvas"]'}
+        logicalWidth={LOGICAL_WIDTH}
+        logicalHeight={LOGICAL_HEIGHT}
+      >
         {Array.from({ length: fraction.a.k }, (_, col) =>
           Array.from({ length: fraction.b.k }, (_, row) => {
             const number = col * fraction.b.k + row + 1;
@@ -61,7 +71,7 @@ export function OverlapCountOverlay({ state }: OverlayProps<ArrayAreaConfig, Arr
             );
           }),
         )}
-      </svg>
+      </CanvasAlignedOverlay>
     );
   }
 

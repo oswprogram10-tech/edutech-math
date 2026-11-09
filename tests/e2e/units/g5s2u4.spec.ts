@@ -173,6 +173,37 @@ test('A1 1×1 정사각형 안의 소수 곱셈 — 대표 오답 뒤 고쳐서 
   await expectPassed(page, true);
 });
 
+test('A1 T1 힌트 ② overlap-count가 캔버스와 2px 안에서 겹친다', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromebook', '크롬북 실측만 확인한다');
+  await openActivity(page, 'g5s2u4.A1', '1×1 정사각형 안의 소수 곱셈');
+  await setFactor(page, '가로', 40);
+  await setFactor(page, '세로', 3);
+  await typeNumber(page, 'ans', ['1', '2', '.', '0']);
+  await submit(page);
+  await submit(page);
+  await expect(page.getByTestId('hint')).toHaveAttribute('data-hint-level', '2');
+
+  const canvas = slot(page, 'main').locator('svg[data-testid="array-canvas"]');
+  const overlay = slot(page, 'main').locator('[data-overlay="overlap-count"] svg');
+  await expect(overlay).toBeVisible();
+  await expect
+    .poll(
+      async () => {
+        const canvasBox = await canvas.boundingBox();
+        const overlayBox = await overlay.boundingBox();
+        if (!canvasBox || !overlayBox) return Number.POSITIVE_INFINITY;
+        return Math.max(
+          Math.abs(overlayBox.x - canvasBox.x),
+          Math.abs(overlayBox.y - canvasBox.y),
+          Math.abs(overlayBox.width - canvasBox.width),
+          Math.abs(overlayBox.height - canvasBox.height),
+        );
+      },
+      { message: 'overlap-count 오버레이가 본 캔버스와 어긋납니다.' },
+    )
+    .toBeLessThanOrEqual(2);
+});
+
 test('A2 소수점 기둥 시프트와 어림 검증 — 대표 오답 뒤 고쳐서 네 과제를 통과한다', async ({
   page,
 }) => {

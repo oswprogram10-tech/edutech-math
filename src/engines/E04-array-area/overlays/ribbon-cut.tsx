@@ -4,7 +4,9 @@
  */
 import { Rational } from '../../../core/math';
 import type { OverlayProps } from '../../../core/engine-sdk';
+import { CanvasAlignedOverlay } from '../../../core/engine-sdk';
 import type { ArrayAreaConfig, ArrayAreaState } from '../types';
+import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../types';
 
 function ratioOf(text: string): number {
   try {
@@ -33,7 +35,11 @@ export function RibbonCutOverlay({ state }: OverlayProps<ArrayAreaConfig, ArrayA
   const cut = x + width * ratio;
 
   return (
-    <svg viewBox="0 0 1000 600" width="100%" height="100%" aria-hidden="true">
+    <CanvasAlignedOverlay
+      canvasSelector={'svg[data-testid="array-canvas"]'}
+      logicalWidth={LOGICAL_WIDTH}
+      logicalHeight={LOGICAL_HEIGHT}
+    >
       <defs>
         <pattern
           id="e04-ribbon-cut-hatch"
@@ -61,6 +67,6 @@ export function RibbonCutOverlay({ state }: OverlayProps<ArrayAreaConfig, ArrayA
         points={`${cut - 9},${y - 10} ${cut + 9},${y - 10} ${cut},${y + 2}`}
         fill="#c2410c"
       />
-    </svg>
+    </CanvasAlignedOverlay>
   );
 }
