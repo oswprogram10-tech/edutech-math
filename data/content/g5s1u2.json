@@ -1,0 +1,1675 @@
+{
+  "unit": "g5s1u2",
+  "title": "약수와 배수",
+  "activities": [
+    {
+      "id": "g5s1u2.A1",
+      "title": "방바닥 타일 깔기",
+      "tasks": [
+        {
+          "id": "g5s1u2.A1.T1",
+          "prompt": "점 12개로 만들 수 있는 직사각형을 모두 찾아 기록해요.",
+          "engine": "E04",
+          "mode": "dot-array",
+          "cpa": "C",
+          "config": {
+            "mode": "dot-array",
+            "rows": 1,
+            "cols": 1,
+            "maxRows": 12,
+            "maxCols": 12,
+            "shelf": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "equals",
+                "path": "distinctArrangements",
+                "value": 3
+              },
+              {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "recorded.0.rows",
+                        "value": 1
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "recorded.0.cols",
+                        "value": 12
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "recorded.0.rows",
+                        "value": 12
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "recorded.0.cols",
+                        "value": 1
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "recorded.0.rows",
+                        "value": 2
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "recorded.0.cols",
+                        "value": 6
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "recorded.0.rows",
+                        "value": 6
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "recorded.0.cols",
+                        "value": 2
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "recorded.0.rows",
+                        "value": 3
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "recorded.0.cols",
+                        "value": 4
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "recorded.0.rows",
+                        "value": 4
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "recorded.0.cols",
+                        "value": 3
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "recorded.1.rows",
+                        "value": 1
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "recorded.1.cols",
+                        "value": 12
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "recorded.1.rows",
+                        "value": 12
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "recorded.1.cols",
+                        "value": 1
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "recorded.1.rows",
+                        "value": 2
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "recorded.1.cols",
+                        "value": 6
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "recorded.1.rows",
+                        "value": 6
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "recorded.1.cols",
+                        "value": 2
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "recorded.1.rows",
+                        "value": 3
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "recorded.1.cols",
+                        "value": 4
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "recorded.1.rows",
+                        "value": 4
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "recorded.1.cols",
+                        "value": 3
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "recorded.2.rows",
+                        "value": 1
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "recorded.2.cols",
+                        "value": 12
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "recorded.2.rows",
+                        "value": 12
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "recorded.2.cols",
+                        "value": 1
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "recorded.2.rows",
+                        "value": 2
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "recorded.2.cols",
+                        "value": 6
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "recorded.2.rows",
+                        "value": 6
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "recorded.2.cols",
+                        "value": 2
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "recorded.2.rows",
+                        "value": 3
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "recorded.2.cols",
+                        "value": 4
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "recorded.2.rows",
+                        "value": 4
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "recorded.2.cols",
+                        "value": 3
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "dot-array"
+              },
+              "level": 1,
+              "say": "12개를 직사각형으로 늘어놓는 방법을 모두 찾았나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "dot-array"
+              },
+              "level": 2,
+              "say": "12개가 아닌 배열을 기록했다면 되돌리기로 지워요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "dot-array"
+              },
+              "level": 3,
+              "backtrack": "g5s1u2.factor-as-array"
+            }
+          ],
+          "concepts": [
+            "g5s1u2.factor-as-array"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g5s1u2.A1.T2",
+          "prompt": "점 18개로 만들 수 있는 직사각형을 모두 찾아 기록해요.",
+          "engine": "E04",
+          "mode": "dot-array",
+          "cpa": "P",
+          "config": {
+            "mode": "dot-array",
+            "rows": 1,
+            "cols": 1,
+            "maxRows": 10,
+            "maxCols": 18,
+            "shelf": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "equals",
+                "path": "distinctArrangements",
+                "value": 3
+              },
+              {
+                "kind": "predicate",
+                "name": "factorsFoundAre",
+                "args": {
+                  "values": [
+                    1,
+                    2,
+                    3,
+                    6,
+                    9,
+                    18
+                  ]
+                }
+              },
+              {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "recorded.0.rows",
+                        "value": 1
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "recorded.0.cols",
+                        "value": 18
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "recorded.0.rows",
+                        "value": 18
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "recorded.0.cols",
+                        "value": 1
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "recorded.0.rows",
+                        "value": 2
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "recorded.0.cols",
+                        "value": 9
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "recorded.0.rows",
+                        "value": 9
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "recorded.0.cols",
+                        "value": 2
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "recorded.0.rows",
+                        "value": 3
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "recorded.0.cols",
+                        "value": 6
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "recorded.0.rows",
+                        "value": 6
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "recorded.0.cols",
+                        "value": 3
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "recorded.1.rows",
+                        "value": 1
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "recorded.1.cols",
+                        "value": 18
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "recorded.1.rows",
+                        "value": 18
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "recorded.1.cols",
+                        "value": 1
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "recorded.1.rows",
+                        "value": 2
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "recorded.1.cols",
+                        "value": 9
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "recorded.1.rows",
+                        "value": 9
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "recorded.1.cols",
+                        "value": 2
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "recorded.1.rows",
+                        "value": 3
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "recorded.1.cols",
+                        "value": 6
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "recorded.1.rows",
+                        "value": 6
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "recorded.1.cols",
+                        "value": 3
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "recorded.2.rows",
+                        "value": 1
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "recorded.2.cols",
+                        "value": 18
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "recorded.2.rows",
+                        "value": 18
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "recorded.2.cols",
+                        "value": 1
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "recorded.2.rows",
+                        "value": 2
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "recorded.2.cols",
+                        "value": 9
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "recorded.2.rows",
+                        "value": 9
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "recorded.2.cols",
+                        "value": 2
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "recorded.2.rows",
+                        "value": 3
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "recorded.2.cols",
+                        "value": 6
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "recorded.2.rows",
+                        "value": 6
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "recorded.2.cols",
+                        "value": 3
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "dot-array"
+              },
+              "level": 1,
+              "say": "3이 18의 약수라면 3과 짝이 되는 수는?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "dot-array"
+              },
+              "level": 2,
+              "say": "찾은 배열을 약수 선반에서 확인해 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "dot-array"
+              },
+              "level": 3,
+              "backtrack": "g5s1u2.factor-as-array"
+            }
+          ],
+          "concepts": [
+            "g5s1u2.factor-as-array"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g5s1u2.A1.T3",
+          "prompt": "12 × 18 방을 남김없이 덮는 타일 크기를 모두 찾아 기록해요.",
+          "engine": "E04",
+          "mode": "tiling",
+          "cpa": "P",
+          "config": {
+            "mode": "tiling",
+            "width": 12,
+            "height": 18
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "recordedSizesAre",
+            "args": {
+              "values": [
+                1,
+                2,
+                3,
+                6
+              ]
+            }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "tiling"
+              },
+              "level": 1,
+              "say": "타일을 깔았을 때 남는 칸이 없는 크기를 모두 찾았나요?"
+            },
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "mode",
+                    "value": "tiling"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "fitsAll",
+                    "value": false
+                  }
+                ]
+              },
+              "level": 2,
+              "show": {
+                "engine": "E04",
+                "overlay": "leftover-strip"
+              },
+              "say": "남는 칸을 빗금으로 보았어요. 잘못 기록한 크기는 되돌리기로 지워요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "tiling"
+              },
+              "level": 2,
+              "say": "잘못 기록한 크기는 되돌리기로 지워요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "tiling"
+              },
+              "level": 3,
+              "backtrack": "g5s1u2.common-factor-gcd"
+            }
+          ],
+          "concepts": [
+            "g5s1u2.common-factor-gcd"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g5s1u2.A1.T4",
+          "prompt": "12 × 18 방에 가장 큰 타일을 깔아요. 타일의 한 변을 써요.",
+          "engine": "E04",
+          "mode": "tiling",
+          "cpa": "P",
+          "config": {
+            "mode": "tiling",
+            "width": 12,
+            "height": 18
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "tileSizeIs",
+                "args": {
+                  "value": 6
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "fitsAll"
+              },
+              {
+                "kind": "equals",
+                "path": "response.largest.value",
+                "value": "6"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "misconception": "MC-GCD-LCM-SWAP"
+              },
+              "level": 1,
+              "say": "타일이 방보다 클 수 있을까?"
+            },
+            {
+              "when": {
+                "misconception": "MC-GCD-LCM-SWAP"
+              },
+              "level": 2,
+              "say": "타일 크기와 방의 크기를 견주어 보세요."
+            },
+            {
+              "when": {
+                "misconception": "MC-GCD-LCM-SWAP"
+              },
+              "level": 3,
+              "backtrack": "g5s1u2.common-factor-gcd"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "tiling"
+              },
+              "level": 1,
+              "say": "가로와 세로를 모두 채우는 타일 중 가장 큰 것은 무엇일까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "tiling"
+              },
+              "level": 2,
+              "say": "타일을 키우거나 줄이며 남는 칸을 살펴보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "tiling"
+              },
+              "level": 3,
+              "backtrack": "g5s1u2.common-factor-gcd"
+            }
+          ],
+          "concepts": [
+            "g5s1u2.common-factor-gcd"
+          ],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-GCD-LCM-SWAP",
+              "args": {
+                "a": "12",
+                "b": "18",
+                "asked": "gcd"
+              },
+              "path": "response.largest.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "largest",
+                "label": "가장 큰 타일의 한 변",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g5s1u2.A1.T5",
+          "prompt": "24의 약수를 모두 골라요.",
+          "engine": "E04",
+          "mode": "dot-array",
+          "cpa": "A",
+          "config": {
+            "mode": "dot-array",
+            "rows": 1,
+            "cols": 1,
+            "maxRows": 24,
+            "maxCols": 24
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.rem.selected",
+            "value": [
+              "n01",
+              "n02",
+              "n03",
+              "n04",
+              "n06",
+              "n08",
+              "n12",
+              "n24"
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "any",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.0",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.1",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.2",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.3",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.4",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.5",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.6",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.7",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.8",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.9",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.10",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.11",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.12",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.13",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.14",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.15",
+                        "value": "n36"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "any",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.0",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.1",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.2",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.3",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.4",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.5",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.6",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.7",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.8",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.9",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.10",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.11",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.12",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.13",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.14",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.15",
+                        "value": "n48"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "level": 1,
+              "say": "24를 똑같이 나눌 수 있는 수야, 24씩 뛰어 센 수야?"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "any",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.0",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.1",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.2",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.3",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.4",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.5",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.6",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.7",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.8",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.9",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.10",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.11",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.12",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.13",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.14",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.15",
+                        "value": "n36"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "any",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.0",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.1",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.2",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.3",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.4",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.5",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.6",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.7",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.8",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.9",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.10",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.11",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.12",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.13",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.14",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.15",
+                        "value": "n48"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "level": 2,
+              "say": "24를 나누는 수인지, 24씩 뛰어 센 수인지 다시 살펴보세요."
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "any",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.0",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.1",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.2",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.3",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.4",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.5",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.6",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.7",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.8",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.9",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.10",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.11",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.12",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.13",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.14",
+                        "value": "n36"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.15",
+                        "value": "n36"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "any",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.0",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.1",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.2",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.3",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.4",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.5",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.6",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.7",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.8",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.9",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.10",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.11",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.12",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.13",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.14",
+                        "value": "n48"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.rem.selected.15",
+                        "value": "n48"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g5s1u2.factor-multiple-relation"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "dot-array"
+              },
+              "level": 1,
+              "say": "3이 24의 약수라면 3과 짝이 되는 수는?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "dot-array"
+              },
+              "level": 2,
+              "say": "24를 똑같이 나눌 수 있는 수를 모두 골랐나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "dot-array"
+              },
+              "level": 3,
+              "backtrack": "g5s1u2.factor-as-array"
+            }
+          ],
+          "concepts": [
+            "g5s1u2.factor-as-array",
+            "g5s1u2.factor-multiple-relation"
+          ],
+          "submit": "button",
+          "showEngine": false,
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "rem",
+                "label": "24의 약수",
+                "multiple": true,
+                "options": [
+                  {
+                    "id": "n01",
+                    "label": "1"
+                  },
+                  {
+                    "id": "n02",
+                    "label": "2"
+                  },
+                  {
+                    "id": "n03",
+                    "label": "3"
+                  },
+                  {
+                    "id": "n04",
+                    "label": "4"
+                  },
+                  {
+                    "id": "n05",
+                    "label": "5"
+                  },
+                  {
+                    "id": "n06",
+                    "label": "6"
+                  },
+                  {
+                    "id": "n07",
+                    "label": "7"
+                  },
+                  {
+                    "id": "n08",
+                    "label": "8"
+                  },
+                  {
+                    "id": "n09",
+                    "label": "9"
+                  },
+                  {
+                    "id": "n10",
+                    "label": "10"
+                  },
+                  {
+                    "id": "n12",
+                    "label": "12"
+                  },
+                  {
+                    "id": "n16",
+                    "label": "16"
+                  },
+                  {
+                    "id": "n18",
+                    "label": "18"
+                  },
+                  {
+                    "id": "n24",
+                    "label": "24"
+                  },
+                  {
+                    "id": "n36",
+                    "label": "36"
+                  },
+                  {
+                    "id": "n48",
+                    "label": "48"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g5s1u2.A1.T6",
+          "prompt": "16과 24의 최대공약수를 써요.",
+          "engine": "E04",
+          "mode": "dot-array",
+          "cpa": "A",
+          "config": {
+            "mode": "dot-array",
+            "rows": 1,
+            "cols": 1,
+            "maxRows": 24,
+            "maxCols": 24
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.gcd.value",
+            "value": "8"
+          },
+          "hints": [
+            {
+              "when": {
+                "misconception": "MC-GCD-LCM-SWAP"
+              },
+              "level": 1,
+              "say": "구하는 것이 두 수의 공약수 중 가장 큰 수인지, 공배수 중 가장 작은 수인지 살펴보세요."
+            },
+            {
+              "when": {
+                "misconception": "MC-GCD-LCM-SWAP"
+              },
+              "level": 2,
+              "say": "두 수를 모두 나누는 수를 찾아보세요."
+            },
+            {
+              "when": {
+                "misconception": "MC-GCD-LCM-SWAP"
+              },
+              "level": 3,
+              "backtrack": "g5s1u2.common-factor-gcd"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "dot-array"
+              },
+              "level": 1,
+              "say": "16과 24를 모두 나누는 수 중 가장 큰 수는 무엇일까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "dot-array"
+              },
+              "level": 2,
+              "say": "두 수의 약수를 각각 찾아 견주어 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "dot-array"
+              },
+              "level": 3,
+              "backtrack": "g5s1u2.common-factor-gcd"
+            }
+          ],
+          "concepts": [
+            "g5s1u2.common-factor-gcd"
+          ],
+          "submit": "button",
+          "showEngine": false,
+          "diagnose": [
+            {
+              "code": "MC-GCD-LCM-SWAP",
+              "args": {
+                "a": "16",
+                "b": "24",
+                "asked": "gcd"
+              },
+              "path": "response.gcd.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "gcd",
+                "label": "최대공약수",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
