@@ -12,7 +12,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import type { CSSProperties } from 'react';
 import type { EngineViewProps } from '../../../core/engine-sdk';
-import { computeDivPlan, divAlarm, divComplete, estimateOver, estimatePartial } from '../grid-div';
+import { computeDivPlan, divAlarm, divComplete, estimateFit, estimatePartial } from '../grid-div';
 import type { DivPlan } from '../grid-div';
 import { divGridNumbers, firstQuotientColumn, gridDividendDigit } from '../grid-div-decimal';
 import { isForeignKeyTarget, isTextEntryTarget } from '../keyboard';
@@ -637,7 +637,7 @@ export function DivView({
             partial={estimatePartial(state, reading, ladderColumn)}
             maxMultiple={maxMultiple}
             selected={selected}
-            over={selected === null ? false : estimateOver(state, reading, ladderColumn, selected)}
+            fit={selected === null ? 'short' : estimateFit(state, reading, ladderColumn, selected)}
             onPreview={preview}
             onChoose={choose}
           />

@@ -8,6 +8,7 @@
  * 막대 높이는 화면 좌표 number로만 계산하고, 선을 넘는지 비교는 BigInt로 한다.
  * 정답 몫·나머지는 여기에 쓰지 않는다.
  */
+import type { EstimateFit } from '../grid-div';
 import { columnCalcStrings as S } from '../strings.ko';
 import ladderStyles from './EstimateLadder.module.css';
 
@@ -19,8 +20,8 @@ interface EstimateLadderProps {
   readonly maxMultiple: number;
   /** 이 열에서 마지막으로 고른 후보. 아직 고르지 않았으면 null. */
   readonly selected: number | null;
-  /** 고른 후보가 선을 넘는가. `selected`가 있을 때만 뜻이 있다. */
-  readonly over: boolean;
+  /** 고른 후보가 선을 넘는지·딱 맞는지·모자라는지. `selected`가 있을 때만 뜻이 있다. */
+  readonly fit: EstimateFit;
   readonly onPreview: (k: number) => void;
   readonly onChoose: (k: number) => void;
 }
@@ -41,7 +42,7 @@ export function EstimateLadder({
   partial,
   maxMultiple,
   selected,
-  over,
+  fit,
   onPreview,
   onChoose,
 }: EstimateLadderProps) {
@@ -65,7 +66,7 @@ export function EstimateLadder({
                 className={ladderStyles.candidate}
                 style={{ minWidth: targetSize, minHeight: targetSize }}
                 data-candidate={selected === k ? k : undefined}
-                data-over={selected === k && over ? true : undefined}
+                data-over={selected === k && fit === 'over' ? true : undefined}
                 aria-pressed={k === selected}
                 aria-label={S.estimateCandidate(k)}
                 onClick={() => onPreview(k)}
@@ -85,7 +86,7 @@ export function EstimateLadder({
                 <span className={ladderStyles.lineLabel}>{S.estimateLine}</span>
               </div>
               <div
-                className={over ? ladderStyles.blocksOver : ladderStyles.blocks}
+                className={fit === 'over' ? ladderStyles.blocksOver : ladderStyles.blocks}
                 style={{ height: `${stackHeight}px` }}
               >
                 {Array.from({ length: selected }, (_, index) => (
@@ -132,7 +133,8 @@ export function EstimateLadder({
       {selected === null ? null : (
         <>
           <p className={ladderStyles.status} aria-live="polite">
-            {S.estimateCandidate(selected)} · {over ? S.estimateOver : S.estimateShort}
+            {S.estimateCandidate(selected)} ·{' '}
+            {fit === 'over' ? S.estimateOver : fit === 'exact' ? S.estimateExact : S.estimateShort}
           </p>
           <button
             type="button"

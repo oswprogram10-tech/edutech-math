@@ -146,6 +146,7 @@ export const columnCalcStrings = {
   estimateChoose: (k: number) => `${k}을 몫으로 정하기`,
   estimateLine: '이 높이까지',
   estimateOver: '선을 넘었어요',
+  estimateExact: '선에 딱 맞아요',
   estimateShort: '선보다 모자라요',
   estimateTriesLabel: '고른 몫 후보',
   overlayQuotientGap: '빈 몫 칸 살펴보기',

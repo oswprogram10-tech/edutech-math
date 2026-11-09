@@ -9,6 +9,7 @@ import {
   divComplete,
   divRemainder,
   divStepReadings,
+  estimateFit,
   estimateOver,
   estimatePartial,
   estimateRevised,
@@ -108,6 +109,20 @@ describe('grid-div 계산', () => {
     expect(estimatePartial(state, plan.reading, 0).toString()).toBe('95');
     expect(estimateOver(state, plan.reading, 0, 5)).toBe(true);
     expect(estimateOver(state, plan.reading, 0, 4)).toBe(false);
+  });
+
+  it('168÷24 배수 사다리에서 7은 딱 맞고 8은 넘고 6은 모자란다', () => {
+    const state = createInitialState({
+      mode: 'div',
+      dividend: 168,
+      divisor: 24,
+      estimateBar: { show: 'C-P', maxMultiple: 9 },
+    });
+    const plan = computeDivPlan(state);
+
+    expect(estimateFit(state, plan.reading, 0, 7)).toBe('exact');
+    expect(estimateFit(state, plan.reading, 0, 8)).toBe('over');
+    expect(estimateFit(state, plan.reading, 0, 6)).toBe('short');
   });
 
   it('739÷36은 몫 20, 나머지 19', () => {
