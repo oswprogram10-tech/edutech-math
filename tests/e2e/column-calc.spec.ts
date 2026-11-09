@@ -430,3 +430,37 @@ test('소수 나눗셈 8.16÷4: 나누어지는 수 소수점이 보이고 엔�
     page.locator('[data-testid="column-grid"] [data-row="quotient"][data-column="0"]'),
   ).toHaveText('3');
 });
+
+test('debugSample이 없는 나눗셈·곱셈에는 틀린 칸 표시 버튼이 없고 F 키도 무시한다', async ({
+  page,
+}) => {
+  await openColumnCalc(page, { mode: 'div', dividend: 95, divisor: 23 });
+  await selectMode(page, 'div');
+  await expect(page.getByRole('button', { name: /틀린 칸을 골라/ })).toHaveCount(0);
+  await page.locator('[data-row="quotient"][data-column="0"]').click();
+  await page.keyboard.press('f');
+  await expect(page.locator('[data-flagged="true"]')).toHaveCount(0);
+
+  await openColumnCalc(page, { mode: 'mul', a: 347, b: 26 });
+  await selectMode(page, 'mul');
+  await expect(page.getByRole('button', { name: /틀린 칸을 골라/ })).toHaveCount(0);
+  await page.locator('[data-row="partial"][data-index="0"][data-column="0"]').click();
+  await page.keyboard.press('F');
+  await expect(page.locator('[data-flagged="true"]')).toHaveCount(0);
+});
+
+test('debugSample이 있는 곱셈에는 틀린 칸 표시 버튼이 있고 F 키로 칸을 표시한다', async ({
+  page,
+}) => {
+  await openColumnCalc(page, {
+    mode: 'mul',
+    a: 347,
+    b: 26,
+    debugSample: { rows: ['2082', '694'], sum: '2776' },
+  });
+  await selectMode(page, 'mul');
+  await expect(page.getByRole('button', { name: /틀린 칸을 골라/ })).toBeVisible();
+  await page.locator('[data-row="partial"][data-index="1"][data-column="0"]').click();
+  await page.keyboard.press('f');
+  await expect(page.locator('[data-flagged="true"]')).toHaveCount(1);
+});

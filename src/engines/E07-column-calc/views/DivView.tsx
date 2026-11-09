@@ -293,7 +293,7 @@ export function DivView({
       } else if (event.key === 'ArrowDown') {
         event.preventDefault();
         moveRow(1);
-      } else if (event.key === 'f' || event.key === 'F') {
+      } else if ((event.key === 'f' || event.key === 'F') && state.hasDebugSample) {
         event.preventDefault();
         toggleFlag();
       }
@@ -686,27 +686,31 @@ export function DivView({
         onClear={() => enterAt(keypadTarget, null)}
       />
 
-      <div className={divStyles.footer}>
-        <button
-          type="button"
-          className={divStyles.flagButton}
-          aria-pressed={isFlagged(keypadTarget)}
-          disabled={readOnly}
-          onClick={toggleFlag}
-        >
-          {isFlagged(keypadTarget) ? S.unflagCell(cellLabel(keypadTarget)) : S.flagHint}
-        </button>
-        {state.rewindEnabled && complete ? (
-          <button
-            type="button"
-            className={divStyles.rewindButton}
-            disabled={readOnly || state.rewound}
-            onClick={() => dispatch({ type: 'rewind' })}
-          >
-            {state.rewound ? S.rewoundText : S.rewind}
-          </button>
-        ) : null}
-      </div>
+      {state.hasDebugSample || (state.rewindEnabled && complete) ? (
+        <div className={divStyles.footer}>
+          {state.hasDebugSample ? (
+            <button
+              type="button"
+              className={divStyles.flagButton}
+              aria-pressed={isFlagged(keypadTarget)}
+              disabled={readOnly}
+              onClick={toggleFlag}
+            >
+              {isFlagged(keypadTarget) ? S.unflagCell(cellLabel(keypadTarget)) : S.flagHint}
+            </button>
+          ) : null}
+          {state.rewindEnabled && complete ? (
+            <button
+              type="button"
+              className={divStyles.rewindButton}
+              disabled={readOnly || state.rewound}
+              onClick={() => dispatch({ type: 'rewind' })}
+            >
+              {state.rewound ? S.rewoundText : S.rewind}
+            </button>
+          ) : null}
+        </div>
+      ) : null}
 
       <p className={styles.hint} aria-live="polite">
         {keypadLabel} · {S.keyboardDivHint}
