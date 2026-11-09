@@ -581,9 +581,10 @@ function TaskStage({
             data-hint-level={hint.level}
             aria-label={runnerStrings.hint}
           >
-            {hint.text ? (
+            {hint.text || show ? (
               <p className={styles.hintText} data-testid="hint-text">
-                {hint.text}
+                {/* 그림만 있는 ② 힌트는 빈 칸 대신 기본 안내 문구를 보여 준다. */}
+                {hint.text || runnerStrings.hintLookAtOverlay}
               </p>
             ) : null}
             {show && !overlayVisible && overlayTarget ? (

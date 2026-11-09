@@ -17,6 +17,7 @@ export const runnerStrings = {
   controls: '과제 조작 도구',
   hint: '힌트',
   hintRead: '힌트 읽어 주기',
+  hintLookAtOverlay: '교구에 표시한 그림을 살펴보세요.',
   boosterTitle: '잠깐 연습',
   slotLabel: (slot: string) => {
     if (slot === 'left') return '왼쪽 판';

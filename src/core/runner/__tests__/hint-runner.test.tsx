@@ -142,6 +142,10 @@ describe('힌트 사다리', () => {
     expect(second.dataset.hintLevel).toBe('2');
     const overlay = within(second).getByTestId('hint-overlay');
     expect(overlay.querySelector('[data-overlay="lasso-guide"]')).not.toBeNull();
+    // 문구 없이 그림만 있는 ② 힌트도 빈 칸이 아니라 기본 안내 문구를 보여 준다.
+    expect(within(second).getByTestId('hint-text').textContent).toBe(
+      '교구에 표시한 그림을 살펴보세요.',
+    );
     expectNoAnswerLeak(task);
 
     const third = submit();
