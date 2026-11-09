@@ -61,6 +61,20 @@ const W2_UNITS = new Set([
   'g6s2u1',
   'g6s2u2',
 ]);
+const W3_UNITS = new Set([
+  'g1s2u3',
+  'g2s1u2',
+  'g3s1u2',
+  'g3s2u3',
+  'g4s1u2',
+  'g4s1u4',
+  'g4s2u2',
+  'g4s2u4',
+  'g4s2u6',
+  'g5s1u6',
+  'g5s2u3',
+  'g6s2u5',
+]);
 
 /** docs/05 §5 표를 코드 → 단원 목록으로 읽는다. */
 function documentedRows(): Map<string, string[]> {
@@ -88,7 +102,7 @@ function documentedCodes(units: ReadonlySet<string>): Set<string> {
   return codes;
 }
 
-describe('W1·W2 오개념 레지스트리', () => {
+describe('W1·W2·W3 오개념 레지스트리', () => {
   const units = new Set(dataAt<UnitsFile>('/units.json').units.map((unit) => unit.id));
   const concepts = new Set(
     dataAt<ConceptsFile>('/concepts.json').concepts.map((concept) => concept.id),
@@ -103,11 +117,12 @@ describe('W1·W2 오개념 레지스트리', () => {
     expect(registryW1.sort()).toEqual([...documented].sort());
   });
 
-  it('docs/05 §5의 W1·W2 코드를 모두 담는다', () => {
-    const union = new Set([...W1_UNITS, ...W2_UNITS]);
+  it('docs/05 §5의 W1·W2·W3 코드를 모두 담는다', () => {
+    const union = new Set([...W1_UNITS, ...W2_UNITS, ...W3_UNITS]);
     const documented = documentedCodes(union);
     expect(W2_UNITS.size).toBe(26);
-    expect(documented.size).toBeGreaterThan(80);
+    expect(W3_UNITS.size).toBe(12);
+    expect(documented.size).toBe(125);
     expect([...MISCONCEPTIONS.map((item) => item.code)].sort()).toEqual([...documented].sort());
   });
 
