@@ -56,6 +56,15 @@ async function focusCanvas(canvas: Locator): Promise<void> {
   await expect(canvas).toBeFocused();
 }
 
+/** 검수용 스크린샷. 뷰포트마다 다른 파일로 남긴다(test-results/는 git 제외). */
+async function capture(page: Page, name: string): Promise<void> {
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.screenshot({
+    path: `test-results/${name}-${test.info().project.name}.png`,
+    fullPage: true,
+  });
+}
+
 test('키보드만으로 못판에서 삼각형을 닫으면 꼭짓점 3개다', async ({ page }) => {
   const { canvas } = await openEngine(page);
 
@@ -83,6 +92,7 @@ test('키보드만으로 못판에서 삼각형을 닫으면 꼭짓점 3개다',
   expect(shape?.sides).toBe(3);
   // 기본 설정에서는 도형 이름을 쓰지 않는다.
   await expect(canvas).not.toContainText('삼각형');
+  await capture(page, 'T100-geoboard');
 });
 
 test('construct에서 반직선 하나로 별 두 개를 맞힌다', async ({ page }) => {
@@ -135,6 +145,7 @@ test('기울어진 직각에 직각삼각자를 대면 꼭 맞는다고 표시�
   expect(observation.rightAngles).toEqual(['tilt']);
   // 삼각자는 학생이 댄 각에만 결과를 보인다.
   await expect(canvas.locator('[data-square="tilt"]')).toHaveCount(1);
+  await capture(page, 'T100-construct');
 });
 
 test('힌트 겹쳐 보기의 straight-run svg가 본 캔버스와 2px 안에 겹친다', async ({ page }) => {
