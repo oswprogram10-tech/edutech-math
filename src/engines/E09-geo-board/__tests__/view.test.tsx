@@ -84,4 +84,32 @@ describe('E09 given은 학생 객체가 아니다', () => {
     expect(container.querySelectorAll('[data-hit="true"]')).toHaveLength(0);
     expect(container.querySelectorAll('[data-hit="false"]')).toHaveLength(2);
   });
+
+  it('showExtension이면 given 반직선·직선에도 연장선을 그리고 선분에는 그리지 않는다', () => {
+    const config: GeoConfig = {
+      mode: 'construct',
+      grid: 5,
+      showExtension: true,
+      given: [
+        { id: 'g1', kind: 'ray', from: [0, 0], to: [1, 0] },
+        { id: 'g2', kind: 'line', from: [0, 2], to: [1, 2] },
+        { id: 'g3', kind: 'segment', from: [0, 4], to: [1, 4] },
+      ],
+    };
+    const state = createInitialState(config);
+    const { container } = render(
+      <GeoView
+        config={config}
+        state={state}
+        dispatch={() => {}}
+        cpa="C"
+        mode={state.mode}
+        targetSize={48}
+      />,
+    );
+    const extended = [...container.querySelectorAll('[data-extension]')].map((node) =>
+      node.getAttribute('data-extension'),
+    );
+    expect(extended.sort()).toEqual(['g1', 'g2']);
+  });
 });

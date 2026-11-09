@@ -400,8 +400,9 @@ export function ConstructView({
             );
           })}
 
+          {/* 미리 그린 반직선·직선도 끝이 없는 쪽을 같이 보여 줘야 분류할 수 있다. */}
           {showExtension
-            ? state.objects.map((object) => {
+            ? [...given, ...state.objects].map((object) => {
                 if (object.kind === 'segment') return null;
                 const from = pegPoint(rect, object.from);
                 const to = pegPoint(rect, object.to);
@@ -409,6 +410,7 @@ export function ConstructView({
                 return (
                   <line
                     key={`ext-${object.id}`}
+                    data-extension={object.id}
                     className={styles.laser}
                     x1={extension.start.x}
                     y1={extension.start.y}
