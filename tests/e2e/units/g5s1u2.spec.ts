@@ -169,6 +169,19 @@ test('A1 방바닥 타일 깔기 — 대표 오답 뒤 고쳐서 여섯 과제�
   await addCols(first, 11);
   await recordArray(first);
   await expect(first.getByTestId('recorded-badge')).toContainText('1가지 배열');
+  const shelf = first.getByTestId('factor-shelf');
+  await expect(shelf).toBeVisible();
+  const shelfFont = await shelf
+    .locator('li')
+    .first()
+    .evaluate((node) => Number.parseFloat(getComputedStyle(node).fontSize));
+  expect(shelfFont).toBeGreaterThanOrEqual(16);
+  expect(
+    await shelf.evaluate((node) => {
+      const box = node.getBoundingClientRect();
+      return box.top >= 0 && box.bottom <= window.innerHeight;
+    }),
+  ).toBe(true);
   await submit(page);
   await expectFailedWithHint(page, '12개를 직사각형으로 늘어놓는 방법을 모두 찾았나요?');
   await addRows(first, 1);
