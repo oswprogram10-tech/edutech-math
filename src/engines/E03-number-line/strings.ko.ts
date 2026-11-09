@@ -87,6 +87,7 @@ export const numberLineStrings = {
     pastBand: '앞에서 보던 구간',
     offRange: '오른쪽 밖',
     landmark: (label: string) => `이정표 ${label}`,
+    magnifyTitle: '확대해서 보기',
   },
 
   double: {

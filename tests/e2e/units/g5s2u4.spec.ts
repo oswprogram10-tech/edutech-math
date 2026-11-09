@@ -173,8 +173,7 @@ test('A1 1×1 정사각형 안의 소수 곱셈 — 대표 오답 뒤 고쳐서 
   await expectPassed(page, true);
 });
 
-test('A1 T1 힌트 ② overlap-count가 캔버스와 2px 안에서 겹친다', async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name !== 'chromebook', '크롬북 실측만 확인한다');
+test('A1 T1 힌트 ② overlap-count가 캔버스와 2px 안에서 겹친다', async ({ page }) => {
   await openActivity(page, 'g5s2u4.A1', '1×1 정사각형 안의 소수 곱셈');
   await setFactor(page, '가로', 40);
   await setFactor(page, '세로', 3);
@@ -202,6 +201,7 @@ test('A1 T1 힌트 ② overlap-count가 캔버스와 2px 안에서 겹친다', a
       { message: 'overlap-count 오버레이가 본 캔버스와 어긋납니다.' },
     )
     .toBeLessThanOrEqual(2);
+  await screenshot(page, 'g5s2u4-a1-overlap-hint.png');
 });
 
 test('A2 소수점 기둥 시프트와 어림 검증 — 대표 오답 뒤 고쳐서 네 과제를 통과한다', async ({

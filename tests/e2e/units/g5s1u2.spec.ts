@@ -182,6 +182,7 @@ test('A1 방바닥 타일 깔기 — 대표 오답 뒤 고쳐서 여섯 과제�
       return box.top >= 0 && box.bottom <= window.innerHeight;
     }),
   ).toBe(true);
+  await screenshot(page, 'g5s1u2-a1-shelf.png');
   await submit(page);
   await expectFailedWithHint(page, '12개를 직사각형으로 늘어놓는 방법을 모두 찾았나요?');
   await addRows(first, 1);

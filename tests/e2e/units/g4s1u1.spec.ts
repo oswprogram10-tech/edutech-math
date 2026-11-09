@@ -175,6 +175,12 @@ test('A2 스케일 줌 수직선 — 대표 오답 뒤 고쳐서 네 과제를 �
   for (let index = 0; index < 5; index += 1) {
     await first.getByRole('button', { name: '한 번 뛰기', exact: true }).click();
   }
+  const magnifier = first.getByTestId('log-hop-magnifier');
+  await expect(magnifier).toBeVisible();
+  await expect(magnifier.getByTestId('log-hop-magnified-label')).toHaveCount(5);
+  const labelBox = await magnifier.getByTestId('log-hop-magnified-label').first().boundingBox();
+  expect(labelBox?.height ?? 0).toBeGreaterThanOrEqual(10);
+  await screenshot(page, 'g4s1u1-a2-magnified.png');
   await field(page, 'place').getByRole('button', { name: '십만 자리', exact: true }).click();
   await submit(page);
   await expectPassed(page);
