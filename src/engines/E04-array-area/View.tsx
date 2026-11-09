@@ -730,49 +730,6 @@ function SquareArrayView({
             </text>
           </g>
         ) : null}
-
-        {state.settings.shelf ? (
-          <g data-testid="factor-shelf">
-            <line x1={790} y1={112} x2={960} y2={112} stroke={MUTED} strokeWidth={2} />
-            <text x={790} y={100} fontSize={16} fontWeight={700} fill={INK}>
-              {S.shelf}
-            </text>
-            {state.recorded.length === 0 ? (
-              <text x={790} y={142} fontSize={13} fill={MUTED}>
-                {S.shelfEmpty}
-              </text>
-            ) : null}
-            {state.recorded.map((item, index) => {
-              const top = 132 + index * 64;
-              const cell = Math.max(
-                2,
-                Math.min(
-                  5,
-                  Math.floor(28 / Math.max(1, item.rows)),
-                  Math.floor(36 / Math.max(1, item.cols)),
-                ),
-              );
-              return (
-                <g key={`shelf-${item.rows}-${item.cols}`} pointerEvents="none">
-                  {Array.from({ length: item.rows }, (_, row) =>
-                    Array.from({ length: item.cols }, (_, col) => (
-                      <circle
-                        key={`shelf-dot-${row}-${col}`}
-                        cx={792 + (col + 0.5) * cell}
-                        cy={top + 6 + (row + 0.5) * cell}
-                        r={Math.max(1.2, cell * 0.3)}
-                        fill={BLUE}
-                      />
-                    )),
-                  )}
-                  <text x={850} y={top + 20} fontSize={14} fontWeight={700} fill={INK}>
-                    {S.shelfRecorded(item.rows, item.cols)}
-                  </text>
-                </g>
-              );
-            })}
-          </g>
-        ) : null}
       </>
     );
   };
@@ -1464,93 +1421,112 @@ function SquareArrayView({
         </span>
       </div>
 
-      <svg
-        ref={svgRef}
-        className={styles.canvas}
-        viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
-        role="group"
-        aria-label={S.canvasLabel}
-        data-testid="array-canvas"
-        data-cpa={cpa}
-        onPointerMove={(event) => {
-          resizeDrag.handlers.onPointerMove(event);
-          lineDrag.handlers.onPointerMove(event);
-          if (resizeTarget.current) {
-            const base = arrayRect(
-              state.rows,
-              state.cols,
-              state.settings.maxRows,
-              state.settings.maxCols,
-            );
-            setDraft({
-              rows: rowsFromPoint(base, toPoint(event), state.settings.maxRows),
-              cols: colsFromPoint(base, toPoint(event), state.settings.maxCols),
-            });
-          }
-          const target = lineTarget;
-          if (target) {
-            const point = toPoint(event);
-            if (target.kind === 'dot-line') {
-              const count = target.orientation === 'rows' ? rows : cols;
-              const at = splitAtFromPoint(rect, point, target.orientation, count);
-              if (at !== null) setLinePreview({ orientation: target.orientation, at });
-            } else if (target.kind === 'split') {
-              const count = target.orientation === 'rows' ? state.rows : state.cols;
-              const at = splitAtFromPoint(rect, point, target.orientation, count);
-              if (at !== null) setLinePreview({ orientation: target.orientation, at });
-            } else {
-              const count = target.side === 'a' ? state.settings.a : state.settings.b;
-              const at = areaSplitAtFromPoint(
-                areaRect(state.settings.a, state.settings.b),
-                point,
-                target.side,
-                count,
+      <div className={styles.canvasArea}>
+        <svg
+          ref={svgRef}
+          className={styles.canvas}
+          viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
+          role="group"
+          aria-label={S.canvasLabel}
+          data-testid="array-canvas"
+          data-cpa={cpa}
+          onPointerMove={(event) => {
+            resizeDrag.handlers.onPointerMove(event);
+            lineDrag.handlers.onPointerMove(event);
+            if (resizeTarget.current) {
+              const base = arrayRect(
+                state.rows,
+                state.cols,
+                state.settings.maxRows,
+                state.settings.maxCols,
               );
-              if (at !== null) setAreaPreview({ side: target.side, at });
+              setDraft({
+                rows: rowsFromPoint(base, toPoint(event), state.settings.maxRows),
+                cols: colsFromPoint(base, toPoint(event), state.settings.maxCols),
+              });
             }
-          }
-        }}
-        onPointerUp={(event) => {
-          resizeDrag.handlers.onPointerUp(event);
-          lineDrag.handlers.onPointerUp(event);
-        }}
-        onPointerCancel={(event) => {
-          resizeDrag.handlers.onPointerCancel(event);
-          lineDrag.handlers.onPointerCancel(event);
-          resetDraft();
-          setDraft(null);
-        }}
-      >
-        <rect width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} fill={PAPER} />
-        <PartialPatterns />
-        {mode === 'dot-array' ? renderDotArray() : null}
-        {mode === 'split' ? renderSplit() : null}
-        {mode === 'area-model' ? renderAreaModel() : null}
-        {mode === 'times-table' ? renderTable() : null}
+            const target = lineTarget;
+            if (target) {
+              const point = toPoint(event);
+              if (target.kind === 'dot-line') {
+                const count = target.orientation === 'rows' ? rows : cols;
+                const at = splitAtFromPoint(rect, point, target.orientation, count);
+                if (at !== null) setLinePreview({ orientation: target.orientation, at });
+              } else if (target.kind === 'split') {
+                const count = target.orientation === 'rows' ? state.rows : state.cols;
+                const at = splitAtFromPoint(rect, point, target.orientation, count);
+                if (at !== null) setLinePreview({ orientation: target.orientation, at });
+              } else {
+                const count = target.side === 'a' ? state.settings.a : state.settings.b;
+                const at = areaSplitAtFromPoint(
+                  areaRect(state.settings.a, state.settings.b),
+                  point,
+                  target.side,
+                  count,
+                );
+                if (at !== null) setAreaPreview({ side: target.side, at });
+              }
+            }
+          }}
+          onPointerUp={(event) => {
+            resizeDrag.handlers.onPointerUp(event);
+            lineDrag.handlers.onPointerUp(event);
+          }}
+          onPointerCancel={(event) => {
+            resizeDrag.handlers.onPointerCancel(event);
+            lineDrag.handlers.onPointerCancel(event);
+            resetDraft();
+            setDraft(null);
+          }}
+        >
+          <rect width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} fill={PAPER} />
+          <PartialPatterns />
+          {mode === 'dot-array' ? renderDotArray() : null}
+          {mode === 'split' ? renderSplit() : null}
+          {mode === 'area-model' ? renderAreaModel() : null}
+          {mode === 'times-table' ? renderTable() : null}
 
-        {shakeKey ? (
-          <g pointerEvents="none" data-testid="shake-badge">
-            <rect
-              x={table.x}
-              y={table.y - 46}
-              width={220}
-              height={34}
-              rx={10}
-              fill="#fff3e0"
-              stroke={SELECT}
-            />
-            <text
-              x={table.x + 110}
-              y={table.y - 23}
-              textAnchor="middle"
-              fontSize={15}
-              fill="#8a4b00"
-            >
-              {S.splitHint}
-            </text>
-          </g>
+          {shakeKey ? (
+            <g pointerEvents="none" data-testid="shake-badge">
+              <rect
+                x={table.x}
+                y={table.y - 46}
+                width={220}
+                height={34}
+                rx={10}
+                fill="#fff3e0"
+                stroke={SELECT}
+              />
+              <text
+                x={table.x + 110}
+                y={table.y - 23}
+                textAnchor="middle"
+                fontSize={15}
+                fill="#8a4b00"
+              >
+                {S.splitHint}
+              </text>
+            </g>
+          ) : null}
+        </svg>
+
+        {state.settings.shelf ? (
+          <section className={styles.factorShelf} data-testid="factor-shelf" aria-label={S.shelf}>
+            <h3 className={styles.factorShelfTitle}>{S.shelf}</h3>
+            {state.recorded.length === 0 ? (
+              <p className={styles.factorShelfEmpty}>{S.shelfEmpty}</p>
+            ) : (
+              <ul className={styles.factorShelfList}>
+                {state.recorded.map((item) => (
+                  <li key={`shelf-${item.rows}-${item.cols}`}>
+                    {S.shelfRecorded(item.rows, item.cols)}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
         ) : null}
-      </svg>
+      </div>
 
       {entry ? (
         <div className={styles.keypad} role="group" aria-label={S.tableKeypad}>

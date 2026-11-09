@@ -9,6 +9,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
+  workers: process.env.CI ? 2 : 6,
   reporter: process.env.CI ? 'github' : 'list',
   use: {
     baseURL: `http://localhost:${DEV_PORT}`,
@@ -17,6 +18,7 @@ export default defineConfig({
   projects: [
     {
       name: 'ipad',
+      timeout: 60_000,
       use: {
         ...devices['iPad (gen 7)'],
         browserName: 'webkit',

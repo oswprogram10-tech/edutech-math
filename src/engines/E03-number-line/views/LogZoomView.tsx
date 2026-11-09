@@ -15,7 +15,7 @@ import {
 } from '../../../core/engine-sdk';
 import type { EngineViewProps, Point } from '../../../core/engine-sdk';
 import { Rational } from '../../../core/math/rational';
-import { bigTickOf, logTickLabel } from '../log';
+import { bigTickOf, logTickLabel, magnifierRange } from '../log';
 import { numberLineStrings } from '../strings.ko';
 import { parseValue, snapFromPosition, xOfValue } from '../ticks';
 import type { TickRow } from '../ticks';
@@ -25,6 +25,7 @@ import styles from '../View.module.css';
 
 const LOGICAL = { width: LOGICAL_WIDTH, height: LOGICAL_HEIGHT };
 const LINE_Y = 380;
+const MAG_Y = 535;
 const TAP_SLOP = 6;
 const MIN_STEP_LABEL_WIDTH = 28;
 
@@ -77,6 +78,8 @@ export function LogZoomView({
   }, [readOnly]);
 
   const xOf = (value: Rational): number => xOfValue(value, Rational.of(0), max);
+  /** 확대 띠 끝 값이 현재 단계 최댓값을 넘으면 본 수직선에서는 최댓값에서 멈춘다. */
+  const mainXOf = (value: Rational): number => xOf(value.compareTo(max) > 0 ? max : value);
 
   const zoomTo = (next: number) => {
     if (readOnly) return;
@@ -254,6 +257,24 @@ export function LogZoomView({
         .map((value) => parseValue(value))
         .filter((value): value is Rational => value !== null)
     : [];
+  const skipStep = parseValue(skip?.rows[0]?.step ?? undefined);
+  const hopCount = skip?.rows[0]?.hops.length ?? 0;
+  const magnifier =
+    skipStart && skipStep
+      ? magnifierRange(
+          skipStart,
+          skipStep,
+          hopCount,
+          Math.abs(xOf(skipStart.add(skipStep)) - xOf(skipStart)),
+          MIN_STEP_LABEL_WIDTH,
+        )
+      : null;
+  const magnifierSpan = magnifier ? magnifier.to.sub(magnifier.from) : null;
+  const bandX = (value: Rational): number => {
+    if (!magnifier || !magnifierSpan || magnifierSpan.isZero()) return LINE_LEFT;
+    const ratio = value.sub(magnifier.from).div(magnifierSpan);
+    return LINE_LEFT + (LINE_RIGHT - LINE_LEFT) * (Number(ratio.n) / Number(ratio.d));
+  };
   const offRangePoints = state.points
     .map((point) => ({ source: point.id, value: point.value, parsed: parseValue(point.value) }))
     .filter(
@@ -443,6 +464,18 @@ export function LogZoomView({
           pointerEvents="none"
         />
 
+        {magnifier ? (
+          <line
+            x1={mainXOf(magnifier.from)}
+            y1={LINE_Y}
+            x2={mainXOf(magnifier.to)}
+            y2={LINE_Y}
+            className={styles.magnifierSpan}
+            pointerEvents="none"
+            data-testid="log-hop-magnifier-span"
+          />
+        ) : null}
+
         {minorTicks.map((tick) => {
           const major = tick.index % 10 === 0;
           return (
@@ -601,6 +634,81 @@ export function LogZoomView({
                 {entry.source}
               </text>
             ))}
+          </g>
+        ) : null}
+
+        {magnifier && skipStep ? (
+          <g pointerEvents="none" data-testid="log-hop-magnifier">
+            <line
+              x1={mainXOf(magnifier.from)}
+              y1={LINE_Y + 50}
+              x2={LINE_LEFT}
+              y2={MAG_Y - 10}
+              stroke="#7a8497"
+              strokeWidth={2}
+              strokeDasharray="6 6"
+            />
+            <line
+              x1={mainXOf(magnifier.to)}
+              y1={LINE_Y + 50}
+              x2={LINE_RIGHT}
+              y2={MAG_Y - 10}
+              stroke="#7a8497"
+              strokeWidth={2}
+              strokeDasharray="6 6"
+            />
+            <line x1={LINE_LEFT} y1={MAG_Y} x2={LINE_RIGHT} y2={MAG_Y} className={styles.tick} />
+            {Array.from({ length: Math.max(10, hopCount) + 1 }, (_, index) => {
+              const value = magnifier.from.add(skipStep.mul(Rational.of(index)));
+              const x = bandX(value);
+              return (
+                <line
+                  key={`mag-tick-${index}`}
+                  x1={x}
+                  y1={MAG_Y - (index === 0 ? 10 : 6)}
+                  x2={x}
+                  y2={MAG_Y + (index === 0 ? 10 : 6)}
+                  className={styles.tick}
+                />
+              );
+            })}
+            <text x={LINE_LEFT} y={MAG_Y + 32} className={styles.majorTickLabel} textAnchor="start">
+              {logTickLabel(magnifier.from, config.labelStyle)}
+            </text>
+            {hopPoints.slice(1).map((point, index) => {
+              const from = hopPoints[index];
+              if (!from) return null;
+              const x1 = bandX(from);
+              const x2 = bandX(point);
+              const top = MAG_Y - 40;
+              return (
+                <g key={`mag-hop-${index}`}>
+                  <path
+                    d={`M ${x1} ${MAG_Y - 10} Q ${(x1 + x2) / 2} ${top} ${x2} ${MAG_Y - 10}`}
+                    fill="none"
+                    className={styles.jump}
+                    markerEnd="url(#e03-log-arrow)"
+                  />
+                  <text
+                    x={(x1 + x2) / 2}
+                    y={top - 2}
+                    className={styles.jumpLabel}
+                    data-testid="log-hop-magnified-label"
+                  >
+                    {logTickLabel(skipStep, config.labelStyle)}
+                  </text>
+                </g>
+              );
+            })}
+            <text
+              x={LINE_RIGHT}
+              y={MAG_Y + 32}
+              className={styles.majorTickLabel}
+              textAnchor="end"
+              data-testid="log-hop-magnifier-title"
+            >
+              {numberLineStrings.logZoom.magnifyTitle}
+            </text>
           </g>
         ) : null}
 

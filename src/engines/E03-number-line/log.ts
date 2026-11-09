@@ -60,3 +60,27 @@ export function koreanLabel(value: Rational): string {
 export function logTickLabel(value: Rational, style: LogZoomLabelStyle | undefined): string {
   return style === 'korean' ? koreanLabel(value) : formatNumber(value);
 }
+
+export interface MagnifierRange {
+  readonly from: Rational;
+  readonly to: Rational;
+}
+
+/**
+ * 한 번 뛰기 폭이 화면에서 너무 좁을 때 아래 확대 띠에 보여 줄 범위.
+ * `stepWidthPx`가 `minWidthPx` 이상이면 확대 띠가 필요 없어 null이다.
+ */
+export function magnifierRange(
+  start: Rational,
+  step: Rational,
+  hopCount: number,
+  stepWidthPx: number,
+  minWidthPx = 28,
+): MagnifierRange | null {
+  if (hopCount <= 0 || step.isZero() || stepWidthPx >= minWidthPx) return null;
+  const hops = Math.max(10, Math.ceil(hopCount));
+  return {
+    from: start,
+    to: start.add(step.mul(Rational.of(hops))),
+  };
+}

@@ -3,8 +3,10 @@
  * 곱(전체 수)은 쓰지 않는다.
  */
 import type { OverlayProps } from '../../../core/engine-sdk';
+import { CanvasAlignedOverlay } from '../../../core/engine-sdk';
 import { arrayRect, cellCenter } from '../layout';
 import type { ArrayAreaConfig, ArrayAreaState } from '../types';
+import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../types';
 
 export function RowCountOverlay({ state }: OverlayProps<ArrayAreaConfig, ArrayAreaState>) {
   const { rows, cols, settings } = state;
@@ -12,7 +14,11 @@ export function RowCountOverlay({ state }: OverlayProps<ArrayAreaConfig, ArrayAr
   const rect = arrayRect(rows, cols, settings.maxRows, settings.maxCols);
 
   return (
-    <svg viewBox="0 0 1000 600" width="100%" height="100%" aria-hidden="true">
+    <CanvasAlignedOverlay
+      canvasSelector={'svg[data-testid="array-canvas"]'}
+      logicalWidth={LOGICAL_WIDTH}
+      logicalHeight={LOGICAL_HEIGHT}
+    >
       {Array.from({ length: rows }, (_, row) => {
         const point = cellCenter(rect, row, 0);
         return (
@@ -31,6 +37,6 @@ export function RowCountOverlay({ state }: OverlayProps<ArrayAreaConfig, ArrayAr
           </g>
         );
       })}
-    </svg>
+    </CanvasAlignedOverlay>
   );
 }

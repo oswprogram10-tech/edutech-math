@@ -137,6 +137,29 @@ async function expectOverlayInPanel(panel: Locator, selector: string): Promise<v
     .toBeLessThanOrEqual(1);
 }
 
+/** 오버레이 svg 상자가 본 캔버스 svg 상자와 2px 안에서 같은지. */
+async function expectOverlayAligned(panel: Locator): Promise<void> {
+  const canvas = panel.locator('svg[data-testid="array-canvas"]');
+  const overlay = panel.locator('[data-overlay="leftover-strip"] svg');
+  await expect(overlay).toBeVisible();
+  await expect
+    .poll(
+      async () => {
+        const canvasBox = await canvas.boundingBox();
+        const overlayBox = await overlay.boundingBox();
+        if (!canvasBox || !overlayBox) return Number.POSITIVE_INFINITY;
+        return Math.max(
+          Math.abs(overlayBox.x - canvasBox.x),
+          Math.abs(overlayBox.y - canvasBox.y),
+          Math.abs(overlayBox.width - canvasBox.width),
+          Math.abs(overlayBox.height - canvasBox.height),
+        );
+      },
+      { message: 'leftover-strip 오버레이가 본 캔버스와 어긋납니다.' },
+    )
+    .toBeLessThanOrEqual(2);
+}
+
 test('A1 방바닥 타일 깔기 — 대표 오답 뒤 고쳐서 여섯 과제를 통과한다', async ({ page }) => {
   await openActivity(page, 'g5s1u2.A1', '방바닥 타일 깔기');
   await screenshot(page, 'g5s1u2-a1.png');
@@ -146,6 +169,20 @@ test('A1 방바닥 타일 깔기 — 대표 오답 뒤 고쳐서 여섯 과제�
   await addCols(first, 11);
   await recordArray(first);
   await expect(first.getByTestId('recorded-badge')).toContainText('1가지 배열');
+  const shelf = first.getByTestId('factor-shelf');
+  await expect(shelf).toBeVisible();
+  const shelfFont = await shelf
+    .locator('li')
+    .first()
+    .evaluate((node) => Number.parseFloat(getComputedStyle(node).fontSize));
+  expect(shelfFont).toBeGreaterThanOrEqual(16);
+  expect(
+    await shelf.evaluate((node) => {
+      const box = node.getBoundingClientRect();
+      return box.top >= 0 && box.bottom <= window.innerHeight;
+    }),
+  ).toBe(true);
+  await screenshot(page, 'g5s1u2-a1-shelf.png');
   await submit(page);
   await expectFailedWithHint(page, '12개를 직사각형으로 늘어놓는 방법을 모두 찾았나요?');
   await addRows(first, 1);
@@ -186,6 +223,7 @@ test('A1 방바닥 타일 깔기 — 대표 오답 뒤 고쳐서 여섯 과제�
     2,
   );
   await expectOverlayInPanel(third, '[data-overlay="leftover-strip"]');
+  await expectOverlayAligned(third);
   await shrinkTile(third, 4);
   await expect(third.getByTestId('tile-size')).toHaveText('1');
   await recordTile(third);

@@ -330,7 +330,7 @@ export function MulView({
       } else if (event.key === 'ArrowDown') {
         event.preventDefault();
         moveRow(1);
-      } else if (event.key === 'f' || event.key === 'F') {
+      } else if ((event.key === 'f' || event.key === 'F') && state.hasDebugSample) {
         event.preventDefault();
         toggleFlag();
       }
@@ -821,19 +821,21 @@ export function MulView({
         onClear={() => enterAt(keypadTarget, null)}
       />
 
-      <div className={mulStyles.flagRow}>
-        <button
-          type="button"
-          className={mulStyles.flagButton}
-          aria-pressed={isFlagged(keypadTarget)}
-          disabled={readOnly || !keypadTarget}
-          onClick={toggleFlag}
-        >
-          {keypadTarget && isFlagged(keypadTarget)
-            ? S.unflagCell(cellLabel(keypadTarget))
-            : S.flagHint}
-        </button>
-      </div>
+      {state.hasDebugSample ? (
+        <div className={mulStyles.flagRow}>
+          <button
+            type="button"
+            className={mulStyles.flagButton}
+            aria-pressed={isFlagged(keypadTarget)}
+            disabled={readOnly || !keypadTarget}
+            onClick={toggleFlag}
+          >
+            {keypadTarget && isFlagged(keypadTarget)
+              ? S.unflagCell(cellLabel(keypadTarget))
+              : S.flagHint}
+          </button>
+        </div>
+      ) : null}
 
       {decimalMul && state.shiftBase !== null ? (
         <ShiftDemo
