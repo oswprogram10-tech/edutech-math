@@ -255,7 +255,7 @@ export function LogZoomView({
         .map((value) => parseValue(value))
         .filter((value): value is Rational => value !== null)
     : [];
-  const skipStep = parseValue(skip?.rows[0]?.step);
+  const skipStep = parseValue(skip?.rows[0]?.step ?? undefined);
   const hopCount = skip?.rows[0]?.hops.length ?? 0;
   const magnifier =
     skipStart && skipStep
