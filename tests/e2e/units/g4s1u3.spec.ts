@@ -201,7 +201,7 @@ test('A1 배수 높이 어림 바 — 대표 오답 뒤 고쳐서 다섯 과제�
   const third = slot(page, 'main');
   await writeDivCell(third, 'quotient', 1, '2');
   await submit(page);
-  await expectFailedWithHint(page, '몫을 어느 자리부터 쓸 수 있을까요? 5를 27으로 나눌 수 있나요?');
+  await expectFailedWithHint(page, '몫을 어느 자리부터 쓸 수 있을까요? 5를 27로 나눌 수 있나요?');
   await writeDivRow(third, 'div-product', 1, { 2: '5', 1: '4' });
   await writeDivRow(third, 'div-diff', 1, { 2: '0', 1: '4', 0: '9' });
   await writeDivCell(third, 'quotient', 0, '1');
