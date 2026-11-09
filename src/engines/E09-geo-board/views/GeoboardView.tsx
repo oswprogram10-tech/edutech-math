@@ -121,7 +121,12 @@ export function GeoboardView({ state, dispatch, cpa, readOnly = false, targetSiz
     const point = pointerToLogical(event, svgRef.current, LOGICAL);
     const peg = snapPeg(rect, point, hitRadius) ?? drag.start;
     if (drag.vertex !== null) {
-      if (peg[0] === drag.start[0] && peg[1] === drag.start[1]) return;
+      // 꼭짓점을 누르기만 하고 움직이지 않으면 못 잇기로 본다. 다른 고무줄의
+      // 꼭짓점을 눌러 새 고무줄을 잇거나, 활성 고무줄의 다음 못으로 쓸 수 있다.
+      if (peg[0] === drag.start[0] && peg[1] === drag.start[1]) {
+        pressPeg(peg);
+        return;
+      }
       dispatch({
         type: 'move-peg',
         band: drag.vertex.band,

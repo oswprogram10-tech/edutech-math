@@ -95,6 +95,49 @@ test('키보드만으로 못판에서 삼각형을 닫으면 꼭짓점 3개다',
   await capture(page, 'T100-geoboard');
 });
 
+test('꼭짓점을 눌러 다른 고무줄과 못을 공유하는 삼각형을 닫는다', async ({ page }) => {
+  const { canvas } = await openEngine(page, {
+    mode: 'geoboard',
+    shapes: [
+      [
+        [0, 0],
+        [2, 0],
+        [0, 2],
+      ],
+    ],
+  });
+
+  const box = await canvas.boundingBox();
+  expect(box).not.toBeNull();
+  if (!box) return;
+  // 기본 5×5 판: 못 (i,j)는 논리 좌표 (100+200i, 100+200j) / 1000.
+  const tap = async (i: number, j: number) => {
+    await page.mouse.click(
+      box.x + (box.width * (100 + 200 * i)) / 1000,
+      box.y + (box.height * (100 + 200 * j)) / 1000,
+    );
+  };
+
+  // (4,0) → (3,1) → (2,0)[이미 닫힌 삼각형의 꼭짓점] → (4,0)으로 닫는다.
+  await tap(4, 0);
+  await tap(3, 1);
+  await tap(2, 0);
+  await tap(4, 0);
+
+  await pollObservation(
+    page,
+    (current) =>
+      current.shapes?.length === 2 &&
+      current.shapes[1]?.closed === true &&
+      current.shapes[1]?.vertices === 3,
+  );
+  const shapes = (await readObservation(page)).shapes ?? [];
+  expect(shapes[0]?.closed).toBe(true);
+  expect(shapes[1]?.closed).toBe(true);
+  expect(shapes[1]?.simple).toBe(true);
+  expect(shapes[1]?.vertices).toBe(3);
+});
+
 test('construct에서 반직선 하나로 별 두 개를 맞힌다', async ({ page }) => {
   const { canvas } = await openEngine(page, {
     grid: 9,
