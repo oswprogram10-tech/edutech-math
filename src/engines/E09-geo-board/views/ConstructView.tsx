@@ -108,8 +108,7 @@ export function ConstructView({
   const [cursor, setCursor] = useState<Peg>([0, 0]);
   const [focused, setFocused] = useState(false);
 
-  const givenIds = new Set(given.map((object) => object.id));
-  const removable = [...state.objects].reverse().find((object) => !givenIds.has(object.id)) ?? null;
+  const removable = state.objects[state.objects.length - 1] ?? null;
 
   const hitTarget = (target: Peg): boolean =>
     state.objects.some((object) => objectHitsTarget(object, target));
@@ -174,7 +173,7 @@ export function ConstructView({
   };
 
   const onObjectKeyDown = (event: ReactKeyboardEvent<SVGGElement>, object: GeoObject) => {
-    if (readOnly || givenIds.has(object.id)) return;
+    if (readOnly) return;
     if (event.key === 'Delete' || event.key === 'Backspace') {
       event.preventDefault();
       dispatch({ type: 'remove-object', id: object.id });
@@ -324,17 +323,49 @@ export function ConstructView({
             ))}
           </g>
 
+          {given.map((object) => {
+            const from = pegPoint(rect, object.from);
+            const to = pegPoint(rect, object.to);
+            const style = OBJECT_STYLE[object.kind];
+            return (
+              <g
+                key={`given-${object.id}`}
+                data-given={object.id}
+                aria-label={S.construct.given}
+                pointerEvents="none"
+              >
+                <line
+                  x1={from.x}
+                  y1={from.y}
+                  x2={to.x}
+                  y2={to.y}
+                  stroke={MUTED}
+                  strokeWidth={style.width}
+                  strokeDasharray={style.dash}
+                  strokeLinecap="round"
+                />
+                <text
+                  x={(from.x + to.x) / 2}
+                  y={(from.y + to.y) / 2 - 12}
+                  textAnchor="middle"
+                  fontSize={14}
+                  fill={MUTED}
+                >
+                  {S.construct.given}
+                </text>
+              </g>
+            );
+          })}
+
           {state.objects.map((object, index) => {
             const from = pegPoint(rect, object.from);
             const to = pegPoint(rect, object.to);
-            const isGiven = givenIds.has(object.id);
             const style = OBJECT_STYLE[object.kind];
-            const stroke = isGiven ? MUTED : hitColor(cpa, index);
             return (
               <g
                 key={object.id}
                 role="button"
-                tabIndex={readOnly || isGiven ? -1 : 0}
+                tabIndex={readOnly ? -1 : 0}
                 aria-label={S.construct.removeObjectLabel(
                   S.construct.objectLabel(
                     object.kind,
@@ -351,33 +382,20 @@ export function ConstructView({
                   y1={from.y}
                   x2={to.x}
                   y2={to.y}
-                  stroke={stroke}
+                  stroke={hitColor(cpa, index)}
                   strokeWidth={style.width}
                   strokeDasharray={style.dash}
                   strokeLinecap="round"
                   pointerEvents="none"
                 />
-                {!isGiven ? (
-                  <line
-                    x1={from.x}
-                    y1={from.y}
-                    x2={to.x}
-                    y2={to.y}
-                    stroke="transparent"
-                    strokeWidth={Math.max(24, hitRadius)}
-                  />
-                ) : (
-                  <text
-                    x={(from.x + to.x) / 2}
-                    y={(from.y + to.y) / 2 - 12}
-                    textAnchor="middle"
-                    fontSize={14}
-                    fill={MUTED}
-                    pointerEvents="none"
-                  >
-                    {S.construct.given}
-                  </text>
-                )}
+                <line
+                  x1={from.x}
+                  y1={from.y}
+                  x2={to.x}
+                  y2={to.y}
+                  stroke="transparent"
+                  strokeWidth={Math.max(24, hitRadius)}
+                />
               </g>
             );
           })}
@@ -412,7 +430,6 @@ export function ConstructView({
             const vertex = pegPoint(rect, angle.vertex);
             const a = pegPoint(rect, angle.a);
             const b = pegPoint(rect, angle.b);
-            const label = angleLabelPoint(vertex, a, b);
             return (
               <g key={angle.id} data-angle={angle.id}>
                 <line
@@ -433,17 +450,6 @@ export function ConstructView({
                   strokeWidth={3}
                   pointerEvents="none"
                 />
-                <text
-                  x={label.x}
-                  y={label.y}
-                  textAnchor="middle"
-                  fontSize={17}
-                  fontWeight={700}
-                  fill={MUTED}
-                  pointerEvents="none"
-                >
-                  {S.construct.angleLabel(index + 1)}
-                </text>
                 <g
                   role="button"
                   tabIndex={readOnly ? -1 : 0}
@@ -533,6 +539,31 @@ export function ConstructView({
               ) : null}
             </g>
           ) : null}
+
+          {/* 각 이름표는 삼각자 위에 그린다. 흰 테두리로 삼각자 색과 겹쳐도 읽힌다. */}
+          {angles.map((angle, index) => {
+            const vertex = pegPoint(rect, angle.vertex);
+            const label = angleLabelPoint(vertex, pegPoint(rect, angle.a), pegPoint(rect, angle.b));
+            return (
+              <text
+                key={`angle-label-${angle.id}`}
+                x={label.x}
+                y={label.y}
+                textAnchor="middle"
+                fontSize={17}
+                fontWeight={700}
+                fill={INK}
+                stroke="#ffffff"
+                strokeWidth={5}
+                paintOrder="stroke"
+                strokeLinejoin="round"
+                pointerEvents="none"
+                data-angle-label={angle.id}
+              >
+                {S.construct.angleLabel(index + 1)}
+              </text>
+            );
+          })}
 
           {angles.map((angle) => {
             if (!state.marked.includes(angle.id)) return null;

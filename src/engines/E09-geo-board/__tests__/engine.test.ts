@@ -246,7 +246,7 @@ describe('E09 construct reduce·observe', () => {
     expect(predicates['markedAre']?.(result, { ids: ['a1', 'a2'] })).toBe(false);
   });
 
-  it('미리 그린 선은 지울 수 없다', () => {
+  it('미리 그린 선은 학생 객체로 세지 않고 지울 수도 없다', () => {
     const config: GeoConfig = {
       mode: 'construct',
       grid: 5,
@@ -255,7 +255,36 @@ describe('E09 construct reduce·observe', () => {
     const state = apply(config, [{ type: 'remove-object', id: 'g1' }]);
     expect(state.mode).toBe('construct');
     if (state.mode !== 'construct') return;
-    expect(state.objects.map((object) => object.id)).toEqual(['g1']);
+    expect(state.objects).toEqual([]);
+    expect(state.settings.given.map((object) => object.id)).toEqual(['g1']);
+  });
+
+  it('given 반직선이 별을 지나도 학생 관찰·판정은 비어 있다', () => {
+    const config: GeoConfig = {
+      mode: 'construct',
+      grid: 5,
+      targets: [
+        [1, 0],
+        [3, 0],
+        [1, 2],
+      ],
+      given: [{ id: 'g1', kind: 'ray', from: [0, 0], to: [1, 0] }],
+    };
+    const result = observation(config, []);
+    expect(result['objects']).toEqual([]);
+    expect(result['objectPoints']).toEqual([]);
+    expect(result['targetPoints']).toEqual([
+      [1, 0],
+      [3, 0],
+      [1, 2],
+    ]);
+    expect(result['targetsHit']).toEqual([]);
+    expect(result['allTargetsHit']).toEqual([]);
+    expect(predicates['hasObject']?.(result, { kind: 'ray', from: [0, 0], to: [1, 0] })).toBe(
+      false,
+    );
+    expect(predicates['oneObjectHits']?.(result, { kind: 'ray', targets: [1] })).toBe(false);
+    expect(predicates['distinctRayStarts']?.(result, { count: 1 })).toBe(false);
   });
 });
 

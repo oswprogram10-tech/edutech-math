@@ -56,3 +56,32 @@ describe('E09 기본 화면은 정답 단서를 쓰지 않는다', () => {
     expect(text).not.toContain('사각형');
   });
 });
+
+describe('E09 given은 학생 객체가 아니다', () => {
+  it('given 반직선이 별을 지나도 별 맞힘 표시가 없다', () => {
+    const config: GeoConfig = {
+      mode: 'construct',
+      grid: 5,
+      targets: [
+        [1, 0],
+        [3, 0],
+      ],
+      given: [{ id: 'g1', kind: 'ray', from: [0, 0], to: [2, 0] }],
+    };
+    const state = createInitialState(config);
+    const { container } = render(
+      <GeoView
+        config={config}
+        state={state}
+        dispatch={() => {}}
+        cpa="C"
+        mode={state.mode}
+        targetSize={48}
+      />,
+    );
+    expect(container.querySelectorAll('[data-given]')).toHaveLength(1);
+    expect(container.querySelectorAll('[data-object]')).toHaveLength(0);
+    expect(container.querySelectorAll('[data-hit="true"]')).toHaveLength(0);
+    expect(container.querySelectorAll('[data-hit="false"]')).toHaveLength(2);
+  });
+});

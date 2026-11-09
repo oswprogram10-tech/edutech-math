@@ -202,7 +202,8 @@ export function createInitialState(config: GeoConfig): GeoState {
       mode: 'construct',
       tool: settings.tools[0] ?? 'segment',
       pendingStart: null,
-      objects: settings.given.map((object) => ({ ...object })),
+      // given은 화면에 미리 그린 선일 뿐, 학생이 만든 객체로 세지 않는다.
+      objects: [],
       squareOn: null,
       marked: [],
       nextId: 1,
@@ -363,7 +364,6 @@ function reduceConstruct(state: ConstructState, action: GeoAction): GeoState {
       };
     }
     case 'remove-object': {
-      if (state.settings.given.some((given) => given.id === action.id)) return state;
       if (!state.objects.some((object) => object.id === action.id)) return state;
       return { ...state, objects: state.objects.filter((object) => object.id !== action.id) };
     }
