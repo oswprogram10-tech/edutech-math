@@ -166,7 +166,7 @@ test('A1 4자리 컬러 슬라이서 — 대표 오답 뒤 고쳐서 네 과제�
   await expectPassed(page, true);
 });
 
-test('A2 스케일 줌 수직선 — 대표 오답 뒤 고쳐서 네 과제를 통과한다', async ({ page }) => {
+test('A2 스케일 줌 수직선 — 대표 오답 뒤 고쳐서 네 과제를 통과한다', async ({ page }, testInfo) => {
   await openActivity(page, 'g4s1u1.A2', '스케일 줌 수직선');
   await screenshot(page, 'g4s1u1-a2.png');
 
@@ -180,6 +180,22 @@ test('A2 스케일 줌 수직선 — 대표 오답 뒤 고쳐서 네 과제를 �
   await expect(magnifier.getByTestId('log-hop-magnified-label')).toHaveCount(5);
   const labelBox = await magnifier.getByTestId('log-hop-magnified-label').first().boundingBox();
   expect(labelBox?.height ?? 0).toBeGreaterThanOrEqual(10);
+  if (testInfo.project.name === 'chromebook') {
+    const titleBox = await magnifier.getByTestId('log-hop-magnifier-title').boundingBox();
+    if (!titleBox) throw new Error('확대 띠 제목 상자를 찾지 못했습니다.');
+    const magnifiedLabels = magnifier.getByTestId('log-hop-magnified-label');
+    const magnifiedCount = await magnifiedLabels.count();
+    for (let index = 0; index < magnifiedCount; index += 1) {
+      const box = await magnifiedLabels.nth(index).boundingBox();
+      if (!box) continue;
+      const apart =
+        titleBox.x + titleBox.width <= box.x ||
+        box.x + box.width <= titleBox.x ||
+        titleBox.y + titleBox.height <= box.y ||
+        box.y + box.height <= titleBox.y;
+      expect(apart, `확대 띠 제목이 ${index + 1}번째 호 이름표와 겹칩니다.`).toBe(true);
+    }
+  }
   await screenshot(page, 'g4s1u1-a2-magnified.png');
   await field(page, 'place').getByRole('button', { name: '십만 자리', exact: true }).click();
   await submit(page);

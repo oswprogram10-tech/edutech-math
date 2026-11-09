@@ -236,6 +236,12 @@
   stroke-width: 3.5;
 }
 
+.magnifierSpan {
+  stroke: #0f7b6c;
+  stroke-width: 6;
+  stroke-linecap: round;
+}
+
 .jumpLabel {
   fill: #0f5f55;
   font-size: 19px;

@@ -78,6 +78,8 @@ export function LogZoomView({
   }, [readOnly]);
 
   const xOf = (value: Rational): number => xOfValue(value, Rational.of(0), max);
+  /** 확대 띠 끝 값이 현재 단계 최댓값을 넘으면 본 수직선에서는 최댓값에서 멈춘다. */
+  const mainXOf = (value: Rational): number => xOf(value.compareTo(max) > 0 ? max : value);
 
   const zoomTo = (next: number) => {
     if (readOnly) return;
@@ -462,6 +464,18 @@ export function LogZoomView({
           pointerEvents="none"
         />
 
+        {magnifier ? (
+          <line
+            x1={mainXOf(magnifier.from)}
+            y1={LINE_Y}
+            x2={mainXOf(magnifier.to)}
+            y2={LINE_Y}
+            className={styles.magnifierSpan}
+            pointerEvents="none"
+            data-testid="log-hop-magnifier-span"
+          />
+        ) : null}
+
         {minorTicks.map((tick) => {
           const major = tick.index % 10 === 0;
           return (
@@ -625,12 +639,9 @@ export function LogZoomView({
 
         {magnifier && skipStep ? (
           <g pointerEvents="none" data-testid="log-hop-magnifier">
-            <text x={LINE_LEFT} y={MAG_Y - 60} className={styles.rowLabel} textAnchor="start">
-              {numberLineStrings.logZoom.magnifyTitle}
-            </text>
             <line
-              x1={xOf(magnifier.from)}
-              y1={LINE_Y + 18}
+              x1={mainXOf(magnifier.from)}
+              y1={LINE_Y + 50}
               x2={LINE_LEFT}
               y2={MAG_Y - 10}
               stroke="#7a8497"
@@ -638,8 +649,8 @@ export function LogZoomView({
               strokeDasharray="6 6"
             />
             <line
-              x1={xOf(magnifier.to)}
-              y1={LINE_Y + 18}
+              x1={mainXOf(magnifier.to)}
+              y1={LINE_Y + 50}
               x2={LINE_RIGHT}
               y2={MAG_Y - 10}
               stroke="#7a8497"
@@ -689,6 +700,15 @@ export function LogZoomView({
                 </g>
               );
             })}
+            <text
+              x={LINE_RIGHT}
+              y={MAG_Y + 32}
+              className={styles.majorTickLabel}
+              textAnchor="end"
+              data-testid="log-hop-magnifier-title"
+            >
+              {numberLineStrings.logZoom.magnifyTitle}
+            </text>
           </g>
         ) : null}
 
