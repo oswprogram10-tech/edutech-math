@@ -1,0 +1,1304 @@
+{
+  "unit": "g4s1u3",
+  "title": "곱셈과 나눗셈",
+  "activities": [
+    {
+      "id": "g4s1u3.A1",
+      "title": "배수 높이 어림 바",
+      "tasks": [
+        {
+          "id": "g4s1u3.A1.T1",
+          "prompt": "95 ÷ 23을 세로셈으로 계산해요. 몫과 나머지를 써요.",
+          "engine": "E07",
+          "mode": "div",
+          "cpa": "C",
+          "config": {
+            "mode": "div",
+            "dividend": 95,
+            "divisor": 23,
+            "estimateBar": {
+              "show": "C-P",
+              "maxMultiple": 9
+            },
+            "remainderAlarm": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "quotientIs",
+                "args": {
+                  "value": "4"
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "remainderIs",
+                "args": {
+                  "value": "3"
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "complete"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-REMAINDER-TOO-BIG"
+                }
+              },
+              "level": 1,
+              "say": "남은 수로 23을 한 번 더 나눌 수 있을까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-REMAINDER-TOO-BIG"
+                }
+              },
+              "level": 2,
+              "show": {
+                "engine": "E07",
+                "overlay": "remainder-vs-divisor"
+              },
+              "say": "남은 수와 나누는 수를 나란히 보았어요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-REMAINDER-TOO-BIG"
+                }
+              },
+              "level": 3,
+              "backtrack": "g3s2u2.remainder"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-ESTIMATE-OFF"
+                }
+              },
+              "level": 1,
+              "say": "몫 후보가 선을 넘었는지, 모자랐는지 살펴보세요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-ESTIMATE-OFF"
+                }
+              },
+              "level": 2,
+              "show": {
+                "engine": "E07",
+                "overlay": "ladder-focus"
+              },
+              "say": "고른 몫 후보와 그 위아래 막대를 보았어요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-ESTIMATE-OFF"
+                }
+              },
+              "level": 3,
+              "backtrack": "g4s1u3.div-by-2digit-estimate"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "div"
+              },
+              "level": 1,
+              "say": "몫을 어느 자리부터 쓸 수 있을까요? 9를 23으로 나눌 수 있나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "div"
+              },
+              "level": 2,
+              "say": "배수 사다리나 배수 표에서 몫 후보를 골라 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "div"
+              },
+              "level": 3,
+              "backtrack": "g4s1u3.div-by-2digit-estimate"
+            }
+          ],
+          "concepts": [
+            "g4s1u3.div-by-2digit-estimate",
+            "g4s1u3.div-3by2"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g4s1u3.A1.T2",
+          "prompt": "168 ÷ 24를 세로셈으로 계산해요. 몫과 나머지를 써요.",
+          "engine": "E07",
+          "mode": "div",
+          "cpa": "C",
+          "config": {
+            "mode": "div",
+            "dividend": 168,
+            "divisor": 24,
+            "estimateBar": {
+              "show": "C-P",
+              "maxMultiple": 9
+            },
+            "remainderAlarm": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "quotientIs",
+                "args": {
+                  "value": "7"
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "remainderIs",
+                "args": {
+                  "value": "0"
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "complete"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-REMAINDER-TOO-BIG"
+                }
+              },
+              "level": 1,
+              "say": "남은 수로 24를 한 번 더 나눌 수 있을까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-REMAINDER-TOO-BIG"
+                }
+              },
+              "level": 2,
+              "show": {
+                "engine": "E07",
+                "overlay": "remainder-vs-divisor"
+              },
+              "say": "남은 수와 나누는 수를 나란히 보았어요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-REMAINDER-TOO-BIG"
+                }
+              },
+              "level": 3,
+              "backtrack": "g3s2u2.remainder"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-ESTIMATE-OFF"
+                }
+              },
+              "level": 1,
+              "say": "몫 후보가 선을 넘었는지, 모자랐는지 살펴보세요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-ESTIMATE-OFF"
+                }
+              },
+              "level": 2,
+              "show": {
+                "engine": "E07",
+                "overlay": "ladder-focus"
+              },
+              "say": "고른 몫 후보와 그 위아래 막대를 보았어요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-ESTIMATE-OFF"
+                }
+              },
+              "level": 3,
+              "backtrack": "g4s1u3.div-by-2digit-estimate"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "div"
+              },
+              "level": 1,
+              "say": "몫을 어느 자리부터 쓸 수 있을까요? 1을 24로 나눌 수 있나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "div"
+              },
+              "level": 2,
+              "say": "배수 사다리나 배수 표에서 몫 후보를 골라 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "div"
+              },
+              "level": 3,
+              "backtrack": "g4s1u3.div-by-2digit-estimate"
+            }
+          ],
+          "concepts": [
+            "g4s1u3.div-by-2digit-estimate",
+            "g4s1u3.div-3by2"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g4s1u3.A1.T3",
+          "prompt": "589 ÷ 27을 세로셈으로 계산해요.",
+          "engine": "E07",
+          "mode": "div",
+          "cpa": "P",
+          "config": {
+            "mode": "div",
+            "dividend": 589,
+            "divisor": 27,
+            "estimateBar": {
+              "show": "C-P",
+              "maxMultiple": 9
+            },
+            "remainderAlarm": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "quotientIs",
+                "args": {
+                  "value": "21"
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "remainderIs",
+                "args": {
+                  "value": "22"
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "complete"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-REMAINDER-TOO-BIG"
+                }
+              },
+              "level": 1,
+              "say": "남은 수로 27을 한 번 더 나눌 수 있을까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-REMAINDER-TOO-BIG"
+                }
+              },
+              "level": 2,
+              "show": {
+                "engine": "E07",
+                "overlay": "remainder-vs-divisor"
+              },
+              "say": "남은 수와 나누는 수를 나란히 보았어요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-REMAINDER-TOO-BIG"
+                }
+              },
+              "level": 3,
+              "backtrack": "g3s2u2.remainder"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-ESTIMATE-OFF"
+                }
+              },
+              "level": 1,
+              "say": "몫 후보가 선을 넘었는지, 모자랐는지 살펴보세요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-ESTIMATE-OFF"
+                }
+              },
+              "level": 2,
+              "show": {
+                "engine": "E07",
+                "overlay": "ladder-focus"
+              },
+              "say": "고른 몫 후보와 그 위아래 막대를 보았어요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-ESTIMATE-OFF"
+                }
+              },
+              "level": 3,
+              "backtrack": "g4s1u3.div-by-2digit-estimate"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "div"
+              },
+              "level": 1,
+              "say": "몫을 어느 자리부터 쓸 수 있을까요? 5를 27로 나눌 수 있나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "div"
+              },
+              "level": 2,
+              "say": "배수 사다리나 배수 표에서 몫 후보를 골라 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "div"
+              },
+              "level": 3,
+              "backtrack": "g4s1u3.div-by-2digit-estimate"
+            }
+          ],
+          "concepts": [
+            "g4s1u3.div-by-2digit-estimate",
+            "g4s1u3.div-3by2"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g4s1u3.A1.T4",
+          "prompt": "815 ÷ 40을 세로셈으로 계산해요.",
+          "engine": "E07",
+          "mode": "div",
+          "cpa": "P",
+          "config": {
+            "mode": "div",
+            "dividend": 815,
+            "divisor": 40,
+            "estimateBar": {
+              "show": "C-P",
+              "maxMultiple": 9
+            },
+            "remainderAlarm": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "quotientIs",
+                "args": {
+                  "value": "20"
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "remainderIs",
+                "args": {
+                  "value": "15"
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "quotientCellIs",
+                "args": {
+                  "column": 0,
+                  "digit": "0"
+                }
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-REMAINDER-TOO-BIG"
+                }
+              },
+              "level": 1,
+              "say": "남은 수로 40을 한 번 더 나눌 수 있을까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-REMAINDER-TOO-BIG"
+                }
+              },
+              "level": 2,
+              "show": {
+                "engine": "E07",
+                "overlay": "remainder-vs-divisor"
+              },
+              "say": "남은 수와 나누는 수를 나란히 보았어요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-REMAINDER-TOO-BIG"
+                }
+              },
+              "level": 3,
+              "backtrack": "g3s2u2.remainder"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-ESTIMATE-OFF"
+                }
+              },
+              "level": 1,
+              "say": "몫 후보가 선을 넘었는지, 모자랐는지 살펴보세요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-ESTIMATE-OFF"
+                }
+              },
+              "level": 2,
+              "show": {
+                "engine": "E07",
+                "overlay": "ladder-focus"
+              },
+              "say": "고른 몫 후보와 그 위아래 막대를 보았어요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-ESTIMATE-OFF"
+                }
+              },
+              "level": 3,
+              "backtrack": "g4s1u3.div-by-2digit-estimate"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-QUOTIENT-ZERO"
+                }
+              },
+              "level": 1,
+              "say": "남은 수를 40으로 나눌 수 있었어? 그럼 몫의 그 자리에는?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-QUOTIENT-ZERO"
+                }
+              },
+              "level": 2,
+              "show": {
+                "engine": "E07",
+                "overlay": "quotient-gap"
+              },
+              "say": "몫의 빈 자리를 깜빡여 보았어요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-QUOTIENT-ZERO"
+                }
+              },
+              "level": 3,
+              "backtrack": "g3s2u2.divide-by-place"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "div"
+              },
+              "level": 1,
+              "say": "몫을 어느 자리부터 쓸 수 있을까요? 8을 40으로 나눌 수 있나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "div"
+              },
+              "level": 2,
+              "say": "배수 사다리나 배수 표에서 몫 후보를 골라 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "div"
+              },
+              "level": 3,
+              "backtrack": "g4s1u3.div-by-2digit-estimate"
+            }
+          ],
+          "concepts": [
+            "g4s1u3.div-3by2"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g4s1u3.A1.T5",
+          "prompt": "739 ÷ 36을 세로셈으로 계산해요.",
+          "engine": "E07",
+          "mode": "div",
+          "cpa": "A",
+          "config": {
+            "mode": "div",
+            "dividend": 739,
+            "divisor": 36,
+            "estimateBar": {
+              "show": "C-P",
+              "maxMultiple": 9
+            },
+            "remainderAlarm": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "quotientIs",
+                "args": {
+                  "value": "20"
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "remainderIs",
+                "args": {
+                  "value": "19"
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "quotientCellIs",
+                "args": {
+                  "column": 0,
+                  "digit": "0"
+                }
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-REMAINDER-TOO-BIG"
+                }
+              },
+              "level": 1,
+              "say": "남은 수로 36을 한 번 더 나눌 수 있을까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-REMAINDER-TOO-BIG"
+                }
+              },
+              "level": 2,
+              "show": {
+                "engine": "E07",
+                "overlay": "remainder-vs-divisor"
+              },
+              "say": "남은 수와 나누는 수를 나란히 보았어요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-REMAINDER-TOO-BIG"
+                }
+              },
+              "level": 3,
+              "backtrack": "g3s2u2.remainder"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-ESTIMATE-OFF"
+                }
+              },
+              "level": 1,
+              "say": "고른 몫에 36을 곱한 값이 나누어지는 수보다 큰가요, 작은가요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-ESTIMATE-OFF"
+                }
+              },
+              "level": 2,
+              "say": "몫 후보가 어느 쪽으로 어긋났는지 다시 살펴보세요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-ESTIMATE-OFF"
+                }
+              },
+              "level": 3,
+              "backtrack": "g4s1u3.div-by-2digit-estimate"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-QUOTIENT-ZERO"
+                }
+              },
+              "level": 1,
+              "say": "남은 수를 36으로 나눌 수 있었어? 그럼 몫의 그 자리에는?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-QUOTIENT-ZERO"
+                }
+              },
+              "level": 2,
+              "show": {
+                "engine": "E07",
+                "overlay": "quotient-gap"
+              },
+              "say": "몫의 빈 자리를 깜빡여 보았어요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-DIV-QUOTIENT-ZERO"
+                }
+              },
+              "level": 3,
+              "backtrack": "g3s2u2.divide-by-place"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "div"
+              },
+              "level": 1,
+              "say": "몫을 어느 자리부터 쓸 수 있을까요? 7을 36으로 나눌 수 있나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "div"
+              },
+              "level": 2,
+              "say": "몫의 각 자리에 쓸 수를 하나씩 확인해 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "div"
+              },
+              "level": 3,
+              "backtrack": "g4s1u3.div-by-2digit-estimate"
+            }
+          ],
+          "concepts": [
+            "g4s1u3.div-3by2"
+          ],
+          "submit": "button"
+        }
+      ]
+    },
+    {
+      "id": "g4s1u3.A2",
+      "title": "세 자리 × 두 자리 칸 코칭",
+      "tasks": [
+        {
+          "id": "g4s1u3.A2.T1",
+          "prompt": "347 × 26을 세로셈으로 계산해요. 부분곱 줄과 결과를 써요.",
+          "engine": "E07",
+          "mode": "mul",
+          "cpa": "P",
+          "config": {
+            "mode": "mul",
+            "a": 347,
+            "b": 26,
+            "style": "carry",
+            "showZeroPlaceholder": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "partialsAre",
+                "args": {
+                  "values": [
+                    "2082",
+                    "6940"
+                  ]
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "resultIs",
+                "args": {
+                  "value": "9022"
+                }
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-MUL-PARTIAL-SHIFT"
+                }
+              },
+              "level": 1,
+              "say": "26의 2는 얼마를 나타낼까요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-MUL-PARTIAL-SHIFT"
+                }
+              },
+              "level": 2,
+              "show": {
+                "engine": "E07",
+                "overlay": "partial-shift"
+              },
+              "say": "자리를 밀어야 하는 줄의 빈칸을 점선으로 보았어요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-MUL-PARTIAL-SHIFT"
+                }
+              },
+              "level": 3,
+              "backtrack": "g3s2u1.mul-by-tens"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PV-NO-CARRY"
+                }
+              },
+              "level": 1,
+              "say": "이 자리에서 10이 넘은 수는 어디로 갔을까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PV-NO-CARRY"
+                }
+              },
+              "level": 2,
+              "show": {
+                "engine": "E07",
+                "overlay": "place-value"
+              },
+              "say": "자리마다 숫자가 나타내는 수를 보여 줘요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PV-NO-CARRY"
+                }
+              },
+              "level": 3,
+              "backtrack": "g3s1u4.column-mul-carry"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "mul"
+              },
+              "level": 1,
+              "say": "둘째 줄은 26의 어느 숫자를 곱한 줄일까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "mul"
+              },
+              "level": 2,
+              "say": "347 × 20은 얼마일까요? 부분곱 줄과 견주어 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "mul"
+              },
+              "level": 3,
+              "backtrack": "g3s1u4.partial-products"
+            }
+          ],
+          "concepts": [
+            "g4s1u3.mul-3x2"
+          ],
+          "submit": "button",
+          "views": [
+            {
+              "slot": "right",
+              "engine": "E07",
+              "mode": "mul",
+              "cpa": "P",
+              "config": {
+                "mode": "mul",
+                "a": 347,
+                "b": 26,
+                "style": "carry",
+                "showZeroPlaceholder": true
+              }
+            },
+            {
+              "slot": "left",
+              "engine": "E04",
+              "mode": "area-model",
+              "cpa": "P",
+              "config": {
+                "mode": "area-model",
+                "a": 347,
+                "b": 26,
+                "splitA": "none",
+                "splitB": "free",
+                "showGrid": "never",
+                "showPartials": "dims"
+              }
+            }
+          ],
+          "links": [
+            {
+              "from": "left",
+              "event": "partial-product-changed",
+              "to": "right"
+            }
+          ]
+        },
+        {
+          "id": "g4s1u3.A2.T2",
+          "prompt": "508 × 34를 세로셈으로 계산해요.",
+          "engine": "E07",
+          "mode": "mul",
+          "cpa": "A",
+          "config": {
+            "mode": "mul",
+            "a": 508,
+            "b": 34,
+            "style": "carry",
+            "showZeroPlaceholder": false
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "resultIs",
+                "args": {
+                  "value": "17272"
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "complete"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-MUL-PARTIAL-SHIFT"
+                }
+              },
+              "level": 1,
+              "say": "34의 3은 얼마를 나타낼까요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-MUL-PARTIAL-SHIFT"
+                }
+              },
+              "level": 2,
+              "show": {
+                "engine": "E07",
+                "overlay": "partial-shift"
+              },
+              "say": "자리를 밀어야 하는 줄의 빈칸을 점선으로 보았어요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-MUL-PARTIAL-SHIFT"
+                }
+              },
+              "level": 3,
+              "backtrack": "g3s2u1.mul-by-tens"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PV-NO-CARRY"
+                }
+              },
+              "level": 1,
+              "say": "이 자리에서 10이 넘은 수는 어디로 갔을까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PV-NO-CARRY"
+                }
+              },
+              "level": 2,
+              "show": {
+                "engine": "E07",
+                "overlay": "place-value"
+              },
+              "say": "자리마다 숫자가 나타내는 수를 보여 줘요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PV-NO-CARRY"
+                }
+              },
+              "level": 3,
+              "backtrack": "g3s1u4.column-mul-carry"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "mul"
+              },
+              "level": 1,
+              "say": "둘째 줄은 34의 어느 숫자를 곱한 줄일까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "mul"
+              },
+              "level": 2,
+              "say": "508 × 30은 얼마일까요? 부분곱 줄과 견주어 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "mul"
+              },
+              "level": 3,
+              "backtrack": "g3s1u4.partial-products"
+            }
+          ],
+          "concepts": [
+            "g4s1u3.mul-3x2"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g4s1u3.A2.T3",
+          "prompt": "누군가 347 × 26을 2776이라고 했어요. 틀린 칸을 골라 표시해요.",
+          "engine": "E07",
+          "mode": "mul",
+          "cpa": "P",
+          "config": {
+            "mode": "mul",
+            "a": 347,
+            "b": 26,
+            "style": "carry",
+            "debugSample": {
+              "rows": [
+                "2082",
+                "694"
+              ],
+              "sum": "2776"
+            }
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "flaggedCell",
+                "args": {
+                  "row": "partial",
+                  "index": 1,
+                  "column": 0
+                }
+              },
+              {
+                "kind": "equals",
+                "path": "flaggedCells",
+                "value": [
+                  {
+                    "row": "partial",
+                    "column": 0,
+                    "index": 1
+                  }
+                ]
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "mul"
+              },
+              "level": 1,
+              "say": "26의 2는 얼마를 나타낼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "mul"
+              },
+              "level": 2,
+              "say": "347 × 20은 얼마일까요? 표시된 줄들과 견주어 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "mul"
+              },
+              "level": 3,
+              "backtrack": "g3s1u4.partial-products"
+            }
+          ],
+          "concepts": [
+            "g4s1u3.mul-3x2"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g4s1u3.A2.T4",
+          "prompt": "498 × 21은 약 10000일까, 약 100000일까요?",
+          "engine": "E07",
+          "mode": "estimate",
+          "cpa": "A",
+          "config": {
+            "mode": "estimate",
+            "op": "mul",
+            "a": 498,
+            "b": 21,
+            "roundTo": 1000
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.approx.selected",
+            "value": [
+              "a"
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "estimate"
+              },
+              "level": 1,
+              "say": "498과 21은 각각 몇백, 몇십에 가까운가요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "estimate"
+              },
+              "level": 2,
+              "say": "어림한 두 수를 곱해 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "estimate"
+              },
+              "level": 3,
+              "backtrack": "g3s2u1.mul-by-tens"
+            }
+          ],
+          "concepts": [
+            "g4s1u3.mul-3x2"
+          ],
+          "submit": "button",
+          "showEngine": false,
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "approx",
+                "label": "어림한 곱",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "a",
+                    "label": "약 10000"
+                  },
+                  {
+                    "id": "b",
+                    "label": "약 100000"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

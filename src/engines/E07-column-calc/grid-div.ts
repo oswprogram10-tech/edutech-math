@@ -359,6 +359,23 @@ export function estimatePartial(
   return scaled - TEN * (reading.divisor * above);
 }
 
+/** 후보 k와 부분 피제수의 높이 관계. */
+export type EstimateFit = 'over' | 'exact' | 'short';
+
+/** 후보 k의 배수 막대가 선을 넘는지, 딱 맞는지, 모자라는지. */
+export function estimateFit(
+  state: ColumnCalcState,
+  reading: DivReading,
+  column: number,
+  k: number,
+): EstimateFit {
+  const product = reading.divisor * BigInt(k);
+  const partial = estimatePartial(state, reading, column);
+  if (product > partial) return 'over';
+  if (product === partial) return 'exact';
+  return 'short';
+}
+
 /** 후보 k가 선을 넘는가(나누는 수 × k > 부분 피제수). */
 export function estimateOver(
   state: ColumnCalcState,
@@ -366,7 +383,7 @@ export function estimateOver(
   column: number,
   k: number,
 ): boolean {
-  return reading.divisor * BigInt(k) > estimatePartial(state, reading, column);
+  return estimateFit(state, reading, column, k) === 'over';
 }
 
 export function computeDivPlan(state: ColumnCalcState): DivPlan {
