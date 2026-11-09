@@ -1,3 +1,5 @@
+export * from './geometry';
+
 export { MathError } from './errors';
 export type { MathErrorCode, MathErrorOptions } from './errors';
 
