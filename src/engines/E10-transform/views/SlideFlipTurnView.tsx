@@ -471,7 +471,7 @@ export function SlideFlipTurnView({
                   key={`flip-${handle.side}`}
                   data-flip-handle={handle.side}
                   role="button"
-                  aria-label={`${S.sides[handle.side]}로 뒤집기`}
+                  aria-label={S.moveText.flip(S.sides[handle.side])}
                   onPointerDown={(event) => {
                     event.stopPropagation();
                     dispatch({ type: 'flip', side: handle.side });

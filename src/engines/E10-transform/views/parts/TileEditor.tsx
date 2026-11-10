@@ -92,7 +92,7 @@ export function TileEditor({ customCells, dispatch, readOnly }: TileEditorProps)
               role="gridcell"
               data-cell={`${cell[0]},${cell[1]}`}
               data-filled={filled ? 'true' : 'false'}
-              aria-label={`${cell[0] + 1}번째 줄 ${cell[1] + 1}번째 칸`}
+              aria-label={S.tessellation.cellAria(cell[0] + 1, cell[1] + 1)}
               aria-pressed={filled}
               disabled={readOnly}
               onClick={() => {

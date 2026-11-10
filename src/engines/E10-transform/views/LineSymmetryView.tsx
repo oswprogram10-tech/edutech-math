@@ -4,7 +4,7 @@
  * 접기 전에는 정답 축·축 개수를 그리지 않는다. 접은 결과(겹침/빈틈)는 학생이
  * 접은 뒤에만 보여 준다. 완성하기는 남은 반쪽을 절대 그리지 않는다.
  */
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent } from 'react';
 import type { EngineViewProps } from '../../../core/engine-sdk';
 import { pointerToLogical } from '../../../core/engine-sdk';
@@ -17,6 +17,7 @@ import { transformStrings as S } from '../strings.ko';
 import type { LineSymmetryState, Pt, TransformAction, TransformConfig } from '../types';
 import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../types';
 import styles from '../View.module.css';
+import { prefersReducedMotion } from './parts/motion';
 import { DotBoard } from './parts/DotBoard';
 
 const PAPER = '#fbfaf6';
@@ -49,6 +50,37 @@ function pathOf(points: readonly ScreenPoint[]): string {
     .join(' ')
     .concat(' Z');
 }
+
+/**
+ * 축에 수직인 방향으로 `scale`배 늘인 SVG 행렬.
+ *
+ * 접기 미리보기에서 1 → −1 → 1로 움직이면 종이가 축 쪽으로 납작해졌다가
+ * 반대편으로 넘어갔다가 다시 펴지는 모습이 된다.
+ */
+function foldPreviewMatrix(a: ScreenPoint, b: ScreenPoint, scale: number): string | null {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const length = Math.hypot(dx, dy);
+  if (length < 1e-9) return null;
+  const nx = -dy / length;
+  const ny = dx / length;
+  const k = scale - 1;
+  const m00 = 1 + k * nx * nx;
+  const m01 = k * nx * ny;
+  const m10 = k * ny * nx;
+  const m11 = 1 + k * ny * ny;
+  const tx = a.x - (m00 * a.x + m01 * a.y);
+  const ty = a.y - (m10 * a.x + m11 * a.y);
+  return `matrix(${m00.toFixed(4)} ${m10.toFixed(4)} ${m01.toFixed(4)} ${m11.toFixed(4)} ${tx.toFixed(2)} ${ty.toFixed(2)})`;
+}
+
+/** 접기 미리보기의 수직 배율. 0 → 접힘(−1) → 1로 돌아온다. */
+function foldPreviewScale(progress: number): number {
+  const t = progress < 0 ? 0 : progress > 1 ? 1 : progress;
+  return Math.cos(2 * Math.PI * t);
+}
+
+const FOLD_PREVIEW_MS = 700;
 
 function isTriShape(shape: LinePresetId): boolean {
   return POLYGONS[shape].board === 'tri';
@@ -131,6 +163,45 @@ export function LineSymmetryView({ state, dispatch, cpa, readOnly = false, targe
   const [cursor, setCursor] = useState<Pt>([4, 0]);
   const [focused, setFocused] = useState(false);
   const [mark, setMark] = useState<0 | 1 | 2 | 3>(0);
+  const reduced = prefersReducedMotion();
+  // 접기 미리보기는 접힌 결과가 있고, 설정이 켜져 있으며, 줄인 움직임이 아닐 때만 돈다.
+  const previewEnabled =
+    state.task !== 'complete' &&
+    state.settings.foldPreview &&
+    state.showing !== null &&
+    state.axis !== null &&
+    !reduced;
+  const [foldProgress, setFoldProgress] = useState(1);
+  const previewStarted = useRef(false);
+
+  useEffect(() => {
+    if (!previewEnabled) {
+      previewStarted.current = false;
+      // 효과 본문에서 바로 setState를 부르지 않도록 마이크로태스크로 미룬다.
+      let cancelled = false;
+      const reset = () => {
+        if (!cancelled) setFoldProgress(1);
+      };
+      if (typeof queueMicrotask === 'function') queueMicrotask(reset);
+      else void Promise.resolve().then(reset);
+      return () => {
+        cancelled = true;
+      };
+    }
+    if (previewStarted.current) return;
+    previewStarted.current = true;
+    if (typeof requestAnimationFrame !== 'function' || typeof performance === 'undefined') return;
+    let frame = 0;
+    let started: number | null = null;
+    const tick = (now: number) => {
+      if (started === null) started = now;
+      const value = Math.min(1, (now - started) / FOLD_PREVIEW_MS);
+      setFoldProgress(value);
+      if (value < 1) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [previewEnabled]);
 
   if (state.task === 'decalcomania') {
     const onKeyDown = (event: ReactKeyboardEvent<SVGSVGElement>) => {
@@ -269,6 +340,11 @@ export function LineSymmetryView({ state, dispatch, cpa, readOnly = false, targe
       ? shapePoints.map((point) => reflect(geom.toScreen(point), axisScreen.a, axisScreen.b))
       : null;
   const originalScreen = shapePoints.map((point) => geom.toScreen(point));
+  const foldPreviewRunning = previewEnabled && foldProgress < 1;
+  const foldPreviewTransform =
+    foldPreviewRunning && axisScreen
+      ? foldPreviewMatrix(axisScreen.a, axisScreen.b, foldPreviewScale(foldProgress))
+      : null;
 
   const moveCursor = (key: string) => {
     setCursor((current) => {
@@ -390,7 +466,7 @@ export function LineSymmetryView({ state, dispatch, cpa, readOnly = false, targe
               ? S.line.foldOk
               : S.line.foldGap
             : state.pending
-              ? '한 점을 더 골라 주세요.'
+              ? S.line.pickSecond
               : ''}
       </p>
 
@@ -514,6 +590,8 @@ export function LineSymmetryView({ state, dispatch, cpa, readOnly = false, targe
             <>
               <polygon
                 data-shape
+                data-fold-preview={foldPreviewRunning ? 'true' : undefined}
+                transform={foldPreviewTransform ?? undefined}
                 points={geom.pointsString(shapePoints)}
                 fill={foldFailFill(mirror)}
                 stroke={INK}
@@ -592,6 +670,7 @@ export function LineSymmetryView({ state, dispatch, cpa, readOnly = false, targe
                     fill="#ffffff"
                     stroke={INK}
                     strokeWidth={2.5}
+                    transform={foldPreviewTransform ?? undefined}
                   />
                 );
               })}
@@ -608,7 +687,7 @@ export function LineSymmetryView({ state, dispatch, cpa, readOnly = false, targe
             </>
           )}
 
-          {state.task !== 'complete' && focused ? (
+          {focused ? (
             <circle
               data-cursor
               cx={cursorScreen.x}

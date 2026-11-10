@@ -5,8 +5,9 @@
  * 전에는 빈 칸을 빨갛게 칠하지 않는다. 정오각형은 한 꼭짓점 둘레 시험만 한다.
  */
 import { useRef, useState } from 'react';
-import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
-import type { EngineViewProps } from '../../../core/engine-sdk';
+import type { KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent } from 'react';
+import type { EngineViewProps, Point } from '../../../core/engine-sdk';
+import { pointerToLogical } from '../../../core/engine-sdk';
 import { boardRect, cellRect, triBoardRect, triPtXY } from '../layout';
 import type { BoardRect, TriBoardRect } from '../layout';
 import {
@@ -144,6 +145,7 @@ function SquareLayer({ rect, placed, stamp, checked }: SquareLayerProps) {
             <rect
               key={`placed-${tile.id}-${cell[0]}-${cell[1]}`}
               data-placed-tile={tile.id}
+              data-overlap-cell={overlap ? 'true' : undefined}
               x={box.x + 0.5}
               y={box.y + 0.5}
               width={box.width - 1}
@@ -245,6 +247,7 @@ function TriLayer({ rect, placed, stamp, checked }: TriLayerProps) {
             <polygon
               key={`placed-${tile.id}-${index}`}
               data-placed-tile={tile.id}
+              data-overlap-cell={overlap ? 'true' : undefined}
               points={triPointsToString(rect, points)}
               fill={overlap ? 'url(#e10-tess-overlap)' : tileColor(tile.id)}
               stroke={overlap ? RED : '#5b6b88'}
@@ -301,30 +304,32 @@ function polar(center: { x: number; y: number }, radius: number, degrees: number
   return { x: center.x + radius * Math.cos(radians), y: center.y + radius * Math.sin(radians) };
 }
 
-function PentagonLayer({ hub, checked }: { readonly hub: number; readonly checked: boolean }) {
+function PentagonLayer({ hub, gapCheck }: { readonly hub: number; readonly gapCheck: boolean }) {
   const center = { x: 500, y: 520 };
   const radius = 150;
-  const distance = radius * 0.85;
+  // 오각형은 허브 꼭짓점을 공유하므로 중심까지의 거리가 외접원 반지름과 같다.
+  const distance = radius;
   const startAngle = -90;
-  const gap = hub === 3 ? 36 : 0;
-  const overlap = hub === 4 ? 72 : 0;
+  // 오각형 i는 [-144 + 108i, -36 + 108i]를 차지한다. 360° = [-144, 216].
+  const occupiedEnd = -144 + 108 * hub;
+  const gapDegrees = gapCheck ? Math.max(0, Math.min(360, 216 - occupiedEnd)) : 0;
+  const overlapDegrees = Math.max(0, occupiedEnd - 216);
   const sector = (from: number, to: number) => {
     const a = polar(center, distance, from);
     const b = polar(center, distance, to);
-    return `M ${center.x} ${center.y} L ${a.x.toFixed(2)} ${a.y.toFixed(2)} A ${distance} ${distance} 0 0 1 ${b.x.toFixed(2)} ${b.y.toFixed(2)} Z`;
+    const largeArc = to - from > 180 ? 1 : 0;
+    return `M ${center.x} ${center.y} L ${a.x.toFixed(2)} ${a.y.toFixed(2)} A ${distance} ${distance} 0 ${largeArc} 1 ${b.x.toFixed(2)} ${b.y.toFixed(2)} Z`;
   };
   return (
     <g data-pentagon-hub={hub}>
-      {sector(startAngle, startAngle + 72 * hub).length > 0 ? (
-        <circle
-          cx={center.x}
-          cy={center.y}
-          r={distance + 4}
-          fill="none"
-          stroke="#d7deea"
-          strokeDasharray="8 6"
-        />
-      ) : null}
+      <circle
+        cx={center.x}
+        cy={center.y}
+        r={distance + 4}
+        fill="none"
+        stroke="#d7deea"
+        strokeDasharray="8 6"
+      />
       {Array.from({ length: hub }, (_, index) => {
         const angle = startAngle + index * 108;
         const pentagonCenter = polar(center, distance, angle);
@@ -343,28 +348,23 @@ function PentagonLayer({ hub, checked }: { readonly hub: number; readonly checke
           />
         );
       })}
-      {gap > 0 ? (
+      {gapCheck && gapDegrees > 0 ? (
         <path
           data-gap-cell
-          d={sector(startAngle, startAngle + gap)}
+          d={sector(occupiedEnd, 216)}
           fill="url(#e10-tess-gap)"
           stroke={RED}
           strokeWidth={2.5}
         />
       ) : null}
-      {overlap > 0 ? (
+      {overlapDegrees > 0 ? (
         <path
           data-overlap-cell
-          d={sector(startAngle, startAngle + overlap)}
+          d={sector(216, occupiedEnd)}
           fill="url(#e10-tess-overlap)"
           stroke={RED}
           strokeWidth={2.5}
         />
-      ) : null}
-      {checked && gap === 0 && overlap === 0 ? (
-        <text x={500} y={860} textAnchor="middle" fontSize={24} fontWeight={800} fill="#1f7a4d">
-          {S.tessellation.full}
-        </text>
       ) : null}
     </g>
   );
@@ -379,6 +379,63 @@ export function TessellationView({ state, dispatch, cpa, readOnly = false, targe
   const stats = tessellationStats(state.placed, state.tile);
   const centerIndex = Math.min(state.center, Math.max(0, state.stamp.outline.length - 1));
   const centerPoint = state.stamp.outline[centerIndex] ?? [0, 0];
+  const checked = state.checked && state.settings.gapCheck;
+  const drag = useRef<{
+    readonly pointerId: number;
+    readonly startA: number;
+    readonly startB: number;
+    appliedA: number;
+    appliedB: number;
+  } | null>(null);
+
+  /** 화면 좌표를 격자 단위(정사각형) 또는 삼각 격자 좌표로 되돌린다. */
+  const gridCoords = (point: Point): { readonly a: number; readonly b: number } => {
+    if (family === 'tri') {
+      const root = Math.sqrt(3) / 2;
+      const b = (point.y - TRI_BOARD.originY) / (root * TRI_BOARD.unit);
+      const a = (point.x - TRI_BOARD.originX) / TRI_BOARD.unit - b / 2;
+      return { a, b };
+    }
+    return { a: (point.x - rect.x) / rect.cell, b: (point.y - rect.y) / rect.cell };
+  };
+
+  const pointerPoint = (event: ReactPointerEvent<SVGSVGElement>) =>
+    pointerToLogical(event, svgRef.current, { width: LOGICAL_WIDTH, height: LOGICAL_HEIGHT });
+
+  const onPointerDown = (event: ReactPointerEvent<SVGSVGElement>) => {
+    if (readOnly || cpa !== 'C' || family === 'free') return;
+    const start = gridCoords(pointerPoint(event));
+    drag.current = {
+      pointerId: event.pointerId,
+      startA: start.a,
+      startB: start.b,
+      appliedA: 0,
+      appliedB: 0,
+    };
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      // jsdom처럼 포인터 캡처를 지원하지 않는 환경.
+    }
+  };
+
+  const onPointerMove = (event: ReactPointerEvent<SVGSVGElement>) => {
+    const active = drag.current;
+    if (!active || active.pointerId !== event.pointerId || readOnly) return;
+    const current = gridCoords(pointerPoint(event));
+    const da = Math.round(current.a - active.startA);
+    const db = Math.round(current.b - active.startB);
+    if (da === active.appliedA && db === active.appliedB) return;
+    const dx = da - active.appliedA;
+    const dy = db - active.appliedB;
+    active.appliedA = da;
+    active.appliedB = db;
+    dispatch({ type: 'move', move: { kind: 'slide', dx, dy } });
+  };
+
+  const onPointerUp = () => {
+    drag.current = null;
+  };
 
   const pickTile = (tile: TessTile) => {
     dispatch({ type: 'select-tile', tile });
@@ -488,13 +545,19 @@ export function TessellationView({ state, dispatch, cpa, readOnly = false, targe
   };
 
   const status =
-    stats.overlapCells > 0
-      ? S.tessellation.hasOverlap
-      : state.checked && stats.gapCells > 0
-        ? S.tessellation.hasGap
-        : state.checked && stats.gapCells === 0 && stats.overlapCells === 0
-          ? S.tessellation.full
-          : '';
+    family === 'free'
+      ? state.hub >= 4
+        ? S.tessellation.hasOverlap
+        : state.hub === 3 && state.settings.gapCheck
+          ? S.tessellation.hasGap
+          : ''
+      : stats.overlapCells > 0
+        ? S.tessellation.hasOverlap
+        : checked && stats.gapCells > 0
+          ? S.tessellation.hasGap
+          : checked && stats.gapCells === 0 && stats.overlapCells === 0
+            ? S.tessellation.full
+            : '';
 
   const tileOptions: readonly TessTile[] = [
     ...state.settings.baseTiles,
@@ -550,7 +613,12 @@ export function TessellationView({ state, dispatch, cpa, readOnly = false, targe
           data-testid="transform-canvas"
           data-motion="full"
           data-cpa={cpa}
+          style={{ touchAction: 'none' }}
           onKeyDown={onKeyDown}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerUp}
         >
           <defs>
             <pattern
@@ -615,7 +683,7 @@ export function TessellationView({ state, dispatch, cpa, readOnly = false, targe
                 rect={rect}
                 placed={state.placed}
                 stamp={state.stamp}
-                checked={state.checked}
+                checked={checked}
               />
             </>
           ) : null}
@@ -655,11 +723,13 @@ export function TessellationView({ state, dispatch, cpa, readOnly = false, targe
                 rect={TRI_BOARD}
                 placed={state.placed}
                 stamp={state.stamp}
-                checked={state.checked}
+                checked={checked}
               />
             </>
           ) : null}
-          {family === 'free' ? <PentagonLayer hub={state.hub} checked={state.checked} /> : null}
+          {family === 'free' ? (
+            <PentagonLayer hub={state.hub} gapCheck={state.settings.gapCheck} />
+          ) : null}
         </svg>
       </div>
 
@@ -712,6 +782,30 @@ export function TessellationView({ state, dispatch, cpa, readOnly = false, targe
                       }}
                     />
                   </label>
+                ) : null}
+                {family === 'tri' ? (
+                  <>
+                    <button
+                      type="button"
+                      className={styles.button}
+                      disabled={readOnly}
+                      onClick={() =>
+                        dispatch({ type: 'move', move: { kind: 'slide', dx: -1, dy: 1 } })
+                      }
+                    >
+                      {S.tessellation.diagonalSw}
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.button}
+                      disabled={readOnly}
+                      onClick={() =>
+                        dispatch({ type: 'move', move: { kind: 'slide', dx: 1, dy: -1 } })
+                      }
+                    >
+                      {S.tessellation.diagonalNe}
+                    </button>
+                  </>
                 ) : null}
               </div>
             </section>
@@ -835,14 +929,16 @@ export function TessellationView({ state, dispatch, cpa, readOnly = false, targe
             >
               {S.tessellation.clearAll}
             </button>
-            <button
-              type="button"
-              className={styles.button}
-              disabled={readOnly}
-              onClick={() => dispatch({ type: 'check-gaps' })}
-            >
-              {S.tessellation.checkGaps}
-            </button>
+            {state.settings.gapCheck ? (
+              <button
+                type="button"
+                className={styles.button}
+                disabled={readOnly}
+                onClick={() => dispatch({ type: 'check-gaps' })}
+              >
+                {S.tessellation.checkGaps}
+              </button>
+            ) : null}
           </div>
         </section>
       </div>

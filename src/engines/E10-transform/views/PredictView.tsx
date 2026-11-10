@@ -215,7 +215,7 @@ export function PredictView({
   const paintedKeys = new Set(state.painted.map((cell) => cellKey(cell)));
   const result = resultFigure(state);
   const matches = sameCellSet(result.cells, state.painted);
-  const firstTurn = state.operations.find((move) => move.kind === 'turn');
+  const firstTurn = state.operations[0];
 
   const paintAt = (cell: Cell, value: boolean) => {
     dispatch({ type: 'paint', cells: [cell], value });
@@ -444,7 +444,7 @@ export function PredictView({
             />
           </g>
 
-          {firstTurn && firstTurn.kind === 'turn' ? (
+          {!state.confirmed && firstTurn && firstTurn.kind === 'turn' ? (
             <g data-pin pointerEvents="none">
               <circle
                 cx={ptXY(rect, firstTurn.center).x}

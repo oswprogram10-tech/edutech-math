@@ -2,6 +2,14 @@
 import type { Side, TurnAngle, TurnDirection } from './types';
 import type { LinePresetId, PointPresetId } from './polygons';
 
+/** 받침에 맞춘 방향 조사. '위·아래'는 로, '왼쪽·오른쪽'은 으로. */
+function directionParticle(word: string): '로' | '으로' {
+  const code = word.charCodeAt(word.length - 1);
+  if (code < 0xac00 || code > 0xd7a3) return '로';
+  const final = (code - 0xac00) % 28;
+  return final === 0 || final === 8 ? '로' : '으로';
+}
+
 export const transformStrings = {
   name: '도형 이동',
   canvasLabel: {
@@ -42,8 +50,8 @@ export const transformStrings = {
   vertexAria: (label: string) => `꼭짓점 ${label}`,
 
   moveText: {
-    slide: (side: string, cells: number) => `${side}로 ${cells}칸 밀기`,
-    flip: (side: string) => `${side}로 뒤집기`,
+    slide: (side: string, cells: number) => `${side}${directionParticle(side)} ${cells}칸 밀기`,
+    flip: (side: string) => `${side}${directionParticle(side)} 뒤집기`,
     turn: (label: string, direction: string, angle: number) =>
       `점 ${label}을 중심으로 ${direction} 방향으로 ${angle}° 돌리기`,
   },
@@ -62,6 +70,7 @@ export const transformStrings = {
     gridLabel: '모눈',
     gridValue: (grid: number) => `${grid}×${grid}`,
     moveListTitle: '이동 기록',
+    historyLabel: '이동 기록',
     operationTitle: '해야 할 움직임',
     noMoves: '아직 움직이지 않았어요.',
   },
@@ -121,6 +130,9 @@ export const transformStrings = {
     hubRemove: '하나 빼기',
     editorTitle: '변 깎기 편집판',
     editorHint: '방향키로 칸을 옮기고 Enter로 깎아 보세요. 붙은 칸은 다른 무늬로 보여요.',
+    cellAria: (column: number, row: number) => `${row}번째 줄 ${column}번째 칸`,
+    diagonalSw: '↙ 왼쪽 아래',
+    diagonalNe: '↗ 오른쪽 위',
     cells: '칸 수',
   },
 
@@ -143,6 +155,7 @@ export const transformStrings = {
     clearAxis: '축 지우기',
     pointCursor: '점 커서',
     axisPrompt: '점 두 개를 골라 축을 그어 보세요.',
+    pickSecond: '한 점을 더 골라 주세요.',
     foldOk: '딱 겹쳐요',
     foldGap: '어긋나서 빈틈이 생겨요',
     shapePick: (index: number) => `도형 ${index + 1}`,

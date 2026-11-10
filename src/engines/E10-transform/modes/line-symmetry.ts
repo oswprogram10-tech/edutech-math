@@ -4,7 +4,7 @@
  * 판정은 `src/core/math/geometry.ts`의 정확한 기하 도우미만 쓴다. 접은 그림은
  * 화면 계산이며, 학생이 접기 전에는 축의 정답·개수를 그리지 않는다.
  */
-import { gp, lineKey, orientation, polygonMirrorSymmetric } from '../../../core/math';
+import { gp, lineKey, pointOnLine, polygonMirrorSymmetric } from '../../../core/math';
 import type { GPoint, PlaneMetric } from '../../../core/math';
 import type { JsonValue, Observation } from '../../../core/engine-sdk';
 import { POLYGONS, isLinePresetId } from '../polygons';
@@ -133,22 +133,12 @@ function axisPairs(state: LineSymmetryState): [Pt, Pt] | null {
   return [state.axis[0], state.axis[1]];
 }
 
-function isOnSegment(point: Pt, a: Pt, b: Pt): boolean {
-  const p = asGPoint(point);
-  if (orientation(asGPoint(a), asGPoint(b), p) !== 0) return false;
-  const minX = Math.min(a[0], b[0]);
-  const maxX = Math.max(a[0], b[0]);
-  const minY = Math.min(a[1], b[1]);
-  const maxY = Math.max(a[1], b[1]);
-  return point[0] >= minX && point[0] <= maxX && point[1] >= minY && point[1] <= maxY;
-}
-
-/** 축 위에 서로 이웃하지 않은 꼭짓점 둘이 있는지. 대각선 접기 감지에 쓴다. */
 function isDiagonalAxis(shape: LinePresetId, a: Pt, b: Pt): boolean {
   const points = POLYGONS[shape].points;
   const onAxis: number[] = [];
   points.forEach((point, index) => {
-    if (isOnSegment(point, a, b)) onAxis.push(index);
+    // 축은 고른 두 점을 지나는 직선 전체다. 선분 밖으로 연장된 꼭짓점도 센다.
+    if (pointOnLine(asGPoint(point), asGPoint(a), asGPoint(b))) onAxis.push(index);
   });
   const count = points.length;
   for (let left = 0; left < onAxis.length; left += 1) {

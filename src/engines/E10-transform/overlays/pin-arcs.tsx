@@ -117,12 +117,13 @@ export function PinArcsOverlay({ state }: OverlayProps<TransformConfig, Transfor
   state.operations.forEach((move, index) => {
     if (move.kind === 'turn') turns.push({ move, index });
   });
-  const first = turns[0];
-  if (!first) return null;
   const rect = boardRect(state.settings.grid);
-  const center = ptXY(rect, first.move.center);
 
   if (!state.confirmed) {
+    // 확인 전에는 첫 움직임이 돌리기일 때만 중심과 궤도를 미리 보여 준다.
+    const first = state.operations[0];
+    if (!first || first.kind !== 'turn') return null;
+    const center = ptXY(rect, first.center);
     const radii = new Set<string>();
     for (const point of state.start.outline) {
       const xy = ptXY(rect, point);
@@ -153,6 +154,8 @@ export function PinArcsOverlay({ state }: OverlayProps<TransformConfig, Transfor
       </CanvasAlignedOverlay>
     );
   }
+
+  if (turns.length === 0) return null;
 
   return (
     <CanvasAlignedOverlay

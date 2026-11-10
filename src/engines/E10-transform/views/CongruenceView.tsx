@@ -333,7 +333,7 @@ export function CongruenceView({ state, dispatch, cpa, readOnly = false, targetS
                 const movingA = moving.outline[index];
                 const movingB = moving.outline[(index + 1) % count];
                 const fixedA = state.fixed[fixedIndex];
-                const fixedB = state.fixed[(fixedIndex + 1) % count];
+                const fixedB = state.fixed[correspondence[(index + 1) % count] ?? -1];
                 if (!movingA || !movingB || !fixedA || !fixedB) return null;
                 const color = CORR_COLORS[index % CORR_COLORS.length] ?? BLUE;
                 return (

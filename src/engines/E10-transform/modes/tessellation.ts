@@ -156,6 +156,7 @@ export function reduceTessellation(
       return { ...state, placed: [], movesUsed: [], checked: false };
     }
     case 'check-gaps':
+      if (!state.settings.gapCheck) return state;
       return state.checked ? state : { ...state, checked: true };
     case 'toggle-notch': {
       if (state.settings.customize !== 'edge-translate') return state;
@@ -172,7 +173,9 @@ export function reduceTessellation(
     case 'hub-remove':
       return state.hub <= 1 ? state : { ...state, hub: state.hub - 1 };
     case 'select-center': {
-      if (!Number.isInteger(action.index) || action.index < 0 || action.index > 3) return state;
+      if (!Number.isInteger(action.index) || action.index < 0) return state;
+      // 육각형 타일은 꼭짓점이 6개(4·5 포함)라 0~3으로 자르지 않는다.
+      if (action.index >= state.stamp.outline.length) return state;
       return { ...state, center: action.index };
     }
     default:

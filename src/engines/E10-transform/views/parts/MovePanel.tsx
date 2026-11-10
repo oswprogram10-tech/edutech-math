@@ -23,10 +23,13 @@ export function MovePanel({ state, figure, dispatch, readOnly }: MovePanelProps)
   const [side, setSide] = useState<Side>('right');
   const [cells, setCells] = useState(1);
   const [turnDirection, setTurnDirection] = useState<TurnDirection>('cw');
-  const [turnAngle, setTurnAngle] = useState<TurnAngle>(90);
+  const [turnAngle, setTurnAngle] = useState<TurnAngle>(() => state.settings.turnAngles[0] ?? 90);
 
   const allowed = state.settings.allowed;
   const maxCells = Math.max(1, state.settings.grid - 1);
+  const effectiveAngle = state.settings.turnAngles.includes(turnAngle)
+    ? turnAngle
+    : (state.settings.turnAngles[0] ?? 90);
   const centerIndex = Math.min(state.center, Math.max(0, figure.outline.length - 1));
   const label = S.vertexLabels[centerIndex] ?? S.vertexLabels[0];
 
@@ -125,7 +128,7 @@ export function MovePanel({ state, figure, dispatch, readOnly }: MovePanelProps)
               key={angle}
               type="button"
               className={styles.button}
-              aria-pressed={turnAngle === angle}
+              aria-pressed={effectiveAngle === angle}
               disabled={readOnly || !allowed.includes('turn')}
               onClick={() => setTurnAngle(angle)}
             >
@@ -162,7 +165,7 @@ export function MovePanel({ state, figure, dispatch, readOnly }: MovePanelProps)
             dispatch({
               type: 'turn',
               direction: turnDirection,
-              angle: turnAngle,
+              angle: effectiveAngle,
               center: point,
             });
           }}
@@ -171,7 +174,7 @@ export function MovePanel({ state, figure, dispatch, readOnly }: MovePanelProps)
         </button>
       </section>
 
-      <section className={styles.panelGroup} aria-label="기록">
+      <section className={styles.panelGroup} aria-label={S.panel.historyLabel}>
         <span className={styles.panelLabel}>{S.panel.moveListTitle}</span>
         <span className={styles.badge} data-testid="center-label">
           {S.centerAnnounce(label)}

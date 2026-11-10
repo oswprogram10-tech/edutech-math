@@ -125,6 +125,21 @@ test('키보드로 결과 칸 7개를 칠하고 확인하면 결과가 겹친다
   await capture(page, 'predict');
 });
 
+test('predict는 첫 움직임이 돌리기일 때만 확인 전 중심을 보여 준다', async ({ page }) => {
+  const turn = { type: 'turn', direction: 'cw', angle: 90, center: 'vertex-A' };
+  const slide = { type: 'slide', direction: 'right', cells: 1 };
+
+  const firstSlide = await openEngine(page, { at: [1, 1], operation: [slide, turn] });
+  await page.getByLabel('모드').selectOption('predict');
+  await pollObservation(page, (current) => current.mode === 'predict');
+  await expect(firstSlide.canvas.locator('[data-pin]')).toHaveCount(0);
+
+  const firstTurn = await openEngine(page, { at: [1, 1], operation: [turn, slide] });
+  await page.getByLabel('모드').selectOption('predict');
+  await pollObservation(page, (current) => current.mode === 'predict');
+  await expect(firstTurn.canvas.locator('[data-pin]')).toHaveCount(1);
+});
+
 test('두 번 이동 목표를 방향키와 R로 만든다', async ({ page }) => {
   const { canvas } = await openEngine(page, {
     at: [1, 1],

@@ -99,6 +99,52 @@ test('쪽매맞춤 키보드: 정사각 타일 9개로 틀을 정확히 채운�
   await capture(page, 'tessellation-square');
 });
 
+test('쪽매맞춤: 포인터로 타일을 끌어 한 칸 옮긴다', async ({ page }) => {
+  const { canvas } = await openEngine(page);
+  await chooseMode(page, 'tessellation');
+  await canvas.scrollIntoViewIfNeeded();
+  const box = await canvas.boundingBox();
+  if (!box) throw new Error('쪽매맞춤 캔버스가 없습니다.');
+  // 18×18 틀은 논리 좌표 880(=1000−60×2)을 차지한다. 한 칸은 880/18이다.
+  const cell = (box.width / 1000) * (880 / 18);
+  const viewport = page.viewportSize();
+  const startX = box.x + box.width / 2;
+  const startY = Math.max(
+    box.y + 30,
+    Math.min(box.y + box.height / 2, (viewport?.height ?? 720) - 50),
+  );
+
+  await page.mouse.move(startX, startY);
+  await page.mouse.down();
+  await page.mouse.move(startX + cell, startY, { steps: 5 });
+  await page.mouse.up();
+
+  await pollObservation(
+    page,
+    (current) => Array.isArray(current['movesUsed']) && current['movesUsed'].includes('slide'),
+  );
+  await capture(page, 'tessellation-drag');
+});
+
+test('쪽매맞춤 삼각 격자: ↙·↗ 버튼으로 대각선으로 민다', async ({ page }) => {
+  const { canvas } = await openEngine(page);
+  await chooseMode(page, 'tessellation');
+  await page.getByRole('button', { name: '정삼각형', exact: true }).click();
+  await pollObservation(page, (current) => current.tile === 'triangle');
+
+  await page.getByRole('button', { name: '↙ 왼쪽 아래' }).click();
+  await pollObservation(
+    page,
+    (current) => Array.isArray(current['movesUsed']) && current['movesUsed'].length >= 1,
+  );
+  await page.getByRole('button', { name: '↗ 오른쪽 위' }).click();
+  await pollObservation(
+    page,
+    (current) => Array.isArray(current['movesUsed']) && current['movesUsed'].length >= 2,
+  );
+  await expect(canvas.locator('[data-stamp]')).not.toHaveCount(0);
+});
+
 test('쪽매맞춤 정오각형: 세 개를 놓으면 36° 빈틈이 드러난다', async ({ page }) => {
   const { canvas } = await openEngine(page);
   await chooseMode(page, 'tessellation');
