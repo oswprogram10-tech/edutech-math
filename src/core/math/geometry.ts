@@ -276,3 +276,78 @@ export function congruentPolygons(p: readonly GPoint[], q: readonly GPoint[]): b
   const reversedSignature = signatureOf(reversed);
   return reversedSignature !== null && rotationsMatch(firstSignature, reversedSignature);
 }
+
+// ── T108 ──
+/**
+ * T108(E17 분류기)용 y 배율 기하. 카드 좌표 `(x, y)`는 실제 점 `(x, y·√k)`를 뜻하고,
+ * `yScale2`는 `k`(1 또는 3)다. 정삼각형을 정확한 유리수 좌표로 다루기 위해서다.
+ */
+
+/** 선분 AB와 CD가 평행한지. 길이가 0인 선분이 있으면 false. */
+export function parallel(a: GPoint, b: GPoint, c: GPoint, d: GPoint): boolean {
+  const first = vsub(b, a);
+  const second = vsub(d, c);
+  if (first.x.isZero() && first.y.isZero()) return false;
+  if (second.x.isZero() && second.y.isZero()) return false;
+  return cross(first, second).isZero();
+}
+
+/** y 배율을 반영한 내적 `u.x·v.x + yScale2·u.y·v.y`. */
+export function dotScaled(u: GPoint, v: GPoint, yScale2: Rational): Rational {
+  return u.x.mul(v.x).add(yScale2.mul(u.y.mul(v.y)));
+}
+
+/** y 배율을 반영한 길이의 제곱. */
+export function dist2Scaled(a: GPoint, b: GPoint, yScale2: Rational): Rational {
+  return dotScaled(vsub(a, b), vsub(a, b), yScale2);
+}
+
+/** y 배율을 반영한 각의 종류. 외적의 0 여부는 양수 배율에서 바뀌지 않는다. */
+export function angleKindScaled(
+  a: GPoint,
+  vertex: GPoint,
+  b: GPoint,
+  yScale2: Rational,
+): AngleKind {
+  const first = vsub(a, vertex);
+  const second = vsub(b, vertex);
+  const product = dotScaled(first, second, yScale2);
+  if (product.isZero()) return 'right';
+  if (product.isNegative()) {
+    return cross(first, second).isZero() ? 'straight' : 'obtuse';
+  }
+  return 'acute';
+}
+
+/**
+ * 두 각의 크기를 비교한다. 각 1이 작으면 -1, 같으면 0, 크면 1.
+ * cos 비교를 제곱으로 하므로 제곱근이 필요 없다. 길이 0인 변이 있으면 0.
+ */
+export function compareAngles(
+  a1: GPoint,
+  v1: GPoint,
+  b1: GPoint,
+  a2: GPoint,
+  v2: GPoint,
+  b2: GPoint,
+  yScale2: Rational,
+): -1 | 0 | 1 {
+  const u1 = vsub(a1, v1);
+  const w1 = vsub(b1, v1);
+  const u2 = vsub(a2, v2);
+  const w2 = vsub(b2, v2);
+  const p1 = dist2Scaled(a1, v1, yScale2).mul(dist2Scaled(b1, v1, yScale2));
+  const p2 = dist2Scaled(a2, v2, yScale2).mul(dist2Scaled(b2, v2, yScale2));
+  if (p1.isZero() || p2.isZero()) return 0;
+  const d1 = dotScaled(u1, w1, yScale2);
+  const d2 = dotScaled(u2, w2, yScale2);
+  if (d1.isNegative() !== d2.isNegative()) {
+    return d1.isNegative() ? 1 : -1;
+  }
+  const first = d1.mul(d1).mul(p2);
+  const second = d2.mul(d2).mul(p1);
+  const order = first.compareTo(second);
+  if (order === 0) return 0;
+  if (d1.isNegative()) return order > 0 ? 1 : -1;
+  return order > 0 ? -1 : 1;
+}
