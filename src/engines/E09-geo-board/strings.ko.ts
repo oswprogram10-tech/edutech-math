@@ -146,7 +146,7 @@ export const geoBoardStrings = {
     tools: {
       rope: '밧줄',
       radius: '반지름',
-      chord: '현',
+      chord: '선분',
       compass: '컴퍼스',
     },
     ropeLabel: '밧줄 길이',

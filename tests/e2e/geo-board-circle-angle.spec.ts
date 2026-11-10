@@ -94,6 +94,39 @@ test('circle 밧줄을 72칸 돌리면 커버리지가 100%다', async ({ page }
   await capture(page, 'circle-rope');
 });
 
+test('circle 밧줄 길이를 바꾸면 밧줄·자국 반지름이 바뀐다', async ({ page }) => {
+  const { canvas } = await openEngine(page, {
+    mode: 'circle',
+    grid: 13,
+    ropeLength: 4,
+    ropeLengths: [4, 6],
+    traceDots: true,
+  });
+  await chooseMode(page, 'circle');
+  await focusCanvas(canvas);
+  const mainCircle = canvas.locator('circle[fill="none"][stroke-width="2.5"]');
+
+  // 13×13 판의 못 간격은 800/12칸이다. 밧줄 4칸 = 266.7, 6칸 = 400.
+  await expect.poll(async () => Math.round(Number(await mainCircle.getAttribute('r')))).toBe(267);
+  await page.keyboard.press('Enter');
+  await page.keyboard.press(']');
+  await expect.poll(async () => Math.round(Number(await mainCircle.getAttribute('r')))).toBe(400);
+
+  await page.keyboard.press('Enter');
+  await pollObservation<CircleObservation>(
+    page,
+    (current) => current.coverage?.['4'] === 1 && current.coverage?.['6'] === 1,
+  );
+
+  // 자국과 밧줄 끝도 6칸 자리(중심 500 + 400 = 900)에 찍힌다.
+  const traceDot = canvas.locator('circle[r="5"][fill="#e8872e"]');
+  const ropeEnd = canvas.locator('circle[r="6"][fill="#e8872e"]');
+  await expect(traceDot).toHaveCount(1);
+  await expect.poll(async () => Math.round(Number(await traceDot.getAttribute('cx')))).toBe(900);
+  await expect.poll(async () => Math.round(Number(await ropeEnd.getAttribute('cx')))).toBe(900);
+  await capture(page, 'circle-rope-length');
+});
+
 test('circle 현을 반대 자리로 붙이면 지름 이름표가 붙는다', async ({ page }) => {
   const { canvas } = await openEngine(page, {
     mode: 'circle',
@@ -102,7 +135,7 @@ test('circle 현을 반대 자리로 붙이면 지름 이름표가 붙는다', a
     snapDiameter: true,
   });
   await chooseMode(page, 'circle');
-  await page.getByRole('button', { name: '현', exact: true }).click();
+  await page.getByRole('button', { name: '선분', exact: true }).click();
   await focusCanvas(canvas);
   await page.keyboard.press('2');
   for (let index = 0; index < 6; index += 1) await page.keyboard.press('ArrowRight');
