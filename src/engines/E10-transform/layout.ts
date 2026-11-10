@@ -115,12 +115,12 @@ export function arcPath(
   center: Point,
   from: Point,
   to: Point,
-  angle: 90 | 180 | 270,
+  angle: number,
   direction: TurnDirection,
 ): string | null {
   const radius = Math.hypot(from.x - center.x, from.y - center.y);
   if (radius < 0.5) return null;
-  const largeArc = angle === 270 ? 1 : 0;
+  const largeArc = angle > 180 ? 1 : 0;
   const sweep = direction === 'cw' ? 1 : 0;
   return [
     `M ${from.x.toFixed(2)} ${from.y.toFixed(2)}`,
@@ -162,6 +162,71 @@ export function clockwiseArrow(
     `${(end.x - tangent.x + center.x).toFixed(2)},${(end.y - tangent.y + center.y).toFixed(2)}`,
   ];
   return { path, head: head.join(' ') };
+}
+
+/** 삼각 격자 화면 배치. `unit`은 `e1`의 화면 길이이고 √3은 여기서만 쓴다. */
+export interface TriBoardRect {
+  readonly originX: number;
+  readonly originY: number;
+  readonly unit: number;
+  readonly minA: number;
+  readonly maxA: number;
+  readonly minB: number;
+  readonly maxB: number;
+}
+
+/** 축 좌표 범위를 논리 좌표 1000×1000 가운데에 맞춘다. */
+export function triBoardRect(minA: number, maxA: number, minB: number, maxB: number): TriBoardRect {
+  const root = Math.sqrt(3) / 2;
+  const xMin = minA + minB / 2;
+  const xMax = maxA + maxB / 2;
+  const yMin = root * minB;
+  const yMax = root * maxB;
+  const width = Math.max(1, xMax - xMin);
+  const height = Math.max(1, yMax - yMin);
+  const unit = Math.min(USABLE / width, USABLE / height);
+  return {
+    originX: (LOGICAL_WIDTH - width * unit) / 2 - xMin * unit,
+    originY: (LOGICAL_HEIGHT - height * unit) / 2 - yMin * unit,
+    unit,
+    minA,
+    maxA,
+    minB,
+    maxB,
+  };
+}
+
+/** 축 좌표 `(a, b)`를 화면 좌표로. */
+export function triPtXY(rect: TriBoardRect, point: Pt): Point {
+  const root = Math.sqrt(3) / 2;
+  return {
+    x: rect.originX + (point[0] + point[1] / 2) * rect.unit,
+    y: rect.originY + root * point[1] * rect.unit,
+  };
+}
+
+export function triPolygonPoints(rect: TriBoardRect, points: readonly Pt[]): string {
+  return points
+    .map((point) => {
+      const xy = triPtXY(rect, point);
+      return `${xy.x.toFixed(2)},${xy.y.toFixed(2)}`;
+    })
+    .join(' ');
+}
+
+/** 정다각형 꼭짓점(화면 좌표). 정오각형 그리기에만 쓴다. */
+export function regularPolygonPoints(
+  center: Point,
+  radius: number,
+  sides: number,
+  startDegrees = -90,
+): string {
+  const points: string[] = [];
+  for (let index = 0; index < sides; index += 1) {
+    const xy = polar(center, radius, startDegrees + (360 / sides) * index);
+    points.push(`${xy.x.toFixed(2)},${xy.y.toFixed(2)}`);
+  }
+  return points.join(' ');
 }
 
 export { LOGICAL_HEIGHT, LOGICAL_WIDTH };
