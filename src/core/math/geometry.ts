@@ -777,3 +777,285 @@ export function lineKey(a: GPoint, b: GPoint): string {
   }
   return `${intA.toString()},${intB.toString()},${intC.toString()}`;
 }
+
+// ── T106 ──
+
+const HALF = Rational.of(2);
+const TWO_TURNS = 4;
+
+/** 두 점의 중점. */
+export function midpoint(a: GPoint, b: GPoint): GPoint {
+  return {
+    x: a.x.add(b.x).div(HALF),
+    y: a.y.add(b.y).div(HALF),
+  };
+}
+
+/** `center`를 중심으로 90°씩 `turns`번 돌린 점. 네 번이면 제자리다. */
+export function rotate90About(p: GPoint, center: GPoint, turns: number): GPoint {
+  const count = ((Math.trunc(turns) % TWO_TURNS) + TWO_TURNS) % TWO_TURNS;
+  let dx = p.x.sub(center.x);
+  let dy = p.y.sub(center.y);
+  for (let index = 0; index < count; index += 1) {
+    const nextX = dy.neg();
+    const nextY = dx;
+    dx = nextX;
+    dy = nextY;
+  }
+  return { x: center.x.add(dx), y: center.y.add(dy) };
+}
+
+/** 점이 다각형의 안쪽·변 위(꼭짓점 포함)·바깥쪽 중 어디인지. 반직선 교차 수로 센다. */
+export function locatePoint(
+  p: GPoint,
+  polygon: readonly GPoint[],
+): 'inside' | 'boundary' | 'outside' {
+  const points = simplifyPolygon(polygon);
+  if (points.length < 3) return 'outside';
+  for (let index = 0; index < points.length; index += 1) {
+    const a = points[index];
+    const b = points[(index + 1) % points.length];
+    if (!a || !b) continue;
+    if (pointOnSegment(p, a, b)) return 'boundary';
+  }
+
+  let inside = false;
+  for (let index = 0; index < points.length; index += 1) {
+    const a = points[index];
+    const b = points[(index + 1) % points.length];
+    if (!a || !b) continue;
+    const above = a.y.compareTo(p.y) > 0;
+    const below = b.y.compareTo(p.y) > 0;
+    if (above === below) continue;
+    const t = p.y.sub(a.y).div(b.y.sub(a.y));
+    const x = a.x.add(t.mul(b.x.sub(a.x)));
+    if (x.compareTo(p.x) > 0) inside = !inside;
+  }
+  return inside ? 'inside' : 'outside';
+}
+
+/** 단순 다각형이고 모든 꺾임 부호가 같으면 볼록하다. */
+export function isConvexPolygon(points: readonly GPoint[]): boolean {
+  const polygon = simplifyPolygon(points);
+  if (polygon.length < 3) return false;
+  if (!isSimplePolygon(polygon)) return false;
+  let sign: -1 | 0 | 1 = 0;
+  for (let index = 0; index < polygon.length; index += 1) {
+    const a = polygon[index];
+    const b = polygon[(index + 1) % polygon.length];
+    const c = polygon[(index + 2) % polygon.length];
+    if (!a || !b || !c) return false;
+    const turn = orientation(a, b, c);
+    if (turn === 0) return false;
+    if (sign === 0) sign = turn;
+    else if (sign !== turn) return false;
+  }
+  return true;
+}
+
+function comparePoints(a: GPoint, b: GPoint): number {
+  const x = a.x.compareTo(b.x);
+  return x !== 0 ? x : a.y.compareTo(b.y);
+}
+
+/** 볼록 껍질(반시계). 일직선 위의 점은 뺀다. 넓이가 0이면 점 3개 미만을 돌려준다. */
+export function convexHull(points: readonly GPoint[]): GPoint[] {
+  const unique: GPoint[] = [];
+  for (const point of points) {
+    if (!unique.some((existing) => samePoint(existing, point))) unique.push(point);
+  }
+  unique.sort(comparePoints);
+  if (unique.length <= 2) return unique;
+
+  const lower: GPoint[] = [];
+  for (const point of unique) {
+    while (lower.length >= 2) {
+      const first = lower[lower.length - 2];
+      const second = lower[lower.length - 1];
+      if (!first || !second) break;
+      if (cross(vsub(second, first), vsub(point, first)).compareTo(Rational.of(0)) > 0) break;
+      lower.pop();
+    }
+    lower.push(point);
+  }
+
+  const upper: GPoint[] = [];
+  for (let index = unique.length - 1; index >= 0; index -= 1) {
+    const point = unique[index];
+    if (!point) continue;
+    while (upper.length >= 2) {
+      const first = upper[upper.length - 2];
+      const second = upper[upper.length - 1];
+      if (!first || !second) break;
+      if (cross(vsub(second, first), vsub(point, first)).compareTo(Rational.of(0)) > 0) break;
+      upper.pop();
+    }
+    upper.push(point);
+  }
+
+  lower.pop();
+  upper.pop();
+  const hull = [...lower, ...upper];
+  if (hull.length < 3 || polygonArea(hull).isZero()) {
+    return hull.length >= 3 ? hull.slice(0, 2) : hull;
+  }
+  return hull;
+}
+
+function lineSide(a: GPoint, b: GPoint, p: GPoint): Rational {
+  return cross(vsub(b, a), vsub(p, a));
+}
+
+function segmentLineIntersection(p: GPoint, q: GPoint, a: GPoint, b: GPoint): GPoint {
+  const fp = lineSide(a, b, p);
+  const fq = lineSide(a, b, q);
+  const denominator = fp.sub(fq);
+  if (denominator.isZero()) return p;
+  const t = fp.div(denominator);
+  return {
+    x: p.x.add(t.mul(q.x.sub(p.x))),
+    y: p.y.add(t.mul(q.y.sub(p.y))),
+  };
+}
+
+/** 볼록 다각형 두 개의 교집합(Sutherland–Hodgman). 넓이가 0이면 `[]`. */
+export function clipConvexPolygon(subject: readonly GPoint[], clip: readonly GPoint[]): GPoint[] {
+  const clipPoints = simplifyPolygon(clip);
+  const sign = polygonOrientation(clipPoints);
+  if (sign === 0) return [];
+  let output = simplifyPolygon(subject);
+  if (output.length < 3) return [];
+
+  for (let index = 0; index < clipPoints.length; index += 1) {
+    const a = clipPoints[index];
+    const b = clipPoints[(index + 1) % clipPoints.length];
+    if (!a || !b) continue;
+    const input = output;
+    output = [];
+    for (let position = 0; position < input.length; position += 1) {
+      const current = input[position];
+      const previous = input[(position - 1 + input.length) % input.length];
+      if (!current || !previous) continue;
+      const currentInside = lineSide(a, b, current).compareTo(Rational.of(0)) * sign >= 0;
+      const previousInside = lineSide(a, b, previous).compareTo(Rational.of(0)) * sign >= 0;
+      if (currentInside) {
+        if (!previousInside) output.push(segmentLineIntersection(previous, current, a, b));
+        output.push(current);
+      } else if (previousInside) {
+        output.push(segmentLineIntersection(previous, current, a, b));
+      }
+    }
+    if (output.length === 0) return [];
+  }
+
+  const result = simplifyPolygon(output);
+  if (result.length < 3 || polygonArea(result).isZero()) return [];
+  return result;
+}
+
+function vertexIndex(points: readonly GPoint[], p: GPoint): number | null {
+  const index = points.findIndex((point) => samePoint(point, p));
+  return index >= 0 ? index : null;
+}
+
+function edgeIndex(points: readonly GPoint[], p: GPoint): number | null {
+  for (let index = 0; index < points.length; index += 1) {
+    const a = points[index];
+    const b = points[(index + 1) % points.length];
+    if (!a || !b) continue;
+    if (pointOnSegment(p, a, b)) return index;
+  }
+  return null;
+}
+
+function walkBoundary(points: readonly GPoint[], from: GPoint, to: GPoint): GPoint[] | null {
+  const startVertex = vertexIndex(points, from);
+  const endVertex = vertexIndex(points, to);
+  const startEdge = startVertex === null ? edgeIndex(points, from) : null;
+  const endEdge = endVertex === null ? edgeIndex(points, to) : null;
+  if (startVertex === null && startEdge === null) return null;
+  if (endVertex === null && endEdge === null) return null;
+
+  const result: GPoint[] = [from];
+  let index: number;
+  if (startVertex !== null) index = (startVertex + 1) % points.length;
+  else if (startEdge !== null) index = (startEdge + 1) % points.length;
+  else return null;
+  for (let step = 0; step <= points.length; step += 1) {
+    if (endVertex !== null) {
+      const current = points[index];
+      if (!current) return null;
+      result.push(current);
+      if (index === endVertex) return result;
+    } else {
+      if (index === endEdge) {
+        const current = points[index];
+        if (!current) return null;
+        result.push(current);
+        result.push(to);
+        return result;
+      }
+      const current = points[index];
+      if (!current) return null;
+      result.push(current);
+    }
+    index = (index + 1) % points.length;
+  }
+  return null;
+}
+
+/**
+ * 경계 위의 두 점 a·b를 잇는 현으로 다각형을 자른다.
+ *
+ * a·b가 서로 다르고 경계 위에 있으며, 같은 변 위가 아니고, 중점이 안쪽이고,
+ * 선분 ab가 a·b 말고 경계와 만나지 않을 때만 자른다. 첫 조각은 a에서 꼭짓점
+ * 순서대로 b까지, 둘째 조각은 b에서 a까지다. 아니면 null.
+ */
+export function splitPolygonByChord(
+  points: readonly GPoint[],
+  a: GPoint,
+  b: GPoint,
+): [GPoint[], GPoint[]] | null {
+  const polygon = simplifyPolygon(points);
+  if (polygon.length < 3) return null;
+  if (samePoint(a, b)) return null;
+
+  const vertexA = vertexIndex(polygon, a);
+  const vertexB = vertexIndex(polygon, b);
+  const edgeA = vertexA === null ? edgeIndex(polygon, a) : null;
+  const edgeB = vertexB === null ? edgeIndex(polygon, b) : null;
+  if (vertexA === null && edgeA === null) return null;
+  if (vertexB === null && edgeB === null) return null;
+  if (edgeA !== null && edgeA === edgeB) return null;
+  if (vertexA !== null && vertexB !== null && (vertexA + 1) % polygon.length === vertexB) {
+    return null;
+  }
+  if (vertexA !== null && vertexB !== null && (vertexB + 1) % polygon.length === vertexA) {
+    return null;
+  }
+
+  const middle = midpoint(a, b);
+  if (locatePoint(middle, polygon) !== 'inside') return null;
+
+  for (let index = 0; index < polygon.length; index += 1) {
+    const start = polygon[index];
+    const end = polygon[(index + 1) % polygon.length];
+    if (!start || !end) continue;
+    if (vertexA === null && index === edgeA) continue;
+    if (vertexB === null && index === edgeB) continue;
+    if (vertexA !== null && index === vertexA) continue;
+    if (vertexA !== null && (index + 1) % polygon.length === vertexA) continue;
+    if (vertexB !== null && index === vertexB) continue;
+    if (vertexB !== null && (index + 1) % polygon.length === vertexB) continue;
+    if (segmentsIntersect(a, b, start, end)) return null;
+  }
+
+  const first = walkBoundary(polygon, a, b);
+  const second = walkBoundary(polygon, b, a);
+  if (!first || !second) return null;
+  const firstPolygon = simplifyPolygon(first);
+  const secondPolygon = simplifyPolygon(second);
+  if (firstPolygon.length < 3 || secondPolygon.length < 3) return null;
+  if (polygonArea(firstPolygon).isZero() || polygonArea(secondPolygon).isZero()) return null;
+  return [firstPolygon, secondPolygon];
+}
