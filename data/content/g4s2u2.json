@@ -1,0 +1,851 @@
+{
+  "unit": "g4s2u2",
+  "title": "삼각형",
+  "activities": [
+    {
+      "id": "g4s2u2.A1",
+      "title": "드래깅 테스트 작도",
+      "tasks": [
+        {
+          "id": "g4s2u2.A1.T1",
+          "prompt": "점과 선분으로 두 변의 길이가 같은 삼각형을 그려요. 다 그렸으면 흔들기를 눌러 보세요.",
+          "engine": "E09",
+          "mode": "drag-test",
+          "cpa": "C",
+          "config": {
+            "mode": "drag-test",
+            "construction": "free",
+            "shakeButton": true,
+            "measure": ["sideLengths"],
+            "tools": ["free-point", "segment"]
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "lostAfterShake",
+            "args": { "props": ["equal-sides-2"] }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "figureHas",
+                "args": { "props": ["equal-sides-2"] }
+              },
+              "level": 1,
+              "say": "이제 흔들기를 눌러 두 변이 그대로인지 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "figureHas",
+                "args": { "props": ["equal-sides-2"] }
+              },
+              "level": 2,
+              "show": { "engine": "E09", "overlay": "shake-trail" },
+              "say": "다음에 흔들면 점이 움직일 자리를 그렸어요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "figureHas",
+                "args": { "props": ["equal-sides-2"] }
+              },
+              "level": 3,
+              "backtrack": "g4s2u2.construct-isosceles"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "drag-test" },
+              "level": 1,
+              "say": "길이 표에서 두 변의 길이가 똑같은지 살펴볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "drag-test" },
+              "level": 2,
+              "say": "두 변에 같은 눈금이 생기도록 점을 옮긴 뒤, 한 번 흔들어 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "drag-test" },
+              "level": 3,
+              "backtrack": "g4s2u2.construct-isosceles"
+            }
+          ],
+          "concepts": ["g4s2u2.construct-isosceles"],
+          "submit": "button"
+        },
+        {
+          "id": "g4s2u2.A1.T2",
+          "prompt": "컴퍼스로 두 변의 길이가 같은 삼각형을 그려요. 흔들어도 두 변이 같은지 확인해요.",
+          "engine": "E09",
+          "mode": "drag-test",
+          "cpa": "C",
+          "config": {
+            "mode": "drag-test",
+            "construction": "free",
+            "shakeButton": true,
+            "measure": ["sideLengths"],
+            "tools": ["free-point", "segment", "compass", "intersection"]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "keptAfterShake",
+                "args": { "props": ["equal-sides-2"] }
+              },
+              {
+                "kind": "predicate",
+                "name": "usedTools",
+                "args": { "kinds": ["circle", "intersection"] }
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "lostAfterShake",
+                "args": { "props": ["equal-sides-2"] }
+              },
+              "level": 1,
+              "say": "흔들어도 두 변이 같을까요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "lostAfterShake",
+                "args": { "props": ["equal-sides-2"] }
+              },
+              "level": 2,
+              "show": { "engine": "E09", "overlay": "shake-trail" },
+              "say": "흔들기 전 모양을 점선으로 그렸어요. 어느 변이 달라졌나요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "lostAfterShake",
+                "args": { "props": ["equal-sides-2"] }
+              },
+              "level": 3,
+              "backtrack": "g4s2u2.construct-isosceles"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "drag-test" },
+              "level": 1,
+              "say": "점 두 개에서 같은 폭으로 원을 그리면, 두 원이 만나는 점은 어떤 점일까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "drag-test" },
+              "level": 2,
+              "say": "다 그렸으면 흔들기를 눌러 두 변이 그대로인지 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "drag-test" },
+              "level": 3,
+              "backtrack": "g3s2u3.compass-construct"
+            }
+          ],
+          "concepts": ["g4s2u2.construct-isosceles"],
+          "submit": "button"
+        },
+        {
+          "id": "g4s2u2.A1.T3",
+          "prompt": "컴퍼스로 세 변의 길이가 모두 같은 삼각형을 그리고 흔들어 보세요.",
+          "engine": "E09",
+          "mode": "drag-test",
+          "cpa": "C",
+          "config": {
+            "mode": "drag-test",
+            "construction": "free",
+            "shakeButton": true,
+            "measure": ["sideLengths"],
+            "tools": ["free-point", "segment", "compass", "intersection"]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "keptAfterShake",
+                "args": { "props": ["equal-sides-3"] }
+              },
+              {
+                "kind": "predicate",
+                "name": "usedTools",
+                "args": { "kinds": ["circle", "intersection"] }
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "lostAfterShake",
+                    "args": { "props": ["equal-sides-2"] }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "lostAfterShake",
+                    "args": { "props": ["equal-sides-3"] }
+                  }
+                ]
+              },
+              "level": 1,
+              "say": "흔들어도 두 변이 같을까요?"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "lostAfterShake",
+                    "args": { "props": ["equal-sides-2"] }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "lostAfterShake",
+                    "args": { "props": ["equal-sides-3"] }
+                  }
+                ]
+              },
+              "level": 2,
+              "show": { "engine": "E09", "overlay": "shake-trail" },
+              "say": "흔들기 전 모양을 점선으로 그렸어요. 어느 변이 달라졌나요?"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "lostAfterShake",
+                    "args": { "props": ["equal-sides-2"] }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "lostAfterShake",
+                    "args": { "props": ["equal-sides-3"] }
+                  }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g4s2u2.construct-isosceles"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "keptAfterShake",
+                "args": { "props": ["equal-sides-2"] }
+              },
+              "level": 1,
+              "say": "원의 폭을 어느 두 점 사이 길이로 벌렸나요? 세 번째 변과 견주어 봐요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "keptAfterShake",
+                "args": { "props": ["equal-sides-2"] }
+              },
+              "level": 2,
+              "say": "두 원이 만나는 점에서 세 변의 길이를 견주어 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "keptAfterShake",
+                "args": { "props": ["equal-sides-2"] }
+              },
+              "level": 3,
+              "backtrack": "g4s2u2.construct-isosceles"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "drag-test" },
+              "level": 1,
+              "say": "세 변이 모두 같으려면 컴퍼스를 어떤 길이로 벌려야 할까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "drag-test" },
+              "level": 2,
+              "say": "원의 폭과 세 번째 변의 길이를 견주어 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "drag-test" },
+              "level": 3,
+              "backtrack": "g4s2u2.construct-isosceles"
+            }
+          ],
+          "concepts": ["g4s2u2.construct-isosceles"],
+          "submit": "button"
+        },
+        {
+          "id": "g4s2u2.A1.T4",
+          "prompt": "컴퍼스로 두 변만 같은 삼각형을 그려요. 흔들어도 항상 같은 두 각을 골라 확인해요.",
+          "engine": "E09",
+          "mode": "drag-test",
+          "cpa": "P",
+          "config": {
+            "mode": "drag-test",
+            "construction": "free",
+            "shakeButton": true,
+            "measure": ["sideLengths"],
+            "tools": ["free-point", "segment", "compass", "intersection"]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "pickedAnglesInvariant" },
+              {
+                "kind": "predicate",
+                "name": "figureNotNamed",
+                "args": { "name": "equilateral" }
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "figureNamed",
+                "args": { "name": "equilateral" }
+              },
+              "level": 1,
+              "say": "지금 삼각형의 세 변을 견주어 보세요. 두 변만 같은 삼각형인가요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "figureNamed",
+                "args": { "name": "equilateral" }
+              },
+              "level": 2,
+              "say": "두 변만 같은 삼각형을 다시 그려 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "figureNamed",
+                "args": { "name": "equilateral" }
+              },
+              "level": 3,
+              "backtrack": "g4s2u2.construct-isosceles"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "drag-test" },
+              "level": 1,
+              "say": "같은 눈금이 있는 두 변을 찾았나요? 그 두 변과 각은 어떻게 놓여 있나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "drag-test" },
+              "level": 2,
+              "say": "고른 두 각을 바꿔 가며 다시 흔들어 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "drag-test" },
+              "level": 3,
+              "backtrack": "g4s2u2.classify-by-sides"
+            }
+          ],
+          "concepts": ["g4s2u2.classify-by-sides", "g4s2u2.construct-isosceles"],
+          "submit": "button"
+        }
+      ]
+    },
+    {
+      "id": "g4s2u2.A2",
+      "title": "변·각 2차원 분류판",
+      "tasks": [
+        {
+          "id": "g4s2u2.A2.T1",
+          "prompt": "삼각형 카드를 각과 변에 맞는 칸에 모두 넣어요.",
+          "engine": "E17",
+          "mode": "venn",
+          "cpa": "P",
+          "config": {
+            "mode": "venn",
+            "layout": "grid",
+            "deck": "triangles-12",
+            "rows": ["acute", "right", "obtuse"],
+            "cols": ["equilateral", "isosceles-only", "scalene"],
+            "cellFeedback": "on-check"
+          },
+          "goal": { "kind": "predicate", "name": "allCardsCorrect" },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": { "code": "MC-GEO-TRI-ISOSCELES-ORIENT" }
+              },
+              "level": 1,
+              "say": "변의 길이를 견주어 볼까요? 같은 변이 있나요?"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  { "kind": "predicate", "name": "cardInCell", "args": { "card": "t08", "cell": "acute|equilateral" } },
+                  { "kind": "predicate", "name": "cardInCell", "args": { "card": "t08", "cell": "acute|scalene" } },
+                  { "kind": "predicate", "name": "cardInCell", "args": { "card": "t08", "cell": "right|equilateral" } },
+                  { "kind": "predicate", "name": "cardInCell", "args": { "card": "t08", "cell": "right|scalene" } },
+                  { "kind": "predicate", "name": "cardInCell", "args": { "card": "t08", "cell": "obtuse|equilateral" } },
+                  { "kind": "predicate", "name": "cardInCell", "args": { "card": "t08", "cell": "obtuse|scalene" } }
+                ]
+              },
+              "level": 2,
+              "show": { "engine": "E17", "overlay": "upright-card", "args": { "card": "t08" } },
+              "say": "카드를 돌려 바로 세운 모습을 겹쳐 그렸어요."
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  { "kind": "predicate", "name": "cardInCell", "args": { "card": "t10", "cell": "acute|equilateral" } },
+                  { "kind": "predicate", "name": "cardInCell", "args": { "card": "t10", "cell": "acute|scalene" } },
+                  { "kind": "predicate", "name": "cardInCell", "args": { "card": "t10", "cell": "right|equilateral" } },
+                  { "kind": "predicate", "name": "cardInCell", "args": { "card": "t10", "cell": "right|scalene" } },
+                  { "kind": "predicate", "name": "cardInCell", "args": { "card": "t10", "cell": "obtuse|equilateral" } },
+                  { "kind": "predicate", "name": "cardInCell", "args": { "card": "t10", "cell": "obtuse|scalene" } }
+                ]
+              },
+              "level": 2,
+              "show": { "engine": "E17", "overlay": "upright-card", "args": { "card": "t10" } },
+              "say": "카드를 돌려 바로 세운 모습을 겹쳐 그렸어요."
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  { "kind": "predicate", "name": "cardInCell", "args": { "card": "t12", "cell": "acute|equilateral" } },
+                  { "kind": "predicate", "name": "cardInCell", "args": { "card": "t12", "cell": "acute|scalene" } },
+                  { "kind": "predicate", "name": "cardInCell", "args": { "card": "t12", "cell": "right|equilateral" } },
+                  { "kind": "predicate", "name": "cardInCell", "args": { "card": "t12", "cell": "right|scalene" } },
+                  { "kind": "predicate", "name": "cardInCell", "args": { "card": "t12", "cell": "obtuse|equilateral" } },
+                  { "kind": "predicate", "name": "cardInCell", "args": { "card": "t12", "cell": "obtuse|scalene" } }
+                ]
+              },
+              "level": 2,
+              "show": { "engine": "E17", "overlay": "upright-card", "args": { "card": "t12" } },
+              "say": "카드를 돌려 바로 세운 모습을 겹쳐 그렸어요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": { "code": "MC-GEO-TRI-ISOSCELES-ORIENT" }
+              },
+              "level": 3,
+              "backtrack": "g4s2u2.classify-by-sides"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": { "code": "MC-GEO-ACUTE-TRI-ONE-ANGLE" }
+              },
+              "level": 1,
+              "say": "예각 줄에 넣은 삼각형의 세 각을 모두 살펴봤나요?"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  { "kind": "predicate", "name": "cardInCell", "args": { "card": "t02", "cell": "acute|equilateral" } },
+                  { "kind": "predicate", "name": "cardInCell", "args": { "card": "t02", "cell": "acute|isosceles-only" } },
+                  { "kind": "predicate", "name": "cardInCell", "args": { "card": "t02", "cell": "acute|scalene" } }
+                ]
+              },
+              "level": 2,
+              "show": { "engine": "E17", "overlay": "angle-paint", "args": { "card": "t02" } },
+              "say": "세 각을 칠해 가장 큰 각을 표시했어요."
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  { "kind": "predicate", "name": "cardInCell", "args": { "card": "t06", "cell": "acute|equilateral" } },
+                  { "kind": "predicate", "name": "cardInCell", "args": { "card": "t06", "cell": "acute|isosceles-only" } },
+                  { "kind": "predicate", "name": "cardInCell", "args": { "card": "t06", "cell": "acute|scalene" } }
+                ]
+              },
+              "level": 2,
+              "show": { "engine": "E17", "overlay": "angle-paint", "args": { "card": "t06" } },
+              "say": "세 각을 칠해 가장 큰 각을 표시했어요."
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  { "kind": "predicate", "name": "cardInCell", "args": { "card": "t10", "cell": "acute|equilateral" } },
+                  { "kind": "predicate", "name": "cardInCell", "args": { "card": "t10", "cell": "acute|isosceles-only" } },
+                  { "kind": "predicate", "name": "cardInCell", "args": { "card": "t10", "cell": "acute|scalene" } }
+                ]
+              },
+              "level": 2,
+              "show": { "engine": "E17", "overlay": "angle-paint", "args": { "card": "t10" } },
+              "say": "세 각을 칠해 가장 큰 각을 표시했어요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": { "code": "MC-GEO-ACUTE-TRI-ONE-ANGLE" }
+              },
+              "level": 3,
+              "backtrack": "g4s2u2.classify-by-angles"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "venn" },
+              "level": 1,
+              "say": "카드마다 가장 큰 각과 같은 길이 변을 먼저 찾아볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "venn" },
+              "level": 2,
+              "say": "'맞는지 보기'로 ✗ 카드를 찾아 다시 살펴보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "venn" },
+              "level": 3,
+              "backtrack": "g4s2u2.two-criteria"
+            }
+          ],
+          "concepts": ["g4s2u2.two-criteria"],
+          "submit": "button"
+        },
+        {
+          "id": "g4s2u2.A2.T2",
+          "prompt": "어떤 삼각형으로도 채울 수 없는 칸을 모두 찾아 '불가능한 칸 표시'로 표시해요.",
+          "engine": "E17",
+          "mode": "venn",
+          "cpa": "A",
+          "config": {
+            "mode": "venn",
+            "layout": "grid",
+            "deck": "triangles-12",
+            "rows": ["acute", "right", "obtuse"],
+            "cols": ["equilateral", "isosceles-only", "scalene"],
+            "cellFeedback": "none"
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "impossibleMarkedAre",
+            "args": { "cells": ["right|equilateral", "obtuse|equilateral"] }
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "venn" },
+              "level": 1,
+              "say": "세 변이 모두 같은 삼각형의 각은 어떤 각일까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "venn" },
+              "level": 2,
+              "say": "줄마다 '이 줄에 이런 삼각형이 있을까?' 하고 하나씩 따져 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "venn" },
+              "level": 3,
+              "backtrack": "g4s2u2.two-criteria"
+            }
+          ],
+          "concepts": ["g4s2u2.two-criteria"],
+          "submit": "button"
+        },
+        {
+          "id": "g4s2u2.A2.T3",
+          "prompt": "점판에 직각이 있으면서 두 변의 길이가 같은 삼각형을 만들어요.",
+          "engine": "E09",
+          "mode": "classify",
+          "cpa": "P",
+          "config": {
+            "mode": "classify",
+            "grid": [5, 5],
+            "maxShapes": 1,
+            "tools": ["geoboard-band", "set-square"]
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "shapeHas",
+            "args": { "vertices": 3, "rightAngles": 1, "equalSides": 2 }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "shapeHas",
+                "args": { "vertices": 3, "rightAngles": 1 }
+              },
+              "level": 1,
+              "say": "같은 길이인 변이 있나요? 세 변을 견주어 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "shapeHas",
+                "args": { "vertices": 3, "rightAngles": 1 }
+              },
+              "level": 2,
+              "say": "직각을 끼고 있는 두 변의 길이를 견주어 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "shapeHas",
+                "args": { "vertices": 3, "rightAngles": 1 }
+              },
+              "level": 3,
+              "backtrack": "g4s2u2.classify-by-sides"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "shapeHas",
+                "args": { "vertices": 3, "equalSides": 2 }
+              },
+              "level": 1,
+              "say": "직각이 있나요? 직각삼각자를 대 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "shapeHas",
+                "args": { "vertices": 3, "equalSides": 2 }
+              },
+              "level": 2,
+              "show": { "engine": "E09", "overlay": "angle-kinds" },
+              "say": "세 각의 종류를 무늬로 칠했어요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "shapeHas",
+                "args": { "vertices": 3, "equalSides": 2 }
+              },
+              "level": 3,
+              "backtrack": "g4s2u2.classify-by-angles"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "classify" },
+              "level": 1,
+              "say": "고무줄을 닫아 삼각형을 만들었나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "classify" },
+              "level": 2,
+              "say": "못 세 곳을 이어 도형을 닫아 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "classify" },
+              "level": 3,
+              "backtrack": "g4s2u2.two-criteria"
+            }
+          ],
+          "concepts": ["g4s2u2.two-criteria"],
+          "submit": "button"
+        },
+        {
+          "id": "g4s2u2.A2.T4",
+          "prompt": "예각삼각형이란 무엇일까요? 알맞은 설명을 골라요.",
+          "engine": "E17",
+          "mode": "venn",
+          "cpa": "A",
+          "showEngine": false,
+          "config": {
+            "mode": "venn",
+            "layout": "grid",
+            "deck": "triangles-12",
+            "rows": ["acute", "right", "obtuse"],
+            "cols": ["equilateral", "isosceles-only", "scalene"],
+            "cellFeedback": "on-check"
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.def.selected",
+            "value": ["all"]
+          },
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "def",
+                "label": "예각삼각형이란",
+                "multiple": false,
+                "options": [
+                  { "id": "all", "label": "세 각이 모두 예각인 삼각형" },
+                  { "id": "one", "label": "예각이 하나라도 있는 삼각형" },
+                  { "id": "obtuse", "label": "한 각이 직각보다 큰 삼각형" }
+                ]
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.def.selected",
+                "value": ["one"]
+              },
+              "level": 1,
+              "say": "둔각이 있는 삼각형에도 예각이 있을까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.def.selected",
+                "value": ["one"]
+              },
+              "level": 2,
+              "say": "둔각이 하나 있는 삼각형을 떠올려 보세요. 나머지 두 각은 어떤 각인가요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.def.selected",
+                "value": ["one"]
+              },
+              "level": 3,
+              "backtrack": "g4s2u2.classify-by-angles"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  { "kind": "equals", "path": "response.def.selected", "value": ["obtuse"] },
+                  { "kind": "equals", "path": "response.def.selected", "value": [] }
+                ]
+              },
+              "level": 1,
+              "say": "예각삼각형의 세 각을 하나씩 떠올려 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  { "kind": "equals", "path": "response.def.selected", "value": ["obtuse"] },
+                  { "kind": "equals", "path": "response.def.selected", "value": [] }
+                ]
+              },
+              "level": 2,
+              "say": "세 각이 모두 예각인 경우와 그렇지 않은 경우를 견주어 보세요."
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  { "kind": "equals", "path": "response.def.selected", "value": ["obtuse"] },
+                  { "kind": "equals", "path": "response.def.selected", "value": [] }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g4s2u2.classify-by-angles"
+            }
+          ],
+          "concepts": ["g4s2u2.classify-by-angles"],
+          "submit": "button"
+        },
+        {
+          "id": "g4s2u2.A2.T5",
+          "prompt": "정삼각형도 이등변삼각형이라고 할 수 있을까요? 까닭이 맞는 것을 골라요.",
+          "engine": "E17",
+          "mode": "venn",
+          "cpa": "A",
+          "showEngine": false,
+          "config": {
+            "mode": "venn",
+            "layout": "grid",
+            "deck": "triangles-12",
+            "rows": ["acute", "right", "obtuse"],
+            "cols": ["equilateral", "isosceles-only", "scalene"],
+            "cellFeedback": "on-check"
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.why.selected",
+            "value": ["yes"]
+          },
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "why",
+                "label": "정삼각형과 이등변삼각형",
+                "multiple": false,
+                "options": [
+                  { "id": "yes", "label": "예, 길이가 같은 변이 두 개 이상 있어요." },
+                  { "id": "no-three", "label": "아니요, 세 변이 모두 같으면 이등변삼각형이 아니에요." },
+                  { "id": "no-angle", "label": "아니요, 세 각이 모두 같아서 이등변삼각형과 달라요." }
+                ]
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-GEO-EQUI-NOT-ISO" },
+              "level": 1,
+              "say": "이등변삼각형이 되려면 같은 변이 몇 개 필요하지요? 정삼각형은요?"
+            },
+            {
+              "when": { "misconception": "MC-GEO-EQUI-NOT-ISO" },
+              "level": 2,
+              "say": "정삼각형의 세 변 중 아무 두 변을 골라 길이를 견주어 보세요."
+            },
+            {
+              "when": { "misconception": "MC-GEO-EQUI-NOT-ISO" },
+              "level": 3,
+              "backtrack": "g4s2u2.classify-by-sides"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  { "kind": "equals", "path": "response.why.selected", "value": ["no-three"] },
+                  { "kind": "equals", "path": "response.why.selected", "value": ["no-angle"] },
+                  { "kind": "equals", "path": "response.why.selected", "value": [] }
+                ]
+              },
+              "level": 1,
+              "say": "정삼각형의 세 변의 길이를 떠올려 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  { "kind": "equals", "path": "response.why.selected", "value": ["no-three"] },
+                  { "kind": "equals", "path": "response.why.selected", "value": ["no-angle"] },
+                  { "kind": "equals", "path": "response.why.selected", "value": [] }
+                ]
+              },
+              "level": 2,
+              "say": "정삼각형에서 두 변을 골라 길이가 같은지 살펴보세요."
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  { "kind": "equals", "path": "response.why.selected", "value": ["no-three"] },
+                  { "kind": "equals", "path": "response.why.selected", "value": ["no-angle"] },
+                  { "kind": "equals", "path": "response.why.selected", "value": [] }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g4s2u2.classify-by-sides"
+            }
+          ],
+          "diagnose": [
+            {
+              "code": "MC-GEO-EQUI-NOT-ISO",
+              "args": { "trap": "no-three" },
+              "path": "response.why.selected.0"
+            }
+          ],
+          "concepts": ["g4s2u2.classify-by-sides"],
+          "submit": "button"
+        }
+      ]
+    }
+  ]
+}
