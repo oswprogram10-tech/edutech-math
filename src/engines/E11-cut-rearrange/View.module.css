@@ -1,0 +1,148 @@
+.wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  min-width: 0;
+  height: 100%;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.group {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.4rem;
+  border: 1px solid #d7deea;
+  border-radius: 12px;
+  background: #fbfcff;
+}
+
+.groupLabel {
+  color: #5a6478;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.button {
+  min-height: 48px;
+  min-width: 48px;
+  padding: 0 0.9rem;
+  border: 2px solid #2f6fde;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #1d2330;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.wrap[data-target-size='64'] .button {
+  min-height: 64px;
+  min-width: 64px;
+  font-size: 1.1rem;
+}
+
+.button[aria-pressed='true'] {
+  background: #dbe7ff;
+  border-color: #1d4fa8;
+}
+
+.button:disabled {
+  border-color: #aab4c6;
+  color: #7a8497;
+  cursor: not-allowed;
+}
+
+.hint {
+  color: var(--muted, #5b6577);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.instructions {
+  margin: 0;
+  color: var(--muted, #5b6577);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.canvasArea {
+  display: flex;
+  flex: 1 1 auto;
+  justify-content: center;
+  align-items: flex-start;
+  min-width: 0;
+  min-height: 200px;
+}
+
+.canvas {
+  display: block;
+  width: 100%;
+  max-width: 960px;
+  aspect-ratio: 3 / 2;
+  border-radius: 16px;
+  background: #fbfaf6;
+  border: 1px solid #d7deea;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.canvas [role='button']:focus-visible,
+.canvas [tabindex='0']:focus-visible,
+.button:focus-visible {
+  outline: 3px solid #e8872e;
+  outline-offset: 3px;
+}
+
+.piece {
+  cursor: grab;
+}
+
+.piece[data-animating='true'] {
+  animation: hinge-pulse 0.6s ease-in-out;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@keyframes hinge-pulse {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  45% {
+    opacity: 0.55;
+    transform: scale(0.96) rotate(8deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.status {
+  min-height: 1.3em;
+  margin: 0;
+  color: #8a4b00;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.padLabel {
+  fill: #5a6478;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .piece[data-animating='true'] {
+    animation: none;
+  }
+}

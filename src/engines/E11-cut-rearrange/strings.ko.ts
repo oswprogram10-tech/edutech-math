@@ -1,0 +1,60 @@
+/** E11 자르고 붙이기의 학생 문구. 화면에 하드코딩하지 않는다. */
+import type { PieceTool } from './pieces/types';
+
+export const cutStrings = {
+  name: '자르고 붙이기',
+  canvasLabel: {
+    slice: '직선으로 자르고 조각을 옮기는 판',
+    'formula-derive': '도형을 잘라 옮겨 넓이를 알아보는 판',
+    'angle-gather': '꼭짓점을 자르고 한 점에 모으는 판',
+  },
+  instructions: {
+    slice: '가위로 자르고 조각을 끌어 옮겨 보세요. 맞물리는 곳에 가까이 놓으면 자석처럼 붙어요.',
+    'formula-derive':
+      '가위·경첩·복제 도구로 도형을 잘라 옮겨 보세요. 조각을 끌면 맞물리는 곳에 붙어요.',
+    'angle-gather': '꼭짓점 손잡이를 옮겨 모양을 바꾸고, 꼭짓점을 잘라 한 점에 모아 보세요.',
+  },
+  toolbar: {
+    tools: '도구',
+    labels: {
+      move: '옮기기',
+      scissors: '가위',
+      rotate90: '돌리기',
+      hinge180: '경첩',
+      duplicate: '복제',
+    } as Readonly<Record<PieceTool, string>>,
+    cutCorners: '꼭짓점 자르기',
+    newTrial: '모양 바꿔 다시 하기',
+    turnCorner: '각 조각 돌리기',
+  },
+  pieceLabel: (number: number) => `조각 ${number}`,
+  pieceNumber: (number: number) => String(number),
+  status: {
+    cutStart: '자를 곳을 골랐어요. 다른 곳을 눌러 자르세요.',
+    cutPick: '자를 곳을 눌러 보세요. 두 번 눌러도 돼요.',
+    hingePick: '경첩 점을 눌러 보세요.',
+    scissorsPick: '자를 점을 고르고 Enter를 누르세요.',
+    hingeHint: '←/→로 경첩 점을 고르고 Enter를 누르세요.',
+  },
+  canvasHint: '방향키: 옮기기 · R: 돌리기 · D: 복제 · C: 자르기 · H: 경첩 · Esc: 취소',
+  angle: {
+    vertexLabel: (number: number) => `${number}번 꼭짓점`,
+    cornerLabel: (number: number) => `${number}번 각 조각`,
+    shapeHint: '꼭짓점을 끌거나 방향키로 옮겨 모양을 바꿔 보세요.',
+    cutHint: '각 조각을 모으는 자리로 끌어 보세요. Enter로 모으거나 뺄 수 있어요.',
+    cornerHint: 'Tab으로 각 조각을 고르고 Enter로 모으기 · R로 돌리기',
+    invalid: '모양이 찌그러져요. 다른 곳으로 옮겨 보세요.',
+    gatheredSum: (sum: number) => `모은 각의 합: ${sum}°`,
+    trial: (number: number, total: number) => `시도 ${number}/${total}`,
+    gatherPad: '모으는 자리',
+    gathered: (number: number) => `${number}번 각 조각을 모았어요.`,
+    ungathered: (number: number) => `${number}번 각 조각을 뺐어요.`,
+  },
+  overlays: {
+    workOutline: '학생이 만든 것의 테두리',
+    slantRectangle: '처음 도형의 밑변과 옆변으로 만든 직사각형',
+    hingeReplay: '경첩으로 돌리기 전 모습',
+    unitCompare: '한 칸 선분과 한 칸 정사각형',
+    trialCompare: '기록한 시도 비교',
+  },
+} as const;
