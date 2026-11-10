@@ -66,6 +66,22 @@
   line-height: 1.4;
 }
 
+.slider {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.slider input[type='range'] {
+  width: 9rem;
+  min-height: 48px;
+  accent-color: #2f6fde;
+}
+
+.wrap[data-target-size='64'] .slider input[type='range'] {
+  min-height: 64px;
+}
+
 .instructions {
   margin: 0;
   color: var(--muted, #5b6577);

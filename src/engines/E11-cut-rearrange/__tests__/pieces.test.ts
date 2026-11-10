@@ -28,7 +28,9 @@ function record(value: JsonValue | undefined): Readonly<Record<string, JsonValue
 }
 
 function piecesState(state: CutState): PiecesState {
-  if (state.mode === 'angle-gather') throw new Error('angle-gather 상태가 나왔습니다.');
+  if (state.mode !== 'slice' && state.mode !== 'formula-derive') {
+    throw new Error('조각 상태가 나오지 않았습니다.');
+  }
   return state;
 }
 

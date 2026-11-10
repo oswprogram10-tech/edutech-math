@@ -18,7 +18,7 @@ import type { CutConfig, CutState } from '../types';
 const PURPLE = '#7c3aed';
 
 export function HingeReplayOverlay({ state }: OverlayProps<CutConfig, CutState>) {
-  if (state.mode === 'angle-gather') return null;
+  if (state.mode !== 'slice' && state.mode !== 'formula-derive') return null;
 
   const hinged = state.lastHinge
     ? (state.pieces.find((piece) => piece.id === state.lastHinge?.piece) ?? null)

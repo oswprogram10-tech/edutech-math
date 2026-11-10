@@ -1,15 +1,19 @@
 /**
  * E11의 공개 이벤트·판정. 둘 다 순수 함수다.
  *
- * 이벤트: `piece-cut {pieces}`, `outline-formed {kind}`, `fan-complete {sum}`.
+ * 이벤트: `piece-cut {pieces}`, `outline-formed {kind}`, `fan-complete {sum}`,
+ * `silhouette-filled {silhouette}`, `sectors-arranged {divisions}`.
  */
 import type { EngineEvent, EnginePredicate, JsonValue, Observation } from '../../core/engine-sdk';
 import { Rational, congruentPolygons, gp } from '../../core/math';
 import type { GPoint } from '../../core/math';
 import { fanState } from './angle-gather/fan';
 import type { AngleGatherState } from './angle-gather/types';
+import type { CircleSectorsState } from './circle-sectors/types';
 import { outlineOfPieces } from './pieces/outline';
 import type { OutlineKind, PiecesState } from './pieces/types';
+import { analyzeTangram } from './tangram/observe';
+import type { TangramState } from './tangram/types';
 import type { CutState } from './types';
 
 function argsRecord(args: JsonValue | undefined): Readonly<Record<string, JsonValue>> {
@@ -107,6 +111,9 @@ export const predicates: Readonly<Record<string, EnginePredicate>> = {
     const allowed = INCLUDED[kind];
     if (!allowed || !allowed.includes(actual as OutlineKind)) return false;
 
+    const pieces = numberArg(record, 'pieces');
+    if (pieces !== null && observation['pieceCount'] !== pieces) return false;
+
     for (const key of ['base', 'width', 'height'] as const) {
       const expected = stringArg(record, key);
       if (expected === null) continue;
@@ -153,28 +160,84 @@ export const predicates: Readonly<Record<string, EnginePredicate>> = {
     const sum = numberArg(record, 'sum');
     return distinctTrials(observation, sum) >= count;
   },
+
+  silhouetteFilled: (observation) =>
+    observation['filled'] === true &&
+    observation['overlap'] === false &&
+    observation['sticksOut'] === false,
+
+  selectedAllWithCorners: (observation, args) => {
+    const corners = numberArg(argsRecord(args), 'corners');
+    if (corners === null) return false;
+    const selected = arrayOf(observation['selected'])
+      .filter((item): item is string => typeof item === 'string')
+      .sort();
+    if (selected.length === 0) return false;
+    const wanted: string[] = [];
+    for (const item of arrayOf(observation['pieces'])) {
+      const record = recordOf(item);
+      if (!record) continue;
+      const id = record['id'];
+      if (typeof id === 'string' && record['corners'] === corners) wanted.push(id);
+    }
+    wanted.sort();
+    return selected.length === wanted.length && selected.every((id, index) => id === wanted[index]);
+  },
+
+  sectorsArranged: (observation, args) => {
+    const divisions = numberArg(argsRecord(args), 'divisions');
+    if (divisions === null) return observation['arranged'] === true;
+    return arrayOf(observation['arrangedDivisions']).some((value) => value === divisions);
+  },
+
+  arrangedAtLeast: (observation, args) => {
+    const divisions = numberArg(argsRecord(args), 'divisions');
+    if (divisions === null) return false;
+    let best = 0;
+    for (const value of arrayOf(observation['arrangedDivisions'])) {
+      if (typeof value === 'number' && value > best) best = value;
+    }
+    return best >= divisions;
+  },
 };
 
-export const EVENT_NAMES = ['piece-cut', 'outline-formed', 'fan-complete'] as const;
+export const EVENT_NAMES = [
+  'piece-cut',
+  'outline-formed',
+  'fan-complete',
+  'silhouette-filled',
+  'sectors-arranged',
+] as const;
 
-function piecesOutline(state: CutState) {
-  return state.mode === 'angle-gather' ? null : outlineOfPieces(state);
+function pieceState(state: CutState): PiecesState | null {
+  return state.mode === 'slice' || state.mode === 'formula-derive' ? state : null;
 }
 
 function angleState(state: CutState): AngleGatherState | null {
   return state.mode === 'angle-gather' ? state : null;
 }
 
+function tangramState(state: CutState): TangramState | null {
+  return state.mode === 'tangram' ? state : null;
+}
+
+function circleState(state: CutState): CircleSectorsState | null {
+  return state.mode === 'circle-sectors' ? state : null;
+}
+
+function piecesOutline(state: CutState) {
+  const pieces = pieceState(state);
+  return pieces ? outlineOfPieces(pieces) : null;
+}
+
 export function emit(prev: CutState, next: CutState): EngineEvent[] {
   if (prev === next) return [];
   const events: EngineEvent[] = [];
 
-  if (prev.mode !== 'angle-gather' && next.mode !== 'angle-gather') {
-    const before: PiecesState = prev;
-    const after: PiecesState = next;
-    if (after.cuts > before.cuts) {
-      events.push({ name: 'piece-cut', payload: { pieces: after.pieces.length } });
-    }
+  const beforePieces = pieceState(prev);
+  const afterPieces = pieceState(next);
+  if (beforePieces && afterPieces && afterPieces.cuts > beforePieces.cuts) {
+    events.push({ name: 'piece-cut', payload: { pieces: afterPieces.pieces.length } });
   }
 
   const beforeOutline = piecesOutline(prev);
@@ -190,6 +253,29 @@ export function emit(prev: CutState, next: CutState): EngineEvent[] {
     const after = fanState(afterAngle);
     if ((after === 'straight' || after === 'full') && before !== after) {
       events.push({ name: 'fan-complete', payload: { sum: after === 'straight' ? 180 : 360 } });
+    }
+  }
+
+  const beforeTangram = tangramState(prev);
+  const afterTangram = tangramState(next);
+  if (beforeTangram && afterTangram) {
+    const before = analyzeTangram(beforeTangram).filled;
+    const after = analyzeTangram(afterTangram).filled;
+    if (!before && after) {
+      events.push({
+        name: 'silhouette-filled',
+        payload: { silhouette: afterTangram.settings.silhouette },
+      });
+    }
+  }
+
+  const beforeCircle = circleState(prev);
+  const afterCircle = circleState(next);
+  if (beforeCircle && afterCircle) {
+    for (const divisions of afterCircle.arrangedDivisions) {
+      if (!beforeCircle.arrangedDivisions.includes(divisions)) {
+        events.push({ name: 'sectors-arranged', payload: { divisions } });
+      }
     }
   }
 

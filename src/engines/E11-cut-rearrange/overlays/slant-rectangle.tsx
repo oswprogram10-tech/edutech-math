@@ -15,7 +15,7 @@ import type { CutConfig, CutState } from '../types';
 const ORANGE = '#e8872e';
 
 export function SlantRectangleOverlay({ state }: OverlayProps<CutConfig, CutState>) {
-  if (state.mode === 'angle-gather') return null;
+  if (state.mode !== 'slice' && state.mode !== 'formula-derive') return null;
   const initial = state.settings.initial[0];
   if (!initial) return null;
   const shape = slantRectangle(initial);

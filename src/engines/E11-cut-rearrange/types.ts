@@ -5,15 +5,22 @@
  * `tangram/`·`circle-sectors/`를 더할 때 이 파일의 유니온 항목만 늘리면 된다.
  */
 import type { AngleGatherAction, AngleGatherConfig, AngleGatherState } from './angle-gather/types';
+import type {
+  CircleSectorsAction,
+  CircleSectorsConfig,
+  CircleSectorsState,
+} from './circle-sectors/types';
 import type { FormulaDeriveConfig, PiecesAction, PiecesState, SliceConfig } from './pieces/types';
+import type { TangramAction, TangramConfig, TangramState } from './tangram/types';
 
-export type CutMode = 'slice' | 'formula-derive' | 'angle-gather';
+export type CutMode = 'slice' | 'formula-derive' | 'angle-gather' | 'tangram' | 'circle-sectors';
 
-export type CutConfig = SliceConfig | FormulaDeriveConfig | AngleGatherConfig;
+export type CutConfig =
+  SliceConfig | FormulaDeriveConfig | AngleGatherConfig | TangramConfig | CircleSectorsConfig;
 
-export type CutState = PiecesState | AngleGatherState;
+export type CutState = PiecesState | AngleGatherState | TangramState | CircleSectorsState;
 
-export type CutAction = PiecesAction | AngleGatherAction;
+export type CutAction = PiecesAction | AngleGatherAction | TangramAction | CircleSectorsAction;
 
 export const LOGICAL_WIDTH = 1200;
 export const LOGICAL_HEIGHT = 800;

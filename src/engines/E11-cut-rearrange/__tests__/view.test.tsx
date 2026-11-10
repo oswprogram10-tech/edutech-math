@@ -124,6 +124,33 @@ describe('E11 showSum: after-gather', () => {
   });
 });
 
+describe('E11 T107 tangram·circle-sectors 기본 화면', () => {
+  const T107_FORBIDDEN = [
+    '세모',
+    '네모',
+    '삼각형',
+    '사각형',
+    '직사각형',
+    '원주',
+    '반지름',
+    '3.14',
+    'π',
+  ];
+
+  it('tangram 기본 설정에 조각 이름·도형 이름·정답 단서가 없다', () => {
+    const text = renderView({ mode: 'tangram' });
+    for (const forbidden of T107_FORBIDDEN) expect(text).not.toContain(forbidden);
+    expect(text).toContain('돌리기');
+    expect(text).toContain('뒤집기');
+  });
+
+  it('circle-sectors 기본 설정에 원주·반지름·π가 없다', () => {
+    const text = renderView({ mode: 'circle-sectors' });
+    for (const forbidden of T107_FORBIDDEN) expect(text).not.toContain(forbidden);
+    expect(text).toContain('더 잘게 나누기');
+  });
+});
+
 describe('E11 경첩 연출', () => {
   function hingedState(): CutState {
     return apply(TRIANGLE_CONFIG, [
