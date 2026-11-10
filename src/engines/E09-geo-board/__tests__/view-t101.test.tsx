@@ -159,4 +159,26 @@ describe('E09 T101 사각형 손잡이 키보드 조작', () => {
       params: [{ param: 'beta', value: 6 }],
     });
   });
+
+  it('손잡이 고르는 키를 화면에 안내하고, Escape로 손잡이를 놓으면 방향키가 다시 커서를 옮긴다', () => {
+    const config: GeoConfig = { mode: 'drag-test', construction: 'from-diagonals' };
+    const state = createInitialState(config);
+    const dispatch = vi.fn();
+    const { getByTestId, container } = render(
+      <GeoView
+        config={config}
+        state={state}
+        dispatch={dispatch}
+        cpa="P"
+        mode={state.mode}
+        targetSize={48}
+      />,
+    );
+    expect(container.textContent ?? '').toContain('1~4: ㄱ~ㄹ 손잡이 고르기');
+    const canvas = getByTestId('geo-canvas');
+    fireEvent.keyDown(canvas, { key: '2' });
+    fireEvent.keyDown(canvas, { key: 'Escape' });
+    fireEvent.keyDown(canvas, { key: 'ArrowRight' });
+    expect(dispatch).not.toHaveBeenCalled();
+  });
 });

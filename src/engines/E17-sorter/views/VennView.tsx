@@ -21,6 +21,7 @@ import {
   boxCenter,
   pointInBox,
   vennCardFrame,
+  vennSlotGrid,
   vennCellBox,
   vennTargetAt,
   vennTrayBox,
@@ -63,9 +64,9 @@ export function VennView({ state, dispatch, cpa, readOnly = false, targetSize }:
   const hit = Math.max(10, Math.ceil(minTouchRadius(targetSize, rendered, LOGICAL)));
   const cards = deckCards(state.deck);
   const trayUnit = deckUnit(cards, VENN_TRAY_CELL.width, VENN_TRAY_CELL.height, 14);
-  // 한 칸에 12장까지 들어가도록 4×3 슬롯으로 나눈다. 예전 3×2에서는 7장째부터
-  // 그려지지 않아 키보드로도 닿지 않았다.
-  const cellUnit = deckUnit(cards, VENN_CELL_WIDTH / 4, VENN_CELL_HEIGHT / 3, 6);
+  // 칸 안 카드는 6장까지 3×2, 7~12장은 4×3 슬롯에 둔다(vennSlotGrid).
+  const cellUnitLarge = deckUnit(cards, VENN_CELL_WIDTH / 3, VENN_CELL_HEIGHT / 2, 8);
+  const cellUnitSmall = deckUnit(cards, VENN_CELL_WIDTH / 4, VENN_CELL_HEIGHT / 3, 6);
   const [held, setHeld] = useState<CardId | null>(null);
   const [impossibleTool, setImpossibleTool] = useState(false);
   const [status, setStatus] = useState('');
@@ -372,14 +373,16 @@ export function VennView({ state, dispatch, cpa, readOnly = false, targetSize }:
               const cell = cellKey(row, col);
               const box = vennCellBox(rowIndex, colIndex);
               const inside = (placedByCell.get(cell) ?? []).slice(0, 12);
-              const slotWidth = box.width / 4;
-              const slotHeight = box.height / 3;
+              const grid = vennSlotGrid(inside.length);
+              const cellUnit = grid.cols === 3 ? cellUnitLarge : cellUnitSmall;
+              const slotWidth = box.width / grid.cols;
+              const slotHeight = box.height / grid.rows;
               return inside.map((cardId, index) => {
                 const card = cards.find((candidate) => candidate.id === cardId);
                 if (!card) return null;
                 const center = {
-                  x: box.x + (index % 4) * slotWidth + slotWidth / 2,
-                  y: box.y + Math.floor(index / 4) * slotHeight + slotHeight / 2,
+                  x: box.x + (index % grid.cols) * slotWidth + slotWidth / 2,
+                  y: box.y + Math.floor(index / grid.cols) * slotHeight + slotHeight / 2,
                 };
                 const feedback = feedbackFor(cardId);
                 return (

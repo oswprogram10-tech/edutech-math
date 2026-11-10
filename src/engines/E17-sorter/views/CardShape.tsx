@@ -346,7 +346,7 @@ export function CardShape({
 }
 
 /**
- * 바닥에 놓인 변 aseIndex가 수평 아래로 가도록 돌려 ox 안에 맞춘다.
+ * 바닥에 놓인 변 `baseIndex`가 수평 아래로 가도록 돌려 `box` 안에 맞춘다.
  * 오버레이 upright-card가 쓴다(화면 좌표 계산만).
  */
 export function uprightPolygon(

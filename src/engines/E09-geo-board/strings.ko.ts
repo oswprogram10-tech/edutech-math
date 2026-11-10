@@ -77,6 +77,9 @@ export const geoBoardStrings = {
   },
 
   dragTest: {
+    quadHandleLabels: ['ㄱ', 'ㄴ', 'ㄷ', 'ㄹ'] as readonly string[],
+    quadKeyHint:
+      '1~4: ㄱ~ㄹ 손잡이 고르기 · 방향키: 고른 손잡이로 모양 바꾸기 · Escape: 손잡이 놓기',
     canvasLabel: '점을 옮기고 관계가 유지되는지 살펴보는 판',
     instructions:
       '도구를 골라 점과 선을 만들고, 흔들기로 관계가 유지되는지 살펴보세요. 키보드로도 조작할 수 있어요.',

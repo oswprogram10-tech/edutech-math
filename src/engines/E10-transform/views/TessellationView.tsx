@@ -13,13 +13,15 @@ import type { BoardRect, TriBoardRect } from '../layout';
 import {
   SQUARE_FRAME,
   TRI_FRAME_ROWS,
+  applyStampMove,
   TRI_FRAME_WIDTH,
   squareFrameKeys,
   tessellationStats,
   tileFamily,
   triangleFrameKeys,
 } from '../tiles';
-import type { TessTile } from '../tiles';
+import type { TessTile, TileStamp } from '../tiles';
+import { inExtent } from '../modes/tessellation';
 import { decodeTriCell } from '../tri';
 import { transformStrings as S } from '../strings.ko';
 import type { Pt, TessellationState, TransformAction, TransformConfig } from '../types';
@@ -312,7 +314,8 @@ function PentagonLayer({ hub, gapCheck }: { readonly hub: number; readonly gapCh
   const startAngle = -90;
   // 오각형 i는 [-144 + 108i, -36 + 108i]를 차지한다. 360° = [-144, 216].
   const occupiedEnd = -144 + 108 * hub;
-  const gapDegrees = gapCheck ? Math.max(0, Math.min(360, 216 - occupiedEnd)) : 0;
+  // 1·2개는 아직 놓는 중이라 빈자리를 '빈틈'으로 칠하지 않는다. 3개를 둘렀을 때만 빈틈을 보인다.
+  const gapDegrees = gapCheck && hub >= 3 ? Math.max(0, Math.min(360, 216 - occupiedEnd)) : 0;
   const overlapDegrees = Math.max(0, occupiedEnd - 216);
   const sector = (from: number, to: number) => {
     const a = polar(center, distance, from);
@@ -386,6 +389,8 @@ export function TessellationView({ state, dispatch, cpa, readOnly = false, targe
     readonly startB: number;
     appliedA: number;
     appliedB: number;
+    /** 끌기 중 실제로 받아들여진 도장. 판 밖이라 거절될 밀기는 보내지도, 세지도 않는다. */
+    stamp: TileStamp;
   } | null>(null);
 
   /** 화면 좌표를 격자 단위(정사각형) 또는 삼각 격자 좌표로 되돌린다. */
@@ -411,6 +416,7 @@ export function TessellationView({ state, dispatch, cpa, readOnly = false, targe
       startB: start.b,
       appliedA: 0,
       appliedB: 0,
+      stamp: state.stamp,
     };
     try {
       event.currentTarget.setPointerCapture(event.pointerId);
@@ -428,9 +434,14 @@ export function TessellationView({ state, dispatch, cpa, readOnly = false, targe
     if (da === active.appliedA && db === active.appliedB) return;
     const dx = da - active.appliedA;
     const dy = db - active.appliedB;
+    const move = { kind: 'slide', dx, dy } as const;
+    const next = applyStampMove(state.tile, active.stamp, move);
+    // 판 밖으로 나가는 밀기는 reduce가 거절하므로, 옮긴 것으로 세지 않고 다음 움직임에서 다시 잰다.
+    if (!inExtent(state.tile, next)) return;
     active.appliedA = da;
     active.appliedB = db;
-    dispatch({ type: 'move', move: { kind: 'slide', dx, dy } });
+    active.stamp = next;
+    dispatch({ type: 'move', move });
   };
 
   const onPointerUp = () => {

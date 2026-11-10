@@ -3,6 +3,7 @@
 import { cleanup, fireEvent, render } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { deckIds } from '../deck';
+import { VENN_CELL_WIDTH, vennCardFrame, vennSlotGrid } from '../layout';
 import { createInitialState, reduce } from '../reduce';
 import type { SecretRuleState, SorterConfig, SorterState } from '../types';
 import { SorterView } from '../View';
@@ -134,6 +135,31 @@ describe('E17 venn 한 칸에 카드가 많아도 모두 보인다', () => {
       expect(node?.getAttribute('tabindex')).toBe('0');
     }
     expect(container.textContent ?? '').not.toContain('+1');
+  });
+
+  it('6장까지는 3×2 큰 슬롯을 지키고 7장부터만 4×3으로 줄인다', () => {
+    const config: SorterConfig = { mode: 'venn' };
+    const cell = 'acute|scalene';
+    const ids = deckIds('triangles-12');
+    const placeN = (n: number) =>
+      ids
+        .slice(0, n)
+        .reduce<SorterState>(
+          (current, card) => reduce(current, { type: 'place', card, cell }),
+          createInitialState(config),
+        );
+    const one = placeN(1);
+    const six = placeN(6);
+    const seven = placeN(7);
+    if (one.mode !== 'venn' || six.mode !== 'venn' || seven.mode !== 'venn') {
+      throw new Error('venn 상태가 아니다');
+    }
+    const width = (state: typeof one, card: string) => vennCardFrame(state, card)?.box.width;
+    expect(width(one, ids[0] ?? '')).toBe(VENN_CELL_WIDTH / 3);
+    expect(width(six, ids[5] ?? '')).toBe(VENN_CELL_WIDTH / 3);
+    expect(width(seven, ids[0] ?? '')).toBe(VENN_CELL_WIDTH / 4);
+    expect(vennSlotGrid(6)).toEqual({ cols: 3, rows: 2 });
+    expect(vennSlotGrid(7)).toEqual({ cols: 4, rows: 3 });
   });
 });
 

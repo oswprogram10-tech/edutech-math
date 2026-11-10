@@ -311,6 +311,11 @@ export function DragTestView({
       setKeyPoint(null);
       return;
     }
+    if (key === 'Escape' && quadHandle !== null) {
+      event.preventDefault();
+      setQuadHandle(null);
+      return;
+    }
     if (key === ' ' || key === 'Spacebar') {
       event.preventDefault();
       if (event.shiftKey) jumpPoint(-1);
@@ -957,7 +962,7 @@ export function DragTestView({
                   pointerEvents="none"
                 />
                 <text x={handle.x + 12} y={handle.y - 10} fontSize={16} fontWeight={700} fill={INK}>
-                  {['ㄱ', 'ㄴ', 'ㄷ', 'ㄹ'][index] ?? ''}
+                  {S.dragTest.quadHandleLabels[index] ?? ''}
                 </text>
               </g>
             ))}
@@ -1097,6 +1102,7 @@ export function DragTestView({
       </div>
 
       <p className={styles.hint}>{S.dragTest.canvasHint}</p>
+      {state.quad ? <p className={styles.hint}>{S.dragTest.quadKeyHint}</p> : null}
       <p className={styles.hint}>
         {state.settings.construction === 'from-diagonals'
           ? S.dragTest.fromDiagonalsHint

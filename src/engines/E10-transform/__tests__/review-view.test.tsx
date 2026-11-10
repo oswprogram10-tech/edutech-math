@@ -11,7 +11,7 @@
  * - 겹친 칸·정오각형 상태·정육각형 돌리기 중심.
  */
 import { cleanup, fireEvent, render } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createInitialState, reduce } from '../reduce';
 import type {
   CongruenceConfig,
@@ -22,9 +22,14 @@ import type {
   TransformConfig,
   TransformState,
 } from '../types';
+import { boardRect } from '../layout';
+import { SQUARE_FRAME } from '../tiles';
 import { TransformView } from '../View';
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 
 function build(config: TransformConfig, actions: readonly TransformAction[] = []): TransformState {
   return actions.reduce<TransformState>(
@@ -212,6 +217,58 @@ describe('E10 쪽매맞춤 표시', () => {
     const fourView = renderState(config, four);
     expect(fourView.getByTestId('tessellation-status').textContent).toBe('겹친 칸이 있어요');
     expect(fourView.container.querySelectorAll('[data-overlap-cell]')).toHaveLength(1);
+  });
+
+  it('도장을 판 밖으로 끌었다 돌아와도 거절된 밀기를 옮긴 것으로 세지 않는다', () => {
+    // 화면 좌표 = 논리 좌표(1000×1000)가 되게 한다.
+    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue({
+      x: 0,
+      y: 0,
+      left: 0,
+      top: 0,
+      right: 1000,
+      bottom: 1000,
+      width: 1000,
+      height: 1000,
+      toJSON: () => ({}),
+    } as DOMRect);
+    const config: TessellationConfig = { mode: 'tessellation' };
+    const initial = build(config);
+    const actions: TransformAction[] = [];
+    const { getByTestId } = renderState(config, initial, actions);
+    const canvas = getByTestId('transform-canvas');
+    const cell = boardRect(SQUARE_FRAME).cell;
+    fireEvent.pointerDown(canvas, { pointerId: 1, clientX: 990, clientY: 500 });
+    // 화면 폭 전체를 왼쪽으로 끌면 판 범위(-6칸)를 넘으므로 보내지 않는다.
+    fireEvent.pointerMove(canvas, { pointerId: 1, clientX: 0, clientY: 500 });
+    expect(actions).toHaveLength(0);
+    // 시작점에서 한 칸 왼쪽으로 돌아오면 그 한 칸만 민다(거절된 밀기를 센 만큼 어긋나지 않는다).
+    fireEvent.pointerMove(canvas, { pointerId: 1, clientX: 990 - cell, clientY: 500 });
+    fireEvent.pointerUp(canvas, { pointerId: 1 });
+    expect(actions).toEqual([{ type: 'move', move: { kind: 'slide', dx: -1, dy: 0 } }]);
+    const moved = build(config, actions);
+    if (moved.mode !== 'tessellation' || initial.mode !== 'tessellation') throw new Error('mode');
+    expect(moved.stamp.cells[0]).toEqual([
+      (initial.stamp.cells[0]?.[0] ?? 0) - 1,
+      initial.stamp.cells[0]?.[1] ?? 0,
+    ]);
+  });
+
+  it('정오각형 1·2개는 아직 놓는 중이라 빈틈 쐐기를 그리지 않고, 3개일 때만 그린다', () => {
+    const config: TessellationConfig = { mode: 'tessellation' };
+    const steps = [
+      { type: 'select-tile', tile: 'pentagon-regular' },
+      { type: 'hub-add' },
+      { type: 'hub-add' },
+    ] as const;
+    for (const count of [1, 2]) {
+      const view = renderState(config, build(config, [...steps.slice(0, count)]));
+      expect(view.container.querySelectorAll('[data-pentagon]')).toHaveLength(count);
+      expect(view.container.querySelectorAll('[data-gap-cell]')).toHaveLength(0);
+      view.unmount();
+    }
+    const three = renderState(config, build(config, [...steps]));
+    expect(three.container.querySelectorAll('[data-gap-cell]')).toHaveLength(1);
   });
 
   it('정오각형은 허브 꼭짓점을 공유한다(중심 거리 = 외접원 반지름)', () => {

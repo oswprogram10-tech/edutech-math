@@ -369,6 +369,14 @@ export function overlayHeader(): Point {
 
 // ── overlay 기본 대상 ────────────────────────────────────────
 
+/**
+ * venn 칸 안 카드 슬롯 배치. 6장까지는 3×2로 크게 두어 터치 영역을 지키고,
+ * 7장부터 12장까지만 4×3으로 줄인다.
+ */
+export function vennSlotGrid(count: number): { readonly cols: number; readonly rows: number } {
+  return count <= 6 ? { cols: 3, rows: 2 } : { cols: 4, rows: 3 };
+}
+
 /** venn에서 카드 한 장이 실제로 놓인 자리(카드 칸 또는 칸 안 슬롯). */
 export function vennCardFrame(state: VennState, cardId: string): CardFrame | null {
   const index = deckIds(state.deck).indexOf(cardId);
@@ -384,12 +392,13 @@ export function vennCardFrame(state: VennState, cardId: string): CardFrame | nul
   const box = vennCellBox(row, col);
   const inCell = deckIds(state.deck).filter((id) => state.placements[id] === cell);
   const position = Math.max(0, inCell.indexOf(cardId));
-  const slotWidth = box.width / 4;
-  const slotHeight = box.height / 3;
+  const grid = vennSlotGrid(inCell.length);
+  const slotWidth = box.width / grid.cols;
+  const slotHeight = box.height / grid.rows;
   return {
     box: {
-      x: box.x + (position % 4) * slotWidth,
-      y: box.y + Math.floor(position / 4) * slotHeight,
+      x: box.x + (position % grid.cols) * slotWidth,
+      y: box.y + Math.floor(position / grid.cols) * slotHeight,
       width: slotWidth,
       height: slotHeight,
     },

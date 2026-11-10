@@ -67,7 +67,8 @@ export function createTessellationState(config: TessellationConfig): Tessellatio
   };
 }
 
-function inExtent(tile: TessTile, stamp: TileStamp): boolean {
+/** 도장이 판 범위 안에 있는지. reduce와 화면 끌기가 같은 판정을 쓴다. */
+export function inExtent(tile: TessTile, stamp: TileStamp): boolean {
   if (tileFamily(tile) === 'square') {
     return stamp.cells.every(
       (cell) => cell[0] >= -6 && cell[1] >= -6 && cell[0] < 24 && cell[1] < 24,

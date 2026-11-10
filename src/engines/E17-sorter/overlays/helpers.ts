@@ -30,7 +30,7 @@ function cardIn(deck: 'triangles-12' | 'quadrilaterals-16', id: CardId | null): 
   return deckCards(deck).find((card) => card.id === id) ?? null;
 }
 
-/** 오버레이 대상 카드. rgs.card가 없으면 모드 기본값에서 고르고, 없으면 null. */
+/** 오버레이 대상 카드. `args.card`가 없으면 모드 기본값에서 고르고, 없으면 null. */
 export function targetCard(state: SorterState, args: unknown): DeckCard | null {
   const requested = stringArg(argsOf(args), 'card');
   if (state.mode === 'venn') {
