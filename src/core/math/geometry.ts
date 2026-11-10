@@ -276,3 +276,220 @@ export function congruentPolygons(p: readonly GPoint[], q: readonly GPoint[]): b
   const reversedSignature = signatureOf(reversed);
   return reversedSignature !== null && rotationsMatch(firstSignature, reversedSignature);
 }
+
+// ── T105 ──
+
+/** 정사각 격자(`euclid`)와 삼각 격자(`hex`, 축 좌표)의 거리 규칙. */
+export type PlaneMetric = 'euclid' | 'hex';
+
+/** 두 점 거리의 제곱. `hex`는 축 좌표 `dx² + dx·dy + dy²`다. */
+export function metricDist2(a: GPoint, b: GPoint, metric: PlaneMetric): Rational {
+  const dx = a.x.sub(b.x);
+  const dy = a.y.sub(b.y);
+  const square = dx.mul(dx).add(dy.mul(dy));
+  if (metric === 'euclid') return square;
+  return square.add(dx.mul(dy));
+}
+
+/**
+ * `q`가 직선 `ab`에 대한 `p`의 거울상인지.
+ *
+ * `a`·`b`까지의 거리²가 각각 같고 방향 부호가 반대면 된다. 두 원의 교점은
+ * 많아야 둘이고 서로 직선 `ab`의 거울상이므로 이 판정은 정확하다. 둘 다
+ * 일직선 위에 있으면 같은 점이어야 한다.
+ */
+export function isMirrorPair(
+  p: GPoint,
+  q: GPoint,
+  a: GPoint,
+  b: GPoint,
+  metric: PlaneMetric,
+): boolean {
+  if (!metricDist2(p, a, metric).equals(metricDist2(q, a, metric))) return false;
+  if (!metricDist2(p, b, metric).equals(metricDist2(q, b, metric))) return false;
+  const first = orientation(a, b, p);
+  const second = orientation(a, b, q);
+  if (first === 0 && second === 0) return samePoint(p, q);
+  return first === -second;
+}
+
+function matchingMap(
+  points: readonly GPoint[],
+  candidate: (index: number) => number[],
+  step: 1 | -1,
+): boolean {
+  const count = points.length;
+  const map = new Array<number>(count).fill(-1);
+  const used = new Array<boolean>(count).fill(false);
+  const solve = (index: number): boolean => {
+    if (index === count) {
+      for (let at = 0; at < count; at += 1) {
+        const current = map[at];
+        const next = map[(at + 1) % count];
+        if (current === undefined || next === undefined) return false;
+        if (next !== (current + step + count) % count) return false;
+      }
+      return true;
+    }
+    for (const target of candidate(index)) {
+      if (used[target]) continue;
+      used[target] = true;
+      map[index] = target;
+      if (solve(index + 1)) return true;
+      used[target] = false;
+      map[index] = -1;
+    }
+    return false;
+  };
+  return solve(0);
+}
+
+/**
+ * 다각형이 직선 `ab`에 대해 선대칭인지. 꼭짓점마다 거울상 꼭짓점을 찾고,
+ * 일대일 대응이면서 `map(i+1) ≡ map(i) − 1 (mod n)`(거울은 순서를 뒤집는다)일 때 참이다.
+ */
+export function polygonMirrorSymmetric(
+  points: readonly GPoint[],
+  a: GPoint,
+  b: GPoint,
+  metric: PlaneMetric,
+): boolean {
+  if (samePoint(a, b)) return false;
+  const polygon = simplifyPolygon(points);
+  if (polygon.length < 3) return false;
+  return matchingMap(
+    polygon,
+    (index) => {
+      const point = polygon[index];
+      if (!point) return [];
+      const result: number[] = [];
+      polygon.forEach((other, candidate) => {
+        if (isMirrorPair(point, other, a, b, metric)) result.push(candidate);
+      });
+      return result;
+    },
+    -1,
+  );
+}
+
+/** 점 `center`에 대한 180° 회전(점대칭). `2·center − p`다. */
+export function pointReflect(p: GPoint, center: GPoint): GPoint {
+  return {
+    x: center.x.mul(Rational.of(2)).sub(p.x),
+    y: center.y.mul(Rational.of(2)).sub(p.y),
+  };
+}
+
+/**
+ * 다각형이 점 `center`에 대해 점대칭인지. 각 꼭짓점의 점대칭 점이 꼭짓점이고
+ * `map(i+1) ≡ map(i) + 1 (mod n)`(180° 회전은 순서를 보존한다)일 때 참이다.
+ */
+export function polygonPointSymmetric(points: readonly GPoint[], center: GPoint): boolean {
+  const polygon = simplifyPolygon(points);
+  if (polygon.length < 3) return false;
+  return matchingMap(
+    polygon,
+    (index) => {
+      const point = polygon[index];
+      if (!point) return [];
+      const reflected = pointReflect(point, center);
+      const result: number[] = [];
+      polygon.forEach((other, candidate) => {
+        if (samePoint(reflected, other)) result.push(candidate);
+      });
+      return result;
+    },
+    1,
+  );
+}
+
+/** 두 꼭짓점 열이 시작점 회전·역순까지 같으면 같은 다각형이다. */
+export function samePolygon(p: readonly GPoint[], q: readonly GPoint[]): boolean {
+  const first = simplifyPolygon(p);
+  const second = simplifyPolygon(q);
+  if (first.length < 3 || second.length < 3) return false;
+  if (first.length !== second.length) return false;
+  const count = first.length;
+  const matches = (candidate: readonly GPoint[]): boolean => {
+    for (let offset = 0; offset < count; offset += 1) {
+      let same = true;
+      for (let index = 0; index < count; index += 1) {
+        const a = first[index];
+        const b = candidate[(index + offset) % count];
+        if (!a || !b || !samePoint(a, b)) {
+          same = false;
+          break;
+        }
+      }
+      if (same) return true;
+    }
+    return false;
+  };
+  return matches(second) || matches([...second].reverse());
+}
+
+/** 유클리드 직선 `ab`에 대한 거울상. 두 점이 같으면 그 점을 그대로 돌려준다. */
+export function reflectPoint(p: GPoint, a: GPoint, b: GPoint): GPoint {
+  const direction = vsub(b, a);
+  const squared = dot(direction, direction);
+  if (squared.isZero()) return p;
+  const projection = dot(vsub(p, a), direction).div(squared);
+  const foot = {
+    x: a.x.add(direction.x.mul(projection)),
+    y: a.y.add(direction.y.mul(projection)),
+  };
+  return {
+    x: foot.x.mul(Rational.of(2)).sub(p.x),
+    y: foot.y.mul(Rational.of(2)).sub(p.y),
+  };
+}
+
+function bigAbs(value: bigint): bigint {
+  return value < BigInt(0) ? -value : value;
+}
+
+function bigGcd(a: bigint, b: bigint): bigint {
+  let left = bigAbs(a);
+  let right = bigAbs(b);
+  while (right !== BigInt(0)) {
+    const remainder = left % right;
+    left = right;
+    right = remainder;
+  }
+  return left;
+}
+
+function bigLcm(a: bigint, b: bigint): bigint {
+  if (a === BigInt(0) || b === BigInt(0)) return BigInt(0);
+  return bigAbs((a / bigGcd(a, b)) * b);
+}
+
+/**
+ * 직선 `A·x + B·y = C`의 정수 계수를 최대공약수로 나누고, `A`(0이면 `B`)가
+ * 양수가 되게 정규화한 `"A,B,C"` 키. 같은 직선이면 두 점이 달라도 키가 같다.
+ */
+export function lineKey(a: GPoint, b: GPoint): string {
+  const dx = b.x.sub(a.x);
+  const dy = b.y.sub(a.y);
+  const normalA = dy;
+  const normalB = dx.neg();
+  const constant = normalA.mul(a.x).add(normalB.mul(a.y));
+  if (normalA.isZero() && normalB.isZero()) return '0,0,0';
+
+  const scale = bigLcm(bigLcm(normalA.d, normalB.d), constant.d);
+  let intA = normalA.n * (scale / normalA.d);
+  let intB = normalB.n * (scale / normalB.d);
+  let intC = constant.n * (scale / constant.d);
+  const divisor = bigGcd(bigGcd(intA, intB), intC);
+  if (divisor !== BigInt(1) && divisor !== BigInt(0)) {
+    intA /= divisor;
+    intB /= divisor;
+    intC /= divisor;
+  }
+  if (intA < BigInt(0) || (intA === BigInt(0) && intB < BigInt(0))) {
+    intA = -intA;
+    intB = -intB;
+    intC = -intC;
+  }
+  return `${intA.toString()},${intB.toString()},${intC.toString()}`;
+}
