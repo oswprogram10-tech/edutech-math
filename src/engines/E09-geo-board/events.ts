@@ -4,6 +4,9 @@
  * 이벤트: `shape-closed {vertices}`, `object-created {kind}`.
  */
 import type { EngineEvent, EnginePredicate, JsonValue, Observation } from '../../core/engine-sdk';
+import { anglePredicates } from './modes/angle/predicates';
+import { circlePredicates } from './modes/circle/predicates';
+import { chordThroughCenter, halfString } from './modes/circle/observe';
 import { classifyPredicates, classifyClosedPayload } from './modes/classify/observe';
 import {
   dragTestPredicates,
@@ -210,9 +213,21 @@ export const predicates: Readonly<Record<string, EnginePredicate>> = {
 
   ...classifyPredicates,
   ...dragTestPredicates,
+  ...circlePredicates,
+  ...anglePredicates,
 };
 
-export const EVENT_NAMES = ['shape-closed', 'object-created', 'shaken', 'figure-changed'] as const;
+export const EVENT_NAMES = [
+  'shape-closed',
+  'object-created',
+  'shaken',
+  'figure-changed',
+  'trace-complete',
+  'chord-diameter',
+  'circle-drawn',
+  'reading-set',
+  'laser-fired',
+] as const;
 
 export function emit(prev: GeoState, next: GeoState): EngineEvent[] {
   if (prev === next) return [];
@@ -270,6 +285,52 @@ export function emit(prev: GeoState, next: GeoState): EngineEvent[] {
         name: 'figure-changed',
         payload: { names: [...after.names], toggles: [...after.toggles] },
       });
+    }
+  }
+
+  if (next.mode === 'circle' && prev.mode === 'circle') {
+    const keys = new Set([...Object.keys(prev.traces), ...Object.keys(next.traces)]);
+    for (const key of keys) {
+      const before = (prev.traces[key] ?? []).length;
+      const after = (next.traces[key] ?? []).length;
+      if (before * 100 < 95 * 72 && after * 100 >= 95 * 72) {
+        events.push({ name: 'trace-complete', payload: { ropeLength: Number(key) } });
+      }
+    }
+    if (!prev.chord || !chordThroughCenter(prev)) {
+      if (next.chord && chordThroughCenter(next)) {
+        events.push({ name: 'chord-diameter', payload: {} });
+      }
+    }
+    if (next.circles.length > prev.circles.length) {
+      const created = next.circles[next.circles.length - 1];
+      if (created) {
+        events.push({ name: 'circle-drawn', payload: { radius: halfString(created.radius) } });
+      }
+    }
+  }
+
+  if (next.mode === 'angle' && prev.mode === 'angle') {
+    for (const angle of next.settings.angles) {
+      const before = prev.entries[angle.id]?.reading ?? null;
+      const after = next.entries[angle.id]?.reading ?? null;
+      if (after !== null && after !== before) {
+        events.push({ name: 'reading-set', payload: { angle: angle.id, value: after } });
+      }
+    }
+    const beforeFired = prev.puzzle?.fired.length ?? 0;
+    const afterFired = next.puzzle?.fired.length ?? 0;
+    if (afterFired > beforeFired && next.puzzle) {
+      const last = next.puzzle.fired[afterFired - 1];
+      if (typeof last === 'number') {
+        events.push({
+          name: 'laser-fired',
+          payload: {
+            angle: last,
+            hit: last === (next.settings.puzzle?.targetAngle ?? -1),
+          },
+        });
+      }
     }
   }
 

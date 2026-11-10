@@ -6,6 +6,10 @@
  * - 수학 값은 저장하지 않는다. 넓이·각 판정은 `observe.ts`가 `core/math/geometry`로 계산한다.
  */
 import { clamp } from '../../core/engine-sdk';
+import { createAngleState, reduceAngle } from './modes/angle/reduce';
+import type { AngleConfig } from './modes/angle/types';
+import { createCircleState, reduceCircle } from './modes/circle/reduce';
+import type { CircleConfig } from './modes/circle/types';
 import { createClassifyState, reduceClassify } from './modes/classify/reduce';
 import type { ClassifyConfig } from './modes/classify/types';
 import { createDragTestState, reduceDragTest } from './modes/drag-test/reduce';
@@ -85,7 +89,9 @@ export function inferMode(config: GeoConfig): GeoMode {
     declared === 'geoboard' ||
     declared === 'construct' ||
     declared === 'classify' ||
-    declared === 'drag-test'
+    declared === 'drag-test' ||
+    declared === 'circle' ||
+    declared === 'angle'
   ) {
     return declared;
   }
@@ -209,6 +215,12 @@ function constructSettings(config: ConstructConfig): ConstructSettings {
 
 export function createInitialState(config: GeoConfig): GeoState {
   const mode = inferMode(config);
+  if (mode === 'circle') {
+    return createCircleState(config as CircleConfig);
+  }
+  if (mode === 'angle') {
+    return createAngleState(config as AngleConfig);
+  }
   if (mode === 'classify') {
     return createClassifyState(config as ClassifyConfig);
   }
@@ -419,6 +431,8 @@ function reduceConstruct(state: ConstructState, action: GeoAction): GeoState {
 
 export function reduce(state: GeoState, action: GeoAction): GeoState {
   if (state.mode === 'geoboard') return reduceGeoboard(state, action) as GeoboardState;
+  if (state.mode === 'circle') return reduceCircle(state, action);
+  if (state.mode === 'angle') return reduceAngle(state, action);
   if (state.mode === 'classify') return reduceClassify(state, action);
   if (state.mode === 'drag-test') return reduceDragTest(state, action);
   return reduceConstruct(state, action) as ConstructState;

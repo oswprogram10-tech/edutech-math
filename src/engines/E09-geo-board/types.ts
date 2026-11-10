@@ -8,10 +8,12 @@
  * `core/math/geometry`의 `gp`로 바꿔서 하고, 화면 좌표만 number다.
  */
 import type { JsonValue } from '../../core/engine-sdk';
+import type { AngleAction, AngleConfig, AngleState } from './modes/angle/types';
+import type { CircleAction, CircleConfig, CircleState } from './modes/circle/types';
 import type { ClassifyAction, ClassifyConfig, ClassifyState } from './modes/classify/types';
 import type { DragTestAction, DragTestConfig, DragTestState } from './modes/drag-test/types';
 
-export type GeoMode = 'geoboard' | 'construct' | 'classify' | 'drag-test';
+export type GeoMode = 'geoboard' | 'construct' | 'classify' | 'drag-test' | 'circle' | 'angle';
 
 /** 못·점의 정수 격자 좌표. `[i, j]` */
 export type Peg = readonly [number, number];
@@ -68,7 +70,8 @@ export interface ConstructConfig {
   readonly angles?: readonly GeoAngle[];
 }
 
-export type GeoConfig = GeoboardConfig | ConstructConfig | ClassifyConfig | DragTestConfig;
+export type GeoConfig =
+  GeoboardConfig | ConstructConfig | ClassifyConfig | DragTestConfig | CircleConfig | AngleConfig;
 
 export interface GeoboardSettings {
   readonly grid: readonly [number, number];
@@ -129,7 +132,8 @@ export interface ConstructState {
   readonly settings: ConstructSettings;
 }
 
-export type GeoState = GeoboardState | ConstructState | ClassifyState | DragTestState;
+export type GeoState =
+  GeoboardState | ConstructState | ClassifyState | DragTestState | CircleState | AngleState;
 
 export type GeoAction =
   | { readonly type: 'start-band'; readonly peg: Peg }
@@ -145,7 +149,9 @@ export type GeoAction =
   | { readonly type: 'remove-square' }
   | { readonly type: 'toggle-mark'; readonly angle: string }
   | ClassifyAction
-  | DragTestAction;
+  | DragTestAction
+  | CircleAction
+  | AngleAction;
 
 export interface GeoShapeObservation {
   readonly id: string;
@@ -180,5 +186,8 @@ export const MIN_GRID = 3;
 export const MAX_GRID = 12;
 export const DEFAULT_GEOBOARD_GRID: readonly [number, number] = [5, 5];
 export const DEFAULT_CONSTRUCT_GRID = 9;
+export const MIN_CIRCLE_GRID = 9;
+export const MAX_CIRCLE_GRID = 15;
+export const DEFAULT_CIRCLE_GRID = 13;
 export const DEFAULT_MAX_SHAPES = 4;
 export const DEFAULT_CONSTRUCT_TOOLS: readonly ConstructTool[] = ['segment', 'ray', 'line'];

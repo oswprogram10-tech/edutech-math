@@ -5,6 +5,8 @@ import { ClassifyView } from './views/ClassifyView';
 import { ConstructView } from './views/ConstructView';
 import { DragTestView } from './views/DragTestView';
 import { GeoboardView } from './views/GeoboardView';
+import { CircleView } from './views/CircleView';
+import { AngleView } from './views/AngleView';
 
 export function GeoView(props: EngineViewProps<GeoConfig, GeoState, GeoAction>) {
   if (props.state.mode === 'geoboard') {
@@ -15,6 +17,12 @@ export function GeoView(props: EngineViewProps<GeoConfig, GeoState, GeoAction>) 
   }
   if (props.state.mode === 'drag-test') {
     return <DragTestView {...props} state={props.state} />;
+  }
+  if (props.state.mode === 'circle') {
+    return <CircleView {...props} state={props.state} />;
+  }
+  if (props.state.mode === 'angle') {
+    return <AngleView {...props} state={props.state} />;
   }
   return <ConstructView {...props} state={props.state} />;
 }

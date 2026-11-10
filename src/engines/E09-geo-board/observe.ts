@@ -19,6 +19,8 @@ import {
   simplifyPolygon,
 } from '../../core/math';
 import type { GPoint } from '../../core/math';
+import { observeAngle } from './modes/angle/observe';
+import { observeCircle } from './modes/circle/observe';
 import { observeClassify } from './modes/classify/observe';
 import { observeDragTest } from './modes/drag-test/observe';
 import type {
@@ -165,6 +167,8 @@ function observeConstruct(state: ConstructState): Observation {
 
 export function observe(state: GeoState): Observation {
   if (state.mode === 'geoboard') return observeGeoboard(state);
+  if (state.mode === 'circle') return observeCircle(state);
+  if (state.mode === 'angle') return observeAngle(state);
   if (state.mode === 'classify') return observeClassify(state);
   if (state.mode === 'drag-test') return observeDragTest(state);
   return observeConstruct(state);
