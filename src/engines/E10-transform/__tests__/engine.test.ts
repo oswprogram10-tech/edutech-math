@@ -14,6 +14,7 @@ import type {
   PredictConfig,
   SlideFlipTurnConfig,
   TransformAction,
+  TransformConfig,
   TransformState,
 } from '../types';
 
@@ -288,6 +289,23 @@ describe('E10 직렬화·이벤트', () => {
     assertSerializable(predict);
     assertSerializable(observe(slide));
     assertSerializable(observe(predict));
+  });
+
+  it('T105 새 네 모드도 직렬화 목록에 들어간다', () => {
+    const configs: readonly TransformConfig[] = [
+      { mode: 'tessellation' },
+      { mode: 'congruence' },
+      { mode: 'line-symmetry' },
+      { mode: 'point-symmetry' },
+    ];
+    const modes: string[] = [];
+    for (const config of configs) {
+      const state = createInitialState(config);
+      modes.push(state.mode);
+      assertSerializable(state);
+      assertSerializable(observe(state));
+    }
+    expect(modes).toEqual(['tessellation', 'congruence', 'line-symmetry', 'point-symmetry']);
   });
 
   it('이동할 때 moved 이벤트를 한 번 낸다', () => {

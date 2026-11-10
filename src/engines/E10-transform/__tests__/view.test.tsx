@@ -1,9 +1,18 @@
 /** @vitest-environment jsdom */
 /** E10 화면 테스트: 기본 설정에서 정답 단서가 없고, predict 확인 전 결과 자리를 그리지 않는다. */
-import { cleanup, render } from '@testing-library/react';
+import { cleanup, fireEvent, render } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createInitialState } from '../reduce';
-import type { PredictConfig, SlideFlipTurnConfig, TransformConfig } from '../types';
+import type {
+  CongruenceConfig,
+  LineSymmetryConfig,
+  PointSymmetryConfig,
+  PredictConfig,
+  SlideFlipTurnConfig,
+  TessellationConfig,
+  TransformAction,
+  TransformConfig,
+} from '../types';
 import { TransformView } from '../View';
 
 afterEach(cleanup);
@@ -44,6 +53,10 @@ describe('E10 기본 화면은 정답 단서를 쓰지 않는다', () => {
   it.each<TransformConfig>([
     { mode: 'slide-flip-turn' } satisfies SlideFlipTurnConfig,
     { mode: 'predict' } satisfies PredictConfig,
+    { mode: 'tessellation' } satisfies TessellationConfig,
+    { mode: 'congruence' } satisfies CongruenceConfig,
+    { mode: 'line-symmetry' } satisfies LineSymmetryConfig,
+    { mode: 'point-symmetry' } satisfies PointSymmetryConfig,
   ])('$mode 기본 설정에 "정답"·"딱 맞아요"·"맞았어요"가 없다', (config) => {
     const text = renderView(config).container.textContent ?? '';
     expect(text).not.toContain('정답');
@@ -64,6 +77,70 @@ describe('E10 기본 화면은 정답 단서를 쓰지 않는다', () => {
     };
     const text = renderView(config).container.textContent ?? '';
     expect(text).not.toContain('정답');
+  });
+});
+
+describe('E10 T105 기본 화면은 정답 표시를 미리 그리지 않는다', () => {
+  it('line-symmetry 기본 설정에는 찾은 축·접힌 빈틈이 없다', () => {
+    const { container } = renderView({ mode: 'line-symmetry' });
+    expect(container.querySelectorAll('[data-axis-found]')).toHaveLength(0);
+    expect(container.querySelectorAll('[data-fold-gap]')).toHaveLength(0);
+    expect(container.querySelectorAll('[data-mirror]')).toHaveLength(0);
+  });
+
+  it('line-symmetry 완성하기는 남은 반쪽 경로를 그리지 않는다', () => {
+    const { container } = renderView({ mode: 'line-symmetry', task: 'complete' });
+    expect(container.querySelectorAll('[data-mirror]')).toHaveLength(0);
+    expect(container.querySelectorAll('[data-student-path]')).toHaveLength(0);
+    expect(container.querySelectorAll('[data-axis-found]')).toHaveLength(0);
+    expect(container.querySelectorAll('[data-fold-gap]')).toHaveLength(0);
+  });
+
+  it('point-symmetry 기본 설정에는 중심·이등분 표시와 도형 이름이 없다', () => {
+    const { container } = renderView({ mode: 'point-symmetry' });
+    expect(container.querySelectorAll('[data-center-mark]')).toHaveLength(0);
+    expect(container.querySelectorAll('[data-bisect]')).toHaveLength(0);
+    const text = container.textContent ?? '';
+    expect(text).not.toContain('대칭의 중심');
+    expect(text).not.toContain('평행사변형');
+    expect(text).not.toContain('글자');
+    expect(text).not.toContain('정오각형');
+  });
+
+  it('congruence 기본 설정에는 대응 표시가 없다', () => {
+    const { container } = renderView({ mode: 'congruence' });
+    expect(container.querySelectorAll('[data-corr]')).toHaveLength(0);
+  });
+
+  it('tessellation 기본 설정에는 빈 칸 표시가 없고 "채울 수 없" 문구도 없다', () => {
+    const { container } = renderView({ mode: 'tessellation' });
+    expect(container.querySelectorAll('[data-gap-cell]')).toHaveLength(0);
+    expect(container.textContent ?? '').not.toContain('채울 수 없');
+  });
+});
+
+describe('E10 tessellation 키보드', () => {
+  it('방향키는 move(slide), Enter는 place 액션으로 보낸다', () => {
+    const actions: TransformAction[] = [];
+    const state = createInitialState({ mode: 'tessellation' } satisfies TessellationConfig);
+    const { container } = render(
+      <TransformView
+        config={{ mode: 'tessellation' }}
+        state={state}
+        dispatch={(action) => actions.push(action)}
+        cpa="C"
+        mode="tessellation"
+        targetSize={48}
+      />,
+    );
+    const canvas = container.querySelector('svg[data-testid="transform-canvas"]');
+    if (!canvas) throw new Error('tessellation canvas missing');
+    fireEvent.keyDown(canvas, { key: 'ArrowRight' });
+    fireEvent.keyDown(canvas, { key: 'Enter' });
+    expect(actions).toEqual([
+      { type: 'move', move: { kind: 'slide', dx: 6, dy: 0 } },
+      { type: 'place' },
+    ]);
   });
 });
 

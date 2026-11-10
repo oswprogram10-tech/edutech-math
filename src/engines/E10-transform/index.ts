@@ -7,13 +7,23 @@ import { transformStrings } from './strings.ko';
 import type { TransformAction, TransformConfig, TransformState } from './types';
 import { TransformView } from './View';
 import { ClockHandOverlay } from './overlays/clock-hand';
+import { FlipVsTurnOverlay } from './overlays/flip-vs-turn';
+import { FoldGapOverlay } from './overlays/fold-gap';
 import { PinArcsOverlay } from './overlays/pin-arcs';
 import { PointTrackOverlay } from './overlays/point-track';
+import { ProtrudeOverlay } from './overlays/protrude';
 
 const definition: EngineDefinition<TransformConfig, TransformState, TransformAction> = {
   id: 'E10',
   name: transformStrings.name,
-  modes: ['slide-flip-turn', 'predict'],
+  modes: [
+    'slide-flip-turn',
+    'predict',
+    'tessellation',
+    'congruence',
+    'line-symmetry',
+    'point-symmetry',
+  ],
   createInitialState,
   reduce,
   View: TransformView,
@@ -25,6 +35,9 @@ const definition: EngineDefinition<TransformConfig, TransformState, TransformAct
     'pin-arcs': PinArcsOverlay,
     'point-track': PointTrackOverlay,
     'clock-hand': ClockHandOverlay,
+    'fold-gap': FoldGapOverlay,
+    protrude: ProtrudeOverlay,
+    'flip-vs-turn': FlipVsTurnOverlay,
   },
 };
 
