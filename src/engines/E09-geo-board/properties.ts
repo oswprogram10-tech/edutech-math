@@ -301,7 +301,22 @@ export function propertyKeys(props: FigureProps): string[] {
   }
   if (props.parallelPairs >= 1) keys.push('parallel-1');
   if (props.parallelPairs >= 2) keys.push('parallel-2');
+  if (oppositeSidesEqual(props)) keys.push('opposite-sides-equal');
   return [...keys, ...diagonalKeys(props)];
+}
+
+/** 사각형의 마주 보는 두 변이 각각 같은 길이인지. 이웃한 변이 같아도 참이 되지 않는다. */
+function oppositeSidesEqual(props: FigureProps): boolean {
+  const points = props.vertices;
+  if (points.length !== 4) return false;
+  const [a, b, c, d] = points;
+  if (!a || !b || !c || !d) return false;
+  const first = sDist2(a, b);
+  const opposite = sDist2(c, d);
+  const second = sDist2(b, c);
+  const secondOpposite = sDist2(d, a);
+  if (!first || !opposite || !second || !secondOpposite) return false;
+  return surdEquals(first, opposite) && surdEquals(second, secondOpposite);
 }
 
 /** 합동 판정 대신 쓰는 정확한 서명. 꼭짓점 사이 거리²의 정렬된 목록이다. */

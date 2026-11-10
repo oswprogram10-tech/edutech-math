@@ -240,7 +240,7 @@ export const geoBoardStrings = {
     conditions: {
       rectangle: [
         { key: 'right-angles-4', text: '네 각이 모두 직각이에요' },
-        { key: 'equal-sides-2', text: '마주 보는 변의 길이가 같아요' },
+        { key: 'opposite-sides-equal', text: '마주 보는 변의 길이가 같아요' },
       ],
       square: [
         { key: 'right-angles-4', text: '네 각이 모두 직각이에요' },

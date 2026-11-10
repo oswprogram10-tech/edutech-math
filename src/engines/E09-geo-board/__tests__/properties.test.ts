@@ -101,4 +101,15 @@ describe('properties: 도형 성질', () => {
     expect(figureProperties([sp(0, 0), sp(1, 1)])).toBeNull();
     expect(figureProperties([sp(0, 0), sp(1, 0), sp(2, 0)])).toBeNull();
   });
+
+  it('마주 보는 변 키는 이웃한 두 변이 같을 때 참이 되지 않는다', () => {
+    const rectangle = polygon([gp(0, 0), gp(2, 0), gp(2, 3), gp(0, 3)]);
+    expect(propertyKeys(rectangle)).toContain('opposite-sides-equal');
+
+    // AB = DA = 2(이웃한 변)이지만 마주 보는 변은 다르다.
+    const kite = polygon([gp(0, 0), gp(2, 0), gp(3, 2), gp(0, 2)]);
+    const keys = propertyKeys(kite);
+    expect(keys).toContain('equal-sides-2');
+    expect(keys).not.toContain('opposite-sides-equal');
+  });
 });

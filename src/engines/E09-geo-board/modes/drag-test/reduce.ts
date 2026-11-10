@@ -43,6 +43,7 @@ import type {
   DragTestState,
   DragTool,
   MeasureKind,
+  QuadParamName,
   QuadParams,
   QuadToggle,
 } from './types';
@@ -266,6 +267,38 @@ function clearPicked(nodes: readonly DragNode[], picked: readonly string[]): str
 function reject(state: DragTestState, next: DragTestState): DragTestState {
   void next;
   return state;
+}
+
+/** 여러 매개변수를 한 Action으로 바꾼다. 중간 모양이 거절되어도 원래 상태를 지킨다. */
+function applyQuadParamUpdates(
+  state: DragTestState,
+  updates: readonly {
+    readonly param: QuadParamName;
+    readonly value: number | readonly [number, number];
+  }[],
+): DragTestState {
+  const { settings } = state;
+  if (!state.quad || settings.construction === 'free' || updates.length === 0) return state;
+  let updated: QuadParams | null = state.quad;
+  for (const update of updates) {
+    updated = sanitizeQuadValue(updated, update.param, update.value);
+    if (!updated) return state;
+  }
+  const normalized = normalizeQuad(updated, state.toggles, settings.construction);
+  if (!normalized) return state;
+  if (!quadParamsValid(normalized)) return state;
+  if (!validQuad(normalized, settings.lattice, state.toggles as readonly QuadToggle[])) {
+    return state;
+  }
+  const built = quadNodes(normalized, settings.lattice, state.toggles as readonly QuadToggle[], 1);
+  if (!built) return state;
+  return withCleanPreShake(state, {
+    ...state,
+    nodes: built.nodes,
+    quad: normalized,
+    nextId: built.nextId,
+    pickedAngles: clearPicked(built.nodes, state.pickedAngles),
+  });
 }
 
 export function reduceDragTest(
@@ -516,29 +549,11 @@ export function reduceDragTest(
     }
 
     case 'set-quad-param': {
-      if (!state.quad || settings.construction === 'free') return state;
-      const updated = sanitizeQuadValue(state.quad, action.param, action.value);
-      if (!updated) return state;
-      const normalized = normalizeQuad(updated, state.toggles, settings.construction);
-      if (!normalized) return state;
-      if (!quadParamsValid(normalized)) return state;
-      if (!validQuad(normalized, settings.lattice, state.toggles as readonly QuadToggle[])) {
-        return state;
-      }
-      const built = quadNodes(
-        normalized,
-        settings.lattice,
-        state.toggles as readonly QuadToggle[],
-        1,
-      );
-      if (!built) return state;
-      return withCleanPreShake(state, {
-        ...state,
-        nodes: built.nodes,
-        quad: normalized,
-        nextId: built.nextId,
-        pickedAngles: clearPicked(built.nodes, state.pickedAngles),
-      });
+      return applyQuadParamUpdates(state, [{ param: action.param, value: action.value }]);
+    }
+
+    case 'set-quad-params': {
+      return applyQuadParamUpdates(state, action.params);
     }
 
     case 'toggle-condition': {

@@ -106,8 +106,8 @@ export function AngleView({ state, dispatch, cpa, readOnly = false, targetSize }
   const placeCurrent = () => {
     if (readOnly) return;
     const on = puzzle ? 'launcher' : angle.id;
+    // 각도기는 꼭짓점에만 붙인다. 변에 맞춰 돌리는 것은 학생이 한다.
     dispatch({ type: 'place-protractor', on });
-    dispatch({ type: 'rotate-protractor', rotation: puzzle ? 0 : angle.base });
   };
 
   const lift = () => {
@@ -120,11 +120,11 @@ export function AngleView({ state, dispatch, cpa, readOnly = false, targetSize }
     else placeCurrent();
   };
 
-  const rotateBy = (delta: number) => {
+  const rotateBy = (delta: number, snap = false) => {
     const next = normalizeDegrees(state.protractor.rotation + delta);
     dispatch({
       type: 'rotate-protractor',
-      rotation: snapRotation(next, angleArms(state)),
+      rotation: snap ? snapRotation(next, angleArms(state)) : next,
     });
   };
 
@@ -139,6 +139,7 @@ export function AngleView({ state, dispatch, cpa, readOnly = false, targetSize }
     if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
     event.preventDefault();
     const step = event.shiftKey ? 15 : 1;
+    // 키보드 1°는 4° 스냅을 거치지 않는다(맞춘 변에서 ±1이 다시 붙는 문제).
     rotateBy(event.key === 'ArrowRight' ? step : -step);
   };
 

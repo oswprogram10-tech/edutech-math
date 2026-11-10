@@ -61,6 +61,16 @@ describe('angle 각도기 맞춤', () => {
     const config180: GeoConfig = { mode: 'angle', angles: [{ degrees: 100, base: 30 }] };
     expect(observe(placed(config180, 130)).protractorAligned).toBe(false);
   });
+
+  it('60° 각의 둘째 변을 왼쪽 0° 선에 맞추면 안쪽 눈금이다', () => {
+    const config60: GeoConfig = { mode: 'angle', angles: [{ degrees: 60, base: 0 }] };
+    const inner = observe(placed(config60, 240));
+    expect(inner.protractorAligned).toBe(true);
+    expect(inner.activeScale).toBe('inner');
+    const outer = observe(placed(config60, 0));
+    expect(outer.protractorAligned).toBe(true);
+    expect(outer.activeScale).toBe('outer');
+  });
 });
 
 describe('angle 어림 먼저', () => {

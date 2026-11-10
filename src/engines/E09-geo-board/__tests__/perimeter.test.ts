@@ -95,6 +95,11 @@ describe('fixed-perimeter 기록표', () => {
     state = reduce(state, { type: 'log-rect' });
     expect(observe(state).log).toEqual([]);
   });
+
+  it('state.log가 없어도 빈 기록표로 관찰한다', () => {
+    const state = { ...geoboardState(createInitialState(PERIMETER_20)), log: undefined };
+    expect(observe(state as unknown as GeoState).log).toEqual([]);
+  });
 });
 
 describe('fixed-perimeter 설정 검사', () => {

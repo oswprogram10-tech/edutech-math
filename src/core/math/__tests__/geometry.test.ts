@@ -308,8 +308,7 @@ describe('geometry T101 무리수·교점·회전', () => {
     expect(minus?.y.b.toString()).toBe('-1');
 
     const touching = circleCircleIntersections(gp(0, 0), r(1), gp(2, 0), r(1));
-    expect(touching).toHaveLength(1);
-    expect(touching[0]?.x.a.toString()).toBe('1');
+    expect(touching).toEqual([]);
 
     expect(circleCircleIntersections(gp(0, 0), r(1), gp(5, 0), r(1))).toEqual([]);
     expect(circleCircleIntersections(gp(1, 1), r(1), gp(1, 1), r(4))).toEqual([]);

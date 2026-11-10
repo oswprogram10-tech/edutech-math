@@ -44,7 +44,7 @@ export function perimeterObservation(state: GeoboardState): PerimeterObservation
           area: rect.width * rect.height,
         }
       : null,
-    log: state.log.map(logObservation),
+    log: (state.log ?? []).map(logObservation),
   };
 }
 

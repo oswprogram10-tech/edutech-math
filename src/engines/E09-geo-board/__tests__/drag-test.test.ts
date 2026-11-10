@@ -8,6 +8,7 @@ import { describe, expect, it } from 'vitest';
 import { assertSerializable } from '../../../core/engine-sdk';
 import type { Observation } from '../../../core/engine-sdk';
 import { emit, predicates } from '../events';
+import { previewShake } from '../modes/drag-test/shake';
 import type { DragNode, DragTestState } from '../modes/drag-test/types';
 import { observe } from '../observe';
 import { createInitialState, reduce } from '../reduce';
@@ -420,6 +421,84 @@ describe('E09 drag-test events', () => {
     const payload = shaken?.payload as { count?: unknown; kept?: unknown } | undefined;
     expect(payload?.count).toBe(1);
     expect(stringsOf(payload?.kept)).toContain('equal-sides-2');
+  });
+});
+
+describe('E09 drag-test 사각형 매개변수 한 Action', () => {
+  const config: GeoConfig = {
+    mode: 'drag-test',
+    construction: 'quad-conditions',
+    quadToggles: ['one-parallel-pair', 'two-parallel-pairs', 'equal-sides', 'right-angle'],
+  };
+
+  it('set-quad-params는 s·t를 한 번에 적용해 중간 모양 거절을 피한다', () => {
+    const start = apply(config, []);
+    let found = false;
+    for (let s = 0; s < 12 && !found; s += 1) {
+      for (let t = 2; t <= 22 && !found; t += 1) {
+        const single = reduce(start, { type: 'set-quad-param', param: 's', value: s });
+        const both = reduce(start, {
+          type: 'set-quad-params',
+          params: [
+            { param: 's', value: s },
+            { param: 't', value: t },
+          ],
+        });
+        // s만 바꾸면 중간 모양이 거절되지만, t와 함께면 받는 경우가 있어야 한다.
+        if (single === start && both !== start) {
+          expect(both.mode).toBe('drag-test');
+          if (both.mode === 'drag-test') {
+            expect(both.quad?.kind).toBe('quad-conditions');
+            if (both.quad?.kind === 'quad-conditions') {
+              expect(both.quad.s).toBe(s);
+              expect(both.quad.t).toBe(t);
+            }
+          }
+          found = true;
+        }
+      }
+    }
+    expect(found).toBe(true);
+  });
+});
+
+describe('E09 drag-test 흔들기 미리보기', () => {
+  it('미리보기가 실제 다음 흔들기와 같은 결과를 낸다', () => {
+    const state = isoscelesByCircles(2);
+    const preview = previewShake(
+      state.nodes,
+      state.quad,
+      state.settings,
+      state.shakeCount,
+      state.toggles,
+    );
+    const next = reduce(state, { type: 'shake' }) as DragTestState;
+    expect(JSON.stringify(preview.nodes)).toBe(JSON.stringify(next.nodes));
+    expect(preview.quad).toEqual(next.quad);
+  });
+
+  it('from-diagonals에서도 미리보기가 실제 다음 흔들기와 같다', () => {
+    const state = apply(
+      {
+        mode: 'drag-test',
+        construction: 'from-diagonals',
+        diagonalToggles: ['bisect-each-other', 'perpendicular'],
+      },
+      [
+        { type: 'toggle-condition', condition: 'bisect-each-other' },
+        { type: 'toggle-condition', condition: 'perpendicular' },
+      ],
+    );
+    const preview = previewShake(
+      state.nodes,
+      state.quad,
+      state.settings,
+      state.shakeCount,
+      state.toggles,
+    );
+    const next = reduce(state, { type: 'shake' }) as DragTestState;
+    expect(JSON.stringify(preview.nodes)).toBe(JSON.stringify(next.nodes));
+    expect(preview.quad).toEqual(next.quad);
   });
 });
 

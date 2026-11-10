@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
+import { canvasScale } from './canvas-point';
 
 /**
  * E09 classify·drag-test 모드 E2E(T101).
@@ -236,6 +237,75 @@ test('from-diagonals에서 이등분·수직을 켜고 흔들면 마름모다', 
   );
   expect(observation.toggles).not.toContain('equal-length');
   await capture(page, 'drag-rhombus');
+});
+
+/**
+ * 사각형 손잡이를 캔버스 가운데 쪽으로 한 격자 끈다(포인터).
+ * 크롬북처럼 캔버스가 화면보다 길면 손잡이가 화면 밖에 있으므로 먼저 보이게 스크롤한다.
+ */
+async function dragHandleTowardCenter(
+  page: Page,
+  canvas: Locator,
+  index: number,
+): Promise<{ readonly x: number; readonly y: number }> {
+  const handle = page.getByTestId(`quad-handle-${index}`);
+  await handle.scrollIntoViewIfNeeded();
+  const box = await handle.boundingBox();
+  const canvasBox = await canvas.boundingBox();
+  if (!box || !canvasBox) throw new Error('손잡이 또는 캔버스 상자를 찾지 못했다');
+  const center = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  const canvasCenter = {
+    x: canvasBox.x + canvasBox.width / 2,
+    y: canvasBox.y + canvasBox.height / 2,
+  };
+  const dx = canvasCenter.x - center.x;
+  const dy = canvasCenter.y - center.y;
+  const length = Math.hypot(dx, dy);
+  if (length === 0) throw new Error('손잡이가 캔버스 가운데에 있다');
+  // 기본 격자 24칸: 논리 한 칸 = 800/24, 화면은 캔버스 배율만큼.
+  const step = canvasScale(canvasBox) * (800 / 24);
+  await page.mouse.move(center.x, center.y);
+  await page.mouse.down();
+  await page.mouse.move(center.x + (dx / length) * step, center.y + (dy / length) * step, {
+    steps: 5,
+  });
+  await page.mouse.up();
+  return center;
+}
+
+test('from-diagonals의 B·D 손잡이를 포인터로 끌면 모양이 바뀐다', async ({ page }) => {
+  const { canvas } = await openEngine(page, {
+    mode: 'drag-test',
+    construction: 'from-diagonals',
+  });
+  await chooseMode(page, 'drag-test');
+
+  const bStart = await dragHandleTowardCenter(page, canvas, 1);
+  await expect
+    .poll(async () => {
+      const after = await page.getByTestId('quad-handle-1').boundingBox();
+      if (!after) return 0;
+      return Math.hypot(
+        after.x + after.width / 2 - bStart.x,
+        after.y + after.height / 2 - bStart.y,
+      );
+    })
+    .toBeGreaterThan(10);
+
+  const dStart = await dragHandleTowardCenter(page, canvas, 3);
+  await expect
+    .poll(async () => {
+      const after = await page.getByTestId('quad-handle-3').boundingBox();
+      if (!after) return 0;
+      return Math.hypot(
+        after.x + after.width / 2 - dStart.x,
+        after.y + after.height / 2 - dStart.y,
+      );
+    })
+    .toBeGreaterThan(10);
+
+  const observation = await readObservation<DragObservation>(page);
+  expect(observation.figure?.kind).toBe('quad');
 });
 
 test('property-checklist 오버레이가 본 캔버스와 2px 안에 겹친다', async ({ page }) => {

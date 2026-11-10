@@ -7,7 +7,7 @@ import { CanvasAlignedOverlay } from '../../../core/engine-sdk';
 import type { OverlayProps } from '../../../core/engine-sdk';
 import type { GPoint } from '../../../core/math';
 import { boardRect, pegPoint, ratToScreen } from '../layout';
-import { pointAt } from '../modes/circle/observe';
+import { pointAt, chordThroughCenter } from '../modes/circle/observe';
 import { geoBoardStrings as S } from '../strings.ko';
 import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../types';
 import type { GeoConfig, GeoState } from '../types';
@@ -24,6 +24,8 @@ function screenOf(
 
 export function ChordGapOverlay({ state }: OverlayProps<GeoConfig, GeoState>) {
   if (state.mode !== 'circle' || !state.chord) return null;
+  // 현이 중심을 지나면 "중심에서 떨어져 있어요"를 보이지 않는다.
+  if (chordThroughCenter(state)) return null;
   const rect = boardRect(state.settings.grid, state.settings.grid);
   const center = pegPoint(rect, state.settings.stake);
   const first = screenOf(rect, pointAt(state.settings, state.chord[0]));

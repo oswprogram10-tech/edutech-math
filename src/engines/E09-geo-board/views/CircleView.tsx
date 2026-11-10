@@ -141,7 +141,7 @@ export function CircleView({
     y: (chordFirst.y + chordSecond.y) / 2,
   };
   const chordRatio = state.chord
-    ? clamp(distance(chordFirst, chordSecond) / (2 * mainRadiusScreen), 0, 1)
+    ? clamp(distance(chordFirst, chordSecond) / (2.5 * mainRadiusScreen), 0, 1)
     : 0;
   const matched = patternMatched(state);
   const chordIsDiameter = settings.snapDiameter && chordThroughCenter(state);
@@ -713,7 +713,7 @@ export function CircleView({
               width={Math.max(0, 560 * chordRatio)}
               height={26}
               rx={8}
-              fill={chordIsDiameter ? ORANGE : BLUE}
+              fill={BLUE}
             />
           </svg>
         </div>

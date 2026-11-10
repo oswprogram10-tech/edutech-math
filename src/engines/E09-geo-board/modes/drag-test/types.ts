@@ -192,6 +192,13 @@ export type DragTestAction =
       readonly value: number | readonly [number, number];
     }
   | {
+      readonly type: 'set-quad-params';
+      readonly params: readonly {
+        readonly param: QuadParamName;
+        readonly value: number | readonly [number, number];
+      }[];
+    }
+  | {
       readonly type: 'toggle-condition';
       readonly condition: DiagonalToggle | QuadToggle;
     };

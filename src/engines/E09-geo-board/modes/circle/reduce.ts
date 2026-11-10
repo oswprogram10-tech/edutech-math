@@ -252,7 +252,7 @@ export function reduceCircle(state: CircleState, action: GeoAction): CircleState
     case 'set-compass': {
       if (!state.settings.compass.enabled) return state;
       const step = state.settings.compass.gridSnap * 2;
-      const maxHalf = state.settings.grid * 2;
+      const maxHalf = (state.settings.grid - 1) * 2;
       let center = state.compass.center;
       if (action.center !== undefined) {
         if (!Array.isArray(action.center) || action.center.length < 2) return state;

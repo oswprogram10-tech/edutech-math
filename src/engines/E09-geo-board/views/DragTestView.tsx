@@ -103,6 +103,7 @@ function tickMarks(
     marks.push(
       <line
         key={`${keyPrefix}-${index}`}
+        data-testid="drag-tick"
         x1={center.x - normal.x * 8}
         y1={center.y - normal.y * 8}
         x2={center.x + normal.x * 8}
@@ -172,6 +173,7 @@ export function DragTestView({
   const [pending, setPending] = useState<string[]>([]);
   const [lineBase, setLineBase] = useState<string | null>(null);
   const [grabbed, setGrabbed] = useState<string | null>(null);
+  const [quadHandle, setQuadHandle] = useState<number | null>(null);
   const [message, setMessage] = useState('');
   const dragRef = useRef<{
     readonly pointerId: number;
@@ -236,6 +238,7 @@ export function DragTestView({
 
   const pressPoint = (id: string) => {
     if (readOnly) return;
+    setQuadHandle(null);
     setKeyPoint(id);
     setMessage('');
     const tool = state.tool;
@@ -302,6 +305,12 @@ export function DragTestView({
   const onCanvasKeyDown = (event: ReactKeyboardEvent<SVGSVGElement>) => {
     if (readOnly) return;
     const key = event.key;
+    if (state.quad && key >= '1' && key <= '4') {
+      event.preventDefault();
+      setQuadHandle(Number(key) - 1);
+      setKeyPoint(null);
+      return;
+    }
     if (key === ' ' || key === 'Spacebar') {
       event.preventDefault();
       if (event.shiftKey) jumpPoint(-1);
@@ -328,6 +337,7 @@ export function DragTestView({
         });
         return;
       }
+      if (quadHandle !== null && adjustQuadHandle(quadHandle, key)) return;
       setKeyPoint(null);
       setCursor([
         clamp(cursor[0] + (key === 'ArrowRight' ? 1 : key === 'ArrowLeft' ? -1 : 0), 0, lattice),
@@ -369,9 +379,11 @@ export function DragTestView({
     }
     const handle = quadHandleAt(point);
     if (handle !== null) {
+      setQuadHandle(handle);
       dragRef.current = { pointerId: event.pointerId, node: null, handle };
       return;
     }
+    setQuadHandle(null);
     const id = nearestPoint(point);
     dragRef.current = { pointerId: event.pointerId, node: id, handle: null };
     if (id) {
@@ -439,8 +451,17 @@ export function DragTestView({
     return null;
   };
 
+  const setParams = (
+    params: readonly {
+      readonly param: QuadParamName;
+      readonly value: number | readonly [number, number];
+    }[],
+  ) => {
+    dispatch({ type: 'set-quad-params', params });
+  };
+
   const setParam = (param: QuadParamName, value: number | readonly [number, number]) => {
-    dispatch({ type: 'set-quad-param', param, value });
+    setParams([{ param, value }]);
   };
 
   const applyQuadHandle = (index: number, point: Point) => {
@@ -468,19 +489,20 @@ export function DragTestView({
         setParam('gamma', clamp(Math.round(gamma * 4 - 1), 0, 11));
         return;
       }
-      const bScreen = handles[1];
-      const dScreen = handles[3];
-      const target = index === 1 ? bScreen : dScreen;
-      if (!target) return;
-      const length = Math.hypot(target.x - center.x, target.y - center.y);
-      const ratio = length / pLength;
+      // B·D 손잡이는 지금 손잡이 위치가 아니라 포인터 위치로 비율·각을 잰다.
+      const ratio = Math.hypot(point.x - center.x, point.y - center.y) / pLength;
       if (index === 1) {
-        setParam('beta', clamp(Math.round(ratio * 4 - 1), 0, 11));
         const angle =
-          Math.atan2(target.y - center.y, target.x - center.x) -
+          Math.atan2(point.y - center.y, point.x - center.x) -
           Math.atan2(aScreen.y - center.y, aScreen.x - center.x);
         const normalized = ((angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
-        setParam('t', clamp(Math.round(normalized / ((Math.PI * 2) / 48)) % 24 || 1, 1, 23));
+        setParams([
+          {
+            param: 't',
+            value: clamp(Math.round(normalized / ((Math.PI * 2) / 48)) % 24 || 1, 1, 23),
+          },
+          { param: 'beta', value: clamp(Math.round(ratio * 4 - 1), 0, 11) },
+        ]);
       } else {
         setParam('delta', clamp(Math.round(ratio * 4 - 1), 0, 11));
       }
@@ -498,11 +520,14 @@ export function DragTestView({
       const ab = Math.hypot(aScreen.x - bScreen.x, aScreen.y - bScreen.y);
       const ad = Math.hypot(point.x - aScreen.x, point.y - aScreen.y);
       if (ab === 0) return;
-      setParam('s', clamp(Math.round((ad / ab) * 4 - 1), 0, 11));
       const baseAngle = Math.atan2(bScreen.y - aScreen.y, bScreen.x - aScreen.x);
       const angle = Math.atan2(point.y - aScreen.y, point.x - aScreen.x) - baseAngle;
       const normalized = ((-angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
-      setParam('t', clamp(Math.round(normalized / ((Math.PI * 2) / 48)) || 2, 2, 22));
+      // 길이(s)와 방향(t)을 한 Action으로 보내 중간 모양에서 거절되지 않게 한다.
+      setParams([
+        { param: 's', value: clamp(Math.round((ad / ab) * 4 - 1), 0, 11) },
+        { param: 't', value: clamp(Math.round(normalized / ((Math.PI * 2) / 48)) || 2, 2, 22) },
+      ]);
       return;
     }
     if (index === 2) {
@@ -521,6 +546,53 @@ export function DragTestView({
         setParam('c', [at[0] - Math.floor(lattice / 4), at[1] - Math.floor((lattice * 3) / 4)]);
       }
     }
+  };
+
+  /** 손잡이를 고른 뒤 방향키로 매개변수를 한 단계씩 바꾼다(AGENTS 6). */
+  const adjustQuadHandle = (index: number, key: string): boolean => {
+    if (!state.quad) return false;
+    const dx = key === 'ArrowRight' ? 1 : key === 'ArrowLeft' ? -1 : 0;
+    const dy = key === 'ArrowDown' ? 1 : key === 'ArrowUp' ? -1 : 0;
+    // 벡터는 화면 방향(dx, dy), 단계 값은 ↑/→ +1, ↓/← −1이다.
+    const step = dx !== 0 ? dx : key === 'ArrowUp' ? 1 : key === 'ArrowDown' ? -1 : 0;
+    if (step === 0) return false;
+    if (state.quad.kind === 'from-diagonals') {
+      if (index === 0) {
+        setParam('p', [state.quad.p[0] + dx, state.quad.p[1] + dy]);
+        return true;
+      }
+      if (index === 1) {
+        setParam(dx !== 0 ? 't' : 'beta', (dx !== 0 ? state.quad.t : state.quad.beta) + step);
+        return true;
+      }
+      if (index === 2) {
+        setParam('gamma', state.quad.gamma + step);
+        return true;
+      }
+      if (index === 3) {
+        setParam('delta', state.quad.delta + step);
+        return true;
+      }
+      return false;
+    }
+    if (index === 1) {
+      setParam('u', [state.quad.u[0] + dx, state.quad.u[1] + dy]);
+      return true;
+    }
+    if (index === 2) {
+      if (state.toggles.includes('two-parallel-pairs')) return false;
+      if (state.toggles.includes('one-parallel-pair')) {
+        setParam('kappa', state.quad.kappa + step);
+      } else {
+        setParam('c', [state.quad.c[0] + dx, state.quad.c[1] + dy]);
+      }
+      return true;
+    }
+    if (index === 3) {
+      setParam(dx !== 0 ? 't' : 's', (dx !== 0 ? state.quad.t : state.quad.s) + step);
+      return true;
+    }
+    return false;
   };
 
   const intersectionCandidates = useMemo(() => {
@@ -682,7 +754,7 @@ export function DragTestView({
   };
 
   const figureTicks = (): ReactNode[] => {
-    if (!figure) return [];
+    if (!figure || state.settings.measure.length === 0) return [];
     const screens = figure.points.map(screenOf);
     const groups = equalSideGroups(figure.points);
     return groups.flatMap((group, number) =>
@@ -872,6 +944,7 @@ export function DragTestView({
             {quadScreen().map((handle, index) => (
               <g key={`handle-${index}`}>
                 <rect
+                  data-testid={`quad-handle-${index}`}
                   x={handle.x - 9}
                   y={handle.y - 9}
                   width={18}
@@ -879,8 +952,8 @@ export function DragTestView({
                   rx={4}
                   fill={ORANGE}
                   fillOpacity={0.75}
-                  stroke={INK}
-                  strokeWidth={2}
+                  stroke={quadHandle === index ? INK : ORANGE}
+                  strokeWidth={quadHandle === index ? 4 : 2}
                   pointerEvents="none"
                 />
                 <text x={handle.x + 12} y={handle.y - 10} fontSize={16} fontWeight={700} fill={INK}>

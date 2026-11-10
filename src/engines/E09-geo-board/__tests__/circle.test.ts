@@ -90,6 +90,21 @@ describe('circle 컴퍼스', () => {
     assertSerializable(state);
   });
 
+  it('컴퍼스 중심은 격자 끝 (grid−1)×2 반 칸까지만 간다', () => {
+    const config: GeoConfig = {
+      mode: 'circle',
+      grid: 13,
+      compass: { enabled: true, gridSnap: 0.5 },
+    };
+    const state = reduce(createInitialState(config), {
+      type: 'set-compass',
+      center: [26, 12],
+      width: 3,
+    });
+    if (state.mode !== 'circle') throw new Error('circle 상태가 아니다');
+    expect(state.compass.center).toEqual([24, 12]);
+  });
+
   it('무늬 three-circles-in-row를 세 개 그리면 모두 맞는다', () => {
     const config: GeoConfig = {
       mode: 'circle',

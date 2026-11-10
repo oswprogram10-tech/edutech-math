@@ -485,7 +485,7 @@ export function circleCircleIntersections(
   if (d2.isZero()) return [];
   const k = r1sq.sub(r2sq).add(d2).div(Rational.of(2).mul(d2));
   const s = r1sq.div(d2).sub(k.mul(k));
-  if (s.isNegative()) return [];
+  if (s.isNegative() || s.isZero()) return [];
   const dx = c2.x.sub(c1.x);
   const dy = c2.y.sub(c1.y);
   const baseX = surdOf(c1.x.add(k.mul(dx)));
@@ -501,7 +501,7 @@ export function circleCircleIntersections(
   if (!plusX || !plusY || !minusX || !minusY) return [];
   const plus: SPoint = { x: plusX, y: plusY };
   const minus: SPoint = { x: minusX, y: minusY };
-  return s.isZero() ? [plus] : [plus, minus];
+  return [plus, minus];
 }
 
 /** 두 직선(두 점으로 정한다)의 교점. 평행하거나 퇴화하면 null. */

@@ -203,5 +203,5 @@ export function previewShake(
   shakeCount: number,
   activeToggles: readonly (DiagonalToggle | QuadToggle)[] = [],
 ): ShakeResult {
-  return shakeGeometry(nodes, quad, settings, shakeCount + 1, activeToggles);
+  return shakeGeometry(nodes, quad, settings, shakeCount, activeToggles);
 }
