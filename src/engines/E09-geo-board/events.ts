@@ -4,6 +4,17 @@
  * 이벤트: `shape-closed {vertices}`, `object-created {kind}`.
  */
 import type { EngineEvent, EnginePredicate, JsonValue, Observation } from '../../core/engine-sdk';
+import { anglePredicates } from './modes/angle/predicates';
+import { circlePredicates } from './modes/circle/predicates';
+import { chordThroughCenter, halfString } from './modes/circle/observe';
+import { classifyPredicates, classifyClosedPayload } from './modes/classify/observe';
+import { diagonalPredicates } from './modes/diagonal/predicates';
+import {
+  dragTestPredicates,
+  figureChangedPayload,
+  observeDragTest,
+} from './modes/drag-test/observe';
+import { perimeterPredicates } from './modes/perimeter/predicates';
 import { shapeObservation, objectHitsTarget } from './observe';
 import { samePeg } from './reduce';
 import type { GeoObjectKind, GeoState, Peg } from './types';
@@ -201,9 +212,29 @@ export const predicates: Readonly<Record<string, EnginePredicate>> = {
     const actual = new Set(marked);
     return expected.every((id) => actual.has(id));
   },
+
+  ...classifyPredicates,
+  ...dragTestPredicates,
+  ...circlePredicates,
+  ...anglePredicates,
+  ...diagonalPredicates,
+  ...perimeterPredicates,
 };
 
-export const EVENT_NAMES = ['shape-closed', 'object-created'] as const;
+export const EVENT_NAMES = [
+  'shape-closed',
+  'object-created',
+  'shaken',
+  'figure-changed',
+  'trace-complete',
+  'chord-diameter',
+  'circle-drawn',
+  'reading-set',
+  'laser-fired',
+  'diagonal-drawn',
+  'diagonal-rejected',
+  'rect-logged',
+] as const;
 
 export function emit(prev: GeoState, next: GeoState): EngineEvent[] {
   if (prev === next) return [];
@@ -219,12 +250,129 @@ export function emit(prev: GeoState, next: GeoState): EngineEvent[] {
         payload: { vertices: shapeObservation(band).vertices },
       });
     }
+    if (next.log.length > prev.log.length) {
+      const added = next.log[next.log.length - 1];
+      if (added) {
+        events.push({
+          name: 'rect-logged',
+          payload: {
+            width: added.width,
+            height: added.height,
+            area: added.width * added.height,
+          },
+        });
+      }
+    }
+  }
+
+  if (next.mode === 'diagonal' && prev.mode === 'diagonal') {
+    for (const n of next.settings.polygons) {
+      const key = String(n);
+      const before = (prev.drawn[key] ?? []).length;
+      const after = (next.drawn[key] ?? []).length;
+      if (after > before) {
+        events.push({ name: 'diagonal-drawn', payload: { n, count: after } });
+      }
+    }
+    if (next.adjacentAttempts > prev.adjacentAttempts) {
+      events.push({
+        name: 'diagonal-rejected',
+        payload: { n: next.lastRejected?.n ?? 0, reason: 'adjacent' },
+      });
+    } else if (next.duplicateAttempts > prev.duplicateAttempts) {
+      events.push({
+        name: 'diagonal-rejected',
+        payload: { n: next.lastRejected?.n ?? 0, reason: 'duplicate' },
+      });
+    }
+  }
+
+  if (next.mode === 'classify' && prev.mode === 'classify') {
+    for (const band of next.bands) {
+      if (!band.closed) continue;
+      const before = prev.bands.find((candidate) => candidate.id === band.id);
+      if (before && before.closed) continue;
+      events.push({ name: 'shape-closed', payload: classifyClosedPayload(band) });
+    }
   }
 
   if (next.mode === 'construct' && prev.mode === 'construct') {
     if (next.objects.length > prev.objects.length) {
       const created = next.objects[next.objects.length - 1];
       if (created) events.push({ name: 'object-created', payload: { kind: created.kind } });
+    }
+  }
+
+  if (next.mode === 'drag-test' && prev.mode === 'drag-test') {
+    if (next.shakeCount > prev.shakeCount) {
+      const observation = observeDragTest(next);
+      const last = observation['lastShake'];
+      const record = last && typeof last === 'object' && !Array.isArray(last) ? last : {};
+      events.push({
+        name: 'shaken',
+        payload: {
+          count: next.shakeCount,
+          kept: [...arrayOf(record['kept'])],
+          lost: [...arrayOf(record['lost'])],
+        },
+      });
+    }
+    const before = figureChangedPayload(prev);
+    const after = figureChangedPayload(next);
+    if (
+      JSON.stringify(before.names) !== JSON.stringify(after.names) ||
+      JSON.stringify(before.toggles) !== JSON.stringify(after.toggles)
+    ) {
+      events.push({
+        name: 'figure-changed',
+        payload: { names: [...after.names], toggles: [...after.toggles] },
+      });
+    }
+  }
+
+  if (next.mode === 'circle' && prev.mode === 'circle') {
+    const keys = new Set([...Object.keys(prev.traces), ...Object.keys(next.traces)]);
+    for (const key of keys) {
+      const before = (prev.traces[key] ?? []).length;
+      const after = (next.traces[key] ?? []).length;
+      if (before * 100 < 95 * 72 && after * 100 >= 95 * 72) {
+        events.push({ name: 'trace-complete', payload: { ropeLength: Number(key) } });
+      }
+    }
+    if (!prev.chord || !chordThroughCenter(prev)) {
+      if (next.chord && chordThroughCenter(next)) {
+        events.push({ name: 'chord-diameter', payload: {} });
+      }
+    }
+    if (next.circles.length > prev.circles.length) {
+      const created = next.circles[next.circles.length - 1];
+      if (created) {
+        events.push({ name: 'circle-drawn', payload: { radius: halfString(created.radius) } });
+      }
+    }
+  }
+
+  if (next.mode === 'angle' && prev.mode === 'angle') {
+    for (const angle of next.settings.angles) {
+      const before = prev.entries[angle.id]?.reading ?? null;
+      const after = next.entries[angle.id]?.reading ?? null;
+      if (after !== null && after !== before) {
+        events.push({ name: 'reading-set', payload: { angle: angle.id, value: after } });
+      }
+    }
+    const beforeFired = prev.puzzle?.fired.length ?? 0;
+    const afterFired = next.puzzle?.fired.length ?? 0;
+    if (afterFired > beforeFired && next.puzzle) {
+      const last = next.puzzle.fired[afterFired - 1];
+      if (typeof last === 'number') {
+        events.push({
+          name: 'laser-fired',
+          payload: {
+            angle: last,
+            hit: last === (next.settings.puzzle?.targetAngle ?? -1),
+          },
+        });
+      }
     }
   }
 

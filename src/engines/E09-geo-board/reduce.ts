@@ -6,11 +6,24 @@
  * - 수학 값은 저장하지 않는다. 넓이·각 판정은 `observe.ts`가 `core/math/geometry`로 계산한다.
  */
 import { clamp } from '../../core/engine-sdk';
+import { createAngleState, reduceAngle } from './modes/angle/reduce';
+import type { AngleConfig } from './modes/angle/types';
+import { createCircleState, reduceCircle } from './modes/circle/reduce';
+import type { CircleConfig } from './modes/circle/types';
+import { createClassifyState, reduceClassify } from './modes/classify/reduce';
+import type { ClassifyConfig } from './modes/classify/types';
+import { createDiagonalState, reduceDiagonal } from './modes/diagonal/reduce';
+import type { DiagonalConfig } from './modes/diagonal/types';
+import { createDragTestState, reduceDragTest } from './modes/drag-test/reduce';
+import type { DragTestConfig } from './modes/drag-test/types';
+import { initialRect, readConstraint, rectBand, reducePerimeter } from './modes/perimeter/reduce';
 import type {
+  BandBoardState,
   ConstructConfig,
   ConstructSettings,
   ConstructState,
   ConstructTool,
+  CurvedShapeConfig,
   GeoAction,
   GeoAngle,
   GeoBand,
@@ -75,7 +88,18 @@ function pegList(value: unknown, cols: number, rows: number): Peg[] {
 }
 
 export function inferMode(config: GeoConfig): GeoMode {
-  if (config.mode === 'geoboard' || config.mode === 'construct') return config.mode;
+  const declared = (config as { readonly mode?: string }).mode;
+  if (
+    declared === 'geoboard' ||
+    declared === 'construct' ||
+    declared === 'classify' ||
+    declared === 'drag-test' ||
+    declared === 'circle' ||
+    declared === 'angle' ||
+    declared === 'diagonal'
+  ) {
+    return declared;
+  }
   const candidate = config as ConstructConfig;
   if (
     candidate.tools !== undefined ||
@@ -90,6 +114,39 @@ export function inferMode(config: GeoConfig): GeoMode {
   return 'geoboard';
 }
 
+function openShapesOf(value: unknown, cols: number, rows: number): readonly (readonly Peg[])[] {
+  if (!Array.isArray(value)) return [];
+  const result: Peg[][] = [];
+  for (const item of value) {
+    const pegs = pegList(item, cols, rows);
+    if (pegs.length >= 2) result.push(pegs);
+  }
+  return result;
+}
+
+function curvedShapesOf(value: unknown, cols: number, rows: number): readonly CurvedShapeConfig[] {
+  if (!Array.isArray(value)) return [];
+  const result: CurvedShapeConfig[] = [];
+  for (const item of value) {
+    if (item === null || typeof item !== 'object' || Array.isArray(item)) continue;
+    const record = item as Readonly<Record<string, unknown>>;
+    const pegs = pegList(record['pegs'], cols, rows);
+    if (pegs.length < 3) continue;
+    const curved: number[] = [];
+    const raw = record['curved'];
+    if (Array.isArray(raw)) {
+      for (const edge of raw) {
+        if (typeof edge !== 'number' || !Number.isFinite(edge)) continue;
+        const index = Math.round(edge);
+        if (index < 0 || index >= pegs.length) continue;
+        if (!curved.includes(index)) curved.push(index);
+      }
+    }
+    result.push({ pegs, curved });
+  }
+  return result;
+}
+
 function geoboardSettings(config: GeoboardConfig): GeoboardSettings {
   const raw = Array.isArray(config.grid) ? config.grid : DEFAULT_GEOBOARD_GRID;
   const cols = integer(raw[0], DEFAULT_GEOBOARD_GRID[0], MIN_GRID, MAX_GRID);
@@ -99,6 +156,10 @@ function geoboardSettings(config: GeoboardConfig): GeoboardSettings {
     // 'after-submit'은 실행기가 제출 결과를 알려 주지 않으므로 'never'로 본다.
     showCounts: config.showCounts === 'always' ? 'always' : 'never',
     maxShapes: integer(config.maxShapes, DEFAULT_MAX_SHAPES, 1, 8),
+    constraint: readConstraint(config, cols, rows),
+    log: config.log === true,
+    openShapes: openShapesOf(config.openShapes, cols, rows),
+    curvedShapes: curvedShapesOf(config.curvedShapes, cols, rows),
   };
 }
 
@@ -196,6 +257,21 @@ function constructSettings(config: ConstructConfig): ConstructSettings {
 
 export function createInitialState(config: GeoConfig): GeoState {
   const mode = inferMode(config);
+  if (mode === 'circle') {
+    return createCircleState(config as CircleConfig);
+  }
+  if (mode === 'angle') {
+    return createAngleState(config as AngleConfig);
+  }
+  if (mode === 'diagonal') {
+    return createDiagonalState(config as DiagonalConfig);
+  }
+  if (mode === 'classify') {
+    return createClassifyState(config as ClassifyConfig);
+  }
+  if (mode === 'drag-test') {
+    return createDragTestState(config as DragTestConfig);
+  }
   if (mode === 'construct') {
     const settings = constructSettings(config as ConstructConfig);
     return {
@@ -213,6 +289,17 @@ export function createInitialState(config: GeoConfig): GeoState {
 
   const settings = geoboardSettings(config as GeoboardConfig);
   const [cols, rows] = settings.grid;
+  const fixed = settings.constraint ? initialRect(settings.constraint, cols, rows) : null;
+  if (settings.constraint && fixed) {
+    return {
+      mode: 'geoboard',
+      bands: [rectBand(fixed.width, fixed.height)],
+      activeBand: null,
+      nextId: 2,
+      log: [],
+      settings,
+    };
+  }
   const shapes = Array.isArray((config as GeoboardConfig).shapes)
     ? ((config as GeoboardConfig).shapes ?? [])
     : [];
@@ -228,6 +315,7 @@ export function createInitialState(config: GeoConfig): GeoState {
     bands,
     activeBand: null,
     nextId: bands.length + 1,
+    log: [],
     settings,
   };
 }
@@ -333,6 +421,16 @@ function reduceGeoboard(state: GeoboardState, action: GeoAction): GeoState {
   }
 }
 
+/**
+ * 고무줄 Action만 처리하는 공통 reducer. geoboard와 classify가 같이 쓴다.
+ * 모드별 추가 필드(`squareOn` 등)는 그대로 보존한다.
+ */
+export function reduceBands<S extends BandBoardState>(state: S, action: GeoAction): S {
+  const next = reduceGeoboard(state as unknown as GeoboardState, action);
+  if ((next as unknown) === (state as unknown)) return state;
+  return { ...state, ...next } as S;
+}
+
 function reduceConstruct(state: ConstructState, action: GeoAction): GeoState {
   const { grid } = state.settings;
   switch (action.type) {
@@ -389,15 +487,25 @@ function reduceConstruct(state: ConstructState, action: GeoAction): GeoState {
 }
 
 export function reduce(state: GeoState, action: GeoAction): GeoState {
-  if (state.mode === 'geoboard') return reduceGeoboard(state, action) as GeoboardState;
+  if (state.mode === 'geoboard') {
+    // 제약이 있으면 둘레가 깨지는 고무줄 편집을 받지 않는다.
+    if (state.settings.constraint) return reducePerimeter(state, action);
+    return reduceGeoboard(state, action) as GeoboardState;
+  }
+  if (state.mode === 'circle') return reduceCircle(state, action);
+  if (state.mode === 'angle') return reduceAngle(state, action);
+  if (state.mode === 'diagonal') return reduceDiagonal(state, action);
+  if (state.mode === 'classify') return reduceClassify(state, action);
+  if (state.mode === 'drag-test') return reduceDragTest(state, action);
   return reduceConstruct(state, action) as ConstructState;
 }
 
 /** 고무줄 id로 찾는다. View·overlay가 쓴다. */
-export function findBand(state: GeoboardState, id: string | null): GeoBand | null {
-  return bandById(state, id);
+export function findBand(state: BandBoardState, id: string | null): GeoBand | null {
+  if (id === null) return null;
+  return state.bands.find((band) => band.id === id) ?? null;
 }
 
-export function closedBands(state: GeoboardState): GeoBand[] {
+export function closedBands(state: BandBoardState): GeoBand[] {
   return state.bands.filter((band) => band.closed);
 }

@@ -4,6 +4,7 @@
  */
 import { snapToPoints } from '../../core/engine-sdk';
 import type { Point } from '../../core/engine-sdk';
+import type { Rational, Surd } from '../../core/math';
 import type { Peg } from './types';
 import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from './types';
 
@@ -84,6 +85,16 @@ export function snapPeg(rect: BoardRect, point: Point, threshold: number): Peg |
 
 export function pegDistance(rect: BoardRect, first: Peg, second: Peg): number {
   return Math.hypot((first[0] - second[0]) * rect.spacing, (first[1] - second[1]) * rect.spacing);
+}
+
+/** 정확한 유리수를 화면 숫자로. 화면에만 쓴다. */
+export function ratToScreen(value: Rational): number {
+  return Number(value.n) / Number(value.d);
+}
+
+/** 정확한 무리수를 화면 숫자로. 화면에만 쓴다. */
+export function surdToScreen(value: Surd): number {
+  return ratToScreen(value.a) + ratToScreen(value.b) * Math.sqrt(ratToScreen(value.d));
 }
 
 function normalize(point: Point): Point {

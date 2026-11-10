@@ -6,15 +6,17 @@
  * - 꼭짓점·변 수는 `showCounts: 'always'`일 때만 쓴다. 도형 이름은 쓰지 않는다.
  */
 import { useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import type { KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent } from 'react';
 import { clamp, minTouchRadius, pointerToLogical, useRenderedSize } from '../../../core/engine-sdk';
-import type { EngineViewProps } from '../../../core/engine-sdk';
+import type { EngineViewProps, Point } from '../../../core/engine-sdk';
 import { gp, isSimplePolygon, simplifyPolygon } from '../../../core/math';
 import { allPegs, boardRect, pegPoint, snapPeg } from '../layout';
+import type { BoardRect } from '../layout';
 import { findBand } from '../reduce';
 import { geoBoardStrings as S } from '../strings.ko';
 import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../types';
-import type { GeoAction, GeoBand, GeoConfig, GeoboardState, Peg } from '../types';
+import type { BandBoardState, GeoAction, GeoBand, GeoConfig, Peg } from '../types';
 import styles from '../View.module.css';
 
 const LOGICAL = { width: LOGICAL_WIDTH, height: LOGICAL_HEIGHT };
@@ -30,7 +32,14 @@ const BAND_PALETTE = [
   { stroke: '#7c3aed', width: 6, dash: '16 4 4 4', fill: '#7c3aed' },
 ] as const;
 
-type GeoViewProps = EngineViewProps<GeoConfig, GeoboardState, GeoAction>;
+interface GeoboardViewExtraProps {
+  /** 고무줄 위에 성질 표시를 그린다(classify). */
+  readonly decorate?: (rect: BoardRect) => ReactNode;
+  /** 고른 꼭짓점에서 온 키. true면 GeoboardView가 더 처리하지 않는다. */
+  readonly onVertexKey?: (band: string, index: number, key: string) => boolean;
+}
+
+type GeoViewProps = EngineViewProps<GeoConfig, BandBoardState, GeoAction> & GeoboardViewExtraProps;
 
 function pointsString(points: readonly { readonly x: number; readonly y: number }[]): string {
   return points.map((point) => `${point.x.toFixed(2)},${point.y.toFixed(2)}`).join(' ');
@@ -54,7 +63,117 @@ function simplifiedCount(band: GeoBand): number {
   return simplifyPolygon(band.pegs.map((peg) => gp(peg[0], peg[1]))).length;
 }
 
-export function GeoboardView({ state, dispatch, cpa, readOnly = false, targetSize }: GeoViewProps) {
+/**
+ * 곡선 변 하나(i→i+1)의 2차 베지어 기하. 바깥 법선으로 변 길이의 0.35배만큼 부푼다.
+ * 그림 좌표만 number다. `curve-gap` 오버레이도 같은 값을 쓴다.
+ */
+export function givenCurvedEdgeGeometry(
+  rect: BoardRect,
+  pegs: readonly Peg[],
+  edge: number,
+): { readonly from: Point; readonly control: Point; readonly to: Point } | null {
+  const points = pegs.map((peg) => pegPoint(rect, peg));
+  if (points.length < 3 || edge < 0 || edge >= points.length) return null;
+  const from = points[edge];
+  const to = points[(edge + 1) % points.length];
+  if (!from || !to) return null;
+  const centroid = points.reduce(
+    (sum, point) => ({ x: sum.x + point.x / points.length, y: sum.y + point.y / points.length }),
+    { x: 0, y: 0 },
+  );
+  const mid = { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 };
+  const length = Math.hypot(to.x - from.x, to.y - from.y) || 1;
+  let nx = -(to.y - from.y) / length;
+  let ny = (to.x - from.x) / length;
+  const outwardX = mid.x - centroid.x;
+  const outwardY = mid.y - centroid.y;
+  if (nx * outwardX + ny * outwardY < 0) {
+    nx = -nx;
+    ny = -ny;
+  }
+  const control = { x: mid.x + nx * length * 0.35, y: mid.y + ny * length * 0.35 };
+  return { from, control, to };
+}
+
+/** 곡선 변 하나(i→i+1)의 2차 베지어 path. */
+export function givenCurvedEdgePath(
+  rect: BoardRect,
+  pegs: readonly Peg[],
+  edge: number,
+): string | null {
+  const geometry = givenCurvedEdgeGeometry(rect, pegs, edge);
+  if (!geometry) return null;
+  const { from, control, to } = geometry;
+  return [
+    `M ${from.x.toFixed(2)} ${from.y.toFixed(2)}`,
+    `Q ${control.x.toFixed(2)} ${control.y.toFixed(2)} ${to.x.toFixed(2)} ${to.y.toFixed(2)}`,
+  ].join(' ');
+}
+
+/**
+ * 읽기 전용으로 그리는 열린 꺾은선·곡선 도형의 path(T103).
+ * `curved`의 i번 변(i→i+1)은 변 중점에서 바깥 법선으로 변 길이의 0.35배만큼 부푼다.
+ * 그림 좌표만 number다.
+ */
+export function givenShapePath(
+  rect: BoardRect,
+  pegs: readonly Peg[],
+  curved: readonly number[],
+  closed: boolean,
+): string {
+  const points = pegs.map((peg) => pegPoint(rect, peg));
+  if (points.length === 0) return '';
+  if (!closed) {
+    return points
+      .map(
+        (point, index) => `${index === 0 ? 'M' : 'L'} ${point.x.toFixed(2)} ${point.y.toFixed(2)}`,
+      )
+      .join(' ');
+  }
+  const centroid = points.reduce(
+    (sum, point) => ({ x: sum.x + point.x / points.length, y: sum.y + point.y / points.length }),
+    { x: 0, y: 0 },
+  );
+  const parts: string[] = [`M ${points[0]?.x.toFixed(2)} ${points[0]?.y.toFixed(2)}`];
+  for (let index = 0; index < points.length; index += 1) {
+    const from = points[index];
+    const to = points[(index + 1) % points.length];
+    if (!from || !to) continue;
+    if (!curved.includes(index)) {
+      parts.push(`L ${to.x.toFixed(2)} ${to.y.toFixed(2)}`);
+      continue;
+    }
+    const mid = { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 };
+    const length = Math.hypot(to.x - from.x, to.y - from.y) || 1;
+    let nx = -(to.y - from.y) / length;
+    let ny = (to.x - from.x) / length;
+    const outwardX = mid.x - centroid.x;
+    const outwardY = mid.y - centroid.y;
+    if (nx * outwardX + ny * outwardY < 0) {
+      nx = -nx;
+      ny = -ny;
+    }
+    const control = {
+      x: mid.x + nx * length * 0.35,
+      y: mid.y + ny * length * 0.35,
+    };
+    parts.push(
+      `Q ${control.x.toFixed(2)} ${control.y.toFixed(2)} ${to.x.toFixed(2)} ${to.y.toFixed(2)}`,
+    );
+  }
+  parts.push('Z');
+  return parts.join(' ');
+}
+
+export function GeoboardView({
+  state,
+  dispatch,
+  cpa,
+  readOnly = false,
+  targetSize,
+  decorate,
+  onVertexKey,
+}: GeoViewProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const rendered = useRenderedSize(svgRef);
   const hitRadius = Math.max(14, Math.ceil(minTouchRadius(targetSize, rendered, LOGICAL)));
@@ -178,6 +297,13 @@ export function GeoboardView({ state, dispatch, cpa, readOnly = false, targetSiz
   const onBandKeyDown = (event: ReactKeyboardEvent<SVGGElement>, band: GeoBand) => {
     if (readOnly) return;
     const key = event.key;
+    if (vertex !== null && vertex.band === band.id) {
+      const vertexKey = key.toLowerCase() === 's' ? (event.shiftKey ? 'Shift+S' : 'S') : key;
+      if (onVertexKey?.(band.id, vertex.index, vertexKey)) {
+        event.preventDefault();
+        return;
+      }
+    }
     if (key === 'Delete' || key === 'Backspace') {
       event.preventDefault();
       dispatch({ type: 'delete-band', id: band.id });
@@ -293,6 +419,35 @@ export function GeoboardView({ state, dispatch, cpa, readOnly = false, targetSiz
             ))}
           </g>
 
+          {(state.settings.openShapes ?? []).length > 0 ||
+          (state.settings.curvedShapes ?? []).length > 0 ? (
+            <g data-given="true" pointerEvents="none">
+              {(state.settings.openShapes ?? []).map((pegs, index) => (
+                <path
+                  key={`open-${index}`}
+                  d={givenShapePath(rect, pegs, [], false)}
+                  fill="none"
+                  stroke="#6b7280"
+                  strokeWidth={5}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  data-given-open={index}
+                />
+              ))}
+              {(state.settings.curvedShapes ?? []).map((shape, index) => (
+                <path
+                  key={`curved-${index}`}
+                  d={givenShapePath(rect, shape.pegs, shape.curved, true)}
+                  fill="none"
+                  stroke="#6b7280"
+                  strokeWidth={5}
+                  strokeLinejoin="round"
+                  data-given-curved={index}
+                />
+              ))}
+            </g>
+          ) : null}
+
           {state.bands.map((band, index) => {
             const style = bandStyle(index, colored);
             const points = band.pegs.map((peg) => pegPoint(rect, peg));
@@ -360,6 +515,8 @@ export function GeoboardView({ state, dispatch, cpa, readOnly = false, targetSiz
               </g>
             );
           })}
+
+          {decorate ? decorate(rect) : null}
 
           {allPegs(rect).map((peg) => {
             const point = pegPoint(rect, peg);

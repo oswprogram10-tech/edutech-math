@@ -19,6 +19,12 @@ import {
   simplifyPolygon,
 } from '../../core/math';
 import type { GPoint } from '../../core/math';
+import { observeAngle } from './modes/angle/observe';
+import { observeCircle } from './modes/circle/observe';
+import { observeClassify } from './modes/classify/observe';
+import { observeDiagonal } from './modes/diagonal/observe';
+import { observeDragTest } from './modes/drag-test/observe';
+import { perimeterObservation } from './modes/perimeter/observe';
 import type {
   ConstructState,
   GeoAngle,
@@ -84,6 +90,7 @@ function observeGeoboard(state: GeoboardState): Observation {
     shapes: shapes.map((shape) => ({ ...shape })),
     closedShapes: shapes.filter((shape) => shape.closed && shape.simple).length,
     distinctBy: distinctOf(shapes, state.bands),
+    ...perimeterObservation(state),
   };
 }
 
@@ -163,6 +170,11 @@ function observeConstruct(state: ConstructState): Observation {
 
 export function observe(state: GeoState): Observation {
   if (state.mode === 'geoboard') return observeGeoboard(state);
+  if (state.mode === 'circle') return observeCircle(state);
+  if (state.mode === 'angle') return observeAngle(state);
+  if (state.mode === 'diagonal') return observeDiagonal(state);
+  if (state.mode === 'classify') return observeClassify(state);
+  if (state.mode === 'drag-test') return observeDragTest(state);
   return observeConstruct(state);
 }
 
