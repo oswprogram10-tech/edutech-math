@@ -23,6 +23,7 @@ function minCell(cells: readonly (readonly [number, number])[]): readonly [numbe
 }
 
 export function PointTrackOverlay({ state }: OverlayProps<TransformConfig, TransformState>) {
+  if (state.mode !== 'slide-flip-turn' && state.mode !== 'predict') return null;
   const rect = boardRect(state.settings.grid);
 
   if (state.mode === 'slide-flip-turn') {

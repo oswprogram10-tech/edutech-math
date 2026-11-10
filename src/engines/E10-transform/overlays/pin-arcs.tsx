@@ -4,8 +4,18 @@ import type { OverlayProps } from '../../../core/engine-sdk';
 import { arcPath, boardRect, ptXY } from '../layout';
 import { applyMovesUpTo } from '../moves';
 import { currentFigure } from '../modes/slide-flip-turn';
-import type { Move, TransformConfig, TransformState } from '../types';
+import { currentPointShape, pinCenter } from '../modes/point-symmetry';
+import { POLYGONS } from '../polygons';
+import type { Move, Pt, TransformConfig, TransformState } from '../types';
 import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../types';
+
+function toNumber(value: { readonly n: bigint; readonly d: bigint }): number {
+  return Number(value.n) / Number(value.d);
+}
+
+function screenPoint(rect: ReturnType<typeof boardRect>, x: number, y: number) {
+  return { x: rect.x + x * rect.cell, y: rect.y + y * rect.cell };
+}
 
 function pin(cx: number, cy: number) {
   return (
@@ -25,6 +35,43 @@ function pin(cx: number, cy: number) {
 }
 
 export function PinArcsOverlay({ state }: OverlayProps<TransformConfig, TransformState>) {
+  if (state.mode === 'point-symmetry') {
+    if (!state.pin || !state.turned) return null;
+    const rect = boardRect(9);
+    const center = pinCenter(state.pin);
+    const centerXY = screenPoint(rect, toNumber(center.x), toNumber(center.y));
+    const points = POLYGONS[currentPointShape(state)].points;
+    return (
+      <CanvasAlignedOverlay
+        testId="pin-arcs"
+        canvasSelector={'svg[data-testid="transform-canvas"]'}
+        logicalWidth={LOGICAL_WIDTH}
+        logicalHeight={LOGICAL_HEIGHT}
+      >
+        {points.map((point: Pt, index: number) => {
+          const from = ptXY(rect, point);
+          const to = screenPoint(
+            rect,
+            toNumber(center.x) * 2 - point[0],
+            toNumber(center.y) * 2 - point[1],
+          );
+          const path = arcPath(centerXY, from, to, 180, 'cw');
+          return path ? (
+            <path
+              key={`point-arc-${index}`}
+              d={path}
+              fill="none"
+              stroke="#e8872e"
+              strokeWidth={4}
+              strokeLinecap="round"
+            />
+          ) : null;
+        })}
+        {pin(centerXY.x, centerXY.y)}
+      </CanvasAlignedOverlay>
+    );
+  }
+
   if (state.mode === 'slide-flip-turn') {
     const last = state.moves[state.moves.length - 1];
     if (!last || last.kind !== 'turn' || state.settings.grid <= 0) return null;
@@ -65,6 +112,7 @@ export function PinArcsOverlay({ state }: OverlayProps<TransformConfig, Transfor
     );
   }
 
+  if (state.mode !== 'predict') return null;
   const turns: { readonly move: Extract<Move, { kind: 'turn' }>; readonly index: number }[] = [];
   state.operations.forEach((move, index) => {
     if (move.kind === 'turn') turns.push({ move, index });

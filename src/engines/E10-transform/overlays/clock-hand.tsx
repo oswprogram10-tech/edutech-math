@@ -16,11 +16,13 @@ function clockCenter(state: TransformState): Pt | null {
     const figure = currentFigure(state);
     return figure.outline[state.center] ?? figure.outline[0] ?? null;
   }
+  if (state.mode !== 'predict') return null;
   const turn = state.operations.find((move) => move.kind === 'turn');
   return turn && turn.kind === 'turn' ? turn.center : null;
 }
 
 export function ClockHandOverlay({ state }: OverlayProps<TransformConfig, TransformState>) {
+  if (state.mode !== 'slide-flip-turn' && state.mode !== 'predict') return null;
   const center = clockCenter(state);
   if (!center) return null;
   const rect = boardRect(state.settings.grid);
