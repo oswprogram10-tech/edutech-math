@@ -1,21 +1,29 @@
 import { describe, expect, it } from 'vitest';
 import {
   angleKind,
+  clipConvexPolygon,
   collinear,
   congruentPolygons,
+  convexHull,
   cross,
   dist2,
   dot,
   gp,
+  isConvexPolygon,
   isRightAngle,
   isSimplePolygon,
+  locatePoint,
+  midpoint,
   orientation,
   pointOnLine,
   pointOnRay,
   pointOnSegment,
+  pointReflect,
   polygonArea,
+  rotate90About,
   segmentsIntersect,
   simplifyPolygon,
+  splitPolygonByChord,
   vsub,
 } from '../geometry';
 import type { GPoint } from '../geometry';
@@ -252,5 +260,166 @@ describe('geometry 각', () => {
     expect(angleKind(gp(1, 0), gp(0, 0), gp(-1, 1))).toBe('obtuse');
     expect(angleKind(gp(1, 0), gp(0, 0), gp(-1, 0))).toBe('straight');
     expect(angleKind(gp(1, 0), gp(0, 0), gp(2, 0))).toBe('acute');
+  });
+});
+
+// ── T106 ──
+describe('T106 기하 도우미', () => {
+  it('locatePoint가 안·변·꼭짓점·밖을 구분한다', () => {
+    const square = points([
+      [0, 0],
+      [2, 0],
+      [2, 2],
+      [0, 2],
+    ]);
+    expect(locatePoint(gp(1, 1), square)).toBe('inside');
+    expect(locatePoint(gp(1, 0), square)).toBe('boundary');
+    expect(locatePoint(gp(0, 0), square)).toBe('boundary');
+    expect(locatePoint(gp(3, 1), square)).toBe('outside');
+    expect(locatePoint(gp(-1, -1), square)).toBe('outside');
+  });
+
+  it('isConvexPolygon은 정사각형은 true, L자는 false, 일직선 점이 섞여도 true다', () => {
+    const square = points([
+      [0, 0],
+      [2, 0],
+      [2, 2],
+      [0, 2],
+    ]);
+    const withExtra = points([
+      [0, 0],
+      [1, 0],
+      [2, 0],
+      [2, 2],
+      [0, 2],
+    ]);
+    const lShape = points([
+      [0, 0],
+      [3, 0],
+      [3, 1],
+      [1, 1],
+      [1, 3],
+      [0, 3],
+    ]);
+    expect(isConvexPolygon(square)).toBe(true);
+    expect(isConvexPolygon(withExtra)).toBe(true);
+    expect(isConvexPolygon(lShape)).toBe(false);
+  });
+
+  it('convexHull은 안쪽 점과 일직선 점을 빼고, 모두 일직선이면 점 3개 미만이다', () => {
+    const hull = convexHull(
+      points([
+        [1, 1],
+        [0, 0],
+        [2, 0],
+        [2, 2],
+        [0, 2],
+        [1, 0],
+      ]),
+    );
+    expect(hull).toHaveLength(4);
+    const line = convexHull(
+      points([
+        [0, 0],
+        [1, 1],
+        [2, 2],
+        [3, 3],
+      ]),
+    );
+    expect(line.length).toBeLessThan(3);
+  });
+
+  it('clipConvexPolygon은 겹친 두 정사각형 넓이 1, 변만 닿으면 []다', () => {
+    const first = points([
+      [0, 0],
+      [2, 0],
+      [2, 2],
+      [0, 2],
+    ]);
+    const second = points([
+      [1, 1],
+      [3, 1],
+      [3, 3],
+      [1, 3],
+    ]);
+    const overlap = clipConvexPolygon(first, second);
+    expect(overlap.length).toBeGreaterThanOrEqual(3);
+    expect(polygonArea(overlap).toString()).toBe('1');
+
+    const touching = points([
+      [2, 0],
+      [4, 0],
+      [4, 2],
+      [2, 2],
+    ]);
+    expect(clipConvexPolygon(first, touching)).toEqual([]);
+  });
+
+  it('splitPolygonByChord는 평행사변형 높이선을 넓이 4와 20으로 자른다', () => {
+    const parallelogram = points([
+      [4, 2],
+      [10, 2],
+      [8, 6],
+      [2, 6],
+    ]);
+    const split = splitPolygonByChord(parallelogram, gp(4, 2), gp(4, 6));
+    expect(split).not.toBeNull();
+    if (!split) return;
+    const areas = split.map((piece) => polygonArea(piece).toString()).sort();
+    expect(areas).toEqual(['20', '4']);
+  });
+
+  it('splitPolygonByChord는 변을 따라가는 현·a=b·L자 밖으로 나가는 현을 거절한다', () => {
+    const square = points([
+      [0, 0],
+      [3, 0],
+      [3, 3],
+      [0, 3],
+    ]);
+    expect(splitPolygonByChord(square, gp(0, 0), gp(3, 0))).toBeNull();
+    expect(splitPolygonByChord(square, gp(1, 0), gp(1, 0))).toBeNull();
+    const lShape = points([
+      [0, 0],
+      [3, 0],
+      [3, 1],
+      [1, 1],
+      [1, 3],
+      [0, 3],
+    ]);
+    expect(splitPolygonByChord(lShape, gp(0, 0), gp(3, 3))).toBeNull();
+  });
+
+  it('7/3 좌표가 생기는 자르기도 넓이 합이 정확하다', () => {
+    const square = points([
+      [0, 0],
+      [3, 0],
+      [3, 3],
+      [0, 3],
+    ]);
+    const split = splitPolygonByChord(
+      square,
+      { x: Rational.of(7, 3), y: Rational.of(0) },
+      { x: Rational.of(7, 3), y: Rational.of(3) },
+    );
+    expect(split).not.toBeNull();
+    if (!split) return;
+    const total = split.reduce((sum, piece) => sum.add(polygonArea(piece)), Rational.of(0));
+    expect(total.toString()).toBe('9');
+    const areas = split.map((piece) => polygonArea(piece).toString()).sort();
+    expect(areas).toEqual(['2', '7']);
+  });
+
+  it('rotate90About 4번과 pointReflect 2번은 제자리이고, 10^9 좌표도 정확하다', () => {
+    const point = gp(1_000_000_000, -999_999_999);
+    const center = gp(-1_000_000_000, 999_999_999);
+    const turned = rotate90About(
+      rotate90About(rotate90About(rotate90About(point, center, 1), center, 1), center, 1),
+      center,
+      1,
+    );
+    expect(turned).toEqual(point);
+    expect(pointReflect(pointReflect(point, center), center)).toEqual(point);
+    expect(rotate90About(gp(1, 0), gp(0, 0), 1)).toEqual(gp(0, 1));
+    expect(midpoint(gp(0, 0), gp(1, 0))).toEqual({ x: Rational.of(1, 2), y: Rational.of(0) });
   });
 });
