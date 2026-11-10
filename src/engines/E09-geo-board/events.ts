@@ -4,6 +4,12 @@
  * 이벤트: `shape-closed {vertices}`, `object-created {kind}`.
  */
 import type { EngineEvent, EnginePredicate, JsonValue, Observation } from '../../core/engine-sdk';
+import { classifyPredicates, classifyClosedPayload } from './modes/classify/observe';
+import {
+  dragTestPredicates,
+  figureChangedPayload,
+  observeDragTest,
+} from './modes/drag-test/observe';
 import { shapeObservation, objectHitsTarget } from './observe';
 import { samePeg } from './reduce';
 import type { GeoObjectKind, GeoState, Peg } from './types';
@@ -201,9 +207,12 @@ export const predicates: Readonly<Record<string, EnginePredicate>> = {
     const actual = new Set(marked);
     return expected.every((id) => actual.has(id));
   },
+
+  ...classifyPredicates,
+  ...dragTestPredicates,
 };
 
-export const EVENT_NAMES = ['shape-closed', 'object-created'] as const;
+export const EVENT_NAMES = ['shape-closed', 'object-created', 'shaken', 'figure-changed'] as const;
 
 export function emit(prev: GeoState, next: GeoState): EngineEvent[] {
   if (prev === next) return [];
@@ -221,10 +230,46 @@ export function emit(prev: GeoState, next: GeoState): EngineEvent[] {
     }
   }
 
+  if (next.mode === 'classify' && prev.mode === 'classify') {
+    for (const band of next.bands) {
+      if (!band.closed) continue;
+      const before = prev.bands.find((candidate) => candidate.id === band.id);
+      if (before && before.closed) continue;
+      events.push({ name: 'shape-closed', payload: classifyClosedPayload(band) });
+    }
+  }
+
   if (next.mode === 'construct' && prev.mode === 'construct') {
     if (next.objects.length > prev.objects.length) {
       const created = next.objects[next.objects.length - 1];
       if (created) events.push({ name: 'object-created', payload: { kind: created.kind } });
+    }
+  }
+
+  if (next.mode === 'drag-test' && prev.mode === 'drag-test') {
+    if (next.shakeCount > prev.shakeCount) {
+      const observation = observeDragTest(next);
+      const last = observation['lastShake'];
+      const record = last && typeof last === 'object' && !Array.isArray(last) ? last : {};
+      events.push({
+        name: 'shaken',
+        payload: {
+          count: next.shakeCount,
+          kept: [...arrayOf(record['kept'])],
+          lost: [...arrayOf(record['lost'])],
+        },
+      });
+    }
+    const before = figureChangedPayload(prev);
+    const after = figureChangedPayload(next);
+    if (
+      JSON.stringify(before.names) !== JSON.stringify(after.names) ||
+      JSON.stringify(before.toggles) !== JSON.stringify(after.toggles)
+    ) {
+      events.push({
+        name: 'figure-changed',
+        payload: { names: [...after.names], toggles: [...after.toggles] },
+      });
     }
   }
 

@@ -9,7 +9,7 @@ import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../types';
 import type { GeoConfig, GeoState } from '../types';
 
 export function UprightGhostOverlay({ state }: OverlayProps<GeoConfig, GeoState>) {
-  if (state.mode !== 'geoboard') return null;
+  if (state.mode !== 'geoboard' && state.mode !== 'classify') return null;
   const last = [...state.bands].reverse().find((band) => band.closed && band.pegs.length >= 3);
   if (!last) return null;
 

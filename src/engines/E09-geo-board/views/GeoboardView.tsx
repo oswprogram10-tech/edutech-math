@@ -6,15 +6,17 @@
  * - 꼭짓점·변 수는 `showCounts: 'always'`일 때만 쓴다. 도형 이름은 쓰지 않는다.
  */
 import { useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import type { KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent } from 'react';
 import { clamp, minTouchRadius, pointerToLogical, useRenderedSize } from '../../../core/engine-sdk';
 import type { EngineViewProps } from '../../../core/engine-sdk';
 import { gp, isSimplePolygon, simplifyPolygon } from '../../../core/math';
 import { allPegs, boardRect, pegPoint, snapPeg } from '../layout';
+import type { BoardRect } from '../layout';
 import { findBand } from '../reduce';
 import { geoBoardStrings as S } from '../strings.ko';
 import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../types';
-import type { GeoAction, GeoBand, GeoConfig, GeoboardState, Peg } from '../types';
+import type { BandBoardState, GeoAction, GeoBand, GeoConfig, Peg } from '../types';
 import styles from '../View.module.css';
 
 const LOGICAL = { width: LOGICAL_WIDTH, height: LOGICAL_HEIGHT };
@@ -30,7 +32,14 @@ const BAND_PALETTE = [
   { stroke: '#7c3aed', width: 6, dash: '16 4 4 4', fill: '#7c3aed' },
 ] as const;
 
-type GeoViewProps = EngineViewProps<GeoConfig, GeoboardState, GeoAction>;
+interface GeoboardViewExtraProps {
+  /** 고무줄 위에 성질 표시를 그린다(classify). */
+  readonly decorate?: (rect: BoardRect) => ReactNode;
+  /** 고른 꼭짓점에서 온 키. true면 GeoboardView가 더 처리하지 않는다. */
+  readonly onVertexKey?: (band: string, index: number, key: string) => boolean;
+}
+
+type GeoViewProps = EngineViewProps<GeoConfig, BandBoardState, GeoAction> & GeoboardViewExtraProps;
 
 function pointsString(points: readonly { readonly x: number; readonly y: number }[]): string {
   return points.map((point) => `${point.x.toFixed(2)},${point.y.toFixed(2)}`).join(' ');
@@ -54,7 +63,15 @@ function simplifiedCount(band: GeoBand): number {
   return simplifyPolygon(band.pegs.map((peg) => gp(peg[0], peg[1]))).length;
 }
 
-export function GeoboardView({ state, dispatch, cpa, readOnly = false, targetSize }: GeoViewProps) {
+export function GeoboardView({
+  state,
+  dispatch,
+  cpa,
+  readOnly = false,
+  targetSize,
+  decorate,
+  onVertexKey,
+}: GeoViewProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const rendered = useRenderedSize(svgRef);
   const hitRadius = Math.max(14, Math.ceil(minTouchRadius(targetSize, rendered, LOGICAL)));
@@ -178,6 +195,13 @@ export function GeoboardView({ state, dispatch, cpa, readOnly = false, targetSiz
   const onBandKeyDown = (event: ReactKeyboardEvent<SVGGElement>, band: GeoBand) => {
     if (readOnly) return;
     const key = event.key;
+    if (vertex !== null && vertex.band === band.id) {
+      const vertexKey = key.toLowerCase() === 's' ? (event.shiftKey ? 'Shift+S' : 'S') : key;
+      if (onVertexKey?.(band.id, vertex.index, vertexKey)) {
+        event.preventDefault();
+        return;
+      }
+    }
     if (key === 'Delete' || key === 'Backspace') {
       event.preventDefault();
       dispatch({ type: 'delete-band', id: band.id });
@@ -360,6 +384,8 @@ export function GeoboardView({ state, dispatch, cpa, readOnly = false, targetSiz
               </g>
             );
           })}
+
+          {decorate ? decorate(rect) : null}
 
           {allPegs(rect).map((peg) => {
             const point = pegPoint(rect, peg);

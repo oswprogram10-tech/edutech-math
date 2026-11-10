@@ -6,7 +6,12 @@
  * - 수학 값은 저장하지 않는다. 넓이·각 판정은 `observe.ts`가 `core/math/geometry`로 계산한다.
  */
 import { clamp } from '../../core/engine-sdk';
+import { createClassifyState, reduceClassify } from './modes/classify/reduce';
+import type { ClassifyConfig } from './modes/classify/types';
+import { createDragTestState, reduceDragTest } from './modes/drag-test/reduce';
+import type { DragTestConfig } from './modes/drag-test/types';
 import type {
+  BandBoardState,
   ConstructConfig,
   ConstructSettings,
   ConstructState,
@@ -75,7 +80,15 @@ function pegList(value: unknown, cols: number, rows: number): Peg[] {
 }
 
 export function inferMode(config: GeoConfig): GeoMode {
-  if (config.mode === 'geoboard' || config.mode === 'construct') return config.mode;
+  const declared = (config as { readonly mode?: string }).mode;
+  if (
+    declared === 'geoboard' ||
+    declared === 'construct' ||
+    declared === 'classify' ||
+    declared === 'drag-test'
+  ) {
+    return declared;
+  }
   const candidate = config as ConstructConfig;
   if (
     candidate.tools !== undefined ||
@@ -196,6 +209,12 @@ function constructSettings(config: ConstructConfig): ConstructSettings {
 
 export function createInitialState(config: GeoConfig): GeoState {
   const mode = inferMode(config);
+  if (mode === 'classify') {
+    return createClassifyState(config as ClassifyConfig);
+  }
+  if (mode === 'drag-test') {
+    return createDragTestState(config as DragTestConfig);
+  }
   if (mode === 'construct') {
     const settings = constructSettings(config as ConstructConfig);
     return {
@@ -333,6 +352,16 @@ function reduceGeoboard(state: GeoboardState, action: GeoAction): GeoState {
   }
 }
 
+/**
+ * 고무줄 Action만 처리하는 공통 reducer. geoboard와 classify가 같이 쓴다.
+ * 모드별 추가 필드(`squareOn` 등)는 그대로 보존한다.
+ */
+export function reduceBands<S extends BandBoardState>(state: S, action: GeoAction): S {
+  const next = reduceGeoboard(state as unknown as GeoboardState, action);
+  if ((next as unknown) === (state as unknown)) return state;
+  return { ...state, ...next } as S;
+}
+
 function reduceConstruct(state: ConstructState, action: GeoAction): GeoState {
   const { grid } = state.settings;
   switch (action.type) {
@@ -390,14 +419,17 @@ function reduceConstruct(state: ConstructState, action: GeoAction): GeoState {
 
 export function reduce(state: GeoState, action: GeoAction): GeoState {
   if (state.mode === 'geoboard') return reduceGeoboard(state, action) as GeoboardState;
+  if (state.mode === 'classify') return reduceClassify(state, action);
+  if (state.mode === 'drag-test') return reduceDragTest(state, action);
   return reduceConstruct(state, action) as ConstructState;
 }
 
 /** 고무줄 id로 찾는다. View·overlay가 쓴다. */
-export function findBand(state: GeoboardState, id: string | null): GeoBand | null {
-  return bandById(state, id);
+export function findBand(state: BandBoardState, id: string | null): GeoBand | null {
+  if (id === null) return null;
+  return state.bands.find((band) => band.id === id) ?? null;
 }
 
-export function closedBands(state: GeoboardState): GeoBand[] {
+export function closedBands(state: BandBoardState): GeoBand[] {
   return state.bands.filter((band) => band.closed);
 }

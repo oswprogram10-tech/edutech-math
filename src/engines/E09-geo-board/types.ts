@@ -8,8 +8,10 @@
  * `core/math/geometry`의 `gp`로 바꿔서 하고, 화면 좌표만 number다.
  */
 import type { JsonValue } from '../../core/engine-sdk';
+import type { ClassifyAction, ClassifyConfig, ClassifyState } from './modes/classify/types';
+import type { DragTestAction, DragTestConfig, DragTestState } from './modes/drag-test/types';
 
-export type GeoMode = 'geoboard' | 'construct';
+export type GeoMode = 'geoboard' | 'construct' | 'classify' | 'drag-test';
 
 /** 못·점의 정수 격자 좌표. `[i, j]` */
 export type Peg = readonly [number, number];
@@ -66,7 +68,7 @@ export interface ConstructConfig {
   readonly angles?: readonly GeoAngle[];
 }
 
-export type GeoConfig = GeoboardConfig | ConstructConfig;
+export type GeoConfig = GeoboardConfig | ConstructConfig | ClassifyConfig | DragTestConfig;
 
 export interface GeoboardSettings {
   readonly grid: readonly [number, number];
@@ -91,6 +93,21 @@ export interface GeoBand {
   readonly closed: boolean;
 }
 
+/**
+ * 고무줄만 쓰는 모드(geoboard·classify)의 공통 구조.
+ * `GeoboardView`가 이 구조만 보고 그리므로 두 모드가 같은 화면을 쓴다.
+ */
+export interface BandBoardState {
+  readonly bands: readonly GeoBand[];
+  readonly activeBand: string | null;
+  readonly nextId: number;
+  readonly settings: {
+    readonly grid: readonly [number, number];
+    readonly showCounts: 'never' | 'always';
+    readonly maxShapes: number;
+  };
+}
+
 export interface GeoboardState {
   readonly mode: 'geoboard';
   readonly bands: readonly GeoBand[];
@@ -112,7 +129,7 @@ export interface ConstructState {
   readonly settings: ConstructSettings;
 }
 
-export type GeoState = GeoboardState | ConstructState;
+export type GeoState = GeoboardState | ConstructState | ClassifyState | DragTestState;
 
 export type GeoAction =
   | { readonly type: 'start-band'; readonly peg: Peg }
@@ -126,7 +143,9 @@ export type GeoAction =
   | { readonly type: 'remove-object'; readonly id: string }
   | { readonly type: 'place-square'; readonly angle: string }
   | { readonly type: 'remove-square' }
-  | { readonly type: 'toggle-mark'; readonly angle: string };
+  | { readonly type: 'toggle-mark'; readonly angle: string }
+  | ClassifyAction
+  | DragTestAction;
 
 export interface GeoShapeObservation {
   readonly id: string;
