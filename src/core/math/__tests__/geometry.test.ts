@@ -45,6 +45,11 @@ import {
   midpoint,
   rotate90About,
   splitPolygonByChord,
+  angleKindScaled,
+  compareAngles,
+  dist2Scaled,
+  dotScaled,
+  parallel,
 } from '../geometry';
 import type { GPoint, SPoint } from '../geometry';
 import { Rational } from '../rational';
@@ -648,5 +653,77 @@ describe('T106 기하 도우미', () => {
     expect(pointReflect(pointReflect(point, center), center)).toEqual(point);
     expect(rotate90About(gp(1, 0), gp(0, 0), 1)).toEqual(gp(0, 1));
     expect(midpoint(gp(0, 0), gp(1, 0))).toEqual({ x: Rational.of(1, 2), y: Rational.of(0) });
+  });
+});
+
+// ── T108 ──
+describe('geometry T108 y 배율 기하', () => {
+  it('parallel은 길이 0 선분을 평행으로 보지 않고 기울어진 평행은 true다', () => {
+    expect(parallel(gp(0, 0), gp(0, 0), gp(0, 1), gp(2, 3))).toBe(false);
+    expect(parallel(gp(0, 0), gp(2, 2), gp(0, 0), gp(0, 0))).toBe(false);
+    expect(parallel(gp(0, 0), gp(4, 2), gp(1, 3), gp(5, 5))).toBe(true);
+    expect(parallel(gp(0, 0), gp(4, 2), gp(1, 3), gp(5, 6))).toBe(false);
+  });
+
+  it('k=3 정삼각형 t04의 세 변의 길이 제곱이 모두 16이다', () => {
+    const k = Rational.of(3);
+    const a = gp(0, 0);
+    const b = gp(4, 0);
+    const c = gp(2, 2);
+    expect(dist2Scaled(a, b, k).toString()).toBe('16');
+    expect(dist2Scaled(b, c, k).toString()).toBe('16');
+    expect(dist2Scaled(c, a, k).toString()).toBe('16');
+  });
+
+  it('k=3 정삼각형의 세 각은 모두 예각이다', () => {
+    const k = Rational.of(3);
+    const a = gp(0, 0);
+    const b = gp(4, 0);
+    const c = gp(2, 2);
+    expect(angleKindScaled(b, a, c, k)).toBe('acute');
+    expect(angleKindScaled(a, b, c, k)).toBe('acute');
+    expect(angleKindScaled(a, c, b, k)).toBe('acute');
+  });
+
+  it('compareAngles는 같은 각 0, 예각 대 둔각 -1, 둔각끼리는 큰 각 1이다', () => {
+    const k = Rational.of(1);
+    expect(compareAngles(gp(1, 0), gp(0, 0), gp(0, 1), gp(2, 0), gp(0, 0), gp(0, 2), k)).toBe(0);
+    expect(compareAngles(gp(1, 0), gp(0, 0), gp(1, 1), gp(1, 0), gp(0, 0), gp(-1, 1), k)).toBe(-1);
+    // 둔각끼리: (−1, 0.5) 쪽이 (−1, 1) 쪽보다 더 벌어져 크다.
+    expect(compareAngles(gp(1, 0), gp(0, 0), gp(-2, 1), gp(1, 0), gp(0, 0), gp(-1, 1), k)).toBe(1);
+    expect(compareAngles(gp(1, 0), gp(0, 0), gp(-1, 1), gp(1, 0), gp(0, 0), gp(-2, 1), k)).toBe(-1);
+  });
+
+  it('compareAngles는 좌표 10⁹에서도 정확하고 길이 0이면 0이다', () => {
+    const big = 1_000_000_000;
+    const k = Rational.of(1);
+    expect(
+      compareAngles(
+        gp(big + 1, big),
+        gp(big, big),
+        gp(big, big + 1),
+        gp(1, 0),
+        gp(0, 0),
+        gp(0, 1),
+        k,
+      ),
+    ).toBe(0);
+    expect(compareAngles(gp(0, 0), gp(0, 0), gp(1, 1), gp(1, 0), gp(0, 0), gp(0, 1), k)).toBe(0);
+  });
+
+  it('k=1이면 dot·dist2·angleKind와 같은 값이다', () => {
+    const pairs = [
+      [gp(2, 3), gp(-1, 5)],
+      [gp(-4, 1), gp(2, -7)],
+    ] as const;
+    const one = Rational.of(1);
+    for (const [u, v] of pairs) {
+      expect(dotScaled(u, v, one).equals(dot(u, v))).toBe(true);
+    }
+    expect(dist2Scaled(gp(1, 2), gp(4, 6), one).equals(dist2(gp(1, 2), gp(4, 6)))).toBe(true);
+    expect(angleKindScaled(gp(1, 0), gp(0, 0), gp(-1, 1), one)).toBe(
+      angleKind(gp(1, 0), gp(0, 0), gp(-1, 1)),
+    );
+    expect(angleKindScaled(gp(1, 0), gp(0, 0), gp(0, 1), one)).toBe('right');
   });
 });
