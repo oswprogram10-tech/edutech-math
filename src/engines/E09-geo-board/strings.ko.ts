@@ -197,6 +197,44 @@ export const geoBoardStrings = {
     equalArms: '두 변의 길이를 같게 잘라 겹쳐 보기',
   },
 
+  diagonal: {
+    canvasLabel: '다각형의 꼭짓점을 이어 대각선을 긋는 판',
+    instructions:
+      '꼭짓점 두 개를 차례로 골라 선을 그어 보세요. 이웃한 꼭짓점을 고르면 변과 겹쳐요.',
+    polygonGroup: '다각형 고르기',
+    polygonButton: (n: number) => `꼭짓점 ${n}개`,
+    vertexLabels: ['ㄱ', 'ㄴ', 'ㄷ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅅ', 'ㅇ', 'ㅈ', 'ㅊ'] as readonly string[],
+    countTableTitle: '그은 대각선',
+    vertexCount: '꼭짓점 수',
+    drawnCount: '그은 대각선',
+    adjacent: '이건 변이에요',
+    duplicate: '이미 그은 선이에요',
+    pending: '첫 꼭짓점을 골랐어요. 다른 꼭짓점을 골라 보세요.',
+    undo: '마지막 대각선 지우기',
+    clear: '모두 지우기',
+    sideLabel: '변',
+    mergeText: '같은 선분 하나',
+    canvasHint:
+      '방향키: 꼭짓점 옮기기 · Enter: 꼭짓점 고르기 · Escape: 취소 · Backspace: 마지막 대각선 지우기',
+  },
+
+  perimeter: {
+    canvasLabel: '둘레가 고정된 고무줄 직사각형을 살펴보는 판',
+    instructions:
+      '오른쪽 아래 손잡이를 끌어 직사각형을 바꿔 보세요. 둘레는 그대로이고 넓이가 달라져요.',
+    perimeterLabel: (value: number) => `둘레 ${value}`,
+    areaLabel: (value: number) => `넓이 ${value}`,
+    widthLabel: (value: number) => `가로 ${value}`,
+    heightLabel: (value: number) => `세로 ${value}`,
+    logButton: '기록하기',
+    logTitle: '기록표',
+    logWidth: '가로',
+    logHeight: '세로',
+    logArea: '넓이',
+    handle: '크기 손잡이',
+    canvasHint: '방향키: 가로·세로 바꾸기 · Enter: 기록하기',
+  },
+
   checklist: {
     title: '조건 확인',
     conditions: {
@@ -230,5 +268,9 @@ export const geoBoardStrings = {
     activeScale: '0° 눈금 트랙',
     zeroGap: '0° 선과의 틈',
     equalArms: '변 길이를 같게 겹친 그림',
+    sideGlow: '이웃한 두 꼭짓점을 이은 변',
+    mergeBeams: '같은 선분으로 합쳐지는 빔',
+    unitSquares: '단위 정사각형 겹쳐 보기',
+    curveGap: '곡선 변과 열린 틈',
   },
 } as const;

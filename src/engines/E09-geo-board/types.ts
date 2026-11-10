@@ -11,9 +11,11 @@ import type { JsonValue } from '../../core/engine-sdk';
 import type { AngleAction, AngleConfig, AngleState } from './modes/angle/types';
 import type { CircleAction, CircleConfig, CircleState } from './modes/circle/types';
 import type { ClassifyAction, ClassifyConfig, ClassifyState } from './modes/classify/types';
+import type { DiagonalAction, DiagonalConfig, DiagonalState } from './modes/diagonal/types';
 import type { DragTestAction, DragTestConfig, DragTestState } from './modes/drag-test/types';
 
-export type GeoMode = 'geoboard' | 'construct' | 'classify' | 'drag-test' | 'circle' | 'angle';
+export type GeoMode =
+  'geoboard' | 'construct' | 'classify' | 'drag-test' | 'circle' | 'angle' | 'diagonal';
 
 /** 못·점의 정수 격자 좌표. `[i, j]` */
 export type Peg = readonly [number, number];
@@ -41,6 +43,19 @@ export interface GeoAngle {
   readonly b: Peg;
 }
 
+export interface FixedPerimeterConstraint {
+  readonly type: 'fixed-perimeter';
+  /** 둘레(칸). 짝수 정수 4 이상이고 격자 안에 직사각형이 있어야 켜진다. */
+  readonly value: number;
+  readonly shape: 'rectangle';
+}
+
+/** 읽기 전용으로 그리는 곡선 도형. `curved`의 i번 변(i→i+1)은 바깥으로 부푼다. */
+export interface CurvedShapeConfig {
+  readonly pegs: readonly Peg[];
+  readonly curved: readonly number[];
+}
+
 export interface GeoboardConfig {
   readonly mode?: 'geoboard';
   /** `[cols, rows]`. 각 값은 3~12로 자른다. 기본 `[5, 5]`. */
@@ -52,6 +67,14 @@ export interface GeoboardConfig {
   readonly shapes?: readonly (readonly Peg[])[];
   /** 받기만 하고 무시한다(곡선은 만들지 않는다). */
   readonly allowCurves?: boolean;
+  /** 둘레 고정 직사각형. 격자에 맞지 않으면 제약 없음으로 본다. */
+  readonly constraint?: FixedPerimeterConstraint;
+  /** 고정 둘레 기록표. 기본 false. */
+  readonly log?: boolean;
+  /** 읽기 전용 열린 꺾은선(다각형 아님 카드). */
+  readonly openShapes?: readonly (readonly Peg[])[];
+  /** 읽기 전용 곡선 도형(다각형 아님 카드). */
+  readonly curvedShapes?: readonly CurvedShapeConfig[];
 }
 
 export interface ConstructConfig {
@@ -71,12 +94,22 @@ export interface ConstructConfig {
 }
 
 export type GeoConfig =
-  GeoboardConfig | ConstructConfig | ClassifyConfig | DragTestConfig | CircleConfig | AngleConfig;
+  | GeoboardConfig
+  | ConstructConfig
+  | ClassifyConfig
+  | DragTestConfig
+  | CircleConfig
+  | AngleConfig
+  | DiagonalConfig;
 
 export interface GeoboardSettings {
   readonly grid: readonly [number, number];
   readonly showCounts: 'never' | 'always';
   readonly maxShapes: number;
+  readonly constraint: FixedPerimeterConstraint | null;
+  readonly log: boolean;
+  readonly openShapes: readonly (readonly Peg[])[];
+  readonly curvedShapes: readonly CurvedShapeConfig[];
 }
 
 export interface ConstructSettings {
@@ -108,7 +141,15 @@ export interface BandBoardState {
     readonly grid: readonly [number, number];
     readonly showCounts: 'never' | 'always';
     readonly maxShapes: number;
+    /** geoboard만 채운다. classify는 없음. */
+    readonly openShapes?: readonly (readonly Peg[])[];
+    readonly curvedShapes?: readonly CurvedShapeConfig[];
   };
+}
+
+export interface RectLogEntry {
+  readonly width: number;
+  readonly height: number;
 }
 
 export interface GeoboardState {
@@ -116,6 +157,8 @@ export interface GeoboardState {
   readonly bands: readonly GeoBand[];
   readonly activeBand: string | null;
   readonly nextId: number;
+  /** 학생이 `log-rect`로 기록한 (가로, 세로). 최대 12줄. */
+  readonly log: readonly RectLogEntry[];
   readonly settings: GeoboardSettings;
 }
 
@@ -133,7 +176,13 @@ export interface ConstructState {
 }
 
 export type GeoState =
-  GeoboardState | ConstructState | ClassifyState | DragTestState | CircleState | AngleState;
+  | GeoboardState
+  | ConstructState
+  | ClassifyState
+  | DragTestState
+  | CircleState
+  | AngleState
+  | DiagonalState;
 
 export type GeoAction =
   | { readonly type: 'start-band'; readonly peg: Peg }
@@ -142,6 +191,8 @@ export type GeoAction =
   | { readonly type: 'undo-peg' }
   | { readonly type: 'delete-band'; readonly id: string }
   | { readonly type: 'move-peg'; readonly band: string; readonly index: number; readonly peg: Peg }
+  | { readonly type: 'resize-rect'; readonly width: number; readonly height: number }
+  | { readonly type: 'log-rect' }
   | { readonly type: 'select-tool'; readonly tool: ConstructTool }
   | { readonly type: 'pick'; readonly at: Peg }
   | { readonly type: 'remove-object'; readonly id: string }
@@ -151,7 +202,8 @@ export type GeoAction =
   | ClassifyAction
   | DragTestAction
   | CircleAction
-  | AngleAction;
+  | AngleAction
+  | DiagonalAction;
 
 export interface GeoShapeObservation {
   readonly id: string;

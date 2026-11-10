@@ -8,11 +8,13 @@ import { anglePredicates } from './modes/angle/predicates';
 import { circlePredicates } from './modes/circle/predicates';
 import { chordThroughCenter, halfString } from './modes/circle/observe';
 import { classifyPredicates, classifyClosedPayload } from './modes/classify/observe';
+import { diagonalPredicates } from './modes/diagonal/predicates';
 import {
   dragTestPredicates,
   figureChangedPayload,
   observeDragTest,
 } from './modes/drag-test/observe';
+import { perimeterPredicates } from './modes/perimeter/predicates';
 import { shapeObservation, objectHitsTarget } from './observe';
 import { samePeg } from './reduce';
 import type { GeoObjectKind, GeoState, Peg } from './types';
@@ -215,6 +217,8 @@ export const predicates: Readonly<Record<string, EnginePredicate>> = {
   ...dragTestPredicates,
   ...circlePredicates,
   ...anglePredicates,
+  ...diagonalPredicates,
+  ...perimeterPredicates,
 };
 
 export const EVENT_NAMES = [
@@ -227,6 +231,9 @@ export const EVENT_NAMES = [
   'circle-drawn',
   'reading-set',
   'laser-fired',
+  'diagonal-drawn',
+  'diagonal-rejected',
+  'rect-logged',
 ] as const;
 
 export function emit(prev: GeoState, next: GeoState): EngineEvent[] {
@@ -241,6 +248,41 @@ export function emit(prev: GeoState, next: GeoState): EngineEvent[] {
       events.push({
         name: 'shape-closed',
         payload: { vertices: shapeObservation(band).vertices },
+      });
+    }
+    if (next.log.length > prev.log.length) {
+      const added = next.log[next.log.length - 1];
+      if (added) {
+        events.push({
+          name: 'rect-logged',
+          payload: {
+            width: added.width,
+            height: added.height,
+            area: added.width * added.height,
+          },
+        });
+      }
+    }
+  }
+
+  if (next.mode === 'diagonal' && prev.mode === 'diagonal') {
+    for (const n of next.settings.polygons) {
+      const key = String(n);
+      const before = (prev.drawn[key] ?? []).length;
+      const after = (next.drawn[key] ?? []).length;
+      if (after > before) {
+        events.push({ name: 'diagonal-drawn', payload: { n, count: after } });
+      }
+    }
+    if (next.adjacentAttempts > prev.adjacentAttempts) {
+      events.push({
+        name: 'diagonal-rejected',
+        payload: { n: next.lastRejected?.n ?? 0, reason: 'adjacent' },
+      });
+    } else if (next.duplicateAttempts > prev.duplicateAttempts) {
+      events.push({
+        name: 'diagonal-rejected',
+        payload: { n: next.lastRejected?.n ?? 0, reason: 'duplicate' },
       });
     }
   }
