@@ -4,7 +4,7 @@
  * 반올림한다.
  */
 import { Rational } from '../../../core/math';
-import { kindDefinition, orientedBase } from './pieces';
+import { kindDefinition, orientedBase, setD } from './pieces';
 import type { PieceSet } from './pieces';
 import { silhouettePartPolygons } from './silhouettes';
 import { sAdd, sFromJson, sSub, sToJson, sToNumber } from './surd';
@@ -22,7 +22,7 @@ function verticesFor(
 ): SPoint[] {
   const def = kindDefinition(set, kind);
   if (!def) return [];
-  return orientedBase(def, rot, flip, step).map((point) => ({
+  return orientedBase(def, rot, flip, step, setD(set)).map((point) => ({
     x: sAdd(point.x, at.x),
     y: sAdd(point.y, at.y),
   }));

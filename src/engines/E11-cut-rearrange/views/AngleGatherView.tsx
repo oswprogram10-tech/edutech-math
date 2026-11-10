@@ -637,7 +637,7 @@ export function AngleGatherView({
             {state.phase === 'shape' ? S.angle.shapeHint : S.angle.cornerHint}
           </text>
           <text x={716} y={776} fontSize={13} fontWeight={600} fill="#5a6478">
-            {gathered} / {state.corners.length}
+            {S.angle.gatherCount(gathered, state.corners.length)}
           </text>
         </svg>
       </div>

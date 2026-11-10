@@ -20,7 +20,6 @@ import {
 } from '../../../core/engine-sdk';
 import type { EngineViewProps, Point } from '../../../core/engine-sdk';
 import {
-  kindDefinition,
   PIECE_COLORS,
   pieceVertices,
   TANGRAM_CELL,
@@ -555,7 +554,6 @@ export function TangramView({
             const center = pieceCenter(piece);
             const selected = state.selected.includes(piece.id);
             const previewing = preview?.piece === piece.id ? preview : null;
-            const definition = kindDefinition(set, piece.kind);
             return (
               <g
                 key={piece.id}
@@ -564,13 +562,11 @@ export function TangramView({
                 tabIndex={readOnly ? -1 : 0}
                 aria-label={S.pieceLabel(index + 1)}
                 data-piece={piece.id}
-                data-kind={piece.kind}
                 data-ax={atPoint.x.toFixed(3)}
                 data-ay={atPoint.y.toFixed(3)}
                 data-rot={piece.rot * step}
                 data-flip={piece.flip ? 'true' : 'false'}
                 data-selected={selected ? 'true' : 'false'}
-                data-corners={definition?.corners ?? 0}
                 transform={
                   previewing
                     ? `translate(${previewing.dx.toFixed(2)} ${previewing.dy.toFixed(2)})`
@@ -630,7 +626,6 @@ export function TangramView({
                     role="button"
                     tabIndex={readOnly ? -1 : 0}
                     aria-label={trayLabel(index)}
-                    data-tray-kind={slot.kind}
                     onKeyDown={(event) => onTrayKeyDown(event, slot.kind)}
                   >
                     <polygon

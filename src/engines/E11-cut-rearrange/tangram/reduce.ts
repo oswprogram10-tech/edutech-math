@@ -150,7 +150,7 @@ function verticesOf(piece: TangramPiece, settings: TangramSettings): SPoint[] {
   if (!at) return [];
   const def = kindDefinition(settings.pieceSet, piece.kind);
   if (!def) return [];
-  return orientedBase(def, piece.rot, piece.flip, settings.rotationStep).map((point) => ({
+  return orientedBase(def, piece.rot, piece.flip, settings.rotationStep, d).map((point) => ({
     x: sAdd(point.x, at.x),
     y: sAdd(point.y, at.y),
   }));
@@ -182,9 +182,9 @@ function turnPiece(
   const turns = turnsOf(step);
   const current = verticesOf(piece, state.settings);
   const center = sAverage(current);
-  const c0 = sAverage(orientedBase(def, 0, piece.flip, step));
+  const c0 = sAverage(orientedBase(def, 0, piece.flip, step, state.settings.d));
   const rot = (piece.rot + 1) % turns;
-  const offset = sRotate(c0, rot, step);
+  const offset = sRotate(c0, rot, step, state.settings.d);
   const nextAt = { x: sSub(center.x, offset.x), y: sSub(center.y, offset.y) };
   const next: TangramPiece = { ...piece, rot, at: jsonOf(nextAt, state.settings.d) };
   if (!withinBoard(verticesOf(next, state.settings))) return state;
@@ -206,8 +206,8 @@ function flipPiece(
   const center = sAverage(verticesOf(piece, state.settings));
   const flip = !piece.flip;
   const rot = (((turns - piece.rot) % turns) + turns) % turns;
-  const c0 = sAverage(orientedBase(def, 0, flip, step));
-  const offset = sRotate(c0, rot, step);
+  const c0 = sAverage(orientedBase(def, 0, flip, step, state.settings.d));
+  const offset = sRotate(c0, rot, step, state.settings.d);
   const nextAt = { x: sSub(center.x, offset.x), y: sSub(center.y, offset.y) };
   const next: TangramPiece = { ...piece, rot, flip, at: jsonOf(nextAt, state.settings.d) };
   if (!withinBoard(verticesOf(next, state.settings))) return state;

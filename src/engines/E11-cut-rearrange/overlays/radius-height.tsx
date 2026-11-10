@@ -27,7 +27,7 @@ export function RadiusHeightOverlay({ state }: OverlayProps<CutConfig, CutState>
         logicalWidth={LOGICAL_WIDTH}
         logicalHeight={LOGICAL_HEIGHT}
       >
-        <title>{S.overlays.radiusHeight}</title>
+        <title>{S.overlays.radiusHeightPlain}</title>
       </CanvasAlignedOverlay>
     );
   }
@@ -35,6 +35,11 @@ export function RadiusHeightOverlay({ state }: OverlayProps<CutConfig, CutState>
   const done = arranged(state);
   const n = currentDivisions(state);
   const top = rowScreenTop(n);
+  // 'named'일 때만 반지름이라는 말을 쓴다. 아니면 정답 어휘를 미리 알려 주지 않는다.
+  const title =
+    state.settings.showDimensions === 'named'
+      ? S.overlays.radiusHeight
+      : S.overlays.radiusHeightPlain;
 
   return (
     <CanvasAlignedOverlay
@@ -72,7 +77,7 @@ export function RadiusHeightOverlay({ state }: OverlayProps<CutConfig, CutState>
           <circle cx={SLOT_X0} cy={top} r={5} fill={ORANGE} />
         </>
       ) : null}
-      <title>{S.overlays.radiusHeight}</title>
+      <title>{title}</title>
     </CanvasAlignedOverlay>
   );
 }

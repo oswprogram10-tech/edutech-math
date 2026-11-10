@@ -4,7 +4,13 @@
  */
 import { CanvasAlignedOverlay } from '../../../core/engine-sdk';
 import type { OverlayProps, Point } from '../../../core/engine-sdk';
-import { kindDefinition, orientedBase, TANGRAM_CELL, TANGRAM_ORIGIN } from '../tangram/pieces';
+import {
+  kindDefinition,
+  orientedBase,
+  setD,
+  TANGRAM_CELL,
+  TANGRAM_ORIGIN,
+} from '../tangram/pieces';
 import { tangramPiecePolygons } from '../tangram/observe';
 import { sAdd, sToNumber } from '../tangram/surd';
 import type { SPoint } from '../tangram/surd-geometry';
@@ -50,10 +56,12 @@ export function UprightTurnOverlay({ state }: OverlayProps<CutConfig, CutState>)
     const definition = kindDefinition(state.settings.pieceSet, piece.kind);
     if (!polygon || polygon.length < 3 || !definition) continue;
     const center = sAverage(polygon);
-    const base = orientedBase(definition, 0, piece.flip, step).map((point) => {
-      const moved = { x: sAdd(point.x, center.x), y: sAdd(point.y, center.y) };
-      return screenOf(moved);
-    });
+    const base = orientedBase(definition, 0, piece.flip, step, setD(state.settings.pieceSet)).map(
+      (point) => {
+        const moved = { x: sAdd(point.x, center.x), y: sAdd(point.y, center.y) };
+        return screenOf(moved);
+      },
+    );
     if (base.length < 3) continue;
     const centerPoint = screenOf(center);
     const size =

@@ -202,9 +202,10 @@ export function reduceAngleGather(
     }
 
     case 'turn-corner': {
-      return updateCorner(state, action.index, (corner) =>
+      const next = updateCorner(state, action.index, (corner) =>
         corner.gathered ? { ...corner, turned: !corner.turned } : corner,
       );
+      return next === state ? state : recordIfComplete(next);
     }
 
     case 'new-trial': {

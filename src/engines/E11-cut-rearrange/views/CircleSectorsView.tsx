@@ -8,7 +8,11 @@
  * - 표시선은 `showDimensions`가 켜졌을 때만 그린다. 원주·넓이 값은 쓰지 않는다.
  */
 import { useRef, useState } from 'react';
-import type { KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent } from 'react';
+import type {
+  CSSProperties,
+  KeyboardEvent as ReactKeyboardEvent,
+  PointerEvent as ReactPointerEvent,
+} from 'react';
 import { pointerToLogical, useRenderedSize } from '../../../core/engine-sdk';
 import type { EngineViewProps, Point } from '../../../core/engine-sdk';
 import {
@@ -23,6 +27,7 @@ import {
   rowScreenTop,
   rowUnscale,
   sectorAngleHit,
+  sectorArrivalOffset,
   SLOT_BASELINE,
   SLOT_X0,
   slotSectorPath,
@@ -100,6 +105,11 @@ export function CircleSectorsView({
 
   const scale = rowScale(n);
   const rowTransform = `translate(${SLOT_X0} ${SLOT_BASELINE}) scale(${scale.toFixed(4)}) translate(${-SLOT_X0} ${-SLOT_BASELINE})`;
+  // 자동 배열은 원 자리에서 줄 자리로 1초 동안 옮겨 간다. 줄인 움직임이면 바로 놓는다.
+  const reducedMotion =
+    typeof window !== 'undefined' &&
+    window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+  const rowAnimated = !manual && state.autoArranged && !reducedMotion;
   const showDimensions =
     state.settings.showDimensions !== 'off' && (manual ? placedCount > 0 : state.autoArranged);
   const labels = dimensionText(state.settings.showDimensions === 'named');
@@ -239,9 +249,18 @@ export function CircleSectorsView({
     const fill = colored ? colorOf(sector) : '#ffffff';
     const label = S.circle.sectorLabel(sector + 1);
     const interactive = readOnly ? false : manual;
+    const arrival = slot !== null && rowAnimated ? sectorArrivalOffset(sector, slot, n) : null;
+    const arrivalStyle: CSSProperties | undefined = arrival
+      ? {
+          ['--from-x' as string]: `${arrival.x.toFixed(1)}px`,
+          ['--from-y' as string]: `${arrival.y.toFixed(1)}px`,
+        }
+      : undefined;
     return (
       <path
         key={`${slot === null ? 'circle' : 'row'}-${sector}`}
+        className={arrival ? styles.autoSector : undefined}
+        style={arrivalStyle}
         d={path}
         fill={fill}
         fillOpacity={colored ? (slot === null ? 0.3 : 0.34) : 1}

@@ -145,6 +145,21 @@ describe('E11 angle-gather 부채꼴 사슬', () => {
     expect(fanTrialSum(state)).toBeNull();
   });
 
+  it('turn-corner로 부채가 완성돼도 그 시도를 기록한다', () => {
+    let state = apply({ mode: 'angle-gather' }, [{ type: 'cut-corners' }]);
+    for (let index = 0; index < state.vertices.length; index += 1) {
+      state = reduceAngleGather(state, { type: 'gather-corner', index, turned: false });
+    }
+    expect(fanState(state)).toBe('gap');
+    expect(state.trials).toHaveLength(0);
+
+    const completed = reduceAngleGather(state, { type: 'turn-corner', index: 0 });
+    expect(fanState(completed)).toBe('straight');
+    expect(completed.recorded).toBe(true);
+    expect(completed.trials).toHaveLength(1);
+    expect(trials(observe(completed))).toHaveLength(1);
+  });
+
   it('turn-corner는 모은 조각만 뒤집는다', () => {
     const state = gatherOne({ mode: 'angle-gather' });
     const turned = reduceAngleGather(state, { type: 'turn-corner', index: 0 });

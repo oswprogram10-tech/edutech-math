@@ -166,10 +166,16 @@ export function isKindOf(set: PieceSet, kind: string): kind is PieceKind {
   return kindDefinition(set, kind) !== null;
 }
 
-/** 뒤집은 다음 돌린 기준 자세. */
-export function orientedBase(def: PieceDef, rot: number, flip: boolean, step: number): SPoint[] {
+/** 뒤집은 다음 돌린 기준 자세. 세트의 √d를 넘겨 √2·√3을 섞지 않는다. */
+export function orientedBase(
+  def: PieceDef,
+  rot: number,
+  flip: boolean,
+  step: number,
+  d: SurdD,
+): SPoint[] {
   return def.base.map((point) =>
-    sRotate({ x: flip ? sNeg(point.x) : point.x, y: point.y }, rot, step),
+    sRotate({ x: flip ? sNeg(point.x) : point.x, y: point.y }, rot, step, d),
   );
 }
 
@@ -184,7 +190,7 @@ export function pieceVertices(
 ): SPoint[] {
   const def = kindDefinition(set, kind);
   if (!def) return [];
-  return orientedBase(def, rot, flip, step).map((point) => ({
+  return orientedBase(def, rot, flip, step, setD(set)).map((point) => ({
     x: sAdd(point.x, at.x),
     y: sAdd(point.y, at.y),
   }));

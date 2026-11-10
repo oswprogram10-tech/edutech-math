@@ -49,6 +49,7 @@ export const cutStrings = {
     cornerHint: 'Tab으로 각 조각을 고르고 Enter로 모으기 · R로 돌리기',
     invalid: '모양이 찌그러져요. 다른 곳으로 옮겨 보세요.',
     gatheredSum: (sum: number) => `모은 각의 합: ${sum}°`,
+    gatherCount: (gathered: number, total: number) => `${gathered} / ${total}`,
     trial: (number: number, total: number) => `시도 ${number}/${total}`,
     gatherPad: '모으는 자리',
     gathered: (number: number) => `${number}번 각 조각을 모았어요.`,
@@ -76,10 +77,14 @@ export const cutStrings = {
     hint: '조각을 골라 Enter · ←/→로 칸 고르기 · R로 방향 · Enter로 놓기',
     dragHint: '원에서 조각을 줄 칸으로 끌어 놓아 보세요. 두 번 누르면 방향이 바뀌어요.',
     sectorLabel: (number: number) => `조각 ${number}`,
+    dimensions: {
+      named: { horizontal: '원주의 반', vertical: '반지름' },
+      plain: { horizontal: '가로', vertical: '세로' },
+    },
   },
   overlays: {
     workOutline: '학생이 만든 것의 테두리',
-    slantRectangle: '처음 도형의 밑변과 옆변으로 만든 직사각형',
+    slantRectangle: '처음 도형의 밑변과 옆변으로 만든 상자',
     hingeReplay: '경첩으로 돌리기 전 모습',
     unitCompare: '한 칸 선분과 한 칸 정사각형',
     trialCompare: '기록한 시도 비교',
@@ -87,5 +92,6 @@ export const cutStrings = {
     topArcs: '배열한 줄의 위쪽 호',
     rimVsCover: '원 둘레와 원 안의 칸',
     radiusHeight: '반지름과 줄의 높이',
+    radiusHeightPlain: '원의 중심에서 테두리까지의 길이와 줄의 높이',
   },
 } as const;

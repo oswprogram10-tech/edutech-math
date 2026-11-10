@@ -19,8 +19,8 @@ import {
 } from '../tangram/silhouettes';
 import type { SilhouetteDef } from '../tangram/silhouettes';
 import { snapPiece } from '../tangram/snap';
-import { sFromJson, sToJson, sToNumber } from '../tangram/surd';
-import { sAverage, sClipConvex, sPolygonArea } from '../tangram/surd-geometry';
+import { sEquals, sFromJson, sInt, sToJson, sToNumber } from '../tangram/surd';
+import { sAverage, sClipConvex, sPolygonArea, sRotate } from '../tangram/surd-geometry';
 import type { SPoint } from '../tangram/surd-geometry';
 import { patternSpawnPoint } from '../tangram/tray';
 import type { CutAction, CutConfig, CutState } from '../types';
@@ -264,6 +264,38 @@ describe('T107 tangram 돌리기·뒤집기·스냅', () => {
     expect(after?.flip).toBe(before?.flip);
     expect(after?.rot).toBe(before?.rot);
     expect(after?.at).toEqual(before?.at);
+  });
+
+  it('패턴 블록 90°에서는 √3 좌표를 √3 회전표로 돌린다', () => {
+    const point = { x: sInt(1, 3), y: sInt(0, 3) };
+    const rotated = sRotate(point, 1, 90, 3);
+    expect(rotated.x.d).toBe(3);
+    expect(rotated.y.d).toBe(3);
+    expect(sEquals(rotated.x, sInt(0, 3))).toBe(true);
+    expect(sEquals(rotated.y, sInt(1, 3))).toBe(true);
+  });
+
+  it('패턴 블록 rotationStep 90에서 돌리기·뒤집기가 예외를 내지 않는다', () => {
+    const state = apply({ mode: 'tangram', pieceSet: 'pattern-blocks', rotationStep: 90 }, [
+      { type: 'add-piece', kind: 'trapezoid', at: atJson(patternSpawnPoint()) },
+    ]);
+    if (state.mode !== 'tangram') throw new Error('tangram 상태가 아닙니다.');
+    const before = analyzeTangram(state).polygons.get('p1');
+    expect(before).toBeDefined();
+    if (!before) return;
+    const beforeArea = sToNumber(sPolygonArea(before));
+
+    const turned = reduce(state, { type: 'turn-piece', piece: 'p1' });
+    const flipped = reduce(turned, { type: 'flip-piece', piece: 'p1' });
+    if (flipped.mode !== 'tangram') throw new Error('tangram 상태가 아닙니다.');
+    expect(() => analyzeTangram(flipped)).not.toThrow();
+    // 90°면 한 바퀴가 4단계다. 뒤집기는 돌린 각을 거울로 옮긴다(1 → 3).
+    expect(flipped.pieces[0]?.rot).toBe(3);
+    expect(flipped.pieces[0]?.flip).toBe(true);
+    const after = analyzeTangram(flipped).polygons.get('p1');
+    expect(after).toBeDefined();
+    if (!after) return;
+    expect(sToNumber(sPolygonArea(after))).toBeCloseTo(beforeArea, 12);
   });
 
   it('패턴 블록 30° 회전 뒤에도 넓이가 같다', () => {

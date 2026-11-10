@@ -66,8 +66,7 @@ export function sPolygonArea(points: readonly SPoint[]): Surd {
   return sAbs(sDiv(sSignedDoubleArea(points), sInt(2, points[0]?.x.d ?? 2)));
 }
 
-function rotationCosSin(k: number, step: number): { readonly c: Surd; readonly s: Surd } {
-  const d: SurdD = step === 30 || step === 60 ? 3 : 2;
+function rotationCosSin(k: number, step: number, d: SurdD): { readonly c: Surd; readonly s: Surd } {
   if (step === 45) {
     const half2 = sOf(Rational.of(0), Rational.of(1, 2), d);
     const index = ((Math.trunc(k) % 8) + 8) % 8;
@@ -124,7 +123,7 @@ function rotationCosSin(k: number, step: number): { readonly c: Surd; readonly s
   }
   if (step === 60) {
     // 60° 표는 30° 표에서 두 칸씩 읽는다.
-    return rotationCosSin(k * 2, 30);
+    return rotationCosSin(k * 2, 30, d);
   }
   const index = ((Math.trunc(k) % 4) + 4) % 4;
   switch (index) {
@@ -140,8 +139,8 @@ function rotationCosSin(k: number, step: number): { readonly c: Surd; readonly s
 }
 
 /** 원점 기준으로 `k·step`도 돌린다. y가 아래쪽이라 화면에서는 시계 방향이다. */
-export function sRotate(p: SPoint, k: number, step: number): SPoint {
-  const { c, s } = rotationCosSin(k, step);
+export function sRotate(p: SPoint, k: number, step: number, d: SurdD = p.x.d): SPoint {
+  const { c, s } = rotationCosSin(k, step, d);
   return {
     x: sSub(sMul(p.x, c), sMul(p.y, s)),
     y: sAdd(sMul(p.x, s), sMul(p.y, c)),

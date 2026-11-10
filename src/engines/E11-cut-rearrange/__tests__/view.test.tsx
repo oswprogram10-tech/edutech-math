@@ -12,6 +12,9 @@ import { createInitialState, reduce } from '../reduce';
 import type { CutAction, CutConfig, CutState } from '../types';
 import { CutView } from '../View';
 import { bestTurn } from '../angle-gather/fan';
+import { RadiusHeightOverlay } from '../overlays/radius-height';
+import { sToJson } from '../tangram/surd';
+import { patternSpawnPoint } from '../tangram/tray';
 
 const FORBIDDEN = ['직사각형', '평행사변형', '삼각형', '사각형', '180', '360', '°', '넓이'];
 
@@ -148,6 +151,77 @@ describe('E11 T107 tangram·circle-sectors 기본 화면', () => {
     const text = renderView({ mode: 'circle-sectors' });
     for (const forbidden of T107_FORBIDDEN) expect(text).not.toContain(forbidden);
     expect(text).toContain('더 잘게 나누기');
+  });
+});
+
+describe('E11 T107 답을 드러내는 data 속성', () => {
+  it('패턴 블록 조각·쟁반에 kind·corners·tray-kind가 없다', () => {
+    const config: CutConfig = { mode: 'tangram', pieceSet: 'pattern-blocks' };
+    const spawn = patternSpawnPoint();
+    const state = apply(config, [
+      { type: 'add-piece', kind: 'triangle', at: [sToJson(spawn.x), sToJson(spawn.y)] },
+    ]);
+    const { container } = render(
+      <CutView
+        config={config}
+        state={state}
+        dispatch={() => {}}
+        cpa="C"
+        mode="tangram"
+        targetSize={48}
+      />,
+    );
+    expect(container.querySelectorAll('[data-kind]')).toHaveLength(0);
+    expect(container.querySelectorAll('[data-corners]')).toHaveLength(0);
+    expect(container.querySelectorAll('[data-tray-kind]')).toHaveLength(0);
+    // E2E가 쓰는 위치·회전 값은 남긴다.
+    expect(container.querySelectorAll('[data-ax]').length).toBeGreaterThan(0);
+    expect(container.querySelectorAll('[data-rot]').length).toBeGreaterThan(0);
+  });
+});
+
+describe('E11 T107 반지름 오버레이 제목', () => {
+  it("showDimensions가 'named'가 아니면 '반지름'을 쓰지 않는다", () => {
+    const config: CutConfig = { mode: 'circle-sectors' };
+    const view = render(<RadiusHeightOverlay config={config} state={createInitialState(config)} />);
+    expect((view.container.textContent ?? '').includes('반지름')).toBe(false);
+    expect(view.container.textContent ?? '').toContain('원의 중심에서 테두리까지');
+  });
+
+  it("showDimensions: 'named'일 때만 반지름 어휘를 쓴다", () => {
+    const config: CutConfig = { mode: 'circle-sectors', showDimensions: 'named' };
+    const view = render(<RadiusHeightOverlay config={config} state={createInitialState(config)} />);
+    expect(view.container.textContent ?? '').toContain('반지름');
+  });
+});
+
+describe('E11 T107 자동 배열 1초 연출', () => {
+  const config: CutConfig = { mode: 'circle-sectors', divisions: [16] };
+  const autoArranged = reduce(createInitialState(config), { type: 'auto-arrange' });
+
+  function renderCircle(state: CutState) {
+    return render(
+      <CutView
+        config={config}
+        state={state}
+        dispatch={() => {}}
+        cpa="C"
+        mode="circle-sectors"
+        targetSize={48}
+      />,
+    );
+  }
+
+  it('reduced motion이 아니면 부채꼴마다 원→줄 시작 오프셋이 붙는다', () => {
+    mockReducedMotion(false);
+    const { container } = renderCircle(autoArranged);
+    expect(container.querySelectorAll('[style*="--from-x"]').length).toBeGreaterThan(0);
+  });
+
+  it('prefers-reduced-motion이면 연출 없이 바로 놓는다', () => {
+    mockReducedMotion(true);
+    const { container } = renderCircle(autoArranged);
+    expect(container.querySelectorAll('[style*="--from-x"]')).toHaveLength(0);
   });
 });
 

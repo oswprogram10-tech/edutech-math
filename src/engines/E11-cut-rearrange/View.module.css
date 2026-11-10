@@ -157,8 +157,28 @@
   font-weight: 700;
 }
 
+/* 자동 배열: 원 자리에서 줄 칸으로 1초 동안 옮겨 간다. */
+.autoSector {
+  animation: autoSectorArrive 1s ease-out both;
+}
+
+@keyframes autoSectorArrive {
+  from {
+    transform: translate(var(--from-x, 0), var(--from-y, 0));
+    opacity: 0.65;
+  }
+  to {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .piece[data-animating='true'] {
+    animation: none;
+  }
+
+  .autoSector {
     animation: none;
   }
 }

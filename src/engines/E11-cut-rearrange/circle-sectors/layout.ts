@@ -5,6 +5,7 @@
  */
 import { Rational } from '../../../core/math';
 import type { Point } from '../../../core/engine-sdk';
+import { cutStrings as S } from '../strings.ko';
 
 export const CIRCLE_CENTER = { x: 230, y: 400 } as const;
 export const CIRCLE_RADIUS = 150;
@@ -41,7 +42,9 @@ export function rowRight(divisions: number): number {
 export const ROW_SCREEN_RIGHT = 1160;
 
 export function rowScale(divisions: number): number {
-  const width = divisions * chordOf(divisions);
+  // 줄의 실제 너비는 (n+1)·c/2다. n·c로 재면 줄이 약 0.77배로 줄어
+  // 줄 높이가 반지름과 달라 보인다.
+  const width = ((divisions + 1) * chordOf(divisions)) / 2;
   const available = ROW_SCREEN_RIGHT - SLOT_X0;
   if (width <= 0) return 1;
   return Math.min(1, available / width);
@@ -98,6 +101,17 @@ export function slotSectorPath(slot: number, divisions: number, arcUp: boolean):
   const apex = arcUp ? { x: cx, y: SLOT_BASELINE } : { x: cx, y: SLOT_BASELINE - h };
   const sweep = arcUp ? 1 : 0;
   return `M ${f(left.x)} ${f(left.y)} A ${CIRCLE_RADIUS} ${CIRCLE_RADIUS} 0 0 ${sweep} ${f(right.x)} ${f(right.y)} L ${f(apex.x)} ${f(apex.y)} Z`;
+}
+
+/** 자동 배열 연출: 원에서 줄 칸으로 옮겨 갈 때의 시작 오프셋(px). */
+export function sectorArrivalOffset(sector: number, slot: number, divisions: number): Point {
+  const theta = thetaOf(divisions);
+  const angle = -Math.PI / 2 + (sector + 0.5) * theta;
+  const fromX = CIRCLE_CENTER.x + CIRCLE_RADIUS * 0.72 * Math.cos(angle);
+  const fromY = CIRCLE_CENTER.y + CIRCLE_RADIUS * 0.72 * Math.sin(angle);
+  const toX = slotCenterX(slot, divisions);
+  const toY = SLOT_BASELINE - sectorHeight(divisions) / 3;
+  return { x: fromX - toX, y: fromY - toY };
 }
 
 /** 원에서 고를 부채꼴 하나. 12시 방향에서 시계 방향으로 센다. */
@@ -164,9 +178,7 @@ export function dimensionText(named: boolean): {
   readonly horizontal: string;
   readonly vertical: string;
 } {
-  return named
-    ? { horizontal: '원주의 반', vertical: '반지름' }
-    : { horizontal: '가로', vertical: '세로' };
+  return named ? S.circle.dimensions.named : S.circle.dimensions.plain;
 }
 
 export function radiusUnit(rational: string): number {

@@ -10,6 +10,16 @@ import { predicates } from '../events';
 import { observe } from '../observe';
 import { createInitialState, reduce } from '../reduce';
 import { alternating, arranged, circleSettings, currentDivisions } from '../circle-sectors/reduce';
+import {
+  dimensionText,
+  rowScale,
+  rowScreenRight,
+  rowScreenTop,
+  ROW_SCREEN_RIGHT,
+  sectorHeight,
+  SLOT_BASELINE,
+  SLOT_X0,
+} from '../circle-sectors/layout';
 import type {
   CircleSectorsAction,
   CircleSectorsConfig,
@@ -167,5 +177,28 @@ describe('T107 circle-sectors 단계와 자동 배열', () => {
     expect(observation['pi']).toBe('22/7');
     expect(observation['divisions']).toBe(8);
     expect(observation['manual']).toBe(true);
+  });
+});
+
+describe('T107 circle-sectors 줄 배율', () => {
+  it('줄 너비는 (n+1)·c/2라 배율이 1이고 줄 높이가 반지름 크기 그대로다', () => {
+    for (const divisions of [4, 8, 16, 32, 64, 128, 256]) {
+      expect(rowScale(divisions)).toBe(1);
+      // 화면의 줄 높이 = arc의 높이(작은 n에서는 반지름에 가깝다).
+      expect(rowScreenTop(divisions)).toBeCloseTo(SLOT_BASELINE - sectorHeight(divisions), 9);
+      // 줄의 오른쪽 끝이 화면 한계를 넘지 않는다.
+      expect(rowScreenRight(divisions)).toBeLessThanOrEqual(ROW_SCREEN_RIGHT);
+      expect(rowScreenRight(divisions)).toBeGreaterThan(SLOT_X0);
+    }
+  });
+
+  it('64등분이면 줄 높이가 반지름과 1% 안쪽으로 같아진다', () => {
+    expect(sectorHeight(64)).toBeCloseTo(150, 0);
+    expect(150 / sectorHeight(64)).toBeLessThan(1.01);
+  });
+
+  it('표시선 이름은 named일 때만 반지름·원주를 말한다', () => {
+    expect(dimensionText(true)).toEqual({ horizontal: '원주의 반', vertical: '반지름' });
+    expect(dimensionText(false)).toEqual({ horizontal: '가로', vertical: '세로' });
   });
 });

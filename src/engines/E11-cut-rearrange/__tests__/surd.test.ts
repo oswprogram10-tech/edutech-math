@@ -79,7 +79,7 @@ describe('Surd 회전은 제자리로 돌아온다', () => {
     const def = kindDefinition('tangram', 'small-triangle');
     expect(def).not.toBeNull();
     if (!def) return;
-    const rotated = orientedBase(def, 1, false, 45);
+    const rotated = orientedBase(def, 1, false, 45, 2);
     expect(sEquals(sPolygonArea(rotated), sInt(1))).toBe(true);
   });
 });
