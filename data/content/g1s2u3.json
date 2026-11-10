@@ -1,0 +1,294 @@
+{
+  "unit": "g1s2u3",
+  "title": "모양과 시각",
+  "activities": [
+    {
+      "id": "g1s2u3.A1",
+      "title": "그림자 퍼즐",
+      "tasks": [
+        {
+          "id": "g1s2u3.A1.T1",
+          "prompt": "보이는 조각을 모두 붙여 네모를 만들어요.",
+          "engine": "E11",
+          "mode": "tangram",
+          "cpa": "C",
+          "config": {
+            "mode": "tangram",
+            "pieceSet": "tangram",
+            "silhouette": "none",
+            "pieces": ["small-triangle", "small-triangle"],
+            "rotationStep": 45
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "outlineIs",
+            "args": { "kind": "square", "pieces": 2 }
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "tangram" },
+              "level": 1,
+              "say": "네모는 뾰족한 곳이 몇 개였나요? 만든 모양은 몇 개인가요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "tangram" },
+              "level": 2,
+              "say": "만든 모양의 테두리를 따라가며 뾰족한 곳을 세어 봐요.",
+              "show": { "engine": "E11", "overlay": "work-outline" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "tangram" },
+              "level": 3,
+              "backtrack": "g1s1u2.shape-families"
+            }
+          ],
+          "concepts": ["g1s2u3.flat-shapes", "g1s2u3.compose-shapes"],
+          "submit": "button"
+        },
+        {
+          "id": "g1s2u3.A1.T2",
+          "prompt": "그림자에 조각을 채워 집을 만들어요.",
+          "engine": "E11",
+          "mode": "tangram",
+          "cpa": "C",
+          "config": {
+            "mode": "tangram",
+            "pieceSet": "pattern-blocks",
+            "silhouette": "house",
+            "rotationStep": 60,
+            "showPieceOutlines": true
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "silhouetteFilled"
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "sticksOut", "value": true },
+              "level": 1,
+              "say": "그림자 밖으로 나온 조각이 있나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "sticksOut", "value": true },
+              "level": 2,
+              "say": "그림자 테두리와 놓은 조각의 테두리를 견주어 봐요.",
+              "show": { "engine": "E11", "overlay": "work-outline" }
+            },
+            {
+              "when": { "kind": "equals", "path": "sticksOut", "value": true },
+              "level": 3,
+              "backtrack": "g1s2u3.flat-shapes"
+            },
+            {
+              "when": { "kind": "equals", "path": "overlap", "value": true },
+              "level": 1,
+              "say": "겹쳐 놓은 조각이 있나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "overlap", "value": true },
+              "level": 2,
+              "say": "조각이 겹친 곳을 그림자 테두리와 함께 살펴봐요.",
+              "show": { "engine": "E11", "overlay": "work-outline" }
+            },
+            {
+              "when": { "kind": "equals", "path": "overlap", "value": true },
+              "level": 3,
+              "backtrack": "g1s2u3.flat-shapes"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "tangram" },
+              "level": 1,
+              "say": "그림자에 빈 곳이 남았나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "tangram" },
+              "level": 2,
+              "say": "놓은 조각의 테두리를 보고 빈 곳을 찾아봐요.",
+              "show": { "engine": "E11", "overlay": "work-outline" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "tangram" },
+              "level": 3,
+              "backtrack": "g1s2u3.flat-shapes"
+            }
+          ],
+          "concepts": ["g1s2u3.compose-shapes"],
+          "submit": "button"
+        },
+        {
+          "id": "g1s2u3.A1.T3",
+          "prompt": "그림자에 조각을 채워 배를 만들어요.",
+          "engine": "E11",
+          "mode": "tangram",
+          "cpa": "P",
+          "config": {
+            "mode": "tangram",
+            "pieceSet": "pattern-blocks",
+            "silhouette": "boat",
+            "rotationStep": 60,
+            "showPieceOutlines": false
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "silhouetteFilled"
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "sticksOut", "value": true },
+              "level": 1,
+              "say": "배 그림자 밖으로 나온 조각이 있나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "sticksOut", "value": true },
+              "level": 2,
+              "say": "배 그림자 테두리와 놓은 조각의 테두리를 견주어 봐요.",
+              "show": { "engine": "E11", "overlay": "work-outline" }
+            },
+            {
+              "when": { "kind": "equals", "path": "sticksOut", "value": true },
+              "level": 3,
+              "backtrack": "g1s2u3.flat-shapes"
+            },
+            {
+              "when": { "kind": "equals", "path": "overlap", "value": true },
+              "level": 1,
+              "say": "배 그림자에 겹쳐 놓은 조각이 있나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "overlap", "value": true },
+              "level": 2,
+              "say": "조각이 겹친 곳을 배 그림자 테두리와 함께 살펴봐요.",
+              "show": { "engine": "E11", "overlay": "work-outline" }
+            },
+            {
+              "when": { "kind": "equals", "path": "overlap", "value": true },
+              "level": 3,
+              "backtrack": "g1s2u3.flat-shapes"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "tangram" },
+              "level": 1,
+              "say": "배 그림자에 빈 곳이 남았나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "tangram" },
+              "level": 2,
+              "say": "놓은 조각의 테두리를 보고 빈 곳을 찾아봐요.",
+              "show": { "engine": "E11", "overlay": "work-outline" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "tangram" },
+              "level": 3,
+              "backtrack": "g1s2u3.flat-shapes"
+            }
+          ],
+          "concepts": ["g1s2u3.compose-shapes"],
+          "submit": "button"
+        },
+        {
+          "id": "g1s2u3.A1.T4",
+          "prompt": "뾰족한 곳이 3개인 조각을 모두 눌러요.",
+          "engine": "E11",
+          "mode": "tangram",
+          "cpa": "C",
+          "config": {
+            "mode": "tangram",
+            "pieceSet": "tangram",
+            "silhouette": "none",
+            "selectMode": true,
+            "pieces": [
+              { "kind": "large-triangle", "rot": 1 },
+              "medium-triangle",
+              { "kind": "small-triangle", "rot": 3 },
+              "square",
+              "parallelogram"
+            ]
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "selectedAllWithCorners",
+            "args": { "corners": 3 }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "selectedCorners",
+                    "value": [3]
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "selectedCorners",
+                    "value": [3, 3]
+                  }
+                ]
+              },
+              "level": 1,
+              "say": "돌려 보면 어떻게 될까요?"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "selectedCorners",
+                    "value": [3]
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "selectedCorners",
+                    "value": [3, 3]
+                  }
+                ]
+              },
+              "level": 2,
+              "say": "돌아간 조각을 똑바로 돌린 모습을 보세요.",
+              "show": { "engine": "E11", "overlay": "upright-turn" }
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "selectedCorners",
+                    "value": [3]
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "selectedCorners",
+                    "value": [3, 3]
+                  }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g1s1u2.ignore-irrelevant"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "tangram" },
+              "level": 1,
+              "say": "조각마다 뾰족한 곳을 손가락으로 세어 봤나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "tangram" },
+              "level": 2,
+              "say": "조각 테두리를 따라가며 뾰족한 곳을 세어 봐요.",
+              "show": { "engine": "E11", "overlay": "work-outline" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "tangram" },
+              "level": 3,
+              "backtrack": "g1s2u3.flat-shapes"
+            }
+          ],
+          "concepts": ["g1s2u3.flat-shapes"],
+          "submit": "button"
+        }
+      ]
+    }
+  ]
+}
