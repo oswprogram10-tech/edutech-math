@@ -210,7 +210,7 @@ export function applySquareMove(figure: SquareFigure, move: Move): SquareFigure 
     case 'flip':
       return flipFigure(figure, move.side);
     case 'turn':
-      return rotateFigure(figure, move.center, move.angle, move.direction);
+      return rotateFigure(figure, move.center, assertAngle(move.angle), move.direction);
   }
   return fail('알 수 없는 이동입니다.');
 }

@@ -10,7 +10,16 @@
  * 바꾸기만 하고, 나눗셈·삼각함수는 화면 좌표(layout·animation)에만 쓴다.
  */
 
-export type TransformMode = 'slide-flip-turn' | 'predict';
+import type { LinePresetId, PointPresetId, PolygonPresetId } from './polygons';
+import type { TessBaseTile, TessTile } from './tiles';
+
+export type TransformMode =
+  | 'slide-flip-turn'
+  | 'predict'
+  | 'tessellation'
+  | 'congruence'
+  | 'line-symmetry'
+  | 'point-symmetry';
 
 /** 정수 모눈점. `[x, y]` */
 export type Pt = readonly [number, number];
@@ -28,7 +37,7 @@ export type Side = 'up' | 'down' | 'left' | 'right';
 
 export type TurnDirection = 'cw' | 'ccw';
 
-/** 정수 도. */
+/** 정사각 격자 버튼이 쓰는 정수 도. 삼각 격자는 60의 배수까지 받는다. */
 export type TurnAngle = 90 | 180 | 270;
 
 export type MoveKind = 'slide' | 'flip' | 'turn';
@@ -46,7 +55,8 @@ export type Move =
   | {
       readonly kind: 'turn';
       readonly direction: TurnDirection;
-      readonly angle: TurnAngle;
+      /** 정수 도. 정사각 격자는 90·180·270, 삼각 격자는 60의 배수다. */
+      readonly angle: number;
       readonly center: Pt;
     };
 
@@ -93,7 +103,66 @@ export interface PredictConfig {
   readonly showOperation?: boolean;
 }
 
-export type TransformConfig = SlideFlipTurnConfig | PredictConfig;
+export type TessellationCustomize = 'none' | 'edge-translate';
+
+export interface TessellationConfig {
+  readonly mode?: 'tessellation';
+  /** 기본은 정사각형·정삼각형·정육각형·정오각형 넷 다. */
+  readonly baseTiles?: readonly TessBaseTile[];
+  readonly customize?: TessellationCustomize;
+  readonly gapCheck?: boolean;
+}
+
+export type ShapeRef = PolygonPresetId | { readonly points: readonly Pt[] };
+
+export interface CongruenceConfig {
+  readonly mode?: 'congruence';
+  /** 8~14로 자른다. 기본 12. */
+  readonly grid?: number;
+  readonly fixed?: ShapeRef;
+  readonly fixedAt?: Pt;
+  readonly fixedOrientation?: Orientation;
+  readonly moving?: ShapeRef;
+  readonly movingAt?: Pt;
+  readonly showCorrespondence?: 'after-overlap' | 'never';
+  readonly pairSides?: boolean;
+}
+
+export type LineTask = 'find-axis' | 'decalcomania' | 'complete';
+
+export interface LineSymmetryConfig {
+  readonly mode?: 'line-symmetry';
+  readonly task?: LineTask;
+  readonly shapes?: readonly LinePresetId[];
+  readonly allowDrawAxis?: boolean;
+  readonly foldPreview?: boolean;
+  /** complete용. 기본 `[[4,0],[4,8]]`. */
+  readonly axis?: readonly [Pt, Pt];
+  /** complete용. 양 끝이 축 위인 반쪽 꺾은선. */
+  readonly half?: readonly Pt[];
+}
+
+export type PointTask = 'pin' | 'complete';
+
+export interface PointSymmetryConfig {
+  readonly mode?: 'point-symmetry';
+  readonly task?: PointTask;
+  readonly shapes?: readonly PointPresetId[];
+  readonly pinAnywhere?: boolean;
+  readonly showArcs?: boolean;
+  /** complete용, 두 배 좌표. */
+  readonly center?: Pt;
+  /** complete용 반쪽 꺾은선. */
+  readonly half?: readonly Pt[];
+}
+
+export type TransformConfig =
+  | SlideFlipTurnConfig
+  | PredictConfig
+  | TessellationConfig
+  | CongruenceConfig
+  | LineSymmetryConfig
+  | PointSymmetryConfig;
 
 export interface SlideFlipTurnSettings {
   readonly shape: ShapeId;
@@ -139,7 +208,128 @@ export interface PredictState {
   readonly settings: PredictSettings;
 }
 
-export type TransformState = SlideFlipTurnState | PredictState;
+export interface TessellationSettings {
+  readonly baseTiles: readonly TessBaseTile[];
+  readonly customize: TessellationCustomize;
+  readonly gapCheck: boolean;
+}
+
+export interface PlacedTile {
+  readonly id: number;
+  readonly tile: TessTile;
+  readonly cells: readonly Pt[];
+}
+
+export interface TessellationState {
+  readonly mode: 'tessellation';
+  readonly tile: TessTile;
+  readonly stamp: { readonly outline: readonly Pt[]; readonly cells: readonly Pt[] };
+  readonly placed: readonly PlacedTile[];
+  readonly customCells: readonly Pt[];
+  readonly movesUsed: readonly string[];
+  readonly checked: boolean;
+  readonly hub: number;
+  readonly center: number;
+  readonly nextId: number;
+  readonly settings: TessellationSettings;
+}
+
+export interface CongruenceSettings {
+  readonly grid: number;
+  readonly fixed: readonly Pt[];
+  readonly fixedOrientation: Orientation;
+  readonly movingStart: readonly Pt[];
+  readonly showCorrespondence: 'after-overlap' | 'never';
+  readonly pairSides: boolean;
+}
+
+export interface CongruenceState {
+  readonly mode: 'congruence';
+  readonly fixed: readonly Pt[];
+  readonly movingStart: readonly Pt[];
+  readonly moves: readonly Move[];
+  readonly center: number;
+  readonly correspondence: readonly number[] | null;
+  readonly everOverlapped: boolean;
+  readonly sidePairs: readonly (readonly [number, number])[];
+  readonly settings: CongruenceSettings;
+}
+
+export interface LineSymmetrySettings {
+  readonly task: LineTask;
+  readonly shapes: readonly LinePresetId[];
+  readonly allowDrawAxis: boolean;
+  readonly foldPreview: boolean;
+  readonly axis: readonly [Pt, Pt];
+  readonly half: readonly Pt[];
+}
+
+export interface FoldRecord {
+  readonly shape: LinePresetId;
+  readonly from: Pt;
+  readonly to: Pt;
+  readonly ok: boolean;
+  readonly diagonal: boolean;
+  readonly key: string;
+}
+
+export interface DecalDot {
+  readonly at: Pt;
+  readonly mark: 0 | 1 | 2 | 3;
+}
+
+export interface LineSymmetryState {
+  readonly mode: 'line-symmetry';
+  readonly task: LineTask;
+  readonly shapeIndex: number;
+  readonly pending: Pt | null;
+  readonly axis: readonly [Pt, Pt] | null;
+  readonly folds: readonly FoldRecord[];
+  readonly showing: number | null;
+  readonly dots: readonly DecalDot[];
+  readonly folded: boolean;
+  readonly vertices: readonly Pt[];
+  readonly settings: LineSymmetrySettings;
+}
+
+export interface PointSymmetrySettings {
+  readonly task: PointTask;
+  readonly shapes: readonly PointPresetId[];
+  readonly pinAnywhere: boolean;
+  readonly showArcs: boolean;
+  /** 두 배 좌표. */
+  readonly center: Pt;
+  readonly half: readonly Pt[];
+}
+
+export interface PointTry {
+  readonly shape: PointPresetId;
+  /** 두 배 좌표. */
+  readonly pin: Pt;
+  readonly overlaps: boolean;
+}
+
+export interface PointSymmetryState {
+  readonly mode: 'point-symmetry';
+  readonly task: PointTask;
+  readonly shapeIndex: number;
+  readonly pin: Pt | null;
+  readonly turned: boolean;
+  readonly flipped: Side | null;
+  readonly tries: readonly PointTry[];
+  readonly centerFound: readonly string[];
+  readonly flipUsed: boolean;
+  readonly vertices: readonly Pt[];
+  readonly settings: PointSymmetrySettings;
+}
+
+export type TransformState =
+  | SlideFlipTurnState
+  | PredictState
+  | TessellationState
+  | CongruenceState
+  | LineSymmetryState
+  | PointSymmetryState;
 
 export type TransformAction =
   | { readonly type: 'slide'; readonly dx: number; readonly dy: number }
@@ -147,7 +337,7 @@ export type TransformAction =
   | {
       readonly type: 'turn';
       readonly direction: TurnDirection;
-      readonly angle: TurnAngle;
+      readonly angle: number;
       readonly center: Pt;
     }
   | { readonly type: 'select-center'; readonly index: number }
@@ -157,7 +347,41 @@ export type TransformAction =
   | { readonly type: 'paint'; readonly cells: readonly Cell[]; readonly value: boolean }
   | { readonly type: 'clear-paint' }
   | { readonly type: 'confirm' }
-  | { readonly type: 'retry' };
+  | { readonly type: 'retry' }
+  | { readonly type: 'select-tile'; readonly tile: TessTile }
+  | { readonly type: 'move'; readonly move: Move }
+  | { readonly type: 'place' }
+  | { readonly type: 'remove-last' }
+  | { readonly type: 'clear-tiles' }
+  | { readonly type: 'check-gaps' }
+  | { readonly type: 'toggle-notch'; readonly cell: Cell }
+  | { readonly type: 'hub-add' }
+  | { readonly type: 'hub-remove' }
+  | { readonly type: 'reset-moving' }
+  | {
+      readonly type: 'pair-sides';
+      readonly moving: number;
+      readonly fixed: number;
+    }
+  | { readonly type: 'unpair'; readonly moving: number }
+  | { readonly type: 'select-shape'; readonly index: number }
+  | { readonly type: 'pick-point'; readonly at: Pt }
+  | { readonly type: 'clear-axis' }
+  | { readonly type: 'fold' }
+  | { readonly type: 'unfold' }
+  | {
+      readonly type: 'add-dot';
+      readonly at: Pt;
+      readonly mark: 0 | 1 | 2 | 3;
+    }
+  | { readonly type: 'remove-dot'; readonly at: Pt }
+  | { readonly type: 'fold-paper' }
+  | { readonly type: 'unfold-paper' }
+  | { readonly type: 'add-vertex'; readonly at: Pt }
+  | { readonly type: 'undo-vertex' }
+  | { readonly type: 'place-pin'; readonly at: Pt }
+  | { readonly type: 'turn-180' }
+  | { readonly type: 'reset-turn' };
 
 export type MoveObservation =
   | { readonly kind: 'slide'; readonly dx: number; readonly dy: number }
@@ -165,7 +389,7 @@ export type MoveObservation =
   | {
       readonly kind: 'turn';
       readonly direction: TurnDirection;
-      readonly angle: TurnAngle;
+      readonly angle: number;
       readonly center: Pt;
       readonly centerLabel: string | null;
     };

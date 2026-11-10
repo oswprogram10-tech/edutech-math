@@ -145,7 +145,7 @@ export function reduceSlideFlipTurn(
     }
     case 'turn': {
       if (!state.settings.allowed.includes('turn')) return state;
-      if (!state.settings.turnAngles.includes(action.angle)) return state;
+      if (!state.settings.turnAngles.some((value) => value === action.angle)) return state;
       if (action.direction !== 'cw' && action.direction !== 'ccw') return state;
       if (!Array.isArray(action.center)) return state;
       let center: Pt;
