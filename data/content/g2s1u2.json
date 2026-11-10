@@ -1,0 +1,363 @@
+{
+  "unit": "g2s1u2",
+  "title": "여러 가지 도형",
+  "activities": [
+    {
+      "id": "g2s1u2.A1",
+      "title": "고무줄 기하판",
+      "tasks": [
+        {
+          "id": "g2s1u2.A1.T1",
+          "prompt": "못과 못을 곧은 선으로 이어 삼각형을 만들어요.",
+          "engine": "E09",
+          "mode": "geoboard",
+          "cpa": "C",
+          "config": {
+            "mode": "geoboard",
+            "grid": [5, 5],
+            "showCounts": "never"
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "shapeWithVertices",
+            "args": { "count": 3 }
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "geoboard" },
+              "level": 1,
+              "say": "곧은 선 3개로 둘러싸 볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "geoboard" },
+              "level": 2,
+              "say": "닫힌 도형의 테두리를 따라가며 곧은 선을 세어 봐요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "geoboard" },
+              "level": 3,
+              "backtrack": "g1s2u3.flat-shapes"
+            }
+          ],
+          "concepts": ["g2s1u2.side-vertex"],
+          "submit": "button"
+        },
+        {
+          "id": "g2s1u2.A1.T2",
+          "prompt": "모양이 서로 다른 사각형을 두 개 만들어요.",
+          "engine": "E09",
+          "mode": "geoboard",
+          "cpa": "C",
+          "config": {
+            "mode": "geoboard",
+            "grid": [5, 5],
+            "showCounts": "never"
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "distinctShapes",
+            "args": { "vertices": 4, "count": 2 }
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "geoboard" },
+              "level": 1,
+              "say": "두 사각형을 돌려서 겹치면 꼭 맞을까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "geoboard" },
+              "level": 2,
+              "say": "사각형을 바로 세우면 어떤 모양일까요? 다른 사각형과 견주어 보세요.",
+              "show": { "engine": "E09", "overlay": "upright-ghost" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "geoboard" },
+              "level": 3,
+              "backtrack": "g2s1u2.side-vertex"
+            }
+          ],
+          "concepts": ["g2s1u2.side-vertex", "g2s1u2.polygon-names"],
+          "submit": "button"
+        },
+        {
+          "id": "g2s1u2.A1.T3",
+          "prompt": "꼭짓점이 5개인 도형을 만들어요.",
+          "engine": "E09",
+          "mode": "geoboard",
+          "cpa": "P",
+          "config": {
+            "mode": "geoboard",
+            "grid": [5, 5],
+            "showCounts": "never",
+            "maxShapes": 1
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "shapeWithVertices",
+            "args": { "count": 5 }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "all",
+                    "of": [
+                      { "kind": "equals", "path": "shapes.0.pegCount", "value": 5 },
+                      { "kind": "equals", "path": "shapes.0.vertices", "value": 4 }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      { "kind": "equals", "path": "shapes.0.pegCount", "value": 5 },
+                      { "kind": "equals", "path": "shapes.0.vertices", "value": 3 }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      { "kind": "equals", "path": "shapes.0.pegCount", "value": 6 },
+                      { "kind": "equals", "path": "shapes.0.vertices", "value": 4 }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      { "kind": "equals", "path": "shapes.0.pegCount", "value": 6 },
+                      { "kind": "equals", "path": "shapes.0.vertices", "value": 3 }
+                    ]
+                  }
+                ]
+              },
+              "level": 1,
+              "say": "이 점에서 선이 꺾여요?"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "all",
+                    "of": [
+                      { "kind": "equals", "path": "shapes.0.pegCount", "value": 5 },
+                      { "kind": "equals", "path": "shapes.0.vertices", "value": 4 }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      { "kind": "equals", "path": "shapes.0.pegCount", "value": 5 },
+                      { "kind": "equals", "path": "shapes.0.vertices", "value": 3 }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      { "kind": "equals", "path": "shapes.0.pegCount", "value": 6 },
+                      { "kind": "equals", "path": "shapes.0.vertices", "value": 4 }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      { "kind": "equals", "path": "shapes.0.pegCount", "value": 6 },
+                      { "kind": "equals", "path": "shapes.0.vertices", "value": 3 }
+                    ]
+                  }
+                ]
+              },
+              "level": 2,
+              "say": "꺾이지 않는 못에 × 표시를 했어요.",
+              "show": { "engine": "E09", "overlay": "straight-run" }
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "all",
+                    "of": [
+                      { "kind": "equals", "path": "shapes.0.pegCount", "value": 5 },
+                      { "kind": "equals", "path": "shapes.0.vertices", "value": 4 }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      { "kind": "equals", "path": "shapes.0.pegCount", "value": 5 },
+                      { "kind": "equals", "path": "shapes.0.vertices", "value": 3 }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      { "kind": "equals", "path": "shapes.0.pegCount", "value": 6 },
+                      { "kind": "equals", "path": "shapes.0.vertices", "value": 4 }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      { "kind": "equals", "path": "shapes.0.pegCount", "value": 6 },
+                      { "kind": "equals", "path": "shapes.0.vertices", "value": 3 }
+                    ]
+                  }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g2s1u2.side-vertex"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "geoboard" },
+              "level": 1,
+              "say": "꺾인 곳이 몇 군데인지 세어 볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "geoboard" },
+              "level": 2,
+              "say": "곧은 선을 따라가다 보면 꺾이지 않고 지나가는 못이 있나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "geoboard" },
+              "level": 3,
+              "backtrack": "g2s1u2.side-vertex"
+            }
+          ],
+          "concepts": ["g2s1u2.side-vertex", "g2s1u2.polygon-names"],
+          "submit": "button"
+        },
+        {
+          "id": "g2s1u2.A1.T4",
+          "prompt": "꼭짓점이 6개인 도형이에요. 이름은 무엇일까요?",
+          "engine": "E09",
+          "mode": "geoboard",
+          "cpa": "A",
+          "config": {
+            "mode": "geoboard",
+            "grid": [5, 5],
+            "showCounts": "never",
+            "maxShapes": 1,
+            "shapes": [[[1, 0], [3, 0], [4, 2], [3, 4], [1, 4], [0, 2]]]
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.name.selected",
+            "value": ["hexa"]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "geoboard" },
+              "level": 1,
+              "say": "삼각형, 사각형은 무엇을 보고 이름을 붙였나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "geoboard" },
+              "level": 2,
+              "say": "도형의 곧은 선과 꺾인 점을 세어 봐요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "geoboard" },
+              "level": 3,
+              "backtrack": "g2s1u2.side-vertex"
+            }
+          ],
+          "concepts": ["g2s1u2.polygon-names"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "name",
+                "label": "도형의 이름을 골라요.",
+                "multiple": false,
+                "options": [
+                  { "id": "tri", "label": "삼각형" },
+                  { "id": "quad", "label": "사각형" },
+                  { "id": "penta", "label": "오각형" },
+                  { "id": "hexa", "label": "육각형" }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g2s1u2.A1.T5",
+          "prompt": "비스듬히 놓인 도형이에요. 이 도형도 사각형일까요?",
+          "engine": "E09",
+          "mode": "geoboard",
+          "cpa": "P",
+          "config": {
+            "mode": "geoboard",
+            "grid": [5, 5],
+            "showCounts": "never",
+            "maxShapes": 1,
+            "shapes": [[[1, 0], [4, 1], [3, 4], [0, 3]]]
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.quad.selected",
+            "value": ["yes"]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-SHAPE-ORIENTATION" },
+              "level": 1,
+              "say": "변과 꼭짓점을 세어 볼까요?"
+            },
+            {
+              "when": { "misconception": "MC-SHAPE-ORIENTATION" },
+              "level": 2,
+              "say": "이 도형을 돌려 바로 세운 모습을 옆에 그렸어요.",
+              "show": { "engine": "E09", "overlay": "upright-ghost" }
+            },
+            {
+              "when": { "misconception": "MC-SHAPE-ORIENTATION" },
+              "level": 3,
+              "backtrack": "g1s1u2.ignore-irrelevant"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "geoboard" },
+              "level": 1,
+              "say": "곧은 선과 꺾인 점이 몇 개인지 살펴볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "geoboard" },
+              "level": 2,
+              "say": "도형의 테두리를 따라가며 변과 꼭짓점을 세어 봐요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "geoboard" },
+              "level": 3,
+              "backtrack": "g2s1u2.side-vertex"
+            }
+          ],
+          "concepts": ["g2s1u2.polygon-names"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-SHAPE-ORIENTATION",
+              "args": { "trap": "no" },
+              "path": "response.quad.selected.0"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "quad",
+                "label": "이 도형은 사각형일까요?",
+                "multiple": false,
+                "options": [
+                  { "id": "yes", "label": "사각형이에요" },
+                  { "id": "no", "label": "사각형이 아니에요" }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
