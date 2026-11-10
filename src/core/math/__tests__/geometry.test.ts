@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   angleKind,
+  circleCircleIntersections,
   collinear,
   congruentPolygons,
   cross,
@@ -9,16 +10,28 @@ import {
   gp,
   isRightAngle,
   isSimplePolygon,
+  lineLineIntersection,
+  makeSurd,
   orientation,
   pointOnLine,
   pointOnRay,
   pointOnSegment,
   polygonArea,
+  rationalRotate,
+  rationalSqrt,
+  sSignedCos2,
   segmentsIntersect,
   simplifyPolygon,
+  surdAdd,
+  surdEquals,
+  surdMul,
+  surdSign,
+  surdSub,
+  surdOf,
+  toSPoint,
   vsub,
 } from '../geometry';
-import type { GPoint } from '../geometry';
+import type { GPoint, SPoint } from '../geometry';
 import { Rational } from '../rational';
 
 function points(coords: readonly (readonly [number, number])[]): GPoint[] {
@@ -252,5 +265,87 @@ describe('geometry 각', () => {
     expect(angleKind(gp(1, 0), gp(0, 0), gp(-1, 1))).toBe('obtuse');
     expect(angleKind(gp(1, 0), gp(0, 0), gp(-1, 0))).toBe('straight');
     expect(angleKind(gp(1, 0), gp(0, 0), gp(2, 0))).toBe('acute');
+  });
+});
+
+describe('geometry T101 무리수·교점·회전', () => {
+  const r = (n: number, d = 1) => Rational.of(n, d);
+
+  it('1 − √2 < 0이고 √3·√3 = 3이다', () => {
+    const root2 = makeSurd(r(0), r(1), r(2));
+    const value = surdSub(surdOf(r(1)), root2);
+    expect(value).not.toBeNull();
+    if (!value) return;
+    expect(surdSign(value)).toBe(-1);
+    const root3 = makeSurd(r(0), r(1), r(3));
+    expect(surdMul(root3, root3)?.a.toString()).toBe('3');
+    expect(surdSign(surdMul(root3, root3) ?? surdOf(r(0)))).toBe(1);
+  });
+
+  it('√8과 2√2를 같은 근호로 맞춘다', () => {
+    const root8 = makeSurd(r(0), r(1), r(8));
+    const twiceRoot2 = makeSurd(r(0), r(2), r(2));
+    expect(surdEquals(root8, twiceRoot2)).toBe(true);
+    expect(root8.d.toString()).toBe('2');
+    expect(root8.b.toString()).toBe('2');
+  });
+
+  it('√2 + √3은 하나의 근호로 적을 수 없어 null이다', () => {
+    const root2 = makeSurd(r(0), r(1), r(2));
+    const root3 = makeSurd(r(0), r(1), r(3));
+    expect(surdAdd(root2, root3)).toBeNull();
+    expect(surdEquals(root2, root3)).toBe(false);
+  });
+
+  it('두 원의 교점 (1, ±√3)과 접함·떨어짐·같은 중심을 정확히 센다', () => {
+    const points = circleCircleIntersections(gp(0, 0), r(4), gp(2, 0), r(4));
+    expect(points).toHaveLength(2);
+    const [plus, minus] = points;
+    expect(plus?.x.a.toString()).toBe('1');
+    expect(plus?.y.a.toString()).toBe('0');
+    expect(plus?.y.b.toString()).toBe('1');
+    expect(plus?.y.d.toString()).toBe('3');
+    expect(minus?.y.b.toString()).toBe('-1');
+
+    const touching = circleCircleIntersections(gp(0, 0), r(1), gp(2, 0), r(1));
+    expect(touching).toHaveLength(1);
+    expect(touching[0]?.x.a.toString()).toBe('1');
+
+    expect(circleCircleIntersections(gp(0, 0), r(1), gp(5, 0), r(1))).toEqual([]);
+    expect(circleCircleIntersections(gp(1, 1), r(1), gp(1, 1), r(4))).toEqual([]);
+  });
+
+  it('rationalRotate((1,0), 1) = (0,1)이고 큰 수에서도 길이²가 보존된다', () => {
+    const turned = rationalRotate(gp(1, 0), r(1));
+    expect(turned.x.toString()).toBe('0');
+    expect(turned.y.toString()).toBe('1');
+
+    const big = gp(1_000_000_000, -1_000_000_000);
+    const rotated = rationalRotate(big, r(3, 4));
+    expect(dist2(big, gp(0, 0)).equals(dist2(rotated, gp(0, 0)))).toBe(true);
+  });
+
+  it('평행선 교점은 null이고, 정삼각형 두 각의 sSignedCos2가 같다', () => {
+    expect(lineLineIntersection(gp(0, 0), gp(2, 0), gp(0, 1), gp(2, 1))).toBeNull();
+    const crossing = lineLineIntersection(gp(0, 0), gp(2, 0), gp(1, -1), gp(1, 1));
+    expect(crossing?.x.toString()).toBe('1');
+    expect(crossing?.y.toString()).toBe('0');
+
+    // 한 변이 2인 정삼각형: (0,0), (2,0), (1, √3).
+    const base = toSPoint(gp(0, 0));
+    const other = toSPoint(gp(2, 0));
+    const top = toSPoint(gp(1, 0));
+    const apex: SPoint = { x: top.x, y: makeSurd(r(0), r(1), r(3)) };
+    const first = sSignedCos2(base, other, apex);
+    const second = sSignedCos2(other, apex, base);
+    expect(first).not.toBeNull();
+    expect(second).not.toBeNull();
+    expect(first && second ? surdEquals(first, second) : false).toBe(true);
+  });
+
+  it('분모가 완전제곱일 때만 rationalSqrt가 값을 준다', () => {
+    expect(rationalSqrt(r(9, 16))?.toString()).toBe('3/4');
+    expect(rationalSqrt(r(8))).toBeNull();
+    expect(rationalSqrt(r(-4))).toBeNull();
   });
 });
