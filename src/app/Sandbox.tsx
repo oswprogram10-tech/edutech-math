@@ -17,6 +17,32 @@ interface EngineSandboxProps {
  * 샌드박스 전용 설정. `/?config={"subdivisions":12}#/sandbox/E03`처럼
  * 주소에 엔진 설정을 넘겨 E2E·교사 시연에서 특정 단원 설정을 재현한다.
  */
+interface SandboxOverlay {
+  readonly name: string;
+  readonly args?: unknown;
+}
+
+/**
+ * `?overlay=이름`이 실제 오버레이 이름이면 오버레이 단추가 첫 키 대신 그 이름을 켠다.
+ * `?overlayArgs=`(JSON)는 그 오버레이에 넘길 힌트 인자다(샌드박스 시연·E2E용).
+ */
+function overlayFromUrl(names: readonly string[]): SandboxOverlay | null {
+  if (typeof window === 'undefined') return null;
+  const params = new URLSearchParams(window.location.search);
+  const raw = params.get('overlay');
+  if (!raw || !names.includes(raw)) return null;
+  const rawArgs = params.get('overlayArgs');
+  let args: unknown;
+  if (rawArgs) {
+    try {
+      args = JSON.parse(rawArgs);
+    } catch {
+      args = undefined;
+    }
+  }
+  return { name: raw, args };
+}
+
 function configFromUrl(): Record<string, unknown> {
   if (typeof window === 'undefined') return {};
   const raw = new URLSearchParams(window.location.search).get('config');
@@ -42,6 +68,8 @@ function EngineSandbox({ definition }: EngineSandboxProps) {
   const pinch = usePinch({ initialScale: 1, min: 1, max: 2, step: 0.25 });
   const [targetSize, setTargetSize] = useState<TargetSize>(48);
   const [readOnly, setReadOnly] = useState(false);
+  const overlayNames = Object.keys(definition.overlays ?? {});
+  const urlOverlay = overlayFromUrl(overlayNames);
   const [overlay, setOverlay] = useState<string | null>(null);
 
   // 모드를 바꾸면 그 모드의 초기 상태로 새로 시작한다(기록도 비운다).
@@ -49,7 +77,6 @@ function EngineSandbox({ definition }: EngineSandboxProps) {
     reset(definition.createInitialState(config));
   }, [definition, config, reset]);
 
-  const overlayNames = Object.keys(definition.overlays ?? {});
   const stateMode = (state as { readonly mode?: string }).mode;
   // `mode`가 없는 엔진(E00 등)은 상태를 그대로 보여 준다. 모드가 있는 엔진은
   // 모드 전환 직후 effect가 상태를 새로 만들기 전까지 초기 상태를 보여 준다.
@@ -152,7 +179,11 @@ function EngineSandbox({ definition }: EngineSandboxProps) {
           <button
             type="button"
             aria-pressed={overlay !== null}
-            onClick={() => setOverlay((current) => (current ? null : (overlayNames[0] ?? null)))}
+            onClick={() =>
+              setOverlay((current) =>
+                current ? null : (urlOverlay?.name ?? overlayNames[0] ?? null),
+              )
+            }
           >
             {sandboxStrings.overlay}
           </button>
@@ -176,6 +207,7 @@ function EngineSandbox({ definition }: EngineSandboxProps) {
             overlay={overlay}
             config={config}
             state={activeState}
+            args={urlOverlay?.args}
             scale={pinch.scale}
           />
         ) : null}
