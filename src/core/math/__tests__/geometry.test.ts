@@ -30,6 +30,14 @@ import {
   surdOf,
   toSPoint,
   vsub,
+  isMirrorPair,
+  lineKey,
+  metricDist2,
+  pointReflect,
+  polygonMirrorSymmetric,
+  polygonPointSymmetric,
+  reflectPoint,
+  samePolygon,
 } from '../geometry';
 import type { GPoint, SPoint } from '../geometry';
 import { Rational } from '../rational';
@@ -346,5 +354,131 @@ describe('geometry T101 무리수·교점·회전', () => {
     expect(rationalSqrt(r(9, 16))?.toString()).toBe('3/4');
     expect(rationalSqrt(r(8))).toBeNull();
     expect(rationalSqrt(r(-4))).toBeNull();
+  });
+});
+
+describe('geometry T105 선대칭·점대칭', () => {
+  const rectangle = points([
+    [2, 3],
+    [6, 3],
+    [6, 5],
+    [2, 5],
+  ]);
+
+  it('직사각형은 x=4, y=4 축에 선대칭이고 대각선에는 아니다', () => {
+    expect(polygonMirrorSymmetric(rectangle, gp(4, 0), gp(4, 1), 'euclid')).toBe(true);
+    expect(polygonMirrorSymmetric(rectangle, gp(0, 4), gp(1, 4), 'euclid')).toBe(true);
+    expect(polygonMirrorSymmetric(rectangle, gp(2, 3), gp(6, 5), 'euclid')).toBe(false);
+    // 같은 축을 다른 두 점으로 그어도 결과가 같다.
+    expect(polygonMirrorSymmetric(rectangle, gp(4, 7), gp(4, 9), 'euclid')).toBe(true);
+  });
+
+  it('평행사변형은 선대칭이 아니고 중심 (4, 9/2)에 점대칭이다', () => {
+    const parallelogram = points([
+      [3, 3],
+      [7, 3],
+      [5, 6],
+      [1, 6],
+    ]);
+    expect(polygonMirrorSymmetric(parallelogram, gp(4, 0), gp(4, 1), 'euclid')).toBe(false);
+    expect(polygonMirrorSymmetric(parallelogram, gp(2, 3), gp(6, 6), 'euclid')).toBe(false);
+    const center = { x: Rational.of(4), y: Rational.of(9, 2) };
+    expect(polygonPointSymmetric(parallelogram, center)).toBe(true);
+    expect(polygonPointSymmetric(parallelogram, gp(4, 4))).toBe(false);
+  });
+
+  it('삼각 격자 정육각형은 축 6개 모두 참이고 다른 선은 거짓이다', () => {
+    const hexagon = points([
+      [6, 3],
+      [4, 5],
+      [2, 5],
+      [2, 3],
+      [4, 1],
+      [6, 1],
+    ]);
+    const directions: readonly (readonly [number, number])[] = [
+      [1, 0],
+      [0, 1],
+      [-1, 1],
+      [1, 1],
+      [-1, 2],
+      [-2, 1],
+    ];
+    for (const [dx, dy] of directions) {
+      expect(polygonMirrorSymmetric(hexagon, gp(4, 3), gp(4 + dx, 3 + dy), 'hex')).toBe(true);
+    }
+    expect(polygonMirrorSymmetric(hexagon, gp(6, 3), gp(5, 4), 'hex')).toBe(false);
+  });
+
+  it('isMirrorPair와 pointReflect가 정확히 짝을 찾는다', () => {
+    expect(isMirrorPair(gp(1, 4), gp(7, 4), gp(4, 0), gp(4, 1), 'euclid')).toBe(true);
+    expect(isMirrorPair(gp(1, 4), gp(6, 4), gp(4, 0), gp(4, 1), 'euclid')).toBe(false);
+    expect(isMirrorPair(gp(0, 2), gp(0, 2), gp(0, 0), gp(0, 1), 'euclid')).toBe(true);
+    expect(pointReflect(gp(1, 2), gp(4, 5))).toEqual(gp(7, 8));
+  });
+
+  it('metricDist2가 두 격자 규칙을 구분한다', () => {
+    expect(metricDist2(gp(0, 0), gp(3, 4), 'euclid').toString()).toBe('25');
+    expect(metricDist2(gp(0, 0), gp(1, 1), 'hex').toString()).toBe('3');
+  });
+
+  it('lineKey는 같은 직선을 같은 키로 만든다', () => {
+    expect(lineKey(gp(0, 0), gp(2, 2))).toBe(lineKey(gp(1, 1), gp(3, 3)));
+    expect(lineKey(gp(0, 0), gp(2, 0))).not.toBe(lineKey(gp(0, 0), gp(0, 2)));
+    expect(lineKey(gp(2, 3), gp(6, 5))).toBe(lineKey(gp(6, 5), gp(2, 3)));
+  });
+
+  it('reflectPoint는 유클리드 직선에 대한 거울상이다', () => {
+    expect(reflectPoint(gp(1, 4), gp(4, 0), gp(4, 1))).toEqual(gp(7, 4));
+    expect(reflectPoint(gp(1, 1), gp(0, 0), gp(1, 1))).toEqual(gp(1, 1));
+  });
+
+  it('samePolygon은 시작점 회전과 역순을 허용하고 한 점이 다르면 거짓이다', () => {
+    const square = points([
+      [0, 0],
+      [2, 0],
+      [2, 2],
+      [0, 2],
+    ]);
+    const rotated = points([
+      [2, 0],
+      [2, 2],
+      [0, 2],
+      [0, 0],
+    ]);
+    const reversed = points([
+      [0, 0],
+      [0, 2],
+      [2, 2],
+      [2, 0],
+    ]);
+    const different = points([
+      [0, 0],
+      [2, 0],
+      [2, 2],
+      [1, 2],
+    ]);
+    expect(samePolygon(square, rotated)).toBe(true);
+    expect(samePolygon(square, reversed)).toBe(true);
+    expect(samePolygon(square, different)).toBe(false);
+  });
+
+  it('좌표 10⁹와 넓이 0 다각형에서도 예외 없이 판정한다', () => {
+    const big = 1_000_000_000;
+    const square = points([
+      [big, big],
+      [big + 4, big],
+      [big + 4, big + 4],
+      [big, big + 4],
+    ]);
+    expect(polygonMirrorSymmetric(square, gp(big + 2, 0), gp(big + 2, 1), 'euclid')).toBe(true);
+    expect(metricDist2(gp(big, big), gp(big + 3, big + 4), 'euclid').toString()).toBe('25');
+    const line = points([
+      [0, 0],
+      [2, 0],
+      [5, 0],
+    ]);
+    expect(polygonMirrorSymmetric(line, gp(0, 1), gp(1, 1), 'euclid')).toBe(false);
+    expect(polygonPointSymmetric(line, gp(0, 0))).toBe(false);
   });
 });
