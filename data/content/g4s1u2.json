@@ -1,0 +1,754 @@
+{
+  "unit": "g4s1u2",
+  "title": "각도",
+  "activities": [
+    {
+      "id": "g4s1u2.A1",
+      "title": "각도기 레이저 반사 퍼즐",
+      "tasks": [
+        {
+          "id": "g4s1u2.A1.T1",
+          "prompt": "각도기를 각에 올려 세 각의 크기를 재어 보세요. 각도기를 올린 뒤 눈금을 읽어요.",
+          "engine": "E09",
+          "mode": "angle",
+          "cpa": "C",
+          "config": {
+            "mode": "angle",
+            "angles": [
+              { "id": "a1", "degrees": 40, "base": 20 },
+              { "id": "a2", "degrees": 115, "base": 0 },
+              { "id": "a3", "degrees": 70, "base": 110 }
+            ],
+            "highlightActiveScale": true
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "readingsWithin",
+            "args": { "tolerance": 1 }
+          },
+          "hints": [
+            {
+              "when": { "kind": "predicate", "name": "readWithoutAlign" },
+              "level": 1,
+              "say": "각도기의 0° 선이 각의 변과 겹쳐 있어?"
+            },
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  { "kind": "predicate", "name": "readWithoutAlign" },
+                  { "kind": "equals", "path": "protractorAligned", "value": false },
+                  {
+                    "kind": "any",
+                    "of": [
+                      { "kind": "equals", "path": "protractorOn", "value": "a1" },
+                      { "kind": "equals", "path": "protractorOn", "value": "a2" },
+                      { "kind": "equals", "path": "protractorOn", "value": "a3" }
+                    ]
+                  }
+                ]
+              },
+              "level": 2,
+              "show": { "engine": "E09", "overlay": "zero-gap" },
+              "say": "각도기의 0° 선과 각의 변 사이의 틈을 빨갛게 표시했어요."
+            },
+            {
+              "when": { "kind": "predicate", "name": "readWithoutAlign" },
+              "level": 2,
+              "say": "각도기의 0° 선을 각의 한 변에 맞춘 뒤 다시 읽어 보세요."
+            },
+            {
+              "when": { "kind": "predicate", "name": "readWithoutAlign" },
+              "level": 3,
+              "backtrack": "g4s1u2.angle-measure"
+            },
+            {
+              "when": { "kind": "predicate", "name": "readingFlipped" },
+              "level": 1,
+              "say": "한 변이 0°에 맞은 눈금은 안쪽이야, 바깥쪽이야?"
+            },
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  { "kind": "predicate", "name": "readingFlipped" },
+                  {
+                    "kind": "any",
+                    "of": [
+                      { "kind": "equals", "path": "protractorOn", "value": "a1" },
+                      { "kind": "equals", "path": "protractorOn", "value": "a2" },
+                      { "kind": "equals", "path": "protractorOn", "value": "a3" }
+                    ]
+                  }
+                ]
+              },
+              "level": 2,
+              "show": { "engine": "E09", "overlay": "active-scale" },
+              "say": "0°에서 시작하는 눈금만 남기고 다른 눈금은 흐리게 했어요."
+            },
+            {
+              "when": { "kind": "predicate", "name": "readingFlipped" },
+              "level": 2,
+              "say": "각도기를 올린 뒤 0°에서 시작하는 눈금을 따라 읽어 보세요."
+            },
+            {
+              "when": { "kind": "predicate", "name": "readingFlipped" },
+              "level": 3,
+              "backtrack": "g4s1u2.angle-measure"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "angle" },
+              "level": 1,
+              "say": "각도기를 각에 올리고 한 변을 0°에 맞춘 뒤 눈금을 읽어 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "angle" },
+              "level": 2,
+              "say": "각마다 각도기를 올린 뒤 0°에서 시작하는 눈금을 따라 읽어 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "angle" },
+              "level": 3,
+              "backtrack": "g4s1u2.angle-measure"
+            }
+          ],
+          "concepts": ["g4s1u2.angle-measure"],
+          "submit": "button"
+        },
+        {
+          "id": "g4s1u2.A1.T2",
+          "prompt": "각도기를 올리기 전에 크기를 어림해 보세요. 어림한 뒤 재어서 두 값을 적어요.",
+          "engine": "E09",
+          "mode": "angle",
+          "cpa": "C",
+          "config": {
+            "mode": "angle",
+            "angles": [
+              { "id": "b1", "degrees": 25, "base": 20 },
+              { "id": "b2", "degrees": 150, "base": 10 }
+            ],
+            "highlightActiveScale": true,
+            "estimateFirst": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "readingsWithin", "args": { "tolerance": 1 } },
+              { "kind": "predicate", "name": "estimatesWithin", "args": { "tolerance": 30 } },
+              { "kind": "predicate", "name": "estimatedBeforeReading" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "predicate", "name": "readWithoutAlign" },
+              "level": 1,
+              "say": "각도기의 0° 선이 각의 변과 겹쳐 있어?"
+            },
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  { "kind": "predicate", "name": "readWithoutAlign" },
+                  { "kind": "equals", "path": "protractorAligned", "value": false },
+                  {
+                    "kind": "any",
+                    "of": [
+                      { "kind": "equals", "path": "protractorOn", "value": "b1" },
+                      { "kind": "equals", "path": "protractorOn", "value": "b2" }
+                    ]
+                  }
+                ]
+              },
+              "level": 2,
+              "show": { "engine": "E09", "overlay": "zero-gap" },
+              "say": "각도기의 0° 선과 각의 변 사이의 틈을 빨갛게 표시했어요."
+            },
+            {
+              "when": { "kind": "predicate", "name": "readWithoutAlign" },
+              "level": 2,
+              "say": "각도기의 0° 선을 각의 한 변에 맞춘 뒤 다시 읽어 보세요."
+            },
+            {
+              "when": { "kind": "predicate", "name": "readWithoutAlign" },
+              "level": 3,
+              "backtrack": "g4s1u2.angle-measure"
+            },
+            {
+              "when": { "kind": "predicate", "name": "readingFlipped" },
+              "level": 1,
+              "say": "한 변이 0°에 맞은 눈금은 안쪽이야, 바깥쪽이야?"
+            },
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  { "kind": "predicate", "name": "readingFlipped" },
+                  {
+                    "kind": "any",
+                    "of": [
+                      { "kind": "equals", "path": "protractorOn", "value": "b1" },
+                      { "kind": "equals", "path": "protractorOn", "value": "b2" }
+                    ]
+                  }
+                ]
+              },
+              "level": 2,
+              "show": { "engine": "E09", "overlay": "active-scale" },
+              "say": "0°에서 시작하는 눈금만 남기고 다른 눈금은 흐리게 했어요."
+            },
+            {
+              "when": { "kind": "predicate", "name": "readingFlipped" },
+              "level": 2,
+              "say": "각도기를 올린 뒤 0°에서 시작하는 눈금을 따라 읽어 보세요."
+            },
+            {
+              "when": { "kind": "predicate", "name": "readingFlipped" },
+              "level": 3,
+              "backtrack": "g4s1u2.angle-measure"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "angle" },
+              "level": 1,
+              "say": "두 각의 크기를 먼저 어림하고, 각도기로 잰 값과 견주어 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "angle" },
+              "level": 2,
+              "say": "어림한 각과 잰 각이 30° 안쪽으로 가까운지 살펴보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "angle" },
+              "level": 3,
+              "backtrack": "g4s1u2.angle-measure"
+            }
+          ],
+          "concepts": ["g4s1u2.angle-measure"],
+          "submit": "button"
+        },
+        {
+          "id": "g4s1u2.A1.T3",
+          "prompt": "여섯 각을 보고 예각, 직각, 둔각 상자에 나누어 담아 보세요.",
+          "engine": "E09",
+          "mode": "angle",
+          "cpa": "P",
+          "config": {
+            "mode": "angle",
+            "angles": [
+              { "id": "c1", "degrees": 35, "base": 10 },
+              { "id": "c2", "degrees": 90, "base": 30 },
+              { "id": "c3", "degrees": 125, "base": 0 },
+              { "id": "c4", "degrees": 80, "base": 50 },
+              { "id": "c5", "degrees": 100, "base": 20 },
+              { "id": "c6", "degrees": 90, "base": 0 }
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "response.kind.bins.acute", "value": ["c1", "c4"] },
+              { "kind": "equals", "path": "response.kind.bins.right", "value": ["c2", "c6"] },
+              { "kind": "equals", "path": "response.kind.bins.obtuse", "value": ["c3", "c5"] }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "angle" },
+              "level": 1,
+              "say": "각의 벌어진 정도를 살펴보고 어느 상자에 넣을지 골라 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "angle" },
+              "level": 2,
+              "say": "직각보다 좁은지, 넓은지 하나씩 견주어 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "angle" },
+              "level": 3,
+              "backtrack": "g4s1u2.acute-obtuse"
+            }
+          ],
+          "concepts": ["g4s1u2.acute-obtuse"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "sort",
+                "id": "kind",
+                "label": "각 나누기",
+                "cards": [
+                  { "id": "c1", "label": "각 1" },
+                  { "id": "c2", "label": "각 2" },
+                  { "id": "c3", "label": "각 3" },
+                  { "id": "c4", "label": "각 4" },
+                  { "id": "c5", "label": "각 5" },
+                  { "id": "c6", "label": "각 6" }
+                ],
+                "bins": [
+                  { "id": "acute", "label": "예각" },
+                  { "id": "right", "label": "직각" },
+                  { "id": "obtuse", "label": "둔각" }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g4s1u2.A1.T4",
+          "prompt": "별에 닿도록 발사 각을 정해 쏘아 보세요. 각도기를 발사대에 올려 재어 볼 수 있어요.",
+          "engine": "E09",
+          "mode": "angle",
+          "cpa": "C",
+          "config": {
+            "mode": "angle",
+            "puzzle": { "type": "laser-mirror", "targetAngle": 135 },
+            "estimateFirst": true,
+            "highlightActiveScale": true
+          },
+          "goal": { "kind": "predicate", "name": "laserHit" },
+          "hints": [
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  { "kind": "equals", "path": "puzzle.fired.0", "value": 45 },
+                  { "kind": "equals", "path": "puzzle.fired.1", "value": 45 },
+                  { "kind": "equals", "path": "puzzle.fired.2", "value": 45 },
+                  { "kind": "equals", "path": "puzzle.fired.3", "value": 45 },
+                  { "kind": "equals", "path": "puzzle.fired.4", "value": 45 },
+                  { "kind": "equals", "path": "puzzle.fired.5", "value": 45 }
+                ]
+              },
+              "level": 1,
+              "say": "한 변이 0°에 맞은 눈금은 안쪽이야, 바깥쪽이야?"
+            },
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  {
+                    "kind": "any",
+                    "of": [
+                      { "kind": "equals", "path": "puzzle.fired.0", "value": 45 },
+                      { "kind": "equals", "path": "puzzle.fired.1", "value": 45 },
+                      { "kind": "equals", "path": "puzzle.fired.2", "value": 45 },
+                      { "kind": "equals", "path": "puzzle.fired.3", "value": 45 },
+                      { "kind": "equals", "path": "puzzle.fired.4", "value": 45 },
+                      { "kind": "equals", "path": "puzzle.fired.5", "value": 45 }
+                    ]
+                  },
+                  { "kind": "equals", "path": "protractorOn", "value": "launcher" }
+                ]
+              },
+              "level": 2,
+              "show": { "engine": "E09", "overlay": "active-scale" },
+              "say": "발사대에서 0°로 시작하는 눈금만 남기고 다른 눈금은 흐리게 했어요."
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  { "kind": "equals", "path": "puzzle.fired.0", "value": 45 },
+                  { "kind": "equals", "path": "puzzle.fired.1", "value": 45 },
+                  { "kind": "equals", "path": "puzzle.fired.2", "value": 45 },
+                  { "kind": "equals", "path": "puzzle.fired.3", "value": 45 },
+                  { "kind": "equals", "path": "puzzle.fired.4", "value": 45 },
+                  { "kind": "equals", "path": "puzzle.fired.5", "value": 45 }
+                ]
+              },
+              "level": 2,
+              "say": "발사대에 각도기를 올려 0°에서 시작하는 눈금을 따라가 보세요."
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  { "kind": "equals", "path": "puzzle.fired.0", "value": 45 },
+                  { "kind": "equals", "path": "puzzle.fired.1", "value": 45 },
+                  { "kind": "equals", "path": "puzzle.fired.2", "value": 45 },
+                  { "kind": "equals", "path": "puzzle.fired.3", "value": 45 },
+                  { "kind": "equals", "path": "puzzle.fired.4", "value": 45 },
+                  { "kind": "equals", "path": "puzzle.fired.5", "value": 45 }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g4s1u2.angle-measure"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "angle" },
+              "level": 1,
+              "say": "발사대에 각도기를 올려 발사 각을 어림해 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "angle" },
+              "level": 2,
+              "say": "각도기의 눈금을 따라가며 별에 닿는 발사 각을 찾아보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "angle" },
+              "level": 3,
+              "backtrack": "g4s1u2.angle-measure"
+            }
+          ],
+          "concepts": ["g4s1u2.angle-measure"],
+          "submit": "button"
+        },
+        {
+          "id": "g4s1u2.A1.T5",
+          "prompt": "두 각도의 합과 차를 계산해 보세요.",
+          "engine": "E09",
+          "mode": "angle",
+          "cpa": "A",
+          "config": { "mode": "angle" },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "response.sum.value", "value": "105" },
+              { "kind": "equals", "path": "response.diff.value", "value": "65" }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "angle" },
+              "level": 1,
+              "say": "두 각을 이어 붙이거나 덜어 내면 몇 도가 되는지 생각해 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "angle" },
+              "level": 2,
+              "say": "60°에서 45°만큼 더 가 보세요. 150°에서 85°만큼 뒤로 가 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "angle" },
+              "level": 3,
+              "backtrack": "g4s1u2.angle-add-sub"
+            }
+          ],
+          "concepts": ["g4s1u2.angle-add-sub"],
+          "submit": "button",
+          "showEngine": false,
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "sum",
+                "label": "60° + 45°",
+                "forms": ["integer"]
+              },
+              {
+                "kind": "number",
+                "id": "diff",
+                "label": "150° − 85°",
+                "forms": ["integer"]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g4s1u2.A1.T6",
+          "prompt": "두 각 중 어느 각이 더 클까요? 각도기로 재어 봐도 돼요.",
+          "engine": "E09",
+          "mode": "angle",
+          "cpa": "P",
+          "config": {
+            "mode": "angle",
+            "angles": [
+              { "id": "a1", "degrees": 45, "base": 15, "arms": [1, 1] },
+              { "id": "a2", "degrees": 70, "base": 15, "arms": [0.45, 0.45] }
+            ]
+          },
+          "goal": { "kind": "equals", "path": "response.cmp.selected", "value": ["a2"] },
+          "hints": [
+            {
+              "when": { "misconception": "MC-ANGLE-SIDE-LENGTH" },
+              "level": 1,
+              "say": "각의 크기는 변의 길이일까, 벌어진 정도일까?"
+            },
+            {
+              "when": { "misconception": "MC-ANGLE-SIDE-LENGTH" },
+              "level": 2,
+              "show": { "engine": "E09", "overlay": "equal-arms" },
+              "say": "두 각의 변을 같은 길이로 잘라 겹쳐 보았어요."
+            },
+            {
+              "when": { "misconception": "MC-ANGLE-SIDE-LENGTH" },
+              "level": 3,
+              "backtrack": "g3s1u2.angle-right-angle"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "angle" },
+              "level": 1,
+              "say": "각도기로 두 각을 각각 재어 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "angle" },
+              "level": 2,
+              "say": "재어 본 두 값을 견주어 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "angle" },
+              "level": 3,
+              "backtrack": "g4s1u2.angle-measure"
+            }
+          ],
+          "concepts": ["g4s1u2.angle-measure"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-ANGLE-SIDE-LENGTH",
+              "args": { "trap": "a1" },
+              "path": "response.cmp.selected.0"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "cmp",
+                "label": "어느 각이 더 클까요?",
+                "multiple": false,
+                "options": [
+                  { "id": "a1", "label": "각 1이 더 커요" },
+                  { "id": "a2", "label": "각 2가 더 커요" },
+                  { "id": "same", "label": "두 각의 크기가 같아요" }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "g4s1u2.A2",
+      "title": "꼭짓점 잘라 모으기",
+      "tasks": [
+        {
+          "id": "g4s1u2.A2.T1",
+          "prompt": "삼각형의 세 꼭짓점을 잘라 한 점에 모아 보세요. 모은 각이 어떻게 이어지는지 살펴보세요.",
+          "engine": "E11",
+          "mode": "angle-gather",
+          "cpa": "C",
+          "config": {
+            "mode": "angle-gather",
+            "shape": "triangle",
+            "deformable": true,
+            "showSum": "after-gather"
+          },
+          "goal": { "kind": "predicate", "name": "gatheredSumIs", "args": { "value": 180 } },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "angle-gather" },
+              "level": 1,
+              "say": "꼭짓점을 하나씩 잘라 한 점에 모아 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "angle-gather" },
+              "level": 2,
+              "say": "모은 각이 어떻게 이어지는지 살펴보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "angle-gather" },
+              "level": 3,
+              "backtrack": "g4s1u2.triangle-sum"
+            }
+          ],
+          "concepts": ["g4s1u2.triangle-sum"],
+          "submit": "button"
+        },
+        {
+          "id": "g4s1u2.A2.T2",
+          "prompt": "삼각형을 크게 바꾼 뒤 세 각을 다시 모아 보세요. 모은 각이 어떻게 될지 먼저 골라 보세요.",
+          "engine": "E11",
+          "mode": "angle-gather",
+          "cpa": "C",
+          "config": {
+            "mode": "angle-gather",
+            "shape": "triangle",
+            "deformable": true,
+            "showSum": "after-gather",
+            "repeatTrials": 3
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "distinctTrials",
+                "args": { "count": 3, "sum": 180 }
+              },
+              { "kind": "equals", "path": "response.p.selected", "value": ["same"] }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-ANGLE-SUM-SHAPE-DEPENDENT" },
+              "level": 1,
+              "say": "아까 작은 삼각형에선 몇 °였지? 큰 삼각형에서도 모아 볼까?"
+            },
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  { "kind": "equals", "path": "response.p.selected.0", "value": "bigger" },
+                  { "kind": "predicate", "name": "distinctTrials", "args": { "count": 1 } }
+                ]
+              },
+              "level": 2,
+              "show": { "engine": "E11", "overlay": "trial-compare" },
+              "say": "모양이 다른 삼각형을 나란히 그려 보았어요."
+            },
+            {
+              "when": { "misconception": "MC-ANGLE-SUM-SHAPE-DEPENDENT" },
+              "level": 2,
+              "say": "삼각형을 크게 바꾼 뒤 세 각을 다시 모아 보세요."
+            },
+            {
+              "when": { "misconception": "MC-ANGLE-SUM-SHAPE-DEPENDENT" },
+              "level": 3,
+              "backtrack": "g4s1u2.triangle-sum"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "angle-gather" },
+              "level": 1,
+              "say": "삼각형 모양을 바꾸어도 세 각을 모은 결과가 같은지 살펴보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "angle-gather" },
+              "level": 2,
+              "say": "서로 다른 삼각형 세 개에서 모아 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "angle-gather" },
+              "level": 3,
+              "backtrack": "g4s1u2.triangle-sum"
+            }
+          ],
+          "concepts": ["g4s1u2.triangle-sum"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-ANGLE-SUM-SHAPE-DEPENDENT",
+              "args": { "trap": "bigger" },
+              "path": "response.p.selected.0"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "p",
+                "label": "삼각형을 크게 바꾸면 모은 각은?",
+                "multiple": false,
+                "options": [
+                  { "id": "bigger", "label": "더 커져요" },
+                  { "id": "same", "label": "똑같아요" },
+                  { "id": "smaller", "label": "더 작아져요" }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g4s1u2.A2.T3",
+          "prompt": "사각형의 네 꼭짓점을 잘라 한 점에 모아 보세요. 모은 각이 어떻게 이어지는지 살펴보세요.",
+          "engine": "E11",
+          "mode": "angle-gather",
+          "cpa": "C",
+          "config": {
+            "mode": "angle-gather",
+            "shape": "quadrilateral",
+            "deformable": true,
+            "showSum": "after-gather"
+          },
+          "goal": { "kind": "predicate", "name": "gatheredSumIs", "args": { "value": 360 } },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "angle-gather" },
+              "level": 1,
+              "say": "네 꼭짓점을 모두 잘라 한 점에 모아 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "angle-gather" },
+              "level": 2,
+              "say": "모은 각의 합이 어떻게 되는지 살펴보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "angle-gather" },
+              "level": 3,
+              "backtrack": "g4s1u2.quad-sum"
+            }
+          ],
+          "concepts": ["g4s1u2.quad-sum"],
+          "submit": "button"
+        },
+        {
+          "id": "g4s1u2.A2.T4",
+          "prompt": "두 각이 50°, 75°인 삼각형의 나머지 한 각은 몇 도일까요?",
+          "engine": "E11",
+          "mode": "angle-gather",
+          "cpa": "A",
+          "config": { "mode": "angle-gather", "shape": "triangle" },
+          "goal": { "kind": "equals", "path": "response.rest.value", "value": "55" },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "angle-gather" },
+              "level": 1,
+              "say": "삼각형의 세 각을 모으면 어떻게 되는지 떠올려 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "angle-gather" },
+              "level": 2,
+              "say": "50°와 75°를 더한 뒤 나머지를 생각해 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "angle-gather" },
+              "level": 3,
+              "backtrack": "g4s1u2.triangle-sum"
+            }
+          ],
+          "concepts": ["g4s1u2.triangle-sum"],
+          "submit": "button",
+          "showEngine": false,
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "rest", "label": "나머지 한 각", "forms": ["integer"] }
+            ]
+          }
+        },
+        {
+          "id": "g4s1u2.A2.T5",
+          "prompt": "세 각이 80°, 95°, 70°인 사각형의 나머지 한 각은 몇 도일까요?",
+          "engine": "E11",
+          "mode": "angle-gather",
+          "cpa": "A",
+          "config": { "mode": "angle-gather", "shape": "quadrilateral" },
+          "goal": { "kind": "equals", "path": "response.rest.value", "value": "115" },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "angle-gather" },
+              "level": 1,
+              "say": "사각형의 네 각을 모으면 어떻게 되는지 떠올려 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "angle-gather" },
+              "level": 2,
+              "say": "80°, 95°, 70°를 더한 뒤 나머지를 생각해 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "angle-gather" },
+              "level": 3,
+              "backtrack": "g4s1u2.quad-sum"
+            }
+          ],
+          "concepts": ["g4s1u2.quad-sum"],
+          "submit": "button",
+          "showEngine": false,
+          "response": {
+            "fields": [
+              { "kind": "number", "id": "rest", "label": "나머지 한 각", "forms": ["integer"] }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
