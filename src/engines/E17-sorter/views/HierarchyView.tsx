@@ -172,6 +172,7 @@ export function HierarchyView({
               const isBlank = state.settings.treeBlanks.includes(treeNode.name);
               const value = state.blanks[treeNode.name] ?? null;
               const current = showPosition && node === treeNode.name;
+              const blankNumber = state.settings.treeBlanks.indexOf(treeNode.name) + 1;
               return (
                 <g
                   key={treeNode.name}
@@ -179,7 +180,9 @@ export function HierarchyView({
                   tabIndex={isBlank && !readOnly ? 0 : undefined}
                   aria-label={
                     isBlank
-                      ? `${S.hierarchy.blankEmpty} ${S.quadName[treeNode.name]}`
+                      ? value === null
+                        ? S.hierarchy.blankPosition(blankNumber)
+                        : S.quadName[value]
                       : S.quadName[treeNode.name]
                   }
                   data-blank={isBlank ? treeNode.name : undefined}

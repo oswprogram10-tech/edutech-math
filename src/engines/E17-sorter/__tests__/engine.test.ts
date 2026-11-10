@@ -300,10 +300,17 @@ describe('E17 역할 바꾸기', () => {
     startRole: 'answerer',
   };
 
-  it('q12를 고르면 컴퓨터 첫 질문이 평행한 변 두 쌍이다', () => {
-    const state = asSecret(apply(config, [{ type: 'swap-pick', card: 'q12' }]));
+  it('q12를 고르면 역할 바꾸기 질문 순서 전체가 고정된다', () => {
+    let state = asSecret(apply(config, [{ type: 'swap-pick', card: 'q12' }]));
     expect(state.swap.secret).toBe('q12');
-    expect(state.swap.pending).toBe('parallel-pairs==2');
+    const order: string[] = [];
+    while (state.swap.pending !== null) {
+      order.push(state.swap.pending);
+      state = asSecret(reduce(state, { type: 'swap-answer', answer: true }));
+    }
+    expect(order).toEqual(['parallel-pairs==2', 'all-sides-equal', 'has-right-angle']);
+    expect(state.swap.done).toBe(true);
+    expect(state.swap.candidates).toHaveLength(3);
   });
 
   it('틀린 답은 swapErrors 1로 기록하고 후보는 truth로 거른다', () => {
@@ -322,6 +329,14 @@ describe('E17 역할 바꾸기', () => {
     const observation = observe(state);
     expect(observation['swapErrors']).toBe(1);
     expect(predicates['swapNoErrors']?.(observation, undefined)).toBe(false);
+  });
+
+  it('roleSwap: false면 switch-role이 역할을 바꾸지 않는다', () => {
+    const state = asSecret(
+      createInitialState({ mode: 'secret-rule', seed: 1, roleSwap: false, startRole: 'answerer' }),
+    );
+    const next = asSecret(reduce(state, { type: 'switch-role', role: 'guesser' }));
+    expect(next.role).toBe('answerer');
   });
 
   it('나머지를 모두 맞히면 done이고 후보가 남는다', () => {

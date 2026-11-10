@@ -49,7 +49,8 @@ export const sorterStrings = {
     rowHeader: '각',
     colHeader: '변',
     heldStatus: (label: string) => `${label}을(를) 들었어요. 놓을 칸을 골라요.`,
-    impossibleStatus: (cell: string) => `이 칸을 불가능으로 표시했어요: ${cell}`,
+    impossibleOn: (row: string, col: string) => `${row}·${col} 칸을 불가능으로 표시했어요.`,
+    impossibleOff: (row: string, col: string) => `${row}·${col} 칸의 불가능 표시를 풀었어요.`,
     checkedStatus: (right: number, wrong: number) =>
       wrong > 0
         ? `맞는 카드 ${right}장, 다시 볼 카드 ${wrong}장이에요.`
@@ -150,7 +151,7 @@ export const sorterStrings = {
     toggleTitle: '조건',
     nameTitle: '이름 카드',
     heldStatus: (name: string) => `${name} 카드를 들었어요. 빈칸을 골라요.`,
-    blankEmpty: '빈칸',
+    blankPosition: (number: number) => `빈칸 ${number}`,
     nowShape: '지금 모양',
     shapeLabel: '지금 만든 모양',
     treeLabel: '사각형 이름 트리',

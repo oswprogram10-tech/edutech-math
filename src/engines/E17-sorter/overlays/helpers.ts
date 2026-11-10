@@ -1,6 +1,6 @@
 /**
- * E17 ?�버?�이 공용 ?�우�? ?�답(?�느 칸·어???�름)?� 계산?��? ?�는??
- * ?�생???�룬 카드 ?�나�?고르거나, ?�재 모양???�질�??�시 계산?�다.
+ * E17 오버레이 공용 도우미. 정답(어느 칸·어느 이름)을 계산하지 않는다.
+ * 학생이 그린 카드 하나를 고르거나, 지금 모양의 성질을 다시 계산한다.
  */
 import { dist2Scaled } from '../../../core/math';
 import { boxCenter, PANEL, secretCardBox, vennCardFrame } from '../layout';
@@ -30,7 +30,7 @@ function cardIn(deck: 'triangles-12' | 'quadrilaterals-16', id: CardId | null): 
   return deckCards(deck).find((card) => card.id === id) ?? null;
 }
 
-/** ?�버?�이 ?�??카드. `args.card` ??모드 기본�????�으�?null. */
+/** 오버레이 대상 카드. rgs.card가 없으면 모드 기본값에서 고르고, 없으면 null. */
 export function targetCard(state: SorterState, args: unknown): DeckCard | null {
   const requested = stringArg(argsOf(args), 'card');
   if (state.mode === 'venn') {
@@ -44,7 +44,7 @@ export function targetCard(state: SorterState, args: unknown): DeckCard | null {
   return null;
 }
 
-/** ?�보�????�에 카드 ?�나가 ?�게 ?�어가??배율. */
+/** 오버레이 패널에 카드 하나가 크게 들어가는 배율. */
 export function panelUnit(card: DeckCard): number {
   return deckUnit([card], PANEL.width - 80, PANEL.height - 120, 20);
 }
@@ -53,7 +53,7 @@ export function panelCenter(): { readonly x: number; readonly y: number } {
   return boxCenter(PANEL);
 }
 
-/** ?�??카드???�제 ?�면 ?�리(굵�? ?�두리용). */
+/** 이 카드가 실제 그려진 자리(굵은 테두리용). */
 export function cardFrameOf(
   state: SorterState,
   card: DeckCard,
@@ -75,7 +75,7 @@ export function cardFrameOf(
   return null;
 }
 
-/** 밑�??�로 ??변 번호. ?�각?��? 길이가 ?�나뿐인 변, ?�으�?가??�?변. ?�각?��? 가??�?변. */
+/** 밑변으로 쓸 변 번호. 삼각형은 길이가 하나뿐인 변, 없으면 가장 긴 변. 사각형은 가장 긴 변. */
 export function baseSideIndex(card: DeckCard): number {
   const points = cardPoints(card);
   const scale = cardScale(card);
@@ -101,7 +101,7 @@ export function baseSideIndex(card: DeckCard): number {
   return best;
 }
 
-/** ?�버?�이??P ?�시???�정 `marks`�?본다(?�버?�이????�� C ?�계 ??. */
+/** 오버레이의 P 표시는 설정 marks를 본다(오버레이에서는 C 단계 제외). */
 export function marksOn(config: SorterConfig): boolean {
   const record = argsOf(config);
   return record['marks'] !== 'hide';

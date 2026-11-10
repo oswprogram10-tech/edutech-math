@@ -366,7 +366,7 @@ function reduceSecret(state: SecretRuleState, action: SorterAction): SecretRuleS
       };
     }
     case 'switch-role': {
-      if (!state.settings.roleSwap && action.role !== state.settings.startRole) return state;
+      if (!state.settings.roleSwap) return state;
       if (state.role === action.role) return state;
       return { ...state, role: action.role, swap: emptySwap() };
     }

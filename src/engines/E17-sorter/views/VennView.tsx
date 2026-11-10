@@ -25,7 +25,7 @@ import {
   vennTargetAt,
   vennTrayBox,
 } from '../layout';
-import { cellKey, fitsCell } from '../properties';
+import { cellKey, fitsCell, parseCell } from '../properties';
 import { sorterStrings as S } from '../strings.ko';
 import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../types';
 import type {
@@ -63,7 +63,9 @@ export function VennView({ state, dispatch, cpa, readOnly = false, targetSize }:
   const hit = Math.max(10, Math.ceil(minTouchRadius(targetSize, rendered, LOGICAL)));
   const cards = deckCards(state.deck);
   const trayUnit = deckUnit(cards, VENN_TRAY_CELL.width, VENN_TRAY_CELL.height, 14);
-  const cellUnit = deckUnit(cards, VENN_CELL_WIDTH / 3, VENN_CELL_HEIGHT / 2, 8);
+  // 한 칸에 12장까지 들어가도록 4×3 슬롯으로 나눈다. 예전 3×2에서는 7장째부터
+  // 그려지지 않아 키보드로도 닿지 않았다.
+  const cellUnit = deckUnit(cards, VENN_CELL_WIDTH / 4, VENN_CELL_HEIGHT / 3, 6);
   const [held, setHeld] = useState<CardId | null>(null);
   const [impossibleTool, setImpossibleTool] = useState(false);
   const [status, setStatus] = useState('');
@@ -85,6 +87,15 @@ export function VennView({ state, dispatch, cpa, readOnly = false, targetSize }:
   const place = (card: CardId, cell: string | null) => {
     dispatch({ type: 'place', card, cell });
     setHeld(null);
+  };
+
+  // 상태 문구는 내부 칸 키(acute|equilateral)가 아니라 학생이 보는 행·열 이름을 쓴다.
+  const impossibleMessage = (cell: string, wasMarked: boolean): string => {
+    const parsed = parseCell(cell);
+    if (!parsed) return '';
+    const row = S.angleCondition[parsed.row as AngleCondition] ?? parsed.row;
+    const col = S.sideCondition[parsed.col as SideCondition] ?? parsed.col;
+    return wasMarked ? S.venn.impossibleOff(row, col) : S.venn.impossibleOn(row, col);
   };
 
   const feedbackFor = (card: CardId): boolean | null => {
@@ -135,8 +146,9 @@ export function VennView({ state, dispatch, cpa, readOnly = false, targetSize }:
         if (!row || !col) return;
         const cell = cellKey(row, col);
         if (impossibleTool) {
+          const wasMarked = state.impossible.includes(cell);
           dispatch({ type: 'toggle-impossible', cell });
-          setStatus(S.venn.impossibleStatus(cell));
+          setStatus(impossibleMessage(cell, wasMarked));
           return;
         }
         if (held) place(held, cell);
@@ -158,8 +170,9 @@ export function VennView({ state, dispatch, cpa, readOnly = false, targetSize }:
     if (event.key !== 'Enter' && event.key !== ' ' && event.key !== 'Spacebar') return;
     event.preventDefault();
     if (impossibleTool) {
+      const wasMarked = state.impossible.includes(cell);
       dispatch({ type: 'toggle-impossible', cell });
-      setStatus(S.venn.impossibleStatus(cell));
+      setStatus(impossibleMessage(cell, wasMarked));
       return;
     }
     if (held) place(held, cell);
@@ -284,7 +297,8 @@ export function VennView({ state, dispatch, cpa, readOnly = false, targetSize }:
               const cell = cellKey(row, col);
               const box = vennCellBox(rowIndex, colIndex);
               const marked = state.impossible.includes(cell);
-              const inside = (placedByCell.get(cell) ?? []).slice(0, 6);
+              const cellCards = placedByCell.get(cell) ?? [];
+              const inside = cellCards.slice(0, 12);
               const shown = inside.map((cardId) => feedbackFor(cardId));
               const hasWrong = shown.includes(false);
               const hasRight = shown.includes(true);
@@ -335,7 +349,7 @@ export function VennView({ state, dispatch, cpa, readOnly = false, targetSize }:
                       </text>
                     </g>
                   ) : null}
-                  {inside.length > 6 ? (
+                  {cellCards.length > 12 ? (
                     <text
                       x={box.x + box.width - 12}
                       y={box.y + box.height - 12}
@@ -345,7 +359,7 @@ export function VennView({ state, dispatch, cpa, readOnly = false, targetSize }:
                       fill={INK}
                       pointerEvents="none"
                     >
-                      {S.venn.moreCards(inside.length - 6)}
+                      {S.venn.moreCards(cellCards.length - 12)}
                     </text>
                   ) : null}
                 </g>
@@ -357,15 +371,15 @@ export function VennView({ state, dispatch, cpa, readOnly = false, targetSize }:
             cols.map((col, colIndex) => {
               const cell = cellKey(row, col);
               const box = vennCellBox(rowIndex, colIndex);
-              const inside = (placedByCell.get(cell) ?? []).slice(0, 6);
-              const slotWidth = box.width / 3;
-              const slotHeight = box.height / 2;
+              const inside = (placedByCell.get(cell) ?? []).slice(0, 12);
+              const slotWidth = box.width / 4;
+              const slotHeight = box.height / 3;
               return inside.map((cardId, index) => {
                 const card = cards.find((candidate) => candidate.id === cardId);
                 if (!card) return null;
                 const center = {
-                  x: box.x + (index % 3) * slotWidth + slotWidth / 2,
-                  y: box.y + Math.floor(index / 3) * slotHeight + slotHeight / 2,
+                  x: box.x + (index % 4) * slotWidth + slotWidth / 2,
+                  y: box.y + Math.floor(index / 4) * slotHeight + slotHeight / 2,
                 };
                 const feedback = feedbackFor(cardId);
                 return (

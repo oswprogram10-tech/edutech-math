@@ -384,12 +384,12 @@ export function vennCardFrame(state: VennState, cardId: string): CardFrame | nul
   const box = vennCellBox(row, col);
   const inCell = deckIds(state.deck).filter((id) => state.placements[id] === cell);
   const position = Math.max(0, inCell.indexOf(cardId));
-  const slotWidth = box.width / 3;
-  const slotHeight = box.height / 2;
+  const slotWidth = box.width / 4;
+  const slotHeight = box.height / 3;
   return {
     box: {
-      x: box.x + (position % 3) * slotWidth,
-      y: box.y + Math.floor(position / 3) * slotHeight,
+      x: box.x + (position % 4) * slotWidth,
+      y: box.y + Math.floor(position / 4) * slotHeight,
       width: slotWidth,
       height: slotHeight,
     },

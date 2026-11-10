@@ -1,8 +1,8 @@
 /**
- * E17 카드 ?�나 그리�?+ P ?�계 ?�시(?�금·직각·�??�·평???�살??.
+ * E17 카드 하나 그리기 + P 단계 표시(눈금·직각·각호·평행 화살표).
  *
- * 카드?�는 글?��? ?��? ?�는?? ?�름·각도·길이???�면?�도 Observation?�도 ?�다.
- * 좌표�??�면 number?�고, ?�질?� `properties.ts`???�확 계산 값을 그�?�?그린??
+ * 카드에는 글자를 쓰지 않는다. 이름·각도·길이는 화면에도 Observation에도 없다.
+ * 좌표만 화면 number이고, 성질은 properties.ts의 정확 계산 값을 그대로 그린다.
  */
 import { angleKindScaled } from '../../../core/math';
 import type { Point } from '../../../core/engine-sdk';
@@ -52,7 +52,7 @@ function add(point: Point, dir: Point, length: number): Point {
   return { x: point.x + dir.x * length, y: point.y + dir.y * length };
 }
 
-/** �?��??v?�서 a·b 쪽으�?반�?�?r??부채꼴 ?�두�?경로. */
+/** 꼭짓점 v에서 a·b 쪽으로 반지름 r인 부채꼴 호의 경로. */
 export function arcPath(vertex: Point, a: Point, b: Point, radius: number): string {
   const startAngle = Math.atan2(a.y - vertex.y, a.x - vertex.x);
   const endAngle = Math.atan2(b.y - vertex.y, b.x - vertex.x);
@@ -71,7 +71,7 @@ export function arcPath(vertex: Point, a: Point, b: Point, radius: number): stri
   return `M ${xy(start)} A ${radius} ${radius} 0 0 ${sweep} ${xy(end)}`;
 }
 
-/** �?��?�에????변 ?�이�?칠한 부채꼴. */
+/** 꼭짓점에 이웃한 두 변 사이를 칠한 부채꼴. */
 export function sectorPath(vertex: Point, a: Point, b: Point, radius: number): string {
   return `${arcPath(vertex, a, b, radius)} L ${xy(vertex)} Z`;
 }
@@ -299,9 +299,9 @@ export interface CardShapeProps {
   readonly unit: number;
   readonly center: Point;
   readonly showMarks: boolean;
-  /** 지??카드: ?�집??무늬 + ??*/
+  /** 지운 카드: 뒤집힌 무늬 + X. */
   readonly erased?: boolean;
-  /** 반투�?겹쳐 그리�??�트 ??. */
+  /** 반투명하게 겹쳐 그리는 고스트 카드. */
   readonly ghost?: boolean;
   readonly tone?: string;
 }
@@ -346,8 +346,8 @@ export function CardShape({
 }
 
 /**
- * ?�들??밑�? `baseIndex`가 ?�평 ?�래???�도�??�려 `box` ?�에 맞춘??
- * ?�트 ??`upright-card`가 ?�다(?�면 좌표 계산�?.
+ * 바닥에 놓인 변 aseIndex가 수평 아래로 가도록 돌려 ox 안에 맞춘다.
+ * 오버레이 upright-card가 쓴다(화면 좌표 계산만).
  */
 export function uprightPolygon(
   points: readonly Point[],

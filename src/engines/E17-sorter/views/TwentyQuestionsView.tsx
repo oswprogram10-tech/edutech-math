@@ -90,7 +90,12 @@ export function TwentyQuestionsView({
             <rect width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} fill={PAPER} />
             {cards.map((card, index) => {
               const box = secretCardBox(index);
-              const eliminated = state.eliminated.includes(card.id);
+              // 답하는 역할에서는 학생이 고른 카드와 컴퓨터가 지운 카드만 쓴다.
+              // state.eliminated는 맞히는 역할의 기록이라 여기서 쓰지 않는다.
+              const eliminated =
+                state.role === 'answerer'
+                  ? state.swap.secret !== null && !state.swap.candidates.includes(card.id)
+                  : state.eliminated.includes(card.id);
               const mine = state.role === 'answerer' && state.swap.secret === card.id;
               const isSecret = state.solved && state.secret === card.id;
               const candidate =
@@ -312,7 +317,7 @@ export function TwentyQuestionsView({
             {state.role === 'guesser' && state.solved ? S.secret.solved : ''}
           </p>
 
-          {state.settings.roleSwap || state.settings.startRole === 'answerer' ? (
+          {state.settings.roleSwap ? (
             <button
               type="button"
               className={styles.button}
