@@ -223,8 +223,7 @@ export const geoBoardStrings = {
 
   perimeter: {
     canvasLabel: '둘레가 고정된 고무줄 직사각형을 살펴보는 판',
-    instructions:
-      '오른쪽 아래 손잡이를 끌어 직사각형을 바꿔 보세요. 둘레는 그대로이고 넓이가 달라져요.',
+    instructions: '오른쪽 아래 손잡이를 끌어 직사각형을 바꿔 보세요.',
     perimeterLabel: (value: number) => `둘레 ${value}`,
     areaLabel: (value: number) => `넓이 ${value}`,
     widthLabel: (value: number) => `가로 ${value}`,
