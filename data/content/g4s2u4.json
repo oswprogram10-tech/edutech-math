@@ -23,66 +23,133 @@
           "goal": {
             "kind": "all",
             "of": [
-              { "kind": "predicate", "name": "solvedConsistently" },
+              {
+                "kind": "predicate",
+                "name": "solvedConsistently"
+              },
               {
                 "kind": "any",
                 "of": [
-                  { "kind": "equals", "path": "guessCount", "value": 1 },
-                  { "kind": "equals", "path": "guessCount", "value": 2 }
+                  {
+                    "kind": "equals",
+                    "path": "guessCount",
+                    "value": 1
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "guessCount",
+                    "value": 2
+                  }
                 ]
               }
             ]
           },
           "hints": [
             {
-              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-GEO-RHOMBUS-ORIENT" } },
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-GEO-RHOMBUS-ORIENT"
+                }
+              },
               "level": 1,
               "say": "네 변의 길이와 각을 다시 살펴볼까요? 질문의 답과 정말 맞지 않나요?"
             },
             {
-              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-GEO-RHOMBUS-ORIENT" } },
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-GEO-RHOMBUS-ORIENT"
+                }
+              },
               "level": 2,
-              "show": { "engine": "E17", "overlay": "upright-card" },
+              "show": {
+                "engine": "E17",
+                "overlay": "upright-card"
+              },
               "say": "카드를 돌려 바로 세운 모습을 겹쳐 그렸어요."
             },
             {
-              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-GEO-RHOMBUS-ORIENT" } },
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-GEO-RHOMBUS-ORIENT"
+                }
+              },
               "level": 3,
               "backtrack": "g4s2u4.quad-definitions"
             },
             {
-              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-GEO-PROTOTYPE-ONLY" } },
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-GEO-PROTOTYPE-ONLY"
+                }
+              },
               "level": 1,
               "say": "질문의 답과 이 카드의 성질이 정말 맞지 않나요?"
             },
             {
-              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-GEO-PROTOTYPE-ONLY" } },
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-GEO-PROTOTYPE-ONLY"
+                }
+              },
               "level": 2,
-              "show": { "engine": "E17", "overlay": "card-properties" },
+              "show": {
+                "engine": "E17",
+                "overlay": "card-properties"
+              },
               "say": "지운 카드가 물은 질문에 어떻게 답하는지 적었어요."
             },
             {
-              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-GEO-PROTOTYPE-ONLY" } },
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-GEO-PROTOTYPE-ONLY"
+                }
+              },
               "level": 3,
               "backtrack": "g4s2u4.quad-definitions"
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "secret-rule" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "secret-rule"
+              },
               "level": 1,
               "say": "남은 카드가 질문의 답과 모두 맞는지 살펴봤나요? 하나로 좁혀졌을 때 골라 볼까요?"
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "secret-rule" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "secret-rule"
+              },
               "level": 2,
               "say": "다시 하려면 '새 게임'을 누르고, 질문의 답과 맞지 않는 카드만 뒤집어 보세요."
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "secret-rule" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "secret-rule"
+              },
               "level": 3,
               "backtrack": "g4s2u4.quad-definitions"
             }
           ],
-          "concepts": ["g4s2u4.quad-definitions"],
+          "concepts": [
+            "g4s2u4.quad-definitions"
+          ],
           "submit": "button"
         },
         {
@@ -102,67 +169,140 @@
           "goal": {
             "kind": "all",
             "of": [
-              { "kind": "predicate", "name": "solvedWithin", "args": { "max": 4 } },
-              { "kind": "predicate", "name": "solvedConsistently" },
+              {
+                "kind": "predicate",
+                "name": "solvedWithin",
+                "args": {
+                  "max": 4
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "solvedConsistently"
+              },
               {
                 "kind": "any",
                 "of": [
-                  { "kind": "equals", "path": "guessCount", "value": 1 },
-                  { "kind": "equals", "path": "guessCount", "value": 2 }
+                  {
+                    "kind": "equals",
+                    "path": "guessCount",
+                    "value": 1
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "guessCount",
+                    "value": 2
+                  }
                 ]
               }
             ]
           },
           "hints": [
             {
-              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-GEO-RHOMBUS-ORIENT" } },
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-GEO-RHOMBUS-ORIENT"
+                }
+              },
               "level": 1,
               "say": "네 변의 길이와 각을 다시 살펴볼까요? 질문의 답과 정말 맞지 않나요?"
             },
             {
-              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-GEO-RHOMBUS-ORIENT" } },
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-GEO-RHOMBUS-ORIENT"
+                }
+              },
               "level": 2,
-              "show": { "engine": "E17", "overlay": "upright-card" },
+              "show": {
+                "engine": "E17",
+                "overlay": "upright-card"
+              },
               "say": "카드를 돌려 바로 세운 모습을 겹쳐 그렸어요."
             },
             {
-              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-GEO-RHOMBUS-ORIENT" } },
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-GEO-RHOMBUS-ORIENT"
+                }
+              },
               "level": 3,
               "backtrack": "g4s2u4.quad-definitions"
             },
             {
-              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-GEO-PROTOTYPE-ONLY" } },
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-GEO-PROTOTYPE-ONLY"
+                }
+              },
               "level": 1,
               "say": "질문의 답과 이 카드의 성질이 정말 맞지 않나요?"
             },
             {
-              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-GEO-PROTOTYPE-ONLY" } },
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-GEO-PROTOTYPE-ONLY"
+                }
+              },
               "level": 2,
-              "show": { "engine": "E17", "overlay": "card-properties" },
+              "show": {
+                "engine": "E17",
+                "overlay": "card-properties"
+              },
               "say": "지운 카드가 물은 질문에 어떻게 답하는지 적었어요."
             },
             {
-              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-GEO-PROTOTYPE-ONLY" } },
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-GEO-PROTOTYPE-ONLY"
+                }
+              },
               "level": 3,
               "backtrack": "g4s2u4.quad-definitions"
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "secret-rule" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "secret-rule"
+              },
               "level": 1,
               "say": "어떤 질문이 카드를 가장 많이 반으로 나눌까요?"
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "secret-rule" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "secret-rule"
+              },
               "level": 2,
               "say": "다시 하려면 '새 게임'을 누르고, 질문의 답과 맞지 않는 카드만 뒤집어 보세요."
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "secret-rule" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "secret-rule"
+              },
               "level": 3,
               "backtrack": "g4s2u4.quad-definitions"
             }
           ],
-          "concepts": ["g4s2u4.quad-definitions"],
+          "concepts": [
+            "g4s2u4.quad-definitions"
+          ],
           "submit": "button"
         },
         {
@@ -185,54 +325,110 @@
           },
           "hints": [
             {
-              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-GEO-RHOMBUS-ORIENT" } },
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-GEO-RHOMBUS-ORIENT"
+                }
+              },
               "level": 1,
               "say": "네 변의 길이와 각을 다시 살펴볼까요? 질문의 답과 정말 맞지 않나요?"
             },
             {
-              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-GEO-RHOMBUS-ORIENT" } },
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-GEO-RHOMBUS-ORIENT"
+                }
+              },
               "level": 2,
-              "show": { "engine": "E17", "overlay": "upright-card" },
+              "show": {
+                "engine": "E17",
+                "overlay": "upright-card"
+              },
               "say": "카드를 돌려 바로 세운 모습을 겹쳐 그렸어요."
             },
             {
-              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-GEO-RHOMBUS-ORIENT" } },
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-GEO-RHOMBUS-ORIENT"
+                }
+              },
               "level": 3,
               "backtrack": "g4s2u4.quad-definitions"
             },
             {
-              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-GEO-PROTOTYPE-ONLY" } },
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-GEO-PROTOTYPE-ONLY"
+                }
+              },
               "level": 1,
               "say": "질문의 답과 이 카드의 성질이 정말 맞지 않나요?"
             },
             {
-              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-GEO-PROTOTYPE-ONLY" } },
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-GEO-PROTOTYPE-ONLY"
+                }
+              },
               "level": 2,
-              "show": { "engine": "E17", "overlay": "upright-card" },
+              "show": {
+                "engine": "E17",
+                "overlay": "upright-card"
+              },
               "say": "카드를 돌려 바로 세운 모습을 겹쳐 그렸어요."
             },
             {
-              "when": { "kind": "predicate", "name": "hasMisconception", "args": { "code": "MC-GEO-PROTOTYPE-ONLY" } },
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-GEO-PROTOTYPE-ONLY"
+                }
+              },
               "level": 3,
               "backtrack": "g4s2u4.quad-definitions"
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "secret-rule" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "secret-rule"
+              },
               "level": 1,
               "say": "컴퓨터의 질문을 내 카드에 하나씩 대어 봤나요?"
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "secret-rule" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "secret-rule"
+              },
               "level": 2,
               "say": "틀린 답이 있으면 되돌리기로 그 질문까지 돌아가 다시 답해 보세요."
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "secret-rule" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "secret-rule"
+              },
               "level": 3,
               "backtrack": "g4s2u4.quad-definitions"
             }
           ],
-          "concepts": ["g4s2u4.quad-definitions"],
+          "concepts": [
+            "g4s2u4.quad-definitions"
+          ],
           "submit": "button"
         },
         {
@@ -253,7 +449,10 @@
           "goal": {
             "kind": "equals",
             "path": "response.q.selected",
-            "value": ["eq", "rt"]
+            "value": [
+              "eq",
+              "rt"
+            ]
           },
           "response": {
             "fields": [
@@ -263,11 +462,26 @@
                 "label": "정사각형만 남기는 질문 두 개",
                 "multiple": true,
                 "options": [
-                  { "id": "eq", "label": "네 변의 길이가 모두 같나요?" },
-                  { "id": "op", "label": "마주 보는 변의 길이가 각각 같나요?" },
-                  { "id": "p1", "label": "평행한 변이 한 쌍 이상 있나요?" },
-                  { "id": "p2", "label": "평행한 변이 두 쌍 있나요?" },
-                  { "id": "rt", "label": "직각이 하나 이상 있나요?" }
+                  {
+                    "id": "eq",
+                    "label": "네 변의 길이가 모두 같나요?"
+                  },
+                  {
+                    "id": "op",
+                    "label": "마주 보는 변의 길이가 각각 같나요?"
+                  },
+                  {
+                    "id": "p1",
+                    "label": "평행한 변이 한 쌍 이상 있나요?"
+                  },
+                  {
+                    "id": "p2",
+                    "label": "평행한 변이 두 쌍 있나요?"
+                  },
+                  {
+                    "id": "rt",
+                    "label": "직각이 하나 이상 있나요?"
+                  }
                 ]
               }
             ]
@@ -275,78 +489,36 @@
           "hints": [
             {
               "when": {
-                "kind": "any",
-                "of": [
-                  { "kind": "equals", "path": "response.q.selected", "value": [] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["eq"] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["op"] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["p1"] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["p2"] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["rt"] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["eq", "op"] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["eq", "p1"] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["eq", "p2"] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["op", "p1"] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["op", "p2"] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["op", "rt"] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["p1", "p2"] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["p1", "rt"] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["p2", "rt"] }
-                ]
+                "kind": "equals",
+                "path": "mode",
+                "value": "secret-rule"
               },
               "level": 1,
               "say": "네 변이 같은 사각형에는 어떤 것들이 있나요? 그중 정사각형만 가진 성질은?"
             },
             {
               "when": {
-                "kind": "any",
-                "of": [
-                  { "kind": "equals", "path": "response.q.selected", "value": [] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["eq"] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["op"] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["p1"] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["p2"] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["rt"] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["eq", "op"] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["eq", "p1"] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["eq", "p2"] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["op", "p1"] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["op", "p2"] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["op", "rt"] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["p1", "p2"] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["p1", "rt"] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["p2", "rt"] }
-                ]
+                "kind": "equals",
+                "path": "mode",
+                "value": "secret-rule"
               },
               "level": 2,
               "say": "두 질문의 답이 모두 '예'인 사각형을 카드 16장에서 하나씩 떠올려 보세요."
             },
             {
               "when": {
-                "kind": "any",
-                "of": [
-                  { "kind": "equals", "path": "response.q.selected", "value": [] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["eq"] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["op"] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["p1"] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["p2"] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["rt"] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["eq", "op"] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["eq", "p1"] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["eq", "p2"] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["op", "p1"] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["op", "p2"] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["op", "rt"] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["p1", "p2"] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["p1", "rt"] },
-                  { "kind": "equals", "path": "response.q.selected", "value": ["p2", "rt"] }
-                ]
+                "kind": "equals",
+                "path": "mode",
+                "value": "secret-rule"
               },
               "level": 3,
               "backtrack": "g4s2u4.quad-definitions"
             }
           ],
-          "concepts": ["g4s2u4.quad-definitions", "g4s2u4.quad-inclusion"],
+          "concepts": [
+            "g4s2u4.quad-definitions",
+            "g4s2u4.quad-inclusion"
+          ],
           "submit": "button"
         }
       ]
@@ -376,28 +548,58 @@
           "goal": {
             "kind": "all",
             "of": [
-              { "kind": "predicate", "name": "togglesAre", "args": { "toggles": ["two-parallel-pairs"] } },
-              { "kind": "predicate", "name": "shaken", "args": { "min": 1 } }
+              {
+                "kind": "predicate",
+                "name": "togglesAre",
+                "args": {
+                  "toggles": [
+                    "two-parallel-pairs"
+                  ]
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "keptAfterShake",
+                "args": {
+                  "props": [
+                    "parallel-2"
+                  ]
+                }
+              }
             ]
           },
           "hints": [
             {
-              "when": { "kind": "equals", "path": "mode", "value": "drag-test" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "drag-test"
+              },
               "level": 1,
               "say": "평행사변형은 어떤 변들이 평행한가요? 지금 켠 조건과 견주어 볼까요?"
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "drag-test" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "drag-test"
+              },
               "level": 2,
               "say": "조건을 하나씩 끄고 켜며 모양이 어떻게 바뀌는지 살펴보세요."
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "drag-test" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "drag-test"
+              },
               "level": 3,
               "backtrack": "g4s2u4.quad-definitions"
             }
           ],
-          "concepts": ["g4s2u4.quad-definitions"],
+          "concepts": [
+            "g4s2u4.quad-definitions"
+          ],
           "submit": "button"
         },
         {
@@ -419,23 +621,40 @@
           },
           "hints": [
             {
-              "when": { "kind": "equals", "path": "mode", "value": "hierarchy" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "hierarchy"
+              },
               "level": 1,
               "say": "지금 켠 조건으로 만든 모양은 트리의 어느 칸에 있나요? 그 모양의 이름은?"
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "hierarchy" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "hierarchy"
+              },
               "level": 2,
-              "show": { "engine": "E17", "overlay": "condition-checklist" },
+              "show": {
+                "engine": "E17",
+                "overlay": "condition-checklist"
+              },
               "say": "지금 모양이 가진 조건을 표시했어요."
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "hierarchy" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "hierarchy"
+              },
               "level": 3,
               "backtrack": "g4s2u4.quad-inclusion"
             }
           ],
-          "concepts": ["g4s2u4.quad-inclusion"],
+          "concepts": [
+            "g4s2u4.quad-inclusion"
+          ],
           "submit": "button"
         },
         {
@@ -455,7 +674,9 @@
           "goal": {
             "kind": "equals",
             "path": "response.why.selected",
-            "value": ["yes-side"]
+            "value": [
+              "yes-side"
+            ]
           },
           "response": {
             "fields": [
@@ -465,10 +686,22 @@
                 "label": "정사각형과 마름모",
                 "multiple": false,
                 "options": [
-                  { "id": "yes-side", "label": "예, 네 변의 길이가 모두 같으니까요." },
-                  { "id": "yes-angle", "label": "예, 네 각이 모두 직각이니까요." },
-                  { "id": "no-angle", "label": "아니요, 정사각형은 네 각이 직각이라 마름모와 달라요." },
-                  { "id": "no-tilt", "label": "아니요, 마름모는 비스듬히 기울어진 모양이에요." }
+                  {
+                    "id": "yes-side",
+                    "label": "예, 네 변의 길이가 모두 같으니까요."
+                  },
+                  {
+                    "id": "yes-angle",
+                    "label": "예, 네 각이 모두 직각이니까요."
+                  },
+                  {
+                    "id": "no-angle",
+                    "label": "아니요, 정사각형은 네 각이 직각이라 마름모와 달라요."
+                  },
+                  {
+                    "id": "no-tilt",
+                    "label": "아니요, 마름모는 비스듬히 기울어진 모양이에요."
+                  }
                 ]
               }
             ]
@@ -476,38 +709,64 @@
           "diagnose": [
             {
               "code": "MC-GEO-SQUARE-NOT-RECT",
-              "args": { "trap": "no-angle" },
+              "args": {
+                "trap": "no-angle"
+              },
               "path": "response.why.selected.0"
             }
           ],
           "hints": [
             {
-              "when": { "misconception": "MC-GEO-SQUARE-NOT-RECT" },
+              "when": {
+                "misconception": "MC-GEO-SQUARE-NOT-RECT"
+              },
               "level": 1,
               "say": "마름모의 조건을 하나씩 정사각형에 확인해 볼까요?"
             },
             {
-              "when": { "misconception": "MC-GEO-SQUARE-NOT-RECT" },
+              "when": {
+                "misconception": "MC-GEO-SQUARE-NOT-RECT"
+              },
               "level": 2,
               "say": "정사각형의 네 변을 하나씩 견주어 보세요."
             },
             {
-              "when": { "misconception": "MC-GEO-SQUARE-NOT-RECT" },
+              "when": {
+                "misconception": "MC-GEO-SQUARE-NOT-RECT"
+              },
               "level": 3,
               "backtrack": "g3s1u2.rect-square"
             },
             {
-              "when": { "kind": "equals", "path": "response.why.selected", "value": ["no-tilt"] },
+              "when": {
+                "kind": "equals",
+                "path": "response.why.selected",
+                "value": [
+                  "no-tilt"
+                ]
+              },
               "level": 1,
               "say": "네 변의 길이와 각을 재 볼까요? 놓인 방향이 바뀌면 성질도 바뀌나요?"
             },
             {
-              "when": { "kind": "equals", "path": "response.why.selected", "value": ["no-tilt"] },
+              "when": {
+                "kind": "equals",
+                "path": "response.why.selected",
+                "value": [
+                  "no-tilt"
+                ]
+              },
               "level": 2,
               "say": "같은 정사각형을 돌려 놓아도 네 변의 길이는 그대로인가요?"
             },
             {
-              "when": { "kind": "equals", "path": "response.why.selected", "value": ["no-tilt"] },
+              "when": {
+                "kind": "equals",
+                "path": "response.why.selected",
+                "value": [
+                  "no-tilt"
+                ]
+              },
               "level": 3,
               "backtrack": "g4s2u4.quad-definitions"
             },
@@ -515,8 +774,18 @@
               "when": {
                 "kind": "any",
                 "of": [
-                  { "kind": "equals", "path": "response.why.selected", "value": [] },
-                  { "kind": "equals", "path": "response.why.selected", "value": ["yes-angle"] }
+                  {
+                    "kind": "equals",
+                    "path": "response.why.selected",
+                    "value": []
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.why.selected",
+                    "value": [
+                      "yes-angle"
+                    ]
+                  }
                 ]
               },
               "level": 1,
@@ -526,8 +795,18 @@
               "when": {
                 "kind": "any",
                 "of": [
-                  { "kind": "equals", "path": "response.why.selected", "value": [] },
-                  { "kind": "equals", "path": "response.why.selected", "value": ["yes-angle"] }
+                  {
+                    "kind": "equals",
+                    "path": "response.why.selected",
+                    "value": []
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.why.selected",
+                    "value": [
+                      "yes-angle"
+                    ]
+                  }
                 ]
               },
               "level": 2,
@@ -537,15 +816,28 @@
               "when": {
                 "kind": "any",
                 "of": [
-                  { "kind": "equals", "path": "response.why.selected", "value": [] },
-                  { "kind": "equals", "path": "response.why.selected", "value": ["yes-angle"] }
+                  {
+                    "kind": "equals",
+                    "path": "response.why.selected",
+                    "value": []
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.why.selected",
+                    "value": [
+                      "yes-angle"
+                    ]
+                  }
                 ]
               },
               "level": 3,
               "backtrack": "g4s2u4.quad-inclusion"
             }
           ],
-          "concepts": ["g4s2u4.quad-inclusion", "g4s2u4.quad-definitions"],
+          "concepts": [
+            "g4s2u4.quad-inclusion",
+            "g4s2u4.quad-definitions"
+          ],
           "submit": "button"
         },
         {
@@ -565,7 +857,9 @@
           "goal": {
             "kind": "equals",
             "path": "response.why.selected",
-            "value": ["yes-pair"]
+            "value": [
+              "yes-pair"
+            ]
           },
           "response": {
             "fields": [
@@ -575,10 +869,22 @@
                 "label": "평행사변형과 사다리꼴",
                 "multiple": false,
                 "options": [
-                  { "id": "yes-pair", "label": "예, 평행한 변이 한 쌍이라도 있으니까요." },
-                  { "id": "yes-equal", "label": "예, 마주 보는 변의 길이가 같으니까요." },
-                  { "id": "no-two", "label": "아니요, 평행한 변이 두 쌍이면 사다리꼴이 아니에요." },
-                  { "id": "no-short", "label": "아니요, 사다리꼴은 한 변이 더 짧아야 해요." }
+                  {
+                    "id": "yes-pair",
+                    "label": "예, 평행한 변이 한 쌍이라도 있으니까요."
+                  },
+                  {
+                    "id": "yes-equal",
+                    "label": "예, 마주 보는 변의 길이가 같으니까요."
+                  },
+                  {
+                    "id": "no-two",
+                    "label": "아니요, 평행한 변이 두 쌍이면 사다리꼴이 아니에요."
+                  },
+                  {
+                    "id": "no-short",
+                    "label": "아니요, 사다리꼴은 한 변이 더 짧아야 해요."
+                  }
                 ]
               }
             ]
@@ -586,81 +892,71 @@
           "diagnose": [
             {
               "code": "MC-GEO-PARALLELOGRAM-NOT-TRAPEZOID",
-              "args": { "trap": "no-two" },
+              "args": {
+                "trap": "no-two"
+              },
               "path": "response.why.selected.0"
             }
           ],
           "hints": [
             {
-              "when": { "misconception": "MC-GEO-PARALLELOGRAM-NOT-TRAPEZOID" },
+              "when": {
+                "misconception": "MC-GEO-PARALLELOGRAM-NOT-TRAPEZOID"
+              },
               "level": 1,
               "say": "사다리꼴의 조건이 뭐였지요? 평행사변형에도 그게 있나요?"
             },
             {
-              "when": { "misconception": "MC-GEO-PARALLELOGRAM-NOT-TRAPEZOID" },
+              "when": {
+                "misconception": "MC-GEO-PARALLELOGRAM-NOT-TRAPEZOID"
+              },
               "level": 2,
               "say": "사다리꼴이 되려면 평행한 변이 몇 쌍 필요하지요?"
             },
             {
-              "when": { "misconception": "MC-GEO-PARALLELOGRAM-NOT-TRAPEZOID" },
+              "when": {
+                "misconception": "MC-GEO-PARALLELOGRAM-NOT-TRAPEZOID"
+              },
               "level": 3,
               "backtrack": "g4s2u4.quad-definitions"
             },
             {
-              "when": { "kind": "equals", "path": "response.why.selected", "value": ["no-short"] },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "hierarchy"
+              },
               "level": 1,
               "say": "사다리꼴의 조건에 변의 길이가 들어 있나요?"
             },
             {
-              "when": { "kind": "equals", "path": "response.why.selected", "value": ["no-short"] },
-              "level": 2,
-              "say": "평행한 변이 있는지만 살펴보세요. 변의 길이는 조건일까요?"
-            },
-            {
-              "when": { "kind": "equals", "path": "response.why.selected", "value": ["no-short"] },
-              "level": 3,
-              "backtrack": "g4s2u4.quad-definitions"
-            },
-            {
               "when": {
-                "kind": "any",
-                "of": [
-                  { "kind": "equals", "path": "response.why.selected", "value": [] },
-                  { "kind": "equals", "path": "response.why.selected", "value": ["yes-equal"] }
-                ]
-              },
-              "level": 1,
-              "say": "사다리꼴의 조건을 평행사변형에서 찾아볼까요?"
-            },
-            {
-              "when": {
-                "kind": "any",
-                "of": [
-                  { "kind": "equals", "path": "response.why.selected", "value": [] },
-                  { "kind": "equals", "path": "response.why.selected", "value": ["yes-equal"] }
-                ]
+                "kind": "equals",
+                "path": "mode",
+                "value": "hierarchy"
               },
               "level": 2,
-              "say": "정의에 있는 조건만으로 판단해 보세요."
+              "say": "사다리꼴의 정의에 있는 조건이 평행사변형에도 있는지 살펴볼까요?"
             },
             {
               "when": {
-                "kind": "any",
-                "of": [
-                  { "kind": "equals", "path": "response.why.selected", "value": [] },
-                  { "kind": "equals", "path": "response.why.selected", "value": ["yes-equal"] }
-                ]
+                "kind": "equals",
+                "path": "mode",
+                "value": "hierarchy"
               },
               "level": 3,
               "backtrack": "g4s2u4.quad-definitions"
             }
           ],
-          "concepts": ["g4s2u4.quad-inclusion", "g4s2u4.quad-definitions"],
+          "concepts": [
+            "g4s2u4.quad-inclusion",
+            "g4s2u4.quad-definitions"
+          ],
           "submit": "button"
         },
         {
           "id": "g4s2u4.A2.T5",
-          "prompt": "직사각형이면서 마름모인 사각형을 무엇이라고 할까요?",
+          "prompt": "직사각형이면서 마름모인 사각형의 가장 알맞은 이름은 무엇일까요?",
           "engine": "E17",
           "mode": "hierarchy",
           "cpa": "A",
@@ -675,7 +971,9 @@
           "goal": {
             "kind": "equals",
             "path": "response.name.selected",
-            "value": ["square"]
+            "value": [
+              "square"
+            ]
           },
           "response": {
             "fields": [
@@ -685,10 +983,22 @@
                 "label": "직사각형이면서 마름모",
                 "multiple": false,
                 "options": [
-                  { "id": "square", "label": "정사각형" },
-                  { "id": "parallelogram", "label": "평행사변형" },
-                  { "id": "trapezoid", "label": "사다리꼴" },
-                  { "id": "none", "label": "그런 사각형은 없어요." }
+                  {
+                    "id": "square",
+                    "label": "정사각형"
+                  },
+                  {
+                    "id": "parallelogram",
+                    "label": "평행사변형"
+                  },
+                  {
+                    "id": "trapezoid",
+                    "label": "사다리꼴"
+                  },
+                  {
+                    "id": "none",
+                    "label": "그런 사각형은 없어요."
+                  }
                 ]
               }
             ]
@@ -696,64 +1006,65 @@
           "diagnose": [
             {
               "code": "MC-GEO-SQUARE-NOT-RECT",
-              "args": { "trap": "none" },
+              "args": {
+                "trap": "none"
+              },
               "path": "response.name.selected.0"
             }
           ],
           "hints": [
             {
-              "when": { "misconception": "MC-GEO-SQUARE-NOT-RECT" },
+              "when": {
+                "misconception": "MC-GEO-SQUARE-NOT-RECT"
+              },
               "level": 1,
-              "say": "정사각형에 직사각형의 조건과 마름모의 조건을 하나씩 대어 볼까요?"
+              "say": "직사각형의 조건과 마름모의 조건을 모두 가진 사각형을 카드에서 찾아볼까요?"
             },
             {
-              "when": { "misconception": "MC-GEO-SQUARE-NOT-RECT" },
+              "when": {
+                "misconception": "MC-GEO-SQUARE-NOT-RECT"
+              },
               "level": 2,
               "say": "직사각형의 조건과 마름모의 조건을 모두 가진 사각형을 떠올려 보세요."
             },
             {
-              "when": { "misconception": "MC-GEO-SQUARE-NOT-RECT" },
+              "when": {
+                "misconception": "MC-GEO-SQUARE-NOT-RECT"
+              },
               "level": 3,
               "backtrack": "g3s1u2.rect-square"
             },
             {
               "when": {
-                "kind": "any",
-                "of": [
-                  { "kind": "equals", "path": "response.name.selected", "value": [] },
-                  { "kind": "equals", "path": "response.name.selected", "value": ["parallelogram"] },
-                  { "kind": "equals", "path": "response.name.selected", "value": ["trapezoid"] }
-                ]
+                "kind": "equals",
+                "path": "mode",
+                "value": "hierarchy"
               },
               "level": 1,
               "say": "직사각형의 조건과 마름모의 조건을 함께 살펴볼까요?"
             },
             {
               "when": {
-                "kind": "any",
-                "of": [
-                  { "kind": "equals", "path": "response.name.selected", "value": [] },
-                  { "kind": "equals", "path": "response.name.selected", "value": ["parallelogram"] },
-                  { "kind": "equals", "path": "response.name.selected", "value": ["trapezoid"] }
-                ]
+                "kind": "equals",
+                "path": "mode",
+                "value": "hierarchy"
               },
               "level": 2,
               "say": "두 조건을 모두 만족하는 사각형이 있나요?"
             },
             {
               "when": {
-                "kind": "any",
-                "of": [
-                  { "kind": "equals", "path": "response.name.selected", "value": [] },
-                  { "kind": "equals", "path": "response.name.selected", "value": ["parallelogram"] },
-                  { "kind": "equals", "path": "response.name.selected", "value": ["trapezoid"] }
-                ]
+                "kind": "equals",
+                "path": "mode",
+                "value": "hierarchy"
               },
               "level": 3,
               "backtrack": "g4s2u4.quad-inclusion"
             }
           ],
-          "concepts": ["g4s2u4.quad-inclusion"],
+          "concepts": [
+            "g4s2u4.quad-inclusion"
+          ],
           "submit": "button"
         }
       ]

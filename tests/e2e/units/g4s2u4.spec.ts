@@ -1,7 +1,11 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 import { PREVIEW_URL } from '../../../playwright.config';
-import { expectContentPanelsReachable } from '../panel-layout';
+import {
+  expectChromeBookCanvasSize,
+  expectContentPanelsReachable,
+  expectFitCanvasVisible,
+} from '../panel-layout';
 
 /**
  * T117 g4s2u4 「사각형」 A1 「도형 스무고개」·A2 「사각형 진화 트리」 단원 E2E.
@@ -155,10 +159,17 @@ async function passA2T2(page: Page): Promise<void> {
   await expectPassed(page);
 }
 
-test('A1 도형 스무고개 — 질문·카드 지우기·역할 바꾸기·질문 고르기', async ({ page }) => {
+test('A1 도형 스무고개 — 질문·카드 지우기·역할 바꾸기·질문 고르기', async ({ page }, testInfo) => {
   await openActivity(page, 'g4s2u4.A1', '도형 스무고개');
   await screenshot(page, 'g4s2u4-a1.png');
+  // T122로 판이 실행기 판 높이에 맞춰 줄어 세 뷰포트 모두 판 안 스크롤이 없다.
   await expectContentPanelsReachable(page);
+  const boxes = await expectFitCanvasVisible(page);
+  // sorter 판은 16장 카드가 들어가 아이패드에서 판이 첫 화면보다 조금 길다(실측 0.92).
+  // 판은 잘리지 않고 판 안 스크롤도 없다(expectFitCanvasVisible). '확인하기'는 앱 스크롤로 닿는다.
+  await expect(main(page).getByTestId('sorter-canvas')).toBeInViewport();
+  await expect(page.getByRole('button', { name: '확인하기' })).toBeInViewport();
+  if (testInfo.project.name === 'chromebook') expectChromeBookCanvasSize(boxes);
 
   // T1 — 평행한 변 두 쌍을 묻고 q08(정사각형)을 지워 RHOMBUS ①.
   await ask(page, 'all-sides-equal');
@@ -262,10 +273,13 @@ test('A1 도형 스무고개 — 질문·카드 지우기·역할 바꾸기·질
   await expectPassed(page, true);
 });
 
-test('A2 사각형 진화 트리 — 조건·흔들기·이름 트리·포함 관계 고르기', async ({ page }) => {
+test('A2 사각형 진화 트리 — 조건·흔들기·이름 트리·포함 관계 고르기', async ({ page }, testInfo) => {
   await openActivity(page, 'g4s2u4.A2', '사각형 진화 트리');
   await screenshot(page, 'g4s2u4-a2.png');
   await expectContentPanelsReachable(page);
+  const boxes = await expectFitCanvasVisible(page);
+  await expect(main(page).getByTestId('geo-canvas')).toBeInViewport({ ratio: 1 });
+  if (testInfo.project.name === 'chromebook') expectChromeBookCanvasSize(boxes);
 
   // T1 — '네 변 같음'까지 켜면 평행사변형 조건이 아니어서 일반 ①.
   const twoPairs = main(page).getByRole('button', { name: '두 쌍 평행', exact: true });
@@ -325,7 +339,7 @@ test('A2 사각형 진화 트리 — 조건·흔들기·이름 트리·포함 �
   await submit(page);
   await expectFailedWithHint(
     page,
-    '정사각형에 직사각형의 조건과 마름모의 조건을 하나씩 대어 볼까요?',
+    '직사각형의 조건과 마름모의 조건을 모두 가진 사각형을 카드에서 찾아볼까요?',
     1,
   );
   await choose(page, 'name', '정사각형');

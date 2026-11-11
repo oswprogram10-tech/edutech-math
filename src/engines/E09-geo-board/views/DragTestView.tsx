@@ -1094,15 +1094,7 @@ export function DragTestView({
       </div>
 
       <div className={styles.hintBlock}>
-        <p className={styles.hint}>{S.dragTest.canvasHint}</p>
         {state.quad ? <p className={styles.hint}>{S.dragTest.quadKeyHint}</p> : null}
-        <p className={styles.hint}>
-          {state.settings.construction === 'from-diagonals'
-            ? S.dragTest.fromDiagonalsHint
-            : state.settings.construction === 'quad-conditions'
-              ? S.dragTest.quadConditionsHint
-              : S.dragTest.instructions}
-        </p>
       </div>
     </div>
   );
