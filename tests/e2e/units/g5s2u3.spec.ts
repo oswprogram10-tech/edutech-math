@@ -1,7 +1,11 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 import { PREVIEW_URL } from '../../../playwright.config';
-import { expectContentPanelsReachable } from '../panel-layout';
+import {
+  expectChromeBookCanvasSize,
+  expectContentPanelsReachable,
+  expectFitCanvasVisible,
+} from '../panel-layout';
 
 /**
  * T120 g5s2u3 「합동과 대칭」 A1 「포개기와 데칼코마니」·
@@ -151,17 +155,22 @@ async function pairSides(page: Page, moving: number, fixed: number): Promise<voi
   await section.getByRole('button', { name: '짝 짓기', exact: true }).click();
 }
 
-test('A1 포개기와 데칼코마니 — 포개기·대칭축·완성', async ({ page }) => {
-  await openActivity(page, 'g5s2u3.A1', '포개기와 데칼코마니');
+test('A1 포개기와 접기 — 포개기·대칭축·완성', async ({ page }, testInfo) => {
+  await openActivity(page, 'g5s2u3.A1', '포개기와 접기');
   await screenshot(page, 'g5s2u3-a1.png');
+  // T122로 판이 실행기 판 높이에 맞춰 줄어 세 뷰포트 모두 판 안 스크롤이 없다.
   await expectContentPanelsReachable(page);
+  const boxes = await expectFitCanvasVisible(page);
+  await expect(main(page).getByTestId('transform-canvas')).toBeInViewport();
+  await expect(page.getByRole('button', { name: '확인하기' })).toBeVisible();
+  if (testInfo.project.name === 'chromebook') expectChromeBookCanvasSize(boxes);
 
-  // T1 — C,C,R,→,↑,↑로 겹친 뒤 대응변을 잘못(ㅁㅂ–ㄴㄷ) 한 쌍만 지어 일반 ①.
+  // T1 — C,C,R,→,↑,↑로 겹친 뒤 대응변을 잘못(ㅁㅂ–ㄴㄷ) 한 쌍만 지어 '겹친 뒤 짝' ①.
   await focusCanvas(page);
   await press(page, ['c', 'c', 'r', 'ArrowRight', 'ArrowUp', 'ArrowUp']);
   await pairSides(page, 0, 1);
   await submit(page);
-  await expectFailedWithHint(page, '두 도형이 완전히 겹치려면 어느 쪽으로 옮겨야 할까요?', 1);
+  await expectFailedWithHint(page, '겹쳤을 때 같은 자리에 온 꼭짓점은 어느 것끼리일까요?', 1);
 
   // 네 변을 대응대로 짝 지으면 통과한다. 0↔0을 지으면 0↔1은 엔진이 지운다.
   await pairSides(page, 0, 0);
@@ -265,10 +274,14 @@ test('A1 포개기와 데칼코마니 — 포개기·대칭축·완성', async (
   await expectPassed(page, true);
 });
 
-test('A2 180° 압정 회전 스튜디오 — 중심·분류·거리·완성', async ({ page }) => {
+test('A2 180° 압정 회전 스튜디오 — 중심·분류·거리·완성', async ({ page }, testInfo) => {
   await openActivity(page, 'g5s2u3.A2', '180° 압정 회전 스튜디오');
   await screenshot(page, 'g5s2u3-a2.png');
   await expectContentPanelsReachable(page);
+  const boxes = await expectFitCanvasVisible(page);
+  await expect(main(page).getByTestId('transform-canvas')).toBeInViewport({ ratio: 1 });
+  await expect(page.getByRole('button', { name: '확인하기' })).toBeInViewport({ ratio: 1 });
+  if (testInfo.project.name === 'chromebook') expectChromeBookCanvasSize(boxes);
 
   // T1 — 뒤집고 압정을 엉뚱한 곳에 꽂아 POINT-AS-LINE ①·②, 중심 (8,9)로 통과.
   await focusCanvas(page);
@@ -316,6 +329,13 @@ test('A2 180° 압정 회전 스튜디오 — 중심·분류·거리·완성', a
   await press(page, ['Enter']);
   await submit(page);
   await expectFailedWithHint(page, '반쪽의 끝에서 시작해 중심 건너편 점을 이어 보세요.', 1);
+  // 같은 오답을 한 번 더 내면 ②(조작 중심 질문)가 나온다.
+  await submit(page);
+  await expectFailedWithHint(
+    page,
+    '반쪽의 끝 점과 중심을 이어 보고, 그 방향으로 같은 거리만큼 간 자리를 찍어 볼까요?',
+    2,
+  );
 
   await focusCanvas(page);
   await press(page, ['Backspace', 'Backspace']);
@@ -329,13 +349,31 @@ test('A2 180° 압정 회전 스튜디오 — 중심·분류·거리·완성', a
   await expectPassed(page, true);
 });
 
+test('A2.T2 도형 2만 고른 단일 오답은 힌트 ①이 나온다', async ({ page }) => {
+  await openActivity(page, 'g5s2u3.A2', '180° 압정 회전 스튜디오');
+  // T1은 뒤집기 오답 → 압정으로 통과.
+  await focusCanvas(page);
+  await press(page, ['Shift+ArrowRight', 'Enter', 't']);
+  await submit(page);
+  await expectFailedWithHint(page, '180° 돌리기와 뒤집기는 어떻게 달랐지?', 1);
+  await focusCanvas(page);
+  await press(page, ['ArrowLeft', 'Enter', 't']);
+  await submit(page);
+  await expectPassed(page);
+
+  // T2 — 도형 2만 고르면(단일 ["s2"]) ①이 나온다.
+  await choose(page, 'pick', '도형 2');
+  await submit(page);
+  await expectFailedWithHint(page, '180° 돌리기와 뒤집기는 어떻게 달랐지?', 1);
+});
+
 test('오프라인에서도 g5s2u3.A1 활동이 열린다', async ({ page, context }) => {
   await page.goto(PREVIEW_URL);
   await page.getByRole('button', { name: '1번', exact: true }).click();
   await page.getByRole('button', { name: '건너뛰기' }).click();
   await expect(page).toHaveURL(/#\/map$/);
   await page.goto(`${PREVIEW_URL}/#/activity/g5s2u3.A1`);
-  await expect(page.getByRole('heading', { name: '포개기와 데칼코마니' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '포개기와 접기' })).toBeVisible();
 
   // 서비스 워커가 설치·활성화되어 이 페이지를 제어할 때까지 기다린다.
   await page.evaluate(async () => {
@@ -351,6 +389,6 @@ test('오프라인에서도 g5s2u3.A1 활동이 열린다', async ({ page, conte
 
   await context.setOffline(true);
   await page.reload();
-  await expect(page.getByRole('heading', { name: '포개기와 데칼코마니' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '포개기와 접기' })).toBeVisible();
   await expect(page.getByRole('button', { name: '확인하기' })).toBeVisible();
 });

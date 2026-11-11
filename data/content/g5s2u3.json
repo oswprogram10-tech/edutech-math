@@ -4,7 +4,7 @@
   "activities": [
     {
       "id": "g5s2u3.A1",
-      "title": "포개기와 데칼코마니",
+      "title": "포개기와 접기",
       "tasks": [
         {
           "id": "g5s2u3.A1.T1",
@@ -16,10 +16,16 @@
             "mode": "congruence",
             "grid": 12,
             "fixed": "quad-a",
-            "fixedAt": [7, 2],
+            "fixedAt": [
+              7,
+              2
+            ],
             "fixedOrientation": "cw90",
             "moving": "quad-a",
-            "movingAt": [1, 6],
+            "movingAt": [
+              1,
+              6
+            ],
             "showCorrespondence": "never",
             "pairSides": true
           },
@@ -40,6 +46,39 @@
             ]
           },
           "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "overlapped",
+                "args": {
+                  "ever": true
+                }
+              },
+              "level": 1,
+              "say": "겹쳤을 때 같은 자리에 온 꼭짓점은 어느 것끼리일까요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "overlapped",
+                "args": {
+                  "ever": true
+                }
+              },
+              "level": 2,
+              "say": "같은 자리에 온 꼭짓점끼리 변을 짝 지어 보세요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "overlapped",
+                "args": {
+                  "ever": true
+                }
+              },
+              "level": 3,
+              "backtrack": "g4s1u4.slide"
+            },
             {
               "when": {
                 "kind": "equals",
@@ -87,7 +126,7 @@
                 "value": "congruence"
               },
               "level": 3,
-              "backtrack": "g4s1u4"
+              "backtrack": "g4s1u4.slide"
             }
           ],
           "concepts": [
@@ -104,9 +143,9 @@
           "config": {
             "mode": "line-symmetry",
             "task": "find-axis",
-            "shapes": ["rectangle"],
-            "allowDrawAxis": true,
-            "foldPreview": true
+            "shapes": [
+              "rectangle"
+            ]
           },
           "goal": {
             "kind": "predicate",
@@ -230,14 +269,16 @@
           "config": {
             "mode": "line-symmetry",
             "task": "find-axis",
-            "shapes": ["parallelogram"],
-            "allowDrawAxis": true,
-            "foldPreview": true
+            "shapes": [
+              "parallelogram"
+            ]
           },
           "goal": {
             "kind": "equals",
             "path": "response.axes.selected",
-            "value": ["none"]
+            "value": [
+              "none"
+            ]
           },
           "hints": [
             {
@@ -247,7 +288,9 @@
                   {
                     "kind": "equals",
                     "path": "response.axes.selected",
-                    "value": ["two"]
+                    "value": [
+                      "two"
+                    ]
                   },
                   {
                     "kind": "predicate",
@@ -271,7 +314,9 @@
                       {
                         "kind": "equals",
                         "path": "response.axes.selected",
-                        "value": ["two"]
+                        "value": [
+                          "two"
+                        ]
                       },
                       {
                         "kind": "predicate",
@@ -303,7 +348,9 @@
                   {
                     "kind": "equals",
                     "path": "response.axes.selected",
-                    "value": ["two"]
+                    "value": [
+                      "two"
+                    ]
                   },
                   {
                     "kind": "predicate",
@@ -324,7 +371,9 @@
                   {
                     "kind": "equals",
                     "path": "response.axes.selected",
-                    "value": ["two"]
+                    "value": [
+                      "two"
+                    ]
                   },
                   {
                     "kind": "predicate",
@@ -421,9 +470,9 @@
           "config": {
             "mode": "line-symmetry",
             "task": "find-axis",
-            "shapes": ["regular-hexagon"],
-            "allowDrawAxis": true,
-            "foldPreview": true
+            "shapes": [
+              "regular-hexagon"
+            ]
           },
           "goal": {
             "kind": "equals",
@@ -482,7 +531,9 @@
                 "kind": "number",
                 "id": "n",
                 "label": "대칭축의 수",
-                "forms": ["integer"]
+                "forms": [
+                  "integer"
+                ]
               }
             ]
           }
@@ -497,15 +548,36 @@
             "mode": "line-symmetry",
             "task": "complete",
             "axis": [
-              [4, 0],
-              [4, 8]
+              [
+                4,
+                0
+              ],
+              [
+                4,
+                8
+              ]
             ],
             "half": [
-              [4, 1],
-              [2, 2],
-              [1, 5],
-              [3, 7],
-              [4, 7]
+              [
+                4,
+                1
+              ],
+              [
+                2,
+                2
+              ],
+              [
+                1,
+                5
+              ],
+              [
+                3,
+                7
+              ],
+              [
+                4,
+                7
+              ]
             ]
           },
           "goal": {
@@ -556,14 +628,22 @@
             "mode": "congruence",
             "grid": 12,
             "fixed": "quad-a",
-            "fixedAt": [7, 2],
+            "fixedAt": [
+              7,
+              2
+            ],
             "moving": "quad-b",
-            "movingAt": [1, 6]
+            "movingAt": [
+              1,
+              6
+            ]
           },
           "goal": {
             "kind": "equals",
             "path": "response.cong.selected",
-            "value": ["no"]
+            "value": [
+              "no"
+            ]
           },
           "hints": [
             {
@@ -573,7 +653,9 @@
                   {
                     "kind": "equals",
                     "path": "response.cong.selected",
-                    "value": ["yes"]
+                    "value": [
+                      "yes"
+                    ]
                   },
                   {
                     "kind": "equals",
@@ -687,7 +769,9 @@
           "config": {
             "mode": "point-symmetry",
             "task": "pin",
-            "shapes": ["parallelogram"],
+            "shapes": [
+              "parallelogram"
+            ],
             "pinAnywhere": true,
             "showArcs": true
           },
@@ -800,12 +884,19 @@
           "config": {
             "mode": "point-symmetry",
             "task": "pin",
-            "shapes": ["letter-S", "regular-pentagon", "letter-N"]
+            "shapes": [
+              "letter-S",
+              "regular-pentagon",
+              "letter-N"
+            ]
           },
           "goal": {
             "kind": "equals",
             "path": "response.pick.selected",
-            "value": ["s1", "s3"]
+            "value": [
+              "s1",
+              "s3"
+            ]
           },
           "hints": [
             {
@@ -819,22 +910,34 @@
                   {
                     "kind": "equals",
                     "path": "response.pick.selected",
-                    "value": ["s2"]
+                    "value": [
+                      "s2"
+                    ]
                   },
                   {
                     "kind": "equals",
                     "path": "response.pick.selected",
-                    "value": ["s1", "s2"]
+                    "value": [
+                      "s1",
+                      "s2"
+                    ]
                   },
                   {
                     "kind": "equals",
                     "path": "response.pick.selected",
-                    "value": ["s2", "s3"]
+                    "value": [
+                      "s2",
+                      "s3"
+                    ]
                   },
                   {
                     "kind": "equals",
                     "path": "response.pick.selected",
-                    "value": ["s1", "s2", "s3"]
+                    "value": [
+                      "s1",
+                      "s2",
+                      "s3"
+                    ]
                   }
                 ]
               },
@@ -855,22 +958,34 @@
                       {
                         "kind": "equals",
                         "path": "response.pick.selected",
-                        "value": ["s2"]
+                        "value": [
+                          "s2"
+                        ]
                       },
                       {
                         "kind": "equals",
                         "path": "response.pick.selected",
-                        "value": ["s1", "s2"]
+                        "value": [
+                          "s1",
+                          "s2"
+                        ]
                       },
                       {
                         "kind": "equals",
                         "path": "response.pick.selected",
-                        "value": ["s2", "s3"]
+                        "value": [
+                          "s2",
+                          "s3"
+                        ]
                       },
                       {
                         "kind": "equals",
                         "path": "response.pick.selected",
-                        "value": ["s1", "s2", "s3"]
+                        "value": [
+                          "s1",
+                          "s2",
+                          "s3"
+                        ]
                       }
                     ]
                   },
@@ -899,22 +1014,34 @@
                   {
                     "kind": "equals",
                     "path": "response.pick.selected",
-                    "value": ["s2"]
+                    "value": [
+                      "s2"
+                    ]
                   },
                   {
                     "kind": "equals",
                     "path": "response.pick.selected",
-                    "value": ["s1", "s2"]
+                    "value": [
+                      "s1",
+                      "s2"
+                    ]
                   },
                   {
                     "kind": "equals",
                     "path": "response.pick.selected",
-                    "value": ["s2", "s3"]
+                    "value": [
+                      "s2",
+                      "s3"
+                    ]
                   },
                   {
                     "kind": "equals",
                     "path": "response.pick.selected",
-                    "value": ["s1", "s2", "s3"]
+                    "value": [
+                      "s1",
+                      "s2",
+                      "s3"
+                    ]
                   }
                 ]
               },
@@ -932,22 +1059,34 @@
                   {
                     "kind": "equals",
                     "path": "response.pick.selected",
-                    "value": ["s2"]
+                    "value": [
+                      "s2"
+                    ]
                   },
                   {
                     "kind": "equals",
                     "path": "response.pick.selected",
-                    "value": ["s1", "s2"]
+                    "value": [
+                      "s1",
+                      "s2"
+                    ]
                   },
                   {
                     "kind": "equals",
                     "path": "response.pick.selected",
-                    "value": ["s2", "s3"]
+                    "value": [
+                      "s2",
+                      "s3"
+                    ]
                   },
                   {
                     "kind": "equals",
                     "path": "response.pick.selected",
-                    "value": ["s1", "s2", "s3"]
+                    "value": [
+                      "s1",
+                      "s2",
+                      "s3"
+                    ]
                   }
                 ]
               },
@@ -1033,12 +1172,16 @@
           "config": {
             "mode": "point-symmetry",
             "task": "pin",
-            "shapes": ["letter-S"]
+            "shapes": [
+              "letter-S"
+            ]
           },
           "goal": {
             "kind": "equals",
             "path": "response.dist.selected",
-            "value": ["same"]
+            "value": [
+              "same"
+            ]
           },
           "hints": [
             {
@@ -1120,12 +1263,27 @@
           "config": {
             "mode": "point-symmetry",
             "task": "complete",
-            "center": [8, 8],
+            "center": [
+              8,
+              8
+            ],
             "half": [
-              [2, 2],
-              [4, 2],
-              [6, 4],
-              [6, 6]
+              [
+                2,
+                2
+              ],
+              [
+                4,
+                2
+              ],
+              [
+                6,
+                4
+              ],
+              [
+                6,
+                6
+              ]
             ]
           },
           "goal": {
@@ -1149,7 +1307,7 @@
                 "value": "point-symmetry"
               },
               "level": 2,
-              "say": "중심에서 같은 거리에 있는 점을 찾아보세요."
+              "say": "반쪽의 끝 점과 중심을 이어 보고, 그 방향으로 같은 거리만큼 간 자리를 찍어 볼까요?"
             },
             {
               "when": {
