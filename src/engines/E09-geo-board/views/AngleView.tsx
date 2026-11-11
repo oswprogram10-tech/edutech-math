@@ -485,7 +485,9 @@ export function AngleView({ state, dispatch, cpa, readOnly = false, targetSize }
         </div>
       )}
 
-      <p className={styles.hint}>{S.angle.canvasHint}</p>
+      <div className={styles.hintBlock}>
+        <p className={styles.hint}>{S.angle.canvasHint}</p>
+      </div>
     </div>
   );
 }

@@ -99,12 +99,12 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "angle" },
               "level": 1,
-              "say": "각도기를 각에 올리고 한 변을 0°에 맞춘 뒤 눈금을 읽어 보세요."
+              "say": "각도기를 올릴 때 0° 선을 어디에 맞추어야 할까요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "angle" },
               "level": 2,
-              "say": "각마다 각도기를 올린 뒤 0°에서 시작하는 눈금을 따라 읽어 보세요."
+              "say": "각마다 0°에서 시작하는 눈금은 어느 쪽에 있을까요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "angle" },
@@ -209,12 +209,12 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "angle" },
               "level": 1,
-              "say": "두 각의 크기를 먼저 어림하고, 각도기로 잰 값과 견주어 보세요."
+              "say": "두 각의 크기를 먼저 어림해 볼까요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "angle" },
               "level": 2,
-              "say": "어림한 각과 잰 각이 30° 안쪽으로 가까운지 살펴보세요."
+              "say": "어림한 각과 잰 각이 얼마나 가까운가요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "angle" },
@@ -254,12 +254,12 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "angle" },
               "level": 1,
-              "say": "각의 벌어진 정도를 살펴보고 어느 상자에 넣을지 골라 보세요."
+              "say": "각의 벌어진 정도를 살펴보고 어느 상자에 넣을지 골라 볼까요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "angle" },
               "level": 2,
-              "say": "직각보다 좁은지, 넓은지 하나씩 견주어 보세요."
+              "say": "각마다 직각보다 좁은지 넓은지 견주어 볼까요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "angle" },
@@ -376,7 +376,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "angle" },
               "level": 1,
-              "say": "발사대에 각도기를 올려 발사 각을 어림해 보세요."
+              "say": "발사대에 각도기를 올려 발사 각을 먼저 어림해 볼까요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "angle" },
@@ -410,7 +410,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "angle" },
               "level": 1,
-              "say": "두 각을 이어 붙이거나 덜어 내면 몇 도가 되는지 생각해 보세요."
+              "say": "두 각을 이어 붙이거나 덜어 내면 몇 도가 되는지 생각해 볼까요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "angle" },
@@ -477,12 +477,12 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "angle" },
               "level": 1,
-              "say": "각도기로 두 각을 각각 재어 보세요."
+              "say": "각도기로 두 각을 각각 재어 볼까요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "angle" },
               "level": 2,
-              "say": "재어 본 두 값을 견주어 보세요."
+              "say": "재어 본 두 값을 견주어 볼까요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "angle" },
@@ -538,7 +538,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "angle-gather" },
               "level": 1,
-              "say": "꼭짓점을 하나씩 잘라 한 점에 모아 보세요."
+              "say": "세 꼭짓점을 잘라 한 점에 모아 볼까요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "angle-gather" },
@@ -556,7 +556,7 @@
         },
         {
           "id": "g4s1u2.A2.T2",
-          "prompt": "삼각형을 크게 바꾼 뒤 세 각을 다시 모아 보세요. 모은 각이 어떻게 될지 먼저 골라 보세요.",
+          "prompt": "모양을 바꿔 가며 서로 다른 삼각형 세 개에서 세 각을 모아 보세요. 모은 각이 어떻게 될지 먼저 골라 보세요.",
           "engine": "E11",
           "mode": "angle-gather",
           "cpa": "C",
@@ -594,12 +594,12 @@
               },
               "level": 2,
               "show": { "engine": "E11", "overlay": "trial-compare" },
-              "say": "모양이 다른 삼각형을 나란히 그려 보았어요."
+              "say": "기록한 삼각형을 키운 그림과 나란히 그렸어요. 두 모양이 같은지 견주어 보세요."
             },
             {
               "when": { "misconception": "MC-ANGLE-SUM-SHAPE-DEPENDENT" },
               "level": 2,
-              "say": "삼각형을 크게 바꾼 뒤 세 각을 다시 모아 보세요."
+              "say": "삼각형의 모양이 달라져도 모은 세 각의 합이 같았는지 견주어 볼까요?"
             },
             {
               "when": { "misconception": "MC-ANGLE-SUM-SHAPE-DEPENDENT" },
@@ -609,12 +609,12 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "angle-gather" },
               "level": 1,
-              "say": "삼각형 모양을 바꾸어도 세 각을 모은 결과가 같은지 살펴보세요."
+              "say": "세 각을 모은 결과가 시도마다 같았나요, 달랐나요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "angle-gather" },
               "level": 2,
-              "say": "서로 다른 삼각형 세 개에서 모아 보세요."
+              "say": "시도를 하나만 했을 때는 그 삼각형을 키운 그림을 옆에 그려요. 두 삼각형의 모양이 같은지 다른지 견주어 보세요."
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "angle-gather" },
@@ -636,7 +636,7 @@
               {
                 "kind": "choice",
                 "id": "p",
-                "label": "삼각형을 크게 바꾸면 모은 각은?",
+                "label": "모양이 다른 삼각형에서 모은 세 각의 합은?",
                 "multiple": false,
                 "options": [
                   { "id": "bigger", "label": "더 커져요" },
@@ -664,7 +664,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "angle-gather" },
               "level": 1,
-              "say": "네 꼭짓점을 모두 잘라 한 점에 모아 보세요."
+              "say": "네 꼭짓점을 모두 잘라 한 점에 모아 볼까요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "angle-gather" },
@@ -697,7 +697,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "angle-gather" },
               "level": 2,
-              "say": "50°와 75°를 더한 뒤 나머지를 생각해 보세요."
+              "say": "50°와 75°를 더하면 몇 도이고, 삼각형 전체에서 얼마가 남을까요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "angle-gather" },
@@ -731,7 +731,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "angle-gather" },
               "level": 2,
-              "say": "80°, 95°, 70°를 더한 뒤 나머지를 생각해 보세요."
+              "say": "80°, 95°, 70°를 더하면 몇 도이고, 사각형 전체에서 얼마가 남을까요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "angle-gather" },

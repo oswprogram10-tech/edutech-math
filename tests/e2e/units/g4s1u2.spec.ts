@@ -1,7 +1,11 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 import { PREVIEW_URL } from '../../../playwright.config';
-import { expectContentPanelsReachable } from '../panel-layout';
+import {
+  expectChromeBookCanvasSize,
+  expectContentPanelsReachable,
+  expectFitCanvasVisible,
+} from '../panel-layout';
 
 /**
  * T114 g4s1u2 「각도」 A1 「각도기 레이저 반사 퍼즐」·A2 「꼭짓점 잘라 모으기」 단원 E2E.
@@ -167,6 +171,12 @@ async function typeNumber(page: Page, id: string, digits: string): Promise<void>
   for (const digit of digits) await page.keyboard.press(digit);
 }
 
+async function clearNumber(page: Page, id: string): Promise<void> {
+  const box = slot(page, 'response').locator(`[data-response-field="${id}"]`);
+  await box.getByRole('button').first().click();
+  await slot(page, 'response').getByRole('button', { name: '모두 지우기' }).click();
+}
+
 async function choose(page: Page, fieldId: string, label: string): Promise<void> {
   const field = slot(page, 'response').locator(`[data-response-field="${fieldId}"]`);
   await field.getByRole('button', { name: label, exact: true }).click();
@@ -279,6 +289,175 @@ test('A1 각도기 — 대표 오답 뒤 고쳐서 여섯 과제를 통과한다
   await expectPassed(page, true);
 });
 
+test('A1.T2 잰 각이 틀리면 힌트 ①이 나온다', async ({ page }) => {
+  await openActivity(page, 'g4s1u2.A1', '각도기 레이저 반사 퍼즐');
+  // T1은 각도기를 0° 선에 맞춰 세 각을 읽어 통과한다(본 흐름과 같은 조작).
+  await placeProtractor(page);
+  await focusCanvas(page);
+  await press(page, 'Shift+ArrowRight');
+  await press(page, 'ArrowRight', 5);
+  await setStepper(page, 'reading-stepper', '잰 각', 40);
+  await switchAngle(page, 2);
+  await resetRotation(page, 20);
+  await setStepper(page, 'reading-stepper', '잰 각', 115);
+  await switchAngle(page, 3);
+  await setStepper(page, 'reading-stepper', '잰 각', 70);
+  await submit(page);
+  await expectPassed(page);
+
+  // T2 — 어림만 적고 재어 읽지 않으면 일반 ①이 나온다.
+  await setStepper(page, 'estimate-stepper', '어림한 각', 30);
+  await submit(page);
+  await expectFailedWithHint(page, '두 각의 크기를 먼저 어림해 볼까요?');
+});
+
+test('A1.T3 상자를 잘못 나누면 힌트 ①이 나온다', async ({ page }) => {
+  await openActivity(page, 'g4s1u2.A1', '각도기 레이저 반사 퍼즐');
+  // T1·T2는 통과한다.
+  await placeProtractor(page);
+  await setStepper(page, 'reading-stepper', '잰 각', 40);
+  await switchAngle(page, 2);
+  await resetRotation(page, 20);
+  await setStepper(page, 'reading-stepper', '잰 각', 115);
+  await switchAngle(page, 3);
+  await setStepper(page, 'reading-stepper', '잰 각', 70);
+  await submit(page);
+  await expectPassed(page);
+  await placeProtractor(page);
+  await setStepper(page, 'estimate-stepper', '어림한 각', 30);
+  await setStepper(page, 'reading-stepper', '잰 각', 25);
+  await switchAngle(page, 2);
+  await setStepper(page, 'estimate-stepper', '어림한 각', 140);
+  await setStepper(page, 'reading-stepper', '잰 각', 150);
+  await submit(page);
+  await expectPassed(page);
+
+  // T3 — 각 1(예각)을 둔각 상자에 넣으면 일반 ①이 나온다.
+  const response = slot(page, 'response');
+  await response.getByRole('button', { name: '각 1 옮길 카드로 고르기', exact: true }).click();
+  await response.getByRole('button', { name: '둔각 여기에 놓기', exact: true }).click();
+  await response.getByRole('button', { name: '각 2 옮길 카드로 고르기', exact: true }).click();
+  await response.getByRole('button', { name: '직각 여기에 놓기', exact: true }).click();
+  await response.getByRole('button', { name: '각 3 옮길 카드로 고르기', exact: true }).click();
+  await response.getByRole('button', { name: '둔각 여기에 놓기', exact: true }).click();
+  await response.getByRole('button', { name: '각 4 옮길 카드로 고르기', exact: true }).click();
+  await response.getByRole('button', { name: '예각 여기에 놓기', exact: true }).click();
+  await response.getByRole('button', { name: '각 5 옮길 카드로 고르기', exact: true }).click();
+  await response.getByRole('button', { name: '둔각 여기에 놓기', exact: true }).click();
+  await response.getByRole('button', { name: '각 6 옮길 카드로 고르기', exact: true }).click();
+  await response.getByRole('button', { name: '직각 여기에 놓기', exact: true }).click();
+  await submit(page);
+  await expectFailedWithHint(page, '각의 벌어진 정도를 살펴보고 어느 상자에 넣을지 골라 볼까요?');
+});
+
+test('A1.T5 합과 차가 틀리면 힌트 ①이 나온다', async ({ page }) => {
+  await openActivity(page, 'g4s1u2.A1', '각도기 레이저 반사 퍼즐');
+  // T1~T4는 정답으로 통과시킨다.
+  await placeProtractor(page);
+  await setStepper(page, 'reading-stepper', '잰 각', 40);
+  await switchAngle(page, 2);
+  await resetRotation(page, 20);
+  await setStepper(page, 'reading-stepper', '잰 각', 115);
+  await switchAngle(page, 3);
+  await setStepper(page, 'reading-stepper', '잰 각', 70);
+  await submit(page);
+  await expectPassed(page);
+  await placeProtractor(page);
+  await setStepper(page, 'estimate-stepper', '어림한 각', 30);
+  await setStepper(page, 'reading-stepper', '잰 각', 25);
+  await switchAngle(page, 2);
+  await setStepper(page, 'estimate-stepper', '어림한 각', 140);
+  await setStepper(page, 'reading-stepper', '잰 각', 150);
+  await submit(page);
+  await expectPassed(page);
+  const response = slot(page, 'response');
+  const cards: readonly [string, string][] = [
+    ['각 1', '예각'],
+    ['각 2', '직각'],
+    ['각 3', '둔각'],
+    ['각 4', '예각'],
+    ['각 5', '둔각'],
+    ['각 6', '직각'],
+  ];
+  for (const [card, bin] of cards) {
+    await response.getByRole('button', { name: `${card} 옮길 카드로 고르기`, exact: true }).click();
+    await response.getByRole('button', { name: `${bin} 여기에 놓기`, exact: true }).click();
+  }
+  await submit(page);
+  await expectPassed(page);
+  await placeProtractor(page);
+  await setStepper(page, 'launch-estimate-stepper', '어림한 발사 각', 130);
+  await setStepper(page, 'launch-stepper', '발사 각', 135);
+  await page.getByRole('button', { name: '쏘기', exact: true }).click();
+  await submit(page);
+  await expectPassed(page);
+
+  // T5 — 합과 차를 바꿔 넣으면 일반 ①이 나온다.
+  await typeNumber(page, 'sum', '65');
+  await typeNumber(page, 'diff', '105');
+  await submit(page);
+  await expectFailedWithHint(page, '두 각을 이어 붙이거나 덜어 내면 몇 도가 되는지 생각해 볼까요?');
+});
+
+test('A2.T1 모으지 않고 제출하면 힌트 ①이 나온다', async ({ page }) => {
+  await openActivity(page, 'g4s1u2.A2', '꼭짓점 잘라 모으기');
+  await submit(page);
+  await expectFailedWithHint(page, '세 꼭짓점을 잘라 한 점에 모아 볼까요?');
+});
+
+test('A2.T3 네 각을 모으지 않으면 힌트 ①이 나온다', async ({ page }) => {
+  await openActivity(page, 'g4s1u2.A2', '꼭짓점 잘라 모으기');
+  // T1·T2는 정답으로 통과시킨다.
+  await gatherAllCorners(page, 3);
+  await submit(page);
+  await expectPassed(page);
+  await gatherAllCorners(page, 3);
+  await newTrialAndMoveApex(page, 2);
+  await gatherAllCorners(page, 3);
+  await newTrialAndMoveApex(page, 2);
+  await gatherAllCorners(page, 3);
+  await choose(page, 'p', '똑같아요');
+  await submit(page);
+  await expectPassed(page);
+
+  // T3 — 두 꼭짓점만 모으면 일반 ①이 나온다.
+  await gatherAllCorners(page, 2);
+  await submit(page);
+  await expectFailedWithHint(page, '네 꼭짓점을 모두 잘라 한 점에 모아 볼까요?');
+});
+
+test('A2.T4·T5 나머지 각이 틀리면 힌트 ①이 나온다', async ({ page }) => {
+  await openActivity(page, 'g4s1u2.A2', '꼭짓점 잘라 모으기');
+  await gatherAllCorners(page, 3);
+  await submit(page);
+  await expectPassed(page);
+  await gatherAllCorners(page, 3);
+  await newTrialAndMoveApex(page, 2);
+  await gatherAllCorners(page, 3);
+  await newTrialAndMoveApex(page, 2);
+  await gatherAllCorners(page, 3);
+  await choose(page, 'p', '똑같아요');
+  await submit(page);
+  await expectPassed(page);
+  await gatherAllCorners(page, 4);
+  await submit(page);
+  await expectPassed(page);
+
+  // T4 — 나머지 각을 틀리면 일반 ①이 나온다.
+  await typeNumber(page, 'rest', '45');
+  await submit(page);
+  await expectFailedWithHint(page, '삼각형의 세 각을 모으면 어떻게 되는지 떠올려 보세요.');
+  await clearNumber(page, 'rest');
+  await typeNumber(page, 'rest', '55');
+  await submit(page);
+  await expectPassed(page);
+
+  // T5 — 사각형 나머지 각을 틀리면 일반 ①이 나온다.
+  await typeNumber(page, 'rest', '105');
+  await submit(page);
+  await expectFailedWithHint(page, '사각형의 네 각을 모으면 어떻게 되는지 떠올려 보세요.');
+});
+
 test('A1.T1 ZERO-LINE ② zero-gap이 판과 1px 이내로 겹친다', async ({ page }) => {
   await openActivity(page, 'g4s1u2.A1', '각도기 레이저 반사 퍼즐');
   await placeProtractor(page);
@@ -313,7 +492,9 @@ test('A2 꼭짓점 잘라 모으기 — 예측 오답 뒤 고쳐서 다섯 과�
 
   // T2 — 서로 다른 삼각형 세 개를 모은 뒤, '더 커져요'를 골라 SUM-SHAPE ①을 보고
   // '똑같아요'로 고쳐 통과한다.
-  await expect(page.getByText('삼각형을 크게 바꾼 뒤', { exact: false })).toBeVisible();
+  await expect(
+    page.getByText('모양을 바꿔 가며 서로 다른 삼각형 세 개에서', { exact: false }),
+  ).toBeVisible();
   await gatherAllCorners(page, 3);
   await newTrialAndMoveApex(page, 2);
   await gatherAllCorners(page, 3);
@@ -353,29 +534,40 @@ test('A2.T2 SUM-SHAPE ② trial-compare가 기록한 시도를 보여 준다', a
   await gatherAllCorners(page, 3);
   await submit(page);
   await expectPassed(page);
-  await expect(page.getByText('삼각형을 크게 바꾼 뒤', { exact: false })).toBeVisible();
+  await expect(
+    page.getByText('모양을 바꿔 가며 서로 다른 삼각형 세 개에서', { exact: false }),
+  ).toBeVisible();
   await gatherAllCorners(page, 3);
   await choose(page, 'p', '더 커져요');
   await submit(page);
   await expectFailedWithHint(page, '아까 작은 삼각형에선 몇 °였지? 큰 삼각형에서도 모아 볼까?');
   await submit(page);
-  await expectFailedWithHint(page, '모양이 다른 삼각형을 나란히 그려 보았어요.', 2);
+  await expectFailedWithHint(
+    page,
+    '기록한 삼각형을 키운 그림과 나란히 그렸어요. 두 모양이 같은지 견주어 보세요.',
+    2,
+  );
   await expect(slot(page, 'main').locator('[data-overlay="trial-compare"]')).toBeVisible();
 });
 
-test('첫 화면에 엔진·확인하기가 들어온다', async ({ page }) => {
+test('첫 화면에 엔진·확인하기가 들어온다', async ({ page }, testInfo) => {
   await openActivity(page, 'g4s1u2.A1', '각도기 레이저 반사 퍼즐');
   await page.evaluate(() => window.scrollTo(0, 0));
+  // T122로 각도기 판이 실행기 판 높이에 맞춰 줄어 판 안 스크롤이 없다.
   await expectContentPanelsReachable(page);
-  await expect(mainCanvas(page)).toBeVisible();
+  let boxes = await expectFitCanvasVisible(page);
+  await expect(mainCanvas(page)).toBeInViewport({ ratio: 1 });
   await expect(page.getByTestId('reading-stepper')).toBeVisible();
-  await expect(page.getByRole('button', { name: '확인하기' })).toBeVisible();
+  await expect(page.getByRole('button', { name: '확인하기' })).toBeInViewport({ ratio: 1 });
+  if (testInfo.project.name === 'chromebook') expectChromeBookCanvasSize(boxes);
 
   await openActivity(page, 'g4s1u2.A2', '꼭짓점 잘라 모으기');
   await page.evaluate(() => window.scrollTo(0, 0));
   await expectContentPanelsReachable(page);
-  await expect(cutCanvas(page)).toBeVisible();
-  await expect(page.getByRole('button', { name: '확인하기' })).toBeVisible();
+  boxes = await expectFitCanvasVisible(page);
+  await expect(cutCanvas(page)).toBeInViewport({ ratio: 1 });
+  await expect(page.getByRole('button', { name: '확인하기' })).toBeInViewport({ ratio: 1 });
+  if (testInfo.project.name === 'chromebook') expectChromeBookCanvasSize(boxes);
 });
 
 test('오프라인에서도 g4s1u2.A1 활동이 열린다', async ({ page, context }) => {
