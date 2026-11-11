@@ -8,101 +8,183 @@
       "tasks": [
         {
           "id": "g5s1u6.A1.T1",
-          "prompt": "모눈 한 칸의 한 변이 1cm예요. 평행사변형을 잘라 옮겨 네 각이 직각인 도형으로 만들어 보세요.",
+          "prompt": "모눈 한 칸의 한 변이 1cm예요. 평행사변형을 잘라 옮겨 네 각이 직각인 도형으로 만들어 보세요. 넓이도 구해 보세요.",
           "engine": "E11",
           "mode": "formula-derive",
           "cpa": "C",
           "config": {
             "mode": "formula-derive",
-            "shape": { "type": "parallelogram", "base": 6, "height": 4, "skew": 3 },
-            "tools": ["scissors"],
+            "shape": {
+              "type": "parallelogram",
+              "base": 6,
+              "height": 4,
+              "skew": 3
+            },
+            "tools": [
+              "scissors"
+            ],
             "grid": 1,
             "unitCover": "after-assemble"
           },
           "goal": {
             "kind": "all",
             "of": [
-              { "kind": "predicate", "name": "outlineIs", "args": { "kind": "rectangle" } },
-              { "kind": "predicate", "name": "areaPreserved" },
-              { "kind": "equals", "path": "response.area.value", "value": "24" },
-              { "kind": "equals", "path": "response.unit.selected", "value": ["u-cm2"] }
+              {
+                "kind": "predicate",
+                "name": "outlineIs",
+                "args": {
+                  "kind": "rectangle"
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "areaPreserved"
+              },
+              {
+                "kind": "equals",
+                "path": "response.area.value",
+                "value": "24"
+              },
+              {
+                "kind": "equals",
+                "path": "response.unit.selected",
+                "value": [
+                  "u-cm2"
+                ]
+              }
             ]
           },
           "hints": [
             {
-              "when": { "misconception": "MC-AREA-SLANT-SIDE" },
+              "when": {
+                "misconception": "MC-AREA-SLANT-SIDE"
+              },
               "level": 1,
               "say": "높이는 어디에서 어디까지 재는 길이였나요?"
             },
             {
-              "when": { "misconception": "MC-AREA-SLANT-SIDE" },
+              "when": {
+                "misconception": "MC-AREA-SLANT-SIDE"
+              },
               "level": 2,
               "say": "옆변으로 만든 상자와 평행사변형을 겹쳐 보세요.",
-              "show": { "engine": "E11", "overlay": "slant-rectangle" }
+              "show": {
+                "engine": "E11",
+                "overlay": "slant-rectangle"
+              }
             },
             {
-              "when": { "misconception": "MC-AREA-SLANT-SIDE" },
+              "when": {
+                "misconception": "MC-AREA-SLANT-SIDE"
+              },
               "level": 3,
               "backtrack": "g5s1u6.area-conservation"
             },
             {
-              "when": { "misconception": "MC-AREA-UNIT-CONFUSION" },
+              "when": {
+                "misconception": "MC-AREA-UNIT-CONFUSION"
+              },
               "level": 1,
               "say": "1cm²는 어떤 모양이었나요?"
             },
             {
-              "when": { "misconception": "MC-AREA-UNIT-CONFUSION" },
+              "when": {
+                "misconception": "MC-AREA-UNIT-CONFUSION"
+              },
               "level": 2,
               "say": "1cm 선분과 1cm² 정사각형을 나란히 표시했어요.",
-              "show": { "engine": "E11", "overlay": "unit-compare" }
+              "show": {
+                "engine": "E11",
+                "overlay": "unit-compare"
+              }
             },
             {
-              "when": { "misconception": "MC-AREA-UNIT-CONFUSION" },
+              "when": {
+                "misconception": "MC-AREA-UNIT-CONFUSION"
+              },
               "level": 3,
               "backtrack": "g5s1u6.unit-area-rectangle"
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "formula-derive" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "formula-derive"
+              },
               "level": 1,
               "say": "자른 조각을 어디로 옮기면 네 각이 모두 직각이 될까요?"
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "formula-derive" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "formula-derive"
+              },
               "level": 2,
               "say": "지금 만든 도형의 테두리를 표시했어요.",
-              "show": { "engine": "E11", "overlay": "work-outline" }
+              "show": {
+                "engine": "E11",
+                "overlay": "work-outline"
+              }
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "formula-derive" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "formula-derive"
+              },
               "level": 3,
               "backtrack": "g5s1u6.area-conservation"
             }
           ],
-          "concepts": ["g5s1u6.area-conservation", "g5s1u6.unit-area-rectangle"],
+          "concepts": [
+            "g5s1u6.area-conservation",
+            "g5s1u6.unit-area-rectangle"
+          ],
           "submit": "button",
           "diagnose": [
             {
               "code": "MC-AREA-SLANT-SIDE",
-              "args": { "base": "6", "height": "4", "slant": "5" },
+              "args": {
+                "base": "6",
+                "height": "4",
+                "slant": "5"
+              },
               "path": "response.area.value"
             },
             {
               "code": "MC-AREA-UNIT-CONFUSION",
-              "args": { "trap": "u-cm", "expected": "u-cm2" },
+              "args": {
+                "trap": "u-cm",
+                "expected": "u-cm2"
+              },
               "path": "response.unit.selected.0"
             }
           ],
           "response": {
             "fields": [
-              { "kind": "number", "id": "area", "label": "넓이(cm²)", "forms": ["integer"] },
+              {
+                "kind": "number",
+                "id": "area",
+                "label": "넓이",
+                "forms": [
+                  "integer"
+                ]
+              },
               {
                 "kind": "choice",
                 "id": "unit",
                 "label": "넓이의 단위",
                 "multiple": false,
                 "options": [
-                  { "id": "u-cm", "label": "cm" },
-                  { "id": "u-cm2", "label": "cm²" }
+                  {
+                    "id": "u-cm",
+                    "label": "cm"
+                  },
+                  {
+                    "id": "u-cm2",
+                    "label": "cm²"
+                  }
                 ]
               }
             ]
@@ -110,72 +192,141 @@
         },
         {
           "id": "g5s1u6.A1.T2",
-          "prompt": "모눈 한 칸의 한 변이 1cm예요. 삼각형을 복제해 경첩으로 돌려 붙이고, 이어 붙인 도형의 넓이를 구해 보세요.",
+          "prompt": "모눈 한 칸의 한 변이 1cm예요. 삼각형을 복제해 경첩으로 돌려 붙인 뒤, 삼각형 하나의 넓이를 구해 보세요.",
           "engine": "E11",
           "mode": "formula-derive",
           "cpa": "C",
           "config": {
             "mode": "formula-derive",
-            "shape": { "type": "triangle", "base": 6, "height": 4, "apex": 2 },
-            "tools": ["duplicate", "hinge180"],
+            "shape": {
+              "type": "triangle",
+              "base": 6,
+              "height": 4,
+              "apex": 2
+            },
+            "tools": [
+              "duplicate",
+              "hinge180"
+            ],
             "maxCopies": 1,
             "grid": 1
           },
           "goal": {
             "kind": "all",
             "of": [
-              { "kind": "predicate", "name": "usedTools", "args": { "tools": ["duplicate", "hinge180"] } },
-              { "kind": "predicate", "name": "outlineIs", "args": { "kind": "parallelogram" } },
-              { "kind": "predicate", "name": "areaRatioIs", "args": { "value": "2" } },
-              { "kind": "equals", "path": "response.area.value", "value": "12" }
+              {
+                "kind": "predicate",
+                "name": "usedTools",
+                "args": {
+                  "tools": [
+                    "duplicate",
+                    "hinge180"
+                  ]
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "outlineIs",
+                "args": {
+                  "kind": "parallelogram"
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "areaRatioIs",
+                "args": {
+                  "value": "2"
+                }
+              },
+              {
+                "kind": "equals",
+                "path": "response.area.value",
+                "value": "12"
+              }
             ]
           },
           "hints": [
             {
-              "when": { "misconception": "MC-AREA-TRIANGLE-NO-HALF" },
+              "when": {
+                "misconception": "MC-AREA-TRIANGLE-NO-HALF"
+              },
               "level": 1,
               "say": "이 삼각형 몇 개가 모여 평행사변형이 되었나요?"
             },
             {
-              "when": { "misconception": "MC-AREA-TRIANGLE-NO-HALF" },
+              "when": {
+                "misconception": "MC-AREA-TRIANGLE-NO-HALF"
+              },
               "level": 2,
               "say": "경첩으로 돌리기 전 모습을 점선으로 표시했어요.",
-              "show": { "engine": "E11", "overlay": "hinge-replay" }
+              "show": {
+                "engine": "E11",
+                "overlay": "hinge-replay"
+              }
             },
             {
-              "when": { "misconception": "MC-AREA-TRIANGLE-NO-HALF" },
+              "when": {
+                "misconception": "MC-AREA-TRIANGLE-NO-HALF"
+              },
               "level": 3,
               "backtrack": "g5s1u6.derive-formulas"
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "formula-derive" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "formula-derive"
+              },
               "level": 1,
               "say": "복제한 조각을 경첩으로 돌리면 어디에 붙일 수 있을까요?"
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "formula-derive" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "formula-derive"
+              },
               "level": 2,
-              "say": "경첩으로 돌리기 전 모습을 점선으로 표시했어요.",
-              "show": { "engine": "E11", "overlay": "hinge-replay" }
+              "say": "경첩으로 돌리기 전 모양을 점선으로 표시했어요. 지금 모양과 견주어 보세요.",
+              "show": {
+                "engine": "E11",
+                "overlay": "hinge-replay"
+              }
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "formula-derive" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "formula-derive"
+              },
               "level": 3,
               "backtrack": "g5s1u6.derive-formulas"
             }
           ],
-          "concepts": ["g5s1u6.derive-formulas"],
+          "concepts": [
+            "g5s1u6.derive-formulas"
+          ],
           "submit": "button",
           "diagnose": [
             {
               "code": "MC-AREA-TRIANGLE-NO-HALF",
-              "args": { "base": "6", "height": "4" },
+              "args": {
+                "base": "6",
+                "height": "4"
+              },
               "path": "response.area.value"
             }
           ],
           "response": {
             "fields": [
-              { "kind": "number", "id": "area", "label": "넓이(cm²)", "forms": ["integer"] }
+              {
+                "kind": "number",
+                "id": "area",
+                "label": "넓이(cm²)",
+                "forms": [
+                  "integer"
+                ]
+              }
             ]
           }
         },
@@ -187,47 +338,102 @@
           "cpa": "P",
           "config": {
             "mode": "formula-derive",
-            "shape": { "type": "trapezoid", "top": 3, "bottom": 5, "height": 4, "offset": 1 },
-            "tools": ["duplicate", "hinge180"],
+            "shape": {
+              "type": "trapezoid",
+              "top": 3,
+              "bottom": 5,
+              "height": 4,
+              "offset": 1
+            },
+            "tools": [
+              "duplicate",
+              "hinge180"
+            ],
             "maxCopies": 1,
             "grid": 1
           },
           "goal": {
             "kind": "all",
             "of": [
-              { "kind": "predicate", "name": "usedTools", "args": { "tools": ["duplicate", "hinge180"] } },
+              {
+                "kind": "predicate",
+                "name": "usedTools",
+                "args": {
+                  "tools": [
+                    "duplicate",
+                    "hinge180"
+                  ]
+                }
+              },
               {
                 "kind": "predicate",
                 "name": "outlineIs",
-                "args": { "kind": "parallelogram", "base": "8" }
+                "args": {
+                  "kind": "parallelogram",
+                  "base": "8"
+                }
               },
-              { "kind": "predicate", "name": "areaRatioIs", "args": { "value": "2" } },
-              { "kind": "equals", "path": "response.area.value", "value": "16" }
+              {
+                "kind": "predicate",
+                "name": "areaRatioIs",
+                "args": {
+                  "value": "2"
+                }
+              },
+              {
+                "kind": "equals",
+                "path": "response.area.value",
+                "value": "16"
+              }
             ]
           },
           "hints": [
             {
-              "when": { "kind": "equals", "path": "mode", "value": "formula-derive" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "formula-derive"
+              },
               "level": 1,
               "say": "사다리꼴 몇 개를 붙여 평행사변형을 만들었나요?"
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "formula-derive" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "formula-derive"
+              },
               "level": 2,
               "say": "경첩으로 돌리기 전 모습을 점선으로 표시했어요.",
-              "show": { "engine": "E11", "overlay": "hinge-replay" }
+              "show": {
+                "engine": "E11",
+                "overlay": "hinge-replay"
+              }
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "formula-derive" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "formula-derive"
+              },
               "level": 3,
               "backtrack": "g5s1u6.derive-formulas"
             }
           ],
-          "concepts": ["g5s1u6.derive-formulas"],
+          "concepts": [
+            "g5s1u6.derive-formulas"
+          ],
           "submit": "button",
           "response": {
             "fields": [
-              { "kind": "number", "id": "area", "label": "넓이(cm²)", "forms": ["integer"] }
+              {
+                "kind": "number",
+                "id": "area",
+                "label": "넓이(cm²)",
+                "forms": [
+                  "integer"
+                ]
+              }
             ]
           }
         },
@@ -239,22 +445,35 @@
           "cpa": "P",
           "config": {
             "mode": "formula-derive",
-            "shape": { "type": "trapezoid", "top": 3, "bottom": 5, "height": 4, "offset": 1 },
-            "tools": ["duplicate", "hinge180"],
+            "shape": {
+              "type": "trapezoid",
+              "top": 3,
+              "bottom": 5,
+              "height": 4,
+              "offset": 1
+            },
+            "tools": [
+              "duplicate",
+              "hinge180"
+            ],
             "maxCopies": 1,
             "grid": 1
           },
           "goal": {
             "kind": "equals",
             "path": "response.f.selected",
-            "value": ["f-half"]
+            "value": [
+              "f-half"
+            ]
           },
           "hints": [
             {
               "when": {
                 "kind": "equals",
                 "path": "response.f.selected",
-                "value": ["f-nohalf"]
+                "value": [
+                  "f-nohalf"
+                ]
               },
               "level": 1,
               "say": "사다리꼴 2개로 만든 평행사변형의 넓이와 사다리꼴 하나의 넓이는 어떤 관계였나요?"
@@ -263,37 +482,63 @@
               "when": {
                 "kind": "equals",
                 "path": "response.f.selected",
-                "value": ["f-nohalf"]
+                "value": [
+                  "f-nohalf"
+                ]
               },
               "level": 2,
-              "say": "경첩으로 붙이기 전과 붙인 뒤의 모습을 겹쳐 보세요."
+              "say": "같은 사다리꼴을 옆에 하나 더 놓은 모습을 표시했어요. 두 사다리꼴의 넓이를 견주어 보세요.",
+              "show": {
+                "engine": "E11",
+                "overlay": "hinge-replay"
+              }
             },
             {
               "when": {
                 "kind": "equals",
                 "path": "response.f.selected",
-                "value": ["f-nohalf"]
+                "value": [
+                  "f-nohalf"
+                ]
               },
               "level": 3,
               "backtrack": "g5s1u6.derive-formulas"
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "formula-derive" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "formula-derive"
+              },
               "level": 1,
               "say": "식을 고를 때 사다리꼴 2개로 만든 도형을 떠올려 보세요."
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "formula-derive" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "formula-derive"
+              },
               "level": 2,
-              "say": "경첩으로 붙이기 전과 붙인 뒤의 모습을 겹쳐 보세요."
+              "say": "같은 사다리꼴을 옆에 하나 더 놓은 모습을 표시했어요. 두 사다리꼴의 넓이를 견주어 보세요.",
+              "show": {
+                "engine": "E11",
+                "overlay": "hinge-replay"
+              }
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "formula-derive" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "formula-derive"
+              },
               "level": 3,
               "backtrack": "g5s1u6.derive-formulas"
             }
           ],
-          "concepts": ["g5s1u6.derive-formulas"],
+          "concepts": [
+            "g5s1u6.derive-formulas"
+          ],
           "submit": "button",
           "response": {
             "fields": [
@@ -303,10 +548,22 @@
                 "label": "사다리꼴 넓이 식",
                 "multiple": false,
                 "options": [
-                  { "id": "f-half", "label": "(윗변 + 아랫변) × 높이 ÷ 2" },
-                  { "id": "f-nohalf", "label": "(윗변 + 아랫변) × 높이" },
-                  { "id": "f-mul", "label": "윗변 × 아랫변 ÷ 2" },
-                  { "id": "f-base", "label": "아랫변 × 높이 ÷ 2" }
+                  {
+                    "id": "f-half",
+                    "label": "(윗변 + 아랫변) × 높이 ÷ 2"
+                  },
+                  {
+                    "id": "f-nohalf",
+                    "label": "(윗변 + 아랫변) × 높이"
+                  },
+                  {
+                    "id": "f-mul",
+                    "label": "윗변 × 아랫변 ÷ 2"
+                  },
+                  {
+                    "id": "f-base",
+                    "label": "아랫변 × 높이 ÷ 2"
+                  }
                 ]
               }
             ]
@@ -320,7 +577,13 @@
           "cpa": "A",
           "config": {
             "mode": "formula-derive",
-            "shape": { "type": "rhombus", "diagonals": [6, 8] }
+            "shape": {
+              "type": "rhombus",
+              "diagonals": [
+                6,
+                8
+              ]
+            }
           },
           "goal": {
             "kind": "equals",
@@ -329,27 +592,48 @@
           },
           "hints": [
             {
-              "when": { "kind": "equals", "path": "mode", "value": "formula-derive" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "formula-derive"
+              },
               "level": 1,
               "say": "마름모를 두 대각선으로 나누면 어떤 도형이 보이나요?"
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "formula-derive" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "formula-derive"
+              },
               "level": 2,
               "say": "두 대각선으로 나뉜 부분을 떠올려 보세요."
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "formula-derive" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "formula-derive"
+              },
               "level": 3,
               "backtrack": "g5s1u6.derive-formulas"
             }
           ],
-          "concepts": ["g5s1u6.derive-formulas"],
+          "concepts": [
+            "g5s1u6.derive-formulas"
+          ],
           "submit": "button",
           "showEngine": false,
           "response": {
             "fields": [
-              { "kind": "number", "id": "area", "label": "넓이(cm²)", "forms": ["integer"] }
+              {
+                "kind": "number",
+                "id": "area",
+                "label": "넓이(cm²)",
+                "forms": [
+                  "integer"
+                ]
+              }
             ]
           }
         },
@@ -361,7 +645,12 @@
           "cpa": "A",
           "config": {
             "mode": "formula-derive",
-            "shape": { "type": "parallelogram", "base": 9, "height": 4, "skew": 3 }
+            "shape": {
+              "type": "parallelogram",
+              "base": 9,
+              "height": 4,
+              "skew": 3
+            }
           },
           "goal": {
             "kind": "equals",
@@ -370,49 +659,80 @@
           },
           "hints": [
             {
-              "when": { "misconception": "MC-AREA-SLANT-SIDE" },
+              "when": {
+                "misconception": "MC-AREA-SLANT-SIDE"
+              },
               "level": 1,
               "say": "높이는 어디에서 어디까지 재는 길이였나요?"
             },
             {
-              "when": { "misconception": "MC-AREA-SLANT-SIDE" },
+              "when": {
+                "misconception": "MC-AREA-SLANT-SIDE"
+              },
               "level": 2,
               "say": "옆변과 높이는 같은 길이인가요?"
             },
             {
-              "when": { "misconception": "MC-AREA-SLANT-SIDE" },
+              "when": {
+                "misconception": "MC-AREA-SLANT-SIDE"
+              },
               "level": 3,
               "backtrack": "g5s1u6.area-conservation"
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "formula-derive" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "formula-derive"
+              },
               "level": 1,
               "say": "평행사변형의 넓이를 구할 때 밑변과 함께 어떤 길이를 봐야 하나요?"
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "formula-derive" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "formula-derive"
+              },
               "level": 2,
               "say": "밑변에 수직인 길이를 떠올려 보세요."
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "formula-derive" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "formula-derive"
+              },
               "level": 3,
               "backtrack": "g5s1u6.area-conservation"
             }
           ],
-          "concepts": ["g5s1u6.derive-formulas"],
+          "concepts": [
+            "g5s1u6.derive-formulas"
+          ],
           "submit": "button",
           "showEngine": false,
           "diagnose": [
             {
               "code": "MC-AREA-SLANT-SIDE",
-              "args": { "base": "9", "height": "4", "slant": "5" },
+              "args": {
+                "base": "9",
+                "height": "4",
+                "slant": "5"
+              },
               "path": "response.area.value"
             }
           ],
           "response": {
             "fields": [
-              { "kind": "number", "id": "area", "label": "넓이(cm²)", "forms": ["integer"] }
+              {
+                "kind": "number",
+                "id": "area",
+                "label": "넓이(cm²)",
+                "forms": [
+                  "integer"
+                ]
+              }
             ]
           }
         }
@@ -430,57 +750,106 @@
           "cpa": "C",
           "config": {
             "mode": "geoboard",
-            "grid": [12, 12],
-            "constraint": { "type": "fixed-perimeter", "value": 20, "shape": "rectangle" },
+            "grid": [
+              12,
+              12
+            ],
+            "constraint": {
+              "type": "fixed-perimeter",
+              "value": 20,
+              "shape": "rectangle"
+            },
             "log": true
           },
           "goal": {
             "kind": "all",
             "of": [
-              { "kind": "predicate", "name": "loggedDistinctRects", "args": { "count": 3 } },
-              { "kind": "equals", "path": "response.area.selected", "value": ["a-diff"] }
+              {
+                "kind": "predicate",
+                "name": "loggedDistinctRects",
+                "args": {
+                  "count": 3
+                }
+              },
+              {
+                "kind": "equals",
+                "path": "response.area.selected",
+                "value": [
+                  "a-diff"
+                ]
+              }
             ]
           },
           "hints": [
             {
-              "when": { "misconception": "MC-PERIMETER-AREA-SAME" },
+              "when": {
+                "misconception": "MC-PERIMETER-AREA-SAME"
+              },
               "level": 1,
               "say": "1×9와 5×5에 단위넓이가 몇 개씩 들어갈까요?"
             },
             {
-              "when": { "misconception": "MC-PERIMETER-AREA-SAME" },
+              "when": {
+                "misconception": "MC-PERIMETER-AREA-SAME"
+              },
               "level": 2,
-              "say": "지금 직사각형과 넓이가 다른 기록에 단위넓이를 덮어 표시했어요.",
-              "show": { "engine": "E09", "overlay": "unit-squares" }
+              "say": "지금 직사각형에 단위넓이를 표시했어요. 몇 칸이 들어가는지 세어 보세요.",
+              "show": {
+                "engine": "E09",
+                "overlay": "unit-squares"
+              }
             },
             {
-              "when": { "misconception": "MC-PERIMETER-AREA-SAME" },
+              "when": {
+                "misconception": "MC-PERIMETER-AREA-SAME"
+              },
               "level": 3,
               "backtrack": "g5s1u6.perimeter-vs-area"
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "geoboard" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "geoboard"
+              },
               "level": 1,
               "say": "직사각형을 바꿀 때 둘레와 넓이는 각각 어떻게 달라지나요?"
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "geoboard" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "geoboard"
+              },
               "level": 2,
               "say": "지금 직사각형에 단위넓이를 표시했어요.",
-              "show": { "engine": "E09", "overlay": "unit-squares" }
+              "show": {
+                "engine": "E09",
+                "overlay": "unit-squares"
+              }
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "geoboard" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "geoboard"
+              },
               "level": 3,
               "backtrack": "g5s1u6.perimeter-vs-area"
             }
           ],
-          "concepts": ["g5s1u6.perimeter", "g5s1u6.perimeter-vs-area"],
+          "concepts": [
+            "g5s1u6.perimeter",
+            "g5s1u6.perimeter-vs-area"
+          ],
           "submit": "button",
           "diagnose": [
             {
               "code": "MC-PERIMETER-AREA-SAME",
-              "args": { "trap": "a-same", "expected": "a-diff" },
+              "args": {
+                "trap": "a-same",
+                "expected": "a-diff"
+              },
               "path": "response.area.selected.0"
             }
           ],
@@ -492,8 +861,14 @@
                 "label": "기록한 직사각형들의 넓이",
                 "multiple": false,
                 "options": [
-                  { "id": "a-same", "label": "모두 같아요" },
-                  { "id": "a-diff", "label": "다른 것도 있어요" }
+                  {
+                    "id": "a-same",
+                    "label": "모두 같아요"
+                  },
+                  {
+                    "id": "a-diff",
+                    "label": "다른 것도 있어요"
+                  }
                 ]
               }
             ]
@@ -507,34 +882,61 @@
           "cpa": "C",
           "config": {
             "mode": "geoboard",
-            "grid": [12, 12],
-            "constraint": { "type": "fixed-perimeter", "value": 20, "shape": "rectangle" },
+            "grid": [
+              12,
+              12
+            ],
+            "constraint": {
+              "type": "fixed-perimeter",
+              "value": 20,
+              "shape": "rectangle"
+            },
             "log": true
           },
           "goal": {
             "kind": "predicate",
             "name": "currentRect",
-            "args": { "width": 5, "height": 5 }
+            "args": {
+              "width": 5,
+              "height": 5
+            }
           },
           "hints": [
             {
-              "when": { "kind": "equals", "path": "mode", "value": "geoboard" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "geoboard"
+              },
               "level": 1,
               "say": "넓이가 가장 큰 직사각형은 지금 모양과 무엇이 다를까요?"
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "geoboard" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "geoboard"
+              },
               "level": 2,
               "say": "지금 직사각형에 단위넓이를 표시했어요.",
-              "show": { "engine": "E09", "overlay": "unit-squares" }
+              "show": {
+                "engine": "E09",
+                "overlay": "unit-squares"
+              }
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "geoboard" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "geoboard"
+              },
               "level": 3,
               "backtrack": "g5s1u6.perimeter-vs-area"
             }
           ],
-          "concepts": ["g5s1u6.perimeter-vs-area"],
+          "concepts": [
+            "g5s1u6.perimeter-vs-area"
+          ],
           "submit": "button"
         },
         {
@@ -545,34 +947,61 @@
           "cpa": "P",
           "config": {
             "mode": "geoboard",
-            "grid": [12, 12],
-            "constraint": { "type": "fixed-perimeter", "value": 20, "shape": "rectangle" },
+            "grid": [
+              12,
+              12
+            ],
+            "constraint": {
+              "type": "fixed-perimeter",
+              "value": 20,
+              "shape": "rectangle"
+            },
             "log": true
           },
           "goal": {
             "kind": "predicate",
             "name": "currentRect",
-            "args": { "width": 1, "height": 9 }
+            "args": {
+              "width": 1,
+              "height": 9
+            }
           },
           "hints": [
             {
-              "when": { "kind": "equals", "path": "mode", "value": "geoboard" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "geoboard"
+              },
               "level": 1,
-              "say": "가로와 세로를 곱해서 9가 되는 짝을 찾아보세요."
+              "say": "세 직사각형의 둘레를 각각 구해 볼까요? 넓이가 9가 되는 가로와 세로의 짝은 무엇인가요?"
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "geoboard" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "geoboard"
+              },
               "level": 2,
               "say": "지금 직사각형에 단위넓이를 표시했어요.",
-              "show": { "engine": "E09", "overlay": "unit-squares" }
+              "show": {
+                "engine": "E09",
+                "overlay": "unit-squares"
+              }
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "geoboard" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "geoboard"
+              },
               "level": 3,
               "backtrack": "g5s1u6.perimeter-vs-area"
             }
           ],
-          "concepts": ["g5s1u6.perimeter-vs-area"],
+          "concepts": [
+            "g5s1u6.perimeter-vs-area"
+          ],
           "submit": "button"
         },
         {
@@ -583,54 +1012,86 @@
           "cpa": "A",
           "config": {
             "mode": "geoboard",
-            "grid": [12, 12],
-            "constraint": { "type": "fixed-perimeter", "value": 20, "shape": "rectangle" },
+            "grid": [
+              12,
+              12
+            ],
+            "constraint": {
+              "type": "fixed-perimeter",
+              "value": 20,
+              "shape": "rectangle"
+            },
             "log": true
           },
           "goal": {
             "kind": "equals",
             "path": "response.p.selected",
-            "value": ["p-4x6"]
+            "value": [
+              "p-4x6"
+            ]
           },
           "hints": [
             {
-              "when": { "misconception": "MC-PERIMETER-AREA-SAME" },
+              "when": {
+                "misconception": "MC-PERIMETER-AREA-SAME"
+              },
               "level": 1,
               "say": "넓이가 같아도 둘레는 모두 같을까요?"
             },
             {
-              "when": { "misconception": "MC-PERIMETER-AREA-SAME" },
+              "when": {
+                "misconception": "MC-PERIMETER-AREA-SAME"
+              },
               "level": 2,
-              "say": "가로와 세로가 가까워질수록 둘레는 어떻게 달라지나요?"
+              "say": "넓이가 24cm²인 직사각형을 몇 가지 떠올려 보고, 둘레를 각각 구해 볼까요?"
             },
             {
-              "when": { "misconception": "MC-PERIMETER-AREA-SAME" },
+              "when": {
+                "misconception": "MC-PERIMETER-AREA-SAME"
+              },
               "level": 3,
               "backtrack": "g5s1u6.perimeter-vs-area"
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "geoboard" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "geoboard"
+              },
               "level": 1,
-              "say": "가로와 세로가 가까워질수록 둘레는 어떻게 달라지나요?"
+              "say": "넓이가 24cm²인 직사각형의 둘레를 각각 구해 볼까요?"
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "geoboard" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "geoboard"
+              },
               "level": 2,
-              "say": "가로와 세로의 차이가 작을수록 둘레가 어떻게 되나요?"
+              "say": "가로와 세로가 가까운 직사각형과 먼 직사각형의 둘레를 견주어 보세요."
             },
             {
-              "when": { "kind": "equals", "path": "mode", "value": "geoboard" },
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "geoboard"
+              },
               "level": 3,
               "backtrack": "g5s1u6.perimeter-vs-area"
             }
           ],
-          "concepts": ["g5s1u6.perimeter-vs-area"],
+          "concepts": [
+            "g5s1u6.perimeter-vs-area"
+          ],
           "submit": "button",
           "showEngine": false,
           "diagnose": [
             {
               "code": "MC-PERIMETER-AREA-SAME",
-              "args": { "trap": "p-same", "expected": "p-4x6" },
+              "args": {
+                "trap": "p-same",
+                "expected": "p-4x6"
+              },
               "path": "response.p.selected.0"
             }
           ],
@@ -642,10 +1103,22 @@
                 "label": "넓이 24cm²인 직사각형",
                 "multiple": false,
                 "options": [
-                  { "id": "p-4x6", "label": "가로 4cm, 세로 6cm" },
-                  { "id": "p-3x8", "label": "가로 3cm, 세로 8cm" },
-                  { "id": "p-2x12", "label": "가로 2cm, 세로 12cm" },
-                  { "id": "p-same", "label": "둘레가 모두 같아요" }
+                  {
+                    "id": "p-4x6",
+                    "label": "가로 4cm, 세로 6cm"
+                  },
+                  {
+                    "id": "p-3x8",
+                    "label": "가로 3cm, 세로 8cm"
+                  },
+                  {
+                    "id": "p-2x12",
+                    "label": "가로 2cm, 세로 12cm"
+                  },
+                  {
+                    "id": "p-same",
+                    "label": "둘레가 모두 같아요"
+                  }
                 ]
               }
             ]

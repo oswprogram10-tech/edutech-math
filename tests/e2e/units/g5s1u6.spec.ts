@@ -1,7 +1,11 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 import { PREVIEW_URL } from '../../../playwright.config';
-import { expectContentPanelsReachable } from '../panel-layout';
+import {
+  expectChromeBookCanvasSize,
+  expectContentPanelsReachable,
+  expectFitCanvasVisible,
+} from '../panel-layout';
 
 /**
  * T119 g5s1u6 「다각형의 둘레와 넓이」 A1 「잘라 붙여 넓이 공식 만들기」·
@@ -175,10 +179,16 @@ async function movePiece(page: Page, index: number, key: string, count: number):
   for (let step = 0; step < count; step += 1) await page.keyboard.press(key);
 }
 
-test('A1 잘라 붙여 넓이 공식 만들기 — 자르기·경첩·넓이 입력', async ({ page }) => {
+test('A1 잘라 붙여 넓이 공식 만들기 — 자르기·경첩·넓이 입력', async ({ page }, testInfo) => {
   await openActivity(page, 'g5s1u6.A1', '잘라 붙여 넓이 공식 만들기');
   await screenshot(page, 'g5s1u6-a1.png');
+  // T122로 판이 실행기 판 높이에 맞춰 줄어 세 뷰포트 모두 판 안 스크롤이 없다.
   await expectContentPanelsReachable(page);
+  const boxes = await expectFitCanvasVisible(page);
+  // 크롬북에서 E11 판이 0.99로 1px 남짓 걸린다(판 안 스크롤은 0). 일부 보임으로 잰다.
+  await expect(main(page).getByTestId('cut-canvas')).toBeInViewport();
+  await expect(page.getByRole('button', { name: '확인하기' })).toBeInViewport();
+  if (testInfo.project.name === 'chromebook') expectChromeBookCanvasSize(boxes);
 
   // T1 — 단위 오답(cm)을 첫 실패로 만들어 MC-AREA-UNIT-CONFUSION ①을 본다.
   await typeNumber(page, 'area', '24');
@@ -258,10 +268,14 @@ test('A1 잘라 붙여 넓이 공식 만들기 — 자르기·경첩·넓이 입
   await expectPassed(page, true);
 });
 
-test('A2 둘레 20 고무줄 — 기록·최대 넓이·넓이 9·짧은 둘레', async ({ page }) => {
+test('A2 둘레 20 고무줄 — 기록·최대 넓이·넓이 9·짧은 둘레', async ({ page }, testInfo) => {
   await openActivity(page, 'g5s1u6.A2', '둘레 20 고무줄');
   await screenshot(page, 'g5s1u6-a2.png');
   await expectContentPanelsReachable(page);
+  const boxes = await expectFitCanvasVisible(page);
+  await expect(main(page).getByTestId('geo-canvas')).toBeInViewport({ ratio: 1 });
+  await expect(page.getByRole('button', { name: '확인하기' })).toBeInViewport({ ratio: 1 });
+  if (testInfo.project.name === 'chromebook') expectChromeBookCanvasSize(boxes);
 
   // T1 — 3×7·4×6·5×5를 기록하고 "모두 같아요"를 골라 PERIMETER-AREA-SAME ①.
   await focusCanvas(page, 'geo-canvas');
@@ -288,7 +302,11 @@ test('A2 둘레 20 고무줄 — 기록·최대 넓이·넓이 9·짧은 둘레'
 
   // T3 — 처음 3×7로 제출해 일반 ①, ← 두 번으로 1×9를 만들어 통과.
   await submit(page);
-  await expectFailedWithHint(page, '가로와 세로를 곱해서 9가 되는 짝을 찾아보세요.', 1);
+  await expectFailedWithHint(
+    page,
+    '세 직사각형의 둘레를 각각 구해 볼까요? 넓이가 9가 되는 가로와 세로의 짝은 무엇인가요?',
+    1,
+  );
   await focusCanvas(page, 'geo-canvas');
   await page.keyboard.press('ArrowLeft');
   await page.keyboard.press('ArrowLeft');
