@@ -1,7 +1,11 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 import { PREVIEW_URL } from '../../../playwright.config';
-import { expectContentPanelsReachable } from '../panel-layout';
+import {
+  expectChromeBookCanvasSize,
+  expectContentPanelsReachable,
+  expectFitCanvasVisible,
+} from '../panel-layout';
 
 /**
  * T118 g4s2u6 「다각형」 A1 「대각선 레이저 빔 생성기」·A2 「대각선 직교 사각형 실험실」 단원 E2E.
@@ -160,10 +164,15 @@ async function resetVertexCursor(page: Page, n: number): Promise<void> {
 
 test('A1 대각선 레이저 빔 생성기 — 다각형 고르기·대각선 긋기·개수 세기·규칙 찾기', async ({
   page,
-}) => {
+}, testInfo) => {
   await openActivity(page, 'g4s2u6.A1', '대각선 레이저 빔 생성기');
   await screenshot(page, 'g4s2u6-a1.png');
+  // T122로 판이 실행기 판 높이에 맞춰 줄어 세 뷰포트 모두 판 안 스크롤이 없다.
   await expectContentPanelsReachable(page);
+  const boxes = await expectFitCanvasVisible(page);
+  await expect(main(page).getByTestId('geo-canvas')).toBeInViewport({ ratio: 1 });
+  await expect(page.getByRole('button', { name: '확인하기' })).toBeInViewport({ ratio: 1 });
+  if (testInfo.project.name === 'chromebook') expectChromeBookCanvasSize(boxes);
 
   // T1 — 곡선 카드(윗줄 2)를 골라 POLYGON-CURVE ①, 한 번 더 골라 ② curve-gap.
   await choose(page, 'poly', '윗줄 2');
@@ -253,10 +262,14 @@ test('A1 대각선 레이저 빔 생성기 — 다각형 고르기·대각선 �
 
 test('A2 대각선 직교 사각형 실험실 — 조건 켜기·이름 고르기·수직이지만 이등분 아님', async ({
   page,
-}) => {
+}, testInfo) => {
   await openActivity(page, 'g4s2u6.A2', '대각선 직교 사각형 실험실');
   await screenshot(page, 'g4s2u6-a2.png');
   await expectContentPanelsReachable(page);
+  const boxes = await expectFitCanvasVisible(page);
+  await expect(main(page).getByTestId('geo-canvas')).toBeInViewport({ ratio: 1 });
+  await expect(page.getByRole('button', { name: '확인하기' })).toBeInViewport({ ratio: 1 });
+  if (testInfo.project.name === 'chromebook') expectChromeBookCanvasSize(boxes);
 
   const toggle = (name: string) => main(page).getByRole('button', { name, exact: true }).click();
 
