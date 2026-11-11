@@ -71,6 +71,13 @@ function EngineSandbox({ definition }: EngineSandboxProps) {
   const overlayNames = Object.keys(definition.overlays ?? {});
   const urlOverlay = overlayFromUrl(overlayNames);
   const [overlay, setOverlay] = useState<string | null>(null);
+  // T122: `?stage=fit`이면 판을 실행기 viewport와 같은 높이 조건으로 연다.
+  const stageFit = useMemo(
+    () =>
+      typeof window !== 'undefined' &&
+      new URLSearchParams(window.location.search).get('stage') === 'fit',
+    [],
+  );
 
   // 모드를 바꾸면 그 모드의 초기 상태로 새로 시작한다(기록도 비운다).
   useEffect(() => {
@@ -115,7 +122,7 @@ function EngineSandbox({ definition }: EngineSandboxProps) {
   }, [undo, redo, pinch]);
 
   return (
-    <main className={styles.sandbox}>
+    <main className={styles.sandbox} data-stage={stageFit ? 'fit' : undefined}>
       <header className={styles.header}>
         <div>
           <h1 className={styles.title}>{definition.name}</h1>
