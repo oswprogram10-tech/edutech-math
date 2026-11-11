@@ -1,7 +1,11 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 import { PREVIEW_URL } from '../../../playwright.config';
-import { expectContentPanelsReachable } from '../panel-layout';
+import {
+  expectChromeBookCanvasSize,
+  expectContentPanelsReachable,
+  expectFitCanvasVisible,
+} from '../panel-layout';
 
 /**
  * T111 g2s1u2 「여러 가지 도형」 A1 「고무줄 기하판」 단원 E2E.
@@ -222,7 +226,7 @@ test('A1 고무줄 기하판 — 대표 오답 뒤 고쳐서 다섯 과제를 �
     [0, 4],
   ]);
   await submit(page);
-  await expectFailedWithHint(page, '이 점에서 선이 꺾여요?');
+  await expectFailedWithHint(page, '못마다 선이 꺾이는지 살펴볼까요?');
   await submit(page);
   await expectFailedWithHint(page, '꺾이지 않는 못에 × 표시를 했어요.', 2);
   const overlay = await expectOverlayOverCanvas(panel, 'straight-run', 'geo-canvas');
@@ -254,7 +258,11 @@ test('A1 고무줄 기하판 — 대표 오답 뒤 고쳐서 다섯 과제를 �
   await submit(page);
   await expectFailedWithHint(page, '변과 꼭짓점을 세어 볼까요?');
   await submit(page);
-  await expectFailedWithHint(page, '이 도형을 돌려 바로 세운 모습을 옆에 그렸어요.', 2);
+  await expectFailedWithHint(
+    page,
+    '이 도형을 돌려 바로 세운 모습을 도형 위에 겹쳐 그렸어요. 같은 사각형인지 견주어 보세요.',
+    2,
+  );
   const ghost = panel.locator('[data-overlay="upright-ghost"]');
   await expect(ghost).toBeVisible();
   await expect(ghost.locator('polygon, path')).not.toHaveCount(0);
@@ -263,17 +271,19 @@ test('A1 고무줄 기하판 — 대표 오답 뒤 고쳐서 다섯 과제를 �
   await expectPassed(page, true);
 });
 
-test('첫 화면에 엔진·확인하기가 들어온다', async ({ page }) => {
+test('아이패드·크롬북·전자칠판 첫 화면에 엔진·확인하기가 들어온다', async ({ page }, testInfo) => {
   await openActivity(page, 'g2s1u2.A1', '고무줄 기하판');
   await page.evaluate(() => window.scrollTo(0, 0));
-  // 5×5 못판과 64px 조작 단추가 세로로 길어 판 안 스크롤 대신 앱 스크롤로 확인한다.
+  // T122로 못판이 실행기 판 높이에 맞춰 줄어들어 세 뷰포트 모두 판 안 스크롤이 없다.
   await expectContentPanelsReachable(page);
+  const boxes = await expectFitCanvasVisible(page);
 
-  const board = canvas(page);
-  await expect(board).toBeVisible();
-  // 64px 모드의 5×5 못판은 세 뷰포트 모두 첫 화면 세로를 넘는다.
-  // 판 안 스크롤 없이 앱 스크롤로 확인하기에 닿는지 본다.
-  await expect(page.getByRole('button', { name: '확인하기' })).toBeVisible();
+  // 64px 타깃이 켜진 상태에서 판과 조작·확인하기가 모두 첫 화면에 보여야 한다.
+  const panel = slot(page, 'main');
+  await expect(panel).toBeInViewport({ ratio: 1 });
+  await expect(page.getByRole('button', { name: '확인하기' })).toBeInViewport({ ratio: 1 });
+  await expect(canvas(page)).toBeInViewport({ ratio: 1 });
+  if (testInfo.project.name === 'chromebook') expectChromeBookCanvasSize(boxes);
 });
 
 test('오프라인에서도 g2s1u2.A1 활동이 열린다', async ({ page, context }) => {

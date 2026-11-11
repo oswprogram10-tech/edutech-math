@@ -132,7 +132,7 @@
                 ]
               },
               "level": 1,
-              "say": "이 점에서 선이 꺾여요?"
+              "say": "못마다 선이 꺾이는지 살펴볼까요?"
             },
             {
               "when": {
@@ -309,7 +309,7 @@
             {
               "when": { "misconception": "MC-SHAPE-ORIENTATION" },
               "level": 2,
-              "say": "이 도형을 돌려 바로 세운 모습을 옆에 그렸어요.",
+              "say": "이 도형을 돌려 바로 세운 모습을 도형 위에 겹쳐 그렸어요. 같은 사각형인지 견주어 보세요.",
               "show": { "engine": "E09", "overlay": "upright-ghost" }
             },
             {
