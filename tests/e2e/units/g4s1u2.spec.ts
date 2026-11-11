@@ -204,7 +204,7 @@ async function newTrialAndMoveApex(page: Page, steps: number): Promise<void> {
   await press(page, 'ArrowRight', steps);
 }
 
-test('A1 각도기 — 대표 오답 뒤 고쳐서 여섯 과제를 통과한다', async ({ page }) => {
+test('A1 각도기 — 대표 오답 뒤 고쳐서 여섯 과제를 통과한다', async ({ page }, testInfo) => {
   await openActivity(page, 'g4s1u2.A1', '각도기 레이저 반사 퍼즐');
   await screenshot(page, 'g4s1u2-a1.png');
 
@@ -241,6 +241,31 @@ test('A1 각도기 — 대표 오답 뒤 고쳐서 여섯 과제를 통과한다
 
   // T3 — 여섯 각을 예각·직각·둔각으로 나눈다.
   await expect(page.getByText('여섯 각을 보고', { exact: false })).toBeVisible();
+  // T3 첫 화면 실측(맨 위에서): 판·정렬 칸·'확인하기'가 어디에 있는지 남긴다.
+  await page.evaluate(() => window.scrollTo(0, 0));
+  const t3First = await page.evaluate(() => {
+    const box = (el: Element | null) => {
+      if (!(el instanceof Element)) return null;
+      const b = el.getBoundingClientRect();
+      return { top: Math.round(b.top), bottom: Math.round(b.bottom) };
+    };
+    const slotEl = document.querySelector('[data-testid="runner-slot-main"]');
+    const canvas = document.querySelector('svg[data-testid="geo-canvas"]');
+    const submit = [...document.querySelectorAll('button')].find(
+      (b) => b.textContent === '확인하기',
+    );
+    return {
+      slot: box(slotEl),
+      canvas: box(canvas),
+      submit: box(submit ?? null),
+      innerScroll: (() => {
+        const v = slotEl?.querySelector(':scope > div');
+        return v instanceof HTMLElement ? v.scrollHeight - v.clientHeight : null;
+      })(),
+      vh: window.innerHeight,
+    };
+  });
+  console.log('T3_FIRST ' + JSON.stringify({ project: testInfo.project.name, ...t3First }));
   const response = slot(page, 'response');
   const sortCards: readonly [string, string][] = [
     ['각 1', '예각'],
