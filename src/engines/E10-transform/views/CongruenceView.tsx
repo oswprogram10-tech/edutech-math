@@ -150,7 +150,7 @@ export function CongruenceView({ state, dispatch, cpa, readOnly = false, targetS
         {state.everOverlapped && correspondence ? S.status.targetDone : ''}
       </p>
 
-      <div className={styles.canvasArea}>
+      <div className={styles.boardArea}>
         <svg
           ref={svgRef}
           className={styles.canvas}

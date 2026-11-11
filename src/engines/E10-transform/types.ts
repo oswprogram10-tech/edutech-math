@@ -101,6 +101,11 @@ export interface PredictConfig {
   readonly operation?: MoveSpec | readonly MoveSpec[];
   /** 이동을 글로 보여 준다. 문제이지 답이 아니다. */
   readonly showOperation?: boolean;
+  /**
+   * T122: 기본 `true`(지금 동작). `false`면 엔진 '확인'·'다시 해 보기' 단추와
+   * 결과 그림·못 칠한 칸 표시를 그리지 않는다. 칠하기·지우기만 남는다.
+   */
+  readonly selfCheck?: boolean;
 }
 
 export type TessellationCustomize = 'none' | 'edge-translate';
@@ -185,6 +190,8 @@ export interface PredictSettings {
   readonly arcTrail: boolean;
   readonly labels: boolean;
   readonly showOperation: boolean;
+  /** T122: false면 확인 단추·결과 그림을 그리지 않는다. */
+  readonly selfCheck: boolean;
 }
 
 export interface SlideFlipTurnState {

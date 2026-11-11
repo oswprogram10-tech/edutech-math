@@ -106,7 +106,7 @@ export function HierarchyView({
         {held ? S.hierarchy.heldStatus(S.quadName[held]) : ''}
       </p>
 
-      <div className={styles.canvasArea}>
+      <div className={styles.boardArea}>
         <svg
           className={styles.canvas}
           viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
