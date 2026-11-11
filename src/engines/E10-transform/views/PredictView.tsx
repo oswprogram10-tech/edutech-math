@@ -313,14 +313,14 @@ export function PredictView({
 
       <p className={styles.instructions}>{S.instructions.predict}</p>
       <p className={styles.status} role="status" data-testid="predict-status">
-        {state.confirmed && matches
+        {state.settings.selfCheck && state.confirmed && matches
           ? S.status.targetDone
           : !state.confirmed && state.painted.length === 0
             ? S.predict.emptyPaint
             : ''}
       </p>
 
-      <div className={styles.canvasArea}>
+      <div className={styles.boardArea}>
         <svg
           ref={svgRef}
           className={styles.canvas}
@@ -457,7 +457,7 @@ export function PredictView({
             </g>
           ) : null}
 
-          {state.confirmed ? (
+          {state.settings.selfCheck && state.confirmed ? (
             <ResultLayer
               start={state.start}
               operations={state.operations}
@@ -490,23 +490,36 @@ export function PredictView({
       </div>
 
       <div className={styles.predictActions}>
-        <button
-          type="button"
-          className={styles.button}
-          disabled={readOnly || state.painted.length === 0 || state.confirmed}
-          onClick={() => dispatch({ type: 'confirm' })}
-        >
-          {S.predict.confirm}
-        </button>
-        {state.confirmed ? (
-          <button
-            type="button"
-            className={styles.button}
-            disabled={readOnly}
-            onClick={() => dispatch({ type: 'retry' })}
-          >
-            {S.predict.retry}
-          </button>
+        {state.settings.selfCheck ? (
+          <>
+            <button
+              type="button"
+              className={styles.button}
+              disabled={readOnly || state.painted.length === 0 || state.confirmed}
+              onClick={() => dispatch({ type: 'confirm' })}
+            >
+              {S.predict.confirm}
+            </button>
+            {state.confirmed ? (
+              <button
+                type="button"
+                className={styles.button}
+                disabled={readOnly}
+                onClick={() => dispatch({ type: 'retry' })}
+              >
+                {S.predict.retry}
+              </button>
+            ) : (
+              <button
+                type="button"
+                className={styles.button}
+                disabled={readOnly || state.painted.length === 0}
+                onClick={() => dispatch({ type: 'clear-paint' })}
+              >
+                {S.predict.clearPaint}
+              </button>
+            )}
+          </>
         ) : (
           <button
             type="button"
