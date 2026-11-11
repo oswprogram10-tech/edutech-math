@@ -76,7 +76,7 @@ export function TwentyQuestionsView({
   return (
     <div className={styles.wrap} data-target-size={targetSize}>
       <div className={styles.split}>
-        <div className={styles.canvasArea}>
+        <div className={styles.boardArea}>
           <svg
             className={styles.canvasSquare}
             viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}

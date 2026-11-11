@@ -257,7 +257,7 @@ export function LineSymmetryView({ state, dispatch, cpa, readOnly = false, targe
         <p className={styles.status} role="status">
           {state.folded ? S.line.decal.folded : ''}
         </p>
-        <div className={styles.canvasArea}>
+        <div className={styles.boardArea}>
           <DotBoard
             svgRef={svgRef}
             dots={state.dots}
@@ -470,7 +470,7 @@ export function LineSymmetryView({ state, dispatch, cpa, readOnly = false, targe
               : ''}
       </p>
 
-      <div className={styles.canvasArea}>
+      <div className={styles.boardArea}>
         <svg
           ref={svgRef}
           className={styles.canvas}

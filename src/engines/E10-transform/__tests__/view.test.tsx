@@ -2,6 +2,8 @@
 /** E10 화면 테스트: 기본 설정에서 정답 단서가 없고, predict 확인 전 결과 자리를 그리지 않는다. */
 import { cleanup, fireEvent, render } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
+import { predicates } from '../events';
+import { observePredict, createPredictState, resultFigure, reducePredict } from '../modes/predict';
 import { createInitialState } from '../reduce';
 import type {
   CongruenceConfig,
@@ -46,6 +48,58 @@ describe('E10 predict 확인 전에는 결과를 그리지 않는다', () => {
     expect(container.querySelectorAll('[data-painted]')).toHaveLength(0);
     const canvas = container.querySelector('svg[data-testid="transform-canvas"]');
     expect(canvas?.getAttribute('data-motion')).toBe('full');
+  });
+});
+
+describe('E10 predict selfCheck:false (T122)', () => {
+  it('확인·다시 해 보기 단추와 결과 그림이 없고 칠하기는 남는다', () => {
+    const config: PredictConfig = {
+      mode: 'predict',
+      at: [1, 1],
+      operation: { type: 'slide', direction: 'right', cells: 3 },
+      selfCheck: false,
+    };
+    const state = createInitialState(config);
+    const { container, getByText, queryByText } = render(
+      <TransformView
+        config={config}
+        state={state}
+        dispatch={() => {}}
+        cpa="C"
+        mode="predict"
+        targetSize={48}
+      />,
+    );
+    expect(getByText('칠한 칸 지우기')).toBeTruthy();
+    expect(queryByText('확인')).toBeNull();
+    expect(queryByText('다시 해 보기')).toBeNull();
+    expect(container.querySelectorAll('[data-result]')).toHaveLength(0);
+  });
+
+  it('selfCheck:false에서는 confirm·retry 액션이 상태를 바꾸지 않는다', () => {
+    const config: PredictConfig = { mode: 'predict', selfCheck: false };
+    const start = createPredictState(config);
+    const painted = reducePredict(start, { type: 'paint', cells: [[1, 1]], value: true });
+    expect(painted.painted).toHaveLength(1);
+    expect(reducePredict(painted, { type: 'confirm' })).toBe(painted);
+    expect(reducePredict(painted, { type: 'retry' })).toBe(painted);
+  });
+
+  it('맞게 칠하면 confirmed 없이 predictionMatches가 참이다', () => {
+    const config: PredictConfig = {
+      mode: 'predict',
+      at: [1, 1],
+      operation: { type: 'slide', direction: 'right', cells: 3 },
+      selfCheck: false,
+    };
+    let state = createPredictState(config);
+    for (const cell of resultFigure(state).cells) {
+      state = reducePredict(state, { type: 'paint', cells: [cell], value: true });
+    }
+    const observation = observePredict(state);
+    expect(observation.confirmed).toBe(false);
+    expect(predicates['predictionMatches']?.(observation, null)).toBe(true);
+    expect(predicates['predictionMatches']?.(observation, { confirmed: true })).toBe(false);
   });
 });
 
