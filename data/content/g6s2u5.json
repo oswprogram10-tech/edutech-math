@@ -4,18 +4,20 @@
   "activities": [
     {
       "id": "g6s2u5.A2",
-      "title": "원 등분 극한 직사각형",
+      "title": "원을 잘라 늘어놓기",
       "tasks": [
         {
           "id": "g6s2u5.A2.T1",
-          "prompt": "원을 8조각으로 잘라 줄 위에 붙여 보세요.",
+          "prompt": "원을 8조각으로 잘라 줄 위에 엇갈려 붙여 보세요.",
           "engine": "E11",
           "mode": "circle-sectors",
           "cpa": "C",
           "config": {
             "mode": "circle-sectors",
             "radius": 5,
-            "divisions": [8],
+            "divisions": [
+              8
+            ],
             "manualUpTo": 8,
             "showDimensions": false
           },
@@ -68,7 +70,9 @@
               "backtrack": "g6s2u5.area-by-rearrange"
             }
           ],
-          "concepts": ["g6s2u5.area-by-rearrange"],
+          "concepts": [
+            "g6s2u5.area-by-rearrange"
+          ],
           "submit": "button"
         },
         {
@@ -80,7 +84,13 @@
           "config": {
             "mode": "circle-sectors",
             "radius": 5,
-            "divisions": [16, 32, 64, 128, 256],
+            "divisions": [
+              16,
+              32,
+              64,
+              128,
+              256
+            ],
             "manualUpTo": 8,
             "showDimensions": false
           },
@@ -97,7 +107,9 @@
               {
                 "kind": "equals",
                 "path": "response.shape.selected",
-                "value": ["c-rect"]
+                "value": [
+                  "c-rect"
+                ]
               }
             ]
           },
@@ -143,7 +155,9 @@
               "backtrack": "g6s2u5.area-by-rearrange"
             }
           ],
-          "concepts": ["g6s2u5.area-by-rearrange"],
+          "concepts": [
+            "g6s2u5.area-by-rearrange"
+          ],
           "submit": "button",
           "response": {
             "fields": [
@@ -153,9 +167,18 @@
                 "label": "가까워지는 모양",
                 "multiple": false,
                 "options": [
-                  { "id": "c-rect", "label": "직사각형" },
-                  { "id": "c-circle", "label": "원" },
-                  { "id": "c-tri", "label": "삼각형" }
+                  {
+                    "id": "c-rect",
+                    "label": "직사각형"
+                  },
+                  {
+                    "id": "c-circle",
+                    "label": "원"
+                  },
+                  {
+                    "id": "c-tri",
+                    "label": "삼각형"
+                  }
                 ]
               }
             ]
@@ -170,7 +193,13 @@
           "config": {
             "mode": "circle-sectors",
             "radius": 5,
-            "divisions": [16, 32, 64, 128, 256],
+            "divisions": [
+              16,
+              32,
+              64,
+              128,
+              256
+            ],
             "manualUpTo": 8,
             "showDimensions": "lines"
           },
@@ -258,7 +287,10 @@
               "backtrack": "g6s2u5.area-by-rearrange"
             }
           ],
-          "concepts": ["g6s2u5.area-by-rearrange", "g6s2u5.circumference-formula"],
+          "concepts": [
+            "g6s2u5.area-by-rearrange",
+            "g6s2u5.circumference-formula"
+          ],
           "submit": "button",
           "response": {
             "fields": [
@@ -266,7 +298,10 @@
                 "kind": "number",
                 "id": "w",
                 "label": "원주의 몇 배",
-                "forms": ["fraction", "integer"]
+                "forms": [
+                  "fraction",
+                  "integer"
+                ]
               }
             ]
           }
@@ -280,21 +315,31 @@
           "config": {
             "mode": "circle-sectors",
             "radius": 5,
-            "divisions": [16, 32, 64, 128, 256],
+            "divisions": [
+              16,
+              32,
+              64,
+              128,
+              256
+            ],
             "manualUpTo": 8,
             "showDimensions": "named"
           },
           "goal": {
             "kind": "equals",
             "path": "response.f.selected",
-            "value": ["f-rr"]
+            "value": [
+              "f-rr"
+            ]
           },
           "hints": [
             {
               "when": {
                 "kind": "equals",
                 "path": "response.f.selected",
-                "value": ["f-2r"]
+                "value": [
+                  "f-2r"
+                ]
               },
               "level": 1,
               "say": "이 식은 둘레의 길이인가요, 안쪽을 덮는 양인가요?"
@@ -303,7 +348,9 @@
               "when": {
                 "kind": "equals",
                 "path": "response.f.selected",
-                "value": ["f-2r"]
+                "value": [
+                  "f-2r"
+                ]
               },
               "level": 2,
               "show": {
@@ -316,7 +363,9 @@
               "when": {
                 "kind": "equals",
                 "path": "response.f.selected",
-                "value": ["f-2r"]
+                "value": [
+                  "f-2r"
+                ]
               },
               "level": 3,
               "backtrack": "g5s1u6.perimeter-vs-area"
@@ -325,7 +374,9 @@
               "when": {
                 "kind": "equals",
                 "path": "response.f.selected",
-                "value": ["f-dd"]
+                "value": [
+                  "f-dd"
+                ]
               },
               "level": 1,
               "say": "줄의 세로는 원의 어느 길이와 같았나요?"
@@ -334,7 +385,9 @@
               "when": {
                 "kind": "equals",
                 "path": "response.f.selected",
-                "value": ["f-dd"]
+                "value": [
+                  "f-dd"
+                ]
               },
               "level": 2,
               "show": {
@@ -347,7 +400,9 @@
               "when": {
                 "kind": "equals",
                 "path": "response.f.selected",
-                "value": ["f-dd"]
+                "value": [
+                  "f-dd"
+                ]
               },
               "level": 3,
               "backtrack": "g3s2u3.radius-diameter"
@@ -356,7 +411,9 @@
               "when": {
                 "kind": "equals",
                 "path": "response.f.selected",
-                "value": ["f-dr"]
+                "value": [
+                  "f-dr"
+                ]
               },
               "level": 1,
               "say": "줄의 가로는 원주의 얼마였나요?"
@@ -365,7 +422,9 @@
               "when": {
                 "kind": "equals",
                 "path": "response.f.selected",
-                "value": ["f-dr"]
+                "value": [
+                  "f-dr"
+                ]
               },
               "level": 2,
               "show": {
@@ -378,7 +437,9 @@
               "when": {
                 "kind": "equals",
                 "path": "response.f.selected",
-                "value": ["f-dr"]
+                "value": [
+                  "f-dr"
+                ]
               },
               "level": 3,
               "backtrack": "g6s2u5.area-by-rearrange"
@@ -390,7 +451,7 @@
                 "value": "circle-sectors"
               },
               "level": 1,
-              "say": "넓이를 구하려면 줄의 가로와 세로에 무엇을 곱해야 할까요?"
+              "say": "줄의 가로와 세로는 각각 원의 어느 길이와 이어지나요?"
             },
             {
               "when": {
@@ -415,7 +476,9 @@
               "backtrack": "g6s2u5.area-by-rearrange"
             }
           ],
-          "concepts": ["g6s2u5.area-formula"],
+          "concepts": [
+            "g6s2u5.area-formula"
+          ],
           "submit": "button",
           "response": {
             "fields": [
@@ -425,10 +488,22 @@
                 "label": "넓이를 구하는 식",
                 "multiple": false,
                 "options": [
-                  { "id": "f-rr", "label": "반지름 × 반지름 × 원주율" },
-                  { "id": "f-2r", "label": "반지름 × 2 × 원주율" },
-                  { "id": "f-dd", "label": "지름 × 지름 × 원주율" },
-                  { "id": "f-dr", "label": "지름 × 반지름 × 원주율" }
+                  {
+                    "id": "f-rr",
+                    "label": "반지름 × 반지름 × 원주율"
+                  },
+                  {
+                    "id": "f-2r",
+                    "label": "반지름 × 2 × 원주율"
+                  },
+                  {
+                    "id": "f-dd",
+                    "label": "지름 × 지름 × 원주율"
+                  },
+                  {
+                    "id": "f-dr",
+                    "label": "지름 × 반지름 × 원주율"
+                  }
                 ]
               }
             ]
@@ -500,7 +575,7 @@
                 "misconception": "MC-GEO-RADIUS-DIAMETER"
               },
               "level": 2,
-              "say": "반지름과 지름 중 어느 것을 두 번 곱해야 할까요?"
+              "say": "줄의 세로를 원 그림에서 찾아 길이를 견주어 보세요."
             },
             {
               "when": {
@@ -537,7 +612,9 @@
               "backtrack": "g6s2u5.area-by-rearrange"
             }
           ],
-          "concepts": ["g6s2u5.area-formula"],
+          "concepts": [
+            "g6s2u5.area-formula"
+          ],
           "submit": "button",
           "showEngine": false,
           "response": {
@@ -546,7 +623,9 @@
                 "kind": "number",
                 "id": "area",
                 "label": "넓이(cm²)",
-                "forms": ["decimal"]
+                "forms": [
+                  "decimal"
+                ]
               }
             ]
           }

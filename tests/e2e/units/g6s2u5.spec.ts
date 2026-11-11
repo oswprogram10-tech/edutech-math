@@ -1,7 +1,11 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 import { PREVIEW_URL } from '../../../playwright.config';
-import { expectContentPanelsReachable } from '../panel-layout';
+import {
+  expectChromeBookCanvasSize,
+  expectContentPanelsReachable,
+  expectFitCanvasVisible,
+} from '../panel-layout';
 
 /**
  * T121 g6s2u5 「원의 둘레와 넓이」 A2 「원 등분 극한 직사각형」 단원 E2E.
@@ -25,7 +29,7 @@ async function openActivity(page: Page): Promise<void> {
   await page.getByRole('button', { name: '건너뛰기' }).click();
   await expect(page).toHaveURL(/#\/map$/);
   await page.goto('/#/activity/g6s2u5.A2');
-  await expect(page.getByRole('heading', { name: '원 등분 극한 직사각형' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '원을 잘라 늘어놓기' })).toBeVisible();
   await expect(page.getByRole('button', { name: '확인하기' })).toBeVisible();
 }
 
@@ -212,11 +216,17 @@ async function solveT4(page: Page): Promise<void> {
   await expectPassed(page);
 }
 
-test('A2 원 등분 극한 직사각형 — 손 배열·자동 배열·가로·넓이 식·넓이', async ({ page }) => {
+test('A2 원 등분 극한 직사각형 — 손 배열·자동 배열·가로·넓이 식·넓이', async ({
+  page,
+}, testInfo) => {
   await openActivity(page);
   await screenshot(page, 'g6s2u5-a2.png');
-  // E11 판(960×640)이 크롬북 첫 화면 높이를 넘어 판 안쪽 스크롤이 생긴다.
+  // T122로 판이 실행기 판 높이에 맞춰 줄어 세 뷰포트 모두 판 안 스크롤이 없다.
   await expectContentPanelsReachable(page);
+  const boxes = await expectFitCanvasVisible(page);
+  await expect(main(page).getByTestId('cut-canvas')).toBeInViewport({ ratio: 1 });
+  await expect(page.getByRole('button', { name: '확인하기' })).toBeInViewport({ ratio: 1 });
+  if (testInfo.project.name === 'chromebook') expectChromeBookCanvasSize(boxes);
 
   // T1 — 8조각을 모두 같은 방향으로 놓아 일반 ①, 테두리 ② 뒤 홀수 칸만 뒤집어 통과.
   for (let index = 0; index < 8; index += 1) await placeSector(page, index, index, false);
@@ -294,10 +304,42 @@ test('A2 원 등분 극한 직사각형 — 손 배열·자동 배열·가로·�
   await typePart(page, 'area', 'decimal', '452.16');
   await submit(page);
   await expectFailedWithHint(page, '늘어놓은 줄의 세로는 원의 어느 길이와 같았나요?', 1);
+  await submit(page);
+  await expectFailedWithHint(page, '줄의 세로를 원 그림에서 찾아 길이를 견주어 보세요.', 2);
   await clearNumber(page, 'area');
   await typePart(page, 'area', 'decimal', '113.04');
   await submit(page);
   await expectPassed(page, true);
+});
+
+test('A2.T4 f-dd·f-dr 오답도 각각 힌트 ①을 준다', async ({ page }) => {
+  await openActivity(page);
+  await solveT1(page);
+  await solveT2(page);
+  await solveT3(page);
+
+  // T4 — 지름 × 지름 식(f-dd)은 ① '줄의 세로는 원의 어느 길이와 같았나요?'
+  await autoArrange(page);
+  await choose(page, 'f', '지름 × 지름 × 원주율');
+  await submit(page);
+  await expectFailedWithHint(page, '줄의 세로는 원의 어느 길이와 같았나요?', 1);
+
+  // 같은 과제에서 f-dr(지름 × 반지름 × 원주율)을 고르면 두 번째 실패라 ②가 이어진다.
+  await choose(page, 'f', '지름 × 지름 × 원주율');
+  await choose(page, 'f', '지름 × 반지름 × 원주율');
+  await submit(page);
+  await expectFailedWithHint(page, '위쪽에 놓인 호들만 칠했어요. 원 둘레와 견주어 보세요.', 2);
+});
+
+test('A2.T4 f-dr 오답은 첫 실패에서 힌트 ①을 준다', async ({ page }) => {
+  await openActivity(page);
+  await solveT1(page);
+  await solveT2(page);
+  await solveT3(page);
+  await autoArrange(page);
+  await choose(page, 'f', '지름 × 반지름 × 원주율');
+  await submit(page);
+  await expectFailedWithHint(page, '줄의 가로는 원주의 얼마였나요?', 1);
 });
 
 test('오프라인에서도 g6s2u5.A2 활동이 열린다', async ({ page, context }) => {
@@ -306,7 +348,7 @@ test('오프라인에서도 g6s2u5.A2 활동이 열린다', async ({ page, conte
   await page.getByRole('button', { name: '건너뛰기' }).click();
   await expect(page).toHaveURL(/#\/map$/);
   await page.goto(`${PREVIEW_URL}/#/activity/g6s2u5.A2`);
-  await expect(page.getByRole('heading', { name: '원 등분 극한 직사각형' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '원을 잘라 늘어놓기' })).toBeVisible();
 
   // 서비스 워커가 설치·활성화되어 이 페이지를 제어할 때까지 기다린다.
   await page.evaluate(async () => {
@@ -322,6 +364,6 @@ test('오프라인에서도 g6s2u5.A2 활동이 열린다', async ({ page, conte
 
   await context.setOffline(true);
   await page.reload();
-  await expect(page.getByRole('heading', { name: '원 등분 극한 직사각형' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '원을 잘라 늘어놓기' })).toBeVisible();
   await expect(page.getByRole('button', { name: '확인하기' })).toBeVisible();
 });
