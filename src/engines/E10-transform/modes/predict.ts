@@ -65,6 +65,7 @@ function settingsOf(config: PredictConfig, grid: number): PredictSettings {
     arcTrail: config.arcTrail !== false,
     labels: config.labels !== false,
     showOperation: config.showOperation !== false,
+    selfCheck: config.selfCheck !== false,
   };
 }
 
@@ -139,11 +140,13 @@ export function reducePredict(state: PredictState, action: TransformAction): Pre
       return { ...state, painted: [] };
     }
     case 'confirm': {
+      if (!state.settings.selfCheck) return state;
       if (state.confirmed) return state;
       if (state.painted.length === 0) return state;
       return { ...state, confirmed: true, attempts: state.attempts + 1 };
     }
     case 'retry': {
+      if (!state.settings.selfCheck) return state;
       if (!state.confirmed && state.painted.length === 0) return state;
       return { ...state, confirmed: false, painted: [] };
     }
