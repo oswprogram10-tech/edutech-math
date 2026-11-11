@@ -280,6 +280,12 @@ test('from-diagonals의 B·D 손잡이를 포인터로 끌면 모양이 바뀐�
   });
   await chooseMode(page, 'drag-test');
 
+  // 판이 판 높이에 맞춰 줄어들면(T122) 한 격자 이동이 화면에서 작아진다.
+  // 그래서 픽셀 10px 대신 '한 격자의 절반 이상 움직였는지'로 본다.
+  const box = await canvas.boundingBox();
+  if (!box) throw new Error('캔버스 상자를 찾지 못했다');
+  const minMove = Math.max(canvasScale(box) * (800 / 24) * 0.5, 2);
+
   const bStart = await dragHandleTowardCenter(page, canvas, 1);
   await expect
     .poll(async () => {
@@ -290,7 +296,7 @@ test('from-diagonals의 B·D 손잡이를 포인터로 끌면 모양이 바뀐�
         after.y + after.height / 2 - bStart.y,
       );
     })
-    .toBeGreaterThan(10);
+    .toBeGreaterThan(minMove);
 
   const dStart = await dragHandleTowardCenter(page, canvas, 3);
   await expect
@@ -302,7 +308,7 @@ test('from-diagonals의 B·D 손잡이를 포인터로 끌면 모양이 바뀐�
         after.y + after.height / 2 - dStart.y,
       );
     })
-    .toBeGreaterThan(10);
+    .toBeGreaterThan(minMove);
 
   const observation = await readObservation<DragObservation>(page);
   expect(observation.figure?.kind).toBe('quad');

@@ -95,6 +95,20 @@
   padding-bottom: 0.25rem;
 }
 
+/* T122: `?stage=fit`로 열면 실행기 판(viewport)과 같은 높이 조건이 된다.
+   판 높이에 맞춰 캔버스가 줄어드는지 확인하는 E2E(fit-canvas)만 쓴다. */
+.sandbox[data-stage='fit'] .stage {
+  height: min(56dvh, 520px);
+  min-height: 428px;
+}
+
+/* 실행기(T082)와 같이 엔진 View를 판 높이에 묶는다. 이게 없으면 `.wrap`의
+   `height: 100%`가 내용 높이가 되어 엔진의 flex 축소가 일어나지 않는다. */
+.sandbox[data-stage='fit'] .stage > * {
+  height: 100%;
+  min-height: 0;
+}
+
 .observationBox {
   border-top: 1px solid #dfe6f5;
   padding-top: 0.5rem;
