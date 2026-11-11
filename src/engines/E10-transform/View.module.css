@@ -63,19 +63,30 @@
   font-weight: 700;
 }
 
-.canvasArea {
-  display: flex;
-  flex: 1 1 auto;
-  justify-content: center;
-  align-items: flex-start;
-  min-width: 0;
-  min-height: 220px;
+/* T122: 알림이 없을 때 빈 줄이 판 높이를 잡아먹지 않게 한다. */
+.status:empty {
+  display: none;
 }
 
+/* T082 실행기의 `[class*='canvas']` 규칙이 이 칸에 걸리지 않도록 이름을
+   `boardArea`로 둔다. 그래야 카드 결정 2번의 flex·min-height가 산다. */
+.boardArea {
+  display: flex;
+  flex: 1 1 0;
+  justify-content: center;
+  align-items: center;
+  min-width: 0;
+  min-height: 200px;
+  overflow: hidden;
+}
+
+/* 판 높이에 맞춰 줄어든다. 가로·세로 중 좁은 쪽이 기준이다(T122). */
 .canvas {
   display: block;
-  width: 100%;
-  max-width: 720px;
+  height: 100%;
+  max-height: 100%;
+  width: auto;
+  max-width: min(100%, 720px);
   aspect-ratio: 1 / 1;
   border-radius: 16px;
   background: #fbfaf6;
@@ -98,6 +109,10 @@
   align-items: flex-start;
   gap: 0.6rem;
   flex-wrap: wrap;
+  /* T122: 판 높이가 모자라면 아래 조작 패널이 먼저 줄고 넘칠 때만 스크롤한다. */
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow: auto;
 }
 
 .panelGroup {
@@ -218,6 +233,10 @@
   border: 1px solid #d7deea;
   border-radius: 12px;
   background: #fbfcff;
+  /* T122: 판 높이가 모자라면 먼저 줄고 넘칠 때만 스크롤한다. */
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow: auto;
 }
 
 .clockHand {

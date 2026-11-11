@@ -247,7 +247,7 @@ export function VennView({ state, dispatch, cpa, readOnly = false, targetSize }:
         {held ? S.venn.heldStatus(S.cardLabel(cardNumber(state.deck, held))) : status}
       </p>
 
-      <div className={styles.canvasArea}>
+      <div className={styles.boardArea}>
         <svg
           ref={svgRef}
           className={styles.canvas}

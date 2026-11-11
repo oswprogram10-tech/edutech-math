@@ -405,7 +405,7 @@ export function AngleView({ state, dispatch, cpa, readOnly = false, targetSize }
         {statusText}
       </p>
 
-      <div className={styles.canvasArea}>
+      <div className={styles.boardArea}>
         <svg
           ref={svgRef}
           className={styles.canvas}
@@ -430,7 +430,7 @@ export function AngleView({ state, dispatch, cpa, readOnly = false, targetSize }
       </div>
 
       {!puzzle ? (
-        <div style={{ display: 'grid', gap: '0.5rem' }}>
+        <div className={styles.controlStack}>
           <NumberStepper
             label={S.angle.estimate}
             value={entry.estimate}
@@ -450,7 +450,7 @@ export function AngleView({ state, dispatch, cpa, readOnly = false, targetSize }
           ) : null}
         </div>
       ) : (
-        <div style={{ display: 'grid', gap: '0.5rem' }}>
+        <div className={styles.controlStack}>
           {settings.estimateFirst ? (
             <NumberStepper
               label={S.angle.launchEstimate}

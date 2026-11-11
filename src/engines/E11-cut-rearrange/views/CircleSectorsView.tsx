@@ -331,7 +331,7 @@ export function CircleSectorsView({
         {done ? S.circle.arranged : status}
       </p>
 
-      <div className={styles.canvasArea}>
+      <div className={styles.boardArea}>
         <svg
           ref={svgRef}
           className={styles.canvas}
