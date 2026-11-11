@@ -297,7 +297,7 @@ export function PointSymmetryView({ state, dispatch, cpa, readOnly = false, targ
           {complete ? S.point.complete.closed : S.point.complete.notClosed}
         </p>
 
-        <div className={styles.canvasArea}>
+        <div className={styles.boardArea}>
           <svg
             ref={svgRef}
             className={styles.canvas}
@@ -455,7 +455,7 @@ export function PointSymmetryView({ state, dispatch, cpa, readOnly = false, targ
         {status}
       </p>
 
-      <div className={styles.canvasArea}>
+      <div className={styles.boardArea}>
         <svg
           ref={svgRef}
           className={styles.canvas}

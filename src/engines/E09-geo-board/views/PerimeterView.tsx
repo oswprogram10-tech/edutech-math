@@ -138,7 +138,7 @@ export function PerimeterView({
 
       <p className={styles.instructions}>{S.perimeter.instructions}</p>
 
-      <div className={styles.canvasArea}>
+      <div className={styles.boardArea}>
         <svg
           ref={svgRef}
           className={styles.canvas}

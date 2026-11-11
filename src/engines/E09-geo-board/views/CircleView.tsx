@@ -564,7 +564,7 @@ export function CircleView({
       {state.tool === 'chord' ? <p className={styles.hint}>{S.circle.chordHint}</p> : null}
       {state.tool === 'compass' ? <p className={styles.hint}>{S.circle.compassHint}</p> : null}
 
-      <div className={styles.canvasArea}>
+      <div className={styles.boardArea}>
         <svg
           ref={svgRef}
           className={styles.canvas}
