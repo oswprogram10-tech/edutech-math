@@ -17,14 +17,15 @@
             "shape": "flag-L",
             "grid": 10,
             "at": [1, 3],
-            "operation": { "type": "slide", "direction": "right", "cells": 5 }
+            "operation": { "type": "slide", "direction": "right", "cells": 5 },
+            "selfCheck": false
           },
           "goal": { "kind": "predicate", "name": "predictionMatches" },
           "hints": [
             {
               "when": { "kind": "equals", "path": "mode", "value": "predict" },
               "level": 1,
-              "say": "결과가 놓일 칸을 하나씩 세어 칠해 보세요."
+              "say": "결과가 놓일 칸을 어떻게 찾을 수 있을까요?"
             },
             {
               "when": { "kind": "equals", "path": "paintedOrientation", "value": null },
@@ -35,7 +36,7 @@
               "when": { "kind": "equals", "path": "mode", "value": "predict" },
               "level": 2,
               "show": { "engine": "E10", "overlay": "point-track" },
-              "say": "시작 도형의 점 ㄱ이 옮겨 간 자리를 점선으로 이어 보았어요."
+              "say": "점선 모양과 지금 모양을 견주어 보세요."
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "predict" },
@@ -57,7 +58,8 @@
             "shape": "flag-L",
             "grid": 10,
             "at": [2, 3],
-            "operation": { "type": "flip", "side": "right" }
+            "operation": { "type": "flip", "side": "right" },
+            "selfCheck": false
           },
           "goal": { "kind": "predicate", "name": "predictionMatches" },
           "hints": [
@@ -68,7 +70,7 @@
                 "args": { "is": "r180" }
               },
               "level": 1,
-              "say": "뒤집기와 180° 돌리기는 어떻게 다를까요?"
+              "say": "칠한 모양에서 점 ㄱ이 어디에 있는지 시작 도형과 견주어 볼까요?"
             },
             {
               "when": {
@@ -78,7 +80,7 @@
               },
               "level": 2,
               "show": { "engine": "E10", "overlay": "point-track" },
-              "say": "칠한 모양에서 점 ㄱ이 간 자리를 시작 도형과 이어 보았어요."
+              "say": "칠한 모양의 점 ㄱ과 시작 도형의 점 ㄱ을 이어 보았어요."
             },
             {
               "when": {
@@ -92,7 +94,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "predict" },
               "level": 1,
-              "say": "뒤집은 뒤 점 ㄱ이 어느 쪽으로 가는지 살펴보고 칸을 칠해 보세요."
+              "say": "뒤집은 뒤 점 ㄱ은 어느 쪽으로 갈까요?"
             },
             {
               "when": { "kind": "equals", "path": "paintedOrientation", "value": null },
@@ -103,7 +105,7 @@
               "when": { "kind": "equals", "path": "mode", "value": "predict" },
               "level": 2,
               "show": { "engine": "E10", "overlay": "point-track" },
-              "say": "시작 도형의 점 ㄱ이 옮겨 간 자리를 점선으로 이어 보았어요."
+              "say": "점선 모양과 지금 모양을 견주어 보세요."
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "predict" },
@@ -125,7 +127,8 @@
             "shape": "flag-L",
             "grid": 10,
             "at": [4, 3],
-            "operation": { "type": "turn", "direction": "cw", "angle": 90, "center": "vertex-A" }
+            "operation": { "type": "turn", "direction": "cw", "angle": 90, "center": "vertex-A" },
+            "selfCheck": false
           },
           "goal": { "kind": "predicate", "name": "predictionMatches" },
           "hints": [
@@ -136,7 +139,7 @@
                 "args": { "is": "ccw90" }
               },
               "level": 1,
-              "say": "시계 방향과 시계 반대 방향을 바꾸어 칠하지 않았나요?"
+              "say": "시계 방향으로 돌면 점 ㄴ은 어느 쪽으로 움직일까요?"
             },
             {
               "when": {
@@ -160,7 +163,7 @@
             {
               "when": { "kind": "predicate", "name": "predictionOffsetOnly" },
               "level": 1,
-              "say": "점 ㄱ을 중심으로 돌리면 점 ㄱ은 제자리에 있어요. 칠한 모양의 점 ㄱ은 어디에 있나요?"
+              "say": "점 ㄱ을 압정으로 꽂고 돌리면 점 ㄱ은 어디에 있을까요?"
             },
             {
               "when": { "kind": "predicate", "name": "predictionOffsetOnly" },
@@ -176,7 +179,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "predict" },
               "level": 1,
-              "say": "돌린 뒤 점 ㄱ이 어디에 있는지 살펴보고 칸을 칠해 보세요."
+              "say": "돌린 뒤 점 ㄱ은 어디에 있을까요?"
             },
             {
               "when": { "kind": "equals", "path": "paintedOrientation", "value": null },
@@ -216,7 +219,7 @@
             {
               "when": { "kind": "equals", "path": "response.deg.value", "value": "270" },
               "level": 1,
-              "say": "두 방향으로 같은 모양이 되는 각을 직접 돌려 견주어 보세요."
+              "say": "두 방향으로 같은 모양이 되는 각은 몇 도일까요?"
             },
             {
               "when": { "kind": "equals", "path": "response.deg.value", "value": "270" },
@@ -272,7 +275,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "slide-flip-turn" },
               "level": 1,
-              "say": "결과 도형의 점 ㄱ이 어디에 있는지 보고 먼저 밀지 돌릴지 정해 보세요."
+              "say": "결과 도형의 점 ㄱ은 어디에 있을까요?"
             },
             {
               "when": { "kind": "equals", "path": "moveCount", "value": 0 },
@@ -283,7 +286,7 @@
               "when": { "kind": "equals", "path": "mode", "value": "slide-flip-turn" },
               "level": 2,
               "show": { "engine": "E10", "overlay": "point-track" },
-              "say": "이동한 뒤 점 ㄱ이 간 자리를 시작 도형과 이어 보았어요."
+              "say": "점선 모양과 지금 모양을 견주어 보세요."
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "slide-flip-turn" },
@@ -312,7 +315,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "tessellation" },
               "level": 1,
-              "say": "정육각형을 옆 칸에 붙여 가며 틀을 채워 보세요."
+              "say": "정육각형을 옆 칸에 붙여 가면 틀을 채울 수 있을까요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "tessellation" },
@@ -355,12 +358,12 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "tessellation" },
               "level": 1,
-              "say": "정오각형을 한 꼭짓점 둘레에 하나씩 붙여 보세요."
+              "say": "한 꼭짓점 둘레에 정오각형을 붙이면 어떻게 될까요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "tessellation" },
               "level": 2,
-              "say": "한 꼭짓점 둘레에 정오각형을 3개까지 붙였을 때 남는 곳을 살펴보세요."
+              "say": "3개를 붙였을 때 한 꼭짓점 둘레가 꼭 맞게 채워지는지 살펴보세요."
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "tessellation" },
@@ -407,7 +410,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "tessellation" },
               "level": 1,
-              "say": "변을 깎은 타일로 틀을 채워 보세요."
+              "say": "변을 깎은 타일로 틀을 채울 수 있을까요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "tessellation" },
@@ -425,7 +428,7 @@
         },
         {
           "id": "g4s1u4.A2.T4",
-          "prompt": "변형 도형으로 채운 무늬에 도장을 움직인 방법을 모두 골라 보세요.",
+          "prompt": "채운 무늬에 도장을 움직인 방법을 모두 골라 보세요.",
           "engine": "E10",
           "mode": "tessellation",
           "cpa": "P",
@@ -555,7 +558,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "tessellation" },
               "level": 1,
-              "say": "도장을 움직일 때 밀기·뒤집기·돌리기를 썼는지 하나씩 떠올려 보세요."
+              "say": "도장을 움직일 때 어떤 방법을 썼나요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "tessellation" },

@@ -1,6 +1,11 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
-import { expectContentPanelsReachable } from '../panel-layout';
+import { PREVIEW_URL } from '../../../playwright.config';
+import {
+  expectChromeBookCanvasSize,
+  expectContentPanelsReachable,
+  expectFitCanvasVisible,
+} from '../panel-layout';
 
 /**
  * T115 g4s1u4 「평면도형의 이동」 A1 「트레이싱 페이퍼」·A2 「쪽매맞춤 디자이너」 단원 E2E.
@@ -316,7 +321,7 @@ test('A1 트레이싱 페이퍼 — 대표 오답 뒤 고쳐서 다섯 과제를
   await press(page, 'ArrowRight', 5);
   await press(page, 'Enter', 3);
   await submit(page);
-  await expectFailedWithHint(page, '결과가 놓일 칸을 하나씩', 1);
+  await expectFailedWithHint(page, '결과가 놓일 칸을 어떻게 찾을 수 있을까요?', 1);
 
   await resetPaintCursor(page, [1, 3]);
   await pressKeys(page, T1_RIGHT_5);
@@ -327,9 +332,13 @@ test('A1 트레이싱 페이퍼 — 대표 오답 뒤 고쳐서 다섯 과제를
   await focusCanvas(page);
   await pressKeys(page, T2_FLIP_TURN_WRONG);
   await submit(page);
-  await expectFailedWithHint(page, '뒤집기와 180° 돌리기는 어떻게 다를까요?', 1);
+  await expectFailedWithHint(
+    page,
+    '칠한 모양에서 점 ㄱ이 어디에 있는지 시작 도형과 견주어 볼까요?',
+    1,
+  );
   await submit(page);
-  await expectFailedWithHint(page, '점 ㄱ이 간 자리를 시작 도형과 이어', 2);
+  await expectFailedWithHint(page, '칠한 모양의 점 ㄱ과 시작 도형의 점 ㄱ을 이어 보았어요.', 2);
   await expectOverlayOverCanvas(slot(page, 'main'), 'point-track');
 
   await resetPaintCursor(page, [2, 3]);
@@ -341,7 +350,7 @@ test('A1 트레이싱 페이퍼 — 대표 오답 뒤 고쳐서 다섯 과제를
   await focusCanvas(page);
   await pressKeys(page, T3_TURN_CENTER_WRONG);
   await submit(page);
-  await expectFailedWithHint(page, '점 ㄱ을 중심으로 돌리면 점 ㄱ은 제자리에 있어요', 1);
+  await expectFailedWithHint(page, '점 ㄱ을 압정으로 꽂고 돌리면 점 ㄱ은 어디에 있을까요?', 1);
 
   await resetPaintCursor(page, [4, 3]);
   await pressKeys(page, T3_TURN_CW90);
@@ -355,7 +364,7 @@ test('A1 트레이싱 페이퍼 — 대표 오답 뒤 고쳐서 다섯 과제를
   await turnGroup.getByRole('button', { name: '돌리기', exact: true }).click();
   await typeNumber(page, 'deg', '270');
   await submit(page);
-  await expectFailedWithHint(page, '두 방향으로 같은 모양이 되는 각', 1);
+  await expectFailedWithHint(page, '두 방향으로 같은 모양이 되는 각은 몇 도일까요?', 1);
 
   await clearNumber(page, 'deg');
   await typeNumber(page, 'deg', '90');
@@ -366,7 +375,7 @@ test('A1 트레이싱 페이퍼 — 대표 오답 뒤 고쳐서 다섯 과제를
   await focusCanvas(page);
   await page.keyboard.press('r');
   await submit(page);
-  await expectFailedWithHint(page, '결과 도형의 점 ㄱ이 어디에 있는지', 1);
+  await expectFailedWithHint(page, '결과 도형의 점 ㄱ은 어디에 있을까요?', 1);
 
   await focusCanvas(page);
   await page.keyboard.press('Backspace');
@@ -387,11 +396,20 @@ test('A2 쪽매맞춤 — 정육각형·정오각형·변형 도형 과제를 �
   await focusCanvas(page);
   await page.keyboard.press('Enter');
   await submit(page);
-  await expectFailedWithHint(page, '정육각형을 옆 칸에 붙여 가며', 1);
+  await expectFailedWithHint(page, '정육각형을 옆 칸에 붙여 가면 틀을 채울 수 있을까요?', 1);
 
   await slot(page, 'main').getByRole('button', { name: '모두 지우기', exact: true }).click();
   await focusCanvas(page);
   await pressKeys(page, HEXAGON_21);
+  // 판이 작아지면서(T122) 21장 경로 끝에 빈 칸이 남을 수 있다.
+  // 왼쪽으로 한 장씩 붙여 빈틈을 채운 뒤 제출한다.
+  for (let index = 0; index < 8; index += 1) {
+    const gaps = await slot(page, 'main').locator('[data-gap-cell]').count();
+    if (gaps === 0) break;
+    await focusCanvas(page);
+    await page.keyboard.press('ArrowLeft');
+    await page.keyboard.press('Enter');
+  }
   await submit(page);
   await expectPassed(page);
 
@@ -400,7 +418,7 @@ test('A2 쪽매맞춤 — 정육각형·정오각형·변형 도형 과제를 �
   await focusCanvas(page);
   await toggleChoice(page, 'fill', '빈틈없이 채울 수 없어요');
   await submit(page);
-  await expectFailedWithHint(page, '한 꼭짓점 둘레에 정오각형을 몇 개까지', 1);
+  await expectFailedWithHint(page, '한 꼭짓점 둘레에 정오각형을 몇 개까지 붙여 볼 수 있을까요?', 1);
 
   await focusCanvas(page);
   await press(page, 'Enter', 2);
@@ -411,7 +429,7 @@ test('A2 쪽매맞춤 — 정육각형·정오각형·변형 도형 과제를 �
   await focusCanvas(page);
   await pressKeys(page, SQUARE_NINE);
   await submit(page);
-  await expectFailedWithHint(page, '변 깎기 편집판에서 한 변을 깎아', 1);
+  await expectFailedWithHint(page, '변 깎기 편집판에서 한 변을 깎아 변형 도형을 만들어 볼까요?', 1);
 
   await slot(page, 'main').getByRole('button', { name: '모두 지우기', exact: true }).click();
   await clickTile(page, '변형 도형');
@@ -435,11 +453,67 @@ test('A2 쪽매맞춤 — 정육각형·정오각형·변형 도형 과제를 �
   await toggleChoice(page, 'moves', '밀기');
   await toggleChoice(page, 'moves', '돌리기');
   await submit(page);
-  await expectFailedWithHint(page, '도장을 움직일 때 밀기·뒤집기·돌리기를', 1);
+  await expectFailedWithHint(page, '도장을 움직일 때 어떤 방법을 썼나요?', 1);
 
   await toggleChoice(page, 'moves', '돌리기');
   await submit(page);
   await expectPassed(page, true);
+});
+
+test('A1.T1 — 엔진 확인 단추 없이 칠한 칸으로만 판정한다', async ({ page }) => {
+  await openActivity(page, 'g4s1u4.A1', '트레이싱 페이퍼');
+  // selfCheck:false면 엔진 '확인'·'다시 해 보기'가 없다(정답 그림을 보고 베끼지 못한다).
+  await expect(slot(page, 'main').getByRole('button', { name: '확인', exact: true })).toHaveCount(
+    0,
+  );
+  await expect(slot(page, 'main').getByRole('button', { name: '다시 해 보기' })).toHaveCount(0);
+  // 칠하기·지우기는 남는다.
+  await expect(slot(page, 'main').getByRole('button', { name: '칠한 칸 지우기' })).toBeVisible();
+  await focusCanvas(page);
+  await pressKeys(page, T1_RIGHT_5);
+  await submit(page);
+  await expectPassed(page);
+});
+
+test('A1.T3 ccw90 오답 — 반대 방향으로 칠하면 힌트 ①·②가 나온다', async ({ page }) => {
+  await openActivity(page, 'g4s1u4.A1', '트레이싱 페이퍼');
+  // T1·T2는 정답으로 통과시킨다.
+  await focusCanvas(page);
+  await pressKeys(page, T1_RIGHT_5);
+  await submit(page);
+  await expectPassed(page);
+  await resetPaintCursor(page, [2, 3]);
+  await pressKeys(page, T2_FLIP_RIGHT);
+  await submit(page);
+  await expectPassed(page);
+
+  // T3 — 시계 반대 방향 자리(4,0 4,1 5,1 4,2 5,2 6,2 7,2)로 칠하면 오개념 ①·②.
+  await focusCanvas(page);
+  await press(page, 'ArrowLeft', 9);
+  await press(page, 'ArrowUp', 9);
+  await press(page, 'ArrowRight', 4);
+  await press(page, 'ArrowDown', 0);
+  const wrongCcw = [
+    'Enter',
+    'ArrowDown',
+    'Enter',
+    'ArrowRight',
+    'Enter',
+    'ArrowLeft',
+    'ArrowDown',
+    'Enter',
+    'ArrowRight',
+    'Enter',
+    'ArrowRight',
+    'Enter',
+    'ArrowRight',
+    'Enter',
+  ];
+  await pressKeys(page, wrongCcw);
+  await submit(page);
+  await expectFailedWithHint(page, '시계 방향으로 돌면 점 ㄴ은 어느 쪽으로 움직일까요?', 1);
+  await submit(page);
+  await expectFailedWithHint(page, '시계 방향으로 도는 화살표를 보며 다시 견주어 보세요.', 2);
 });
 
 test('A2.T2 정오각형을 채울 수 있다고 답하면 일반 ①이 뜬다', async ({ page }) => {
@@ -456,5 +530,49 @@ test('A2.T2 정오각형을 채울 수 있다고 답하면 일반 ①이 뜬다'
   await press(page, 'Enter', 2);
   await toggleChoice(page, 'fill', '빈틈없이 채울 수 있어요');
   await submit(page);
-  await expectFailedWithHint(page, '정오각형을 한 꼭짓점 둘레에 하나씩', 1);
+  await expectFailedWithHint(page, '한 꼭짓점 둘레에 정오각형을 붙이면 어떻게 될까요?', 1);
+});
+
+test('첫 화면에 엔진·확인하기가 들어온다', async ({ page }, testInfo) => {
+  await openActivity(page, 'g4s1u4.A1', '트레이싱 페이퍼');
+  await page.evaluate(() => window.scrollTo(0, 0));
+  // T122로 E10 판이 실행기 판 높이에 맞춰 줄어 판 안 스크롤이 없다.
+  await expectContentPanelsReachable(page);
+  let boxes = await expectFitCanvasVisible(page);
+  await expect(canvas(page)).toBeInViewport({ ratio: 1 });
+  await expect(page.getByRole('button', { name: '확인하기' })).toBeInViewport({ ratio: 1 });
+  if (testInfo.project.name === 'chromebook') expectChromeBookCanvasSize(boxes);
+
+  await openActivity(page, 'g4s1u4.A2', '쪽매맞춤 디자이너');
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await expectContentPanelsReachable(page);
+  boxes = await expectFitCanvasVisible(page);
+  await expect(canvas(page)).toBeInViewport({ ratio: 1 });
+  await expect(page.getByRole('button', { name: '확인하기' })).toBeInViewport({ ratio: 1 });
+  if (testInfo.project.name === 'chromebook') expectChromeBookCanvasSize(boxes);
+});
+
+test('오프라인에서도 g4s1u4.A1 활동이 열린다', async ({ page, context }) => {
+  await page.goto(PREVIEW_URL);
+  await page.getByRole('button', { name: '1번', exact: true }).click();
+  await page.getByRole('button', { name: '건너뛰기' }).click();
+  await expect(page).toHaveURL(/#\/map$/);
+  await page.goto(`${PREVIEW_URL}/#/activity/g4s1u4.A1`);
+  await expect(page.getByRole('heading', { name: '트레이싱 페이퍼' })).toBeVisible();
+
+  await page.evaluate(async () => {
+    await navigator.serviceWorker.ready;
+    if (!navigator.serviceWorker.controller) {
+      await new Promise<void>((resolve) =>
+        navigator.serviceWorker.addEventListener('controllerchange', () => resolve(), {
+          once: true,
+        }),
+      );
+    }
+  });
+
+  await context.setOffline(true);
+  await page.reload();
+  await expect(page.getByRole('heading', { name: '트레이싱 페이퍼' })).toBeVisible();
+  await expect(page.getByRole('button', { name: '확인하기' })).toBeVisible();
 });

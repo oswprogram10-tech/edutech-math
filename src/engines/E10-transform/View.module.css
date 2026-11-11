@@ -115,6 +115,16 @@
   overflow: auto;
 }
 
+/* T122: 변 깎기 편집판(data-testid="tile-editor")은 6×6 64px 격자라 높다.
+   판 높이가 모자라면 편집판만 줄고 스크롤하게 해, 아래 단추가 화면 밖으로
+   밀리지 않게 한다. */
+[data-testid='tile-editor'] {
+  flex: 0 1 auto;
+  min-height: 0;
+  max-height: 46%;
+  overflow: auto;
+}
+
 .panelGroup {
   display: flex;
   flex-direction: column;
