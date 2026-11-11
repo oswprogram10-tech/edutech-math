@@ -1,7 +1,11 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 import { PREVIEW_URL } from '../../../playwright.config';
-import { expectContentPanelsReachable } from '../panel-layout';
+import {
+  expectChromeBookCanvasSize,
+  expectContentPanelsReachable,
+  expectFitCanvasVisible,
+} from '../panel-layout';
 
 /**
  * T110 g1s2u3 「모양과 시각」 A1 「그림자 퍼즐」 단원 E2E.
@@ -163,7 +167,7 @@ test('A1 그림자 퍼즐 — 대표 오답 뒤 고쳐서 네 과제를 통과�
 
   // T1 — 아무것도 옮기지 않고 제출해 힌트 ①을 본 뒤, 두 조각을 붙여 네모를 만든다.
   await submit(page);
-  await expectFailedWithHint(page, '네모는 뾰족한 곳이 몇 개였나요?');
+  await expectFailedWithHint(page, '만든 모양에서 뾰족하게 튀어나온 곳이 몇 개인가요?');
   // 조각 1을 180° 돌리면 제자리에서 돌아가고, 조각 2를 위로 올리면 자석처럼 붙는다.
   await turnPiece(page, panel, 'p1', 4);
   await expect(piece(panel, 'p1')).toHaveAttribute('data-ax', '25.000');
@@ -214,16 +218,12 @@ test('A1 그림자 퍼즐 — 대표 오답 뒤 고쳐서 네 과제를 통과�
   await expectPassed(page, true);
 });
 
-test('크롬북·전자칠판 첫 화면에 엔진·확인하기가 들어온다', async ({ page }, testInfo) => {
-  test.skip(
-    testInfo.project.name === 'ipad',
-    '아이패드는 판을 위아래로 두어 짧은 스크롤을 허용한다',
-  );
-
+test('아이패드·크롬북·전자칠판 첫 화면에 엔진·확인하기가 들어온다', async ({ page }, testInfo) => {
   await openActivity(page, 'g1s2u3.A1', '그림자 퍼즐');
   await page.evaluate(() => window.scrollTo(0, 0));
-  // 1200×800 칠교 판은 판 안쪽이 세로로 길어(크롬북·전자칠판) 판 안 스크롤로 아래를 본다.
+  // T122로 E11 판이 실행기 판 높이에 맞춰 줄어들어 세 뷰포트 모두 판 안 스크롤이 없다.
   await expectContentPanelsReachable(page);
+  const boxes = await expectFitCanvasVisible(page);
 
   // 64px 타깃이 켜진 상태에서 판과 조작·확인하기가 모두 첫 화면에 보여야 한다.
   const panel = slot(page, 'main');
@@ -232,6 +232,7 @@ test('크롬북·전자칠판 첫 화면에 엔진·확인하기가 들어온다
   await expect(panel.getByRole('button', { name: '조각 1', exact: true })).toBeInViewport({
     ratio: 1,
   });
+  if (testInfo.project.name === 'chromebook') expectChromeBookCanvasSize(boxes);
 });
 
 test('오프라인에서도 g1s2u3.A1 활동이 열린다', async ({ page, context }) => {

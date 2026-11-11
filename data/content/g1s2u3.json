@@ -28,12 +28,12 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "tangram" },
               "level": 1,
-              "say": "네모는 뾰족한 곳이 몇 개였나요? 만든 모양은 몇 개인가요?"
+              "say": "만든 모양에서 뾰족하게 튀어나온 곳이 몇 개인가요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "tangram" },
               "level": 2,
-              "say": "만든 모양의 테두리를 따라가며 뾰족한 곳을 세어 봐요.",
+              "say": "놓은 조각들의 바깥 테두리를 따라가며 뾰족한 곳을 세어 봐요.",
               "show": { "engine": "E11", "overlay": "work-outline" }
             },
             {
@@ -101,9 +101,14 @@
               "say": "그림자에 빈 곳이 남았나요?"
             },
             {
+              "when": { "kind": "equals", "path": "pieceCount", "value": 0 },
+              "level": 2,
+              "say": "아직 그림자 위에 놓은 조각이 없어요. 쟁반에서 조각을 꺼내 놓은 뒤 견주어 봐요."
+            },
+            {
               "when": { "kind": "equals", "path": "mode", "value": "tangram" },
               "level": 2,
-              "say": "놓은 조각의 테두리를 보고 빈 곳을 찾아봐요.",
+              "say": "놓은 조각들의 바깥 테두리를 따라가며 빈 곳을 찾아봐요.",
               "show": { "engine": "E11", "overlay": "work-outline" }
             },
             {
@@ -171,9 +176,14 @@
               "say": "배 그림자에 빈 곳이 남았나요?"
             },
             {
+              "when": { "kind": "equals", "path": "pieceCount", "value": 0 },
+              "level": 2,
+              "say": "아직 그림자 위에 놓은 조각이 없어요. 쟁반에서 조각을 꺼내 놓은 뒤 견주어 봐요."
+            },
+            {
               "when": { "kind": "equals", "path": "mode", "value": "tangram" },
               "level": 2,
-              "say": "놓은 조각의 테두리를 보고 빈 곳을 찾아봐요.",
+              "say": "놓은 조각들의 바깥 테두리를 따라가며 빈 곳을 찾아봐요.",
               "show": { "engine": "E11", "overlay": "work-outline" }
             },
             {
