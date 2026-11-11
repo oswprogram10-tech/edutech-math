@@ -1,7 +1,11 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 import { PREVIEW_URL } from '../../../playwright.config';
-import { expectContentPanelsReachable } from '../panel-layout';
+import {
+  expectChromeBookCanvasSize,
+  expectContentPanelsReachable,
+  expectFitCanvasVisible,
+} from '../panel-layout';
 
 /**
  * T116 g4s2u2 「삼각형」 A1 「드래깅 테스트 작도」·A2 「변·각 2차원 분류판」 단원 E2E.
@@ -292,10 +296,14 @@ const T1_CELLS = [
   ['t02', 'obtuse|scalene'],
 ] as const;
 
-test('A1 드래깅 테스트 — 눈대중·컴퍼스 작도를 흔들어 확인한다', async ({ page }) => {
+test('A1 드래깅 테스트 — 눈대중·컴퍼스 작도를 흔들어 확인한다', async ({ page }, testInfo) => {
   await openActivity(page, 'g4s2u2.A1', '드래깅 테스트 작도');
   await screenshot(page, 'g4s2u2-a1.png');
+  // T122로 판이 실행기 판 높이에 맞춰 줄어 세 뷰포트 모두 판 안 스크롤이 없다.
   await expectContentPanelsReachable(page);
+  const boxes = await expectFitCanvasVisible(page);
+  await expect(main(page).getByTestId('geo-canvas')).toBeInViewport({ ratio: 1 });
+  if (testInfo.project.name === 'chromebook') expectChromeBookCanvasSize(boxes);
 
   // T1 — 눈대중 이등변을 흔들지 않고 내면 ①. 흔들면 판정이 참이 된다.
   await buildEyeballIsosceles(page);
@@ -340,10 +348,15 @@ test('A1 드래깅 테스트 — 눈대중·컴퍼스 작도를 흔들어 확인
   await expectPassed(page, true);
 });
 
-test('A2 변·각 분류판 — 카드 분류·불가능한 칸·점판 작도·정의 고르기', async ({ page }) => {
+test('A2 변·각 분류판 — 카드 분류·불가능한 칸·점판 작도·정의 고르기', async ({
+  page,
+}, testInfo) => {
   await openActivity(page, 'g4s2u2.A2', '변·각 2차원 분류판');
   await screenshot(page, 'g4s2u2-a2.png');
   await expectContentPanelsReachable(page);
+  const boxes = await expectFitCanvasVisible(page);
+  await expect(main(page).getByTestId('sorter-canvas')).toBeInViewport({ ratio: 1 });
+  if (testInfo.project.name === 'chromebook') expectChromeBookCanvasSize(boxes);
 
   // T1 — t12만 틀린 열에 넣어 ISO ①.
   for (const [card, cell] of T1_CELLS) {
