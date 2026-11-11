@@ -265,7 +265,7 @@ export function SlideFlipTurnView({
         {state.lastBlocked ? S.status.blocked : atTarget ? S.status.targetDone : ''}
       </p>
 
-      <div className={styles.canvasArea}>
+      <div className={styles.boardArea}>
         <svg
           ref={svgRef}
           className={styles.canvas}

@@ -613,7 +613,7 @@ export function TessellationView({ state, dispatch, cpa, readOnly = false, targe
         ) : null}
       </div>
 
-      <div className={styles.canvasArea}>
+      <div className={styles.boardArea}>
         <svg
           ref={svgRef}
           className={styles.canvas}
