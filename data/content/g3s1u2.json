@@ -720,7 +720,7 @@
                 "value": "classify"
               },
               "level": 1,
-              "say": "삼각자 모서리에 꼭 맞는 각이 있나요?"
+              "say": "모눈 칸의 모서리와 견주어 볼까요?"
             },
             {
               "when": {
@@ -802,7 +802,7 @@
                 "value": "classify"
               },
               "level": 1,
-              "say": "삼각자 모서리에 꼭 맞는 각이 있나요?"
+              "say": "만든 두 사각형의 변의 길이를 서로 견주어 볼까요?"
             },
             {
               "when": {
@@ -821,34 +821,7 @@
                 ]
               },
               "level": 2,
-              "show": {
-                "engine": "E09",
-                "overlay": "angle-kinds"
-              },
-              "say": "만든 도형의 각마다 종류를 무늬로 칠했어요."
-            },
-            {
-              "when": {
-                "kind": "all",
-                "of": [
-                  {
-                    "kind": "equals",
-                    "path": "mode",
-                    "value": "classify"
-                  },
-                  {
-                    "kind": "equals",
-                    "path": "closedShapes",
-                    "value": 1
-                  }
-                ]
-              },
-              "level": 2,
-              "show": {
-                "engine": "E09",
-                "overlay": "angle-kinds"
-              },
-              "say": "만든 도형의 각마다 종류를 무늬로 칠했어요."
+              "say": "두 사각형을 나란히 두고 네 변의 길이를 하나씩 견주어 보세요."
             },
             {
               "when": {
@@ -857,7 +830,7 @@
                 "value": "classify"
               },
               "level": 2,
-              "say": "도형의 각을 하나씩 살펴보세요."
+              "say": "두 사각형의 변의 길이를 견주어 보세요."
             },
             {
               "when": {
@@ -920,12 +893,7 @@
                 "misconception": "MC-GEO-SQUARE-NOT-RECT"
               },
               "level": 2,
-              "show": {
-                "engine": "E09",
-                "overlay": "property-checklist",
-                "args": { "definition": "rectangle" }
-              },
-              "say": "미리 놓인 도형에 직사각형의 조건을 하나씩 확인했어요."
+              "say": "미리 놓인 도형에서 직사각형의 조건을 하나씩 짚어 보세요."
             },
             {
               "when": {
@@ -950,12 +918,7 @@
                 "value": "classify"
               },
               "level": 2,
-              "show": {
-                "engine": "E09",
-                "overlay": "property-checklist",
-                "args": { "definition": "rectangle" }
-              },
-              "say": "미리 놓인 도형에 직사각형의 조건을 하나씩 확인했어요."
+              "say": "미리 놓인 도형에서 직사각형의 조건을 하나씩 짚어 보세요."
             },
             {
               "when": {

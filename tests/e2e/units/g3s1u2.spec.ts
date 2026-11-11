@@ -1,7 +1,11 @@
 ﻿import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 import { PREVIEW_URL } from '../../../playwright.config';
-import { expectContentPanelsReachable } from '../panel-layout';
+import {
+  expectChromeBookCanvasSize,
+  expectContentPanelsReachable,
+  expectFitCanvasVisible,
+} from '../panel-layout';
 
 /**
  * T112 g3s1u2 「평면도형」 A1 「선 레이저 발사기」·A2 「직각 찾기와 직각 도형 만들기」 단원 E2E.
@@ -311,7 +315,7 @@ test('A2 직각 찾기 — 대표 오답 뒤 고쳐서 네 과제를 통과한�
     [2, 3],
   ]);
   await submit(page);
-  await expectFailedWithHint(page, '삼각자 모서리에 꼭 맞는 각이 있나요?');
+  await expectFailedWithHint(page, '모눈 칸의 모서리와 견주어 볼까요?');
   await submit(page);
   await expectFailedWithHint(page, '만든 도형의 각마다 종류를 무늬로 칠했어요.', 2);
   const angles = panel.locator('[data-overlay="angle-kinds"]');
@@ -344,7 +348,7 @@ test('A2 직각 찾기 — 대표 오답 뒤 고쳐서 네 과제를 통과한�
     [2, 3],
   ]);
   await submit(page);
-  await expectFailedWithHint(page, '삼각자 모서리에 꼭 맞는 각이 있나요?');
+  await expectFailedWithHint(page, '만든 두 사각형의 변의 길이를 서로 견주어 볼까요?');
   await deleteLastShape(page);
   await drawClosedShape(page, [
     [2, 2],
@@ -366,11 +370,9 @@ test('A2 직각 찾기 — 대표 오답 뒤 고쳐서 네 과제를 통과한�
     '직사각형이 되려면 무엇이 필요했지요? 정사각형은 그걸 가졌나요?',
   );
   await submit(page);
-  await expectFailedWithHint(page, '미리 놓인 도형에 직사각형의 조건을 하나씩 확인했어요.', 2);
-  const checklist = panel.locator('[data-overlay="property-checklist"]');
-  await expect(checklist).toBeVisible();
-  await expect(checklist).toContainText('네 각이 모두 직각이에요');
-  await expect(checklist.getByText('✓')).toHaveCount(2);
+  await expectFailedWithHint(page, '미리 놓인 도형에서 직사각형의 조건을 하나씩 짚어 보세요.', 2);
+  const given = panel.getByTestId('geo-canvas');
+  await expect(given).toBeVisible();
   await choose(page, 'yn', '예');
   // reason은 이미 '네 각이 모두 직각이에요'가 선택되어 있다(다시 누르면 해제된다).
   const reason = slot(page, 'response').locator('[data-response-field="reason"]');
@@ -389,20 +391,78 @@ test('A2 T1 일반 힌트 — 직각이 아닌 각만 표시하면 힌트 ①이
   await expectFailedWithHint(page, '삼각자를 대어 꼭 맞는 각만 표시했나요?');
 });
 
-test('첫 화면에 엔진·확인하기가 들어온다', async ({ page }) => {
-  // 9×9 construct 판은 세로가 길어 앱 스크롤로 '확인하기'에 닿는지 본다.
+test('A1 T2 별 하나만 맞히면 일반 힌트 ①이 나온다', async ({ page }) => {
+  await openActivity(page, 'g3s1u2.A1', '선 레이저 발사기');
+  // T1은 선분으로 통과한다.
+  await chooseTool(page, '선분');
+  await drawConstruct(page, 9, [2, 4], [6, 4]);
+  await submit(page);
+  await expectPassed(page);
+
+  // T2 — 별 하나(1번)만 지나가는 반직선은 대표 오답이다.
+  await expect(page.getByText('별 두 개를 한 번에 지나가는 반직선을 쏘아요.')).toBeVisible();
+  await chooseTool(page, '반직선');
+  await drawConstruct(page, 9, [1, 1], [0, 0]);
+  await submit(page);
+  await expectFailedWithHint(page, '한쪽 끝에서 시작해 두 별을 지나가게 쏘아 볼까요?');
+});
+
+test("A2 T4 '예'와 변 길이 까닭을 고르면 일반 힌트 ①이 나온다", async ({ page }) => {
+  await openActivity(page, 'g3s1u2.A2', '직각 찾기와 직각 도형 만들기');
+  // T1~T3은 통과한다.
+  await markAngle(page, 1);
+  await markAngle(page, 2);
+  await markAngle(page, 4);
+  await markAngle(page, 6);
+  await submit(page);
+  await expectPassed(page);
+  await drawClosedShape(page, [
+    [0, 0],
+    [3, 0],
+    [0, 2],
+  ]);
+  await submit(page);
+  await expectPassed(page);
+  await drawClosedShape(page, [
+    [0, 0],
+    [1, 0],
+    [1, 1],
+    [0, 1],
+  ]);
+  await drawClosedShape(page, [
+    [2, 2],
+    [4, 2],
+    [4, 3],
+    [2, 3],
+  ]);
+  await submit(page);
+  await expectPassed(page);
+
+  // T4 — '예'는 맞지만 까닭을 '네 변의 길이가 모두 같아요'로 고르면 일반 ①이 나온다.
+  await choose(page, 'yn', '예');
+  await choose(page, 'reason', '네 변의 길이가 모두 같아요');
+  await submit(page);
+  await expectFailedWithHint(page, '직사각형은 무엇을 보고 정했나요?');
+});
+
+test('아이패드·크롬북·전자칠판 첫 화면에 엔진·확인하기가 들어온다', async ({ page }, testInfo) => {
   await openActivity(page, 'g3s1u2.A1', '선 레이저 발사기');
   await page.evaluate(() => window.scrollTo(0, 0));
+  // T122로 9×9 construct 판이 실행기 판 높이에 맞춰 줄어 판 안 스크롤이 없다.
   await expectContentPanelsReachable(page);
-  await expect(canvas(page)).toBeVisible();
-  await expect(page.getByRole('button', { name: '확인하기' })).toBeVisible();
+  let boxes = await expectFitCanvasVisible(page);
+  await expect(canvas(page)).toBeInViewport({ ratio: 1 });
+  await expect(page.getByRole('button', { name: '확인하기' })).toBeInViewport({ ratio: 1 });
+  if (testInfo.project.name === 'chromebook') expectChromeBookCanvasSize(boxes);
 
   // classify 5×5 판도 같은 기준으로 확인한다.
   await openActivity(page, 'g3s1u2.A2', '직각 찾기와 직각 도형 만들기');
   await page.evaluate(() => window.scrollTo(0, 0));
   await expectContentPanelsReachable(page);
-  await expect(canvas(page)).toBeVisible();
-  await expect(page.getByRole('button', { name: '확인하기' })).toBeVisible();
+  boxes = await expectFitCanvasVisible(page);
+  await expect(canvas(page)).toBeInViewport({ ratio: 1 });
+  await expect(page.getByRole('button', { name: '확인하기' })).toBeInViewport({ ratio: 1 });
+  if (testInfo.project.name === 'chromebook') expectChromeBookCanvasSize(boxes);
 });
 
 test('오프라인에서도 g3s1u2.A1 활동이 열린다', async ({ page, context }) => {
