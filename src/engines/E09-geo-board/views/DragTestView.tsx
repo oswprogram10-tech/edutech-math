@@ -877,16 +877,8 @@ export function DragTestView({
         {message || (pending.length > 0 ? S.dragTest.pending(pending.length) : '')}
       </p>
 
-      <div
-        style={{
-          display: 'flex',
-          gap: '1rem',
-          alignItems: 'flex-start',
-          flex: '1 1 auto',
-          minHeight: 0,
-        }}
-      >
-        <div className={styles.canvasArea} style={{ flex: '1 1 auto' }}>
+      <div className={styles.dragRow}>
+        <div className={styles.boardArea}>
           <svg
             ref={svgRef}
             className={styles.canvas}
@@ -981,7 +973,7 @@ export function DragTestView({
           </svg>
         </div>
 
-        <aside style={{ width: 240, flex: '0 0 auto', display: 'grid', gap: '0.6rem' }}>
+        <aside className={styles.dragAside}>
           {state.tool === 'intersection' ? (
             <div>
               <strong>{S.dragTest.candidates}</strong>
@@ -1101,15 +1093,17 @@ export function DragTestView({
         </aside>
       </div>
 
-      <p className={styles.hint}>{S.dragTest.canvasHint}</p>
-      {state.quad ? <p className={styles.hint}>{S.dragTest.quadKeyHint}</p> : null}
-      <p className={styles.hint}>
-        {state.settings.construction === 'from-diagonals'
-          ? S.dragTest.fromDiagonalsHint
-          : state.settings.construction === 'quad-conditions'
-            ? S.dragTest.quadConditionsHint
-            : S.dragTest.instructions}
-      </p>
+      <div className={styles.hintBlock}>
+        <p className={styles.hint}>{S.dragTest.canvasHint}</p>
+        {state.quad ? <p className={styles.hint}>{S.dragTest.quadKeyHint}</p> : null}
+        <p className={styles.hint}>
+          {state.settings.construction === 'from-diagonals'
+            ? S.dragTest.fromDiagonalsHint
+            : state.settings.construction === 'quad-conditions'
+              ? S.dragTest.quadConditionsHint
+              : S.dragTest.instructions}
+        </p>
+      </div>
     </div>
   );
 }
