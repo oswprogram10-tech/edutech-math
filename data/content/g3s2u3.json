@@ -79,7 +79,7 @@
               "when": { "kind": "equals", "path": "mode", "value": "circle" },
               "level": 2,
               "show": { "engine": "E09", "overlay": "radius-pair" },
-              "say": "그은 선분과 같은 선분 두 개를 말뚝 양쪽에 놓아 보세요."
+              "say": "말뚝에서 원 위의 점까지 그은 선분들의 길이를 견주어 보세요."
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "circle" },
@@ -106,7 +106,7 @@
         },
         {
           "id": "g3s2u3.A1.T3",
-          "prompt": "이번에는 밧줄이 더 길어요. 무엇이 달라질지 고르고, 원을 그려 확인해 보세요.",
+          "prompt": "밧줄 4칸과 6칸으로 원을 하나씩 그리고, 무엇이 달라지는지 골라요.",
           "engine": "E09",
           "mode": "circle",
           "cpa": "P",
@@ -142,12 +142,12 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "circle" },
               "level": 1,
-              "say": "앞에서 그린 원과 견주어 보면 무엇이 달라졌나요?"
+              "say": "밧줄 4칸으로 그린 원과 6칸으로 그린 원을 나란히 두고, 무엇이 같고 무엇이 다른지 살펴볼까요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "circle" },
               "level": 2,
-              "say": "밧줄 길이를 바꾸고 원을 그려 견주어 보세요."
+              "say": "두 원의 크기를 견주어 보고, 원의 모양은 그대로인지도 살펴보세요."
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "circle" },
@@ -352,7 +352,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "circle" },
               "level": 2,
-              "say": "지름을 반으로 나누면 무엇이 될까요?"
+              "say": "지름과 반지름이 각각 원의 어느 부분인지 다시 짚어 볼까요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "circle" },
@@ -426,7 +426,7 @@
               },
               "level": 2,
               "show": { "engine": "E09", "overlay": "compass-width" },
-              "say": "컴퍼스 폭을 그린 원 위에 겹쳐 표시했어요."
+              "say": "컴퍼스 폭을 표시했어요. 폭의 두 끝이 원의 어느 부분인지 살펴보세요."
             },
             {
               "when": {

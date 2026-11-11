@@ -1,7 +1,11 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 import { PREVIEW_URL } from '../../../playwright.config';
-import { expectContentPanelsReachable } from '../panel-layout';
+import {
+  expectChromeBookCanvasSize,
+  expectContentPanelsReachable,
+  expectFitCanvasVisible,
+} from '../panel-layout';
 
 /**
  * T113 g3s2u3 「원」 A1 「말뚝과 밧줄」·A2 「가장 긴 선분 찾기와 컴퍼스 무늬」 단원 E2E.
@@ -169,14 +173,19 @@ test('A1 말뚝과 밧줄 — 대표 오답 뒤 고쳐서 세 과제를 통과�
 
   // T3 — 밧줄 4칸·6칸으로 각각 한 바퀴를 돌린 뒤, '원의 모양'을 골라
   // 힌트 ①을 보고 '원의 크기'로 고쳐 통과한다.
-  await expect(page.getByText('이번에는 밧줄이 더 길어요.', { exact: false })).toBeVisible();
+  await expect(
+    page.getByText('밧줄 4칸과 6칸으로 원을 하나씩 그리고', { exact: false }),
+  ).toBeVisible();
   await traceFullRope(page);
   await focusCanvas(page);
   await page.keyboard.press(']');
   await traceFullRope(page);
   await choose(page, 'change', '원의 모양');
   await submit(page);
-  await expectFailedWithHint(page, '앞에서 그린 원과 견주어 보면 무엇이 달라졌나요?');
+  await expectFailedWithHint(
+    page,
+    '밧줄 4칸으로 그린 원과 6칸으로 그린 원을 나란히 두고, 무엇이 같고 무엇이 다른지 살펴볼까요?',
+  );
   await choose(page, 'change', '원의 크기');
   await submit(page);
   await expectPassed(page, true);
@@ -204,11 +213,15 @@ test('A2 가장 긴 선분과 컴퍼스 무늬 — 대표 오답 뒤 고쳐서 �
   await submit(page);
   await expectPassed(page);
 
-  // T2 — 반지름 3칸인 원의 지름에 3을 넣어 MC-GEO-RADIUS-DIAMETER ①을 본 뒤, 6으로 고친다.
+  // T2 — 일반 ①(9)을 먼저 본 뒤, 오개념 값(3)으로 ② 단계의 오개념 힌트까지 확인하고 6으로 고친다.
   await expect(page.getByText('이 원의 지름은 몇 칸일까요?', { exact: false })).toBeVisible();
+  await typeNumber(page, 'd', '9');
+  await submit(page);
+  await expectFailedWithHint(page, '원의 한쪽 끝에서 중심을 지나 반대쪽 끝까지 몇 칸일까요?');
+  await clearNumber(page, 'd');
   await typeNumber(page, 'd', '3');
   await submit(page);
-  await expectFailedWithHint(page, '지름은 반지름 몇 개를 이어 붙인 길이일까요?');
+  await expectFailedWithHint(page, '원의 중심을 지나 끝에서 끝까지 몇 칸인지 세어 보세요.', 2);
   await clearNumber(page, 'd');
   await typeNumber(page, 'd', '6');
   await submit(page);
@@ -250,19 +263,23 @@ test('A2 가장 긴 선분과 컴퍼스 무늬 — 대표 오답 뒤 고쳐서 �
   await expectPassed(page, true);
 });
 
-test('첫 화면에 엔진·확인하기가 들어온다', async ({ page }) => {
-  // E09 circle 판은 세로가 길어 앱 스크롤로 '확인하기'에 닿는지 본다.
+test('아이패드·크롬북·전자칠판 첫 화면에 엔진·확인하기가 들어온다', async ({ page }, testInfo) => {
   await openActivity(page, 'g3s2u3.A1', '말뚝과 밧줄');
   await page.evaluate(() => window.scrollTo(0, 0));
+  // T122로 원 판이 실행기 판 높이에 맞춰 줄어 판 안 스크롤이 없다.
   await expectContentPanelsReachable(page);
-  await expect(canvas(page)).toBeVisible();
-  await expect(page.getByRole('button', { name: '확인하기' })).toBeVisible();
+  let boxes = await expectFitCanvasVisible(page);
+  await expect(canvas(page)).toBeInViewport({ ratio: 1 });
+  await expect(page.getByRole('button', { name: '확인하기' })).toBeInViewport({ ratio: 1 });
+  if (testInfo.project.name === 'chromebook') expectChromeBookCanvasSize(boxes);
 
   await openActivity(page, 'g3s2u3.A2', '가장 긴 선분 찾기와 컴퍼스 무늬');
   await page.evaluate(() => window.scrollTo(0, 0));
   await expectContentPanelsReachable(page);
-  await expect(canvas(page)).toBeVisible();
-  await expect(page.getByRole('button', { name: '확인하기' })).toBeVisible();
+  boxes = await expectFitCanvasVisible(page);
+  await expect(canvas(page)).toBeInViewport({ ratio: 1 });
+  await expect(page.getByRole('button', { name: '확인하기' })).toBeInViewport({ ratio: 1 });
+  if (testInfo.project.name === 'chromebook') expectChromeBookCanvasSize(boxes);
 });
 
 test('오프라인에서도 g3s2u3.A1 활동이 열린다', async ({ page, context }) => {
