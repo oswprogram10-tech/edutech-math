@@ -338,7 +338,11 @@ test('A1 트레이싱 페이퍼 — 대표 오답 뒤 고쳐서 다섯 과제를
     1,
   );
   await submit(page);
-  await expectFailedWithHint(page, '칠한 모양의 점 ㄱ과 시작 도형의 점 ㄱ을 점선으로 이어 보았어요.', 2);
+  await expectFailedWithHint(
+    page,
+    '칠한 모양의 점 ㄱ과 시작 도형의 점 ㄱ을 점선으로 이어 보았어요.',
+    2,
+  );
   await expectOverlayOverCanvas(slot(page, 'main'), 'point-track');
 
   await resetPaintCursor(page, [2, 3]);
@@ -533,6 +537,17 @@ test('A2.T2 정오각형을 채울 수 있다고 답하면 일반 ①이 뜬다'
   await expectFailedWithHint(page, '한 꼭짓점 둘레에 정오각형을 붙이면 어떻게 될까요?', 1);
 });
 
+/**
+ * '확인하기'가 화면 안에 다 들어오는지 본다. 아이패드 세로는 실행기가 하나뿐인 판을
+ * 내용 높이로 두어 전체 스크롤로 닿고, 스크롤 끝에서도 WebKit 소수점 배치로 1px 미만이
+ * 걸려 0.99를 허용한다.
+ */
+async function expectCheckReachable(page: Page, ipad: boolean): Promise<void> {
+  const check = page.getByRole('button', { name: '확인하기' });
+  if (ipad) await check.scrollIntoViewIfNeeded();
+  await expect(check).toBeInViewport({ ratio: ipad ? 0.99 : 1 });
+}
+
 test('첫 화면에 엔진·확인하기가 들어온다', async ({ page }, testInfo) => {
   await openActivity(page, 'g4s1u4.A1', '트레이싱 페이퍼');
   await page.evaluate(() => window.scrollTo(0, 0));
@@ -540,7 +555,7 @@ test('첫 화면에 엔진·확인하기가 들어온다', async ({ page }, test
   await expectContentPanelsReachable(page);
   let boxes = await expectFitCanvasVisible(page);
   await expect(canvas(page)).toBeInViewport({ ratio: 1 });
-  await expect(page.getByRole('button', { name: '확인하기' })).toBeInViewport({ ratio: 1 });
+  await expectCheckReachable(page, testInfo.project.name === 'ipad');
   if (testInfo.project.name === 'chromebook') expectChromeBookCanvasSize(boxes);
 
   await openActivity(page, 'g4s1u4.A2', '쪽매맞춤 디자이너');
@@ -548,7 +563,7 @@ test('첫 화면에 엔진·확인하기가 들어온다', async ({ page }, test
   await expectContentPanelsReachable(page);
   boxes = await expectFitCanvasVisible(page);
   await expect(canvas(page)).toBeInViewport({ ratio: 1 });
-  await expect(page.getByRole('button', { name: '확인하기' })).toBeInViewport({ ratio: 1 });
+  await expectCheckReachable(page, testInfo.project.name === 'ipad');
   if (testInfo.project.name === 'chromebook') expectChromeBookCanvasSize(boxes);
 });
 
