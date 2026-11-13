@@ -297,121 +297,140 @@ export function PointSymmetryView({ state, dispatch, cpa, readOnly = false, targ
           {complete ? S.point.complete.closed : S.point.complete.notClosed}
         </p>
 
-        <div className={styles.boardArea}>
-          <svg
-            ref={svgRef}
-            className={styles.canvas}
-            viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
-            role="group"
-            aria-label={S.canvasLabel['point-symmetry']}
-            tabIndex={readOnly ? -1 : 0}
-            data-testid="transform-canvas"
-            data-motion="full"
-            data-cpa={cpa}
-            onFocus={() => setFocused(true)}
-            onBlur={() => setFocused(false)}
-            onKeyDown={onKeyDown}
-            onPointerDown={onPointerDown}
-          >
-            <rect width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} fill={PAPER} />
-            <rect
-              x={rect.x}
-              y={rect.y}
-              width={rect.width}
-              height={rect.height}
-              fill="#fffdf7"
-              stroke="#7a8497"
-              strokeWidth={2}
-            />
-            <g stroke={GRID} strokeWidth={1.2} strokeOpacity={0.75} pointerEvents="none">
-              {gridLines.map((line, index) => (
-                <line key={`grid-${index}`} x1={line.x1} y1={line.y1} x2={line.x2} y2={line.y2} />
-              ))}
-            </g>
-            {Array.from({ length: 10 }, (_, row) =>
-              Array.from({ length: 10 }, (_, index) => {
-                const xy = ptXY(rect, [index, row]);
-                return (
-                  <circle key={`dot-${index}-${row}`} cx={xy.x} cy={xy.y} r={3.5} fill="#9aa7bd" />
-                );
-              }),
-            )}
-            <g data-given-center>
-              <circle
-                cx={centerXY.x}
-                cy={centerXY.y}
-                r={10}
-                fill="none"
-                stroke={GOLD}
-                strokeWidth={3}
-                strokeDasharray="7 5"
-              />
-              <circle cx={centerXY.x} cy={centerXY.y} r={3} fill={GOLD} />
-            </g>
-            <polyline
-              points={halfScreen.map((point) => `${point.x},${point.y}`).join(' ')}
-              fill="none"
-              stroke={INK}
-              strokeWidth={5}
-              strokeLinejoin="round"
-              strokeLinecap="round"
-            />
-            {state.vertices.length > 0 ? (
-              <polyline
-                data-student-path
-                points={studentScreen.map((point) => `${point.x},${point.y}`).join(' ')}
-                fill="none"
-                stroke={ORANGE}
-                strokeWidth={5}
-                strokeDasharray="8 6"
-                strokeLinejoin="round"
-                strokeLinecap="round"
-              />
-            ) : null}
-            {state.vertices.map((point, index) => {
-              const xy = ptXY(rect, point);
-              return (
-                <circle
-                  key={`student-vertex-${index}`}
-                  cx={xy.x}
-                  cy={xy.y}
-                  r={7}
-                  fill={ORANGE}
-                  stroke="#ffffff"
+        <div className={styles.stageRow}>
+          <div className={styles.stageRow}>
+            <div className={styles.boardArea}>
+              <svg
+                ref={svgRef}
+                className={styles.canvas}
+                viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
+                role="group"
+                aria-label={S.canvasLabel['point-symmetry']}
+                tabIndex={readOnly ? -1 : 0}
+                data-testid="transform-canvas"
+                data-motion="full"
+                data-cpa={cpa}
+                onFocus={() => setFocused(true)}
+                onBlur={() => setFocused(false)}
+                onKeyDown={onKeyDown}
+                onPointerDown={onPointerDown}
+              >
+                <rect width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} fill={PAPER} />
+                <rect
+                  x={rect.x}
+                  y={rect.y}
+                  width={rect.width}
+                  height={rect.height}
+                  fill="#fffdf7"
+                  stroke="#7a8497"
                   strokeWidth={2}
                 />
-              );
-            })}
-            {focused ? (
-              <circle
-                data-cursor
-                cx={cursorXY.x}
-                cy={cursorXY.y}
-                r={18}
-                fill="none"
-                stroke={ORANGE}
-                strokeWidth={3}
-                strokeDasharray="7 5"
-                pointerEvents="none"
-              />
-            ) : null}
-          </svg>
-        </div>
-
-        <div className={styles.panel} role="group" aria-label={S.name}>
-          <section className={styles.panelGroup}>
-            <span className={styles.panelLabel}>{S.point.complete.instruction}</span>
-            <div className={styles.directionRow}>
-              <button
-                type="button"
-                className={styles.button}
-                disabled={readOnly || state.vertices.length === 0}
-                onClick={() => dispatch({ type: 'undo-vertex' })}
-              >
-                {S.point.complete.undo}
-              </button>
+                <g stroke={GRID} strokeWidth={1.2} strokeOpacity={0.75} pointerEvents="none">
+                  {gridLines.map((line, index) => (
+                    <line
+                      key={`grid-${index}`}
+                      x1={line.x1}
+                      y1={line.y1}
+                      x2={line.x2}
+                      y2={line.y2}
+                    />
+                  ))}
+                </g>
+                {Array.from({ length: 10 }, (_, row) =>
+                  Array.from({ length: 10 }, (_, index) => {
+                    const xy = ptXY(rect, [index, row]);
+                    return (
+                      <circle
+                        key={`dot-${index}-${row}`}
+                        cx={xy.x}
+                        cy={xy.y}
+                        r={3.5}
+                        fill="#9aa7bd"
+                      />
+                    );
+                  }),
+                )}
+                <g data-given-center>
+                  <circle
+                    cx={centerXY.x}
+                    cy={centerXY.y}
+                    r={10}
+                    fill="none"
+                    stroke={GOLD}
+                    strokeWidth={3}
+                    strokeDasharray="7 5"
+                  />
+                  <circle cx={centerXY.x} cy={centerXY.y} r={3} fill={GOLD} />
+                </g>
+                <polyline
+                  points={halfScreen.map((point) => `${point.x},${point.y}`).join(' ')}
+                  fill="none"
+                  stroke={INK}
+                  strokeWidth={5}
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
+                />
+                {state.vertices.length > 0 ? (
+                  <polyline
+                    data-student-path
+                    points={studentScreen.map((point) => `${point.x},${point.y}`).join(' ')}
+                    fill="none"
+                    stroke={ORANGE}
+                    strokeWidth={5}
+                    strokeDasharray="8 6"
+                    strokeLinejoin="round"
+                    strokeLinecap="round"
+                  />
+                ) : null}
+                {state.vertices.map((point, index) => {
+                  const xy = ptXY(rect, point);
+                  return (
+                    <circle
+                      key={`student-vertex-${index}`}
+                      cx={xy.x}
+                      cy={xy.y}
+                      r={7}
+                      fill={ORANGE}
+                      stroke="#ffffff"
+                      strokeWidth={2}
+                    />
+                  );
+                })}
+                {focused ? (
+                  <circle
+                    data-cursor
+                    cx={cursorXY.x}
+                    cy={cursorXY.y}
+                    r={18}
+                    fill="none"
+                    stroke={ORANGE}
+                    strokeWidth={3}
+                    strokeDasharray="7 5"
+                    pointerEvents="none"
+                  />
+                ) : null}
+              </svg>
             </div>
-          </section>
+            <div className={styles.sideStack}>
+              <div className={styles.sideStack}>
+                <div className={styles.panel} role="group" aria-label={S.name}>
+                  <section className={styles.panelGroup}>
+                    <span className={styles.panelLabel}>{S.point.complete.instruction}</span>
+                    <div className={styles.directionRow}>
+                      <button
+                        type="button"
+                        className={styles.button}
+                        disabled={readOnly || state.vertices.length === 0}
+                        onClick={() => dispatch({ type: 'undo-vertex' })}
+                      >
+                        {S.point.complete.undo}
+                      </button>
+                    </div>
+                  </section>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
