@@ -304,7 +304,7 @@ test('A2 둘레 20 고무줄 — 기록·최대 넓이·넓이 9·짧은 둘레'
   await submit(page);
   await expectFailedWithHint(
     page,
-    '세 직사각형의 둘레를 각각 구해 볼까요? 넓이가 9가 되는 가로와 세로의 짝은 무엇인가요?',
+    '지금 직사각형의 넓이는 몇 cm²인가요? 9보다 큰가요, 작은가요?',
     1,
   );
   await focusCanvas(page, 'geo-canvas');
