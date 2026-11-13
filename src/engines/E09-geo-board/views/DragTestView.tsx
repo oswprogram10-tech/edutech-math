@@ -892,7 +892,13 @@ export function DragTestView({
         ) : null}
       </div>
 
-      <p className={styles.instructions}>{S.dragTest.instructions}</p>
+      <p className={styles.instructions}>
+        {state.settings.construction === 'from-diagonals'
+          ? S.dragTest.fromDiagonalsHint
+          : state.settings.construction === 'quad-conditions'
+            ? S.dragTest.quadConditionsHint
+            : S.dragTest.instructions}
+      </p>
       <p className={styles.status} role="status">
         {message || (pending.length > 0 ? S.dragTest.pending(pending.length) : '')}
       </p>

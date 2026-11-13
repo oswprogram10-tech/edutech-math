@@ -257,70 +257,78 @@ export function LineSymmetryView({ state, dispatch, cpa, readOnly = false, targe
         <p className={styles.status} role="status">
           {state.folded ? S.line.decal.folded : ''}
         </p>
-        <div className={styles.boardArea}>
-          <DotBoard
-            svgRef={svgRef}
-            dots={state.dots}
-            folded={state.folded}
-            cursor={cursor}
-            focused={focused}
-            readOnly={readOnly}
-            cpa={cpa}
-            targetSize={targetSize}
-            onKeyDown={onKeyDown}
-            onPick={(at) => {
-              if (at[0] <= 4) dispatch({ type: 'add-dot', at, mark });
-              else dispatch({ type: 'remove-dot', at });
-            }}
-          />
-        </div>
-        <div className={styles.panel} role="group" aria-label={S.name}>
-          <section className={styles.panelGroup}>
-            <span className={styles.panelLabel}>{S.line.decal.mark}</span>
-            <div className={styles.directionRow}>
-              {S.line.decal.marks.map((text, index) => (
-                <button
-                  key={text}
-                  type="button"
-                  className={styles.button}
-                  aria-pressed={mark === index}
-                  disabled={readOnly}
-                  onClick={() => setMark(index as 0 | 1 | 2 | 3)}
-                >
-                  {text}
-                </button>
-              ))}
+        <div className={styles.stageRow}>
+          <div className={styles.stageRow}>
+            <div className={styles.boardArea}>
+              <DotBoard
+                svgRef={svgRef}
+                dots={state.dots}
+                folded={state.folded}
+                cursor={cursor}
+                focused={focused}
+                readOnly={readOnly}
+                cpa={cpa}
+                targetSize={targetSize}
+                onKeyDown={onKeyDown}
+                onPick={(at) => {
+                  if (at[0] <= 4) dispatch({ type: 'add-dot', at, mark });
+                  else dispatch({ type: 'remove-dot', at });
+                }}
+              />
             </div>
-          </section>
-          <section className={styles.panelGroup}>
-            <span className={styles.panelLabel}>{S.line.decal.fold}</span>
-            <div className={styles.directionRow}>
-              <button
-                type="button"
-                className={styles.button}
-                disabled={readOnly || state.dots.length === 0}
-                onClick={() => dispatch({ type: 'fold-paper' })}
-              >
-                {S.line.decal.fold}
-              </button>
-              <button
-                type="button"
-                className={styles.button}
-                disabled={readOnly || !state.folded}
-                onClick={() => dispatch({ type: 'unfold-paper' })}
-              >
-                {S.line.decal.unfold}
-              </button>
-              <button
-                type="button"
-                className={styles.button}
-                disabled={readOnly}
-                onClick={() => dispatch({ type: 'remove-dot', at: cursor })}
-              >
-                {S.line.decal.erase}
-              </button>
+            <div className={styles.sideStack}>
+              <div className={styles.sideStack}>
+                <div className={styles.panel} role="group" aria-label={S.name}>
+                  <section className={styles.panelGroup}>
+                    <span className={styles.panelLabel}>{S.line.decal.mark}</span>
+                    <div className={styles.directionRow}>
+                      {S.line.decal.marks.map((text, index) => (
+                        <button
+                          key={text}
+                          type="button"
+                          className={styles.button}
+                          aria-pressed={mark === index}
+                          disabled={readOnly}
+                          onClick={() => setMark(index as 0 | 1 | 2 | 3)}
+                        >
+                          {text}
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+                  <section className={styles.panelGroup}>
+                    <span className={styles.panelLabel}>{S.line.decal.fold}</span>
+                    <div className={styles.directionRow}>
+                      <button
+                        type="button"
+                        className={styles.button}
+                        disabled={readOnly || state.dots.length === 0}
+                        onClick={() => dispatch({ type: 'fold-paper' })}
+                      >
+                        {S.line.decal.fold}
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.button}
+                        disabled={readOnly || !state.folded}
+                        onClick={() => dispatch({ type: 'unfold-paper' })}
+                      >
+                        {S.line.decal.unfold}
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.button}
+                        disabled={readOnly}
+                        onClick={() => dispatch({ type: 'remove-dot', at: cursor })}
+                      >
+                        {S.line.decal.erase}
+                      </button>
+                    </div>
+                  </section>
+                </div>
+              </div>
             </div>
-          </section>
+          </div>
         </div>
       </div>
     );
