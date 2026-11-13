@@ -17,11 +17,13 @@
     "check:specs": "node scripts/check-specs.mjs && vitest run src/core/runner/__tests__/content-files.test.ts"
   },
   "dependencies": {
+    "@react-three/fiber": "8.18.0",
     "dexie": "^4.4.7",
     "lz-string": "^1.5.0",
     "qrcode-generator": "^2.0.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "three": "0.186.0",
     "zod": "^4.6.7"
   },
   "devDependencies": {
@@ -31,6 +33,7 @@
     "@types/node": "^26.6.6",
     "@types/react": "^18.3.31",
     "@types/react-dom": "^18.3.7",
+    "@types/three": "0.186.0",
     "@vitejs/plugin-react": "^6.1.2",
     "@vitest/coverage-v8": "^5.0.5",
     "eslint": "^10.14.0",

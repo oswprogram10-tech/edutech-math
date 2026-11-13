@@ -6,11 +6,15 @@
 import { CanvasAlignedOverlay, clamp } from '../../../core/engine-sdk';
 import type { OverlayProps } from '../../../core/engine-sdk';
 import { computeStageLayout, projectPoint, rotateContinuous } from '../layout';
+import { useActiveRenderer } from '../renderer';
 import { solid3dStrings as S } from '../strings.ko';
 import type { SolidConfig, SolidState } from '../types';
+import { CUBE_CANVAS_SELECTOR, HelperDiagramBox } from './HelperDiagramBox';
 
 export function SideEyeOverlay({ state }: OverlayProps<SolidConfig, SolidState>) {
+  const activeRenderer = useActiveRenderer();
   if (state.mode !== 'cubes') return null;
+
   const [cols, rows] = state.settings.grid;
   const layout = computeStageLayout(cols, rows, state.settings.maxHeight);
 
@@ -37,10 +41,47 @@ export function SideEyeOverlay({ state }: OverlayProps<SolidConfig, SolidState>)
     y: clamp(rawFront.y, margin, layout.viewBox.height - margin),
   };
 
+  const content = (
+    <>
+      <g transform={`translate(${eye.x}, ${eye.y})`}>
+        <ellipse cx={0} cy={0} rx={18} ry={11} fill="#fff7ed" stroke="#c2410c" strokeWidth={2.5} />
+        <circle cx={0} cy={0} r={5.5} fill="#c2410c" />
+        <circle cx={-1.5} cy={-1.5} r={1.8} fill="#ffffff" />
+      </g>
+
+      <line
+        x1={arrowStart.x}
+        y1={arrowStart.y}
+        x2={arrowTip.x}
+        y2={arrowTip.y}
+        stroke="#c2410c"
+        strokeWidth={3.2}
+        strokeLinecap="round"
+        markerEnd="url(#e12-eye-arrow)"
+      />
+
+      <g transform={`translate(${front.x}, ${front.y})`}>
+        <rect
+          x={-20}
+          y={-15}
+          width={40}
+          height={30}
+          rx={8}
+          fill="#ffedd5"
+          stroke="#c2410c"
+          strokeWidth={2.5}
+        />
+        <text x={0} y={6} textAnchor="middle" fontSize={18} fontWeight={800} fill="#9a3412">
+          {S.front}
+        </text>
+      </g>
+    </>
+  );
+
   return (
     <CanvasAlignedOverlay
       testId="side-eye"
-      canvasSelector={'svg[data-testid="cubes-canvas"]'}
+      canvasSelector={CUBE_CANVAS_SELECTOR}
       logicalWidth={layout.viewBox.width}
       logicalHeight={layout.viewBox.height}
     >
@@ -57,42 +98,11 @@ export function SideEyeOverlay({ state }: OverlayProps<SolidConfig, SolidState>)
           <path d="M 0 1 L 10 5 L 0 9 z" fill="#c2410c" />
         </marker>
       </defs>
-
-      {/* 눈 그림 */}
-      <g transform={`translate(${eye.x}, ${eye.y})`}>
-        <ellipse cx={0} cy={0} rx={18} ry={11} fill="#fff7ed" stroke="#c2410c" strokeWidth={2.5} />
-        <circle cx={0} cy={0} r={5.5} fill="#c2410c" />
-        <circle cx={-1.5} cy={-1.5} r={1.8} fill="#ffffff" />
-      </g>
-
-      {/* +x 쪽에서 모양을 향한 시선 화살표 */}
-      <line
-        x1={arrowStart.x}
-        y1={arrowStart.y}
-        x2={arrowTip.x}
-        y2={arrowTip.y}
-        stroke="#c2410c"
-        strokeWidth={3.2}
-        strokeLinecap="round"
-        markerEnd="url(#e12-eye-arrow)"
-      />
-
-      {/* 눈에서 볼 때 왼쪽(y = 0 쪽) 큰 "앞" 표시 */}
-      <g transform={`translate(${front.x}, ${front.y})`}>
-        <rect
-          x={-20}
-          y={-15}
-          width={40}
-          height={30}
-          rx={8}
-          fill="#ffedd5"
-          stroke="#c2410c"
-          strokeWidth={2.5}
-        />
-        <text x={0} y={6} textAnchor="middle" fontSize={18} fontWeight={800} fill="#9a3412">
-          {S.front}
-        </text>
-      </g>
+      {activeRenderer === '3d' ? (
+        <HelperDiagramBox state={state}>{content}</HelperDiagramBox>
+      ) : (
+        content
+      )}
     </CanvasAlignedOverlay>
   );
 }

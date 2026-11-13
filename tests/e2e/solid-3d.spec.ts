@@ -19,8 +19,9 @@ interface ObservationRecord {
   readonly [key: string]: unknown;
 }
 
-async function openEngine(page: Page, config?: unknown) {
-  const query = config === undefined ? '' : `?config=${encodeURIComponent(JSON.stringify(config))}`;
+async function openEngine(page: Page, config?: Record<string, unknown>) {
+  const merged = { stage: 'isometric', ...config };
+  const query = `?config=${encodeURIComponent(JSON.stringify(merged))}`;
   await page.goto(`/${query}#/sandbox/E12`);
   await expect(page.getByRole('heading', { name: '3D 입체' })).toBeVisible();
   const canvas = page.getByTestId('cubes-canvas');
@@ -168,7 +169,9 @@ test('크롬북 기본 설정에서 [data-col="0,0"] 바닥 마름모의 화면 
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromebook', '크롬북 터치 타깃 크기 테스트');
-  await page.goto('/?stage=fit#/sandbox/E12');
+  await page.goto(
+    `/?stage=fit&config=${encodeURIComponent(JSON.stringify({ stage: 'isometric' }))}#/sandbox/E12`,
+  );
   await expect(page.getByRole('heading', { name: '3D 입체' })).toBeVisible();
   const floor00 = page.locator('[data-floor="0,0"]');
   const box = await floor00.boundingBox();

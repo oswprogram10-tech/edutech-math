@@ -14,6 +14,8 @@ export type ProjectionView = 'top' | 'front' | 'side';
 
 export type CubesTool = 'add' | 'remove';
 
+export type StageMode = 'auto' | '3d' | 'isometric';
+
 export type ViewTurn = 0 | 1 | 2 | 3;
 
 export type GridCoord = readonly [number, number];
@@ -57,6 +59,8 @@ export interface CubesConfig {
   readonly translucentToggle?: boolean;
   /** 회전 잠금. true면 회전 단추를 숨기고 turn Action을 무시한다. 기본 false. */
   readonly rotationLocked?: boolean;
+  /** 무대 렌더러 선택. 기본 `'auto'`. */
+  readonly stage?: StageMode;
   /** 과제 보기 모양(조작 불가 작은 등각 그림). */
   readonly reference?: ReferenceShapeConfig;
   /** 과제 보기 투영. */
@@ -98,6 +102,7 @@ export interface CubesSettings {
   readonly frontMarker: boolean;
   readonly translucentToggle: boolean;
   readonly rotationLocked: boolean;
+  readonly stage: StageMode;
   readonly reference: ReferenceShapeConfig | null;
   readonly referenceViews: ReferenceViewsConfig | null;
 }

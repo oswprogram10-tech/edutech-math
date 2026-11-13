@@ -7,6 +7,7 @@ export const solid3dStrings = {
   instructions:
     '칸을 눌러 쌓기나무를 쌓거나 길게 눌러 뺄 수 있어요. 방향키로 칸을 옮기고 Enter로 쌓아요.',
   keyHint: '방향키: 칸 옮기기 · Enter: 쌓기 · Backspace: 빼기 · Q/E: 돌리기 · T: 반투명',
+  keyHint3d: '손가락 두 개로 돌려 보세요 · 마우스는 오른쪽 버튼으로 끌어요',
   tools: {
     add: '쌓기',
     remove: '빼기',
@@ -15,6 +16,16 @@ export const solid3dStrings = {
   turnRight: '오른쪽으로 돌리기',
   translucent: '반투명',
   clear: '모두 빼기',
+  switchToIso: '평면 그림으로 보기',
+  switchTo3d: '입체로 보기',
+  preparing3d: '입체 무대를 준비하고 있어요',
+  helperDiagramTitle: '도움 그림',
+  cameraPresets: {
+    top: '위에서',
+    front: '앞에서',
+    side: '오른쪽에서',
+    iso: '비스듬히',
+  } as const,
   maxReached: '더 쌓을 수 없어요',
   front: '앞',
   views: {
