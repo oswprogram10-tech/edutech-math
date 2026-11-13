@@ -65,7 +65,9 @@ for (const engine of ENGINES) {
         page,
       }, testInfo) => {
         await openMode(page, engine.label, engine.heading, mode);
-        const box = await expectSandboxCanvasVisible(page);
+        const box = await expectSandboxCanvasVisible(page, {
+          buttons: testInfo.project.name !== 'ipad',
+        });
         console.log('T122', {
           project: testInfo.project.name,
           engine: engine.label,

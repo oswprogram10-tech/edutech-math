@@ -378,231 +378,235 @@ export function GeoboardView({
         {invalid ? S.overlap : ''}
       </p>
 
-      <div className={styles.boardArea}>
-        <svg
-          ref={svgRef}
-          className={styles.canvas}
-          viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
-          role="group"
-          aria-label={S.canvasLabel.geoboard}
-          tabIndex={readOnly ? -1 : 0}
-          data-testid="geo-canvas"
-          data-cpa={cpa}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          onKeyDown={onCanvasKeyDown}
-          onPointerDown={onPointerDown}
-          onPointerUp={onPointerUp}
-          onPointerCancel={() => {
-            dragRef.current = null;
-          }}
-        >
-          <rect width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} fill={PAPER} />
-          <g stroke={GRID} strokeWidth={1} strokeOpacity={0.5} pointerEvents="none">
-            {Array.from({ length: rows }, (_, row) => (
-              <line
-                key={`h-${row}`}
-                x1={rect.x}
-                y1={pegPoint(rect, [0, row]).y}
-                x2={rect.x + rect.width}
-                y2={pegPoint(rect, [0, row]).y}
-              />
-            ))}
-            {Array.from({ length: cols }, (_, col) => (
-              <line
-                key={`v-${col}`}
-                x1={pegPoint(rect, [col, 0]).x}
-                y1={rect.y}
-                x2={pegPoint(rect, [col, 0]).x}
-                y2={rect.y + rect.height}
-              />
-            ))}
-          </g>
-
-          {(state.settings.openShapes ?? []).length > 0 ||
-          (state.settings.curvedShapes ?? []).length > 0 ? (
-            <g data-given="true" pointerEvents="none">
-              {(state.settings.openShapes ?? []).map((pegs, index) => (
-                <path
-                  key={`open-${index}`}
-                  d={givenShapePath(rect, pegs, [], false)}
-                  fill="none"
-                  stroke="#6b7280"
-                  strokeWidth={5}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  data-given-open={index}
+      <div className={styles.stageRow}>
+        <div className={styles.boardArea}>
+          <svg
+            ref={svgRef}
+            className={styles.canvas}
+            viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
+            role="group"
+            aria-label={S.canvasLabel.geoboard}
+            tabIndex={readOnly ? -1 : 0}
+            data-testid="geo-canvas"
+            data-cpa={cpa}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            onKeyDown={onCanvasKeyDown}
+            onPointerDown={onPointerDown}
+            onPointerUp={onPointerUp}
+            onPointerCancel={() => {
+              dragRef.current = null;
+            }}
+          >
+            <rect width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} fill={PAPER} />
+            <g stroke={GRID} strokeWidth={1} strokeOpacity={0.5} pointerEvents="none">
+              {Array.from({ length: rows }, (_, row) => (
+                <line
+                  key={`h-${row}`}
+                  x1={rect.x}
+                  y1={pegPoint(rect, [0, row]).y}
+                  x2={rect.x + rect.width}
+                  y2={pegPoint(rect, [0, row]).y}
                 />
               ))}
-              {(state.settings.curvedShapes ?? []).map((shape, index) => (
-                <path
-                  key={`curved-${index}`}
-                  d={givenShapePath(rect, shape.pegs, shape.curved, true)}
-                  fill="none"
-                  stroke="#6b7280"
-                  strokeWidth={5}
-                  strokeLinejoin="round"
-                  data-given-curved={index}
+              {Array.from({ length: cols }, (_, col) => (
+                <line
+                  key={`v-${col}`}
+                  x1={pegPoint(rect, [col, 0]).x}
+                  y1={rect.y}
+                  x2={pegPoint(rect, [col, 0]).x}
+                  y2={rect.y + rect.height}
                 />
               ))}
             </g>
-          ) : null}
 
-          {state.bands.map((band, index) => {
-            const style = bandStyle(index, colored);
-            const points = band.pegs.map((peg) => pegPoint(rect, peg));
-            const label = S.bandLabel(index + 1);
-            return (
-              <g
-                key={band.id}
-                role="button"
-                tabIndex={readOnly ? -1 : 0}
-                aria-label={label}
-                data-band={band.id}
-                data-closed={band.closed ? 'true' : 'false'}
-                onKeyDown={(event) => onBandKeyDown(event, band)}
-              >
-                {band.closed ? (
-                  <polygon
-                    points={pointsString(points)}
-                    fill={colored ? style.fill : 'none'}
-                    fillOpacity={colored ? 0.1 : 0}
-                    stroke={style.stroke}
-                    strokeWidth={style.width}
-                    strokeDasharray={style.dash}
-                    strokeLinejoin="round"
-                    pointerEvents="none"
-                  />
-                ) : (
-                  <polyline
-                    points={pointsString(points)}
+            {(state.settings.openShapes ?? []).length > 0 ||
+            (state.settings.curvedShapes ?? []).length > 0 ? (
+              <g data-given="true" pointerEvents="none">
+                {(state.settings.openShapes ?? []).map((pegs, index) => (
+                  <path
+                    key={`open-${index}`}
+                    d={givenShapePath(rect, pegs, [], false)}
                     fill="none"
-                    stroke={style.stroke}
-                    strokeWidth={style.width}
-                    strokeDasharray={style.dash}
+                    stroke="#6b7280"
+                    strokeWidth={5}
                     strokeLinecap="round"
-                    pointerEvents="none"
+                    strokeLinejoin="round"
+                    data-given-open={index}
                   />
-                )}
-                {band.pegs.map((peg, pegIndex) => {
-                  const point = pegPoint(rect, peg);
-                  const chosen =
-                    vertex !== null && vertex.band === band.id && vertex.index === pegIndex;
-                  return (
-                    <g key={`${band.id}-${pegIndex}`} pointerEvents="none">
-                      <circle
-                        cx={point.x}
-                        cy={point.y}
-                        r={chosen ? 13 : 8}
-                        fill={band.closed ? style.stroke : PAPER}
-                        stroke={style.stroke}
-                        strokeWidth={chosen ? 4 : 3}
-                      />
-                      {chosen ? (
+                ))}
+                {(state.settings.curvedShapes ?? []).map((shape, index) => (
+                  <path
+                    key={`curved-${index}`}
+                    d={givenShapePath(rect, shape.pegs, shape.curved, true)}
+                    fill="none"
+                    stroke="#6b7280"
+                    strokeWidth={5}
+                    strokeLinejoin="round"
+                    data-given-curved={index}
+                  />
+                ))}
+              </g>
+            ) : null}
+
+            {state.bands.map((band, index) => {
+              const style = bandStyle(index, colored);
+              const points = band.pegs.map((peg) => pegPoint(rect, peg));
+              const label = S.bandLabel(index + 1);
+              return (
+                <g
+                  key={band.id}
+                  role="button"
+                  tabIndex={readOnly ? -1 : 0}
+                  aria-label={label}
+                  data-band={band.id}
+                  data-closed={band.closed ? 'true' : 'false'}
+                  onKeyDown={(event) => onBandKeyDown(event, band)}
+                >
+                  {band.closed ? (
+                    <polygon
+                      points={pointsString(points)}
+                      fill={colored ? style.fill : 'none'}
+                      fillOpacity={colored ? 0.1 : 0}
+                      stroke={style.stroke}
+                      strokeWidth={style.width}
+                      strokeDasharray={style.dash}
+                      strokeLinejoin="round"
+                      pointerEvents="none"
+                    />
+                  ) : (
+                    <polyline
+                      points={pointsString(points)}
+                      fill="none"
+                      stroke={style.stroke}
+                      strokeWidth={style.width}
+                      strokeDasharray={style.dash}
+                      strokeLinecap="round"
+                      pointerEvents="none"
+                    />
+                  )}
+                  {band.pegs.map((peg, pegIndex) => {
+                    const point = pegPoint(rect, peg);
+                    const chosen =
+                      vertex !== null && vertex.band === band.id && vertex.index === pegIndex;
+                    return (
+                      <g key={`${band.id}-${pegIndex}`} pointerEvents="none">
                         <circle
                           cx={point.x}
                           cy={point.y}
-                          r={20}
-                          fill="none"
-                          stroke={ORANGE}
-                          strokeWidth={2}
-                          strokeDasharray="5 4"
+                          r={chosen ? 13 : 8}
+                          fill={band.closed ? style.stroke : PAPER}
+                          stroke={style.stroke}
+                          strokeWidth={chosen ? 4 : 3}
                         />
-                      ) : null}
+                        {chosen ? (
+                          <circle
+                            cx={point.x}
+                            cy={point.y}
+                            r={20}
+                            fill="none"
+                            stroke={ORANGE}
+                            strokeWidth={2}
+                            strokeDasharray="5 4"
+                          />
+                        ) : null}
+                      </g>
+                    );
+                  })}
+                </g>
+              );
+            })}
+
+            {decorate ? decorate(rect) : null}
+
+            {allPegs(rect).map((peg) => {
+              const point = pegPoint(rect, peg);
+              return (
+                <circle
+                  key={`peg-${peg[0]}-${peg[1]}`}
+                  cx={point.x}
+                  cy={point.y}
+                  r={Math.max(3, Math.min(6, rect.spacing * 0.055))}
+                  fill={INK}
+                  pointerEvents="none"
+                />
+              );
+            })}
+
+            {state.settings.showCounts === 'always'
+              ? state.bands.map((band, index) => {
+                  if (!band.closed) return null;
+                  const count = simplifiedCount(band);
+                  if (count < 3) return null;
+                  const points = band.pegs.map((peg) => pegPoint(rect, peg));
+                  const center = points.reduce(
+                    (sum, point) => ({ x: sum.x + point.x, y: sum.y + point.y }),
+                    { x: 0, y: 0 },
+                  );
+                  const x = center.x / points.length;
+                  const y = center.y / points.length;
+                  const label = S.count(count, count);
+                  return (
+                    <g key={`count-${band.id}`} pointerEvents="none">
+                      <rect
+                        x={x - 92}
+                        y={y - 20}
+                        width={184}
+                        height={36}
+                        rx={10}
+                        fill="#ffffff"
+                        fillOpacity={0.92}
+                        stroke={bandStyle(index, colored).stroke}
+                      />
+                      <text
+                        x={x}
+                        y={y + 4}
+                        textAnchor="middle"
+                        fontSize={17}
+                        fontWeight={700}
+                        fill={INK}
+                        data-counts={band.id}
+                      >
+                        {label}
+                      </text>
                     </g>
                   );
-                })}
-              </g>
-            );
-          })}
+                })
+              : null}
 
-          {decorate ? decorate(rect) : null}
-
-          {allPegs(rect).map((peg) => {
-            const point = pegPoint(rect, peg);
-            return (
+            {focused || active !== null ? (
               <circle
-                key={`peg-${peg[0]}-${peg[1]}`}
-                cx={point.x}
-                cy={point.y}
-                r={Math.max(3, Math.min(6, rect.spacing * 0.055))}
-                fill={INK}
+                cx={pegPoint(rect, cursor).x}
+                cy={pegPoint(rect, cursor).y}
+                r={Math.max(16, hitRadius * 0.62)}
+                fill="none"
+                stroke={ORANGE}
+                strokeWidth={2.5}
+                strokeDasharray="7 5"
                 pointerEvents="none"
+                data-testid="geo-cursor"
               />
-            );
-          })}
+            ) : null}
 
-          {state.settings.showCounts === 'always'
-            ? state.bands.map((band, index) => {
-                if (!band.closed) return null;
-                const count = simplifiedCount(band);
-                if (count < 3) return null;
-                const points = band.pegs.map((peg) => pegPoint(rect, peg));
-                const center = points.reduce(
-                  (sum, point) => ({ x: sum.x + point.x, y: sum.y + point.y }),
-                  { x: 0, y: 0 },
-                );
-                const x = center.x / points.length;
-                const y = center.y / points.length;
-                const label = S.count(count, count);
-                return (
-                  <g key={`count-${band.id}`} pointerEvents="none">
-                    <rect
-                      x={x - 92}
-                      y={y - 20}
-                      width={184}
-                      height={36}
-                      rx={10}
-                      fill="#ffffff"
-                      fillOpacity={0.92}
-                      stroke={bandStyle(index, colored).stroke}
-                    />
-                    <text
-                      x={x}
-                      y={y + 4}
-                      textAnchor="middle"
-                      fontSize={17}
-                      fontWeight={700}
-                      fill={INK}
-                      data-counts={band.id}
-                    >
-                      {label}
-                    </text>
-                  </g>
-                );
-              })
-            : null}
+            {active && active.pegs.length > 0 ? (
+              <text
+                x={pegPoint(rect, active.pegs[0] ?? [0, 0]).x}
+                y={rect.y - 34}
+                textAnchor="middle"
+                fontSize={18}
+                fontWeight={700}
+                fill={INK}
+              >
+                {S.bandLabel(state.bands.findIndex((band) => band.id === active.id) + 1)}
+              </text>
+            ) : null}
+          </svg>
+        </div>
 
-          {focused || active !== null ? (
-            <circle
-              cx={pegPoint(rect, cursor).x}
-              cy={pegPoint(rect, cursor).y}
-              r={Math.max(16, hitRadius * 0.62)}
-              fill="none"
-              stroke={ORANGE}
-              strokeWidth={2.5}
-              strokeDasharray="7 5"
-              pointerEvents="none"
-              data-testid="geo-cursor"
-            />
-          ) : null}
-
-          {active && active.pegs.length > 0 ? (
-            <text
-              x={pegPoint(rect, active.pegs[0] ?? [0, 0]).x}
-              y={rect.y - 34}
-              textAnchor="middle"
-              fontSize={18}
-              fontWeight={700}
-              fill={INK}
-            >
-              {S.bandLabel(state.bands.findIndex((band) => band.id === active.id) + 1)}
-            </text>
-          ) : null}
-        </svg>
+        <div className={styles.sideStack}>
+          <p className={styles.hint}>{S.bandHint}</p>
+        </div>
       </div>
-
-      <p className={styles.hint}>{S.bandHint}</p>
     </div>
   );
 }
