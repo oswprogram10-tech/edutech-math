@@ -260,7 +260,7 @@ test('A1 고무줄 기하판 — 대표 오답 뒤 고쳐서 다섯 과제를 �
   await submit(page);
   await expectFailedWithHint(
     page,
-    '이 도형을 돌려 바로 세운 모습을 도형 위에 겹쳐 그렸어요. 같은 사각형인지 견주어 보세요.',
+    '바로 세운 모습을 파란 점선으로 그렸어요. 변과 꼭짓점 수가 달라졌나요?',
     2,
   );
   const ghost = panel.locator('[data-overlay="upright-ghost"]');
