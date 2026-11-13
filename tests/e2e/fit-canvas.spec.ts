@@ -44,6 +44,7 @@ const ENGINES: readonly EngineCase[] = [
     heading: '자르고 붙이기',
     modes: ['slice', 'formula-derive', 'angle-gather', 'tangram', 'circle-sectors'],
   },
+  { label: 'E12', heading: '3D 입체', modes: ['cubes'] },
   {
     label: 'E17',
     heading: '분류기',
