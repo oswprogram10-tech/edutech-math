@@ -564,193 +564,197 @@ export function CircleView({
       {state.tool === 'chord' ? <p className={styles.hint}>{S.circle.chordHint}</p> : null}
       {state.tool === 'compass' ? <p className={styles.hint}>{S.circle.compassHint}</p> : null}
 
-      <div className={styles.boardArea}>
-        <svg
-          ref={svgRef}
-          className={styles.canvas}
-          viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
-          role="group"
-          aria-label={S.circle.canvasLabel}
-          tabIndex={readOnly ? -1 : 0}
-          data-testid="geo-canvas"
-          data-cpa={cpa}
-          onKeyDown={onCanvasKeyDown}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={() => {
-            dragRef.current = null;
-          }}
-          onPointerCancel={() => {
-            dragRef.current = null;
-          }}
-        >
-          <rect
-            width={LOGICAL_WIDTH}
-            height={LOGICAL_HEIGHT}
-            fill={settings.scene === 'playground' ? PLAYGROUND : PAPER}
-          />
-          <g stroke={GRID} strokeWidth={1} pointerEvents="none">
-            {Array.from({ length: settings.grid }, (_, index) => (
-              <g key={`grid-${index}`}>
-                <line
-                  x1={rect.x + index * rect.spacing}
-                  y1={rect.y}
-                  x2={rect.x + index * rect.spacing}
-                  y2={rect.y + (settings.grid - 1) * rect.spacing}
-                />
-                <line
-                  x1={rect.x}
-                  y1={rect.y + index * rect.spacing}
-                  x2={rect.x + (settings.grid - 1) * rect.spacing}
-                  y2={rect.y + index * rect.spacing}
-                />
-              </g>
-            ))}
-          </g>
-
-          {settings.targetPattern.length > 0 ? (
-            patternCircles()
-          ) : (
-            <circle
-              cx={centerScreen.x}
-              cy={centerScreen.y}
-              r={mainRadiusScreen}
-              fill="none"
-              stroke={BLUE}
-              strokeWidth={2.5}
-              strokeOpacity={0.55}
-              pointerEvents="none"
+      <div className={styles.stageRow}>
+        <div className={styles.boardArea}>
+          <svg
+            ref={svgRef}
+            className={styles.canvas}
+            viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
+            role="group"
+            aria-label={S.circle.canvasLabel}
+            tabIndex={readOnly ? -1 : 0}
+            data-testid="geo-canvas"
+            data-cpa={cpa}
+            onKeyDown={onCanvasKeyDown}
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={() => {
+              dragRef.current = null;
+            }}
+            onPointerCancel={() => {
+              dragRef.current = null;
+            }}
+          >
+            <rect
+              width={LOGICAL_WIDTH}
+              height={LOGICAL_HEIGHT}
+              fill={settings.scene === 'playground' ? PLAYGROUND : PAPER}
             />
-          )}
+            <g stroke={GRID} strokeWidth={1} pointerEvents="none">
+              {Array.from({ length: settings.grid }, (_, index) => (
+                <g key={`grid-${index}`}>
+                  <line
+                    x1={rect.x + index * rect.spacing}
+                    y1={rect.y}
+                    x2={rect.x + index * rect.spacing}
+                    y2={rect.y + (settings.grid - 1) * rect.spacing}
+                  />
+                  <line
+                    x1={rect.x}
+                    y1={rect.y + index * rect.spacing}
+                    x2={rect.x + (settings.grid - 1) * rect.spacing}
+                    y2={rect.y + index * rect.spacing}
+                  />
+                </g>
+              ))}
+            </g>
 
-          {settings.traceDots ? traceDots() : null}
-          {drawnCircles()}
-          {radii()}
+            {settings.targetPattern.length > 0 ? (
+              patternCircles()
+            ) : (
+              <circle
+                cx={centerScreen.x}
+                cy={centerScreen.y}
+                r={mainRadiusScreen}
+                fill="none"
+                stroke={BLUE}
+                strokeWidth={2.5}
+                strokeOpacity={0.55}
+                pointerEvents="none"
+              />
+            )}
 
-          {state.tool === 'rope' ? (
-            <g pointerEvents="none">
-              <path
-                d={ropePath()}
+            {settings.traceDots ? traceDots() : null}
+            {drawnCircles()}
+            {radii()}
+
+            {state.tool === 'rope' ? (
+              <g pointerEvents="none">
+                <path
+                  d={ropePath()}
+                  fill="none"
+                  stroke={ORANGE}
+                  strokeWidth={4}
+                  strokeLinecap="round"
+                  strokeDasharray={ropeTaut ? undefined : '8 6'}
+                />
+                <circle cx={centerScreen.x} cy={centerScreen.y} r={9} fill={INK} />
+                <circle cx={ropeEnd.x} cy={ropeEnd.y} r={6} fill={ORANGE} />
+              </g>
+            ) : null}
+
+            {state.tool === 'radius' ? (
+              <circle
+                cx={point(radiusPos).x}
+                cy={point(radiusPos).y}
+                r={12}
                 fill="none"
                 stroke={ORANGE}
-                strokeWidth={4}
-                strokeLinecap="round"
-                strokeDasharray={ropeTaut ? undefined : '8 6'}
+                strokeWidth={3}
+                strokeDasharray="5 4"
+                pointerEvents="none"
               />
-              <circle cx={centerScreen.x} cy={centerScreen.y} r={9} fill={INK} />
-              <circle cx={ropeEnd.x} cy={ropeEnd.y} r={6} fill={ORANGE} />
-            </g>
-          ) : null}
+            ) : null}
 
-          {state.tool === 'radius' ? (
-            <circle
-              cx={point(radiusPos).x}
-              cy={point(radiusPos).y}
-              r={12}
-              fill="none"
-              stroke={ORANGE}
-              strokeWidth={3}
-              strokeDasharray="5 4"
-              pointerEvents="none"
-            />
-          ) : null}
+            {state.tool === 'chord' && settings.chordExplorer ? (
+              <g pointerEvents="none">
+                {state.chord ? (
+                  <line
+                    x1={chordFirst.x}
+                    y1={chordFirst.y}
+                    x2={chordSecond.x}
+                    y2={chordSecond.y}
+                    stroke={INK}
+                    strokeWidth={3.5}
+                    strokeLinecap="round"
+                  />
+                ) : null}
+                {chordHandles()}
+                {chordIsDiameter ? (
+                  <text
+                    x={chordMid.x}
+                    y={chordMid.y - 18}
+                    textAnchor="middle"
+                    fontSize={22}
+                    fontWeight={800}
+                    fill={ORANGE}
+                  >
+                    {S.circle.diameter}
+                  </text>
+                ) : null}
+              </g>
+            ) : null}
 
-          {state.tool === 'chord' && settings.chordExplorer ? (
-            <g pointerEvents="none">
-              {state.chord ? (
-                <line
-                  x1={chordFirst.x}
-                  y1={chordFirst.y}
-                  x2={chordSecond.x}
-                  y2={chordSecond.y}
-                  stroke={INK}
-                  strokeWidth={3.5}
-                  strokeLinecap="round"
-                />
-              ) : null}
-              {chordHandles()}
-              {chordIsDiameter ? (
-                <text
-                  x={chordMid.x}
-                  y={chordMid.y - 18}
-                  textAnchor="middle"
-                  fontSize={22}
-                  fontWeight={800}
-                  fill={ORANGE}
-                >
-                  {S.circle.diameter}
-                </text>
-              ) : null}
-            </g>
-          ) : null}
-
-          {state.tool === 'compass' && settings.compass.enabled ? compassLegs() : null}
-        </svg>
-      </div>
-
-      {state.tool === 'chord' && settings.chordExplorer ? (
-        <div aria-hidden="true" style={{ display: 'grid', gap: 4 }}>
-          <svg
-            viewBox="0 0 1000 60"
-            role="img"
-            aria-label={S.circle.chordBar}
-            data-testid="chord-bar"
-            style={{ width: '100%', maxWidth: 720, height: 46 }}
-          >
-            <rect
-              x={220}
-              y={12}
-              width={560}
-              height={26}
-              rx={8}
-              fill="#f2f4f8"
-              stroke="#9aa4b5"
-              strokeWidth={2}
-            />
-            <rect
-              x={220}
-              y={12}
-              width={Math.max(0, 560 * chordRatio)}
-              height={26}
-              rx={8}
-              fill={BLUE}
-            />
+            {state.tool === 'compass' && settings.compass.enabled ? compassLegs() : null}
           </svg>
         </div>
-      ) : null}
 
-      {settings.compass.enabled ? (
-        <div className={styles.toolbar}>
-          <button
-            type="button"
-            className={styles.button}
-            onClick={() => dispatch({ type: 'draw-circle' })}
-            disabled={readOnly || state.tool !== 'compass'}
-          >
-            {S.circle.drawCircle}
-          </button>
-          <span className={styles.groupLabel}>{S.circle.drawnCircles}</span>
-          {state.circles.map((circle, index) => (
-            <button
-              key={circle.id}
-              type="button"
-              className={styles.button}
-              onClick={() => dispatch({ type: 'remove-circle', id: circle.id })}
-              disabled={readOnly}
-            >
-              {S.circle.removeCircle(index + 1)}
-            </button>
-          ))}
+        <div className={styles.sideStack}>
+          {state.tool === 'chord' && settings.chordExplorer ? (
+            <div aria-hidden="true" style={{ display: 'grid', gap: 4 }}>
+              <svg
+                viewBox="0 0 1000 60"
+                role="img"
+                aria-label={S.circle.chordBar}
+                data-testid="chord-bar"
+                style={{ width: '100%', maxWidth: 720, height: 46 }}
+              >
+                <rect
+                  x={220}
+                  y={12}
+                  width={560}
+                  height={26}
+                  rx={8}
+                  fill="#f2f4f8"
+                  stroke="#9aa4b5"
+                  strokeWidth={2}
+                />
+                <rect
+                  x={220}
+                  y={12}
+                  width={Math.max(0, 560 * chordRatio)}
+                  height={26}
+                  rx={8}
+                  fill={BLUE}
+                />
+              </svg>
+            </div>
+          ) : null}
+
+          {settings.compass.enabled ? (
+            <div className={styles.toolbar}>
+              <button
+                type="button"
+                className={styles.button}
+                onClick={() => dispatch({ type: 'draw-circle' })}
+                disabled={readOnly || state.tool !== 'compass'}
+              >
+                {S.circle.drawCircle}
+              </button>
+              <span className={styles.groupLabel}>{S.circle.drawnCircles}</span>
+              {state.circles.map((circle, index) => (
+                <button
+                  key={circle.id}
+                  type="button"
+                  className={styles.button}
+                  onClick={() => dispatch({ type: 'remove-circle', id: circle.id })}
+                  disabled={readOnly}
+                >
+                  {S.circle.removeCircle(index + 1)}
+                </button>
+              ))}
+            </div>
+          ) : null}
+
+          <p className={styles.hint}>
+            {state.tool === 'radius'
+              ? S.circle.radiusHint
+              : state.tool === 'compass'
+                ? S.circle.compassHint
+                : S.circle.canvasHint}
+          </p>
         </div>
-      ) : null}
-
-      <p className={styles.hint}>
-        {state.tool === 'radius'
-          ? S.circle.radiusHint
-          : state.tool === 'compass'
-            ? S.circle.compassHint
-            : S.circle.canvasHint}
-      </p>
+      </div>
     </div>
   );
 }
