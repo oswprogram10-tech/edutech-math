@@ -1120,6 +1120,7 @@ export function DragTestView({
       </div>
 
       <div className={styles.hintBlock}>
+        <p className={styles.hint}>{S.dragTest.canvasHint}</p>
         {state.quad ? <p className={styles.hint}>{S.dragTest.quadKeyHint}</p> : null}
       </div>
     </div>
