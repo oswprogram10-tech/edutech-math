@@ -259,7 +259,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "angle" },
               "level": 2,
-              "say": "각마다 직각보다 좁은지 넓은지 견주어 볼까요?"
+              "say": "직각 카드와 나란히 놓으면 어느 쪽이 더 벌어졌나요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "angle" },
@@ -594,12 +594,12 @@
               },
               "level": 2,
               "show": { "engine": "E11", "overlay": "trial-compare" },
-              "say": "기록한 삼각형을 키운 그림과 나란히 그렸어요. 두 모양이 같은지 견주어 보세요."
+              "say": "기록한 삼각형을 키워 나란히 그렸어요. 키운 삼각형에서 모은 세 각은 처음과 견주어 어떤가요?"
             },
             {
               "when": { "misconception": "MC-ANGLE-SUM-SHAPE-DEPENDENT" },
               "level": 2,
-              "say": "삼각형의 모양이 달라져도 모은 세 각의 합이 같았는지 견주어 볼까요?"
+              "say": "두 시도에서 모은 각을 견주어 볼까요?"
             },
             {
               "when": { "misconception": "MC-ANGLE-SUM-SHAPE-DEPENDENT" },
@@ -614,7 +614,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "angle-gather" },
               "level": 2,
-              "say": "시도를 하나만 했을 때는 그 삼각형을 키운 그림을 옆에 그려요. 두 삼각형의 모양이 같은지 다른지 견주어 보세요."
+              "say": "모양이 다른 삼각형을 하나 더 만들어 세 각을 모아 볼까요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "angle-gather" },
@@ -692,7 +692,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "angle-gather" },
               "level": 1,
-              "say": "삼각형의 세 각을 모으면 어떻게 되는지 떠올려 보세요."
+              "say": "삼각형의 세 각을 모으면 어떤 모양이 되나요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "angle-gather" },
@@ -726,7 +726,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "angle-gather" },
               "level": 1,
-              "say": "사각형의 네 각을 모으면 어떻게 되는지 떠올려 보세요."
+              "say": "사각형의 네 각을 모으면 어떤 모양이 되나요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "angle-gather" },

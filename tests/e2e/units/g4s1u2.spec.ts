@@ -241,31 +241,8 @@ test('A1 각도기 — 대표 오답 뒤 고쳐서 여섯 과제를 통과한다
 
   // T3 — 여섯 각을 예각·직각·둔각으로 나눈다.
   await expect(page.getByText('여섯 각을 보고', { exact: false })).toBeVisible();
-  // T3 첫 화면 실측(맨 위에서): 판·정렬 칸·'확인하기'가 어디에 있는지 남긴다.
-  await page.evaluate(() => window.scrollTo(0, 0));
-  const t3First = await page.evaluate(() => {
-    const box = (el: Element | null) => {
-      if (!(el instanceof Element)) return null;
-      const b = el.getBoundingClientRect();
-      return { top: Math.round(b.top), bottom: Math.round(b.bottom) };
-    };
-    const slotEl = document.querySelector('[data-testid="runner-slot-main"]');
-    const canvas = document.querySelector('svg[data-testid="geo-canvas"]');
-    const submit = [...document.querySelectorAll('button')].find(
-      (b) => b.textContent === '확인하기',
-    );
-    return {
-      slot: box(slotEl),
-      canvas: box(canvas),
-      submit: box(submit ?? null),
-      innerScroll: (() => {
-        const v = slotEl?.querySelector(':scope > div');
-        return v instanceof HTMLElement ? v.scrollHeight - v.clientHeight : null;
-      })(),
-      vh: window.innerHeight,
-    };
-  });
-  console.log('T3_FIRST ' + JSON.stringify({ project: testInfo.project.name, ...t3First }));
+  // T3 첫 화면: 판이 판 안 스크롤 없이 보이고 글·단추와 겹치지 않는다.
+  await expectFitCanvasVisible(page);
   const response = slot(page, 'response');
   const sortCards: readonly [string, string][] = [
     ['각 1', '예각'],
@@ -471,7 +448,7 @@ test('A2.T4·T5 나머지 각이 틀리면 힌트 ①이 나온다', async ({ pa
   // T4 — 나머지 각을 틀리면 일반 ①이 나온다.
   await typeNumber(page, 'rest', '45');
   await submit(page);
-  await expectFailedWithHint(page, '삼각형의 세 각을 모으면 어떻게 되는지 떠올려 보세요.');
+  await expectFailedWithHint(page, '삼각형의 세 각을 모으면 어떤 모양이 되나요?');
   await clearNumber(page, 'rest');
   await typeNumber(page, 'rest', '55');
   await submit(page);
@@ -480,7 +457,7 @@ test('A2.T4·T5 나머지 각이 틀리면 힌트 ①이 나온다', async ({ pa
   // T5 — 사각형 나머지 각을 틀리면 일반 ①이 나온다.
   await typeNumber(page, 'rest', '105');
   await submit(page);
-  await expectFailedWithHint(page, '사각형의 네 각을 모으면 어떻게 되는지 떠올려 보세요.');
+  await expectFailedWithHint(page, '사각형의 네 각을 모으면 어떤 모양이 되나요?');
 });
 
 test('A1.T1 ZERO-LINE ② zero-gap이 판과 1px 이내로 겹친다', async ({ page }) => {
@@ -569,7 +546,7 @@ test('A2.T2 SUM-SHAPE ② trial-compare가 기록한 시도를 보여 준다', a
   await submit(page);
   await expectFailedWithHint(
     page,
-    '기록한 삼각형을 키운 그림과 나란히 그렸어요. 두 모양이 같은지 견주어 보세요.',
+    '기록한 삼각형을 키워 나란히 그렸어요. 키운 삼각형에서 모은 세 각은 처음과 견주어 어떤가요?',
     2,
   );
   await expect(slot(page, 'main').locator('[data-overlay="trial-compare"]')).toBeVisible();
