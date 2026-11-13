@@ -76,6 +76,14 @@ describe('E10 predict selfCheck:false (T122)', () => {
     expect(container.querySelectorAll('[data-result]')).toHaveLength(0);
   });
 
+  it('안내 문구가 없는 확인 단추를 말하지 않는다', () => {
+    const noCheck = renderView({ mode: 'predict', selfCheck: false });
+    expect(noCheck.container.textContent).not.toContain('확인을 누르면');
+    noCheck.unmount();
+    const withCheck = renderView({ mode: 'predict' });
+    expect(withCheck.container.textContent).toContain('확인을 누르면');
+  });
+
   it('selfCheck:false에서는 confirm·retry 액션이 상태를 바꾸지 않는다', () => {
     const config: PredictConfig = { mode: 'predict', selfCheck: false };
     const start = createPredictState(config);

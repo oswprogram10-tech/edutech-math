@@ -56,6 +56,8 @@ export interface FitCanvasBox {
   readonly slot: string;
   readonly width: number;
   readonly height: number;
+  /** 캔버스 · 조작 묶음 두 칸 배치(가로로 넓은 판). */
+  readonly twoColumn: boolean;
 }
 
 interface CanvasMeasurement {
@@ -65,6 +67,10 @@ interface CanvasMeasurement {
   readonly overflowY: number;
   readonly inside: boolean;
   readonly overlaps: readonly string[];
+  /** 스크롤·클립 칸에 반쯤 걸쳐 일부만 보이는 단추. */
+  readonly clippedButtons: readonly string[];
+  /** 가로로 넓은 판에서 캔버스 · 조작 묶음 두 칸 배치가 켜졌는지. */
+  readonly twoColumn: boolean;
 }
 
 /**
@@ -152,7 +158,39 @@ async function measureCanvasIn(panel: Locator): Promise<CanvasMeasurement | null
       }
     });
 
+    // 보이는 단추는 상자 전체가 보이거나(스크롤 밖이면) 아예 안 보여야 한다.
+    const clippedButtons: string[] = [];
+    element.querySelectorAll('button').forEach((button) => {
+      const style = window.getComputedStyle(button);
+      if (style.visibility === 'hidden' || style.display === 'none') return;
+      const raw = button.getBoundingClientRect();
+      if (raw.width < 1 || raw.height < 1) return;
+      const box = visibleBox(button, element);
+      if (box.width < 1 || box.height < 1) return;
+      if (box.width < raw.width - 1 || box.height < raw.height - 1) {
+        // 넉넉한 높이(240px 이상)의 스크롤 칸 끝에 걸린 단추는 스크롤하면 되므로
+        // 잘림으로 세지 않는다. 문제는 몇십 px짜리 칸에 반쯤 눌린 단추다.
+        let scroller: Element | null = button.parentElement;
+        while (scroller && scroller !== element) {
+          const overflow = window.getComputedStyle(scroller).overflowY;
+          if (/(auto|scroll)/.test(overflow) && scroller.scrollHeight > scroller.clientHeight + 1) {
+            break;
+          }
+          scroller = scroller.parentElement;
+        }
+        if (scroller && scroller !== element && scroller.clientHeight >= 240) return;
+        clippedButtons.push(
+          button.textContent?.trim().slice(0, 24) || button.getAttribute('aria-label') || 'button',
+        );
+      }
+    });
+    const stageRow = svg.closest('[class*="stageRow"]');
+    const twoColumn =
+      stageRow instanceof HTMLElement && window.getComputedStyle(stageRow).display === 'flex';
+
     return {
+      clippedButtons: clippedButtons.slice(0, 5),
+      twoColumn,
       width: svgBox.width,
       height: svgBox.height,
       overflowX,
@@ -193,7 +231,13 @@ export async function expectFitCanvasVisible(page: Page): Promise<FitCanvasBox[]
     expect(measured.overflowX, `${slot}: 판 안 가로 스크롤이 생겼습니다.`).toBeLessThanOrEqual(1);
     expect(measured.overflowY, `${slot}: 판 안 세로 스크롤이 생겼습니다.`).toBeLessThanOrEqual(1);
     expect(measured.overlaps, `${slot}: 캔버스가 판 안의 글·단추와 겹칩니다.`).toEqual([]);
-    boxes.push({ slot, width: measured.width, height: measured.height });
+    expect(measured.clippedButtons, `${slot}: 반쯤 잘린 단추가 있습니다.`).toEqual([]);
+    boxes.push({
+      slot,
+      width: measured.width,
+      height: measured.height,
+      twoColumn: measured.twoColumn,
+    });
   }
   return boxes;
 }
@@ -202,27 +246,44 @@ export async function expectFitCanvasVisible(page: Page): Promise<FitCanvasBox[]
  * T122: 엔진 샌드박스(`#/sandbox/Exx`) 판에서도 같은 검사를 한다.
  * 샌드박스 `.stage`가 실행기 판의 viewport와 같은 역할을 한다.
  */
-export async function expectSandboxCanvasVisible(page: Page): Promise<FitCanvasBox> {
+export async function expectSandboxCanvasVisible(
+  page: Page,
+  options: { readonly buttons?: boolean } = {},
+): Promise<FitCanvasBox> {
   const stage = page.locator('main > div[class*="stage"]').first();
   await expect(stage).toBeVisible();
   const canvas = stage.locator('svg[data-testid$="-canvas"]').first();
   await expect(canvas).toBeVisible();
   const measured = await measureCanvasIn(stage);
   expect(measured, '샌드박스 판에서 캔버스를 찾지 못했습니다.').not.toBeNull();
-  if (!measured) return { slot: 'sandbox', width: 0, height: 0 };
+  if (!measured) return { slot: 'sandbox', width: 0, height: 0, twoColumn: false };
   expect(measured.inside, '샌드박스: 캔버스가 판 밖으로 나갔습니다.').toBe(true);
   expect(measured.overflowX, '샌드박스: 판 안 가로 스크롤이 생겼습니다.').toBeLessThanOrEqual(1);
   expect(measured.overflowY, '샌드박스: 판 안 세로 스크롤이 생겼습니다.').toBeLessThanOrEqual(1);
   expect(measured.overlaps, '샌드박스: 캔버스가 글·단추와 겹칩니다.').toEqual([]);
-  return { slot: 'sandbox', width: measured.width, height: measured.height };
+  // 샌드박스 판 높이는 실행기보다 낮게 고정되어 있어(세로 화면), 단추 잘림은
+  // 가로로 넓은 판에서만 본다. 실행기 판(expectFitCanvasVisible)은 늘 본다.
+  if (options.buttons !== false) {
+    expect(measured.clippedButtons, '샌드박스: 반쯤 잘린 단추가 있습니다.').toEqual([]);
+  }
+  return {
+    slot: 'sandbox',
+    width: measured.width,
+    height: measured.height,
+    twoColumn: measured.twoColumn,
+  };
 }
 
-/** 크롬북(1366×768)에서 캔버스 짧은 변이 200px 이상인지 본다. */
+/**
+ * 크롬북(1366×768)에서 캔버스 짧은 변이 200px 이상인지 본다.
+ * 두 칸 배치가 된 판은 캔버스가 더 커야 하므로 280px 이상을 본다(T122 2차).
+ */
 export function expectChromeBookCanvasSize(boxes: readonly FitCanvasBox[]): void {
   for (const box of boxes) {
+    const min = box.twoColumn ? 280 : 200;
     expect(
       Math.min(box.width, box.height),
-      `${box.slot}: 크롬북에서 캔버스 짧은 변이 200px보다 작습니다.`,
-    ).toBeGreaterThanOrEqual(200);
+      `${box.slot}: 크롬북에서 캔버스 짧은 변이 ${min}px보다 작습니다.`,
+    ).toBeGreaterThanOrEqual(min);
   }
 }
