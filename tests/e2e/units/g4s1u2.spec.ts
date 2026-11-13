@@ -204,7 +204,7 @@ async function newTrialAndMoveApex(page: Page, steps: number): Promise<void> {
   await press(page, 'ArrowRight', steps);
 }
 
-test('A1 각도기 — 대표 오답 뒤 고쳐서 여섯 과제를 통과한다', async ({ page }, testInfo) => {
+test('A1 각도기 — 대표 오답 뒤 고쳐서 여섯 과제를 통과한다', async ({ page }) => {
   await openActivity(page, 'g4s1u2.A1', '각도기 레이저 반사 퍼즐');
   await screenshot(page, 'g4s1u2-a1.png');
 
