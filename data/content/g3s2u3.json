@@ -147,7 +147,7 @@
             {
               "when": { "kind": "equals", "path": "mode", "value": "circle" },
               "level": 2,
-              "say": "두 원의 크기를 견주어 보고, 원의 모양은 그대로인지도 살펴보세요."
+              "say": "두 원을 겹쳐 놓고 무엇이 같고 무엇이 다른지 하나씩 짚어 볼까요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "circle" },

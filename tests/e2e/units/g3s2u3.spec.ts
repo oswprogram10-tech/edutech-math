@@ -213,15 +213,15 @@ test('A2 가장 긴 선분과 컴퍼스 무늬 — 대표 오답 뒤 고쳐서 �
   await submit(page);
   await expectPassed(page);
 
-  // T2 — 일반 ①(9)을 먼저 본 뒤, 오개념 값(3)으로 ② 단계의 오개념 힌트까지 확인하고 6으로 고친다.
+  // T2 — 오개념 값(3)으로 MC-GEO-RADIUS-DIAMETER ①을 본 뒤, 다른 오답(9)으로 일반 ②를 보고 6으로 고친다.
   await expect(page.getByText('이 원의 지름은 몇 칸일까요?', { exact: false })).toBeVisible();
-  await typeNumber(page, 'd', '9');
-  await submit(page);
-  await expectFailedWithHint(page, '원의 한쪽 끝에서 중심을 지나 반대쪽 끝까지 몇 칸일까요?');
-  await clearNumber(page, 'd');
   await typeNumber(page, 'd', '3');
   await submit(page);
-  await expectFailedWithHint(page, '원의 중심을 지나 끝에서 끝까지 몇 칸인지 세어 보세요.', 2);
+  await expectFailedWithHint(page, '지름은 반지름 몇 개를 이어 붙인 길이일까요?');
+  await clearNumber(page, 'd');
+  await typeNumber(page, 'd', '9');
+  await submit(page);
+  await expectFailedWithHint(page, '중심에서 한쪽 끝까지 몇 칸인지 먼저 세어 보세요.', 2);
   await clearNumber(page, 'd');
   await typeNumber(page, 'd', '6');
   await submit(page);
