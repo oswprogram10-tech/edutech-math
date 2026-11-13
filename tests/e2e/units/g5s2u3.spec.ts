@@ -162,7 +162,12 @@ test('A1 포개기와 접기 — 포개기·대칭축·완성', async ({ page },
   await expectContentPanelsReachable(page);
   const boxes = await expectFitCanvasVisible(page);
   await expect(main(page).getByTestId('transform-canvas')).toBeInViewport();
-  await expect(page.getByRole('button', { name: '확인하기' })).toBeInViewport({ ratio: 1 });
+  const check = page.getByRole('button', { name: '확인하기' });
+  // 아이패드 세로는 실행기가 하나뿐인 판을 내용 높이로 두어 '확인하기'가 전체 스크롤로 닿는다.
+  // 스크롤 끝에서도 WebKit 소수점 배치로 0.2px(비율 0.996)이 걸려 아이패드만 0.99를 허용한다.
+  const ipad = testInfo.project.name === 'ipad';
+  if (ipad) await check.scrollIntoViewIfNeeded();
+  await expect(check).toBeInViewport({ ratio: ipad ? 0.99 : 1 });
   if (testInfo.project.name === 'chromebook') expectChromeBookCanvasSize(boxes);
 
   // T1 — C,C,R,→,↑,↑로 겹친 뒤 대응변을 잘못(ㅁㅂ–ㄴㄷ) 한 쌍만 지어 '겹친 뒤 짝' ①.
