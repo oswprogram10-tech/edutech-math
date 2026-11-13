@@ -494,7 +494,7 @@
                 "value": "secret-rule"
               },
               "level": 1,
-              "say": "네 변이 같은 사각형에는 어떤 것들이 있나요? 그중 정사각형만 가진 성질은?"
+              "say": "정사각형만 가진 성질과 다른 카드도 가진 성질을 나눠 볼까요?"
             },
             {
               "when": {
@@ -771,65 +771,17 @@
               "backtrack": "g4s2u4.quad-definitions"
             },
             {
-              "when": {
-                "kind": "any",
-                "of": [
-                  {
-                    "kind": "equals",
-                    "path": "response.why.selected",
-                    "value": []
-                  },
-                  {
-                    "kind": "equals",
-                    "path": "response.why.selected",
-                    "value": [
-                      "yes-angle"
-                    ]
-                  }
-                ]
-              },
+              "when": { "kind": "equals", "path": "mode", "value": "hierarchy" },
               "level": 1,
               "say": "마름모가 되려면 어떤 조건이 필요했나요?"
             },
             {
-              "when": {
-                "kind": "any",
-                "of": [
-                  {
-                    "kind": "equals",
-                    "path": "response.why.selected",
-                    "value": []
-                  },
-                  {
-                    "kind": "equals",
-                    "path": "response.why.selected",
-                    "value": [
-                      "yes-angle"
-                    ]
-                  }
-                ]
-              },
+              "when": { "kind": "equals", "path": "mode", "value": "hierarchy" },
               "level": 2,
               "say": "마름모의 정의에 있는 조건을 정사각형에서 찾아보세요."
             },
             {
-              "when": {
-                "kind": "any",
-                "of": [
-                  {
-                    "kind": "equals",
-                    "path": "response.why.selected",
-                    "value": []
-                  },
-                  {
-                    "kind": "equals",
-                    "path": "response.why.selected",
-                    "value": [
-                      "yes-angle"
-                    ]
-                  }
-                ]
-              },
+              "when": { "kind": "equals", "path": "mode", "value": "hierarchy" },
               "level": 3,
               "backtrack": "g4s2u4.quad-inclusion"
             }
@@ -1018,7 +970,7 @@
                 "misconception": "MC-GEO-SQUARE-NOT-RECT"
               },
               "level": 1,
-              "say": "직사각형의 조건과 마름모의 조건을 모두 가진 사각형을 카드에서 찾아볼까요?"
+              "say": "직사각형의 조건과 마름모의 조건을 모두 가진 사각형을 트리에서 찾아볼까요?"
             },
             {
               "when": {

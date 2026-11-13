@@ -264,7 +264,7 @@ test('A1 도형 스무고개 — 질문·카드 지우기·역할 바꾸기·질
   await submit(page);
   await expectFailedWithHint(
     page,
-    '네 변이 같은 사각형에는 어떤 것들이 있나요? 그중 정사각형만 가진 성질은?',
+    '정사각형만 가진 성질과 다른 카드도 가진 성질을 나눠 볼까요?',
     1,
   );
   await choose(page, 'q', '평행한 변이 두 쌍 있나요?');
@@ -339,7 +339,7 @@ test('A2 사각형 진화 트리 — 조건·흔들기·이름 트리·포함 �
   await submit(page);
   await expectFailedWithHint(
     page,
-    '직사각형의 조건과 마름모의 조건을 모두 가진 사각형을 카드에서 찾아볼까요?',
+    '직사각형의 조건과 마름모의 조건을 모두 가진 사각형을 트리에서 찾아볼까요?',
     1,
   );
   await choose(page, 'name', '정사각형');
