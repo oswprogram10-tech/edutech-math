@@ -162,7 +162,7 @@ test('A1 포개기와 접기 — 포개기·대칭축·완성', async ({ page },
   await expectContentPanelsReachable(page);
   const boxes = await expectFitCanvasVisible(page);
   await expect(main(page).getByTestId('transform-canvas')).toBeInViewport();
-  await expect(page.getByRole('button', { name: '확인하기' })).toBeVisible();
+  await expect(page.getByRole('button', { name: '확인하기' })).toBeInViewport({ ratio: 1 });
   if (testInfo.project.name === 'chromebook') expectChromeBookCanvasSize(boxes);
 
   // T1 — C,C,R,→,↑,↑로 겹친 뒤 대응변을 잘못(ㅁㅂ–ㄴㄷ) 한 쌍만 지어 '겹친 뒤 짝' ①.
@@ -328,12 +328,12 @@ test('A2 180° 압정 회전 스튜디오 — 중심·분류·거리·완성', a
   await nudge(page, 0, -4);
   await press(page, ['Enter']);
   await submit(page);
-  await expectFailedWithHint(page, '반쪽의 끝에서 시작해 중심 건너편 점을 이어 보세요.', 1);
+  await expectFailedWithHint(page, '반쪽의 끝 점은 중심 건너편 어디에 와야 할까요?', 1);
   // 같은 오답을 한 번 더 내면 ②(조작 중심 질문)가 나온다.
   await submit(page);
   await expectFailedWithHint(
     page,
-    '반쪽의 끝 점과 중심을 이어 보고, 그 방향으로 같은 거리만큼 간 자리를 찍어 볼까요?',
+    '중심에 압정을 꽂고 반쪽을 반 바퀴 돌리면 끝 점은 어디로 갈까요?',
     2,
   );
 
