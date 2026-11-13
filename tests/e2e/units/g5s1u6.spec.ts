@@ -273,8 +273,14 @@ test('A2 둘레 20 고무줄 — 기록·최대 넓이·넓이 9·짧은 둘레'
   await screenshot(page, 'g5s1u6-a2.png');
   await expectContentPanelsReachable(page);
   const boxes = await expectFitCanvasVisible(page);
-  await expect(main(page).getByTestId('geo-canvas')).toBeInViewport({ ratio: 1 });
-  await expect(page.getByRole('button', { name: '확인하기' })).toBeInViewport({ ratio: 1 });
+  // 아이패드 WebKit은 소수점 배치로 비율 0.999(1px 미만)가 나와 0.99를 허용한다.
+  // 1px 허용 검사는 expectFitCanvasVisible이 한다.
+  const ipad = testInfo.project.name === 'ipad';
+  await expect(main(page).getByTestId('geo-canvas')).toBeInViewport({ ratio: ipad ? 0.99 : 1 });
+  // 아이패드 세로는 실행기가 하나뿐인 판을 내용 높이로 두어 '확인하기'가 전체 스크롤로 닿는다.
+  const check = page.getByRole('button', { name: '확인하기' });
+  if (ipad) await check.scrollIntoViewIfNeeded();
+  await expect(check).toBeInViewport({ ratio: ipad ? 0.99 : 1 });
   if (testInfo.project.name === 'chromebook') expectChromeBookCanvasSize(boxes);
 
   // T1 — 3×7·4×6·5×5를 기록하고 "모두 같아요"를 골라 PERIMETER-AREA-SAME ①.
