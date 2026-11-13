@@ -32,6 +32,7 @@ interface IsoStageProps {
   readonly state: CubesState;
   readonly cpa: CPA;
   readonly readOnly: boolean;
+  readonly editable?: boolean;
   readonly press: PressGestureHandlers;
   readonly hiddenFromFocus?: boolean;
 }
@@ -100,9 +101,17 @@ function faceMark(
   );
 }
 
-export function IsoStage({ state, cpa, readOnly, press, hiddenFromFocus = false }: IsoStageProps) {
+export function IsoStage({
+  state,
+  cpa,
+  readOnly,
+  editable = true,
+  press,
+  hiddenFromFocus = false,
+}: IsoStageProps) {
   const { settings } = state;
   const [cols, rows] = settings.grid;
+  const interactive = !readOnly && editable;
   const layout = computeStageLayout(cols, rows, settings.maxHeight);
 
   const columns = sortColumnsForPainter(cols, rows, state.viewTurn);
@@ -170,9 +179,9 @@ export function IsoStage({ state, cpa, readOnly, press, hiddenFromFocus = false 
           <circle cx={frontMarker.arrowTo.x} cy={frontMarker.arrowTo.y} r={3.2} fill="#1d4fa8" />
           <text
             x={frontMarker.text.x}
-            y={frontMarker.text.y + 5}
+            y={frontMarker.text.y + 8}
             textAnchor="middle"
-            fontSize={16}
+            fontSize={24}
             fontWeight={800}
             fill="#1d4fa8"
           >
@@ -191,7 +200,7 @@ export function IsoStage({ state, cpa, readOnly, press, hiddenFromFocus = false 
             key={`col-${x}-${y}`}
             data-col={`${x},${y}`}
             aria-label={S.columnAria(x, y)}
-            style={readOnly ? undefined : { cursor: 'pointer' }}
+            style={interactive ? { cursor: 'pointer' } : undefined}
             onPointerDown={(event) => press.onPointerDown(event, x, y)}
             onPointerMove={press.onPointerMove}
             onPointerUp={(event) => press.onPointerUp(event, x, y)}
@@ -257,7 +266,7 @@ export function IsoStage({ state, cpa, readOnly, press, hiddenFromFocus = false 
             })}
 
             {/* 커서 칸 기둥 테두리 강조 */}
-            {!readOnly && isCursor && colCubes.length > 0 ? (
+            {interactive && isCursor && colCubes.length > 0 ? (
               <polygon
                 points={pointsAttr(cubeFaces(layout, rx, ry, colCubes.length - 1).top)}
                 fill="none"
@@ -272,7 +281,7 @@ export function IsoStage({ state, cpa, readOnly, press, hiddenFromFocus = false 
       })}
 
       {/* 커서 바닥 마름모 굵은 점선 테두리 */}
-      {!readOnly ? (
+      {interactive ? (
         <polygon
           points={pointsAttr(cursorDiamond)}
           fill="none"

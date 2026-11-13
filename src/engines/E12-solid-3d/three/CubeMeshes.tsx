@@ -18,6 +18,7 @@ interface CubeMeshesProps {
   readonly cursor: GridCoord;
   readonly focus: FocusCell | null;
   readonly readOnly: boolean;
+  readonly editable?: boolean;
   readonly press?: PressGestureHandlers;
 }
 
@@ -140,6 +141,7 @@ export function CubeMeshes({
   cursor,
   focus,
   readOnly,
+  editable = true,
   press,
 }: CubeMeshesProps) {
   const resources = useMemo(() => buildCubeResources(), []);
@@ -161,7 +163,7 @@ export function CubeMeshes({
         if (!material) return null;
         const pos = toWorld(cube.x, cube.y, cube.z, grid);
         const isFocused = matchesFocus(cube, focus, rows, maxHeight);
-        const isCursorCol = !readOnly && cursor[0] === cube.x && cursor[1] === cube.y;
+        const isCursorCol = !readOnly && editable && cursor[0] === cube.x && cursor[1] === cube.y;
 
         return (
           <group key={`cube3d-${cube.x}-${cube.y}-${cube.z}`} position={[pos[0], pos[1], pos[2]]}>

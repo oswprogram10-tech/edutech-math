@@ -259,7 +259,7 @@ export function CubesView({ state, dispatch, cpa, readOnly = false, targetSize }
   );
 
   const press = usePressGesture({
-    disabled: readOnly,
+    disabled: readOnly || !settings.editable,
     onTap: (x, y) => {
       if (state.tool === 'add') {
         performAdd(x, y);
@@ -274,6 +274,7 @@ export function CubesView({ state, dispatch, cpa, readOnly = false, targetSize }
 
   const onStageKeyDown = useCubesKeyboard({
     readOnly,
+    editable: settings.editable,
     cols,
     rows,
     cursor: state.cursor,
@@ -312,7 +313,12 @@ export function CubesView({ state, dispatch, cpa, readOnly = false, targetSize }
   }, []);
 
   const maxReached = state.cubes.length >= settings.maxCubes;
-  const statusText = maxReached || blockedAdd ? S.maxReached : '';
+  const statusText = settings.editable && (maxReached || blockedAdd) ? S.maxReached : '';
+  const instructionText = settings.editable
+    ? S.instructions
+    : settings.rotationLocked
+      ? S.instructionsViewLocked
+      : S.instructionsView;
 
   const topMatrix = settings.views.includes('top') ? topView(state.cubes, settings.grid) : null;
   const frontMatrix = settings.views.includes('front')
@@ -326,10 +332,26 @@ export function CubesView({ state, dispatch, cpa, readOnly = false, targetSize }
   const refViews = settings.referenceViews;
   const hasRefViews = Boolean(refViews && (refViews.top || refViews.front || refViews.side));
   const showRendererSwitch = webgl && !contextLost && settings.stage !== 'isometric';
+  const hasToolbarButtons =
+    settings.editable ||
+    !settings.rotationLocked ||
+    settings.translucentToggle ||
+    showRendererSwitch;
+  const baseKeyHint = settings.editable
+    ? settings.rotationLocked
+      ? S.keyHintLocked
+      : S.keyHint
+    : settings.rotationLocked
+      ? S.keyHintViewLocked
+      : S.keyHintView;
+  const keyHintText =
+    visibleRenderer === '3d' && !settings.rotationLocked
+      ? `${baseKeyHint} · ${S.keyHint3d}`
+      : baseKeyHint;
 
   return (
     <div className={styles.wrap} data-target-size={targetSize} data-cpa={cpa}>
-      <p className={styles.instructions}>{S.instructions}</p>
+      <p className={styles.instructions}>{instructionText}</p>
       <p className={styles.status} role="status" data-testid="cubes-status">
         {statusText}
       </p>
@@ -364,6 +386,7 @@ export function CubesView({ state, dispatch, cpa, readOnly = false, targetSize }
                       state={state}
                       cpa={cpa}
                       readOnly={readOnly}
+                      editable={settings.editable}
                       press={press}
                       hiddenFromFocus
                     />
@@ -376,6 +399,7 @@ export function CubesView({ state, dispatch, cpa, readOnly = false, targetSize }
                 <Stage3D
                   state={state}
                   readOnly={readOnly}
+                  editable={settings.editable}
                   press={press}
                   cameraRequest={cameraRequest}
                   onContextLost={handleContextLost}
@@ -384,12 +408,19 @@ export function CubesView({ state, dispatch, cpa, readOnly = false, targetSize }
               </Suspense>
             ) : (
               <>
-                <IsoStage state={state} cpa={cpa} readOnly={readOnly} press={press} />
+                <IsoStage
+                  state={state}
+                  cpa={cpa}
+                  readOnly={readOnly}
+                  editable={settings.editable}
+                  press={press}
+                />
                 {rendererDecision === 'probe' ? (
                   <Suspense fallback={null}>
                     <Stage3D
                       state={state}
                       readOnly
+                      editable={false}
                       press={press}
                       cameraRequest={cameraRequest}
                       onContextLost={handleContextLost}
@@ -404,98 +435,141 @@ export function CubesView({ state, dispatch, cpa, readOnly = false, targetSize }
         </div>
 
         <div className={styles.sideStack}>
-          <div className={styles.toolbar} role="toolbar" aria-label={S.name}>
-            <button
-              type="button"
-              className={styles.button}
-              aria-pressed={state.tool === 'add'}
-              disabled={readOnly}
-              onClick={() => dispatch({ type: 'select-tool', tool: 'add' })}
-            >
-              <ToolIcon kind="add" />
-              <span>{S.tools.add}</span>
-            </button>
-            <button
-              type="button"
-              className={styles.button}
-              aria-pressed={state.tool === 'remove'}
-              disabled={readOnly}
-              onClick={() => dispatch({ type: 'select-tool', tool: 'remove' })}
-            >
-              <ToolIcon kind="remove" />
-              <span>{S.tools.remove}</span>
-            </button>
+          {settings.reference || hasRefViews ? (
+            <div className={styles.panelBlock}>
+              <div className={styles.projRow}>
+                {settings.reference ? <ReferenceShapeSvg cubes={settings.reference.cubes} /> : null}
+                {refViews?.top ? (
+                  <ProjectionGrid
+                    view="top"
+                    matrix={refViews.top}
+                    title={S.referenceViewTitle('top')}
+                    testId="cubes-reference-top"
+                    cellSize={32}
+                  />
+                ) : null}
+                {refViews?.front ? (
+                  <ProjectionGrid
+                    view="front"
+                    matrix={refViews.front}
+                    title={S.referenceViewTitle('front')}
+                    testId="cubes-reference-front"
+                    cellSize={32}
+                  />
+                ) : null}
+                {refViews?.side ? (
+                  <ProjectionGrid
+                    view="side"
+                    matrix={refViews.side}
+                    title={S.referenceViewTitle('side')}
+                    testId="cubes-reference-side"
+                    cellSize={32}
+                  />
+                ) : null}
+              </div>
+            </div>
+          ) : null}
 
-            {!settings.rotationLocked ? (
-              <>
+          {hasToolbarButtons ? (
+            <div className={styles.toolbar} role="toolbar" aria-label={S.name}>
+              {settings.editable ? (
+                <>
+                  <button
+                    type="button"
+                    className={styles.button}
+                    aria-pressed={state.tool === 'add'}
+                    disabled={readOnly}
+                    onClick={() => dispatch({ type: 'select-tool', tool: 'add' })}
+                  >
+                    <ToolIcon kind="add" />
+                    <span>{S.tools.add}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.button}
+                    aria-pressed={state.tool === 'remove'}
+                    disabled={readOnly}
+                    onClick={() => dispatch({ type: 'select-tool', tool: 'remove' })}
+                  >
+                    <ToolIcon kind="remove" />
+                    <span>{S.tools.remove}</span>
+                  </button>
+                </>
+              ) : null}
+
+              {!settings.rotationLocked ? (
+                <>
+                  <button
+                    type="button"
+                    className={styles.button}
+                    disabled={readOnly}
+                    onClick={() => {
+                      dispatch({ type: 'turn', dir: 'left' });
+                      setLiveMessage(S.live.turned);
+                    }}
+                  >
+                    <ToolIcon kind="left" />
+                    <span>{S.turnLeft}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.button}
+                    disabled={readOnly}
+                    onClick={() => {
+                      dispatch({ type: 'turn', dir: 'right' });
+                      setLiveMessage(S.live.turned);
+                    }}
+                  >
+                    <ToolIcon kind="right" />
+                    <span>{S.turnRight}</span>
+                  </button>
+                </>
+              ) : null}
+
+              {settings.translucentToggle ? (
                 <button
                   type="button"
                   className={styles.button}
+                  aria-pressed={state.translucent}
                   disabled={readOnly}
                   onClick={() => {
-                    dispatch({ type: 'turn', dir: 'left' });
-                    setLiveMessage(S.live.turned);
+                    const next = !state.translucent;
+                    dispatch({ type: 'set-translucent', on: next });
+                    setLiveMessage(next ? S.live.translucentOn : S.live.translucentOff);
                   }}
                 >
-                  <ToolIcon kind="left" />
-                  <span>{S.turnLeft}</span>
+                  <ToolIcon kind="translucent" />
+                  <span>{S.translucent}</span>
                 </button>
+              ) : null}
+
+              {settings.editable ? (
                 <button
                   type="button"
                   className={styles.button}
-                  disabled={readOnly}
+                  disabled={readOnly || !hasRemovable}
                   onClick={() => {
-                    dispatch({ type: 'turn', dir: 'right' });
-                    setLiveMessage(S.live.turned);
+                    setBlockedAdd(false);
+                    dispatch({ type: 'clear' });
+                    setLiveMessage(S.live.cleared);
                   }}
                 >
-                  <ToolIcon kind="right" />
-                  <span>{S.turnRight}</span>
+                  <ToolIcon kind="clear" />
+                  <span>{S.clear}</span>
                 </button>
-              </>
-            ) : null}
+              ) : null}
 
-            {settings.translucentToggle ? (
-              <button
-                type="button"
-                className={styles.button}
-                aria-pressed={state.translucent}
-                disabled={readOnly}
-                onClick={() => {
-                  const next = !state.translucent;
-                  dispatch({ type: 'set-translucent', on: next });
-                  setLiveMessage(next ? S.live.translucentOn : S.live.translucentOff);
-                }}
-              >
-                <ToolIcon kind="translucent" />
-                <span>{S.translucent}</span>
-              </button>
-            ) : null}
-
-            <button
-              type="button"
-              className={styles.button}
-              disabled={readOnly || !hasRemovable}
-              onClick={() => {
-                setBlockedAdd(false);
-                dispatch({ type: 'clear' });
-                setLiveMessage(S.live.cleared);
-              }}
-            >
-              <ToolIcon kind="clear" />
-              <span>{S.clear}</span>
-            </button>
-
-            {showRendererSwitch ? (
-              <button
-                type="button"
-                className={styles.button}
-                onClick={() => setStudentOverride(visibleRenderer === '3d' ? 'isometric' : '3d')}
-              >
-                <span>{visibleRenderer === '3d' ? S.switchToIso : S.switchTo3d}</span>
-              </button>
-            ) : null}
-          </div>
+              {showRendererSwitch ? (
+                <button
+                  type="button"
+                  className={styles.button}
+                  onClick={() => setStudentOverride(visibleRenderer === '3d' ? 'isometric' : '3d')}
+                >
+                  <span>{visibleRenderer === '3d' ? S.switchToIso : S.switchTo3d}</span>
+                </button>
+              ) : null}
+            </div>
+          ) : null}
 
           {visibleRenderer === '3d' && !settings.rotationLocked ? (
             <div className={styles.toolbar} role="group" aria-label={S.cameraPresets.iso}>
@@ -555,41 +629,7 @@ export function CubesView({ state, dispatch, cpa, readOnly = false, targetSize }
             </div>
           ) : null}
 
-          {settings.reference || hasRefViews ? (
-            <div className={styles.panelBlock}>
-              <div className={styles.projRow}>
-                {settings.reference ? <ReferenceShapeSvg cubes={settings.reference.cubes} /> : null}
-                {refViews?.top ? (
-                  <ProjectionGrid
-                    view="top"
-                    matrix={refViews.top}
-                    title={S.referenceViewTitle('top')}
-                    testId="cubes-reference-top"
-                  />
-                ) : null}
-                {refViews?.front ? (
-                  <ProjectionGrid
-                    view="front"
-                    matrix={refViews.front}
-                    title={S.referenceViewTitle('front')}
-                    testId="cubes-reference-front"
-                  />
-                ) : null}
-                {refViews?.side ? (
-                  <ProjectionGrid
-                    view="side"
-                    matrix={refViews.side}
-                    title={S.referenceViewTitle('side')}
-                    testId="cubes-reference-side"
-                  />
-                ) : null}
-              </div>
-            </div>
-          ) : null}
-
-          <p className={styles.hint}>
-            {visibleRenderer === '3d' ? `${S.keyHint} · ${S.keyHint3d}` : S.keyHint}
-          </p>
+          <p className={styles.hint}>{keyHintText}</p>
         </div>
       </div>
     </div>

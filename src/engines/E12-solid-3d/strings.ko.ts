@@ -6,7 +6,12 @@ export const solid3dStrings = {
   canvasLabel: '쌓기나무를 쌓고 돌려서 살펴보는 무대',
   instructions:
     '칸을 눌러 쌓기나무를 쌓거나 길게 눌러 뺄 수 있어요. 방향키로 칸을 옮기고 Enter로 쌓아요.',
+  instructionsView: '쌓기나무를 돌려 보며 살펴보아요.',
+  instructionsViewLocked: '쌓기나무를 살펴보아요.',
   keyHint: '방향키: 칸 옮기기 · Enter: 쌓기 · Backspace: 빼기 · Q/E: 돌리기 · T: 반투명',
+  keyHintLocked: '방향키: 칸 옮기기 · Enter: 쌓기 · Backspace: 빼기 · T: 반투명',
+  keyHintView: 'Q/E: 돌리기 · T: 반투명',
+  keyHintViewLocked: 'T: 반투명',
   keyHint3d: '손가락 두 개로 돌려 보세요 · 마우스는 오른쪽 버튼으로 끌어요',
   tools: {
     add: '쌓기',

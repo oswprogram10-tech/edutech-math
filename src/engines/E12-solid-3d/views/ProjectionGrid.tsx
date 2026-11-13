@@ -12,15 +12,14 @@ import { solid3dStrings as S } from '../strings.ko';
 import type { FocusCell, ProjectionView } from '../types';
 import styles from '../View.module.css';
 
-const CELL = 20;
-const PAD = 6;
-const FRONT_LABEL_SPACE = 18;
+const DEFAULT_CELL = 20;
 
 export interface ProjectionGridProps {
   readonly view: ProjectionView;
   readonly matrix: readonly (readonly number[])[];
   readonly title: string;
   readonly testId: string;
+  readonly cellSize?: number;
   readonly focus?: FocusCell | null;
   readonly onFocusCell?: (cell: FocusCell | null) => void;
   readonly readOnly?: boolean;
@@ -31,6 +30,7 @@ export function ProjectionGrid({
   matrix,
   title,
   testId,
+  cellSize = DEFAULT_CELL,
   focus = null,
   onFocusCell,
   readOnly = false,
@@ -43,9 +43,16 @@ export function ProjectionGrid({
 
   if (rows === 0 || cols === 0) return null;
 
+  const cell = cellSize;
+  const scale = cell / DEFAULT_CELL;
+  const pad = Math.round(6 * scale);
+  const frontLabelSpace = Math.round(18 * scale);
+  const frontLabelOffset = Math.round(14 * scale);
+  const frontLabelFontSize = Math.round(12 * scale);
+
   const hasFrontLabel = view === 'top' || view === 'side';
-  const width = PAD * 2 + cols * CELL;
-  const height = PAD * 2 + rows * CELL + (hasFrontLabel ? FRONT_LABEL_SPACE : 0);
+  const width = pad * 2 + cols * cell;
+  const height = pad * 2 + rows * cell + (hasFrontLabel ? frontLabelSpace : 0);
   const patternId = `e12-proj-hatch-${testId}`;
 
   const toggleCell = (row: number, col: number) => {
@@ -118,15 +125,15 @@ export function ProjectionGrid({
             const filled = val > 0;
             const isSelected =
               focus !== null && focus.view === view && focus.row === r && focus.col === c;
-            const x = PAD + c * CELL;
-            const y = PAD + r * CELL;
+            const x = pad + c * cell;
+            const y = pad + r * cell;
             return (
               <g key={`${r}-${c}`}>
                 <rect
                   x={x}
                   y={y}
-                  width={CELL}
-                  height={CELL}
+                  width={cell}
+                  height={cell}
                   fill={filled ? '#1d4fa8' : '#ffffff'}
                   stroke="#94a3b8"
                   strokeWidth={1}
@@ -145,8 +152,8 @@ export function ProjectionGrid({
                   <rect
                     x={x}
                     y={y}
-                    width={CELL}
-                    height={CELL}
+                    width={cell}
+                    height={cell}
                     fill={`url(#${patternId})`}
                     fillOpacity={0.55}
                     pointerEvents="none"
@@ -156,8 +163,8 @@ export function ProjectionGrid({
                   <rect
                     x={x + 1}
                     y={y + 1}
-                    width={CELL - 2}
-                    height={CELL - 2}
+                    width={cell - 2}
+                    height={cell - 2}
                     fill="none"
                     stroke="#e8872e"
                     strokeWidth={3}
@@ -171,10 +178,10 @@ export function ProjectionGrid({
 
         {interactive && svgFocused ? (
           <rect
-            x={PAD + cursor[1] * CELL + 2}
-            y={PAD + cursor[0] * CELL + 2}
-            width={CELL - 4}
-            height={CELL - 4}
+            x={pad + cursor[1] * cell + 2}
+            y={pad + cursor[0] * cell + 2}
+            width={cell - 4}
+            height={cell - 4}
             fill="none"
             stroke="#e8872e"
             strokeWidth={2}
@@ -185,10 +192,10 @@ export function ProjectionGrid({
 
         {view === 'top' ? (
           <text
-            x={PAD + (cols * CELL) / 2}
-            y={PAD + rows * CELL + 14}
+            x={pad + (cols * cell) / 2}
+            y={pad + rows * cell + frontLabelOffset}
             textAnchor="middle"
-            fontSize={12}
+            fontSize={frontLabelFontSize}
             fontWeight={700}
             fill="#3d485c"
           >
@@ -198,10 +205,10 @@ export function ProjectionGrid({
 
         {view === 'side' ? (
           <text
-            x={PAD}
-            y={PAD + rows * CELL + 14}
+            x={pad}
+            y={pad + rows * cell + frontLabelOffset}
             textAnchor="start"
-            fontSize={12}
+            fontSize={frontLabelFontSize}
             fontWeight={700}
             fill="#3d485c"
           >

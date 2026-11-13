@@ -59,6 +59,8 @@ export interface CubesConfig {
   readonly translucentToggle?: boolean;
   /** 회전 잠금. true면 회전 단추를 숨기고 turn Action을 무시한다. 기본 false. */
   readonly rotationLocked?: boolean;
+  /** false면 쌓기·빼기·모두 빼기·커서 이동을 막는 보기 전용 모드. 기본 true. */
+  readonly editable?: boolean;
   /** 무대 렌더러 선택. 기본 `'auto'`. */
   readonly stage?: StageMode;
   /** 과제 보기 모양(조작 불가 작은 등각 그림). */
@@ -102,6 +104,7 @@ export interface CubesSettings {
   readonly frontMarker: boolean;
   readonly translucentToggle: boolean;
   readonly rotationLocked: boolean;
+  readonly editable: boolean;
   readonly stage: StageMode;
   readonly reference: ReferenceShapeConfig | null;
   readonly referenceViews: ReferenceViewsConfig | null;
