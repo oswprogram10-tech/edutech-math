@@ -36,7 +36,7 @@
               "when": { "kind": "equals", "path": "mode", "value": "predict" },
               "level": 2,
               "show": { "engine": "E10", "overlay": "point-track" },
-              "say": "점선 모양과 지금 모양을 견주어 보세요."
+              "say": "칠한 모양의 점 ㄱ과 시작 도형의 점 ㄱ을 점선으로 이어 보았어요. 점 ㄱ은 어디로 갔나요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "predict" },
@@ -80,7 +80,7 @@
               },
               "level": 2,
               "show": { "engine": "E10", "overlay": "point-track" },
-              "say": "칠한 모양의 점 ㄱ과 시작 도형의 점 ㄱ을 이어 보았어요."
+              "say": "칠한 모양의 점 ㄱ과 시작 도형의 점 ㄱ을 점선으로 이어 보았어요. 점 ㄱ은 어디로 갔나요?"
             },
             {
               "when": {
@@ -105,7 +105,7 @@
               "when": { "kind": "equals", "path": "mode", "value": "predict" },
               "level": 2,
               "show": { "engine": "E10", "overlay": "point-track" },
-              "say": "점선 모양과 지금 모양을 견주어 보세요."
+              "say": "칠한 모양의 점 ㄱ과 시작 도형의 점 ㄱ을 점선으로 이어 보았어요. 점 ㄱ은 어디로 갔나요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "predict" },
@@ -286,7 +286,7 @@
               "when": { "kind": "equals", "path": "mode", "value": "slide-flip-turn" },
               "level": 2,
               "show": { "engine": "E10", "overlay": "point-track" },
-              "say": "점선 모양과 지금 모양을 견주어 보세요."
+              "say": "칠한 모양의 점 ㄱ과 시작 도형의 점 ㄱ을 점선으로 이어 보았어요. 점 ㄱ은 어디로 갔나요?"
             },
             {
               "when": { "kind": "equals", "path": "mode", "value": "slide-flip-turn" },

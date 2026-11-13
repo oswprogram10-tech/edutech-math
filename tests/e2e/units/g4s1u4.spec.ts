@@ -338,7 +338,7 @@ test('A1 트레이싱 페이퍼 — 대표 오답 뒤 고쳐서 다섯 과제를
     1,
   );
   await submit(page);
-  await expectFailedWithHint(page, '칠한 모양의 점 ㄱ과 시작 도형의 점 ㄱ을 이어 보았어요.', 2);
+  await expectFailedWithHint(page, '칠한 모양의 점 ㄱ과 시작 도형의 점 ㄱ을 점선으로 이어 보았어요.', 2);
   await expectOverlayOverCanvas(slot(page, 'main'), 'point-track');
 
   await resetPaintCursor(page, [2, 3]);
