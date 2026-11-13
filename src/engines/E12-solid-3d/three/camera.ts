@@ -41,6 +41,13 @@ export function azimuthFor(turn: ViewTurn): number {
   return Math.PI / 4 - turn * (Math.PI / 2);
 }
 
+export function targetForPreset(
+  preset: CameraPreset,
+  maxHeight: number,
+): readonly [number, number, number] {
+  return preset === 'top' ? [0, 0, 0] : [0, maxHeight / 2, 0];
+}
+
 export function targetAnglesForPreset(
   preset: CameraPreset,
   viewTurn: ViewTurn,
@@ -79,8 +86,8 @@ export function shortestAngleDelta(from: number, to: number): number {
 }
 
 /**
- * 어느 방위각·극각에서도 바닥 격자(`cols × rows`), `maxHeight` 기둥, `"앞"` 표시가
- * 원점 `(0, 0, 0)` 기준 직교 카메라 안에 들어오는 맞춤 zoom을 구한다.
+ * 상자(`cols × rows × maxHeight`) 꼭짓점 8개를 현재 카메라의 오른쪽·위쪽 축으로 투영한
+ * 너비·높이가 무대 짧은 변의 6% 여백 안에 들어오도록 직교 카메라 zoom을 구한다.
  */
 export function computeFitZoom(
   viewportWidth: number,
@@ -88,11 +95,46 @@ export function computeFitZoom(
   cols: number,
   rows: number,
   maxHeight: number,
+  azimuth: number = azimuthFor(0),
+  polar: number = ISO_POLAR_RAD,
 ): number {
   if (viewportWidth <= 0 || viewportHeight <= 0) return 32;
-  const worldSpanXZ = Math.hypot(cols, rows + 1.5);
-  const maxHalfHeight = Math.hypot(maxHeight, worldSpanXZ / 2);
-  const fullWidth = worldSpanXZ + 0.6;
-  const fullHeight = maxHalfHeight * 2 + 0.6;
-  return Math.max(12, Math.min(viewportWidth / fullWidth, viewportHeight / fullHeight));
+
+  const sinPhi = Math.sin(polar);
+  const cosPhi = Math.cos(polar);
+  const sinTheta = Math.sin(azimuth);
+  const cosTheta = Math.cos(azimuth);
+
+  const rightX = cosTheta;
+  const rightZ = -sinTheta;
+  const upX = -cosPhi * sinTheta;
+  const upY = sinPhi;
+  const upZ = -cosPhi * cosTheta;
+
+  const halfX = cols / 2;
+  const halfZ = rows / 2;
+  let minU = Number.POSITIVE_INFINITY;
+  let maxU = Number.NEGATIVE_INFINITY;
+  let minV = Number.POSITIVE_INFINITY;
+  let maxV = Number.NEGATIVE_INFINITY;
+
+  for (const sx of [-halfX, halfX]) {
+    for (const sy of [0, maxHeight]) {
+      for (const sz of [-halfZ, halfZ]) {
+        const u = sx * rightX + sz * rightZ;
+        const v = sx * upX + sy * upY + sz * upZ;
+        if (u < minU) minU = u;
+        if (u > maxU) maxU = u;
+        if (v < minV) minV = v;
+        if (v > maxV) maxV = v;
+      }
+    }
+  }
+
+  const worldWidth = Math.max(0.1, maxU - minU);
+  const worldHeight = Math.max(0.1, maxV - minV);
+  const margin = Math.min(viewportWidth, viewportHeight) * 0.06;
+  const availWidth = Math.max(1, viewportWidth - margin * 2);
+  const availHeight = Math.max(1, viewportHeight - margin * 2);
+  return Math.max(12, Math.min(availWidth / worldWidth, availHeight / worldHeight));
 }

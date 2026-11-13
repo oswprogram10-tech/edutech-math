@@ -8,14 +8,20 @@ import { computeStageLayout, cubeFaces, pointsAttr, sortCubesForPainter } from '
 import { useActiveRenderer } from '../renderer';
 import type { SolidConfig, SolidState } from '../types';
 import { findHiddenCubes } from '../voxel';
-import { CUBE_CANVAS_SELECTOR, HelperDiagramBox } from './HelperDiagramBox';
+import { HelperDiagramBox } from './HelperDiagramBox';
+import { CUBE_CANVAS_SELECTOR, useHelperOverlayMetrics } from './overlayMetrics';
 
 export function HiddenRevealOverlay({ state }: OverlayProps<SolidConfig, SolidState>) {
   const activeRenderer = useActiveRenderer();
-  if (state.mode !== 'cubes') return null;
-
   const [cols, rows] = state.settings.grid;
   const layout = computeStageLayout(cols, rows, state.settings.maxHeight);
+  const overlayMetrics = useHelperOverlayMetrics(
+    activeRenderer,
+    layout.viewBox.width,
+    layout.viewBox.height,
+  );
+  if (state.mode !== 'cubes') return null;
+
   const hiddenCoords = findHiddenCubes(state.cubes, cols, rows, state.viewTurn);
   const painted = sortCubesForPainter(
     hiddenCoords.map(([x, y, z]) => ({ x, y, z })),
@@ -66,8 +72,8 @@ export function HiddenRevealOverlay({ state }: OverlayProps<SolidConfig, SolidSt
     <CanvasAlignedOverlay
       testId="hidden-reveal"
       canvasSelector={CUBE_CANVAS_SELECTOR}
-      logicalWidth={layout.viewBox.width}
-      logicalHeight={layout.viewBox.height}
+      logicalWidth={overlayMetrics.logicalWidth}
+      logicalHeight={overlayMetrics.logicalHeight}
     >
       <defs>
         <pattern
@@ -80,7 +86,13 @@ export function HiddenRevealOverlay({ state }: OverlayProps<SolidConfig, SolidSt
           <line x1={0} y1={0} x2={0} y2={8} stroke="#c2410c" strokeWidth={2.5} />
         </pattern>
       </defs>
-      {activeRenderer === '3d' ? <HelperDiagramBox state={state}>{marks}</HelperDiagramBox> : marks}
+      {activeRenderer === '3d' ? (
+        <HelperDiagramBox state={state} overlayMetrics={overlayMetrics}>
+          {marks}
+        </HelperDiagramBox>
+      ) : (
+        marks
+      )}
     </CanvasAlignedOverlay>
   );
 }

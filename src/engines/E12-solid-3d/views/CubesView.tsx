@@ -184,6 +184,7 @@ export function CubesView({ state, dispatch, cpa, readOnly = false, targetSize }
   const [probeFps, setProbeFps] = useState<number | null>(null);
   const [studentOverride, setStudentOverride] = useState<RendererKind | null>(null);
   const [contextLost, setContextLost] = useState(false);
+  const [unitPx, setUnitPx] = useState<number | null>(null);
   const [cameraRequest, setCameraRequest] = useState<CameraRequest>({ preset: 'iso', seq: 0 });
 
   const baseDecision: RendererDecision = useMemo(
@@ -347,6 +348,7 @@ export function CubesView({ state, dispatch, cpa, readOnly = false, targetSize }
             data-testid="cubes-stage"
             data-renderer={rendererDecision}
             data-probe-fps={probeFps !== null ? String(Math.round(probeFps)) : undefined}
+            data-unit-px={visibleRenderer === '3d' && unitPx !== null ? String(unitPx) : undefined}
             onKeyDown={onStageKeyDown}
             onPointerDown={() => {
               if (!readOnly && visibleRenderer === '3d') {
@@ -377,6 +379,7 @@ export function CubesView({ state, dispatch, cpa, readOnly = false, targetSize }
                   press={press}
                   cameraRequest={cameraRequest}
                   onContextLost={handleContextLost}
+                  onUnitPxChange={setUnitPx}
                 />
               </Suspense>
             ) : (

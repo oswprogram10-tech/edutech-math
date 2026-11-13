@@ -9,14 +9,19 @@ import { computeStageLayout, projectPoint, rotateContinuous } from '../layout';
 import { useActiveRenderer } from '../renderer';
 import { solid3dStrings as S } from '../strings.ko';
 import type { SolidConfig, SolidState } from '../types';
-import { CUBE_CANVAS_SELECTOR, HelperDiagramBox } from './HelperDiagramBox';
+import { HelperDiagramBox } from './HelperDiagramBox';
+import { CUBE_CANVAS_SELECTOR, useHelperOverlayMetrics } from './overlayMetrics';
 
 export function SideEyeOverlay({ state }: OverlayProps<SolidConfig, SolidState>) {
   const activeRenderer = useActiveRenderer();
-  if (state.mode !== 'cubes') return null;
-
   const [cols, rows] = state.settings.grid;
   const layout = computeStageLayout(cols, rows, state.settings.maxHeight);
+  const overlayMetrics = useHelperOverlayMetrics(
+    activeRenderer,
+    layout.viewBox.width,
+    layout.viewBox.height,
+  );
+  if (state.mode !== 'cubes') return null;
 
   const [eyeRx, eyeRy] = rotateContinuous(cols + 0.45, rows / 2, cols, rows, state.viewTurn);
   const [lookRx, lookRy] = rotateContinuous(cols - 0.15, rows / 2, cols, rows, state.viewTurn);
@@ -82,8 +87,8 @@ export function SideEyeOverlay({ state }: OverlayProps<SolidConfig, SolidState>)
     <CanvasAlignedOverlay
       testId="side-eye"
       canvasSelector={CUBE_CANVAS_SELECTOR}
-      logicalWidth={layout.viewBox.width}
-      logicalHeight={layout.viewBox.height}
+      logicalWidth={overlayMetrics.logicalWidth}
+      logicalHeight={overlayMetrics.logicalHeight}
     >
       <defs>
         <marker
@@ -99,7 +104,9 @@ export function SideEyeOverlay({ state }: OverlayProps<SolidConfig, SolidState>)
         </marker>
       </defs>
       {activeRenderer === '3d' ? (
-        <HelperDiagramBox state={state}>{content}</HelperDiagramBox>
+        <HelperDiagramBox state={state} overlayMetrics={overlayMetrics}>
+          {content}
+        </HelperDiagramBox>
       ) : (
         content
       )}

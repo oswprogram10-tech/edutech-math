@@ -273,7 +273,9 @@
   @container (min-width: 820px) {
     .stageRow {
       display: flex;
-      flex: 1 1 0;
+      /* 샌드박스(height: auto)에서도 무대가 200px로 찌그러지지 않게 기본 높이를 두고,
+         실행기·?stage=fit(고정 높이)에서는 min-height: 200px까지 부드럽게 줄어든다. */
+      flex: 1 1 min(52dvh, 400px);
       gap: 1rem;
       align-items: stretch;
       min-height: 200px;

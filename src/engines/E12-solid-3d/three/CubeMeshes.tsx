@@ -1,6 +1,7 @@
 /**
  * E12 3D 쌓기나무 메시·테두리·색/무늬 CanvasTexture·반투명·강조 렌더링.
  */
+import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import type { ThreeEvent } from '@react-three/fiber';
 import type { CubeColor, CubeItem, FocusCell, GridCoord } from '../types';
@@ -20,12 +21,7 @@ interface CubeMeshesProps {
   readonly press?: PressGestureHandlers;
 }
 
-const CUBE_GEO = new THREE.BoxGeometry(1, 1, 1);
-const CUBE_EDGES_GEO = new THREE.EdgesGeometry(CUBE_GEO);
-const INK_EDGE_MAT = new THREE.LineBasicMaterial({ color: CUBE_INK });
-const FOCUS_EDGE_MAT = new THREE.LineBasicMaterial({ color: FOCUS_STROKE });
-
-const materialCache = new Map<string, THREE.MeshLambertMaterial>();
+const CUBE_COLORS: readonly CubeColor[] = ['plain', 'red', 'blue', 'yellow', 'green'];
 const noopRaycast = () => {};
 
 function drawShapeOnCanvas(
@@ -56,7 +52,6 @@ function drawShapeOnCanvas(
     ctx.fillRect(c - 18, c - 18, 36, 36);
     return;
   }
-  // green diamond ◆
   ctx.beginPath();
   ctx.moveTo(c, c - 24);
   ctx.lineTo(c + 24, c);
@@ -84,22 +79,56 @@ function createCubeTexture(color: CubeColor): THREE.CanvasTexture | null {
   return texture;
 }
 
-function getCubeMaterial(color: CubeColor, translucent: boolean): THREE.MeshLambertMaterial {
-  const key = `${color}-${translucent ? 't' : 'o'}`;
-  const existing = materialCache.get(key);
-  if (existing) return existing;
+function buildCubeResources() {
+  const boxGeo = new THREE.BoxGeometry(1, 1, 1);
+  const edgesGeo = new THREE.EdgesGeometry(boxGeo);
+  const inkEdgeMat = new THREE.LineBasicMaterial({ color: CUBE_INK });
+  const focusEdgeMat = new THREE.LineBasicMaterial({ color: FOCUS_STROKE });
 
-  const texture = createCubeTexture(color);
-  const palette = CUBE_PALETTE[color];
-  const material = new THREE.MeshLambertMaterial({
-    color: texture ? '#ffffff' : color === 'plain' ? palette.top : palette.front,
-    map: texture ?? undefined,
-    transparent: translucent,
-    opacity: translucent ? 0.35 : 1,
-    depthWrite: !translucent,
-  });
-  materialCache.set(key, material);
-  return material;
+  const textures = new Map<CubeColor, THREE.CanvasTexture>();
+  const materials = new Map<string, THREE.MeshLambertMaterial>();
+
+  for (const color of CUBE_COLORS) {
+    const texture = createCubeTexture(color);
+    if (texture) textures.set(color, texture);
+    const palette = CUBE_PALETTE[color];
+
+    for (const translucent of [false, true]) {
+      const mat = new THREE.MeshLambertMaterial({
+        color: texture ? '#ffffff' : color === 'plain' ? palette.top : palette.front,
+        map: texture ?? undefined,
+        transparent: translucent,
+        opacity: translucent ? 0.35 : 1,
+        depthWrite: !translucent,
+      });
+      materials.set(`${color}-${translucent ? 't' : 'o'}`, mat);
+    }
+  }
+
+  return {
+    boxGeo,
+    edgesGeo,
+    inkEdgeMat,
+    focusEdgeMat,
+    materials,
+    touchTextures() {
+      for (const texture of textures.values()) {
+        texture.needsUpdate = true;
+      }
+    },
+    dispose() {
+      for (const texture of textures.values()) {
+        texture.dispose();
+      }
+      for (const material of materials.values()) {
+        material.dispose();
+      }
+      inkEdgeMat.dispose();
+      focusEdgeMat.dispose();
+      edgesGeo.dispose();
+      boxGeo.dispose();
+    },
+  };
 }
 
 export function CubeMeshes({
@@ -113,13 +142,23 @@ export function CubeMeshes({
   readOnly,
   press,
 }: CubeMeshesProps) {
+  const resources = useMemo(() => buildCubeResources(), []);
+
+  useEffect(() => {
+    resources.touchTextures();
+    return () => {
+      resources.dispose();
+    };
+  }, [resources]);
+
   const rows = grid[1];
 
   return (
     <group>
       {cubes.map((cube) => {
         const effectiveColor: CubeColor = colorHints ? cube.color : 'plain';
-        const material = getCubeMaterial(effectiveColor, translucent);
+        const material = resources.materials.get(`${effectiveColor}-${translucent ? 't' : 'o'}`);
+        if (!material) return null;
         const pos = toWorld(cube.x, cube.y, cube.z, grid);
         const isFocused = matchesFocus(cube, focus, rows, maxHeight);
         const isCursorCol = !readOnly && cursor[0] === cube.x && cursor[1] === cube.y;
@@ -127,7 +166,7 @@ export function CubeMeshes({
         return (
           <group key={`cube3d-${cube.x}-${cube.y}-${cube.z}`} position={[pos[0], pos[1], pos[2]]}>
             <mesh
-              geometry={CUBE_GEO}
+              geometry={resources.boxGeo}
               material={material}
               onPointerDown={
                 press
@@ -162,19 +201,23 @@ export function CubeMeshes({
                   : undefined
               }
             />
-            <lineSegments geometry={CUBE_EDGES_GEO} material={INK_EDGE_MAT} raycast={noopRaycast} />
+            <lineSegments
+              geometry={resources.edgesGeo}
+              material={resources.inkEdgeMat}
+              raycast={noopRaycast}
+            />
             {isFocused || isCursorCol ? (
               <>
                 <lineSegments
-                  geometry={CUBE_EDGES_GEO}
-                  material={FOCUS_EDGE_MAT}
+                  geometry={resources.edgesGeo}
+                  material={resources.focusEdgeMat}
                   scale={1.015}
                   raycast={noopRaycast}
                 />
                 {isFocused ? (
                   <lineSegments
-                    geometry={CUBE_EDGES_GEO}
-                    material={FOCUS_EDGE_MAT}
+                    geometry={resources.edgesGeo}
+                    material={resources.focusEdgeMat}
                     scale={1.028}
                     raycast={noopRaycast}
                   />

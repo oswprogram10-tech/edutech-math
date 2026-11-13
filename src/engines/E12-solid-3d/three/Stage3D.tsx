@@ -1,8 +1,8 @@
 /**
  * E12 3D Three.js / React Three Fiber 무대 (지연 로딩 전용 default export).
  *
- * - 직교 카메라 + OrbitControls(target = (0, 0, 0)), frameloop="demand"
- * - 3D WebGL <canvas> 위에 같은 크기의 투명 SVG `cubes-3d-canvas`를 겹쳐
+ * - 직교 카메라 + OrbitControls(target = 상자 중심 또는 위에서 (0,0,0)), frameloop="demand"
+ * - 3D WebGL <canvas> 위에 같은 크기의 투명 SVG `cubes-3d-canvas`(preserveAspectRatio="xMinYMin meet")를 겹쳐
  *   판 맞춤 E2E와 힌트 ② `CanvasAlignedOverlay`가 정확히 무대 상자를 찾게 한다.
  * - `probe` 모드에서는 5×5×4 = 100개 쌓기나무 장면의 평균 fps만 재고 보고한다.
  */
@@ -22,6 +22,7 @@ import {
   shortestAngleDelta,
   sphericalToPosition,
   targetAnglesForPreset,
+  targetForPreset,
 } from './camera';
 import type { CameraPreset } from './camera';
 import { CubeMeshes } from './CubeMeshes';
@@ -41,6 +42,7 @@ export interface Stage3DProps {
   readonly press: PressGestureHandlers;
   readonly cameraRequest: CameraRequest;
   readonly onContextLost: () => void;
+  readonly onUnitPxChange?: (unitPx: number) => void;
   readonly probe?: boolean;
   readonly onProbeComplete?: (fps: number) => void;
 }
@@ -74,10 +76,24 @@ function applyCameraZoom(camera: THREE.Camera, zoom: number): void {
   }
 }
 
+function applyCameraPose(
+  camera: THREE.Camera,
+  controls: OrbitControls,
+  target: readonly [number, number, number],
+  polar: number,
+  azimuth: number,
+): void {
+  const [ox, oy, oz] = sphericalToPosition(CAMERA_DISTANCE, polar, azimuth);
+  controls.target.set(target[0], target[1], target[2]);
+  camera.position.set(target[0] + ox, target[1] + oy, target[2] + oz);
+  controls.update();
+}
+
 function ProbeRig({ onComplete }: { readonly onComplete: (fps: number) => void }) {
   const { get, size } = useThree();
   useEffect(() => {
-    const zoom = computeFitZoom(size.width, size.height, 5, 5, 4);
+    const { azimuth, polar } = targetAnglesForPreset('iso', 0);
+    const zoom = computeFitZoom(size.width, size.height, 5, 5, 4, azimuth, polar);
     applyCameraZoom(get().camera, zoom);
   }, [get, size.width, size.height]);
 
@@ -109,6 +125,7 @@ interface CameraRigProps {
   readonly viewTurn: ViewTurn;
   readonly rotationLocked: boolean;
   readonly cameraRequest: CameraRequest;
+  readonly onUnitPxChange?: (unitPx: number) => void;
 }
 
 function CameraRig({
@@ -118,8 +135,9 @@ function CameraRig({
   viewTurn,
   rotationLocked,
   cameraRequest,
+  onUnitPxChange,
 }: CameraRigProps) {
-  const { camera, gl, size, invalidate, get } = useThree();
+  const { gl, size, invalidate, get } = useThree();
   const controlsRef = useRef<OrbitControls | null>(null);
   const animRef = useRef<{
     active: boolean;
@@ -130,6 +148,8 @@ function CameraRig({
     deltaPolar: number;
     targetAzimuth: number;
     targetPolar: number;
+    startTarget: readonly [number, number, number];
+    endTarget: readonly [number, number, number];
   }>({
     active: false,
     startMs: 0,
@@ -139,14 +159,16 @@ function CameraRig({
     deltaPolar: 0,
     targetAzimuth: 0,
     targetPolar: 0,
+    startTarget: [0, 0, 0],
+    endTarget: [0, 0, 0],
   });
   const initializedRef = useRef(false);
   const lastSeqRef = useRef<number>(-1);
   const lastTurnRef = useRef<ViewTurn>(viewTurn);
 
   useEffect(() => {
-    const controls = new OrbitControls(camera, gl.domElement);
-    controls.target.set(0, 0, 0);
+    const cam = get().camera;
+    const controls = new OrbitControls(cam, gl.domElement);
     controls.enablePan = false;
     controls.enableZoom = !rotationLocked;
     controls.enableRotate = !rotationLocked;
@@ -174,67 +196,111 @@ function CameraRig({
       if (controlsRef.current === controls) {
         controlsRef.current = null;
       }
+      initializedRef.current = false;
     };
-  }, [camera, gl, invalidate, rotationLocked]);
+  }, [get, gl, invalidate, rotationLocked]);
 
   useEffect(() => {
     const controls = controlsRef.current;
     if (!controls) return;
+    const cam = get().camera;
+
     controls.enableRotate = !rotationLocked;
     controls.enableZoom = !rotationLocked;
-    const fitZoom = computeFitZoom(size.width, size.height, cols, rows, maxHeight);
-    controls.minZoom = fitZoom * 0.6;
-    controls.maxZoom = fitZoom * 2;
-    applyCameraZoom(get().camera, fitZoom);
-    controls.update();
-    invalidate();
-  }, [get, cols, rows, maxHeight, size.width, size.height, rotationLocked, invalidate]);
-
-  useEffect(() => {
-    const controls = controlsRef.current;
-    if (!controls) return;
-    const preset = lastTurnRef.current !== viewTurn ? 'iso' : cameraRequest.preset;
-    const { azimuth, polar } = targetAnglesForPreset(preset, viewTurn);
 
     const isFirst = !initializedRef.current;
-    const immediate =
-      isFirst || prefersReducedMotion() || (rotationLocked && lastTurnRef.current === viewTurn);
-    const changed =
-      isFirst || lastSeqRef.current !== cameraRequest.seq || lastTurnRef.current !== viewTurn;
+    const turnChanged = lastTurnRef.current !== viewTurn;
+    const seqChanged = lastSeqRef.current !== cameraRequest.seq;
     initializedRef.current = true;
     lastSeqRef.current = cameraRequest.seq;
     lastTurnRef.current = viewTurn;
-    if (!changed) return;
 
-    if (immediate) {
-      animRef.current.active = false;
-      const [px, py, pz] = sphericalToPosition(CAMERA_DISTANCE, polar, azimuth);
-      camera.position.set(px, py, pz);
-      controls.target.set(0, 0, 0);
-      controls.update();
+    if (isFirst || turnChanged || seqChanged) {
+      const preset: CameraPreset = isFirst || turnChanged ? 'iso' : cameraRequest.preset;
+      const { azimuth, polar } = targetAnglesForPreset(preset, viewTurn);
+      const nextTarget = targetForPreset(preset, maxHeight);
+      const fitZoom = computeFitZoom(
+        size.width,
+        size.height,
+        cols,
+        rows,
+        maxHeight,
+        azimuth,
+        polar,
+      );
+
+      controls.minZoom = fitZoom * 0.6;
+      controls.maxZoom = fitZoom * 2;
+      applyCameraZoom(cam, fitZoom);
+      onUnitPxChange?.(Math.round(fitZoom));
+
+      const immediate = isFirst || prefersReducedMotion() || (rotationLocked && !turnChanged);
+
+      if (immediate) {
+        animRef.current.active = false;
+        applyCameraPose(cam, controls, nextTarget, polar, azimuth);
+        invalidate();
+        return;
+      }
+
+      const offset = cam.position.clone().sub(controls.target);
+      const spherical = new THREE.Spherical().setFromVector3(offset);
+      animRef.current = {
+        active: true,
+        startMs: performance.now(),
+        startAzimuth: spherical.theta,
+        startPolar: spherical.phi,
+        deltaAzimuth: shortestAngleDelta(spherical.theta, azimuth),
+        deltaPolar: polar - spherical.phi,
+        targetAzimuth: azimuth,
+        targetPolar: polar,
+        startTarget: [controls.target.x, controls.target.y, controls.target.z],
+        endTarget: nextTarget,
+      };
       invalidate();
       return;
     }
 
-    const offset = camera.position.clone().sub(controls.target);
-    const spherical = new THREE.Spherical().setFromVector3(offset);
-    animRef.current = {
-      active: true,
-      startMs: performance.now(),
-      startAzimuth: spherical.theta,
-      startPolar: spherical.phi,
-      deltaAzimuth: shortestAngleDelta(spherical.theta, azimuth),
-      deltaPolar: polar - spherical.phi,
-      targetAzimuth: azimuth,
-      targetPolar: polar,
-    };
+    // 무대 크기나 격자 설정만 바뀌었을 때는 현재 카메라 회전각을 유지한 채 배율만 다시 맞춘다.
+    let azimuth: number;
+    let polar: number;
+    if (animRef.current.active) {
+      azimuth = animRef.current.targetAzimuth;
+      polar = animRef.current.targetPolar;
+    } else {
+      const offset = cam.position.clone().sub(controls.target);
+      const spherical = new THREE.Spherical().setFromVector3(offset);
+      azimuth = spherical.theta;
+      polar = spherical.phi;
+    }
+
+    const fitZoom = computeFitZoom(size.width, size.height, cols, rows, maxHeight, azimuth, polar);
+    controls.minZoom = fitZoom * 0.6;
+    controls.maxZoom = fitZoom * 2;
+    applyCameraZoom(cam, fitZoom);
+    controls.update();
+    onUnitPxChange?.(Math.round(fitZoom));
     invalidate();
-  }, [camera, cameraRequest.preset, cameraRequest.seq, viewTurn, rotationLocked, invalidate]);
+  }, [
+    get,
+    cols,
+    rows,
+    maxHeight,
+    size.width,
+    size.height,
+    cameraRequest.preset,
+    cameraRequest.seq,
+    viewTurn,
+    rotationLocked,
+    invalidate,
+    onUnitPxChange,
+  ]);
 
   useFrame(() => {
     const anim = animRef.current;
     const controls = controlsRef.current;
     if (!anim.active || !controls) return;
+    const cam = get().camera;
 
     const elapsed = performance.now() - anim.startMs;
     const rawT = Math.min(1, elapsed / CAMERA_ANIM_MS);
@@ -242,10 +308,20 @@ function CameraRig({
 
     const azimuth = rawT >= 1 ? anim.targetAzimuth : anim.startAzimuth + anim.deltaAzimuth * t;
     const polar = rawT >= 1 ? anim.targetPolar : anim.startPolar + anim.deltaPolar * t;
-    const [px, py, pz] = sphericalToPosition(CAMERA_DISTANCE, polar, azimuth);
-    camera.position.set(px, py, pz);
-    controls.target.set(0, 0, 0);
-    controls.update();
+    const tx =
+      rawT >= 1
+        ? anim.endTarget[0]
+        : anim.startTarget[0] + (anim.endTarget[0] - anim.startTarget[0]) * t;
+    const ty =
+      rawT >= 1
+        ? anim.endTarget[1]
+        : anim.startTarget[1] + (anim.endTarget[1] - anim.startTarget[1]) * t;
+    const tz =
+      rawT >= 1
+        ? anim.endTarget[2]
+        : anim.startTarget[2] + (anim.endTarget[2] - anim.startTarget[2]) * t;
+
+    applyCameraPose(cam, controls, [tx, ty, tz], polar, azimuth);
 
     if (rawT >= 1) {
       anim.active = false;
@@ -263,6 +339,7 @@ export default function Stage3D({
   press,
   cameraRequest,
   onContextLost,
+  onUnitPxChange,
   probe = false,
   onProbeComplete,
 }: Stage3DProps) {
@@ -274,8 +351,10 @@ export default function Stage3D({
 
   const initialPos = useMemo(() => {
     const { azimuth, polar } = targetAnglesForPreset('iso', 0);
-    return sphericalToPosition(CAMERA_DISTANCE, polar, azimuth);
-  }, []);
+    const target = targetForPreset('iso', settings.maxHeight);
+    const [ox, oy, oz] = sphericalToPosition(CAMERA_DISTANCE, polar, azimuth);
+    return [target[0] + ox, target[1] + oy, target[2] + oz] as const;
+  }, [settings.maxHeight]);
 
   useEffect(() => {
     return () => {
@@ -285,6 +364,8 @@ export default function Stage3D({
   }, []);
 
   if (probe && onProbeComplete) {
+    const { azimuth, polar } = targetAnglesForPreset('iso', 0);
+    const [px, py, pz] = sphericalToPosition(CAMERA_DISTANCE, polar, azimuth);
     return (
       <div className={styles.probeLayer} aria-hidden="true">
         <Canvas
@@ -292,7 +373,7 @@ export default function Stage3D({
           frameloop="always"
           dpr={[1, 2]}
           gl={{ antialias: true }}
-          camera={{ position: [initialPos[0], initialPos[1], initialPos[2]], near: 0.1, far: 100 }}
+          camera={{ position: [px, py + 2, pz], near: 0.1, far: 100 }}
           style={{ width: '100%', height: '100%', display: 'block' }}
         >
           <ProbeRig onComplete={onProbeComplete} />
@@ -349,6 +430,7 @@ export default function Stage3D({
           viewTurn={state.viewTurn}
           rotationLocked={settings.rotationLocked}
           cameraRequest={cameraRequest}
+          onUnitPxChange={onUnitPxChange}
         />
         <FloorTiles
           cols={cols}
@@ -374,6 +456,7 @@ export default function Stage3D({
       <svg
         className={styles.overlay3dMirror}
         viewBox={`0 0 ${layout.viewBox.width} ${layout.viewBox.height}`}
+        preserveAspectRatio="xMinYMin meet"
         data-testid="cubes-3d-canvas"
         aria-hidden="true"
       />

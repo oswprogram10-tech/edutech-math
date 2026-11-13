@@ -10,7 +10,8 @@ import { useActiveRenderer } from '../renderer';
 import { solid3dStrings as S } from '../strings.ko';
 import type { SolidConfig, SolidState } from '../types';
 import { columnHeight } from '../voxel';
-import { CUBE_CANVAS_SELECTOR, HelperDiagramBox } from './HelperDiagramBox';
+import { HelperDiagramBox } from './HelperDiagramBox';
+import { CUBE_CANVAS_SELECTOR, useHelperOverlayMetrics } from './overlayMetrics';
 
 function parseColumnArg(args: unknown, cols: number): number | null {
   if (args === null || typeof args !== 'object' || Array.isArray(args)) return null;
@@ -21,13 +22,17 @@ function parseColumnArg(args: unknown, cols: number): number | null {
 
 export function RowLineupOverlay({ state, args }: OverlayProps<SolidConfig, SolidState>) {
   const activeRenderer = useActiveRenderer();
+  const [cols, rows] = state.settings.grid;
+  const layout = computeStageLayout(cols, rows, state.settings.maxHeight);
+  const overlayMetrics = useHelperOverlayMetrics(
+    activeRenderer,
+    layout.viewBox.width,
+    layout.viewBox.height,
+  );
   if (state.mode !== 'cubes') return null;
 
-  const [cols, rows] = state.settings.grid;
   const targetX = parseColumnArg(args, cols);
   if (targetX === null) return null;
-
-  const layout = computeStageLayout(cols, rows, state.settings.maxHeight);
   const heights = Array.from({ length: rows }, (_, y) => columnHeight(state.cubes, targetX, y));
 
   const barWidth = 22;
@@ -98,11 +103,13 @@ export function RowLineupOverlay({ state, args }: OverlayProps<SolidConfig, Soli
     <CanvasAlignedOverlay
       testId="row-lineup"
       canvasSelector={CUBE_CANVAS_SELECTOR}
-      logicalWidth={layout.viewBox.width}
-      logicalHeight={layout.viewBox.height}
+      logicalWidth={overlayMetrics.logicalWidth}
+      logicalHeight={overlayMetrics.logicalHeight}
     >
       {activeRenderer === '3d' ? (
-        <HelperDiagramBox state={state}>{diagram}</HelperDiagramBox>
+        <HelperDiagramBox state={state} overlayMetrics={overlayMetrics}>
+          {diagram}
+        </HelperDiagramBox>
       ) : (
         diagram
       )}

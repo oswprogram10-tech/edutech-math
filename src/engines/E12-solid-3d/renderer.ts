@@ -34,14 +34,29 @@ export function decideRenderer({
   return probeFps >= 30 ? '3d' : 'isometric';
 }
 
-/** 현재 환경에서 WebGL2 또는 WebGL 컨텍스트를 만들 수 있는지 확인한다. */
+let cachedWebGL: boolean | null = null;
+
+export function resetWebGLCache(): void {
+  cachedWebGL = null;
+}
+
+/** 현재 환경에서 WebGL2 또는 WebGL 컨텍스트를 만들 수 있는지 한 번 확인해 캐시한다. */
 export function detectWebGL(): boolean {
-  if (typeof document === 'undefined') return false;
+  if (cachedWebGL !== null) return cachedWebGL;
+  if (typeof document === 'undefined') {
+    cachedWebGL = false;
+    return false;
+  }
   try {
     const canvas = document.createElement('canvas');
     const gl = canvas.getContext('webgl2') ?? canvas.getContext('webgl');
-    return gl !== null;
+    if (gl && 'getExtension' in gl && typeof gl.getExtension === 'function') {
+      gl.getExtension('WEBGL_lose_context')?.loseContext();
+    }
+    cachedWebGL = gl !== null;
+    return cachedWebGL;
   } catch {
+    cachedWebGL = false;
     return false;
   }
 }

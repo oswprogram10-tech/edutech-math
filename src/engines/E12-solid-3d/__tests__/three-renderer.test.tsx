@@ -10,7 +10,9 @@ import { createInitialState, reduce } from '../reduce';
 import {
   RENDERER_STORAGE_KEY,
   decideRenderer,
+  detectWebGL,
   readStoredRenderer,
+  resetWebGLCache,
   setActiveRenderer,
   writeStoredRenderer,
 } from '../renderer';
@@ -20,6 +22,7 @@ import {
   azimuthFor,
   computeFitZoom,
   targetAnglesForPreset,
+  targetForPreset,
   toWorld,
 } from '../three/camera';
 import type { CubesState, SolidConfig } from '../types';
@@ -28,6 +31,7 @@ import { SolidView } from '../View';
 afterEach(() => {
   cleanup();
   setActiveRenderer('isometric');
+  resetWebGLCache();
   window.localStorage.clear();
   vi.restoreAllMocks();
 });
@@ -105,12 +109,36 @@ describe('3D 카메라·좌표 순수 계산', () => {
     expect(azimuthFor(3)).toBeCloseTo((-5 * Math.PI) / 4, 8);
   });
 
-  it('시점 프리셋은 등각 각도와 최대 극각 제약을 만족한다', () => {
+  it('detectWebGL은 시험용 문맥을 즉시 해제하고 결과를 한 번만 캐시한다', () => {
+    const loseContext = vi.fn();
+    const fakeGl = {
+      getExtension: vi.fn(() => ({ loseContext })),
+    };
+    const getContextSpy = vi
+      .spyOn(HTMLCanvasElement.prototype, 'getContext')
+      .mockReturnValue(fakeGl as unknown as RenderingContext);
+
+    expect(detectWebGL()).toBe(true);
+    expect(detectWebGL()).toBe(true);
+    expect(getContextSpy).toHaveBeenCalledTimes(1);
+    expect(fakeGl.getExtension).toHaveBeenCalledWith('WEBGL_lose_context');
+    expect(loseContext).toHaveBeenCalledTimes(1);
+  });
+
+  it('시점 프리셋·타깃·8꼭짓점 투영 배율은 등각/위에서/최대 극각 제약을 만족한다', () => {
     const iso = targetAnglesForPreset('iso', 0);
+    const top = targetAnglesForPreset('top', 0);
     expect(iso.polar).toBeCloseTo(ISO_POLAR_RAD, 8);
     expect(targetAnglesForPreset('front', 0).polar).toBeLessThanOrEqual(MAX_POLAR_RAD);
     expect(targetAnglesForPreset('side', 0).polar).toBeLessThanOrEqual(MAX_POLAR_RAD);
-    expect(computeFitZoom(400, 400, 5, 5, 5)).toBeGreaterThan(12);
+
+    expect(targetForPreset('iso', 5)).toEqual([0, 2.5, 0]);
+    expect(targetForPreset('front', 5)).toEqual([0, 2.5, 0]);
+    expect(targetForPreset('side', 5)).toEqual([0, 2.5, 0]);
+    expect(targetForPreset('top', 5)).toEqual([0, 0, 0]);
+
+    expect(computeFitZoom(690, 395, 5, 5, 5, iso.azimuth, iso.polar)).toBeGreaterThanOrEqual(40);
+    expect(computeFitZoom(690, 395, 5, 5, 5, top.azimuth, top.polar)).toBeGreaterThanOrEqual(48);
   });
 });
 
