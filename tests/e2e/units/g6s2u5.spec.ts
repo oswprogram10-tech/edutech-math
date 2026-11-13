@@ -8,7 +8,7 @@ import {
 } from '../panel-layout';
 
 /**
- * T121 g6s2u5 「원의 둘레와 넓이」 A2 「원 등분 극한 직사각형」 단원 E2E.
+ * T121 g6s2u5 「원의 둘레와 넓이」 A2 「원을 잘라 늘어놓기」 단원 E2E.
  * 과제마다 대표 오답 → 힌트 ① → 고쳐서 통과 순서로 끝까지 해 본다.
  * T5는 오개념 코드가 둘이라 활동을 새로 열어 실패 횟수를 되돌리고 R-D ①을 따로 본다.
  */
@@ -216,9 +216,7 @@ async function solveT4(page: Page): Promise<void> {
   await expectPassed(page);
 }
 
-test('A2 원 등분 극한 직사각형 — 손 배열·자동 배열·가로·넓이 식·넓이', async ({
-  page,
-}, testInfo) => {
+test('A2 원을 잘라 늘어놓기 — 손 배열·자동 배열·가로·넓이 식·넓이', async ({ page }, testInfo) => {
   await openActivity(page);
   await screenshot(page, 'g6s2u5-a2.png');
   // T122로 판이 실행기 판 높이에 맞춰 줄어 세 뷰포트 모두 판 안 스크롤이 없다.
