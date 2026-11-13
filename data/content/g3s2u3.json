@@ -1,0 +1,469 @@
+{
+  "unit": "g3s2u3",
+  "title": "원",
+  "activities": [
+    {
+      "id": "g3s2u3.A1",
+      "title": "말뚝과 밧줄",
+      "tasks": [
+        {
+          "id": "g3s2u3.A1.T1",
+          "prompt": "말뚝에 밧줄을 매고 한 바퀴 돌아 원을 그려요.",
+          "engine": "E09",
+          "mode": "circle",
+          "cpa": "C",
+          "config": {
+            "mode": "circle",
+            "grid": 13,
+            "scene": "playground",
+            "ropeLength": 4,
+            "traceDots": true
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "coverageAtLeast",
+            "args": { "percent": 95 }
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "circle" },
+              "level": 1,
+              "say": "한 바퀴를 다 돌았나요? 점이 빠진 곳이 있나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "circle" },
+              "level": 2,
+              "say": "밧줄 끝이 지나간 자리를 하나씩 살펴보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "circle" },
+              "level": 3,
+              "backtrack": "g3s1u2"
+            }
+          ],
+          "concepts": ["g3s2u3.circle-definition"],
+          "submit": "button"
+        },
+        {
+          "id": "g3s2u3.A1.T2",
+          "prompt": "원 위의 점에서 말뚝까지 선분을 3개 긋고 길이를 재 보세요. 세 선분의 길이는 어떤가요?",
+          "engine": "E09",
+          "mode": "circle",
+          "cpa": "P",
+          "config": {
+            "mode": "circle",
+            "grid": 13,
+            "scene": "playground",
+            "ropeLength": 4,
+            "measureTool": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "predicate", "name": "distinctRadii", "args": { "count": 3 } },
+              { "kind": "predicate", "name": "measuredRadii", "args": { "count": 3 } },
+              {
+                "kind": "equals",
+                "path": "response.same.selected",
+                "value": ["equal"]
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "circle" },
+              "level": 1,
+              "say": "원 위의 다른 곳에서도 그어 보았나요? 길이를 모두 재 보았나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "circle" },
+              "level": 2,
+              "show": { "engine": "E09", "overlay": "radius-pair" },
+              "say": "말뚝에서 원 위의 점까지 그은 선분들의 길이를 견주어 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "circle" },
+              "level": 3,
+              "backtrack": "g3s2u3.circle-definition"
+            }
+          ],
+          "concepts": ["g3s2u3.circle-definition", "g3s2u3.radius-diameter"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "same",
+                "label": "세 선분의 길이는 어떤가요?",
+                "multiple": false,
+                "options": [
+                  { "id": "equal", "label": "모두 같아요" },
+                  { "id": "diff", "label": "서로 달라요" }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s2u3.A1.T3",
+          "prompt": "밧줄 4칸과 6칸으로 원을 하나씩 그리고, 무엇이 달라지는지 골라요.",
+          "engine": "E09",
+          "mode": "circle",
+          "cpa": "P",
+          "config": {
+            "mode": "circle",
+            "grid": 13,
+            "scene": "playground",
+            "ropeLength": 4,
+            "ropeLengths": [4, 6],
+            "traceDots": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "coverageAtLeast",
+                "args": { "percent": 95, "ropeLength": 4 }
+              },
+              {
+                "kind": "predicate",
+                "name": "coverageAtLeast",
+                "args": { "percent": 95, "ropeLength": 6 }
+              },
+              {
+                "kind": "equals",
+                "path": "response.change.selected",
+                "value": ["size"]
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "circle" },
+              "level": 1,
+              "say": "밧줄 4칸으로 그린 원과 6칸으로 그린 원을 나란히 두고, 무엇이 같고 무엇이 다른지 살펴볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "circle" },
+              "level": 2,
+              "say": "두 원을 겹쳐 놓고 무엇이 같고 무엇이 다른지 하나씩 짚어 볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "circle" },
+              "level": 3,
+              "backtrack": "g3s2u3.circle-definition"
+            }
+          ],
+          "concepts": ["g3s2u3.circle-definition"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "change",
+                "label": "밧줄이 길어지면 무엇이 달라질까요?",
+                "multiple": false,
+                "options": [
+                  { "id": "size", "label": "원의 크기" },
+                  { "id": "shape", "label": "원의 모양" },
+                  { "id": "none", "label": "달라지는 것이 없어요" }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "g3s2u3.A2",
+      "title": "가장 긴 선분 찾기와 컴퍼스 무늬",
+      "tasks": [
+        {
+          "id": "g3s2u3.A2.T1",
+          "prompt": "원 위의 두 점을 이어 선분을 만들고, 가장 긴 선분을 찾아요.",
+          "engine": "E09",
+          "mode": "circle",
+          "cpa": "P",
+          "config": {
+            "mode": "circle",
+            "grid": 13,
+            "radius": 5,
+            "chordExplorer": true,
+            "snapDiameter": false
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "chordThroughCenter"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "chord.throughCenter",
+                "value": false
+              },
+              "level": 1,
+              "say": "이 선분보다 더 길게 만들 수 있을까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "chord.throughCenter",
+                "value": false
+              },
+              "level": 2,
+              "show": { "engine": "E09", "overlay": "chord-gap" },
+              "say": "원의 중심에서 선분까지 떨어진 거리를 표시했어요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "chord.throughCenter",
+                "value": false
+              },
+              "level": 3,
+              "backtrack": "g3s2u3.circle-definition"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "circle" },
+              "level": 1,
+              "say": "도구에서 선분을 골라 원 위의 두 점을 이어 볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "circle" },
+              "level": 2,
+              "say": "길이 막대를 보며 선분의 두 끝을 움직여 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "circle" },
+              "level": 3,
+              "backtrack": "g3s2u3.circle-definition"
+            }
+          ],
+          "concepts": ["g3s2u3.radius-diameter", "g3s2u3.circle-definition"],
+          "submit": "button"
+        },
+        {
+          "id": "g3s2u3.A2.T2",
+          "prompt": "반지름이 3칸인 원이 놓여 있어요. 이 원의 지름은 몇 칸일까요?",
+          "engine": "E09",
+          "mode": "circle",
+          "cpa": "P",
+          "config": {
+            "mode": "circle",
+            "grid": 13,
+            "radius": 3
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.d.value",
+            "value": "6"
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-GEO-RADIUS-DIAMETER" },
+              "level": 1,
+              "say": "지름은 반지름 몇 개를 이어 붙인 길이일까요?"
+            },
+            {
+              "when": { "misconception": "MC-GEO-RADIUS-DIAMETER" },
+              "level": 2,
+              "say": "원의 중심을 지나 끝에서 끝까지 몇 칸인지 세어 보세요."
+            },
+            {
+              "when": { "misconception": "MC-GEO-RADIUS-DIAMETER" },
+              "level": 3,
+              "backtrack": "g3s2u3.radius-diameter"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "circle" },
+              "level": 1,
+              "say": "원의 한쪽 끝에서 중심을 지나 반대쪽 끝까지 몇 칸일까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "circle" },
+              "level": 2,
+              "say": "중심에서 한쪽 끝까지 몇 칸인지 먼저 세어 보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "circle" },
+              "level": 3,
+              "backtrack": "g3s2u3.circle-definition"
+            }
+          ],
+          "concepts": ["g3s2u3.radius-diameter"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-GEO-RADIUS-DIAMETER",
+              "args": { "expected": "6", "given": "3" }
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "d",
+                "label": "지름(칸)",
+                "forms": ["integer"]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s2u3.A2.T3",
+          "prompt": "지름이 10cm인 원이 있어요. 이 원의 반지름은 몇 cm일까요?",
+          "engine": "E09",
+          "mode": "circle",
+          "cpa": "A",
+          "config": {
+            "mode": "circle",
+            "grid": 13,
+            "radius": 5
+          },
+          "showEngine": false,
+          "goal": {
+            "kind": "equals",
+            "path": "response.r.value",
+            "value": "5"
+          },
+          "hints": [
+            {
+              "when": { "misconception": "MC-GEO-RADIUS-DIAMETER" },
+              "level": 1,
+              "say": "지름은 반지름 몇 개를 이어 붙인 길이일까요?"
+            },
+            {
+              "when": { "misconception": "MC-GEO-RADIUS-DIAMETER" },
+              "level": 2,
+              "say": "반지름 두 개를 이으면 무엇이 될까요?"
+            },
+            {
+              "when": { "misconception": "MC-GEO-RADIUS-DIAMETER" },
+              "level": 3,
+              "backtrack": "g3s2u3.radius-diameter"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "circle" },
+              "level": 1,
+              "say": "지름과 반지름은 어떤 관계였나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "circle" },
+              "level": 2,
+              "say": "지름과 반지름이 각각 원의 어느 부분인지 다시 짚어 볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "circle" },
+              "level": 3,
+              "backtrack": "g3s2u3.circle-definition"
+            }
+          ],
+          "concepts": ["g3s2u3.radius-diameter"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-GEO-RADIUS-DIAMETER",
+              "args": { "expected": "5", "given": "10" }
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "r",
+                "label": "반지름(cm)",
+                "forms": ["integer"]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s2u3.A2.T4",
+          "prompt": "제시된 무늬와 똑같이 컴퍼스로 원을 그려요.",
+          "engine": "E09",
+          "mode": "circle",
+          "cpa": "P",
+          "config": {
+            "mode": "circle",
+            "grid": 13,
+            "radius": 3,
+            "compass": { "enabled": true, "gridSnap": 1 },
+            "targetPattern": "three-circles-in-row"
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "patternMatched"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "hasCircle",
+                    "args": { "radius": 6 }
+                  },
+                  { "kind": "equals", "path": "compassWidth", "value": "6" }
+                ]
+              },
+              "level": 1,
+              "say": "컴퍼스 침에서 연필까지가 원의 어느 부분이 될까요?"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "hasCircle",
+                    "args": { "radius": 6 }
+                  },
+                  { "kind": "equals", "path": "compassWidth", "value": "6" }
+                ]
+              },
+              "level": 2,
+              "show": { "engine": "E09", "overlay": "compass-width" },
+              "say": "컴퍼스 폭을 표시했어요. 폭의 두 끝이 원의 어느 부분인지 살펴보세요."
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "hasCircle",
+                    "args": { "radius": 6 }
+                  },
+                  { "kind": "equals", "path": "compassWidth", "value": "6" }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g3s2u3.compass-construct"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "circle" },
+              "level": 1,
+              "say": "무늬의 원마다 중심은 어디일까요? 원끼리 어떻게 겹쳐 있나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "circle" },
+              "level": 2,
+              "show": { "engine": "E09", "overlay": "compass-width" },
+              "say": "컴퍼스 폭을 살펴보세요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "circle" },
+              "level": 3,
+              "backtrack": "g3s2u3.radius-diameter"
+            }
+          ],
+          "concepts": ["g3s2u3.compass-construct"],
+          "submit": "button"
+        }
+      ]
+    }
+  ]
+}

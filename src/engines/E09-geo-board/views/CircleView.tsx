@@ -19,7 +19,6 @@ import { boardRect, pegPoint, ratToScreen } from '../layout';
 import type { BoardRect } from '../layout';
 import {
   chordThroughCenter,
-  mainRadius,
   patternMatched,
   pointAt,
   radiusLength2,
@@ -114,7 +113,8 @@ export function CircleView({
   const { settings } = state;
   const rect = boardRect(settings.grid, settings.grid);
   const center = pegPoint(rect, settings.stake);
-  const mainRadiusScreen = mainRadius(settings) * rect.spacing;
+  // 밧줄·자국·본 원은 지금 고른 밧줄 길이를 따른다(T113). `radius`가 있으면 그 원을 그린다.
+  const mainRadiusScreen = (settings.radius ?? state.ropeLength) * rect.spacing;
   const [sector, setSector] = useState(0);
   const [ropeTaut, setRopeTaut] = useState(true);
   const [slackEnd, setSlackEnd] = useState<Point | null>(null);
