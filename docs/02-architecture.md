@@ -12,7 +12,7 @@
 | UI | **React 18 + CSS Modules** | 에이전트들이 가장 안정적으로 다루는 조합. UI 라이브러리는 쓰지 않는다(번들 크기, 터치 커스터마이즈) |
 | 2D 교구 | **SVG(React)** 기본, 객체가 200개를 넘는 장면만 **Canvas 2D** | SVG는 접근성·테스트·확대에 유리 |
 | 물리 | **Matter.js** — 필요한 엔진(E02 셈돌 낙하, E06 저울 기울기 연출)에서만 지연 로딩 | 대부분의 교구는 물리가 아니라 *규칙*이 핵심이다. 물리는 연출용 |
-| 3D | **Three.js + @react-three/fiber + @react-three/drei** — E12에서만 지연 로딩 | 3D가 필요 없는 화면에서는 내려받지 않는다 |
+| 3D | **Three.js + @react-three/fiber**(React 18용 v8, 궤도 회전은 three의 `OrbitControls`) — E12에서만, 3D를 쓰기로 정했을 때만 지연 로딩. 저사양·WebGL 없음이면 등각 2D SVG | 3D가 필요 없는 화면에서는 내려받지 않는다. drei는 번들 크기 때문에 쓰지 않는다 |
 | 소리 | **Web Audio API** (필요하면 Tone.js) | E15 패턴 시퀀서 |
 | 음성 | **Web Speech API `speechSynthesis`(TTS)** 기본 · STT(음성 인식)는 선택 기능 | TTS는 모든 기기에서 무료. STT는 브라우저마다 동작과 데이터 처리 방식이 달라 기본 기능으로 쓰지 않는다 |
 | 상태 관리 | **Zustand** (전역) + 교구 내부는 순수 리듀서 | 교구 상태를 직렬화 가능한 JSON으로 유지 → 저장·되감기·미러링이 공짜로 따라온다 |
