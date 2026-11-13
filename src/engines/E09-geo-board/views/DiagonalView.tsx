@@ -210,164 +210,176 @@ export function DiagonalView({
         {statusText}
       </p>
 
-      <div className={styles.canvasArea}>
-        <svg
-          ref={svgRef}
-          className={styles.canvas}
-          viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
-          role="group"
-          aria-label={S.diagonal.canvasLabel}
-          tabIndex={readOnly ? -1 : 0}
-          data-testid="geo-canvas"
-          data-cpa={cpa}
-          onKeyDown={onCanvasKeyDown}
-          onPointerDown={onPointerDown}
-        >
-          <rect width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} fill={PAPER} />
+      <div className={styles.stageRow}>
+        <div className={styles.boardArea}>
+          <svg
+            ref={svgRef}
+            className={styles.canvas}
+            viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
+            role="group"
+            aria-label={S.diagonal.canvasLabel}
+            tabIndex={readOnly ? -1 : 0}
+            data-testid="geo-canvas"
+            data-cpa={cpa}
+            onKeyDown={onCanvasKeyDown}
+            onPointerDown={onPointerDown}
+          >
+            <rect width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} fill={PAPER} />
 
-          <polygon
-            points={Array.from({ length: n }, (_, index) => {
+            <polygon
+              points={Array.from({ length: n }, (_, index) => {
+                const point = vertexPoint(n, index);
+                return `${point.x.toFixed(2)},${point.y.toFixed(2)}`;
+              }).join(' ')}
+              fill={colored ? '#fff7ee' : 'none'}
+              fillOpacity={colored ? 0.55 : 0}
+              stroke={INK}
+              strokeWidth={colored ? 5 : 4}
+              strokeLinejoin="round"
+              pointerEvents="none"
+            />
+
+            {sides.map((pair) => drawPair(pair, { duplicate: false, side: true }))}
+
+            {drawn.map((pair) => drawPair(pair, { duplicate: false, side: false }))}
+
+            {rejectedDuplicate
+              ? drawPair(rejectedDuplicate, { duplicate: true, side: false })
+              : null}
+
+            {rejectedPair
+              ? (() => {
+                  const from = vertexPoint(n, rejectedPair[0]);
+                  const to = vertexPoint(n, rejectedPair[1]);
+                  const middle = midpoint(from, to);
+                  return (
+                    <g key="rejected-side" pointerEvents="none">
+                      <line
+                        x1={from.x}
+                        y1={from.y}
+                        x2={to.x}
+                        y2={to.y}
+                        stroke={ORANGE}
+                        strokeWidth={16}
+                        strokeOpacity={0.55}
+                        strokeLinecap="round"
+                        strokeDasharray="20 10"
+                      >
+                        {!reduced ? (
+                          <animate
+                            attributeName="stroke-dashoffset"
+                            values="0;-60"
+                            dur="0.7s"
+                            repeatCount="indefinite"
+                          />
+                        ) : null}
+                      </line>
+                      <text
+                        x={middle.x}
+                        y={middle.y - 22}
+                        textAnchor="middle"
+                        fontSize={24}
+                        fontWeight={800}
+                        fill={RED}
+                      >
+                        {S.diagonal.sideLabel}
+                      </text>
+                    </g>
+                  );
+                })()
+              : null}
+
+            {Array.from({ length: n }, (_, index) => {
               const point = vertexPoint(n, index);
-              return `${point.x.toFixed(2)},${point.y.toFixed(2)}`;
-            }).join(' ')}
-            fill={colored ? '#fff7ee' : 'none'}
-            fillOpacity={colored ? 0.55 : 0}
-            stroke={INK}
-            strokeWidth={colored ? 5 : 4}
-            strokeLinejoin="round"
-            pointerEvents="none"
-          />
-
-          {sides.map((pair) => drawPair(pair, { duplicate: false, side: true }))}
-
-          {drawn.map((pair) => drawPair(pair, { duplicate: false, side: false }))}
-
-          {rejectedDuplicate ? drawPair(rejectedDuplicate, { duplicate: true, side: false }) : null}
-
-          {rejectedPair
-            ? (() => {
-                const from = vertexPoint(n, rejectedPair[0]);
-                const to = vertexPoint(n, rejectedPair[1]);
-                const middle = midpoint(from, to);
-                return (
-                  <g key="rejected-side" pointerEvents="none">
-                    <line
-                      x1={from.x}
-                      y1={from.y}
-                      x2={to.x}
-                      y2={to.y}
-                      stroke={ORANGE}
-                      strokeWidth={16}
-                      strokeOpacity={0.55}
-                      strokeLinecap="round"
-                      strokeDasharray="20 10"
-                    >
-                      {!reduced ? (
-                        <animate
-                          attributeName="stroke-dashoffset"
-                          values="0;-60"
-                          dur="0.7s"
-                          repeatCount="indefinite"
-                        />
-                      ) : null}
-                    </line>
-                    <text
-                      x={middle.x}
-                      y={middle.y - 22}
-                      textAnchor="middle"
-                      fontSize={24}
-                      fontWeight={800}
-                      fill={RED}
-                    >
-                      {S.diagonal.sideLabel}
-                    </text>
-                  </g>
-                );
-              })()
-            : null}
-
-          {Array.from({ length: n }, (_, index) => {
-            const point = vertexPoint(n, index);
-            const label = labelPoint(n, index);
-            const chosen = state.pending === index || cursorIndex === index;
-            return (
-              <g key={`vertex-${index}`} pointerEvents="none">
-                <circle
-                  cx={point.x}
-                  cy={point.y}
-                  r={chosen ? 17 : 12}
-                  fill={state.pending === index ? ORANGE : PAPER}
-                  stroke={state.pending === index ? RED : INK}
-                  strokeWidth={chosen ? 4 : 3}
-                />
-                <text
-                  x={label.x}
-                  y={label.y + 8}
-                  textAnchor="middle"
-                  fontSize={26}
-                  fontWeight={800}
-                  fill={state.pending === index ? RED : INK}
-                >
-                  {S.diagonal.vertexLabels[index] ?? String(index + 1)}
-                </text>
-              </g>
-            );
-          })}
-
-          <circle
-            cx={vertexPoint(n, cursorIndex).x}
-            cy={vertexPoint(n, cursorIndex).y}
-            r={Math.max(22, hitRadius * 0.7)}
-            fill="none"
-            stroke={MUTED}
-            strokeWidth={2.5}
-            strokeDasharray="7 5"
-            pointerEvents="none"
-            data-testid="diagonal-cursor"
-          />
-        </svg>
-      </div>
-
-      {state.settings.countTable ? (
-        <table
-          data-testid="diagonal-table"
-          style={{ marginTop: 12, borderCollapse: 'collapse', minWidth: 260 }}
-        >
-          <caption style={{ textAlign: 'left', fontWeight: 700, paddingBottom: 6 }}>
-            {S.diagonal.countTableTitle}
-          </caption>
-          <thead>
-            <tr>
-              <th scope="col" style={{ borderBottom: '2px solid #9aa4b5', padding: '6px 10px' }}>
-                {S.diagonal.vertexCount}
-              </th>
-              <th scope="col" style={{ borderBottom: '2px solid #9aa4b5', padding: '6px 10px' }}>
-                {S.diagonal.drawnCount}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {state.settings.polygons.map((count) => {
-              const value = state.drawn[String(count)]?.length ?? 0;
+              const label = labelPoint(n, index);
+              const chosen = state.pending === index || cursorIndex === index;
               return (
-                <tr key={`row-${count}`}>
-                  <th scope="row" style={{ padding: '6px 10px', fontWeight: 700 }}>
-                    {count}
-                  </th>
-                  <td
-                    data-testid={`diagonal-count-${count}`}
-                    style={{ padding: '6px 10px', textAlign: 'center', minWidth: 92 }}
+                <g key={`vertex-${index}`} pointerEvents="none">
+                  <circle
+                    cx={point.x}
+                    cy={point.y}
+                    r={chosen ? 17 : 12}
+                    fill={state.pending === index ? ORANGE : PAPER}
+                    stroke={state.pending === index ? RED : INK}
+                    strokeWidth={chosen ? 4 : 3}
+                  />
+                  <text
+                    x={label.x}
+                    y={label.y + 8}
+                    textAnchor="middle"
+                    fontSize={26}
+                    fontWeight={800}
+                    fill={state.pending === index ? RED : INK}
                   >
-                    {value > 0 ? value : ''}
-                  </td>
-                </tr>
+                    {S.diagonal.vertexLabels[index] ?? String(index + 1)}
+                  </text>
+                </g>
               );
             })}
-          </tbody>
-        </table>
-      ) : null}
 
-      <p className={styles.hint}>{S.diagonal.canvasHint}</p>
+            <circle
+              cx={vertexPoint(n, cursorIndex).x}
+              cy={vertexPoint(n, cursorIndex).y}
+              r={Math.max(22, hitRadius * 0.7)}
+              fill="none"
+              stroke={MUTED}
+              strokeWidth={2.5}
+              strokeDasharray="7 5"
+              pointerEvents="none"
+              data-testid="diagonal-cursor"
+            />
+          </svg>
+        </div>
+
+        <div className={styles.sideStack}>
+          {state.settings.countTable ? (
+            <table
+              data-testid="diagonal-table"
+              style={{ marginTop: 12, borderCollapse: 'collapse', minWidth: 260 }}
+            >
+              <caption style={{ textAlign: 'left', fontWeight: 700, paddingBottom: 6 }}>
+                {S.diagonal.countTableTitle}
+              </caption>
+              <thead>
+                <tr>
+                  <th
+                    scope="col"
+                    style={{ borderBottom: '2px solid #9aa4b5', padding: '6px 10px' }}
+                  >
+                    {S.diagonal.vertexCount}
+                  </th>
+                  <th
+                    scope="col"
+                    style={{ borderBottom: '2px solid #9aa4b5', padding: '6px 10px' }}
+                  >
+                    {S.diagonal.drawnCount}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {state.settings.polygons.map((count) => {
+                  const value = state.drawn[String(count)]?.length ?? 0;
+                  return (
+                    <tr key={`row-${count}`}>
+                      <th scope="row" style={{ padding: '6px 10px', fontWeight: 700 }}>
+                        {count}
+                      </th>
+                      <td
+                        data-testid={`diagonal-count-${count}`}
+                        style={{ padding: '6px 10px', textAlign: 'center', minWidth: 92 }}
+                      >
+                        {value > 0 ? value : ''}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          ) : null}
+
+          <p className={styles.hint}>{S.diagonal.canvasHint}</p>
+        </div>
+      </div>
     </div>
   );
 }

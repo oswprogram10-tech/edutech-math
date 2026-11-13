@@ -280,6 +280,12 @@ test('from-diagonals의 B·D 손잡이를 포인터로 끌면 모양이 바뀐�
   });
   await chooseMode(page, 'drag-test');
 
+  // 판이 판 높이에 맞춰 줄어들면(T122) 한 격자 이동이 화면에서 작아진다.
+  // 그래서 픽셀 10px 대신 '한 격자의 절반 이상 움직였는지'로 본다.
+  const box = await canvas.boundingBox();
+  if (!box) throw new Error('캔버스 상자를 찾지 못했다');
+  const minMove = Math.max(canvasScale(box) * (800 / 24) * 0.5, 2);
+
   const bStart = await dragHandleTowardCenter(page, canvas, 1);
   await expect
     .poll(async () => {
@@ -290,7 +296,7 @@ test('from-diagonals의 B·D 손잡이를 포인터로 끌면 모양이 바뀐�
         after.y + after.height / 2 - bStart.y,
       );
     })
-    .toBeGreaterThan(10);
+    .toBeGreaterThan(minMove);
 
   const dStart = await dragHandleTowardCenter(page, canvas, 3);
   await expect
@@ -302,7 +308,7 @@ test('from-diagonals의 B·D 손잡이를 포인터로 끌면 모양이 바뀐�
         after.y + after.height / 2 - dStart.y,
       );
     })
-    .toBeGreaterThan(10);
+    .toBeGreaterThan(minMove);
 
   const observation = await readObservation<DragObservation>(page);
   expect(observation.figure?.kind).toBe('quad');
@@ -350,4 +356,19 @@ test('property-checklist 오버레이가 본 캔버스와 2px 안에 겹친다',
     )
     .toBeLessThanOrEqual(2);
   await capture(page, 'overlay');
+});
+
+test('drag-test: 판이 줄어도 키보드 Enter는 가까운 못에 새 점을 놓는다(T122 2차)', async ({
+  page,
+}) => {
+  // ?stage=fit은 판을 실행기 높이로 묶어 캔버스를 작게 만든다. 그러면 손가락 반지름이
+  // 논리 좌표로 커지는데, 키보드 선택은 격자 간격 반지름을 써야 이웃 점을 집지 않는다.
+  const { canvas } = await openEngine(page, { mode: 'drag-test' }, { stage: 'fit' });
+  await chooseMode(page, 'drag-test');
+  await page.getByRole('button', { name: '점 도구', exact: true }).click();
+  await focusCanvas(canvas);
+  for (const key of ['Enter', 'ArrowRight', 'Enter', 'ArrowDown', 'Enter']) {
+    await page.keyboard.press(key);
+  }
+  await pollObservation<DragObservation>(page, (current) => (current.points?.length ?? 0) === 3);
 });

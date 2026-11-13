@@ -331,119 +331,123 @@ export function CircleSectorsView({
         {done ? S.circle.arranged : status}
       </p>
 
-      <div className={styles.canvasArea}>
-        <svg
-          ref={svgRef}
-          className={styles.canvas}
-          viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
-          role="group"
-          aria-label={S.canvasLabel['circle-sectors']}
-          tabIndex={readOnly ? -1 : 0}
-          data-testid="cut-canvas"
-          data-cpa={cpa}
-          data-phase={manual ? 'manual' : 'auto'}
-          data-divisions={n}
-          data-slot-cursor={held ? held.slot : 0}
-          data-held-arc-up={held ? String(held.arcUp) : 'false'}
-          data-arranged={done ? 'true' : 'false'}
-          onPointerDown={onPointerDown}
-          onPointerUp={onPointerUp}
-          onPointerCancel={() => {
-            dragRef.current = null;
-          }}
-        >
-          <rect width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} fill={PAPER} />
-
-          <circle
-            cx={CIRCLE_CENTER.x}
-            cy={CIRCLE_CENTER.y}
-            r={CIRCLE_RADIUS}
-            fill="#ffffff"
-            stroke="#c9d2e2"
-            strokeWidth={2}
-            pointerEvents="none"
-          />
-
-          {manual || !state.autoArranged
-            ? Array.from({ length: n }, (_, sector) =>
-                showSectorInCircle(sector) || !manual ? sectorShape(sector, null, null) : null,
-              )
-            : null}
-
-          {rowItems ? (
-            <g transform={rowTransform}>
-              <line
-                x1={SLOT_X0}
-                y1={SLOT_BASELINE}
-                x2={rowRight(n)}
-                y2={SLOT_BASELINE}
-                stroke="#c9d2e2"
-                strokeWidth={2}
-                pointerEvents="none"
-              />
-              {rowItems.map((item) =>
-                item ? sectorShape(item.sector, item.arcUp, item.slot) : null,
-              )}
-            </g>
-          ) : null}
-
-          {showDimensions ? (
-            <g pointerEvents="none" data-testid="circle-dimensions">
-              <line
-                x1={SLOT_X0}
-                y1={rowScreenTop(n) - 26}
-                x2={rowScreenRight(n)}
-                y2={rowScreenTop(n) - 26}
-                stroke="#8a4b00"
-                strokeWidth={2.5}
-                strokeDasharray="9 6"
-              />
-              <line
-                x1={SLOT_X0}
-                y1={SLOT_BASELINE}
-                x2={SLOT_X0}
-                y2={rowScreenTop(n)}
-                stroke="#8a4b00"
-                strokeWidth={2.5}
-                strokeDasharray="9 6"
-              />
-              <text
-                x={(SLOT_X0 + rowScreenRight(n)) / 2}
-                y={rowScreenTop(n) - 36}
-                textAnchor="middle"
-                fontSize={16}
-                fontWeight={700}
-                fill="#8a4b00"
-              >
-                {labels.horizontal}
-              </text>
-              <text
-                x={SLOT_X0 + 12}
-                y={(SLOT_BASELINE + rowScreenTop(n)) / 2}
-                fontSize={16}
-                fontWeight={700}
-                fill="#8a4b00"
-              >
-                {labels.vertical}
-              </text>
-            </g>
-          ) : null}
-
-          <text
-            x={CIRCLE_CENTER.x}
-            y={CIRCLE_CENTER.y + CIRCLE_RADIUS + 34}
-            textAnchor="middle"
-            fontSize={15}
-            fontWeight={700}
-            fill="#5a6478"
-            pointerEvents="none"
+      <div className={styles.stageRow}>
+        <div className={styles.boardArea}>
+          <svg
+            ref={svgRef}
+            className={styles.canvas}
+            viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
+            role="group"
+            aria-label={S.canvasLabel['circle-sectors']}
+            tabIndex={readOnly ? -1 : 0}
+            data-testid="cut-canvas"
+            data-cpa={cpa}
+            data-phase={manual ? 'manual' : 'auto'}
+            data-divisions={n}
+            data-slot-cursor={held ? held.slot : 0}
+            data-held-arc-up={held ? String(held.arcUp) : 'false'}
+            data-arranged={done ? 'true' : 'false'}
+            onPointerDown={onPointerDown}
+            onPointerUp={onPointerUp}
+            onPointerCancel={() => {
+              dragRef.current = null;
+            }}
           >
-            {manual ? `${placedCount} / ${n}` : `${n}`}
-          </text>
-        </svg>
-      </div>
+            <rect width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} fill={PAPER} />
 
-      <p className={styles.hint}>{manual ? S.circle.hint : S.circle.auto}</p>
+            <circle
+              cx={CIRCLE_CENTER.x}
+              cy={CIRCLE_CENTER.y}
+              r={CIRCLE_RADIUS}
+              fill="#ffffff"
+              stroke="#c9d2e2"
+              strokeWidth={2}
+              pointerEvents="none"
+            />
+
+            {manual || !state.autoArranged
+              ? Array.from({ length: n }, (_, sector) =>
+                  showSectorInCircle(sector) || !manual ? sectorShape(sector, null, null) : null,
+                )
+              : null}
+
+            {rowItems ? (
+              <g transform={rowTransform}>
+                <line
+                  x1={SLOT_X0}
+                  y1={SLOT_BASELINE}
+                  x2={rowRight(n)}
+                  y2={SLOT_BASELINE}
+                  stroke="#c9d2e2"
+                  strokeWidth={2}
+                  pointerEvents="none"
+                />
+                {rowItems.map((item) =>
+                  item ? sectorShape(item.sector, item.arcUp, item.slot) : null,
+                )}
+              </g>
+            ) : null}
+
+            {showDimensions ? (
+              <g pointerEvents="none" data-testid="circle-dimensions">
+                <line
+                  x1={SLOT_X0}
+                  y1={rowScreenTop(n) - 26}
+                  x2={rowScreenRight(n)}
+                  y2={rowScreenTop(n) - 26}
+                  stroke="#8a4b00"
+                  strokeWidth={2.5}
+                  strokeDasharray="9 6"
+                />
+                <line
+                  x1={SLOT_X0}
+                  y1={SLOT_BASELINE}
+                  x2={SLOT_X0}
+                  y2={rowScreenTop(n)}
+                  stroke="#8a4b00"
+                  strokeWidth={2.5}
+                  strokeDasharray="9 6"
+                />
+                <text
+                  x={(SLOT_X0 + rowScreenRight(n)) / 2}
+                  y={rowScreenTop(n) - 36}
+                  textAnchor="middle"
+                  fontSize={16}
+                  fontWeight={700}
+                  fill="#8a4b00"
+                >
+                  {labels.horizontal}
+                </text>
+                <text
+                  x={SLOT_X0 + 12}
+                  y={(SLOT_BASELINE + rowScreenTop(n)) / 2}
+                  fontSize={16}
+                  fontWeight={700}
+                  fill="#8a4b00"
+                >
+                  {labels.vertical}
+                </text>
+              </g>
+            ) : null}
+
+            <text
+              x={CIRCLE_CENTER.x}
+              y={CIRCLE_CENTER.y + CIRCLE_RADIUS + 34}
+              textAnchor="middle"
+              fontSize={15}
+              fontWeight={700}
+              fill="#5a6478"
+              pointerEvents="none"
+            >
+              {manual ? `${placedCount} / ${n}` : `${n}`}
+            </text>
+          </svg>
+        </div>
+
+        <div className={styles.sideStack}>
+          <p className={styles.hint}>{manual ? S.circle.hint : S.circle.auto}</p>
+        </div>
+      </div>
     </div>
   );
 }

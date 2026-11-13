@@ -443,234 +443,240 @@ export function TangramView({
         {toolbarStatus}
       </p>
 
-      <div className={styles.canvasArea}>
-        <svg
-          ref={svgRef}
-          className={styles.canvas}
-          viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
-          role="group"
-          aria-label={S.canvasLabel.tangram}
-          tabIndex={readOnly ? -1 : 0}
-          data-testid="cut-canvas"
-          data-cpa={cpa}
-          data-piece-set={set}
-          data-filled={filled ? 'true' : 'false'}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onPointerCancel={() => {
-            dragRef.current = null;
-            setPreview(null);
-          }}
-        >
-          <rect width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} fill={PAPER} />
+      <div className={styles.stageRow}>
+        <div className={styles.boardArea}>
+          <svg
+            ref={svgRef}
+            className={styles.canvas}
+            viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
+            role="group"
+            aria-label={S.canvasLabel.tangram}
+            tabIndex={readOnly ? -1 : 0}
+            data-testid="cut-canvas"
+            data-cpa={cpa}
+            data-piece-set={set}
+            data-filled={filled ? 'true' : 'false'}
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            onPointerCancel={() => {
+              dragRef.current = null;
+              setPreview(null);
+            }}
+          >
+            <rect width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} fill={PAPER} />
 
-          <g pointerEvents="none" stroke={GRID} strokeWidth={1} strokeOpacity={0.45}>
-            {Array.from({ length: TANGRAM_COLS + 1 }, (_, index) => {
-              const x = TANGRAM_ORIGIN.x + index * TANGRAM_CELL;
-              return (
-                <line
-                  key={`tangram-grid-x-${index}`}
-                  x1={x}
-                  y1={TANGRAM_ORIGIN.y}
-                  x2={x}
-                  y2={TANGRAM_ORIGIN.y + TANGRAM_ROWS * TANGRAM_CELL}
-                />
-              );
-            })}
-            {Array.from({ length: TANGRAM_ROWS + 1 }, (_, index) => {
-              const y = TANGRAM_ORIGIN.y + index * TANGRAM_CELL;
-              return (
-                <line
-                  key={`tangram-grid-y-${index}`}
-                  x1={TANGRAM_ORIGIN.x}
-                  y1={y}
-                  x2={TANGRAM_ORIGIN.x + TANGRAM_COLS * TANGRAM_CELL}
-                  y2={y}
-                />
-              );
-            })}
-          </g>
-
-          <g pointerEvents="none">
-            <rect
-              x={TANGRAM_ORIGIN.x + TRAY_LEFT * TANGRAM_CELL - 14}
-              y={TANGRAM_ORIGIN.y - 14}
-              width={(TANGRAM_COLS - TRAY_LEFT) * TANGRAM_CELL + 14}
-              height={TANGRAM_ROWS * TANGRAM_CELL + 14}
-              rx={16}
-              fill="#eef2f9"
-              stroke="#c9d2e2"
-              strokeWidth={2}
-            />
-            <text
-              x={TANGRAM_ORIGIN.x + TRAY_LEFT * TANGRAM_CELL}
-              y={TANGRAM_ORIGIN.y + 14}
-              fontSize={15}
-              fontWeight={700}
-              fill="#5a6478"
-            >
-              {S.tangram.tray}
-            </text>
-          </g>
-
-          {silhouetteParts.length > 0 ? (
-            <g pointerEvents="none">
-              {silhouetteParts.map((part, index) => (
-                <polygon
-                  key={`silhouette-part-${index}`}
-                  points={pointsAttribute(part)}
-                  fill={SILHOUETTE}
-                  fillOpacity={0.92}
-                  stroke={SILHOUETTE}
-                  strokeWidth={2}
-                  strokeLinejoin="round"
-                />
-              ))}
-              {state.settings.showPieceOutlines
-                ? silhouetteParts.map((part, index) => (
-                    <polygon
-                      key={`silhouette-outline-${index}`}
-                      points={pointsAttribute(part)}
-                      fill="none"
-                      stroke="#ffffff"
-                      strokeOpacity={0.9}
-                      strokeWidth={2}
-                      strokeDasharray="7 5"
-                      strokeLinejoin="round"
-                    />
-                  ))
-                : null}
+            <g pointerEvents="none" stroke={GRID} strokeWidth={1} strokeOpacity={0.45}>
+              {Array.from({ length: TANGRAM_COLS + 1 }, (_, index) => {
+                const x = TANGRAM_ORIGIN.x + index * TANGRAM_CELL;
+                return (
+                  <line
+                    key={`tangram-grid-x-${index}`}
+                    x1={x}
+                    y1={TANGRAM_ORIGIN.y}
+                    x2={x}
+                    y2={TANGRAM_ORIGIN.y + TANGRAM_ROWS * TANGRAM_CELL}
+                  />
+                );
+              })}
+              {Array.from({ length: TANGRAM_ROWS + 1 }, (_, index) => {
+                const y = TANGRAM_ORIGIN.y + index * TANGRAM_CELL;
+                return (
+                  <line
+                    key={`tangram-grid-y-${index}`}
+                    x1={TANGRAM_ORIGIN.x}
+                    y1={y}
+                    x2={TANGRAM_ORIGIN.x + TANGRAM_COLS * TANGRAM_CELL}
+                    y2={y}
+                  />
+                );
+              })}
             </g>
-          ) : null}
 
-          {state.pieces.map((piece, index) => {
-            const polygon = polygons.get(piece.id);
-            if (!polygon || polygon.length < 3) return null;
-            const points = polygon.map(screenOf);
-            const at = atOf(piece, d);
-            const atPoint = at ? atNumber(at) : { x: 0, y: 0 };
-            const color = filled ? '#b5651d' : colorOf(index);
-            const center = pieceCenter(piece);
-            const selected = state.selected.includes(piece.id);
-            const previewing = preview?.piece === piece.id ? preview : null;
-            return (
-              <g
-                key={piece.id}
-                className={styles.piece}
-                role="button"
-                tabIndex={readOnly ? -1 : 0}
-                aria-label={S.pieceLabel(index + 1)}
-                data-piece={piece.id}
-                data-ax={atPoint.x.toFixed(3)}
-                data-ay={atPoint.y.toFixed(3)}
-                data-rot={piece.rot * step}
-                data-flip={piece.flip ? 'true' : 'false'}
-                data-selected={selected ? 'true' : 'false'}
-                transform={
-                  previewing
-                    ? `translate(${previewing.dx.toFixed(2)} ${previewing.dy.toFixed(2)})`
-                    : undefined
-                }
-                onFocus={() => setLastTouched(piece.id)}
-                onKeyDown={(event) => onPieceKeyDown(event, piece, index)}
+            <g pointerEvents="none">
+              <rect
+                x={TANGRAM_ORIGIN.x + TRAY_LEFT * TANGRAM_CELL - 14}
+                y={TANGRAM_ORIGIN.y - 14}
+                width={(TANGRAM_COLS - TRAY_LEFT) * TANGRAM_CELL + 14}
+                height={TANGRAM_ROWS * TANGRAM_CELL + 14}
+                rx={16}
+                fill="#eef2f9"
+                stroke="#c9d2e2"
+                strokeWidth={2}
+              />
+              <text
+                x={TANGRAM_ORIGIN.x + TRAY_LEFT * TANGRAM_CELL}
+                y={TANGRAM_ORIGIN.y + 14}
+                fontSize={15}
+                fontWeight={700}
+                fill="#5a6478"
               >
-                <polygon
-                  points={pointsAttribute(points)}
-                  fill={colored || filled ? color : '#ffffff'}
-                  fillOpacity={filled ? 0.98 : colored ? 0.22 : 1}
-                  stroke={filled ? '#7a3f14' : colored ? color : INK}
-                  strokeWidth={selected ? 5 : 3}
-                  strokeDasharray={selected ? '10 6' : undefined}
-                  strokeLinejoin="round"
-                  pointerEvents="none"
-                />
-                {center ? (
-                  <circle
-                    cx={center.x}
-                    cy={center.y}
-                    r={hitRadius}
-                    fill="transparent"
-                    data-hit-target="true"
+                {S.tangram.tray}
+              </text>
+            </g>
+
+            {silhouetteParts.length > 0 ? (
+              <g pointerEvents="none">
+                {silhouetteParts.map((part, index) => (
+                  <polygon
+                    key={`silhouette-part-${index}`}
+                    points={pointsAttribute(part)}
+                    fill={SILHOUETTE}
+                    fillOpacity={0.92}
+                    stroke={SILHOUETTE}
+                    strokeWidth={2}
+                    strokeLinejoin="round"
+                  />
+                ))}
+                {state.settings.showPieceOutlines
+                  ? silhouetteParts.map((part, index) => (
+                      <polygon
+                        key={`silhouette-outline-${index}`}
+                        points={pointsAttribute(part)}
+                        fill="none"
+                        stroke="#ffffff"
+                        strokeOpacity={0.9}
+                        strokeWidth={2}
+                        strokeDasharray="7 5"
+                        strokeLinejoin="round"
+                      />
+                    ))
+                  : null}
+              </g>
+            ) : null}
+
+            {state.pieces.map((piece, index) => {
+              const polygon = polygons.get(piece.id);
+              if (!polygon || polygon.length < 3) return null;
+              const points = polygon.map(screenOf);
+              const at = atOf(piece, d);
+              const atPoint = at ? atNumber(at) : { x: 0, y: 0 };
+              const color = filled ? '#b5651d' : colorOf(index);
+              const center = pieceCenter(piece);
+              const selected = state.selected.includes(piece.id);
+              const previewing = preview?.piece === piece.id ? preview : null;
+              return (
+                <g
+                  key={piece.id}
+                  className={styles.piece}
+                  role="button"
+                  tabIndex={readOnly ? -1 : 0}
+                  aria-label={S.pieceLabel(index + 1)}
+                  data-piece={piece.id}
+                  data-ax={atPoint.x.toFixed(3)}
+                  data-ay={atPoint.y.toFixed(3)}
+                  data-rot={piece.rot * step}
+                  data-flip={piece.flip ? 'true' : 'false'}
+                  data-selected={selected ? 'true' : 'false'}
+                  transform={
+                    previewing
+                      ? `translate(${previewing.dx.toFixed(2)} ${previewing.dy.toFixed(2)})`
+                      : undefined
+                  }
+                  onFocus={() => setLastTouched(piece.id)}
+                  onKeyDown={(event) => onPieceKeyDown(event, piece, index)}
+                >
+                  <polygon
+                    points={pointsAttribute(points)}
+                    fill={colored || filled ? color : '#ffffff'}
+                    fillOpacity={filled ? 0.98 : colored ? 0.22 : 1}
+                    stroke={filled ? '#7a3f14' : colored ? color : INK}
+                    strokeWidth={selected ? 5 : 3}
+                    strokeDasharray={selected ? '10 6' : undefined}
+                    strokeLinejoin="round"
                     pointerEvents="none"
                   />
-                ) : null}
-                <text
-                  x={center?.x ?? 0}
-                  y={(center?.y ?? 0) + 6}
-                  textAnchor="middle"
-                  fontSize={20}
-                  fontWeight={700}
-                  fill={filled ? '#fff7e8' : INK}
-                  pointerEvents="none"
-                >
-                  {S.pieceNumber(index + 1)}
-                </text>
-              </g>
-            );
-          })}
-
-          {set === 'pattern-blocks'
-            ? patterns.map((slot, index) => {
-                const polygon = pieceVertices(set, slot.kind, slot.at, 0, false, step).map(
-                  screenOf,
-                );
-                if (polygon.length < 3) return null;
-                const center = {
-                  x: polygon.reduce((sum, point) => sum + point.x, 0) / polygon.length,
-                  y: polygon.reduce((sum, point) => sum + point.y, 0) / polygon.length,
-                };
-                return (
-                  <g
-                    key={`tray-${slot.kind}-${index}`}
-                    role="button"
-                    tabIndex={readOnly ? -1 : 0}
-                    aria-label={trayLabel(index)}
-                    onKeyDown={(event) => onTrayKeyDown(event, slot.kind)}
-                  >
-                    <polygon
-                      points={pointsAttribute(polygon)}
-                      fill={colorOf(index)}
-                      fillOpacity={0.18}
-                      stroke={colorOf(index)}
-                      strokeWidth={2.5}
-                      strokeLinejoin="round"
-                      pointerEvents="none"
-                    />
+                  {center ? (
                     <circle
                       cx={center.x}
                       cy={center.y}
                       r={hitRadius}
                       fill="transparent"
+                      data-hit-target="true"
                       pointerEvents="none"
                     />
-                    <text
-                      x={center.x}
-                      y={center.y + 5}
-                      textAnchor="middle"
-                      fontSize={14}
-                      fontWeight={700}
-                      fill={INK}
-                      pointerEvents="none"
+                  ) : null}
+                  <text
+                    x={center?.x ?? 0}
+                    y={(center?.y ?? 0) + 6}
+                    textAnchor="middle"
+                    fontSize={20}
+                    fontWeight={700}
+                    fill={filled ? '#fff7e8' : INK}
+                    pointerEvents="none"
+                  >
+                    {S.pieceNumber(index + 1)}
+                  </text>
+                </g>
+              );
+            })}
+
+            {set === 'pattern-blocks'
+              ? patterns.map((slot, index) => {
+                  const polygon = pieceVertices(set, slot.kind, slot.at, 0, false, step).map(
+                    screenOf,
+                  );
+                  if (polygon.length < 3) return null;
+                  const center = {
+                    x: polygon.reduce((sum, point) => sum + point.x, 0) / polygon.length,
+                    y: polygon.reduce((sum, point) => sum + point.y, 0) / polygon.length,
+                  };
+                  return (
+                    <g
+                      key={`tray-${slot.kind}-${index}`}
+                      role="button"
+                      tabIndex={readOnly ? -1 : 0}
+                      aria-label={trayLabel(index)}
+                      onKeyDown={(event) => onTrayKeyDown(event, slot.kind)}
                     >
-                      +
-                    </text>
-                  </g>
-                );
-              })
-            : null}
+                      <polygon
+                        points={pointsAttribute(polygon)}
+                        fill={colorOf(index)}
+                        fillOpacity={0.18}
+                        stroke={colorOf(index)}
+                        strokeWidth={2.5}
+                        strokeLinejoin="round"
+                        pointerEvents="none"
+                      />
+                      <circle
+                        cx={center.x}
+                        cy={center.y}
+                        r={hitRadius}
+                        fill="transparent"
+                        pointerEvents="none"
+                      />
+                      <text
+                        x={center.x}
+                        y={center.y + 5}
+                        textAnchor="middle"
+                        fontSize={14}
+                        fontWeight={700}
+                        fill={INK}
+                        pointerEvents="none"
+                      >
+                        +
+                      </text>
+                    </g>
+                  );
+                })
+              : null}
 
-          {filled ? (
-            <SilhouetteDecor
-              pieceSet={set as PieceSet}
-              silhouette={silhouetteId}
-              points={silhouettePoints}
-            />
-          ) : null}
-        </svg>
+            {filled ? (
+              <SilhouetteDecor
+                pieceSet={set as PieceSet}
+                silhouette={silhouetteId}
+                points={silhouettePoints}
+              />
+            ) : null}
+          </svg>
+        </div>
+
+        <div className={styles.sideStack}>
+          <p className={styles.hint}>
+            {set === 'pattern-blocks' ? S.tangram.addHint : S.tangram.hint}
+          </p>
+        </div>
       </div>
-
-      <p className={styles.hint}>{set === 'pattern-blocks' ? S.tangram.addHint : S.tangram.hint}</p>
     </div>
   );
 }

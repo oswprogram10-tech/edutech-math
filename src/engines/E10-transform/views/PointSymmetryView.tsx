@@ -297,121 +297,130 @@ export function PointSymmetryView({ state, dispatch, cpa, readOnly = false, targ
           {complete ? S.point.complete.closed : S.point.complete.notClosed}
         </p>
 
-        <div className={styles.canvasArea}>
-          <svg
-            ref={svgRef}
-            className={styles.canvas}
-            viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
-            role="group"
-            aria-label={S.canvasLabel['point-symmetry']}
-            tabIndex={readOnly ? -1 : 0}
-            data-testid="transform-canvas"
-            data-motion="full"
-            data-cpa={cpa}
-            onFocus={() => setFocused(true)}
-            onBlur={() => setFocused(false)}
-            onKeyDown={onKeyDown}
-            onPointerDown={onPointerDown}
-          >
-            <rect width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} fill={PAPER} />
-            <rect
-              x={rect.x}
-              y={rect.y}
-              width={rect.width}
-              height={rect.height}
-              fill="#fffdf7"
-              stroke="#7a8497"
-              strokeWidth={2}
-            />
-            <g stroke={GRID} strokeWidth={1.2} strokeOpacity={0.75} pointerEvents="none">
-              {gridLines.map((line, index) => (
-                <line key={`grid-${index}`} x1={line.x1} y1={line.y1} x2={line.x2} y2={line.y2} />
-              ))}
-            </g>
-            {Array.from({ length: 10 }, (_, row) =>
-              Array.from({ length: 10 }, (_, index) => {
-                const xy = ptXY(rect, [index, row]);
-                return (
-                  <circle key={`dot-${index}-${row}`} cx={xy.x} cy={xy.y} r={3.5} fill="#9aa7bd" />
-                );
-              }),
-            )}
-            <g data-given-center>
-              <circle
-                cx={centerXY.x}
-                cy={centerXY.y}
-                r={10}
-                fill="none"
-                stroke={GOLD}
-                strokeWidth={3}
-                strokeDasharray="7 5"
+        <div className={styles.stageRow}>
+          <div className={styles.boardArea}>
+            <svg
+              ref={svgRef}
+              className={styles.canvas}
+              viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
+              role="group"
+              aria-label={S.canvasLabel['point-symmetry']}
+              tabIndex={readOnly ? -1 : 0}
+              data-testid="transform-canvas"
+              data-motion="full"
+              data-cpa={cpa}
+              onFocus={() => setFocused(true)}
+              onBlur={() => setFocused(false)}
+              onKeyDown={onKeyDown}
+              onPointerDown={onPointerDown}
+            >
+              <rect width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} fill={PAPER} />
+              <rect
+                x={rect.x}
+                y={rect.y}
+                width={rect.width}
+                height={rect.height}
+                fill="#fffdf7"
+                stroke="#7a8497"
+                strokeWidth={2}
               />
-              <circle cx={centerXY.x} cy={centerXY.y} r={3} fill={GOLD} />
-            </g>
-            <polyline
-              points={halfScreen.map((point) => `${point.x},${point.y}`).join(' ')}
-              fill="none"
-              stroke={INK}
-              strokeWidth={5}
-              strokeLinejoin="round"
-              strokeLinecap="round"
-            />
-            {state.vertices.length > 0 ? (
+              <g stroke={GRID} strokeWidth={1.2} strokeOpacity={0.75} pointerEvents="none">
+                {gridLines.map((line, index) => (
+                  <line key={`grid-${index}`} x1={line.x1} y1={line.y1} x2={line.x2} y2={line.y2} />
+                ))}
+              </g>
+              {Array.from({ length: 10 }, (_, row) =>
+                Array.from({ length: 10 }, (_, index) => {
+                  const xy = ptXY(rect, [index, row]);
+                  return (
+                    <circle
+                      key={`dot-${index}-${row}`}
+                      cx={xy.x}
+                      cy={xy.y}
+                      r={3.5}
+                      fill="#9aa7bd"
+                    />
+                  );
+                }),
+              )}
+              <g data-given-center>
+                <circle
+                  cx={centerXY.x}
+                  cy={centerXY.y}
+                  r={10}
+                  fill="none"
+                  stroke={GOLD}
+                  strokeWidth={3}
+                  strokeDasharray="7 5"
+                />
+                <circle cx={centerXY.x} cy={centerXY.y} r={3} fill={GOLD} />
+              </g>
               <polyline
-                data-student-path
-                points={studentScreen.map((point) => `${point.x},${point.y}`).join(' ')}
+                points={halfScreen.map((point) => `${point.x},${point.y}`).join(' ')}
                 fill="none"
-                stroke={ORANGE}
+                stroke={INK}
                 strokeWidth={5}
-                strokeDasharray="8 6"
                 strokeLinejoin="round"
                 strokeLinecap="round"
               />
-            ) : null}
-            {state.vertices.map((point, index) => {
-              const xy = ptXY(rect, point);
-              return (
-                <circle
-                  key={`student-vertex-${index}`}
-                  cx={xy.x}
-                  cy={xy.y}
-                  r={7}
-                  fill={ORANGE}
-                  stroke="#ffffff"
-                  strokeWidth={2}
+              {state.vertices.length > 0 ? (
+                <polyline
+                  data-student-path
+                  points={studentScreen.map((point) => `${point.x},${point.y}`).join(' ')}
+                  fill="none"
+                  stroke={ORANGE}
+                  strokeWidth={5}
+                  strokeDasharray="8 6"
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
                 />
-              );
-            })}
-            {focused ? (
-              <circle
-                data-cursor
-                cx={cursorXY.x}
-                cy={cursorXY.y}
-                r={18}
-                fill="none"
-                stroke={ORANGE}
-                strokeWidth={3}
-                strokeDasharray="7 5"
-                pointerEvents="none"
-              />
-            ) : null}
-          </svg>
-        </div>
-
-        <div className={styles.panel} role="group" aria-label={S.name}>
-          <section className={styles.panelGroup}>
-            <span className={styles.panelLabel}>{S.point.complete.instruction}</span>
-            <div className={styles.directionRow}>
-              <button
-                type="button"
-                className={styles.button}
-                disabled={readOnly || state.vertices.length === 0}
-                onClick={() => dispatch({ type: 'undo-vertex' })}
-              >
-                {S.point.complete.undo}
-              </button>
+              ) : null}
+              {state.vertices.map((point, index) => {
+                const xy = ptXY(rect, point);
+                return (
+                  <circle
+                    key={`student-vertex-${index}`}
+                    cx={xy.x}
+                    cy={xy.y}
+                    r={7}
+                    fill={ORANGE}
+                    stroke="#ffffff"
+                    strokeWidth={2}
+                  />
+                );
+              })}
+              {focused ? (
+                <circle
+                  data-cursor
+                  cx={cursorXY.x}
+                  cy={cursorXY.y}
+                  r={18}
+                  fill="none"
+                  stroke={ORANGE}
+                  strokeWidth={3}
+                  strokeDasharray="7 5"
+                  pointerEvents="none"
+                />
+              ) : null}
+            </svg>
+          </div>
+          <div className={styles.sideStack}>
+            <div className={styles.panel} role="group" aria-label={S.name}>
+              <section className={styles.panelGroup}>
+                <span className={styles.panelLabel}>{S.point.complete.instruction}</span>
+                <div className={styles.directionRow}>
+                  <button
+                    type="button"
+                    className={styles.button}
+                    disabled={readOnly || state.vertices.length === 0}
+                    onClick={() => dispatch({ type: 'undo-vertex' })}
+                  >
+                    {S.point.complete.undo}
+                  </button>
+                </div>
+              </section>
             </div>
-          </section>
+          </div>
         </div>
       </div>
     );
@@ -455,253 +464,262 @@ export function PointSymmetryView({ state, dispatch, cpa, readOnly = false, targ
         {status}
       </p>
 
-      <div className={styles.canvasArea}>
-        <svg
-          ref={svgRef}
-          className={styles.canvas}
-          viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
-          role="group"
-          aria-label={S.canvasLabel['point-symmetry']}
-          tabIndex={readOnly ? -1 : 0}
-          data-testid="transform-canvas"
-          data-motion="full"
-          data-cpa={cpa}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          onKeyDown={onKeyDown}
-          onPointerDown={onPointerDown}
-        >
-          <defs>
-            <pattern
-              id="e10-point-gold"
-              width="18"
-              height="18"
-              patternUnits="userSpaceOnUse"
-              patternTransform="rotate(45)"
-            >
-              <rect width="18" height="18" fill="#fff4cc" />
-              <line x1="0" y1="0" x2="0" y2="18" stroke={GOLD} strokeWidth="3" />
-            </pattern>
-          </defs>
-          <rect width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} fill={PAPER} />
-          <rect
-            x={rect.x}
-            y={rect.y}
-            width={rect.width}
-            height={rect.height}
-            fill="#fffdf7"
-            stroke="#7a8497"
-            strokeWidth={2}
-          />
-          <g stroke={GRID} strokeWidth={1.2} strokeOpacity={0.75} pointerEvents="none">
-            {gridLines.map((line, index) => (
-              <line key={`grid-${index}`} x1={line.x1} y1={line.y1} x2={line.x2} y2={line.y2} />
-            ))}
-          </g>
-          {Array.from({ length: 10 }, (_, row) =>
-            Array.from({ length: 10 }, (_, index) => {
-              const xy = ptXY(rect, [index, row]);
-              return (
-                <circle key={`dot-${index}-${row}`} cx={xy.x} cy={xy.y} r={3.5} fill="#9aa7bd" />
-              );
-            }),
-          )}
-
-          {ghost ? (
-            <polygon
-              data-ghost
-              points={pointsToString(base)}
-              fill="none"
-              stroke="#9aa7bd"
-              strokeWidth={3}
-              strokeDasharray="9 7"
-              opacity={0.75}
+      <div className={styles.stageRow}>
+        <div className={styles.boardArea}>
+          <svg
+            ref={svgRef}
+            className={styles.canvas}
+            viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
+            role="group"
+            aria-label={S.canvasLabel['point-symmetry']}
+            tabIndex={readOnly ? -1 : 0}
+            data-testid="transform-canvas"
+            data-motion="full"
+            data-cpa={cpa}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            onKeyDown={onKeyDown}
+            onPointerDown={onPointerDown}
+          >
+            <defs>
+              <pattern
+                id="e10-point-gold"
+                width="18"
+                height="18"
+                patternUnits="userSpaceOnUse"
+                patternTransform="rotate(45)"
+              >
+                <rect width="18" height="18" fill="#fff4cc" />
+                <line x1="0" y1="0" x2="0" y2="18" stroke={GOLD} strokeWidth="3" />
+              </pattern>
+            </defs>
+            <rect width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} fill={PAPER} />
+            <rect
+              x={rect.x}
+              y={rect.y}
+              width={rect.width}
+              height={rect.height}
+              fill="#fffdf7"
+              stroke="#7a8497"
+              strokeWidth={2}
             />
-          ) : null}
+            <g stroke={GRID} strokeWidth={1.2} strokeOpacity={0.75} pointerEvents="none">
+              {gridLines.map((line, index) => (
+                <line key={`grid-${index}`} x1={line.x1} y1={line.y1} x2={line.x2} y2={line.y2} />
+              ))}
+            </g>
+            {Array.from({ length: 10 }, (_, row) =>
+              Array.from({ length: 10 }, (_, index) => {
+                const xy = ptXY(rect, [index, row]);
+                return (
+                  <circle key={`dot-${index}-${row}`} cx={xy.x} cy={xy.y} r={3.5} fill="#9aa7bd" />
+                );
+              }),
+            )}
 
-          <polygon
-            data-shape
-            points={pointsToString(activeShape)}
-            fill={overlaps ? 'url(#e10-point-gold)' : '#dbe7ff'}
-            fillOpacity={0.45}
-            stroke={INK}
-            strokeWidth={4}
-            strokeLinejoin="round"
-          />
-
-          {state.turned && centerPoint && state.settings.showArcs
-            ? base.map((point, index) => {
-                const path = arcPath(centerPoint, point, rotate180(point, centerPoint), 180, 'cw');
-                return path ? (
-                  <path
-                    key={`arc-${index}`}
-                    data-arc
-                    d={path}
-                    fill="none"
-                    stroke={ORANGE}
-                    strokeWidth={3.5}
-                    strokeLinecap="round"
-                  />
-                ) : null;
-              })
-            : null}
-
-          {centerPoint ? (
-            <g data-pin={overlaps ? 'center' : 'trial'}>
-              <circle
-                cx={centerPoint.x}
-                cy={centerPoint.y}
-                r={overlaps ? 16 : 10}
-                fill={overlaps ? GOLD : ORANGE}
-                stroke="#ffffff"
+            {ghost ? (
+              <polygon
+                data-ghost
+                points={pointsToString(base)}
+                fill="none"
+                stroke="#9aa7bd"
                 strokeWidth={3}
+                strokeDasharray="9 7"
+                opacity={0.75}
               />
-              {!overlaps ? (
+            ) : null}
+
+            <polygon
+              data-shape
+              points={pointsToString(activeShape)}
+              fill={overlaps ? 'url(#e10-point-gold)' : '#dbe7ff'}
+              fillOpacity={0.45}
+              stroke={INK}
+              strokeWidth={4}
+              strokeLinejoin="round"
+            />
+
+            {state.turned && centerPoint && state.settings.showArcs
+              ? base.map((point, index) => {
+                  const path = arcPath(
+                    centerPoint,
+                    point,
+                    rotate180(point, centerPoint),
+                    180,
+                    'cw',
+                  );
+                  return path ? (
+                    <path
+                      key={`arc-${index}`}
+                      data-arc
+                      d={path}
+                      fill="none"
+                      stroke={ORANGE}
+                      strokeWidth={3.5}
+                      strokeLinecap="round"
+                    />
+                  ) : null;
+                })
+              : null}
+
+            {centerPoint ? (
+              <g data-pin={overlaps ? 'center' : 'trial'}>
                 <circle
                   cx={centerPoint.x}
                   cy={centerPoint.y}
-                  r={19}
-                  fill="none"
-                  stroke={ORANGE}
-                  strokeWidth={2}
-                  strokeOpacity={0.55}
+                  r={overlaps ? 16 : 10}
+                  fill={overlaps ? GOLD : ORANGE}
+                  stroke="#ffffff"
+                  strokeWidth={3}
                 />
-              ) : null}
-            </g>
-          ) : null}
-
-          {overlaps && centerPoint ? (
-            <g data-center-mark>
-              <polygon
-                points={starPath(centerPoint, 30, 13)}
-                fill={GOLD}
-                stroke="#ffffff"
-                strokeWidth={2}
-              />
-              <text
-                x={centerPoint.x + 34}
-                y={centerPoint.y - 22}
-                fontSize={28}
-                fontWeight={800}
-                fill={GOLD}
-                stroke="#ffffff"
-                strokeWidth={4}
-                paintOrder="stroke"
-              >
-                {S.point.center}
-              </text>
-            </g>
-          ) : null}
-
-          {pairs.map((pair, index) => {
-            const from = ptXY(rect, pair.from);
-            const to = ptXY(rect, pair.to);
-            const ticks = tickPair(from, to);
-            return (
-              <g key={`bisect-${index}`} data-bisect>
-                <line
-                  x1={from.x}
-                  y1={from.y}
-                  x2={to.x}
-                  y2={to.y}
-                  stroke={RED}
-                  strokeWidth={2.5}
-                  strokeDasharray="10 6"
-                />
-                {ticks.map((tick, tickIndex) => (
-                  <line
-                    key={`tick-${tickIndex}`}
-                    x1={tick.a.x}
-                    y1={tick.a.y}
-                    x2={tick.b.x}
-                    y2={tick.b.y}
-                    stroke={RED}
-                    strokeWidth={3}
+                {!overlaps ? (
+                  <circle
+                    cx={centerPoint.x}
+                    cy={centerPoint.y}
+                    r={19}
+                    fill="none"
+                    stroke={ORANGE}
+                    strokeWidth={2}
+                    strokeOpacity={0.55}
                   />
-                ))}
+                ) : null}
               </g>
-            );
-          })}
+            ) : null}
 
-          {focused ? (
-            <circle
-              data-cursor
-              cx={cursorXY.x}
-              cy={cursorXY.y}
-              r={state.pin ? 22 : 18}
-              fill="none"
-              stroke={ORANGE}
-              strokeWidth={3}
-              strokeDasharray="7 5"
-              pointerEvents="none"
-            />
-          ) : null}
-        </svg>
-      </div>
+            {overlaps && centerPoint ? (
+              <g data-center-mark>
+                <polygon
+                  points={starPath(centerPoint, 30, 13)}
+                  fill={GOLD}
+                  stroke="#ffffff"
+                  strokeWidth={2}
+                />
+                <text
+                  x={centerPoint.x + 34}
+                  y={centerPoint.y - 22}
+                  fontSize={28}
+                  fontWeight={800}
+                  fill={GOLD}
+                  stroke="#ffffff"
+                  strokeWidth={4}
+                  paintOrder="stroke"
+                >
+                  {S.point.center}
+                </text>
+              </g>
+            ) : null}
 
-      <div className={styles.panel} role="group" aria-label={S.name}>
-        <section className={styles.panelGroup}>
-          <span className={styles.panelLabel}>{S.point.place}</span>
-          <div className={styles.directionRow}>
-            <button
-              type="button"
-              className={styles.button}
-              disabled={readOnly}
-              onClick={() => dispatch({ type: 'place-pin', at: cursor })}
-            >
-              {S.point.place}
-            </button>
-            <button
-              type="button"
-              className={styles.button}
-              disabled={readOnly || !state.pin}
-              onClick={() => dispatch({ type: 'turn-180' })}
-            >
-              {S.point.turn}
-            </button>
-            <button
-              type="button"
-              className={styles.button}
-              disabled={readOnly || (!state.turned && !state.flipped)}
-              onClick={() => dispatch({ type: 'reset-turn' })}
-            >
-              {S.point.reset}
-            </button>
+            {pairs.map((pair, index) => {
+              const from = ptXY(rect, pair.from);
+              const to = ptXY(rect, pair.to);
+              const ticks = tickPair(from, to);
+              return (
+                <g key={`bisect-${index}`} data-bisect>
+                  <line
+                    x1={from.x}
+                    y1={from.y}
+                    x2={to.x}
+                    y2={to.y}
+                    stroke={RED}
+                    strokeWidth={2.5}
+                    strokeDasharray="10 6"
+                  />
+                  {ticks.map((tick, tickIndex) => (
+                    <line
+                      key={`tick-${tickIndex}`}
+                      x1={tick.a.x}
+                      y1={tick.a.y}
+                      x2={tick.b.x}
+                      y2={tick.b.y}
+                      stroke={RED}
+                      strokeWidth={3}
+                    />
+                  ))}
+                </g>
+              );
+            })}
+
+            {focused ? (
+              <circle
+                data-cursor
+                cx={cursorXY.x}
+                cy={cursorXY.y}
+                r={state.pin ? 22 : 18}
+                fill="none"
+                stroke={ORANGE}
+                strokeWidth={3}
+                strokeDasharray="7 5"
+                pointerEvents="none"
+              />
+            ) : null}
+          </svg>
+        </div>
+        <div className={styles.sideStack}>
+          <div className={styles.panel} role="group" aria-label={S.name}>
+            <section className={styles.panelGroup}>
+              <span className={styles.panelLabel}>{S.point.place}</span>
+              <div className={styles.directionRow}>
+                <button
+                  type="button"
+                  className={styles.button}
+                  disabled={readOnly}
+                  onClick={() => dispatch({ type: 'place-pin', at: cursor })}
+                >
+                  {S.point.place}
+                </button>
+                <button
+                  type="button"
+                  className={styles.button}
+                  disabled={readOnly || !state.pin}
+                  onClick={() => dispatch({ type: 'turn-180' })}
+                >
+                  {S.point.turn}
+                </button>
+                <button
+                  type="button"
+                  className={styles.button}
+                  disabled={readOnly || (!state.turned && !state.flipped)}
+                  onClick={() => dispatch({ type: 'reset-turn' })}
+                >
+                  {S.point.reset}
+                </button>
+              </div>
+            </section>
+            <section className={styles.panelGroup}>
+              <span className={styles.panelLabel}>{S.point.shapePick(state.shapeIndex)}</span>
+              <div className={styles.directionRow}>
+                {state.settings.shapes.map((id: PointPresetId, index: number) => (
+                  <button
+                    key={id}
+                    type="button"
+                    className={styles.button}
+                    aria-pressed={state.shapeIndex === index}
+                    disabled={readOnly}
+                    onClick={() => dispatch({ type: 'select-shape', index })}
+                  >
+                    {S.point.shapePick(index)}
+                  </button>
+                ))}
+              </div>
+            </section>
+            <section className={styles.panelGroup}>
+              <span className={styles.panelLabel}>{S.panel.flipGroup}</span>
+              <div className={styles.directionRow}>
+                {(['up', 'down', 'left', 'right'] as const).map((side) => (
+                  <button
+                    key={side}
+                    type="button"
+                    className={styles.button}
+                    disabled={readOnly}
+                    onClick={() => dispatch({ type: 'flip', side })}
+                  >
+                    {S.sides[side]}
+                  </button>
+                ))}
+              </div>
+            </section>
           </div>
-        </section>
-        <section className={styles.panelGroup}>
-          <span className={styles.panelLabel}>{S.point.shapePick(state.shapeIndex)}</span>
-          <div className={styles.directionRow}>
-            {state.settings.shapes.map((id: PointPresetId, index: number) => (
-              <button
-                key={id}
-                type="button"
-                className={styles.button}
-                aria-pressed={state.shapeIndex === index}
-                disabled={readOnly}
-                onClick={() => dispatch({ type: 'select-shape', index })}
-              >
-                {S.point.shapePick(index)}
-              </button>
-            ))}
-          </div>
-        </section>
-        <section className={styles.panelGroup}>
-          <span className={styles.panelLabel}>{S.panel.flipGroup}</span>
-          <div className={styles.directionRow}>
-            {(['up', 'down', 'left', 'right'] as const).map((side) => (
-              <button
-                key={side}
-                type="button"
-                className={styles.button}
-                disabled={readOnly}
-                onClick={() => dispatch({ type: 'flip', side })}
-              >
-                {S.sides[side]}
-              </button>
-            ))}
-          </div>
-        </section>
+        </div>
       </div>
     </div>
   );

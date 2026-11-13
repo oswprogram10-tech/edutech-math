@@ -405,87 +405,94 @@ export function AngleView({ state, dispatch, cpa, readOnly = false, targetSize }
         {statusText}
       </p>
 
-      <div className={styles.canvasArea}>
-        <svg
-          ref={svgRef}
-          className={styles.canvas}
-          viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
-          role="group"
-          aria-label={S.angle.canvasLabel}
-          tabIndex={readOnly ? -1 : 0}
-          data-testid="geo-canvas"
-          data-cpa={cpa}
-          onKeyDown={onCanvasKeyDown}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onPointerCancel={() => {
-            dragRef.current = null;
-          }}
-        >
-          <rect width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} fill={PAPER} />
-          {puzzle ? renderPuzzleScene() : renderAngleScene()}
-          {renderProtractor()}
-        </svg>
-      </div>
-
-      {!puzzle ? (
-        <div style={{ display: 'grid', gap: '0.5rem' }}>
-          <NumberStepper
-            label={S.angle.estimate}
-            value={entry.estimate}
-            testId="estimate-stepper"
-            onChange={(value) => dispatch({ type: 'set-estimate', angle: angle.id, value })}
-            disabled={readOnly}
-          />
-          <NumberStepper
-            label={S.angle.reading}
-            value={entry.reading}
-            testId="reading-stepper"
-            onChange={(value) => dispatch({ type: 'set-reading', angle: angle.id, value })}
-            disabled={readOnly || (settings.estimateFirst && entry.estimate === null)}
-          />
-          {settings.estimateFirst && entry.estimate === null ? (
-            <p className={styles.hint}>{S.angle.estimateFirstHint}</p>
-          ) : null}
+      <div className={styles.stageRow}>
+        <div className={styles.boardArea}>
+          <svg
+            ref={svgRef}
+            className={styles.canvas}
+            viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
+            role="group"
+            aria-label={S.angle.canvasLabel}
+            tabIndex={readOnly ? -1 : 0}
+            data-testid="geo-canvas"
+            data-cpa={cpa}
+            onKeyDown={onCanvasKeyDown}
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            onPointerCancel={() => {
+              dragRef.current = null;
+            }}
+          >
+            <rect width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} fill={PAPER} />
+            {puzzle ? renderPuzzleScene() : renderAngleScene()}
+            {renderProtractor()}
+          </svg>
         </div>
-      ) : (
-        <div style={{ display: 'grid', gap: '0.5rem' }}>
-          {settings.estimateFirst ? (
-            <NumberStepper
-              label={S.angle.launchEstimate}
-              value={state.puzzle?.estimate ?? null}
-              testId="launch-estimate-stepper"
-              onChange={(value) => dispatch({ type: 'set-launch-estimate', value })}
-              disabled={readOnly}
-            />
-          ) : null}
-          <NumberStepper
-            label={S.angle.launch}
-            value={launchValue}
-            testId="launch-stepper"
-            onChange={setLaunchValue}
-            disabled={
-              readOnly || (settings.estimateFirst && (state.puzzle?.estimate ?? null) === null)
-            }
-          />
-          <div className={styles.toolbar}>
-            <button
-              type="button"
-              className={styles.button}
-              onClick={() => dispatch({ type: 'fire', angle: clamp(launchValue ?? 0, 0, 360) })}
-              disabled={
-                readOnly || (settings.estimateFirst && (state.puzzle?.estimate ?? null) === null)
-              }
-            >
-              {S.angle.fire}
-            </button>
+
+        <div className={styles.sideStack}>
+          {!puzzle ? (
+            <div className={styles.controlStack}>
+              <NumberStepper
+                label={S.angle.estimate}
+                value={entry.estimate}
+                testId="estimate-stepper"
+                onChange={(value) => dispatch({ type: 'set-estimate', angle: angle.id, value })}
+                disabled={readOnly}
+              />
+              <NumberStepper
+                label={S.angle.reading}
+                value={entry.reading}
+                testId="reading-stepper"
+                onChange={(value) => dispatch({ type: 'set-reading', angle: angle.id, value })}
+                disabled={readOnly || (settings.estimateFirst && entry.estimate === null)}
+              />
+              {settings.estimateFirst && entry.estimate === null ? (
+                <p className={styles.hint}>{S.angle.estimateFirstHint}</p>
+              ) : null}
+            </div>
+          ) : (
+            <div className={styles.controlStack}>
+              {settings.estimateFirst ? (
+                <NumberStepper
+                  label={S.angle.launchEstimate}
+                  value={state.puzzle?.estimate ?? null}
+                  testId="launch-estimate-stepper"
+                  onChange={(value) => dispatch({ type: 'set-launch-estimate', value })}
+                  disabled={readOnly}
+                />
+              ) : null}
+              <NumberStepper
+                label={S.angle.launch}
+                value={launchValue}
+                testId="launch-stepper"
+                onChange={setLaunchValue}
+                disabled={
+                  readOnly || (settings.estimateFirst && (state.puzzle?.estimate ?? null) === null)
+                }
+              />
+              <div className={styles.toolbar}>
+                <button
+                  type="button"
+                  className={styles.button}
+                  onClick={() => dispatch({ type: 'fire', angle: clamp(launchValue ?? 0, 0, 360) })}
+                  disabled={
+                    readOnly ||
+                    (settings.estimateFirst && (state.puzzle?.estimate ?? null) === null)
+                  }
+                >
+                  {S.angle.fire}
+                </button>
+              </div>
+              <p className={styles.hint}>{S.angle.puzzleHint}</p>
+            </div>
+          )}
+
+          <div className={styles.hintBlock}>
+            <p className={styles.hint}>{S.angle.canvasHint}</p>
           </div>
-          <p className={styles.hint}>{S.angle.puzzleHint}</p>
         </div>
-      )}
-
-      <p className={styles.hint}>{S.angle.canvasHint}</p>
+      </div>
     </div>
   );
 }

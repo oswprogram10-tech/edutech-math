@@ -211,10 +211,30 @@ export function DragTestView({
     return best?.id ?? null;
   };
 
+  /**
+   * 키보드 커서가 고른 점. 손가락 반지름(hitRadius)은 판이 작아질수록 논리 좌표에서
+   * 커지므로(T122), 키보드에는 격자 간격에 비례한 작은 반지름을 쓴다. 그러지 않으면
+   * 판이 줄었을 때 Enter가 새 점을 놓지 않고 멀리 있는 점을 집는다.
+   */
+  const keyboardRadius = Math.max(4, rect.spacing * 0.4);
+
+  const nearestPointForKeyboard = (point: Point): string | null => {
+    let best: { id: string; distance: number } | null = null;
+    for (const node of points) {
+      const screen = pointScreen(node.id);
+      if (!screen) continue;
+      const distance = Math.hypot(screen.x - point.x, screen.y - point.y);
+      if (distance <= keyboardRadius && (!best || distance < best.distance)) {
+        best = { id: node.id, distance };
+      }
+    }
+    return best?.id ?? null;
+  };
+
   const pointAtCursor = (): string | null => {
     if (keyPoint && pointScreen(keyPoint)) return keyPoint;
     const screen = { x: rect.x + cursor[0] * rect.spacing, y: rect.y + cursor[1] * rect.spacing };
-    return nearestPoint(screen);
+    return nearestPointForKeyboard(screen);
   };
 
   const resetPending = () => {
@@ -872,21 +892,19 @@ export function DragTestView({
         ) : null}
       </div>
 
-      <p className={styles.instructions}>{S.dragTest.instructions}</p>
+      <p className={styles.instructions}>
+        {state.settings.construction === 'from-diagonals'
+          ? S.dragTest.fromDiagonalsHint
+          : state.settings.construction === 'quad-conditions'
+            ? S.dragTest.quadConditionsHint
+            : S.dragTest.instructions}
+      </p>
       <p className={styles.status} role="status">
         {message || (pending.length > 0 ? S.dragTest.pending(pending.length) : '')}
       </p>
 
-      <div
-        style={{
-          display: 'flex',
-          gap: '1rem',
-          alignItems: 'flex-start',
-          flex: '1 1 auto',
-          minHeight: 0,
-        }}
-      >
-        <div className={styles.canvasArea} style={{ flex: '1 1 auto' }}>
+      <div className={styles.dragRow}>
+        <div className={styles.boardArea}>
           <svg
             ref={svgRef}
             className={styles.canvas}
@@ -981,7 +999,7 @@ export function DragTestView({
           </svg>
         </div>
 
-        <aside style={{ width: 240, flex: '0 0 auto', display: 'grid', gap: '0.6rem' }}>
+        <aside className={styles.dragAside}>
           {state.tool === 'intersection' ? (
             <div>
               <strong>{S.dragTest.candidates}</strong>
@@ -1101,15 +1119,10 @@ export function DragTestView({
         </aside>
       </div>
 
-      <p className={styles.hint}>{S.dragTest.canvasHint}</p>
-      {state.quad ? <p className={styles.hint}>{S.dragTest.quadKeyHint}</p> : null}
-      <p className={styles.hint}>
-        {state.settings.construction === 'from-diagonals'
-          ? S.dragTest.fromDiagonalsHint
-          : state.settings.construction === 'quad-conditions'
-            ? S.dragTest.quadConditionsHint
-            : S.dragTest.instructions}
-      </p>
+      <div className={styles.hintBlock}>
+        <p className={styles.hint}>{S.dragTest.canvasHint}</p>
+        {state.quad ? <p className={styles.hint}>{S.dragTest.quadKeyHint}</p> : null}
+      </div>
     </div>
   );
 }

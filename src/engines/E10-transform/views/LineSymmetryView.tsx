@@ -257,70 +257,74 @@ export function LineSymmetryView({ state, dispatch, cpa, readOnly = false, targe
         <p className={styles.status} role="status">
           {state.folded ? S.line.decal.folded : ''}
         </p>
-        <div className={styles.canvasArea}>
-          <DotBoard
-            svgRef={svgRef}
-            dots={state.dots}
-            folded={state.folded}
-            cursor={cursor}
-            focused={focused}
-            readOnly={readOnly}
-            cpa={cpa}
-            targetSize={targetSize}
-            onKeyDown={onKeyDown}
-            onPick={(at) => {
-              if (at[0] <= 4) dispatch({ type: 'add-dot', at, mark });
-              else dispatch({ type: 'remove-dot', at });
-            }}
-          />
-        </div>
-        <div className={styles.panel} role="group" aria-label={S.name}>
-          <section className={styles.panelGroup}>
-            <span className={styles.panelLabel}>{S.line.decal.mark}</span>
-            <div className={styles.directionRow}>
-              {S.line.decal.marks.map((text, index) => (
-                <button
-                  key={text}
-                  type="button"
-                  className={styles.button}
-                  aria-pressed={mark === index}
-                  disabled={readOnly}
-                  onClick={() => setMark(index as 0 | 1 | 2 | 3)}
-                >
-                  {text}
-                </button>
-              ))}
+        <div className={styles.stageRow}>
+          <div className={styles.boardArea}>
+            <DotBoard
+              svgRef={svgRef}
+              dots={state.dots}
+              folded={state.folded}
+              cursor={cursor}
+              focused={focused}
+              readOnly={readOnly}
+              cpa={cpa}
+              targetSize={targetSize}
+              onKeyDown={onKeyDown}
+              onPick={(at) => {
+                if (at[0] <= 4) dispatch({ type: 'add-dot', at, mark });
+                else dispatch({ type: 'remove-dot', at });
+              }}
+            />
+          </div>
+          <div className={styles.sideStack}>
+            <div className={styles.panel} role="group" aria-label={S.name}>
+              <section className={styles.panelGroup}>
+                <span className={styles.panelLabel}>{S.line.decal.mark}</span>
+                <div className={styles.directionRow}>
+                  {S.line.decal.marks.map((text, index) => (
+                    <button
+                      key={text}
+                      type="button"
+                      className={styles.button}
+                      aria-pressed={mark === index}
+                      disabled={readOnly}
+                      onClick={() => setMark(index as 0 | 1 | 2 | 3)}
+                    >
+                      {text}
+                    </button>
+                  ))}
+                </div>
+              </section>
+              <section className={styles.panelGroup}>
+                <span className={styles.panelLabel}>{S.line.decal.fold}</span>
+                <div className={styles.directionRow}>
+                  <button
+                    type="button"
+                    className={styles.button}
+                    disabled={readOnly || state.dots.length === 0}
+                    onClick={() => dispatch({ type: 'fold-paper' })}
+                  >
+                    {S.line.decal.fold}
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.button}
+                    disabled={readOnly || !state.folded}
+                    onClick={() => dispatch({ type: 'unfold-paper' })}
+                  >
+                    {S.line.decal.unfold}
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.button}
+                    disabled={readOnly}
+                    onClick={() => dispatch({ type: 'remove-dot', at: cursor })}
+                  >
+                    {S.line.decal.erase}
+                  </button>
+                </div>
+              </section>
             </div>
-          </section>
-          <section className={styles.panelGroup}>
-            <span className={styles.panelLabel}>{S.line.decal.fold}</span>
-            <div className={styles.directionRow}>
-              <button
-                type="button"
-                className={styles.button}
-                disabled={readOnly || state.dots.length === 0}
-                onClick={() => dispatch({ type: 'fold-paper' })}
-              >
-                {S.line.decal.fold}
-              </button>
-              <button
-                type="button"
-                className={styles.button}
-                disabled={readOnly || !state.folded}
-                onClick={() => dispatch({ type: 'unfold-paper' })}
-              >
-                {S.line.decal.unfold}
-              </button>
-              <button
-                type="button"
-                className={styles.button}
-                disabled={readOnly}
-                onClick={() => dispatch({ type: 'remove-dot', at: cursor })}
-              >
-                {S.line.decal.erase}
-              </button>
-            </div>
-          </section>
+          </div>
         </div>
       </div>
     );
@@ -470,304 +474,307 @@ export function LineSymmetryView({ state, dispatch, cpa, readOnly = false, targe
               : ''}
       </p>
 
-      <div className={styles.canvasArea}>
-        <svg
-          ref={svgRef}
-          className={styles.canvas}
-          viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
-          role="group"
-          aria-label={S.canvasLabel['line-symmetry']}
-          tabIndex={readOnly ? -1 : 0}
-          data-testid="transform-canvas"
-          data-motion="full"
-          data-cpa={cpa}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          onKeyDown={onKeyDown}
-          onPointerDown={onPointerDown}
-        >
-          <defs>
-            <pattern
-              id="e10-line-gap"
-              width="16"
-              height="16"
-              patternUnits="userSpaceOnUse"
-              patternTransform="rotate(35)"
-            >
-              <rect width="16" height="16" fill="#ffe3e0" />
-              <line x1="0" y1="0" x2="0" y2="16" stroke={RED} strokeWidth="4" />
-            </pattern>
-            <pattern
-              id="e10-line-axis"
-              width="20"
-              height="20"
-              patternUnits="userSpaceOnUse"
-              patternTransform="rotate(45)"
-            >
-              <rect width="20" height="20" fill="#d9f2e6" />
-              <line x1="0" y1="0" x2="0" y2="20" stroke="#1f7a4d" strokeWidth="4" />
-            </pattern>
-          </defs>
-          <rect width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} fill={PAPER} />
-          {geom.gridLines.length > 0 ? (
-            <g stroke={GRID} strokeWidth={1.4} strokeOpacity={0.75} pointerEvents="none">
-              {geom.gridLines.map((line, index) => (
-                <line key={`grid-${index}`} x1={line.x1} y1={line.y1} x2={line.x2} y2={line.y2} />
-              ))}
-            </g>
-          ) : null}
-          {geom.tri ? (
-            <g stroke={GRID} strokeWidth={1} strokeOpacity={0.7} pointerEvents="none">
-              {Array.from({ length: 7 }, (_, b) =>
-                Array.from({ length: 9 }, (_, index) => {
-                  const start = -Math.floor(b / 2);
-                  const a = start + index;
-                  const p1 = geom.toScreen([a, b]);
-                  const p2 = geom.toScreen([a + 1, b]);
-                  const p3 = geom.toScreen([a, b + 1]);
-                  const p4 = geom.toScreen([a + 1, b + 1]);
-                  return (
-                    <g key={`tri-grid-${a}-${b}`}>
-                      <line x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} />
-                      <line x1={p1.x} y1={p1.y} x2={p3.x} y2={p3.y} />
-                      <line x1={p2.x} y1={p2.y} x2={p4.x} y2={p4.y} />
-                      <line x1={p3.x} y1={p3.y} x2={p4.x} y2={p4.y} />
-                    </g>
-                  );
-                }),
-              )}
-            </g>
-          ) : null}
+      <div className={styles.stageRow}>
+        <div className={styles.boardArea}>
+          <svg
+            ref={svgRef}
+            className={styles.canvas}
+            viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
+            role="group"
+            aria-label={S.canvasLabel['line-symmetry']}
+            tabIndex={readOnly ? -1 : 0}
+            data-testid="transform-canvas"
+            data-motion="full"
+            data-cpa={cpa}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            onKeyDown={onKeyDown}
+            onPointerDown={onPointerDown}
+          >
+            <defs>
+              <pattern
+                id="e10-line-gap"
+                width="16"
+                height="16"
+                patternUnits="userSpaceOnUse"
+                patternTransform="rotate(35)"
+              >
+                <rect width="16" height="16" fill="#ffe3e0" />
+                <line x1="0" y1="0" x2="0" y2="16" stroke={RED} strokeWidth="4" />
+              </pattern>
+              <pattern
+                id="e10-line-axis"
+                width="20"
+                height="20"
+                patternUnits="userSpaceOnUse"
+                patternTransform="rotate(45)"
+              >
+                <rect width="20" height="20" fill="#d9f2e6" />
+                <line x1="0" y1="0" x2="0" y2="20" stroke="#1f7a4d" strokeWidth="4" />
+              </pattern>
+            </defs>
+            <rect width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} fill={PAPER} />
+            {geom.gridLines.length > 0 ? (
+              <g stroke={GRID} strokeWidth={1.4} strokeOpacity={0.75} pointerEvents="none">
+                {geom.gridLines.map((line, index) => (
+                  <line key={`grid-${index}`} x1={line.x1} y1={line.y1} x2={line.x2} y2={line.y2} />
+                ))}
+              </g>
+            ) : null}
+            {geom.tri ? (
+              <g stroke={GRID} strokeWidth={1} strokeOpacity={0.7} pointerEvents="none">
+                {Array.from({ length: 7 }, (_, b) =>
+                  Array.from({ length: 9 }, (_, index) => {
+                    const start = -Math.floor(b / 2);
+                    const a = start + index;
+                    const p1 = geom.toScreen([a, b]);
+                    const p2 = geom.toScreen([a + 1, b]);
+                    const p3 = geom.toScreen([a, b + 1]);
+                    const p4 = geom.toScreen([a + 1, b + 1]);
+                    return (
+                      <g key={`tri-grid-${a}-${b}`}>
+                        <line x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} />
+                        <line x1={p1.x} y1={p1.y} x2={p3.x} y2={p3.y} />
+                        <line x1={p2.x} y1={p2.y} x2={p4.x} y2={p4.y} />
+                        <line x1={p3.x} y1={p3.y} x2={p4.x} y2={p4.y} />
+                      </g>
+                    );
+                  }),
+                )}
+              </g>
+            ) : null}
 
-          {state.task === 'complete' ? (
-            <>
-              <line
-                data-complete-axis
-                x1={axisSettingScreen[0]?.x ?? 0}
-                y1={axisSettingScreen[0]?.y ?? 0}
-                x2={axisSettingScreen[1]?.x ?? 0}
-                y2={axisSettingScreen[1]?.y ?? 0}
-                stroke={BLUE}
-                strokeWidth={3}
-                strokeDasharray="12 8"
-              />
-              <polyline
-                points={halfScreen.map((point) => `${point.x},${point.y}`).join(' ')}
-                fill="none"
-                stroke={INK}
-                strokeWidth={5}
-                strokeLinejoin="round"
-                strokeLinecap="round"
-              />
-              {state.vertices.length > 0 ? (
+            {state.task === 'complete' ? (
+              <>
+                <line
+                  data-complete-axis
+                  x1={axisSettingScreen[0]?.x ?? 0}
+                  y1={axisSettingScreen[0]?.y ?? 0}
+                  x2={axisSettingScreen[1]?.x ?? 0}
+                  y2={axisSettingScreen[1]?.y ?? 0}
+                  stroke={BLUE}
+                  strokeWidth={3}
+                  strokeDasharray="12 8"
+                />
                 <polyline
-                  data-student-path
-                  points={studentScreen.map((point) => `${point.x},${point.y}`).join(' ')}
+                  points={halfScreen.map((point) => `${point.x},${point.y}`).join(' ')}
                   fill="none"
-                  stroke={ORANGE}
+                  stroke={INK}
                   strokeWidth={5}
-                  strokeDasharray="8 6"
                   strokeLinejoin="round"
                   strokeLinecap="round"
                 />
-              ) : null}
-              {state.vertices.map((point, index) => {
-                const xy = geom.toScreen(point);
-                return (
-                  <circle
-                    key={`student-vertex-${index}`}
-                    cx={xy.x}
-                    cy={xy.y}
-                    r={7}
-                    fill={ORANGE}
-                    stroke="#ffffff"
-                    strokeWidth={2}
+                {state.vertices.length > 0 ? (
+                  <polyline
+                    data-student-path
+                    points={studentScreen.map((point) => `${point.x},${point.y}`).join(' ')}
+                    fill="none"
+                    stroke={ORANGE}
+                    strokeWidth={5}
+                    strokeDasharray="8 6"
+                    strokeLinejoin="round"
+                    strokeLinecap="round"
                   />
-                );
-              })}
-            </>
-          ) : (
-            <>
-              <polygon
-                data-shape
-                data-fold-preview={foldPreviewRunning ? 'true' : undefined}
-                transform={foldPreviewTransform ?? undefined}
-                points={geom.pointsString(shapePoints)}
-                fill={foldFailFill(mirror)}
-                stroke={INK}
-                strokeWidth={4}
-                strokeLinejoin="round"
-                fillOpacity={0.2}
-              />
-              {mirror ? (
+                ) : null}
+                {state.vertices.map((point, index) => {
+                  const xy = geom.toScreen(point);
+                  return (
+                    <circle
+                      key={`student-vertex-${index}`}
+                      cx={xy.x}
+                      cy={xy.y}
+                      r={7}
+                      fill={ORANGE}
+                      stroke="#ffffff"
+                      strokeWidth={2}
+                    />
+                  );
+                })}
+              </>
+            ) : (
+              <>
                 <polygon
-                  data-mirror
-                  points={mirror
-                    .map((point) => `${point.x.toFixed(2)},${point.y.toFixed(2)}`)
-                    .join(' ')}
-                  fill="none"
-                  stroke={RED}
-                  strokeWidth={3}
-                  strokeDasharray="10 7"
-                />
-              ) : null}
-              {axisScreen ? (
-                <g data-axis>
-                  <line
-                    x1={axisScreen.a.x}
-                    y1={axisScreen.a.y}
-                    x2={axisScreen.b.x}
-                    y2={axisScreen.b.y}
-                    stroke={foldOk ? '#1f7a4d' : BLUE}
-                    strokeWidth={foldOk ? 5 : 3}
-                    strokeDasharray={foldOk ? undefined : '12 8'}
-                  />
-                </g>
-              ) : null}
-              {foldOk && axisScreen ? (
-                <g data-axis-found>
-                  <line
-                    x1={axisScreen.a.x}
-                    y1={axisScreen.a.y}
-                    x2={axisScreen.b.x}
-                    y2={axisScreen.b.y}
-                    stroke="url(#e10-line-axis)"
-                    strokeWidth={12}
-                    strokeOpacity={0.85}
-                  />
-                  <text
-                    x={(axisScreen.a.x + axisScreen.b.x) / 2 + 18}
-                    y={(axisScreen.a.y + axisScreen.b.y) / 2 - 14}
-                    fontSize={30}
-                    fontWeight={800}
-                    fill="#1f7a4d"
-                    stroke="#ffffff"
-                    strokeWidth={4}
-                    paintOrder="stroke"
-                  >
-                    ✓
-                  </text>
-                </g>
-              ) : null}
-              {mirror ? (
-                <path
-                  data-fold-gap
-                  d={`${pathOf(originalScreen)} ${pathOf(mirror)}`}
-                  fill="url(#e10-line-gap)"
-                  fillRule="evenodd"
-                  fillOpacity={0.7}
-                  stroke="none"
-                />
-              ) : null}
-              {shapePoints.map((point, index) => {
-                const xy = geom.toScreen(point);
-                return (
-                  <circle
-                    key={`shape-vertex-${index}`}
-                    cx={xy.x}
-                    cy={xy.y}
-                    r={7}
-                    fill="#ffffff"
-                    stroke={INK}
-                    strokeWidth={2.5}
-                    transform={foldPreviewTransform ?? undefined}
-                  />
-                );
-              })}
-              {state.pending ? (
-                <circle
-                  cx={geom.toScreen(state.pending).x}
-                  cy={geom.toScreen(state.pending).y}
-                  r={14}
-                  fill="none"
-                  stroke={ORANGE}
+                  data-shape
+                  data-fold-preview={foldPreviewRunning ? 'true' : undefined}
+                  transform={foldPreviewTransform ?? undefined}
+                  points={geom.pointsString(shapePoints)}
+                  fill={foldFailFill(mirror)}
+                  stroke={INK}
                   strokeWidth={4}
+                  strokeLinejoin="round"
+                  fillOpacity={0.2}
                 />
-              ) : null}
-            </>
-          )}
+                {mirror ? (
+                  <polygon
+                    data-mirror
+                    points={mirror
+                      .map((point) => `${point.x.toFixed(2)},${point.y.toFixed(2)}`)
+                      .join(' ')}
+                    fill="none"
+                    stroke={RED}
+                    strokeWidth={3}
+                    strokeDasharray="10 7"
+                  />
+                ) : null}
+                {axisScreen ? (
+                  <g data-axis>
+                    <line
+                      x1={axisScreen.a.x}
+                      y1={axisScreen.a.y}
+                      x2={axisScreen.b.x}
+                      y2={axisScreen.b.y}
+                      stroke={foldOk ? '#1f7a4d' : BLUE}
+                      strokeWidth={foldOk ? 5 : 3}
+                      strokeDasharray={foldOk ? undefined : '12 8'}
+                    />
+                  </g>
+                ) : null}
+                {foldOk && axisScreen ? (
+                  <g data-axis-found>
+                    <line
+                      x1={axisScreen.a.x}
+                      y1={axisScreen.a.y}
+                      x2={axisScreen.b.x}
+                      y2={axisScreen.b.y}
+                      stroke="url(#e10-line-axis)"
+                      strokeWidth={12}
+                      strokeOpacity={0.85}
+                    />
+                    <text
+                      x={(axisScreen.a.x + axisScreen.b.x) / 2 + 18}
+                      y={(axisScreen.a.y + axisScreen.b.y) / 2 - 14}
+                      fontSize={30}
+                      fontWeight={800}
+                      fill="#1f7a4d"
+                      stroke="#ffffff"
+                      strokeWidth={4}
+                      paintOrder="stroke"
+                    >
+                      ✓
+                    </text>
+                  </g>
+                ) : null}
+                {mirror ? (
+                  <path
+                    data-fold-gap
+                    d={`${pathOf(originalScreen)} ${pathOf(mirror)}`}
+                    fill="url(#e10-line-gap)"
+                    fillRule="evenodd"
+                    fillOpacity={0.7}
+                    stroke="none"
+                  />
+                ) : null}
+                {shapePoints.map((point, index) => {
+                  const xy = geom.toScreen(point);
+                  return (
+                    <circle
+                      key={`shape-vertex-${index}`}
+                      cx={xy.x}
+                      cy={xy.y}
+                      r={7}
+                      fill="#ffffff"
+                      stroke={INK}
+                      strokeWidth={2.5}
+                      transform={foldPreviewTransform ?? undefined}
+                    />
+                  );
+                })}
+                {state.pending ? (
+                  <circle
+                    cx={geom.toScreen(state.pending).x}
+                    cy={geom.toScreen(state.pending).y}
+                    r={14}
+                    fill="none"
+                    stroke={ORANGE}
+                    strokeWidth={4}
+                  />
+                ) : null}
+              </>
+            )}
 
-          {focused ? (
-            <circle
-              data-cursor
-              cx={cursorScreen.x}
-              cy={cursorScreen.y}
-              r={20}
-              fill="none"
-              stroke={ORANGE}
-              strokeWidth={3}
-              strokeDasharray="7 5"
-              pointerEvents="none"
-            />
-          ) : null}
-        </svg>
-      </div>
-
-      <div className={styles.panel} role="group" aria-label={S.name}>
-        {state.task === 'find-axis' ? (
-          <>
-            <section className={styles.panelGroup}>
-              <span className={styles.panelLabel}>{S.line.fold}</span>
-              <div className={styles.directionRow}>
-                <button
-                  type="button"
-                  className={styles.button}
-                  disabled={readOnly || !state.axis}
-                  onClick={() => dispatch({ type: 'fold' })}
-                >
-                  {S.line.fold}
-                </button>
-                <button
-                  type="button"
-                  className={styles.button}
-                  disabled={readOnly || state.showing === null}
-                  onClick={() => dispatch({ type: 'unfold' })}
-                >
-                  {S.line.unfold}
-                </button>
-                <button
-                  type="button"
-                  className={styles.button}
-                  disabled={readOnly || (!state.axis && !state.pending)}
-                  onClick={() => dispatch({ type: 'clear-axis' })}
-                >
-                  {S.line.clearAxis}
-                </button>
-              </div>
-            </section>
-            <section className={styles.panelGroup}>
-              <span className={styles.panelLabel}>{S.line.shapePick(state.shapeIndex)}</span>
-              <div className={styles.directionRow}>
-                {state.settings.shapes.map((id, index) => (
+            {focused ? (
+              <circle
+                data-cursor
+                cx={cursorScreen.x}
+                cy={cursorScreen.y}
+                r={20}
+                fill="none"
+                stroke={ORANGE}
+                strokeWidth={3}
+                strokeDasharray="7 5"
+                pointerEvents="none"
+              />
+            ) : null}
+          </svg>
+        </div>
+        <div className={styles.sideStack}>
+          <div className={styles.panel} role="group" aria-label={S.name}>
+            {state.task === 'find-axis' ? (
+              <>
+                <section className={styles.panelGroup}>
+                  <span className={styles.panelLabel}>{S.line.fold}</span>
+                  <div className={styles.directionRow}>
+                    <button
+                      type="button"
+                      className={styles.button}
+                      disabled={readOnly || !state.axis}
+                      onClick={() => dispatch({ type: 'fold' })}
+                    >
+                      {S.line.fold}
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.button}
+                      disabled={readOnly || state.showing === null}
+                      onClick={() => dispatch({ type: 'unfold' })}
+                    >
+                      {S.line.unfold}
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.button}
+                      disabled={readOnly || (!state.axis && !state.pending)}
+                      onClick={() => dispatch({ type: 'clear-axis' })}
+                    >
+                      {S.line.clearAxis}
+                    </button>
+                  </div>
+                </section>
+                <section className={styles.panelGroup}>
+                  <span className={styles.panelLabel}>{S.line.shapePick(state.shapeIndex)}</span>
+                  <div className={styles.directionRow}>
+                    {state.settings.shapes.map((id, index) => (
+                      <button
+                        key={id}
+                        type="button"
+                        className={styles.button}
+                        aria-pressed={state.shapeIndex === index}
+                        disabled={readOnly}
+                        onClick={() => dispatch({ type: 'select-shape', index })}
+                      >
+                        {S.line.shapePick(index)}
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              </>
+            ) : (
+              <section className={styles.panelGroup}>
+                <span className={styles.panelLabel}>{S.line.complete.instruction}</span>
+                <div className={styles.directionRow}>
                   <button
-                    key={id}
                     type="button"
                     className={styles.button}
-                    aria-pressed={state.shapeIndex === index}
-                    disabled={readOnly}
-                    onClick={() => dispatch({ type: 'select-shape', index })}
+                    disabled={readOnly || state.vertices.length === 0}
+                    onClick={() => dispatch({ type: 'undo-vertex' })}
                   >
-                    {S.line.shapePick(index)}
+                    {S.line.complete.undo}
                   </button>
-                ))}
-              </div>
-            </section>
-          </>
-        ) : (
-          <section className={styles.panelGroup}>
-            <span className={styles.panelLabel}>{S.line.complete.instruction}</span>
-            <div className={styles.directionRow}>
-              <button
-                type="button"
-                className={styles.button}
-                disabled={readOnly || state.vertices.length === 0}
-                onClick={() => dispatch({ type: 'undo-vertex' })}
-              >
-                {S.line.complete.undo}
-              </button>
-            </div>
-          </section>
-        )}
+                </div>
+              </section>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

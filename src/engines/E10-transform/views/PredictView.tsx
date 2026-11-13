@@ -311,226 +311,245 @@ export function PredictView({
         <span className={styles.hint}>{S.keyboard.predict}</span>
       </div>
 
-      <p className={styles.instructions}>{S.instructions.predict}</p>
+      <p className={styles.instructions}>
+        {state.settings.selfCheck ? S.instructions.predict : S.instructions.predictNoCheck}
+      </p>
       <p className={styles.status} role="status" data-testid="predict-status">
-        {state.confirmed && matches
+        {state.settings.selfCheck && state.confirmed && matches
           ? S.status.targetDone
           : !state.confirmed && state.painted.length === 0
             ? S.predict.emptyPaint
             : ''}
       </p>
 
-      <div className={styles.canvasArea}>
-        <svg
-          ref={svgRef}
-          className={styles.canvas}
-          viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
-          role="group"
-          aria-label={S.canvasLabel.predict}
-          tabIndex={readOnly ? -1 : 0}
-          data-testid="transform-canvas"
-          data-motion={reduced ? 'reduced' : 'full'}
-          data-cpa={cpa}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          onKeyDown={onKeyDown}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onPointerCancel={onPointerUp}
-        >
-          <defs>
-            <pattern
-              id="e10-start-hatch"
-              width="18"
-              height="18"
-              patternUnits="userSpaceOnUse"
-              patternTransform="rotate(35)"
-            >
-              <rect width="18" height="18" fill="#dbe7ff" />
-              <line x1="0" y1="0" x2="0" y2="18" stroke={BLUE} strokeWidth="5" />
-            </pattern>
-            <pattern
-              id="e10-painted-hatch"
-              width="20"
-              height="20"
-              patternUnits="userSpaceOnUse"
-              patternTransform="rotate(-30)"
-            >
-              <rect width="20" height="20" fill="#fff2d8" />
-              <line x1="0" y1="0" x2="0" y2="20" stroke={ORANGE} strokeWidth="4" />
-            </pattern>
-            <pattern
-              id="e10-result-hatch"
-              width="18"
-              height="18"
-              patternUnits="userSpaceOnUse"
-              patternTransform="rotate(35)"
-            >
-              <rect width="18" height="18" fill="#d9f2e6" />
-              <line x1="0" y1="0" x2="0" y2="18" stroke="#2f9e6b" strokeWidth="5" />
-            </pattern>
-            <pattern id="e10-mark-correct" width="34" height="34" patternUnits="userSpaceOnUse">
-              <path
-                d="M8 18 L14 24 L27 8"
-                fill="none"
-                stroke="#1f7a4d"
-                strokeWidth="4"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </pattern>
-            <pattern id="e10-mark-extra" width="30" height="30" patternUnits="userSpaceOnUse">
-              <path
-                d="M7 7 L23 23 M23 7 L7 23"
-                stroke="#b42318"
-                strokeWidth="4"
-                strokeLinecap="round"
-              />
-            </pattern>
-            <pattern id="e10-mark-missing" width="26" height="26" patternUnits="userSpaceOnUse">
-              <circle cx="13" cy="13" r="4" fill="#2f6fde" fillOpacity={0.65} />
-            </pattern>
-          </defs>
+      <div className={styles.stageRow}>
+        <div className={styles.boardArea}>
+          <svg
+            ref={svgRef}
+            className={styles.canvas}
+            viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
+            role="group"
+            aria-label={S.canvasLabel.predict}
+            tabIndex={readOnly ? -1 : 0}
+            data-testid="transform-canvas"
+            data-motion={reduced ? 'reduced' : 'full'}
+            data-cpa={cpa}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            onKeyDown={onKeyDown}
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            onPointerCancel={onPointerUp}
+          >
+            <defs>
+              <pattern
+                id="e10-start-hatch"
+                width="18"
+                height="18"
+                patternUnits="userSpaceOnUse"
+                patternTransform="rotate(35)"
+              >
+                <rect width="18" height="18" fill="#dbe7ff" />
+                <line x1="0" y1="0" x2="0" y2="18" stroke={BLUE} strokeWidth="5" />
+              </pattern>
+              <pattern
+                id="e10-painted-hatch"
+                width="20"
+                height="20"
+                patternUnits="userSpaceOnUse"
+                patternTransform="rotate(-30)"
+              >
+                <rect width="20" height="20" fill="#fff2d8" />
+                <line x1="0" y1="0" x2="0" y2="20" stroke={ORANGE} strokeWidth="4" />
+              </pattern>
+              <pattern
+                id="e10-result-hatch"
+                width="18"
+                height="18"
+                patternUnits="userSpaceOnUse"
+                patternTransform="rotate(35)"
+              >
+                <rect width="18" height="18" fill="#d9f2e6" />
+                <line x1="0" y1="0" x2="0" y2="18" stroke="#2f9e6b" strokeWidth="5" />
+              </pattern>
+              <pattern id="e10-mark-correct" width="34" height="34" patternUnits="userSpaceOnUse">
+                <path
+                  d="M8 18 L14 24 L27 8"
+                  fill="none"
+                  stroke="#1f7a4d"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </pattern>
+              <pattern id="e10-mark-extra" width="30" height="30" patternUnits="userSpaceOnUse">
+                <path
+                  d="M7 7 L23 23 M23 7 L7 23"
+                  stroke="#b42318"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                />
+              </pattern>
+              <pattern id="e10-mark-missing" width="26" height="26" patternUnits="userSpaceOnUse">
+                <circle cx="13" cy="13" r="4" fill="#2f6fde" fillOpacity={0.65} />
+              </pattern>
+            </defs>
 
-          <rect width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} fill={PAPER} />
-          <g stroke={GRID} strokeWidth={1.4} strokeOpacity={0.75} pointerEvents="none">
-            {Array.from({ length: state.settings.grid + 1 }, (_, index) => (
-              <line
-                key={`v-${index}`}
-                x1={rect.x + index * rect.cell}
-                y1={rect.y}
-                x2={rect.x + index * rect.cell}
-                y2={rect.y + rect.height}
-              />
-            ))}
-            {Array.from({ length: state.settings.grid + 1 }, (_, index) => (
-              <line
-                key={`h-${index}`}
-                x1={rect.x}
-                y1={rect.y + index * rect.cell}
-                x2={rect.x + rect.width}
-                y2={rect.y + index * rect.cell}
-              />
-            ))}
-          </g>
+            <rect width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} fill={PAPER} />
+            <g stroke={GRID} strokeWidth={1.4} strokeOpacity={0.75} pointerEvents="none">
+              {Array.from({ length: state.settings.grid + 1 }, (_, index) => (
+                <line
+                  key={`v-${index}`}
+                  x1={rect.x + index * rect.cell}
+                  y1={rect.y}
+                  x2={rect.x + index * rect.cell}
+                  y2={rect.y + rect.height}
+                />
+              ))}
+              {Array.from({ length: state.settings.grid + 1 }, (_, index) => (
+                <line
+                  key={`h-${index}`}
+                  x1={rect.x}
+                  y1={rect.y + index * rect.cell}
+                  x2={rect.x + rect.width}
+                  y2={rect.y + index * rect.cell}
+                />
+              ))}
+            </g>
 
-          {state.painted.map((cell) => {
-            const box = cellRect(rect, cell);
-            return (
-              <rect
-                key={`painted-${cellKey(cell)}`}
-                data-painted
-                x={box.x}
-                y={box.y}
-                width={box.width}
-                height={box.height}
-                fill="url(#e10-painted-hatch)"
-                stroke={ORANGE}
-                strokeWidth={2.5}
-                strokeDasharray="7 5"
-              />
-            );
-          })}
+            {state.painted.map((cell) => {
+              const box = cellRect(rect, cell);
+              return (
+                <rect
+                  key={`painted-${cellKey(cell)}`}
+                  data-painted
+                  x={box.x}
+                  y={box.y}
+                  width={box.width}
+                  height={box.height}
+                  fill="url(#e10-painted-hatch)"
+                  stroke={ORANGE}
+                  strokeWidth={2.5}
+                  strokeDasharray="7 5"
+                />
+              );
+            })}
 
-          <g data-start pointerEvents="none">
-            <FigureShape
-              figure={state.start}
-              rect={rect}
-              fill="url(#e10-start-hatch)"
-              stroke={INK}
-              strokeWidth={4}
-              labels={state.settings.labels ? S.vertexLabels : undefined}
-            />
-          </g>
-
-          {!state.confirmed && firstTurn && firstTurn.kind === 'turn' ? (
-            <g data-pin pointerEvents="none">
-              <circle
-                cx={ptXY(rect, firstTurn.center).x}
-                cy={ptXY(rect, firstTurn.center).y}
-                r={9}
-                fill={ORANGE}
-                stroke="#ffffff"
-                strokeWidth={2}
+            <g data-start pointerEvents="none">
+              <FigureShape
+                figure={state.start}
+                rect={rect}
+                fill="url(#e10-start-hatch)"
+                stroke={INK}
+                strokeWidth={4}
+                labels={state.settings.labels ? S.vertexLabels : undefined}
               />
             </g>
-          ) : null}
 
-          {state.confirmed ? (
-            <ResultLayer
-              start={state.start}
-              operations={state.operations}
-              rect={rect}
-              cpa={cpa}
-              reduced={reduced}
-              painted={state.painted}
-              result={result}
-              labels={state.settings.labels ? S.vertexLabels : undefined}
-              ghost={state.settings.ghost}
-              arcTrail={state.settings.arcTrail}
-            />
-          ) : null}
+            {!state.confirmed && firstTurn && firstTurn.kind === 'turn' ? (
+              <g data-pin pointerEvents="none">
+                <circle
+                  cx={ptXY(rect, firstTurn.center).x}
+                  cy={ptXY(rect, firstTurn.center).y}
+                  r={9}
+                  fill={ORANGE}
+                  stroke="#ffffff"
+                  strokeWidth={2}
+                />
+              </g>
+            ) : null}
 
-          {focused || readOnly ? (
-            <rect
-              data-cursor
-              x={cellRect(rect, cursorCell).x}
-              y={cellRect(rect, cursorCell).y}
-              width={rect.cell}
-              height={rect.cell}
-              fill="none"
-              stroke={ORANGE}
-              strokeWidth={3}
-              strokeDasharray="8 5"
-              pointerEvents="none"
-            />
+            {state.settings.selfCheck && state.confirmed ? (
+              <ResultLayer
+                start={state.start}
+                operations={state.operations}
+                rect={rect}
+                cpa={cpa}
+                reduced={reduced}
+                painted={state.painted}
+                result={result}
+                labels={state.settings.labels ? S.vertexLabels : undefined}
+                ghost={state.settings.ghost}
+                arcTrail={state.settings.arcTrail}
+              />
+            ) : null}
+
+            {focused || readOnly ? (
+              <rect
+                data-cursor
+                x={cellRect(rect, cursorCell).x}
+                y={cellRect(rect, cursorCell).y}
+                width={rect.cell}
+                height={rect.cell}
+                fill="none"
+                stroke={ORANGE}
+                strokeWidth={3}
+                strokeDasharray="8 5"
+                pointerEvents="none"
+              />
+            ) : null}
+          </svg>
+        </div>
+
+        <div className={styles.sideStack}>
+          <div className={styles.predictActions}>
+            {state.settings.selfCheck ? (
+              <>
+                <button
+                  type="button"
+                  className={styles.button}
+                  disabled={readOnly || state.painted.length === 0 || state.confirmed}
+                  onClick={() => dispatch({ type: 'confirm' })}
+                >
+                  {S.predict.confirm}
+                </button>
+                {state.confirmed ? (
+                  <button
+                    type="button"
+                    className={styles.button}
+                    disabled={readOnly}
+                    onClick={() => dispatch({ type: 'retry' })}
+                  >
+                    {S.predict.retry}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className={styles.button}
+                    disabled={readOnly || state.painted.length === 0}
+                    onClick={() => dispatch({ type: 'clear-paint' })}
+                  >
+                    {S.predict.clearPaint}
+                  </button>
+                )}
+              </>
+            ) : (
+              <button
+                type="button"
+                className={styles.button}
+                disabled={readOnly || state.painted.length === 0}
+                onClick={() => dispatch({ type: 'clear-paint' })}
+              >
+                {S.predict.clearPaint}
+              </button>
+            )}
+          </div>
+
+          {state.settings.showOperation ? (
+            <section className={styles.operationPanel} aria-label={S.panel.operationTitle}>
+              <h3 className={styles.panelLabel}>{S.panel.operationTitle}</h3>
+              <ol className={styles.moveList} data-testid="operation-list">
+                {operationItems.map((item) => (
+                  <li key={item.key} className={styles.moveItem}>
+                    {item.text}
+                  </li>
+                ))}
+              </ol>
+            </section>
           ) : null}
-        </svg>
+        </div>
       </div>
-
-      <div className={styles.predictActions}>
-        <button
-          type="button"
-          className={styles.button}
-          disabled={readOnly || state.painted.length === 0 || state.confirmed}
-          onClick={() => dispatch({ type: 'confirm' })}
-        >
-          {S.predict.confirm}
-        </button>
-        {state.confirmed ? (
-          <button
-            type="button"
-            className={styles.button}
-            disabled={readOnly}
-            onClick={() => dispatch({ type: 'retry' })}
-          >
-            {S.predict.retry}
-          </button>
-        ) : (
-          <button
-            type="button"
-            className={styles.button}
-            disabled={readOnly || state.painted.length === 0}
-            onClick={() => dispatch({ type: 'clear-paint' })}
-          >
-            {S.predict.clearPaint}
-          </button>
-        )}
-      </div>
-
-      {state.settings.showOperation ? (
-        <section className={styles.operationPanel} aria-label={S.panel.operationTitle}>
-          <h3 className={styles.panelLabel}>{S.panel.operationTitle}</h3>
-          <ol className={styles.moveList} data-testid="operation-list">
-            {operationItems.map((item) => (
-              <li key={item.key} className={styles.moveItem}>
-                {item.text}
-              </li>
-            ))}
-          </ol>
-        </section>
-      ) : null}
     </div>
   );
 }

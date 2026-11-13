@@ -480,215 +480,219 @@ export function PiecesView({
         {status}
       </p>
 
-      <div className={styles.canvasArea}>
-        <svg
-          ref={svgRef}
-          className={styles.canvas}
-          viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
-          role="group"
-          aria-label={S.canvasLabel[state.mode]}
-          tabIndex={readOnly ? -1 : 0}
-          data-testid="cut-canvas"
-          data-cpa={cpa}
-          data-cut-cursor={cutCursor ? `${cutCursor[0]},${cutCursor[1]}` : undefined}
-          data-hinge-cursor={hingeCursor ? `${hingeCursor[0]},${hingeCursor[1]}` : undefined}
-          onKeyDown={onCanvasKeyDown}
-          onPointerDown={onPointerDown}
-          onPointerUp={onPointerUp}
-          onPointerCancel={() => {
-            dragRef.current = null;
-          }}
-        >
-          <defs>
-            {state.pieces.map((piece, index) => {
-              const color = colorOf(index);
-              const kind = patternKind(index);
-              return (
-                <pattern
-                  key={`pattern-${piece.id}`}
-                  id={patternId(index)}
-                  patternUnits="userSpaceOnUse"
-                  width={18}
-                  height={18}
-                >
-                  {kind === 'hatch' ? (
-                    <path
-                      d="M 0 18 L 18 0 M -4 14 L 14 -4 M 4 22 L 22 4"
-                      stroke={color}
-                      strokeWidth={2}
-                      strokeOpacity={0.55}
-                      fill="none"
-                    />
-                  ) : null}
-                  {kind === 'dots' ? (
-                    <>
-                      <circle cx={4} cy={4} r={2.4} fill={color} fillOpacity={0.65} />
-                      <circle cx={13} cy={13} r={2.4} fill={color} fillOpacity={0.65} />
-                    </>
-                  ) : null}
-                </pattern>
-              );
-            })}
-          </defs>
+      <div className={styles.stageRow}>
+        <div className={styles.boardArea}>
+          <svg
+            ref={svgRef}
+            className={styles.canvas}
+            viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
+            role="group"
+            aria-label={S.canvasLabel[state.mode]}
+            tabIndex={readOnly ? -1 : 0}
+            data-testid="cut-canvas"
+            data-cpa={cpa}
+            data-cut-cursor={cutCursor ? `${cutCursor[0]},${cutCursor[1]}` : undefined}
+            data-hinge-cursor={hingeCursor ? `${hingeCursor[0]},${hingeCursor[1]}` : undefined}
+            onKeyDown={onCanvasKeyDown}
+            onPointerDown={onPointerDown}
+            onPointerUp={onPointerUp}
+            onPointerCancel={() => {
+              dragRef.current = null;
+            }}
+          >
+            <defs>
+              {state.pieces.map((piece, index) => {
+                const color = colorOf(index);
+                const kind = patternKind(index);
+                return (
+                  <pattern
+                    key={`pattern-${piece.id}`}
+                    id={patternId(index)}
+                    patternUnits="userSpaceOnUse"
+                    width={18}
+                    height={18}
+                  >
+                    {kind === 'hatch' ? (
+                      <path
+                        d="M 0 18 L 18 0 M -4 14 L 14 -4 M 4 22 L 22 4"
+                        stroke={color}
+                        strokeWidth={2}
+                        strokeOpacity={0.55}
+                        fill="none"
+                      />
+                    ) : null}
+                    {kind === 'dots' ? (
+                      <>
+                        <circle cx={4} cy={4} r={2.4} fill={color} fillOpacity={0.65} />
+                        <circle cx={13} cy={13} r={2.4} fill={color} fillOpacity={0.65} />
+                      </>
+                    ) : null}
+                  </pattern>
+                );
+              })}
+            </defs>
 
-          <rect width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} fill={PAPER} />
-          {state.settings.grid > 0 ? (
-            <g stroke={GRID} strokeWidth={1} strokeOpacity={0.55} pointerEvents="none">
-              {boardGridLines().map((line, index) => (
-                <line key={`grid-${index}`} x1={line.x1} y1={line.y1} x2={line.x2} y2={line.y2} />
-              ))}
-            </g>
-          ) : null}
+            <rect width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} fill={PAPER} />
+            {state.settings.grid > 0 ? (
+              <g stroke={GRID} strokeWidth={1} strokeOpacity={0.55} pointerEvents="none">
+                {boardGridLines().map((line, index) => (
+                  <line key={`grid-${index}`} x1={line.x1} y1={line.y1} x2={line.x2} y2={line.y2} />
+                ))}
+              </g>
+            ) : null}
 
-          {unitRect ? (
-            <g pointerEvents="none" data-unit-cover="true">
-              <rect
-                x={unitRect.x}
-                y={unitRect.y}
-                width={unitRect.width}
-                height={unitRect.height}
-                fill="none"
-                stroke="#8a4b00"
-                strokeWidth={2}
-                strokeDasharray="8 5"
-              />
-              {unitCoverLines(unitRect).map((line, index) => (
-                <line
-                  key={`unit-${index}`}
-                  x1={line.x1}
-                  y1={line.y1}
-                  x2={line.x2}
-                  y2={line.y2}
+            {unitRect ? (
+              <g pointerEvents="none" data-unit-cover="true">
+                <rect
+                  x={unitRect.x}
+                  y={unitRect.y}
+                  width={unitRect.width}
+                  height={unitRect.height}
+                  fill="none"
                   stroke="#8a4b00"
-                  strokeWidth={1}
-                  strokeOpacity={0.5}
+                  strokeWidth={2}
+                  strokeDasharray="8 5"
                 />
-              ))}
-            </g>
-          ) : null}
+                {unitCoverLines(unitRect).map((line, index) => (
+                  <line
+                    key={`unit-${index}`}
+                    x1={line.x1}
+                    y1={line.y1}
+                    x2={line.x2}
+                    y2={line.y2}
+                    stroke="#8a4b00"
+                    strokeWidth={1}
+                    strokeOpacity={0.5}
+                  />
+                ))}
+              </g>
+            ) : null}
 
-          {state.pieces.map((piece, index) => {
-            const screen = boardPoints(piece.vertices);
-            const label = S.pieceLabel(index + 1);
-            const center = centroid(screen);
-            const color = colorOf(index);
-            const kind = colored ? patternKind(index) : 'plain';
-            const animatingPiece = animating === piece.id;
-            return (
-              <g
-                key={piece.id}
-                className={styles.piece}
-                role="button"
-                tabIndex={readOnly ? -1 : 0}
-                aria-label={label}
-                data-piece={piece.id}
-                data-copy={piece.copy ? 'true' : 'false'}
-                data-animating={animatingPiece ? 'true' : 'false'}
-                onKeyDown={(event) => onPieceKeyDown(event, piece)}
-              >
-                <polygon
-                  points={pointsAttribute(screen)}
-                  fill={colored ? color : '#ffffff'}
-                  fillOpacity={colored ? 0.16 : 1}
-                  stroke={colored ? color : INK}
-                  strokeWidth={colored ? 3 : 2.5}
-                  strokeDasharray={piece.copy ? '11 7' : undefined}
-                  strokeLinejoin="round"
-                  pointerEvents="none"
-                />
-                {colored && kind !== 'plain' ? (
+            {state.pieces.map((piece, index) => {
+              const screen = boardPoints(piece.vertices);
+              const label = S.pieceLabel(index + 1);
+              const center = centroid(screen);
+              const color = colorOf(index);
+              const kind = colored ? patternKind(index) : 'plain';
+              const animatingPiece = animating === piece.id;
+              return (
+                <g
+                  key={piece.id}
+                  className={styles.piece}
+                  role="button"
+                  tabIndex={readOnly ? -1 : 0}
+                  aria-label={label}
+                  data-piece={piece.id}
+                  data-copy={piece.copy ? 'true' : 'false'}
+                  data-animating={animatingPiece ? 'true' : 'false'}
+                  onKeyDown={(event) => onPieceKeyDown(event, piece)}
+                >
                   <polygon
                     points={pointsAttribute(screen)}
-                    fill={`url(#${patternId(index)})`}
-                    stroke="none"
+                    fill={colored ? color : '#ffffff'}
+                    fillOpacity={colored ? 0.16 : 1}
+                    stroke={colored ? color : INK}
+                    strokeWidth={colored ? 3 : 2.5}
+                    strokeDasharray={piece.copy ? '11 7' : undefined}
+                    strokeLinejoin="round"
                     pointerEvents="none"
                   />
-                ) : null}
-                <text
-                  x={center.x}
-                  y={center.y + 6}
-                  textAnchor="middle"
-                  fontSize={20}
-                  fontWeight={700}
-                  fill={INK}
-                  pointerEvents="none"
-                >
-                  {S.pieceNumber(index + 1)}
-                </text>
-              </g>
-            );
-          })}
-
-          {cutPiece
-            ? cutList.map((candidate, index) => {
-                const point = boardPoint(candidate);
-                const chosen = cutCursor !== null && sameRPoint(candidate, cutCursor);
-                const from = cutStart !== null && sameRPoint(candidate, cutStart);
-                return (
-                  <g key={`cut-${index}`} pointerEvents="none" data-cut-candidate={index}>
-                    <circle
-                      cx={point.x}
-                      cy={point.y}
-                      r={chosen ? 15 : 8}
-                      fill={chosen ? ORANGE : '#ffffff'}
-                      fillOpacity={chosen ? 0.85 : 0.7}
-                      stroke={ORANGE}
-                      strokeWidth={2}
+                  {colored && kind !== 'plain' ? (
+                    <polygon
+                      points={pointsAttribute(screen)}
+                      fill={`url(#${patternId(index)})`}
+                      stroke="none"
+                      pointerEvents="none"
                     />
-                    {from ? (
+                  ) : null}
+                  <text
+                    x={center.x}
+                    y={center.y + 6}
+                    textAnchor="middle"
+                    fontSize={20}
+                    fontWeight={700}
+                    fill={INK}
+                    pointerEvents="none"
+                  >
+                    {S.pieceNumber(index + 1)}
+                  </text>
+                </g>
+              );
+            })}
+
+            {cutPiece
+              ? cutList.map((candidate, index) => {
+                  const point = boardPoint(candidate);
+                  const chosen = cutCursor !== null && sameRPoint(candidate, cutCursor);
+                  const from = cutStart !== null && sameRPoint(candidate, cutStart);
+                  return (
+                    <g key={`cut-${index}`} pointerEvents="none" data-cut-candidate={index}>
                       <circle
                         cx={point.x}
                         cy={point.y}
-                        r={22}
-                        fill="none"
-                        stroke="#8a4b00"
-                        strokeWidth={3}
-                        strokeDasharray="6 4"
+                        r={chosen ? 15 : 8}
+                        fill={chosen ? ORANGE : '#ffffff'}
+                        fillOpacity={chosen ? 0.85 : 0.7}
+                        stroke={ORANGE}
+                        strokeWidth={2}
                       />
-                    ) : null}
-                  </g>
-                );
-              })
-            : null}
+                      {from ? (
+                        <circle
+                          cx={point.x}
+                          cy={point.y}
+                          r={22}
+                          fill="none"
+                          stroke="#8a4b00"
+                          strokeWidth={3}
+                          strokeDasharray="6 4"
+                        />
+                      ) : null}
+                    </g>
+                  );
+                })
+              : null}
 
-          {hingePiece
-            ? hingeList.map((candidate, index) => {
-                const point = boardPoint(candidate);
-                const chosen = hingeCursor !== null && sameRPoint(candidate, hingeCursor);
-                return (
-                  <g key={`hinge-${index}`} pointerEvents="none" data-hinge-candidate={index}>
-                    <circle
-                      cx={point.x}
-                      cy={point.y}
-                      r={chosen ? 17 : 9}
-                      fill={chosen ? '#7c3aed' : '#ffffff'}
-                      fillOpacity={chosen ? 0.85 : 0.75}
-                      stroke="#7c3aed"
-                      strokeWidth={2.5}
-                    />
-                    <circle cx={point.x} cy={point.y} r={3} fill="#7c3aed" />
-                  </g>
-                );
-              })
-            : null}
+            {hingePiece
+              ? hingeList.map((candidate, index) => {
+                  const point = boardPoint(candidate);
+                  const chosen = hingeCursor !== null && sameRPoint(candidate, hingeCursor);
+                  return (
+                    <g key={`hinge-${index}`} pointerEvents="none" data-hinge-candidate={index}>
+                      <circle
+                        cx={point.x}
+                        cy={point.y}
+                        r={chosen ? 17 : 9}
+                        fill={chosen ? '#7c3aed' : '#ffffff'}
+                        fillOpacity={chosen ? 0.85 : 0.75}
+                        stroke="#7c3aed"
+                        strokeWidth={2.5}
+                      />
+                      <circle cx={point.x} cy={point.y} r={3} fill="#7c3aed" />
+                    </g>
+                  );
+                })
+              : null}
 
-          {cutPiece && cutStart && cutCursor ? (
-            <line
-              x1={boardPoint(cutStart).x}
-              y1={boardPoint(cutStart).y}
-              x2={boardPoint(cutCursor).x}
-              y2={boardPoint(cutCursor).y}
-              stroke={ORANGE}
-              strokeWidth={2.5}
-              strokeDasharray="9 6"
-              pointerEvents="none"
-              data-cut-preview="true"
-            />
-          ) : null}
-        </svg>
+            {cutPiece && cutStart && cutCursor ? (
+              <line
+                x1={boardPoint(cutStart).x}
+                y1={boardPoint(cutStart).y}
+                x2={boardPoint(cutCursor).x}
+                y2={boardPoint(cutCursor).y}
+                stroke={ORANGE}
+                strokeWidth={2.5}
+                strokeDasharray="9 6"
+                pointerEvents="none"
+                data-cut-preview="true"
+              />
+            ) : null}
+          </svg>
+        </div>
+
+        <div className={styles.sideStack}>
+          <p className={styles.hint}>{S.canvasHint}</p>
+        </div>
       </div>
-
-      <p className={styles.hint}>{S.canvasHint}</p>
     </div>
   );
 }

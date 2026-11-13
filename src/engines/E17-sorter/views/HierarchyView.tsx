@@ -106,153 +106,157 @@ export function HierarchyView({
         {held ? S.hierarchy.heldStatus(S.quadName[held]) : ''}
       </p>
 
-      <div className={styles.canvasArea}>
-        <svg
-          className={styles.canvas}
-          viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
-          role="group"
-          aria-label={S.canvasLabel.hierarchy}
-          tabIndex={readOnly ? -1 : 0}
-          data-testid="sorter-canvas"
-          data-mode="hierarchy"
-        >
-          <SorterDefs />
-          <rect width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} fill={PAPER} />
+      <div className={styles.stageRow}>
+        <div className={styles.boardArea}>
+          <svg
+            className={styles.canvas}
+            viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
+            role="group"
+            aria-label={S.canvasLabel.hierarchy}
+            tabIndex={readOnly ? -1 : 0}
+            data-testid="sorter-canvas"
+            data-mode="hierarchy"
+          >
+            <SorterDefs />
+            <rect width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} fill={PAPER} />
 
-          <text x={20} y={90} fontSize={18} fontWeight={700} fill={INK}>
-            {S.hierarchy.shapeLabel}
-          </text>
-          <rect
-            x={shapeBox.x}
-            y={shapeBox.y}
-            width={shapeBox.width}
-            height={shapeBox.height}
-            fill="#ffffff"
-            stroke={GRID}
-            rx={16}
-          />
-          {shape.length >= 3 ? (
-            <>
-              <polygon
-                points={polygon(shape)}
-                fill="#eaf1fd"
-                fillOpacity={0.6}
-                stroke={INK}
-                strokeWidth={3}
-                strokeLinejoin="round"
-              />
-              {marksOn ? (
-                <>
-                  <RightAngleMarks points={shape} vertices={props.rightAngles} />
-                  <ParallelArrows points={shape} pairs={props.parallelSidePairs} />
-                </>
-              ) : null}
-            </>
-          ) : null}
-
-          <g aria-label={S.hierarchy.treeLabel}>
-            {treeEdges(state.settings.trapezoidDefinition).map(([from, to]) => {
-              const parent = nodeMap.get(from);
-              const child = nodeMap.get(to);
-              if (!parent || !child) return null;
-              return (
-                <line
-                  key={`${from}-${to}`}
-                  x1={parent.x}
-                  y1={parent.y + TREE_NODE.height / 2}
-                  x2={child.x}
-                  y2={child.y - TREE_NODE.height / 2}
-                  stroke={GRID}
+            <text x={20} y={90} fontSize={18} fontWeight={700} fill={INK}>
+              {S.hierarchy.shapeLabel}
+            </text>
+            <rect
+              x={shapeBox.x}
+              y={shapeBox.y}
+              width={shapeBox.width}
+              height={shapeBox.height}
+              fill="#ffffff"
+              stroke={GRID}
+              rx={16}
+            />
+            {shape.length >= 3 ? (
+              <>
+                <polygon
+                  points={polygon(shape)}
+                  fill="#eaf1fd"
+                  fillOpacity={0.6}
+                  stroke={INK}
                   strokeWidth={3}
+                  strokeLinejoin="round"
                 />
-              );
-            })}
-            {nodes.map((treeNode) => {
-              const box = treeNodeBox(treeNode);
-              const isBlank = state.settings.treeBlanks.includes(treeNode.name);
-              const value = state.blanks[treeNode.name] ?? null;
-              const current = showPosition && node === treeNode.name;
-              const blankNumber = state.settings.treeBlanks.indexOf(treeNode.name) + 1;
-              return (
-                <g
-                  key={treeNode.name}
-                  role={isBlank ? 'button' : undefined}
-                  tabIndex={isBlank && !readOnly ? 0 : undefined}
-                  aria-label={
-                    isBlank
-                      ? value === null
-                        ? S.hierarchy.blankPosition(blankNumber)
-                        : S.quadName[value]
-                      : S.quadName[treeNode.name]
-                  }
-                  data-blank={isBlank ? treeNode.name : undefined}
-                  data-current={current ? 'true' : undefined}
-                  onClick={() => {
-                    if (isBlank) pressBlank(treeNode.name);
-                  }}
-                  onKeyDown={(event) => {
-                    if (isBlank) onBlankKey(event, treeNode.name);
-                  }}
-                >
-                  <rect
-                    x={box.x}
-                    y={box.y}
-                    width={box.width}
-                    height={box.height}
-                    rx={12}
-                    fill={current ? '#fff5e6' : '#ffffff'}
-                    stroke={current ? ORANGE : isBlank ? GRID : INK}
-                    strokeWidth={current ? 5 : isBlank ? 3 : 2}
-                    strokeDasharray={isBlank && value === null ? '10 7' : undefined}
+                {marksOn ? (
+                  <>
+                    <RightAngleMarks points={shape} vertices={props.rightAngles} />
+                    <ParallelArrows points={shape} pairs={props.parallelSidePairs} />
+                  </>
+                ) : null}
+              </>
+            ) : null}
+
+            <g aria-label={S.hierarchy.treeLabel}>
+              {treeEdges(state.settings.trapezoidDefinition).map(([from, to]) => {
+                const parent = nodeMap.get(from);
+                const child = nodeMap.get(to);
+                if (!parent || !child) return null;
+                return (
+                  <line
+                    key={`${from}-${to}`}
+                    x1={parent.x}
+                    y1={parent.y + TREE_NODE.height / 2}
+                    x2={child.x}
+                    y2={child.y - TREE_NODE.height / 2}
+                    stroke={GRID}
+                    strokeWidth={3}
                   />
-                  <text
-                    x={treeNode.x}
-                    y={treeNode.y + 7}
-                    textAnchor="middle"
-                    fontSize={19}
-                    fontWeight={700}
-                    fill={current ? '#8a4b00' : INK}
+                );
+              })}
+              {nodes.map((treeNode) => {
+                const box = treeNodeBox(treeNode);
+                const isBlank = state.settings.treeBlanks.includes(treeNode.name);
+                const value = state.blanks[treeNode.name] ?? null;
+                const current = showPosition && node === treeNode.name;
+                const blankNumber = state.settings.treeBlanks.indexOf(treeNode.name) + 1;
+                return (
+                  <g
+                    key={treeNode.name}
+                    role={isBlank ? 'button' : undefined}
+                    tabIndex={isBlank && !readOnly ? 0 : undefined}
+                    aria-label={
+                      isBlank
+                        ? value === null
+                          ? S.hierarchy.blankPosition(blankNumber)
+                          : S.quadName[value]
+                        : S.quadName[treeNode.name]
+                    }
+                    data-blank={isBlank ? treeNode.name : undefined}
+                    data-current={current ? 'true' : undefined}
+                    onClick={() => {
+                      if (isBlank) pressBlank(treeNode.name);
+                    }}
+                    onKeyDown={(event) => {
+                      if (isBlank) onBlankKey(event, treeNode.name);
+                    }}
                   >
-                    {isBlank
-                      ? value === null
-                        ? ''
-                        : S.quadName[value]
-                      : S.quadName[treeNode.name]}
-                  </text>
-                  {current ? (
+                    <rect
+                      x={box.x}
+                      y={box.y}
+                      width={box.width}
+                      height={box.height}
+                      rx={12}
+                      fill={current ? '#fff5e6' : '#ffffff'}
+                      stroke={current ? ORANGE : isBlank ? GRID : INK}
+                      strokeWidth={current ? 5 : isBlank ? 3 : 2}
+                      strokeDasharray={isBlank && value === null ? '10 7' : undefined}
+                    />
                     <text
                       x={treeNode.x}
-                      y={box.y - 10}
+                      y={treeNode.y + 7}
                       textAnchor="middle"
-                      fontSize={16}
+                      fontSize={19}
                       fontWeight={700}
-                      fill={ORANGE}
+                      fill={current ? '#8a4b00' : INK}
                     >
-                      {S.hierarchy.nowShape}
+                      {isBlank
+                        ? value === null
+                          ? ''
+                          : S.quadName[value]
+                        : S.quadName[treeNode.name]}
                     </text>
-                  ) : null}
-                </g>
-              );
-            })}
-          </g>
-        </svg>
-      </div>
+                    {current ? (
+                      <text
+                        x={treeNode.x}
+                        y={box.y - 10}
+                        textAnchor="middle"
+                        fontSize={16}
+                        fontWeight={700}
+                        fill={ORANGE}
+                      >
+                        {S.hierarchy.nowShape}
+                      </text>
+                    ) : null}
+                  </g>
+                );
+              })}
+            </g>
+          </svg>
+        </div>
 
-      <div className={styles.nameTray} role="group" aria-label={S.hierarchy.nameTitle}>
-        {NAME_CARD_ORDER.map((name) => (
-          <button
-            key={name}
-            type="button"
-            className={styles.nameCard}
-            aria-pressed={held === name}
-            data-name-card={name}
-            onClick={() => setHeld((current) => (current === name ? null : name))}
-            disabled={readOnly}
-          >
-            {S.quadName[name]}
-          </button>
-        ))}
-        <span className={styles.hint}>{S.hierarchy.hint}</span>
+        <div className={styles.sideStack}>
+          <div className={styles.nameTray} role="group" aria-label={S.hierarchy.nameTitle}>
+            {NAME_CARD_ORDER.map((name) => (
+              <button
+                key={name}
+                type="button"
+                className={styles.nameCard}
+                aria-pressed={held === name}
+                data-name-card={name}
+                onClick={() => setHeld((current) => (current === name ? null : name))}
+                disabled={readOnly}
+              >
+                {S.quadName[name]}
+              </button>
+            ))}
+            <span className={styles.hint}>{S.hierarchy.hint}</span>
+          </div>
+        </div>
       </div>
     </div>
   );

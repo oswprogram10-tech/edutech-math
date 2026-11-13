@@ -613,350 +613,354 @@ export function TessellationView({ state, dispatch, cpa, readOnly = false, targe
         ) : null}
       </div>
 
-      <div className={styles.canvasArea}>
-        <svg
-          ref={svgRef}
-          className={styles.canvas}
-          viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
-          role="group"
-          aria-label={S.canvasLabel.tessellation}
-          tabIndex={readOnly ? -1 : 0}
-          data-testid="transform-canvas"
-          data-motion="full"
-          data-cpa={cpa}
-          style={{ touchAction: 'none' }}
-          onKeyDown={onKeyDown}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onPointerCancel={onPointerUp}
-        >
-          <defs>
-            <pattern
-              id="e10-tess-overlap"
-              width="16"
-              height="16"
-              patternUnits="userSpaceOnUse"
-              patternTransform="rotate(35)"
-            >
-              <rect width="16" height="16" fill="#ffe3e0" />
-              <line x1="0" y1="0" x2="0" y2="16" stroke={RED} strokeWidth="4" />
-            </pattern>
-            <pattern id="e10-tess-gap" width="16" height="16" patternUnits="userSpaceOnUse">
-              <rect width="16" height="16" fill="#fff5f4" />
-              <circle cx="8" cy="8" r="3.5" fill={RED} />
-            </pattern>
-            <pattern
-              id="e10-tess-stamp"
-              width="16"
-              height="16"
-              patternUnits="userSpaceOnUse"
-              patternTransform="rotate(-35)"
-            >
-              <rect width="16" height="16" fill="#fff2d8" />
-              <line x1="0" y1="0" x2="0" y2="16" stroke={ORANGE} strokeWidth="3.5" />
-            </pattern>
-          </defs>
-          <rect width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} fill={PAPER} />
-          {family === 'square' ? (
-            <>
-              <rect
-                data-frame
-                x={rect.x}
-                y={rect.y}
-                width={rect.width}
-                height={rect.height}
-                fill="#ffffff"
-                stroke="#7a8497"
-                strokeWidth={3}
-              />
-              <g stroke={GRID} strokeWidth={1.1} strokeOpacity={0.7} pointerEvents="none">
-                {Array.from({ length: SQUARE_FRAME + 1 }, (_, index) => (
-                  <line
-                    key={`v-${index}`}
-                    x1={rect.x + index * rect.cell}
-                    y1={rect.y}
-                    x2={rect.x + index * rect.cell}
-                    y2={rect.y + rect.height}
-                  />
-                ))}
-                {Array.from({ length: SQUARE_FRAME + 1 }, (_, index) => (
-                  <line
-                    key={`h-${index}`}
-                    x1={rect.x}
-                    y1={rect.y + index * rect.cell}
-                    x2={rect.x + rect.width}
-                    y2={rect.y + index * rect.cell}
-                  />
-                ))}
-              </g>
-              <SquareLayer
-                rect={rect}
-                placed={state.placed}
-                stamp={state.stamp}
-                checked={checked}
-              />
-            </>
-          ) : null}
-          {family === 'tri' ? (
-            <>
-              <g data-frame stroke="#aab4c6" strokeWidth={0.8} pointerEvents="none">
-                {Array.from({ length: TRI_FRAME_ROWS }, (_, b) => {
-                  const start = -Math.floor(b / 2);
-                  return Array.from({ length: TRI_FRAME_WIDTH }, (_, offset) => {
-                    const a = start + offset;
-                    const up = triCellPoints([3 * a + 1, 3 * b + 1]);
-                    const down = triCellPoints([3 * a + 2, 3 * b + 2]);
-                    return (
-                      <g key={`frame-${a}-${b}`}>
-                        {up ? (
-                          <polygon
-                            points={triPointsToString(TRI_BOARD, up)}
-                            fill="#ffffff"
-                            stroke="#d7deea"
-                            strokeWidth={0.8}
-                          />
-                        ) : null}
-                        {down ? (
-                          <polygon
-                            points={triPointsToString(TRI_BOARD, down)}
-                            fill="#ffffff"
-                            stroke="#d7deea"
-                            strokeWidth={0.8}
-                          />
-                        ) : null}
-                      </g>
-                    );
-                  });
-                })}
-              </g>
-              <TriLayer
-                rect={TRI_BOARD}
-                placed={state.placed}
-                stamp={state.stamp}
-                checked={checked}
-              />
-            </>
-          ) : null}
-          {family === 'free' ? (
-            <PentagonLayer hub={state.hub} gapCheck={state.settings.gapCheck} />
-          ) : null}
-        </svg>
-      </div>
+      <div className={styles.stageRow}>
+        <div className={styles.boardArea}>
+          <svg
+            ref={svgRef}
+            className={styles.canvas}
+            viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
+            role="group"
+            aria-label={S.canvasLabel.tessellation}
+            tabIndex={readOnly ? -1 : 0}
+            data-testid="transform-canvas"
+            data-motion="full"
+            data-cpa={cpa}
+            style={{ touchAction: 'none' }}
+            onKeyDown={onKeyDown}
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            onPointerCancel={onPointerUp}
+          >
+            <defs>
+              <pattern
+                id="e10-tess-overlap"
+                width="16"
+                height="16"
+                patternUnits="userSpaceOnUse"
+                patternTransform="rotate(35)"
+              >
+                <rect width="16" height="16" fill="#ffe3e0" />
+                <line x1="0" y1="0" x2="0" y2="16" stroke={RED} strokeWidth="4" />
+              </pattern>
+              <pattern id="e10-tess-gap" width="16" height="16" patternUnits="userSpaceOnUse">
+                <rect width="16" height="16" fill="#fff5f4" />
+                <circle cx="8" cy="8" r="3.5" fill={RED} />
+              </pattern>
+              <pattern
+                id="e10-tess-stamp"
+                width="16"
+                height="16"
+                patternUnits="userSpaceOnUse"
+                patternTransform="rotate(-35)"
+              >
+                <rect width="16" height="16" fill="#fff2d8" />
+                <line x1="0" y1="0" x2="0" y2="16" stroke={ORANGE} strokeWidth="3.5" />
+              </pattern>
+            </defs>
+            <rect width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} fill={PAPER} />
+            {family === 'square' ? (
+              <>
+                <rect
+                  data-frame
+                  x={rect.x}
+                  y={rect.y}
+                  width={rect.width}
+                  height={rect.height}
+                  fill="#ffffff"
+                  stroke="#7a8497"
+                  strokeWidth={3}
+                />
+                <g stroke={GRID} strokeWidth={1.1} strokeOpacity={0.7} pointerEvents="none">
+                  {Array.from({ length: SQUARE_FRAME + 1 }, (_, index) => (
+                    <line
+                      key={`v-${index}`}
+                      x1={rect.x + index * rect.cell}
+                      y1={rect.y}
+                      x2={rect.x + index * rect.cell}
+                      y2={rect.y + rect.height}
+                    />
+                  ))}
+                  {Array.from({ length: SQUARE_FRAME + 1 }, (_, index) => (
+                    <line
+                      key={`h-${index}`}
+                      x1={rect.x}
+                      y1={rect.y + index * rect.cell}
+                      x2={rect.x + rect.width}
+                      y2={rect.y + index * rect.cell}
+                    />
+                  ))}
+                </g>
+                <SquareLayer
+                  rect={rect}
+                  placed={state.placed}
+                  stamp={state.stamp}
+                  checked={checked}
+                />
+              </>
+            ) : null}
+            {family === 'tri' ? (
+              <>
+                <g data-frame stroke="#aab4c6" strokeWidth={0.8} pointerEvents="none">
+                  {Array.from({ length: TRI_FRAME_ROWS }, (_, b) => {
+                    const start = -Math.floor(b / 2);
+                    return Array.from({ length: TRI_FRAME_WIDTH }, (_, offset) => {
+                      const a = start + offset;
+                      const up = triCellPoints([3 * a + 1, 3 * b + 1]);
+                      const down = triCellPoints([3 * a + 2, 3 * b + 2]);
+                      return (
+                        <g key={`frame-${a}-${b}`}>
+                          {up ? (
+                            <polygon
+                              points={triPointsToString(TRI_BOARD, up)}
+                              fill="#ffffff"
+                              stroke="#d7deea"
+                              strokeWidth={0.8}
+                            />
+                          ) : null}
+                          {down ? (
+                            <polygon
+                              points={triPointsToString(TRI_BOARD, down)}
+                              fill="#ffffff"
+                              stroke="#d7deea"
+                              strokeWidth={0.8}
+                            />
+                          ) : null}
+                        </g>
+                      );
+                    });
+                  })}
+                </g>
+                <TriLayer
+                  rect={TRI_BOARD}
+                  placed={state.placed}
+                  stamp={state.stamp}
+                  checked={checked}
+                />
+              </>
+            ) : null}
+            {family === 'free' ? (
+              <PentagonLayer hub={state.hub} gapCheck={state.settings.gapCheck} />
+            ) : null}
+          </svg>
+        </div>
 
-      <div className={styles.panel} role="group" aria-label={S.name}>
-        {family !== 'free' ? (
-          <>
-            <section className={styles.panelGroup}>
-              <span className={styles.panelLabel}>{S.panel.slideGroup}</span>
-              <div className={styles.directionRow}>
-                {(['up', 'down', 'left', 'right'] as const).map((side) => (
-                  <button
-                    key={side}
-                    type="button"
-                    className={styles.button}
-                    disabled={readOnly}
-                    onClick={() => {
-                      if (family === 'square') {
+        <div className={styles.sideStack}>
+          <div className={styles.panel} role="group" aria-label={S.name}>
+            {family !== 'free' ? (
+              <>
+                <section className={styles.panelGroup}>
+                  <span className={styles.panelLabel}>{S.panel.slideGroup}</span>
+                  <div className={styles.directionRow}>
+                    {(['up', 'down', 'left', 'right'] as const).map((side) => (
+                      <button
+                        key={side}
+                        type="button"
+                        className={styles.button}
+                        disabled={readOnly}
+                        onClick={() => {
+                          if (family === 'square') {
+                            dispatch({
+                              type: 'move',
+                              move: {
+                                kind: 'slide',
+                                dx: side === 'left' ? -cells : side === 'right' ? cells : 0,
+                                dy: side === 'up' ? -cells : side === 'down' ? cells : 0,
+                              },
+                            });
+                          } else {
+                            const dx = side === 'left' ? -1 : side === 'right' ? 1 : 0;
+                            const dy = side === 'down' ? 1 : side === 'up' ? -1 : 0;
+                            dispatch({ type: 'move', move: { kind: 'slide', dx, dy } });
+                          }
+                        }}
+                      >
+                        {S.sides[side]}
+                      </button>
+                    ))}
+                    {family === 'square' ? (
+                      <label className={styles.field}>
+                        <span>{S.tessellation.cells}</span>
+                        <input
+                          className={styles.input}
+                          type="number"
+                          min={1}
+                          max={12}
+                          value={cells}
+                          disabled={readOnly}
+                          onChange={(event) => {
+                            const next = Number(event.target.value);
+                            if (!Number.isFinite(next)) return;
+                            setCells(Math.min(12, Math.max(1, Math.round(next))));
+                          }}
+                        />
+                      </label>
+                    ) : null}
+                    {family === 'tri' ? (
+                      <>
+                        <button
+                          type="button"
+                          className={styles.button}
+                          disabled={readOnly}
+                          onClick={() =>
+                            dispatch({ type: 'move', move: { kind: 'slide', dx: -1, dy: 1 } })
+                          }
+                        >
+                          {S.tessellation.diagonalSw}
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.button}
+                          disabled={readOnly}
+                          onClick={() =>
+                            dispatch({ type: 'move', move: { kind: 'slide', dx: 1, dy: -1 } })
+                          }
+                        >
+                          {S.tessellation.diagonalNe}
+                        </button>
+                      </>
+                    ) : null}
+                  </div>
+                </section>
+                <section className={styles.panelGroup}>
+                  <span className={styles.panelLabel}>{S.panel.flipGroup}</span>
+                  <div className={styles.directionRow}>
+                    {(['up', 'down', 'left', 'right'] as const).map((side) => (
+                      <button
+                        key={side}
+                        type="button"
+                        className={styles.button}
+                        disabled={readOnly}
+                        onClick={() => dispatch({ type: 'move', move: { kind: 'flip', side } })}
+                      >
+                        {S.sides[side]}
+                      </button>
+                    ))}
+                  </div>
+                </section>
+                <section className={styles.panelGroup}>
+                  <span className={styles.panelLabel}>{S.panel.turnGroup}</span>
+                  <div className={styles.directionRow}>
+                    <button
+                      type="button"
+                      className={styles.button}
+                      disabled={readOnly}
+                      onClick={() =>
                         dispatch({
                           type: 'move',
                           move: {
-                            kind: 'slide',
-                            dx: side === 'left' ? -cells : side === 'right' ? cells : 0,
-                            dy: side === 'up' ? -cells : side === 'down' ? cells : 0,
+                            kind: 'turn',
+                            direction: 'cw',
+                            angle: family === 'square' ? 90 : 60,
+                            center: centerPoint,
                           },
-                        });
-                      } else {
-                        const dx = side === 'left' ? -1 : side === 'right' ? 1 : 0;
-                        const dy = side === 'down' ? 1 : side === 'up' ? -1 : 0;
-                        dispatch({ type: 'move', move: { kind: 'slide', dx, dy } });
+                        })
                       }
-                    }}
-                  >
-                    {S.sides[side]}
-                  </button>
-                ))}
-                {family === 'square' ? (
-                  <label className={styles.field}>
-                    <span>{S.tessellation.cells}</span>
-                    <input
-                      className={styles.input}
-                      type="number"
-                      min={1}
-                      max={12}
-                      value={cells}
+                    >
+                      {S.turnDirections.cw}
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.button}
                       disabled={readOnly}
-                      onChange={(event) => {
-                        const next = Number(event.target.value);
-                        if (!Number.isFinite(next)) return;
-                        setCells(Math.min(12, Math.max(1, Math.round(next))));
+                      onClick={() =>
+                        dispatch({
+                          type: 'move',
+                          move: {
+                            kind: 'turn',
+                            direction: 'ccw',
+                            angle: family === 'square' ? 90 : 60,
+                            center: centerPoint,
+                          },
+                        })
+                      }
+                    >
+                      {S.turnDirections.ccw}
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.button}
+                      disabled={readOnly}
+                      onClick={() => {
+                        const length = state.stamp.outline.length;
+                        if (length === 0) return;
+                        dispatch({ type: 'select-center', index: (state.center + 1) % length });
                       }}
-                    />
-                  </label>
-                ) : null}
-                {family === 'tri' ? (
-                  <>
-                    <button
-                      type="button"
-                      className={styles.button}
-                      disabled={readOnly}
-                      onClick={() =>
-                        dispatch({ type: 'move', move: { kind: 'slide', dx: -1, dy: 1 } })
-                      }
                     >
-                      {S.tessellation.diagonalSw}
+                      {S.panel.turnCenter}
                     </button>
-                    <button
-                      type="button"
-                      className={styles.button}
-                      disabled={readOnly}
-                      onClick={() =>
-                        dispatch({ type: 'move', move: { kind: 'slide', dx: 1, dy: -1 } })
-                      }
-                    >
-                      {S.tessellation.diagonalNe}
-                    </button>
-                  </>
-                ) : null}
-              </div>
-            </section>
-            <section className={styles.panelGroup}>
-              <span className={styles.panelLabel}>{S.panel.flipGroup}</span>
-              <div className={styles.directionRow}>
-                {(['up', 'down', 'left', 'right'] as const).map((side) => (
+                  </div>
+                </section>
+              </>
+            ) : (
+              <section className={styles.panelGroup} aria-label={S.tessellation.hubTitle}>
+                <span className={styles.panelLabel}>{S.tessellation.hubTitle}</span>
+                <div className={styles.directionRow}>
                   <button
-                    key={side}
                     type="button"
                     className={styles.button}
                     disabled={readOnly}
-                    onClick={() => dispatch({ type: 'move', move: { kind: 'flip', side } })}
+                    onClick={() => dispatch({ type: 'hub-add' })}
                   >
-                    {S.sides[side]}
+                    {S.tessellation.hubAdd}
                   </button>
-                ))}
-              </div>
-            </section>
+                  <button
+                    type="button"
+                    className={styles.button}
+                    disabled={readOnly}
+                    onClick={() => dispatch({ type: 'hub-remove' })}
+                  >
+                    {S.tessellation.hubRemove}
+                  </button>
+                </div>
+              </section>
+            )}
             <section className={styles.panelGroup}>
-              <span className={styles.panelLabel}>{S.panel.turnGroup}</span>
+              <span className={styles.panelLabel}>{S.panel.moveListTitle}</span>
               <div className={styles.directionRow}>
                 <button
                   type="button"
                   className={styles.button}
                   disabled={readOnly}
-                  onClick={() =>
-                    dispatch({
-                      type: 'move',
-                      move: {
-                        kind: 'turn',
-                        direction: 'cw',
-                        angle: family === 'square' ? 90 : 60,
-                        center: centerPoint,
-                      },
-                    })
-                  }
+                  onClick={() => dispatch({ type: 'place' })}
                 >
-                  {S.turnDirections.cw}
+                  {S.tessellation.place}
                 </button>
                 <button
                   type="button"
                   className={styles.button}
-                  disabled={readOnly}
-                  onClick={() =>
-                    dispatch({
-                      type: 'move',
-                      move: {
-                        kind: 'turn',
-                        direction: 'ccw',
-                        angle: family === 'square' ? 90 : 60,
-                        center: centerPoint,
-                      },
-                    })
-                  }
+                  disabled={readOnly || state.placed.length === 0}
+                  onClick={() => dispatch({ type: 'remove-last' })}
                 >
-                  {S.turnDirections.ccw}
+                  {S.tessellation.removeLast}
                 </button>
                 <button
                   type="button"
                   className={styles.button}
-                  disabled={readOnly}
-                  onClick={() => {
-                    const length = state.stamp.outline.length;
-                    if (length === 0) return;
-                    dispatch({ type: 'select-center', index: (state.center + 1) % length });
-                  }}
+                  disabled={readOnly || (state.placed.length === 0 && state.movesUsed.length === 0)}
+                  onClick={() => dispatch({ type: 'clear-tiles' })}
                 >
-                  {S.panel.turnCenter}
+                  {S.tessellation.clearAll}
                 </button>
+                {state.settings.gapCheck ? (
+                  <button
+                    type="button"
+                    className={styles.button}
+                    disabled={readOnly}
+                    onClick={() => dispatch({ type: 'check-gaps' })}
+                  >
+                    {S.tessellation.checkGaps}
+                  </button>
+                ) : null}
               </div>
             </section>
-          </>
-        ) : (
-          <section className={styles.panelGroup} aria-label={S.tessellation.hubTitle}>
-            <span className={styles.panelLabel}>{S.tessellation.hubTitle}</span>
-            <div className={styles.directionRow}>
-              <button
-                type="button"
-                className={styles.button}
-                disabled={readOnly}
-                onClick={() => dispatch({ type: 'hub-add' })}
-              >
-                {S.tessellation.hubAdd}
-              </button>
-              <button
-                type="button"
-                className={styles.button}
-                disabled={readOnly}
-                onClick={() => dispatch({ type: 'hub-remove' })}
-              >
-                {S.tessellation.hubRemove}
-              </button>
-            </div>
-          </section>
-        )}
-        <section className={styles.panelGroup}>
-          <span className={styles.panelLabel}>{S.panel.moveListTitle}</span>
-          <div className={styles.directionRow}>
-            <button
-              type="button"
-              className={styles.button}
-              disabled={readOnly}
-              onClick={() => dispatch({ type: 'place' })}
-            >
-              {S.tessellation.place}
-            </button>
-            <button
-              type="button"
-              className={styles.button}
-              disabled={readOnly || state.placed.length === 0}
-              onClick={() => dispatch({ type: 'remove-last' })}
-            >
-              {S.tessellation.removeLast}
-            </button>
-            <button
-              type="button"
-              className={styles.button}
-              disabled={readOnly || (state.placed.length === 0 && state.movesUsed.length === 0)}
-              onClick={() => dispatch({ type: 'clear-tiles' })}
-            >
-              {S.tessellation.clearAll}
-            </button>
-            {state.settings.gapCheck ? (
-              <button
-                type="button"
-                className={styles.button}
-                disabled={readOnly}
-                onClick={() => dispatch({ type: 'check-gaps' })}
-              >
-                {S.tessellation.checkGaps}
-              </button>
-            ) : null}
           </div>
-        </section>
-      </div>
 
-      {state.settings.customize === 'edge-translate' ? (
-        <TileEditor customCells={state.customCells} dispatch={dispatch} readOnly={readOnly} />
-      ) : null}
+          {state.settings.customize === 'edge-translate' ? (
+            <TileEditor customCells={state.customCells} dispatch={dispatch} readOnly={readOnly} />
+          ) : null}
+        </div>
+      </div>
     </div>
   );
 }

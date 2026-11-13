@@ -138,186 +138,192 @@ export function PerimeterView({
 
       <p className={styles.instructions}>{S.perimeter.instructions}</p>
 
-      <div className={styles.canvasArea}>
-        <svg
-          ref={svgRef}
-          className={styles.canvas}
-          viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
-          role="group"
-          aria-label={S.perimeter.canvasLabel}
-          tabIndex={readOnly ? -1 : 0}
-          data-testid="geo-canvas"
-          data-cpa={cpa}
-          onKeyDown={onCanvasKeyDown}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={() => {
-            dragRef.current = null;
-          }}
-          onPointerCancel={() => {
-            dragRef.current = null;
-          }}
-        >
-          <rect width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} fill={PAPER} />
-          <g stroke={GRID} strokeWidth={1} strokeOpacity={0.5} pointerEvents="none">
-            {Array.from({ length: rows }, (_, row) => (
-              <line
-                key={`h-${row}`}
-                x1={rect.x}
-                y1={pegPoint(rect, [0, row]).y}
-                x2={rect.x + rect.width}
-                y2={pegPoint(rect, [0, row]).y}
-              />
-            ))}
-            {Array.from({ length: cols }, (_, col) => (
-              <line
-                key={`v-${col}`}
-                x1={pegPoint(rect, [col, 0]).x}
-                y1={rect.y}
-                x2={pegPoint(rect, [col, 0]).x}
-                y2={rect.y + rect.height}
-              />
-            ))}
-          </g>
-
-          <g pointerEvents="none">
-            {Array.from({ length: rows }, (_, row) =>
-              Array.from({ length: cols }, (_, col) => {
-                const point = pegPoint(rect, [col, row]);
-                return (
-                  <circle
-                    key={`peg-${col}-${row}`}
-                    cx={point.x}
-                    cy={point.y}
-                    r={Math.max(3, Math.min(6, rect.spacing * 0.055))}
-                    fill={INK}
-                  />
-                );
-              }),
-            )}
-          </g>
-
-          {band ? (
-            <polygon
-              points={pointsString(band.pegs, rect)}
-              fill={colored ? BLUE : 'none'}
-              fillOpacity={colored ? 0.1 : 0}
-              stroke={colored ? BLUE : INK}
-              strokeWidth={colored ? 6 : 5}
-              strokeLinejoin="round"
-              pointerEvents="none"
-            />
-          ) : null}
-
-          <g pointerEvents="none">
-            <text
-              x={topMiddle.x}
-              y={topMiddle.y - 28}
-              textAnchor="middle"
-              fontSize={24}
-              fontWeight={800}
-              fill={INK}
-              data-testid="perimeter-value"
-            >
-              {S.perimeter.perimeterLabel(2 * (width + height))}
-            </text>
-            <text
-              x={(rect.x + topMiddle.x) / 2}
-              y={Math.max(rect.y - 8, 30)}
-              textAnchor="middle"
-              fontSize={20}
-              fontWeight={700}
-              fill={BLUE}
-              data-testid="perimeter-width"
-            >
-              {S.perimeter.widthLabel(width)}
-            </text>
-            <text
-              x={rightMiddle.x + 18}
-              y={rightMiddle.y}
-              textAnchor="start"
-              fontSize={20}
-              fontWeight={700}
-              fill={BLUE}
-              data-testid="perimeter-height"
-            >
-              {S.perimeter.heightLabel(height)}
-            </text>
-            <text
-              x={(rect.x + pegPoint(rect, [width, 0]).x) / 2}
-              y={(rect.y + pegPoint(rect, [0, height]).y) / 2}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              fontSize={34}
-              fontWeight={800}
-              fill={colored ? BLUE : INK}
-              data-testid="perimeter-area"
-            >
-              {S.perimeter.areaLabel(area)}
-            </text>
-            <text
-              x={bottomMiddle.x}
-              y={bottomMiddle.y + 40}
-              textAnchor="middle"
-              fontSize={20}
-              fontWeight={700}
-              fill={BLUE}
-              data-testid="perimeter-width-bottom"
-            >
-              {S.perimeter.widthLabel(width)}
-            </text>
-          </g>
-
-          <g pointerEvents="none">
-            <circle cx={handle.x} cy={handle.y} r={hitRadius} fill={ORANGE} fillOpacity={0.18} />
-            <circle
-              cx={handle.x}
-              cy={handle.y}
-              r={Math.max(22, hitRadius * 0.6)}
-              fill={PAPER}
-              stroke={ORANGE}
-              strokeWidth={5}
-              data-testid="perimeter-handle"
-            />
-            <circle cx={handle.x} cy={handle.y} r={5} fill={ORANGE} />
-          </g>
-        </svg>
-      </div>
-
-      {state.settings.log ? (
-        <table
-          data-testid="perimeter-log"
-          style={{ marginTop: 12, borderCollapse: 'collapse', minWidth: 240 }}
-        >
-          <caption style={{ textAlign: 'left', fontWeight: 700, paddingBottom: 6 }}>
-            {S.perimeter.logTitle}
-          </caption>
-          <thead>
-            <tr>
-              {[S.perimeter.logWidth, S.perimeter.logHeight, S.perimeter.logArea].map((label) => (
-                <th
-                  key={label}
-                  scope="col"
-                  style={{ borderBottom: '2px solid #9aa4b5', padding: '6px 10px' }}
-                >
-                  {label}
-                </th>
+      <div className={styles.stageRow}>
+        <div className={styles.boardArea}>
+          <svg
+            ref={svgRef}
+            className={styles.canvas}
+            viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
+            role="group"
+            aria-label={S.perimeter.canvasLabel}
+            tabIndex={readOnly ? -1 : 0}
+            data-testid="geo-canvas"
+            data-cpa={cpa}
+            onKeyDown={onCanvasKeyDown}
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={() => {
+              dragRef.current = null;
+            }}
+            onPointerCancel={() => {
+              dragRef.current = null;
+            }}
+          >
+            <rect width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} fill={PAPER} />
+            <g stroke={GRID} strokeWidth={1} strokeOpacity={0.5} pointerEvents="none">
+              {Array.from({ length: rows }, (_, row) => (
+                <line
+                  key={`h-${row}`}
+                  x1={rect.x}
+                  y1={pegPoint(rect, [0, row]).y}
+                  x2={rect.x + rect.width}
+                  y2={pegPoint(rect, [0, row]).y}
+                />
               ))}
-            </tr>
-          </thead>
-          <tbody>
-            {state.log.map((entry, index) => (
-              <tr key={`log-${index}`} data-testid="perimeter-log-row">
-                <td style={{ padding: '6px 10px', textAlign: 'center' }}>{entry.width}</td>
-                <td style={{ padding: '6px 10px', textAlign: 'center' }}>{entry.height}</td>
-                <td style={{ padding: '6px 10px', textAlign: 'center' }}>
-                  {entry.width * entry.height}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      ) : null}
+              {Array.from({ length: cols }, (_, col) => (
+                <line
+                  key={`v-${col}`}
+                  x1={pegPoint(rect, [col, 0]).x}
+                  y1={rect.y}
+                  x2={pegPoint(rect, [col, 0]).x}
+                  y2={rect.y + rect.height}
+                />
+              ))}
+            </g>
+
+            <g pointerEvents="none">
+              {Array.from({ length: rows }, (_, row) =>
+                Array.from({ length: cols }, (_, col) => {
+                  const point = pegPoint(rect, [col, row]);
+                  return (
+                    <circle
+                      key={`peg-${col}-${row}`}
+                      cx={point.x}
+                      cy={point.y}
+                      r={Math.max(3, Math.min(6, rect.spacing * 0.055))}
+                      fill={INK}
+                    />
+                  );
+                }),
+              )}
+            </g>
+
+            {band ? (
+              <polygon
+                points={pointsString(band.pegs, rect)}
+                fill={colored ? BLUE : 'none'}
+                fillOpacity={colored ? 0.1 : 0}
+                stroke={colored ? BLUE : INK}
+                strokeWidth={colored ? 6 : 5}
+                strokeLinejoin="round"
+                pointerEvents="none"
+              />
+            ) : null}
+
+            <g pointerEvents="none">
+              <text
+                x={topMiddle.x}
+                y={topMiddle.y - 28}
+                textAnchor="middle"
+                fontSize={24}
+                fontWeight={800}
+                fill={INK}
+                data-testid="perimeter-value"
+              >
+                {S.perimeter.perimeterLabel(2 * (width + height))}
+              </text>
+              <text
+                x={(rect.x + topMiddle.x) / 2}
+                y={Math.max(rect.y - 8, 30)}
+                textAnchor="middle"
+                fontSize={20}
+                fontWeight={700}
+                fill={BLUE}
+                data-testid="perimeter-width"
+              >
+                {S.perimeter.widthLabel(width)}
+              </text>
+              <text
+                x={rightMiddle.x + 18}
+                y={rightMiddle.y}
+                textAnchor="start"
+                fontSize={20}
+                fontWeight={700}
+                fill={BLUE}
+                data-testid="perimeter-height"
+              >
+                {S.perimeter.heightLabel(height)}
+              </text>
+              <text
+                x={(rect.x + pegPoint(rect, [width, 0]).x) / 2}
+                y={(rect.y + pegPoint(rect, [0, height]).y) / 2}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fontSize={34}
+                fontWeight={800}
+                fill={colored ? BLUE : INK}
+                data-testid="perimeter-area"
+              >
+                {S.perimeter.areaLabel(area)}
+              </text>
+              <text
+                x={bottomMiddle.x}
+                y={bottomMiddle.y + 40}
+                textAnchor="middle"
+                fontSize={20}
+                fontWeight={700}
+                fill={BLUE}
+                data-testid="perimeter-width-bottom"
+              >
+                {S.perimeter.widthLabel(width)}
+              </text>
+            </g>
+
+            <g pointerEvents="none">
+              <circle cx={handle.x} cy={handle.y} r={hitRadius} fill={ORANGE} fillOpacity={0.18} />
+              <circle
+                cx={handle.x}
+                cy={handle.y}
+                r={Math.max(22, hitRadius * 0.6)}
+                fill={PAPER}
+                stroke={ORANGE}
+                strokeWidth={5}
+                data-testid="perimeter-handle"
+              />
+              <circle cx={handle.x} cy={handle.y} r={5} fill={ORANGE} />
+            </g>
+          </svg>
+        </div>
+
+        <div className={styles.sideStack}>
+          {state.settings.log ? (
+            <table
+              data-testid="perimeter-log"
+              style={{ marginTop: 12, borderCollapse: 'collapse', minWidth: 240 }}
+            >
+              <caption style={{ textAlign: 'left', fontWeight: 700, paddingBottom: 6 }}>
+                {S.perimeter.logTitle}
+              </caption>
+              <thead>
+                <tr>
+                  {[S.perimeter.logWidth, S.perimeter.logHeight, S.perimeter.logArea].map(
+                    (label) => (
+                      <th
+                        key={label}
+                        scope="col"
+                        style={{ borderBottom: '2px solid #9aa4b5', padding: '6px 10px' }}
+                      >
+                        {label}
+                      </th>
+                    ),
+                  )}
+                </tr>
+              </thead>
+              <tbody>
+                {state.log.map((entry, index) => (
+                  <tr key={`log-${index}`} data-testid="perimeter-log-row">
+                    <td style={{ padding: '6px 10px', textAlign: 'center' }}>{entry.width}</td>
+                    <td style={{ padding: '6px 10px', textAlign: 'center' }}>{entry.height}</td>
+                    <td style={{ padding: '6px 10px', textAlign: 'center' }}>
+                      {entry.width * entry.height}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : null}
+        </div>
+      </div>
     </div>
   );
 }
