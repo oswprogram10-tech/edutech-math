@@ -209,6 +209,9 @@ function buildSettings(config: CubesConfig): CubesSettings {
       ? Math.max(1, Math.round(config.maxCubes))
       : volume;
 
+  const rotationLocked = config.rotationLocked === true;
+  const stage = config.stage === '3d' || config.stage === 'isometric' ? config.stage : 'auto';
+
   return {
     grid: [cols, rows],
     maxHeight,
@@ -218,7 +221,8 @@ function buildSettings(config: CubesConfig): CubesSettings {
     sideDirection: 'right',
     frontMarker: config.frontMarker !== false,
     translucentToggle: config.translucentToggle !== false,
-    rotationLocked: config.rotationLocked === true,
+    rotationLocked,
+    stage,
     reference: sanitizeReference(config.reference),
     referenceViews: sanitizeReferenceViews(config.referenceViews),
   };

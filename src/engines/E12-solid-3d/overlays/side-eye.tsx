@@ -6,13 +6,22 @@
 import { CanvasAlignedOverlay, clamp } from '../../../core/engine-sdk';
 import type { OverlayProps } from '../../../core/engine-sdk';
 import { computeStageLayout, projectPoint, rotateContinuous } from '../layout';
+import { useActiveRenderer } from '../renderer';
 import { solid3dStrings as S } from '../strings.ko';
 import type { SolidConfig, SolidState } from '../types';
+import { HelperDiagramBox } from './HelperDiagramBox';
+import { CUBE_CANVAS_SELECTOR, useHelperOverlayMetrics } from './overlayMetrics';
 
 export function SideEyeOverlay({ state }: OverlayProps<SolidConfig, SolidState>) {
-  if (state.mode !== 'cubes') return null;
+  const activeRenderer = useActiveRenderer();
   const [cols, rows] = state.settings.grid;
   const layout = computeStageLayout(cols, rows, state.settings.maxHeight);
+  const overlayMetrics = useHelperOverlayMetrics(
+    activeRenderer,
+    layout.viewBox.width,
+    layout.viewBox.height,
+  );
+  if (state.mode !== 'cubes') return null;
 
   const [eyeRx, eyeRy] = rotateContinuous(cols + 0.45, rows / 2, cols, rows, state.viewTurn);
   const [lookRx, lookRy] = rotateContinuous(cols - 0.15, rows / 2, cols, rows, state.viewTurn);
@@ -37,35 +46,14 @@ export function SideEyeOverlay({ state }: OverlayProps<SolidConfig, SolidState>)
     y: clamp(rawFront.y, margin, layout.viewBox.height - margin),
   };
 
-  return (
-    <CanvasAlignedOverlay
-      testId="side-eye"
-      canvasSelector={'svg[data-testid="cubes-canvas"]'}
-      logicalWidth={layout.viewBox.width}
-      logicalHeight={layout.viewBox.height}
-    >
-      <defs>
-        <marker
-          id="e12-eye-arrow"
-          viewBox="0 0 10 10"
-          refX={8}
-          refY={5}
-          markerWidth={6}
-          markerHeight={6}
-          orient="auto"
-        >
-          <path d="M 0 1 L 10 5 L 0 9 z" fill="#c2410c" />
-        </marker>
-      </defs>
-
-      {/* 눈 그림 */}
+  const content = (
+    <>
       <g transform={`translate(${eye.x}, ${eye.y})`}>
         <ellipse cx={0} cy={0} rx={18} ry={11} fill="#fff7ed" stroke="#c2410c" strokeWidth={2.5} />
         <circle cx={0} cy={0} r={5.5} fill="#c2410c" />
         <circle cx={-1.5} cy={-1.5} r={1.8} fill="#ffffff" />
       </g>
 
-      {/* +x 쪽에서 모양을 향한 시선 화살표 */}
       <line
         x1={arrowStart.x}
         y1={arrowStart.y}
@@ -77,7 +65,6 @@ export function SideEyeOverlay({ state }: OverlayProps<SolidConfig, SolidState>)
         markerEnd="url(#e12-eye-arrow)"
       />
 
-      {/* 눈에서 볼 때 왼쪽(y = 0 쪽) 큰 "앞" 표시 */}
       <g transform={`translate(${front.x}, ${front.y})`}>
         <rect
           x={-20}
@@ -93,6 +80,36 @@ export function SideEyeOverlay({ state }: OverlayProps<SolidConfig, SolidState>)
           {S.front}
         </text>
       </g>
+    </>
+  );
+
+  return (
+    <CanvasAlignedOverlay
+      testId="side-eye"
+      canvasSelector={CUBE_CANVAS_SELECTOR}
+      logicalWidth={overlayMetrics.logicalWidth}
+      logicalHeight={overlayMetrics.logicalHeight}
+    >
+      <defs>
+        <marker
+          id="e12-eye-arrow"
+          viewBox="0 0 10 10"
+          refX={8}
+          refY={5}
+          markerWidth={6}
+          markerHeight={6}
+          orient="auto"
+        >
+          <path d="M 0 1 L 10 5 L 0 9 z" fill="#c2410c" />
+        </marker>
+      </defs>
+      {activeRenderer === '3d' ? (
+        <HelperDiagramBox state={state} overlayMetrics={overlayMetrics}>
+          {content}
+        </HelperDiagramBox>
+      ) : (
+        content
+      )}
     </CanvasAlignedOverlay>
   );
 }

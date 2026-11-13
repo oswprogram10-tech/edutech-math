@@ -67,11 +67,71 @@
   -webkit-user-select: none;
 }
 
+.stageHost {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+.stageHost:focus-visible,
 .stageSvg:focus-visible,
 .projSvg:focus-visible,
 .button:focus-visible {
   outline: 3px solid #e8872e;
   outline-offset: 3px;
+}
+
+.stage3dHost {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  border-radius: 16px;
+  background: #fbfaf6;
+  border: 1px solid #d7deea;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.overlay3dMirror {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  display: block;
+}
+
+.probeLayer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.preparingNote {
+  position: absolute;
+  left: 50%;
+  bottom: 0.75rem;
+  transform: translateX(-50%);
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid #d7deea;
+  color: #3d485c;
+  font-size: 0.82rem;
+  font-weight: 600;
+  pointer-events: none;
 }
 
 .toolbar {
@@ -213,7 +273,9 @@
   @container (min-width: 820px) {
     .stageRow {
       display: flex;
-      flex: 1 1 0;
+      /* 샌드박스(height: auto)에서도 무대가 200px로 찌그러지지 않게 기본 높이를 두고,
+         실행기·?stage=fit(고정 높이)에서는 min-height: 200px까지 부드럽게 줄어든다. */
+      flex: 1 1 min(52dvh, 400px);
       gap: 1rem;
       align-items: stretch;
       min-height: 200px;

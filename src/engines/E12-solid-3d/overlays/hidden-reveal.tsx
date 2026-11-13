@@ -5,13 +5,23 @@
 import { CanvasAlignedOverlay } from '../../../core/engine-sdk';
 import type { OverlayProps } from '../../../core/engine-sdk';
 import { computeStageLayout, cubeFaces, pointsAttr, sortCubesForPainter } from '../layout';
+import { useActiveRenderer } from '../renderer';
 import type { SolidConfig, SolidState } from '../types';
 import { findHiddenCubes } from '../voxel';
+import { HelperDiagramBox } from './HelperDiagramBox';
+import { CUBE_CANVAS_SELECTOR, useHelperOverlayMetrics } from './overlayMetrics';
 
 export function HiddenRevealOverlay({ state }: OverlayProps<SolidConfig, SolidState>) {
-  if (state.mode !== 'cubes') return null;
+  const activeRenderer = useActiveRenderer();
   const [cols, rows] = state.settings.grid;
   const layout = computeStageLayout(cols, rows, state.settings.maxHeight);
+  const overlayMetrics = useHelperOverlayMetrics(
+    activeRenderer,
+    layout.viewBox.width,
+    layout.viewBox.height,
+  );
+  if (state.mode !== 'cubes') return null;
+
   const hiddenCoords = findHiddenCubes(state.cubes, cols, rows, state.viewTurn);
   const painted = sortCubesForPainter(
     hiddenCoords.map(([x, y, z]) => ({ x, y, z })),
@@ -20,12 +30,50 @@ export function HiddenRevealOverlay({ state }: OverlayProps<SolidConfig, SolidSt
     state.viewTurn,
   );
 
+  const marks = painted.map(({ cube, rx, ry }) => {
+    const faces = cubeFaces(layout, rx, ry, cube.z);
+    return (
+      <g
+        key={`hidden-${cube.x}-${cube.y}-${cube.z}`}
+        data-hidden-cube={`${cube.x},${cube.y},${cube.z}`}
+      >
+        <polygon
+          points={pointsAttr(faces.top)}
+          fill="url(#e12-hidden-hatch)"
+          fillOpacity={0.5}
+          stroke="#c2410c"
+          strokeWidth={2.5}
+          strokeDasharray="6 4"
+          strokeLinejoin="round"
+        />
+        <polygon
+          points={pointsAttr(faces.front)}
+          fill="url(#e12-hidden-hatch)"
+          fillOpacity={0.5}
+          stroke="#c2410c"
+          strokeWidth={2.5}
+          strokeDasharray="6 4"
+          strokeLinejoin="round"
+        />
+        <polygon
+          points={pointsAttr(faces.right)}
+          fill="url(#e12-hidden-hatch)"
+          fillOpacity={0.5}
+          stroke="#c2410c"
+          strokeWidth={2.5}
+          strokeDasharray="6 4"
+          strokeLinejoin="round"
+        />
+      </g>
+    );
+  });
+
   return (
     <CanvasAlignedOverlay
       testId="hidden-reveal"
-      canvasSelector={'svg[data-testid="cubes-canvas"]'}
-      logicalWidth={layout.viewBox.width}
-      logicalHeight={layout.viewBox.height}
+      canvasSelector={CUBE_CANVAS_SELECTOR}
+      logicalWidth={overlayMetrics.logicalWidth}
+      logicalHeight={overlayMetrics.logicalHeight}
     >
       <defs>
         <pattern
@@ -38,43 +86,13 @@ export function HiddenRevealOverlay({ state }: OverlayProps<SolidConfig, SolidSt
           <line x1={0} y1={0} x2={0} y2={8} stroke="#c2410c" strokeWidth={2.5} />
         </pattern>
       </defs>
-      {painted.map(({ cube, rx, ry }) => {
-        const faces = cubeFaces(layout, rx, ry, cube.z);
-        return (
-          <g
-            key={`hidden-${cube.x}-${cube.y}-${cube.z}`}
-            data-hidden-cube={`${cube.x},${cube.y},${cube.z}`}
-          >
-            <polygon
-              points={pointsAttr(faces.top)}
-              fill="url(#e12-hidden-hatch)"
-              fillOpacity={0.5}
-              stroke="#c2410c"
-              strokeWidth={2.5}
-              strokeDasharray="6 4"
-              strokeLinejoin="round"
-            />
-            <polygon
-              points={pointsAttr(faces.front)}
-              fill="url(#e12-hidden-hatch)"
-              fillOpacity={0.5}
-              stroke="#c2410c"
-              strokeWidth={2.5}
-              strokeDasharray="6 4"
-              strokeLinejoin="round"
-            />
-            <polygon
-              points={pointsAttr(faces.right)}
-              fill="url(#e12-hidden-hatch)"
-              fillOpacity={0.5}
-              stroke="#c2410c"
-              strokeWidth={2.5}
-              strokeDasharray="6 4"
-              strokeLinejoin="round"
-            />
-          </g>
-        );
-      })}
+      {activeRenderer === '3d' ? (
+        <HelperDiagramBox state={state} overlayMetrics={overlayMetrics}>
+          {marks}
+        </HelperDiagramBox>
+      ) : (
+        marks
+      )}
     </CanvasAlignedOverlay>
   );
 }
