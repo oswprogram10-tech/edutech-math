@@ -1,0 +1,971 @@
+{
+  "unit": "g3s1u2",
+  "title": "평면도형",
+  "activities": [
+    {
+      "id": "g3s1u2.A1",
+      "title": "선 레이저 발사기",
+      "tasks": [
+        {
+          "id": "g3s1u2.A1.T1",
+          "prompt": "점 ㄱ과 점 ㄴ을 잇는 선분을 그어요.",
+          "engine": "E09",
+          "mode": "construct",
+          "cpa": "C",
+          "config": {
+            "mode": "construct",
+            "grid": 9,
+            "tools": ["segment", "ray", "line"],
+            "showExtension": true,
+            "points": [
+              { "label": "ㄱ", "at": [2, 4] },
+              { "label": "ㄴ", "at": [6, 4] }
+            ]
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "hasObject",
+            "args": { "kind": "segment", "from": "ㄱ", "to": "ㄴ" }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "hasObject",
+                    "args": { "kind": "ray", "from": "ㄱ", "to": "ㄴ" }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "hasObject",
+                    "args": { "kind": "ray", "from": "ㄴ", "to": "ㄱ" }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "hasObject",
+                    "args": { "kind": "line", "from": "ㄱ", "to": "ㄴ" }
+                  }
+                ]
+              },
+              "level": 1,
+              "say": "이 선은 몇 쪽으로 끝이 없을까요?"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "hasObject",
+                    "args": { "kind": "ray", "from": "ㄱ", "to": "ㄴ" }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "hasObject",
+                    "args": { "kind": "ray", "from": "ㄴ", "to": "ㄱ" }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "hasObject",
+                    "args": { "kind": "line", "from": "ㄱ", "to": "ㄴ" }
+                  }
+                ]
+              },
+              "level": 2,
+              "show": {
+                "engine": "E09",
+                "overlay": "laser-extent"
+              },
+              "say": "그은 선의 끝이 있는 쪽과 없는 쪽을 표시했어요."
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "hasObject",
+                    "args": { "kind": "ray", "from": "ㄱ", "to": "ㄴ" }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "hasObject",
+                    "args": { "kind": "ray", "from": "ㄴ", "to": "ㄱ" }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "hasObject",
+                    "args": { "kind": "line", "from": "ㄱ", "to": "ㄴ" }
+                  }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g2s1u2"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "construct"
+              },
+              "level": 1,
+              "say": "두 점에서 딱 멈추는 선은 어느 도구일까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "construct"
+              },
+              "level": 2,
+              "show": {
+                "engine": "E09",
+                "overlay": "laser-extent"
+              },
+              "say": "그은 선의 끝을 살펴보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "construct"
+              },
+              "level": 3,
+              "backtrack": "g2s1u2"
+            }
+          ],
+          "concepts": ["g3s1u2.segment-ray-line"],
+          "submit": "button"
+        },
+        {
+          "id": "g3s1u2.A1.T2",
+          "prompt": "별 두 개를 한 번에 지나가는 반직선을 쏘아요.",
+          "engine": "E09",
+          "mode": "construct",
+          "cpa": "C",
+          "config": {
+            "mode": "construct",
+            "grid": 9,
+            "tools": ["segment", "ray", "line"],
+            "showExtension": true,
+            "targets": [
+              [1, 1],
+              [7, 4],
+              [3, 8]
+            ]
+          },
+          "goal": {
+            "kind": "any",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "oneObjectHits",
+                "args": { "kind": "ray", "targets": [1, 2] }
+              },
+              {
+                "kind": "predicate",
+                "name": "oneObjectHits",
+                "args": { "kind": "ray", "targets": [1, 3] }
+              },
+              {
+                "kind": "predicate",
+                "name": "oneObjectHits",
+                "args": { "kind": "ray", "targets": [2, 3] }
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "oneObjectHits",
+                    "args": { "kind": "segment", "targets": [1, 2] }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "oneObjectHits",
+                    "args": { "kind": "segment", "targets": [1, 3] }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "oneObjectHits",
+                    "args": { "kind": "segment", "targets": [2, 3] }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "oneObjectHits",
+                    "args": { "kind": "line", "targets": [1, 2] }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "oneObjectHits",
+                    "args": { "kind": "line", "targets": [1, 3] }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "oneObjectHits",
+                    "args": { "kind": "line", "targets": [2, 3] }
+                  }
+                ]
+              },
+              "level": 1,
+              "say": "이 선은 몇 쪽으로 끝이 없을까요?"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "oneObjectHits",
+                    "args": { "kind": "segment", "targets": [1, 2] }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "oneObjectHits",
+                    "args": { "kind": "segment", "targets": [1, 3] }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "oneObjectHits",
+                    "args": { "kind": "segment", "targets": [2, 3] }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "oneObjectHits",
+                    "args": { "kind": "line", "targets": [1, 2] }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "oneObjectHits",
+                    "args": { "kind": "line", "targets": [1, 3] }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "oneObjectHits",
+                    "args": { "kind": "line", "targets": [2, 3] }
+                  }
+                ]
+              },
+              "level": 2,
+              "show": {
+                "engine": "E09",
+                "overlay": "laser-extent"
+              },
+              "say": "그은 선의 끝이 있는 쪽과 없는 쪽을 표시했어요."
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "oneObjectHits",
+                    "args": { "kind": "segment", "targets": [1, 2] }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "oneObjectHits",
+                    "args": { "kind": "segment", "targets": [1, 3] }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "oneObjectHits",
+                    "args": { "kind": "segment", "targets": [2, 3] }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "oneObjectHits",
+                    "args": { "kind": "line", "targets": [1, 2] }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "oneObjectHits",
+                    "args": { "kind": "line", "targets": [1, 3] }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "oneObjectHits",
+                    "args": { "kind": "line", "targets": [2, 3] }
+                  }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g3s1u2.segment-ray-line"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "construct"
+              },
+              "level": 1,
+              "say": "한쪽 끝에서 시작해 두 별을 지나가게 쏘아 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "construct"
+              },
+              "level": 2,
+              "say": "어느 점에서 시작하는지 살펴보고, 그 방향으로 별이 이어지는지 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "construct"
+              },
+              "level": 3,
+              "backtrack": "g3s1u2.segment-ray-line"
+            }
+          ],
+          "concepts": ["g3s1u2.segment-ray-line"],
+          "submit": "button"
+        },
+        {
+          "id": "g3s1u2.A1.T3",
+          "prompt": "점 ㄱ과 점 ㄴ만 써서 반직선 ㄱㄴ과 반직선 ㄴㄱ을 각각 그어요.",
+          "engine": "E09",
+          "mode": "construct",
+          "cpa": "P",
+          "config": {
+            "mode": "construct",
+            "grid": 9,
+            "tools": ["segment", "ray", "line"],
+            "showExtension": true,
+            "points": [
+              { "label": "ㄱ", "at": [2, 4] },
+              { "label": "ㄴ", "at": [6, 4] }
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "hasObject",
+                "args": { "kind": "ray", "from": "ㄱ", "to": "ㄴ" }
+              },
+              {
+                "kind": "predicate",
+                "name": "hasObject",
+                "args": { "kind": "ray", "from": "ㄴ", "to": "ㄱ" }
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "hasObject",
+                    "args": { "kind": "line", "from": "ㄱ", "to": "ㄴ" }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "hasObject",
+                    "args": { "kind": "segment", "from": "ㄱ", "to": "ㄴ" }
+                  }
+                ]
+              },
+              "level": 1,
+              "say": "이 선은 몇 쪽으로 끝이 없을까요?"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "hasObject",
+                    "args": { "kind": "line", "from": "ㄱ", "to": "ㄴ" }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "hasObject",
+                    "args": { "kind": "segment", "from": "ㄱ", "to": "ㄴ" }
+                  }
+                ]
+              },
+              "level": 2,
+              "show": {
+                "engine": "E09",
+                "overlay": "laser-extent"
+              },
+              "say": "그은 선의 끝이 있는 쪽과 없는 쪽을 표시했어요."
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "hasObject",
+                    "args": { "kind": "line", "from": "ㄱ", "to": "ㄴ" }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "hasObject",
+                    "args": { "kind": "segment", "from": "ㄱ", "to": "ㄴ" }
+                  }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g2s1u2"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "construct"
+              },
+              "level": 1,
+              "say": "두 반직선은 각각 어느 점에서 시작하나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "construct"
+              },
+              "level": 2,
+              "show": {
+                "engine": "E09",
+                "overlay": "laser-extent"
+              },
+              "say": "그은 반직선이 어디서 시작하는지 살펴보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "construct"
+              },
+              "level": 3,
+              "backtrack": "g3s1u2.segment-ray-line"
+            }
+          ],
+          "concepts": ["g3s1u2.segment-ray-line"],
+          "submit": "button"
+        },
+        {
+          "id": "g3s1u2.A1.T4",
+          "prompt": "세 선을 알맞은 상자에 놓아요.",
+          "engine": "E09",
+          "mode": "construct",
+          "cpa": "P",
+          "config": {
+            "mode": "construct",
+            "grid": 9,
+            "tools": ["segment", "ray", "line"],
+            "showExtension": true,
+            "points": [
+              { "label": "ㄱ", "at": [1, 1] },
+              { "label": "ㄴ", "at": [4, 1] },
+              { "label": "ㄷ", "at": [1, 4] },
+              { "label": "ㄹ", "at": [5, 6] },
+              { "label": "ㅁ", "at": [1, 7] },
+              { "label": "ㅂ", "at": [5, 7] }
+            ],
+            "given": [
+              { "id": "g1", "kind": "ray", "from": [1, 1], "to": [4, 1] },
+              { "id": "g2", "kind": "line", "from": [1, 4], "to": [5, 6] },
+              { "id": "g3", "kind": "segment", "from": [1, 7], "to": [5, 7] }
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "equals",
+                "path": "response.sort.bins.seg",
+                "value": ["c3"]
+              },
+              {
+                "kind": "equals",
+                "path": "response.sort.bins.ray",
+                "value": ["c1"]
+              },
+              {
+                "kind": "equals",
+                "path": "response.sort.bins.line",
+                "value": ["c2"]
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "construct"
+              },
+              "level": 1,
+              "say": "선마다 몇 쪽으로 끝이 없을까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "construct"
+              },
+              "level": 2,
+              "say": "주황 화살표가 몇 개인지 세어 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "construct"
+              },
+              "level": 3,
+              "backtrack": "g2s1u2"
+            }
+          ],
+          "concepts": ["g3s1u2.segment-ray-line"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "sort",
+                "id": "sort",
+                "label": "선을 알맞은 상자에",
+                "bins": [
+                  { "id": "seg", "label": "선분" },
+                  { "id": "ray", "label": "반직선" },
+                  { "id": "line", "label": "직선" }
+                ],
+                "cards": [
+                  { "id": "c1", "label": "선 ㄱㄴ" },
+                  { "id": "c2", "label": "선 ㄷㄹ" },
+                  { "id": "c3", "label": "선 ㅁㅂ" }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "g3s1u2.A2",
+      "title": "직각 찾기와 직각 도형 만들기",
+      "tasks": [
+        {
+          "id": "g3s1u2.A2.T1",
+          "prompt": "직각인 각을 모두 찾아 직각 표시를 해요.",
+          "engine": "E09",
+          "mode": "construct",
+          "cpa": "C",
+          "config": {
+            "mode": "construct",
+            "grid": 9,
+            "tools": ["set-square"],
+            "angles": [
+              { "id": "k1", "vertex": [1, 1], "a": [3, 1], "b": [1, 3] },
+              { "id": "k2", "vertex": [6, 0], "a": [8, 2], "b": [4, 2] },
+              { "id": "k3", "vertex": [0, 5], "a": [3, 5], "b": [2, 3] },
+              { "id": "k4", "vertex": [5, 4], "a": [7, 5], "b": [4, 6] },
+              { "id": "k5", "vertex": [5, 8], "a": [8, 8], "b": [3, 6] },
+              { "id": "k6", "vertex": [1, 8], "a": [1, 6], "b": [3, 8] }
+            ]
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "markedAre",
+            "args": { "ids": ["k1", "k2", "k4", "k6"] }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "markedAre",
+                    "args": { "ids": ["k1", "k6"] }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "markedAre",
+                    "args": { "ids": ["k1", "k2", "k6"] }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "markedAre",
+                    "args": { "ids": ["k1", "k4", "k6"] }
+                  }
+                ]
+              },
+              "level": 1,
+              "say": "삼각자를 돌려서 대 보면 어떨까요?"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "markedAre",
+                    "args": { "ids": ["k1", "k6"] }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "markedAre",
+                    "args": { "ids": ["k1", "k2", "k6"] }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "markedAre",
+                    "args": { "ids": ["k1", "k4", "k6"] }
+                  }
+                ]
+              },
+              "level": 2,
+              "show": {
+                "engine": "E09",
+                "overlay": "square-turn"
+              },
+              "say": "삼각자를 각에 대고 돌려 보세요. 꼭 맞나요?"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "markedAre",
+                    "args": { "ids": ["k1", "k6"] }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "markedAre",
+                    "args": { "ids": ["k1", "k2", "k6"] }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "markedAre",
+                    "args": { "ids": ["k1", "k4", "k6"] }
+                  }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g3s1u2.angle-right-angle"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "construct"
+              },
+              "level": 1,
+              "say": "삼각자를 대어 꼭 맞는 각만 표시했나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "construct"
+              },
+              "level": 2,
+              "show": {
+                "engine": "E09",
+                "overlay": "square-turn"
+              },
+              "say": "삼각자를 각에 대고 돌려 보세요. 꼭 맞나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "construct"
+              },
+              "level": 3,
+              "backtrack": "g3s1u2.segment-ray-line"
+            }
+          ],
+          "concepts": ["g3s1u2.angle-right-angle"],
+          "submit": "button"
+        },
+        {
+          "id": "g3s1u2.A2.T2",
+          "prompt": "직각이 하나인 삼각형을 고무줄로 만들어요.",
+          "engine": "E09",
+          "mode": "classify",
+          "cpa": "P",
+          "config": {
+            "mode": "classify",
+            "grid": [5, 5],
+            "maxShapes": 1,
+            "showProperties": []
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "shapeHas",
+            "args": { "vertices": 3, "rightAngles": 1 }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "classify"
+              },
+              "level": 1,
+              "say": "모눈 칸의 모서리와 견주어 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "mode",
+                    "value": "classify"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "closedShapes",
+                    "value": 1
+                  }
+                ]
+              },
+              "level": 2,
+              "show": {
+                "engine": "E09",
+                "overlay": "angle-kinds"
+              },
+              "say": "만든 도형의 각마다 종류를 무늬로 칠했어요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "classify"
+              },
+              "level": 2,
+              "say": "도형의 각을 하나씩 살펴보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "classify"
+              },
+              "level": 3,
+              "backtrack": "g3s1u2.angle-right-angle"
+            }
+          ],
+          "concepts": ["g3s1u2.right-triangle"],
+          "submit": "button"
+        },
+        {
+          "id": "g3s1u2.A2.T3",
+          "prompt": "네 각이 모두 직각인 사각형을 두 개 만들어요. 하나는 네 변의 길이가 모두 같게, 하나는 그렇지 않게 만들어요.",
+          "engine": "E09",
+          "mode": "classify",
+          "cpa": "P",
+          "config": {
+            "mode": "classify",
+            "grid": [5, 5],
+            "maxShapes": 2,
+            "showProperties": []
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "shapeHas",
+                "args": { "vertices": 4, "rightAngles": 4, "equalSides": 2 }
+              },
+              {
+                "kind": "predicate",
+                "name": "shapeHas",
+                "args": { "vertices": 4, "rightAngles": 4, "equalSides": 4 }
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "classify"
+              },
+              "level": 1,
+              "say": "만든 두 사각형의 변의 길이를 서로 견주어 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "mode",
+                    "value": "classify"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "closedShapes",
+                    "value": 2
+                  }
+                ]
+              },
+              "level": 2,
+              "say": "두 사각형을 나란히 두고 네 변의 길이를 하나씩 견주어 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "classify"
+              },
+              "level": 2,
+              "say": "두 사각형의 변의 길이를 견주어 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "classify"
+              },
+              "level": 3,
+              "backtrack": "g3s1u2.angle-right-angle"
+            }
+          ],
+          "concepts": ["g3s1u2.rect-square"],
+          "submit": "button"
+        },
+        {
+          "id": "g3s1u2.A2.T4",
+          "prompt": "정사각형은 직사각형일까요? 까닭도 함께 골라요.",
+          "engine": "E09",
+          "mode": "classify",
+          "cpa": "A",
+          "config": {
+            "mode": "classify",
+            "grid": [5, 5],
+            "maxShapes": 1,
+            "showProperties": [],
+            "shapes": [
+              [
+                [1, 1],
+                [3, 1],
+                [3, 3],
+                [1, 3]
+              ]
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "equals",
+                "path": "response.yn.selected",
+                "value": ["yes"]
+              },
+              {
+                "kind": "equals",
+                "path": "response.reason.selected",
+                "value": ["angles"]
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "misconception": "MC-GEO-SQUARE-NOT-RECT"
+              },
+              "level": 1,
+              "say": "직사각형이 되려면 무엇이 필요했지요? 정사각형은 그걸 가졌나요?"
+            },
+            {
+              "when": {
+                "misconception": "MC-GEO-SQUARE-NOT-RECT"
+              },
+              "level": 2,
+              "say": "미리 놓인 도형에서 직사각형의 조건을 하나씩 짚어 보세요."
+            },
+            {
+              "when": {
+                "misconception": "MC-GEO-SQUARE-NOT-RECT"
+              },
+              "level": 3,
+              "backtrack": "g3s1u2.rect-square"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "classify"
+              },
+              "level": 1,
+              "say": "직사각형은 무엇을 보고 정했나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "classify"
+              },
+              "level": 2,
+              "say": "미리 놓인 도형에서 직사각형의 조건을 하나씩 짚어 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "classify"
+              },
+              "level": 3,
+              "backtrack": "g3s1u2.rect-square"
+            }
+          ],
+          "concepts": ["g3s1u2.rect-square"],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-GEO-SQUARE-NOT-RECT",
+              "args": { "trap": "no" },
+              "path": "response.yn.selected.0"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "yn",
+                "label": "정사각형은 직사각형일까요?",
+                "multiple": false,
+                "options": [
+                  { "id": "yes", "label": "예" },
+                  { "id": "no", "label": "아니요" }
+                ]
+              },
+              {
+                "kind": "choice",
+                "id": "reason",
+                "label": "까닭을 골라요.",
+                "multiple": false,
+                "options": [
+                  { "id": "angles", "label": "네 각이 모두 직각이에요" },
+                  { "id": "sides", "label": "네 변의 길이가 모두 같아요" },
+                  { "id": "long", "label": "옆으로 길쭉하지 않아요" }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
