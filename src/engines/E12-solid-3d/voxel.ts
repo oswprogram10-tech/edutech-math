@@ -11,7 +11,7 @@
  * - frontView: maxHeight × cols, 행 0 = 맨 위(maxHeight - 1), 마지막 행 = 바닥(0)
  * - sideView(오른쪽): maxHeight × rows, 행 0 = 맨 위, 열 0 = 맨 앞(y = 0)
  */
-import type { CubeCoord, CubeItem, ProjectionView, ViewTurn } from './types';
+import type { CubeCoord, CubeItem, ProjectionView, ReferenceViewsConfig, ViewTurn } from './types';
 
 export interface HasCoord {
   readonly x: number;
@@ -494,4 +494,192 @@ export function layersMatchShape(
   const a = sortCoords(actualCoords);
   const b = sortCoords(targetCoords);
   return a.length === b.length && compareCoordLists(a, b) === 0;
+}
+
+const MAX_VIEWS_COMBINATIONS = 200_000;
+
+export interface ViewsSolutionsResult {
+  readonly min: number;
+  readonly max: number;
+  readonly minHeights: number[][];
+  readonly maxHeights: number[][];
+}
+
+function extractProjectionHeights(
+  matrix: readonly (readonly number[])[],
+  expectedCols: number,
+): number[] | null {
+  const rows = matrix.length;
+  if (rows === 0) return null;
+  for (const row of matrix) {
+    if (!Array.isArray(row) || row.length !== expectedCols) return null;
+  }
+  const heights = Array<number>(expectedCols).fill(0);
+  for (let c = 0; c < expectedCols; c += 1) {
+    let firstFilled = -1;
+    for (let r = 0; r < rows; r += 1) {
+      const val = matrix[r]?.[c];
+      if (typeof val !== 'number' || !Number.isFinite(val)) return null;
+      if (val > 0) {
+        if (firstFilled === -1) firstFilled = r;
+      } else if (firstFilled !== -1) {
+        // 바닥부터 채워진 기둥이 아니라 중간이 비어 있으면 쌓기나무로 만들 수 없다.
+        return null;
+      }
+    }
+    heights[c] = firstFilled === -1 ? 0 : rows - firstFilled;
+  }
+  return heights;
+}
+
+/**
+ * `referenceViews`(top·front·side) 3장을 모두 만족하는 높이 조합을 전수 탐색해
+ * 최소/최대 쌓기나무 개수와 처음 찾은 최소/최대 해의 높이 행렬을 돌려준다.
+ */
+export function viewsCountSolutions(
+  views: ReferenceViewsConfig | null | undefined,
+): ViewsSolutionsResult | null {
+  if (!views || !views.top || !views.front || !views.side) return null;
+  const { top, front, side } = views;
+  const rows = top.length;
+  if (rows === 0) return null;
+  const cols = top[0]?.length ?? 0;
+  if (cols === 0) return null;
+  for (const row of top) {
+    if (!Array.isArray(row) || row.length !== cols) return null;
+  }
+
+  const fHeights = extractProjectionHeights(front, cols);
+  const sHeights = extractProjectionHeights(side, rows);
+  if (!fHeights || !sHeights) return null;
+
+  interface ActiveCell {
+    readonly r: number;
+    readonly c: number;
+    readonly x: number;
+    readonly y: number;
+    readonly upper: number;
+  }
+
+  const activeCells: ActiveCell[] = [];
+  const rowHasActive = Array<boolean>(rows).fill(false);
+  const colHasActive = Array<boolean>(cols).fill(false);
+
+  for (let r = 0; r < rows; r += 1) {
+    const y = rows - 1 - r;
+    const row = top[r];
+    if (!row) continue;
+    for (let x = 0; x < cols; x += 1) {
+      const val = row[x] ?? 0;
+      if (val <= 0) continue;
+      const upper = Math.min(fHeights[x] ?? 0, sHeights[y] ?? 0);
+      if (upper < 1) return null;
+      rowHasActive[y] = true;
+      colHasActive[x] = true;
+      activeCells.push({ r, c: x, x, y, upper });
+    }
+  }
+
+  for (let x = 0; x < cols; x += 1) {
+    if ((fHeights[x] ?? 0) > 0 && !colHasActive[x]) return null;
+  }
+  for (let y = 0; y < rows; y += 1) {
+    if ((sHeights[y] ?? 0) > 0 && !rowHasActive[y]) return null;
+  }
+
+  if (activeCells.length === 0) {
+    const zero = Array.from({ length: rows }, () => Array<number>(cols).fill(0));
+    return {
+      min: 0,
+      max: 0,
+      minHeights: zero.map((r) => [...r]),
+      maxHeights: zero.map((r) => [...r]),
+    };
+  }
+
+  let combinations = 1;
+  for (const cell of activeCells) {
+    combinations *= cell.upper;
+    if (combinations > MAX_VIEWS_COMBINATIONS) {
+      console.warn(
+        `E12 viewsCountRange: 조합 수(${combinations})가 ${MAX_VIEWS_COMBINATIONS}을 넘어 계산하지 않습니다.`,
+      );
+      return null;
+    }
+  }
+
+  const currentHeights = Array.from({ length: rows }, () => Array<number>(cols).fill(0));
+  const rowMax = Array<number>(rows).fill(0);
+  const colMax = Array<number>(cols).fill(0);
+  let minSum = Number.POSITIVE_INFINITY;
+  let maxSum = -1;
+  let minHeights: number[][] | null = null;
+  let maxHeights: number[][] | null = null;
+
+  const search = (index: number, sum: number) => {
+    if (index === activeCells.length) {
+      for (let x = 0; x < cols; x += 1) {
+        if (colMax[x] !== fHeights[x]) return;
+      }
+      for (let y = 0; y < rows; y += 1) {
+        if (rowMax[y] !== sHeights[y]) return;
+      }
+      if (sum < minSum) {
+        minSum = sum;
+        minHeights = currentHeights.map((row) => [...row]);
+      }
+      if (sum > maxSum) {
+        maxSum = sum;
+        maxHeights = currentHeights.map((row) => [...row]);
+      }
+      return;
+    }
+
+    const cell = activeCells[index];
+    if (!cell) return;
+    const prevRowMax = rowMax[cell.y] ?? 0;
+    const prevColMax = colMax[cell.x] ?? 0;
+    const targetRow = currentHeights[cell.r];
+    if (!targetRow) return;
+
+    for (let h = 1; h <= cell.upper; h += 1) {
+      targetRow[cell.c] = h;
+      if (h > prevRowMax) rowMax[cell.y] = h;
+      if (h > prevColMax) colMax[cell.x] = h;
+      search(index + 1, sum + h);
+      rowMax[cell.y] = prevRowMax;
+      colMax[cell.x] = prevColMax;
+    }
+    targetRow[cell.c] = 0;
+  };
+
+  search(0, 0);
+  if (!minHeights || !maxHeights || maxSum < 0) return null;
+
+  return { min: minSum, max: maxSum, minHeights, maxHeights };
+}
+
+/** `referenceViews` 3장을 모두 만족하는 쌓기나무 개수의 최솟값·최댓값을 구한다. */
+export function viewsCountRange(
+  views: ReferenceViewsConfig | null | undefined,
+): { min: number; max: number } | null {
+  const result = viewsCountSolutions(views);
+  return result ? { min: result.min, max: result.max } : null;
+}
+
+/** 현재 쌓기나무가 `referenceViews`의 위·앞·옆 3장을 모두 만족하는지(평행이동 허용) 검사한다. */
+export function matchesAllReferenceViews(
+  cubes: readonly HasCoord[],
+  grid: readonly [number, number],
+  maxHeight: number,
+  referenceViews: ReferenceViewsConfig | null,
+): boolean {
+  if (!referenceViews || !referenceViews.top || !referenceViews.front || !referenceViews.side) {
+    return false;
+  }
+  return (
+    sameCells(topView(cubes, grid), referenceViews.top, true, true) &&
+    sameCells(frontView(cubes, grid, maxHeight), referenceViews.front, true, false) &&
+    sameCells(sideView(cubes, grid, maxHeight), referenceViews.side, true, false)
+  );
 }

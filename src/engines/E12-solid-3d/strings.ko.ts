@@ -66,6 +66,13 @@ export const solid3dStrings = {
   projectionCellAria: (view: ProjectionView, row: number, col: number, filled: boolean) =>
     `${solid3dStrings.views[view]} ${row + 1}번째 줄 ${col + 1}번째 칸${filled ? ', 채워짐' : ''}`,
   referenceAria: '보기 모양',
+  viewsMatch: '세 모양이 모두 같아요',
+  attemptLogTitle: '찾은 개수',
+  attemptCount: (count: number) => `${count}개`,
+  attemptTagMin: '★ 가장 적어요',
+  attemptTagMax: '★ 가장 많아요',
+  referenceCardsTitle: '보기 카드',
+  viewsTwinsCaption: '같은 세 모양',
   live: {
     cursorAt: (x: number, y: number) => `가로 ${x + 1}번째, 앞에서 ${y + 1}번째 칸`,
     added: '쌓았어요',

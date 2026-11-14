@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { HiddenRevealOverlay } from '../overlays/hidden-reveal';
 import { RowLineupOverlay } from '../overlays/row-lineup';
 import { SideEyeOverlay } from '../overlays/side-eye';
+import { ViewsTwinsOverlay } from '../overlays/views-twins';
 import { createInitialState, reduce } from '../reduce';
 import type { SolidConfig } from '../types';
 import { SolidView } from '../View';
@@ -292,5 +293,187 @@ describe('E12 T134 2D 입력판·슬라이더·paintViews·stageHidden', () => {
     expect(container.querySelector('[data-testid="cubes-view-top"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="cubes-paint-side"]')).not.toBeNull();
     warnSpy.mockRestore();
+  });
+
+  it('attemptLog는 맞힌 개수 목록·최소/최대 꼬리표·무대 맞춤 상태를 표시한다', () => {
+    const specViews = {
+      top: [
+        [1, 1, 1],
+        [1, 1, 0],
+        [1, 0, 0],
+      ],
+      front: [
+        [0, 0, 1],
+        [1, 0, 1],
+        [1, 1, 1],
+      ],
+      side: [
+        [0, 0, 1],
+        [0, 1, 1],
+        [1, 1, 1],
+      ],
+    };
+    const { container } = renderHarness({
+      grid: [3, 3],
+      maxHeight: 3,
+      attemptLog: true,
+      referenceViews: specViews,
+      initial: [
+        { at: [0, 0, 0] },
+        { at: [0, 1, 0] },
+        { at: [0, 1, 1] },
+        { at: [1, 1, 0] },
+        { at: [0, 2, 0] },
+        { at: [1, 2, 0] },
+        { at: [2, 2, 0] },
+        { at: [2, 2, 1] },
+        { at: [2, 2, 2] },
+      ],
+    });
+
+    const stage = container.querySelector('[data-testid="cubes-stage"]') as HTMLElement;
+    expect(stage.getAttribute('data-views-match')).toBe('true');
+    const status = container.querySelector('[data-testid="cubes-status"]');
+    expect(status?.textContent).toContain('세 모양이 모두 같아요');
+    expect(container.querySelector('[data-testid="cubes-attempts"]')).not.toBeNull();
+
+    // 키보드로 (0, 0) -> (0, 2) 이동 후 1개 더 쌓으면 10개 기록됨
+    fireEvent.keyDown(stage, { key: 'ArrowUp' });
+    fireEvent.keyDown(stage, { key: 'ArrowUp' });
+    fireEvent.keyDown(stage, { key: 'Enter' });
+    expect(container.querySelector('[data-attempt="10"]')?.textContent).toContain('10개');
+    expect(container.querySelector('[data-attempt="10"]')?.textContent).toContain('★ 가장 많아요');
+
+    // Backspace로 빼면 9개도 기록됨
+    fireEvent.keyDown(stage, { key: 'Backspace' });
+    expect(container.querySelector('[data-attempt="9"]')?.textContent).toContain('9개');
+    expect(container.querySelector('[data-attempt="9"]')?.textContent).toContain('★ 가장 적어요');
+  });
+
+  it('referenceCards는 과제 보기 바로 뒤에 비대화형 카드를 렌더한다', () => {
+    const { container } = renderHarness({
+      grid: [3, 3],
+      maxHeight: 3,
+      referenceViews: {
+        top: [
+          [1, 1, 1],
+          [1, 0, 0],
+          [1, 0, 0],
+        ],
+      },
+      referenceCards: [
+        {
+          id: 'ga',
+          kind: 'top',
+          label: '가',
+          cells: [
+            [1, 1],
+            [1, 0],
+          ],
+        },
+        {
+          id: 'na',
+          kind: 'front',
+          label: '나',
+          cells: [
+            [0, 1],
+            [1, 1],
+          ],
+        },
+        {
+          id: 'da',
+          kind: 'layers',
+          label: '다',
+          layers: [
+            [
+              [1, 1],
+              [1, 0],
+            ],
+            [
+              [0, 1],
+              [0, 0],
+            ],
+          ],
+        },
+        {
+          id: 'ra',
+          kind: 'numbers',
+          label: '라',
+          cells: [
+            [2, 1],
+            [1, 0],
+          ],
+        },
+      ],
+    });
+
+    const cardsPanel = container.querySelector('[data-testid="cubes-cards"]');
+    const refTop = container.querySelector('[data-testid="cubes-reference-top"]');
+    // ProjectionGrid -> projCard -> projRow -> panelBlock
+    const refBlock = refTop?.parentElement?.parentElement?.parentElement;
+    expect(cardsPanel).not.toBeNull();
+    expect(refBlock).not.toBeNull();
+    // 과제 보기 바로 다음 형제가 카드 묶음이어야 한다
+    expect(refBlock?.nextElementSibling).toBe(cardsPanel);
+    expect(container.querySelectorAll('[data-testid^="cubes-card-"]')).toHaveLength(4);
+    expect(cardsPanel?.querySelectorAll('button')).toHaveLength(0);
+    expect(container.querySelector('[data-testid="cubes-card-ra"]')?.textContent).toContain('2');
+  });
+
+  it('ViewsTwinsOverlay는 min과 max가 다를 때 숫자 없이 두 등각 스케치를 그린다', () => {
+    const specViews = {
+      top: [
+        [1, 1, 1],
+        [1, 1, 0],
+        [1, 0, 0],
+      ],
+      front: [
+        [0, 0, 1],
+        [1, 0, 1],
+        [1, 1, 1],
+      ],
+      side: [
+        [0, 0, 1],
+        [0, 1, 1],
+        [1, 1, 1],
+      ],
+    };
+    const twinsConfig: SolidConfig = {
+      grid: [3, 3],
+      maxHeight: 3,
+      referenceViews: specViews,
+    };
+    const state = createInitialState(twinsConfig);
+    const { container } = render(<ViewsTwinsOverlay config={twinsConfig} state={state} />);
+    const root = container.querySelector('[data-testid="views-twins"]');
+    expect(root).not.toBeNull();
+    expect(container.querySelector('[data-testid="cubes-views-twins"]')).not.toBeNull();
+    expect(root?.textContent).toContain('같은 세 모양');
+    expect(/\d/.test(root?.textContent ?? '')).toBe(false);
+
+    // 유일 해(min === max)일 때는 빈 노드만 돌려준다
+    const uniqueConfig: SolidConfig = {
+      grid: [2, 2],
+      maxHeight: 2,
+      referenceViews: {
+        top: [
+          [1, 1],
+          [1, 0],
+        ],
+        front: [
+          [1, 0],
+          [1, 1],
+        ],
+        side: [
+          [1, 1],
+          [1, 1],
+        ],
+      },
+    };
+    const uniqueState = createInitialState(uniqueConfig);
+    const { container: uniqueContainer } = render(
+      <ViewsTwinsOverlay config={uniqueConfig} state={uniqueState} />,
+    );
+    expect(uniqueContainer.querySelector('[data-testid="views-twins"]')).toBeNull();
   });
 });

@@ -5,6 +5,7 @@ import { observe } from './observe';
 import { HiddenRevealOverlay } from './overlays/hidden-reveal';
 import { RowLineupOverlay } from './overlays/row-lineup';
 import { SideEyeOverlay } from './overlays/side-eye';
+import { ViewsTwinsOverlay } from './overlays/views-twins';
 import { createInitialState, reduce } from './reduce';
 import { solid3dStrings } from './strings.ko';
 import type { SolidAction, SolidConfig, SolidState } from './types';
@@ -25,6 +26,7 @@ const definition: EngineDefinition<SolidConfig, SolidState, SolidAction> = {
     'hidden-reveal': HiddenRevealOverlay,
     'side-eye': SideEyeOverlay,
     'row-lineup': RowLineupOverlay,
+    'views-twins': ViewsTwinsOverlay,
   },
 };
 

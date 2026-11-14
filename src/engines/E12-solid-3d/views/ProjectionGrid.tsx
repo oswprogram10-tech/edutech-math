@@ -94,7 +94,7 @@ export function ProjectionGrid({
 
   return (
     <div className={styles.projCard}>
-      <p className={styles.projTitle}>{title}</p>
+      {title ? <p className={styles.projTitle}>{title}</p> : null}
       <svg
         className={styles.projSvg}
         width={width}
@@ -103,7 +103,7 @@ export function ProjectionGrid({
         data-testid={testId}
         tabIndex={interactive ? 0 : undefined}
         role={interactive ? 'application' : 'img'}
-        aria-label={title}
+        aria-label={title || S.views[view]}
         onFocus={() => setSvgFocused(true)}
         onBlur={() => setSvgFocused(false)}
         onKeyDown={onKeyDown}

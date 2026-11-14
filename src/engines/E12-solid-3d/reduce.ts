@@ -27,6 +27,7 @@ import type {
   NumberGridSettings,
   PaintedViewsState,
   ProjectionView,
+  ReferenceCardConfig,
   ReferenceShapeConfig,
   ReferenceViewsConfig,
   SolidAction,
@@ -34,7 +35,13 @@ import type {
   SolidState,
   ViewTurn,
 } from './types';
-import { columnHeight, projectionSize, sortCubes } from './voxel';
+import {
+  columnHeight,
+  matchesAllReferenceViews,
+  projectionSize,
+  sortCubes,
+  viewsCountRange,
+} from './voxel';
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -177,6 +184,89 @@ function sanitizeMatrix(value: unknown): readonly (readonly number[])[] | null {
   return rows;
 }
 
+function sanitizePositiveIntMatrix(value: unknown): number[][] | null {
+  if (!Array.isArray(value) || value.length === 0) return null;
+  const rows: number[][] = [];
+  let width = -1;
+  for (const row of value) {
+    if (!Array.isArray(row) || row.length === 0) return null;
+    if (width === -1) width = row.length;
+    if (row.length !== width) return null;
+    const nums: number[] = [];
+    for (const cell of row) {
+      if (typeof cell !== 'number' || !Number.isFinite(cell) || cell < 0) return null;
+      nums.push(Math.round(cell));
+    }
+    rows.push(nums);
+  }
+  return rows;
+}
+
+function sanitizeCardLayers(value: unknown): number[][][] | null {
+  if (!Array.isArray(value) || value.length === 0) return null;
+  const result: number[][][] = [];
+  let expectedRows = -1;
+  let expectedCols = -1;
+  for (const rawLayer of value) {
+    const mat = sanitizeMatrix(rawLayer);
+    if (!mat) return null;
+    const r = mat.length;
+    const c = mat[0]?.length ?? 0;
+    if (expectedRows === -1) {
+      expectedRows = r;
+      expectedCols = c;
+    } else if (r !== expectedRows || c !== expectedCols) {
+      return null;
+    }
+    result.push(mat.map((row) => [...row]));
+  }
+  return result;
+}
+
+function sanitizeReferenceCards(value: unknown): readonly ReferenceCardConfig[] {
+  if (!Array.isArray(value)) return [];
+  const cards: ReferenceCardConfig[] = [];
+  const seenIds = new Set<string>();
+  for (const raw of value) {
+    if (!isRecord(raw)) continue;
+    const id = raw['id'];
+    const label = raw['label'];
+    const kind = raw['kind'];
+    if (typeof id !== 'string' || id.trim().length === 0) continue;
+    if (typeof label !== 'string' || label.trim().length === 0) continue;
+    if (seenIds.has(id)) continue;
+    if (kind === 'top' || kind === 'front' || kind === 'side') {
+      const cells = sanitizeMatrix(raw['cells']);
+      if (!cells) continue;
+      seenIds.add(id);
+      cards.push({ id, label, kind, cells });
+    } else if (kind === 'numbers') {
+      const cells = sanitizePositiveIntMatrix(raw['cells']);
+      if (!cells) continue;
+      seenIds.add(id);
+      cards.push({ id, label, kind, cells });
+    } else if (kind === 'layers') {
+      const layers = sanitizeCardLayers(raw['layers']);
+      if (!layers) continue;
+      seenIds.add(id);
+      cards.push({ id, label, kind, layers });
+    }
+  }
+  return cards;
+}
+
+function withRecordedMatch(state: CubesState): CubesState {
+  if (!state.settings.attemptLog) return state;
+  const { grid, maxHeight, referenceViews } = state.settings;
+  if (!matchesAllReferenceViews(state.cubes, grid, maxHeight, referenceViews)) {
+    return state;
+  }
+  const count = state.cubes.length;
+  if (state.matchedCounts.includes(count)) return state;
+  const nextCounts = [...state.matchedCounts, count].sort((a, b) => a - b);
+  return { ...state, matchedCounts: nextCounts };
+}
+
 function sanitizeReference(value: unknown): ReferenceShapeConfig | null {
   if (!isRecord(value) || !Array.isArray(value['cubes'])) return null;
   const cubes: CubeCoord[] = [];
@@ -307,6 +397,10 @@ function buildSettings(config: CubesConfig): CubesSettings {
   const editable = config.editable !== false;
   const stage = config.stage === '3d' || config.stage === 'isometric' ? config.stage : 'auto';
 
+  const reference = sanitizeReference(config.reference);
+  const referenceViews = sanitizeReferenceViews(config.referenceViews);
+  const range = viewsCountRange(referenceViews);
+
   return {
     grid: [cols, rows],
     maxHeight,
@@ -319,12 +413,16 @@ function buildSettings(config: CubesConfig): CubesSettings {
     rotationLocked,
     editable,
     stage,
-    reference: sanitizeReference(config.reference),
-    referenceViews: sanitizeReferenceViews(config.referenceViews),
+    reference,
+    referenceViews,
     numberGrid: sanitizeNumberGrid(config.numberGrid, cols, rows, maxHeight),
     layers: sanitizeLayers(config.layers, cols, rows, maxHeight),
     paintViews: sanitizeViews(config.paintViews, []),
     stageHidden: config.stageHidden === true,
+    attemptLog: config.attemptLog === true,
+    referenceCards: sanitizeReferenceCards(config.referenceCards),
+    viewsMin: range ? range.min : null,
+    viewsMax: range ? range.max : null,
   };
 }
 
@@ -367,6 +465,7 @@ export function createInitialState(config: SolidConfig = {}): CubesState {
         ? Array.from({ length: settings.maxHeight }, () => zeroMatrix(rows, cols))
         : null,
     painted: makeInitialPainted(settings.paintViews, cols, rows, settings.maxHeight),
+    matchedCounts: [],
   };
 }
 
@@ -384,10 +483,10 @@ export function reduce(state: SolidState, action: SolidAction): SolidState {
       const height = columnHeight(state.cubes, x, y);
       if (height >= settings.maxHeight) return state;
       const added: CubeItem = { x, y, z: height, color: 'plain', locked: false };
-      return {
+      return withRecordedMatch({
         ...state,
         cubes: sortCubes([...state.cubes, added]),
-      };
+      });
     }
 
     case 'remove': {
@@ -400,10 +499,10 @@ export function reduce(state: SolidState, action: SolidAction): SolidState {
       const topZ = height - 1;
       const topCube = state.cubes.find((c) => c.x === x && c.y === y && c.z === topZ);
       if (!topCube || topCube.locked) return state;
-      return {
+      return withRecordedMatch({
         ...state,
         cubes: state.cubes.filter((c) => !(c.x === x && c.y === y && c.z === topZ)),
-      };
+      });
     }
 
     case 'select-tool': {
@@ -495,12 +594,12 @@ export function reduce(state: SolidState, action: SolidAction): SolidState {
         for (let z = currentH; z < targetH; z += 1) {
           added.push({ x, y, z, color: 'plain', locked: false });
         }
-        return { ...state, cubes: sortCubes([...state.cubes, ...added]) };
+        return withRecordedMatch({ ...state, cubes: sortCubes([...state.cubes, ...added]) });
       }
-      return {
+      return withRecordedMatch({
         ...state,
         cubes: state.cubes.filter((c) => !(c.x === x && c.y === y && c.z >= targetH)),
-      };
+      });
     }
 
     case 'focus-layer': {
@@ -590,7 +689,7 @@ export function reduce(state: SolidState, action: SolidAction): SolidState {
         return limit !== undefined && cube.z <= limit;
       });
       if (remaining.length === state.cubes.length) return state;
-      return { ...state, cubes: remaining };
+      return withRecordedMatch({ ...state, cubes: remaining });
     }
   }
 }

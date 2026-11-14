@@ -5,7 +5,15 @@
  */
 import type { JsonValue, Observation } from '../../core/engine-sdk';
 import type { PaintedViewsState, SolidState } from './types';
-import { frontView, heightMap, isConnected, layerMatrices, sideView, topView } from './voxel';
+import {
+  frontView,
+  heightMap,
+  isConnected,
+  layerMatrices,
+  matchesAllReferenceViews,
+  sideView,
+  topView,
+} from './voxel';
 
 function toJsonMatrix(matrix: readonly (readonly number[])[]): number[][] {
   return matrix.map((row) => [...row]);
@@ -20,13 +28,24 @@ function toJsonPainted(painted: PaintedViewsState): Readonly<Record<string, Json
 }
 
 export function observe(state: SolidState): Observation {
-  const { grid, maxHeight, maxCubes, numberGrid, layers, paintViews } = state.settings;
+  const {
+    grid,
+    maxHeight,
+    maxCubes,
+    numberGrid,
+    layers,
+    paintViews,
+    referenceViews,
+    viewsMin,
+    viewsMax,
+  } = state.settings;
   const cubes = state.cubes.map((c) => [c.x, c.y, c.z]);
   const heights = heightMap(state.cubes, grid);
   const top = topView(state.cubes, grid);
   const front = frontView(state.cubes, grid, maxHeight);
   const side = sideView(state.cubes, grid, maxHeight);
   const layerList = layerMatrices(state.cubes, grid, maxHeight);
+  const viewsMatch = matchesAllReferenceViews(state.cubes, grid, maxHeight, referenceViews);
 
   const obs: Record<string, JsonValue> = {
     mode: state.mode,
@@ -45,6 +64,10 @@ export function observe(state: SolidState): Observation {
     maxReached: state.cubes.length >= maxCubes,
     layers: layerList,
     layerFocus: state.layerFocus,
+    viewsMin,
+    viewsMax,
+    matchedCounts: [...state.matchedCounts],
+    viewsMatch,
   };
 
   if (numberGrid?.mode === 'input' && state.numbers) {

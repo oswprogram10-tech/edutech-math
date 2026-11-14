@@ -19,8 +19,9 @@ import type { RendererDecision, RendererKind } from '../renderer';
 import { solid3dStrings as S } from '../strings.ko';
 import type { CameraPreset, CameraRequest } from '../three/Stage3D';
 import type { CubeCoord, CubesAction, CubesConfig, CubesState } from '../types';
-import { columnHeight, frontView, sideView, topView } from '../voxel';
+import { columnHeight, frontView, matchesAllReferenceViews, sideView, topView } from '../voxel';
 import styles from '../View.module.css';
+import { AttemptLogPanel, ReferenceCardsPanel } from './CardsPanel';
 import { CUBE_INK, CUBE_PALETTE } from './focusMatch';
 import { LayerGridPanel, LayerSliderBar, NumberGridPanel, PaintViewPanel } from './InputPanels';
 import { IsoStage } from './IsoStage';
@@ -320,9 +321,20 @@ export function CubesView({ state, dispatch, cpa, readOnly = false, targetSize }
     setStudentOverride(null);
   }, []);
 
+  const isViewsMatch =
+    settings.attemptLog &&
+    matchesAllReferenceViews(
+      state.cubes,
+      settings.grid,
+      settings.maxHeight,
+      settings.referenceViews,
+    );
   const maxReached = state.cubes.length >= settings.maxCubes;
-  const statusText =
-    !settings.stageHidden && settings.editable && (maxReached || blockedAdd) ? S.maxReached : '';
+  const statusText = isViewsMatch
+    ? S.viewsMatch
+    : !settings.stageHidden && settings.editable && (maxReached || blockedAdd)
+      ? S.maxReached
+      : '';
   const instructionText = settings.stageHidden
     ? S.instructionsStageHidden
     : settings.editable
@@ -391,7 +403,12 @@ export function CubesView({ state, dispatch, cpa, readOnly = false, targetSize }
       data-stage-hidden={settings.stageHidden ? 'true' : undefined}
     >
       <p className={styles.instructions}>{instructionText}</p>
-      <p className={styles.status} role="status" data-testid="cubes-status">
+      <p
+        className={styles.status}
+        role="status"
+        data-testid="cubes-status"
+        data-views-match={isViewsMatch ? 'true' : undefined}
+      >
         {statusText}
       </p>
       <div className={styles.srOnly} aria-live="polite" data-testid="cubes-live">
@@ -409,6 +426,7 @@ export function CubesView({ state, dispatch, cpa, readOnly = false, targetSize }
               tabIndex={readOnly ? -1 : 0}
               data-testid="cubes-stage"
               data-renderer={rendererDecision}
+              data-views-match={isViewsMatch ? 'true' : undefined}
               data-probe-fps={probeFps !== null ? String(Math.round(probeFps)) : undefined}
               data-unit-px={
                 visibleRenderer === '3d' && unitPx !== null ? String(unitPx) : undefined
@@ -488,7 +506,7 @@ export function CubesView({ state, dispatch, cpa, readOnly = false, targetSize }
                     matrix={refViews.top}
                     title={S.referenceViewTitle('top')}
                     testId="cubes-reference-top"
-                    cellSize={32}
+                    cellSize={settings.referenceCards.length >= 4 ? 22 : 32}
                   />
                 ) : null}
                 {refViews?.front ? (
@@ -497,7 +515,7 @@ export function CubesView({ state, dispatch, cpa, readOnly = false, targetSize }
                     matrix={refViews.front}
                     title={S.referenceViewTitle('front')}
                     testId="cubes-reference-front"
-                    cellSize={32}
+                    cellSize={settings.referenceCards.length >= 4 ? 22 : 32}
                   />
                 ) : null}
                 {refViews?.side ? (
@@ -506,17 +524,19 @@ export function CubesView({ state, dispatch, cpa, readOnly = false, targetSize }
                     matrix={refViews.side}
                     title={S.referenceViewTitle('side')}
                     testId="cubes-reference-side"
-                    cellSize={32}
+                    cellSize={settings.referenceCards.length >= 4 ? 22 : 32}
                   />
                 ) : null}
               </div>
             </div>
           ) : null}
 
+          <ReferenceCardsPanel state={state} />
           <NumberGridPanel state={state} dispatch={dispatch} readOnly={readOnly} />
           <LayerSliderBar state={state} dispatch={dispatch} readOnly={readOnly} />
           <LayerGridPanel state={state} dispatch={dispatch} readOnly={readOnly} />
           <PaintViewPanel state={state} dispatch={dispatch} readOnly={readOnly} />
+          <AttemptLogPanel state={state} />
 
           {hasToolbarButtons ? (
             <div className={styles.toolbar} role="toolbar" aria-label={S.name}>
