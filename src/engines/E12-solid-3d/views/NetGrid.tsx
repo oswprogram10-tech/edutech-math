@@ -1,7 +1,7 @@
 /**
  * E12 `net-fold` 2D 모눈판(SVG).
  *
- * - 칸 크기는 `clamp(48px, 들어갈 수 있는 크기, 72px)`로 48px 미만으로 줄이지 않는다.
+ * - 칸 크기는 `clamp(minCell, 들어갈 수 있는 크기, 72px)`, `minCell = max(32, ceil(48 / minFaceSide))`로 가장 짧은 면 변이 48px 이상이 되게 한다.
  * - Pointer Events(누름→이동→뗌)로 놓기·빼기·미리보기 그림자("놓을 수 없어요")를 처리한다.
  */
 import { useEffect, useRef, useState } from 'react';
@@ -21,7 +21,8 @@ import type { NetFoldAction, NetFoldState } from '../types';
 import styles from '../View.module.css';
 
 const PAD = 8;
-const MIN_CELL = 48;
+const MIN_FACE_PX = 48;
+const ABS_MIN_CELL = 32;
 const MAX_CELL = 72;
 
 interface NetGridProps {
@@ -82,7 +83,12 @@ export function NetGrid({ state, evaluation, readOnly, dispatch, onLiveMessage }
   const pressRef = useRef<ActivePress | null>(null);
 
   const [cols, rows] = state.settings.grid;
-  const fallbackCell = clamp(Math.floor(384 / Math.max(cols, rows)), MIN_CELL, MAX_CELL);
+  const minFaceSide = Math.max(
+    1,
+    state.settings.target === 'cube' ? state.settings.faceSize : Math.min(...state.settings.dims),
+  );
+  const minCell = Math.max(ABS_MIN_CELL, Math.ceil(MIN_FACE_PX / minFaceSide));
+  const fallbackCell = clamp(Math.floor(384 / Math.max(cols, rows)), minCell, MAX_CELL);
   const [measuredCell, setMeasuredCell] = useState<number | null>(null);
   const cellSize = measuredCell ?? fallbackCell;
 
@@ -96,13 +102,13 @@ export function NetGrid({ state, evaluation, readOnly, dispatch, onLiveMessage }
       const h = el.clientHeight;
       if (w < 40 || h < 40) return;
       const fit = Math.floor(Math.min((w - PAD * 2) / cols, (h - PAD * 2) / rows));
-      setMeasuredCell(clamp(fit, MIN_CELL, MAX_CELL));
+      setMeasuredCell(clamp(fit, minCell, MAX_CELL));
     };
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [cols, rows]);
+  }, [cols, rows, minCell]);
 
   const svgWidth = cols * cellSize + PAD * 2;
   const svgHeight = rows * cellSize + PAD * 2;
@@ -215,12 +221,13 @@ export function NetGrid({ state, evaluation, readOnly, dispatch, onLiveMessage }
         className={styles.netGridSvg}
         data-testid="net-grid"
         data-cell-size={cellSize}
+        data-min-cell={minCell}
         width={svgWidth}
         height={svgHeight}
         viewBox={`0 0 ${svgWidth} ${svgHeight}`}
         style={{
-          minWidth: cols * MIN_CELL + PAD * 2,
-          minHeight: rows * MIN_CELL + PAD * 2,
+          minWidth: cols * minCell + PAD * 2,
+          minHeight: rows * minCell + PAD * 2,
         }}
         role="application"
         aria-label={S.net.gridLabel}

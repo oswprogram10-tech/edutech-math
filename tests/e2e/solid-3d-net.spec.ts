@@ -255,12 +255,18 @@ test('크롬북 [8,10] 모눈 크기·넘침 측정', async ({ page }, testInfo)
     { target: 'cuboid', dims: [4, 3, 2], grid: [8, 10] },
     true,
   );
+  const foldBtn = page.getByTestId('net-fold-toggle');
   const viewBox = await page.getByTestId('net-view').boundingBox();
   const boardBox = await page.locator('[class*="netBoardArea"]').boundingBox();
   const gridBox = await grid.boundingBox();
   const cellSize = Number(await grid.getAttribute('data-cell-size'));
 
-  // 크롬북 두 칸 배치 폭(약 640px)에서도 containerQuery 레이아웃 측정
+  await expect(grid).toBeInViewport({ ratio: 1 });
+  await expect(foldBtn).toBeInViewport({ ratio: 1 });
+  expect(cellSize).toBeGreaterThanOrEqual(32);
+  expect(cellSize * 2).toBeGreaterThanOrEqual(48);
+
+  // 크롬북 두 칸 배치 폭(약 660px)에서도 containerQuery 레이아웃 측정
   await page.setViewportSize({ width: 660, height: 680 });
   await page.waitForTimeout(150);
   const twoColView = await page.getByTestId('net-view').boundingBox();
@@ -271,5 +277,17 @@ test('크롬북 [8,10] 모눈 크기·넘침 측정', async ({ page }, testInfo)
   console.log(
     `[E12 net 8x10 measure] sandboxFit: view=${JSON.stringify(viewBox)} board=${JSON.stringify(boardBox)} grid=${JSON.stringify(gridBox)} cell=${cellSize}px | twoCol(660x680): view=${JSON.stringify(twoColView)} board=${JSON.stringify(twoColBoard)} grid=${JSON.stringify(twoColGrid)} cell=${twoColCell}px`,
   );
-  expect(twoColCell).toBeGreaterThanOrEqual(48);
+  expect(twoColCell).toBeGreaterThanOrEqual(32);
+  expect(twoColCell * 2).toBeGreaterThanOrEqual(48);
+  await expect(grid).toBeInViewport({ ratio: 1 });
+  if (twoColBoard && twoColGrid) {
+    expect(twoColGrid.x).toBeGreaterThanOrEqual(twoColBoard.x - 1);
+    expect(twoColGrid.y).toBeGreaterThanOrEqual(twoColBoard.y - 1);
+    expect(twoColGrid.x + twoColGrid.width).toBeLessThanOrEqual(
+      twoColBoard.x + twoColBoard.width + 1,
+    );
+    expect(twoColGrid.y + twoColGrid.height).toBeLessThanOrEqual(
+      twoColBoard.y + twoColBoard.height + 1,
+    );
+  }
 });

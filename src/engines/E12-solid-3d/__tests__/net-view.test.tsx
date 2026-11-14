@@ -290,4 +290,29 @@ describe('E12 net-fold View & Overlays', () => {
     });
     expect(screen.queryByTestId('net-face-2-0')).toBeNull();
   });
+
+  it('가장 짧은 면 변 기준으로 minCell을 계산한다(정육면체 48px, 2칸 변 직육면체 32px)', () => {
+    const rCube1 = render(<NetHarness config={{ mode: 'net-fold', faceSize: 1 }} />);
+    expect(screen.getByTestId('net-grid').getAttribute('data-min-cell')).toBe('48');
+    expect(
+      Number(screen.getByTestId('net-grid').getAttribute('data-cell-size')),
+    ).toBeGreaterThanOrEqual(48);
+    rCube1.unmount();
+
+    const rCube2 = render(
+      <NetHarness config={{ mode: 'net-fold', faceSize: 2, grid: [12, 12] }} />,
+    );
+    expect(screen.getByTestId('net-grid').getAttribute('data-min-cell')).toBe('32');
+    rCube2.unmount();
+
+    render(
+      <NetHarness
+        config={{ mode: 'net-fold', target: 'cuboid', dims: [4, 3, 2], grid: [8, 10] }}
+      />,
+    );
+    expect(screen.getByTestId('net-grid').getAttribute('data-min-cell')).toBe('32');
+    expect(
+      Number(screen.getByTestId('net-grid').getAttribute('data-cell-size')),
+    ).toBeGreaterThanOrEqual(32);
+  });
 });

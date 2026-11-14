@@ -326,6 +326,11 @@
       overflow: auto;
     }
 
+    .wrap[data-mode='net-fold'] .sideStack {
+      flex: 0 1 min(42%, 320px);
+      min-width: 220px;
+    }
+
     /* 보기 투영 제목을 격자 폭에 맞춰 줄바꿈해 세 장이 한 줄에 놓이게 한다. */
     .wrap .projRow > .projCard {
       width: min-content;
@@ -364,6 +369,11 @@
       min-width: 260px;
       min-height: 0;
       overflow: auto;
+    }
+
+    .wrap[data-rich-side='true'][data-mode='net-fold'] .sideStack {
+      flex: 0 1 min(42%, 320px);
+      min-width: 220px;
     }
 
     /* 보기 투영 제목을 격자 폭에 맞춰 줄바꿈해 세 장이 한 줄에 놓이게 한다. */
@@ -408,6 +418,11 @@
       min-width: 300px;
       min-height: 0;
       overflow: auto;
+    }
+
+    .wrap[data-mode='net-fold'] .sideStack {
+      flex: 0 1 min(42%, 320px);
+      min-width: 220px;
     }
 
     .sideStack > * {
@@ -777,11 +792,15 @@ button.numCell {
 }
 
 /* T138 net-fold 전용 스타일 (cubes 배치에는 영향을 주지 않는다). */
+.wrap[data-mode='net-fold'] .instructions {
+  flex: 0 0 auto;
+}
+
 .netBoardArea {
   flex-direction: column;
   gap: 0.5rem;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .netGridHost {
@@ -790,8 +809,9 @@ button.numCell {
   width: 100%;
   min-width: 0;
   min-height: 0;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
+  overflow: auto;
 }
 
 .netGridSvg {
@@ -815,12 +835,14 @@ button.numCell {
   align-items: center;
   justify-content: center;
   gap: 0.45rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .netStageSvg {
   display: block;
-  max-width: 100%;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 216px;
   height: auto;
   border-radius: 12px;
   background: #fbfaf6;
@@ -829,6 +851,7 @@ button.numCell {
 
 .netStageTurns {
   display: flex;
+  flex: 0 0 auto;
   flex-direction: column;
   gap: 0.35rem;
 }

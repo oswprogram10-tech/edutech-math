@@ -236,6 +236,7 @@ export function NetFoldView({
   return (
     <div
       className={styles.wrap}
+      data-mode="net-fold"
       data-rich-side="true"
       data-testid="net-view"
       onKeyDown={handleKeyDown}
@@ -293,6 +294,44 @@ export function NetFoldView({
             onLiveMessage={setLiveMessage}
           />
 
+          <div className={styles.toolbar} role="toolbar" aria-label={S.name}>
+            {settings.foldable ? (
+              <>
+                <button
+                  type="button"
+                  className={styles.button}
+                  data-testid="net-fold-toggle"
+                  aria-pressed={state.folded}
+                  disabled={readOnly || needsPredictionFirst}
+                  onClick={triggerFoldToggle}
+                >
+                  <span>{state.folded ? S.net.unfold : S.net.fold}</span>
+                </button>
+                {needsPredictionFirst ? (
+                  <span className={styles.hint} data-testid="net-pick-first">
+                    {S.net.pickFirst}
+                  </span>
+                ) : null}
+              </>
+            ) : null}
+
+            {settings.editable ? (
+              <button
+                type="button"
+                className={styles.button}
+                data-testid="net-clear"
+                disabled={readOnly || !hasRemovable}
+                onClick={() => {
+                  setDuplicateKey(null);
+                  dispatch({ type: 'clear' });
+                  setLiveMessage(S.net.live.cleared);
+                }}
+              >
+                <span>{S.net.clear}</span>
+              </button>
+            ) : null}
+          </div>
+
           {settings.target === 'cuboid' && settings.editable ? (
             <div className={styles.panelBlock}>
               <div className={styles.toolbar} role="group" aria-label={S.net.rotateShape}>
@@ -334,44 +373,6 @@ export function NetFoldView({
               </div>
             </div>
           ) : null}
-
-          <div className={styles.toolbar} role="toolbar" aria-label={S.name}>
-            {settings.foldable ? (
-              <>
-                <button
-                  type="button"
-                  className={styles.button}
-                  data-testid="net-fold-toggle"
-                  aria-pressed={state.folded}
-                  disabled={readOnly || needsPredictionFirst}
-                  onClick={triggerFoldToggle}
-                >
-                  <span>{state.folded ? S.net.unfold : S.net.fold}</span>
-                </button>
-                {needsPredictionFirst ? (
-                  <span className={styles.hint} data-testid="net-pick-first">
-                    {S.net.pickFirst}
-                  </span>
-                ) : null}
-              </>
-            ) : null}
-
-            {settings.editable ? (
-              <button
-                type="button"
-                className={styles.button}
-                data-testid="net-clear"
-                disabled={readOnly || !hasRemovable}
-                onClick={() => {
-                  setDuplicateKey(null);
-                  dispatch({ type: 'clear' });
-                  setLiveMessage(S.net.live.cleared);
-                }}
-              >
-                <span>{S.net.clear}</span>
-              </button>
-            ) : null}
-          </div>
 
           <NetCardsPanel state={state} />
 

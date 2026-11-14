@@ -24,8 +24,8 @@ import { solid3dStrings as S } from '../strings.ko';
 import type { NetFoldAction, NetFoldState } from '../types';
 import styles from '../View.module.css';
 
-const STAGE_W = 280;
-const STAGE_H = 200;
+const STAGE_W = 216;
+const STAGE_H = 168;
 const ANIM_DURATION_MS = 1600;
 const HALF_PI = Math.PI / 2;
 
