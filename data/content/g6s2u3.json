@@ -1,0 +1,1257 @@
+{
+  "unit": "g6s2u3",
+  "title": "공간과 입체",
+  "activities": [
+    {
+      "id": "g6s2u3.A1",
+      "title": "위·앞·옆에서 본 모양",
+      "tasks": [
+        {
+          "id": "g6s2u3.A1.T1",
+          "prompt": "쌓기나무를 '앞' 쪽에서 보면 어떤 모양일까요? 맞는 카드를 골라요.",
+          "engine": "E12",
+          "mode": "cubes",
+          "cpa": "P",
+          "config": {
+            "mode": "cubes",
+            "grid": [3, 3],
+            "maxHeight": 2,
+            "views": [],
+            "editable": false,
+            "rotationLocked": true,
+            "initial": [
+              { "at": [0, 2, 0], "locked": true },
+              { "at": [1, 2, 0], "locked": true },
+              { "at": [1, 2, 1], "locked": true },
+              { "at": [0, 1, 0], "locked": true },
+              { "at": [0, 1, 1], "locked": true },
+              { "at": [1, 1, 0], "locked": true },
+              { "at": [2, 1, 0], "locked": true },
+              { "at": [0, 0, 0], "locked": true },
+              { "at": [2, 0, 0], "locked": true }
+            ],
+            "referenceCards": [
+              {
+                "id": "ga",
+                "label": "가",
+                "kind": "front",
+                "cells": [
+                  [1, 1, 0],
+                  [1, 1, 1]
+                ]
+              },
+              {
+                "id": "na",
+                "label": "나",
+                "kind": "front",
+                "cells": [
+                  [0, 0, 0],
+                  [1, 1, 1]
+                ]
+              },
+              {
+                "id": "da",
+                "label": "다",
+                "kind": "front",
+                "cells": [
+                  [0, 1, 1],
+                  [1, 1, 1]
+                ]
+              }
+            ]
+          },
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "card",
+                "label": "맞는 카드를 골라요.",
+                "multiple": false,
+                "options": [
+                  { "id": "ga", "label": "가" },
+                  { "id": "na", "label": "나" },
+                  { "id": "da", "label": "다" }
+                ]
+              }
+            ]
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.card.selected",
+            "value": ["ga"]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.card.selected",
+                "value": ["na"]
+              },
+              "level": 1,
+              "say": "같은 줄에 앞뒤로 선 기둥 중 앞에서 보면 무엇이 보일까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.card.selected",
+                "value": ["na"]
+              },
+              "level": 2,
+              "say": "왼쪽 줄 기둥들을 앞에서부터 나란히 세워 보았어요.",
+              "show": { "engine": "E12", "overlay": "row-lineup", "args": { "x": 0 } }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.card.selected",
+                "value": ["na"]
+              },
+              "level": 3,
+              "backtrack": "g6s2u3.views-from-directions"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 1,
+              "say": "'앞' 표시 쪽에 서서 왼쪽 줄부터 몇 층으로 보이는지 세어 볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 2,
+              "say": "카드의 왼쪽과 오른쪽이 무대의 왼쪽과 오른쪽과 같은지 견주어 봐요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 3,
+              "backtrack": "g5s2u5.sketch-hidden-edges"
+            }
+          ],
+          "concepts": ["g6s2u3.views-from-directions"],
+          "submit": "button"
+        },
+        {
+          "id": "g6s2u3.A1.T2",
+          "prompt": "쌓기나무는 모두 몇 개일까요?",
+          "engine": "E12",
+          "mode": "cubes",
+          "cpa": "C",
+          "config": {
+            "mode": "cubes",
+            "grid": [3, 2],
+            "maxHeight": 3,
+            "views": [],
+            "editable": false,
+            "rotationLocked": true,
+            "translucentToggle": false,
+            "initial": [
+              { "at": [0, 0, 0], "locked": true },
+              { "at": [1, 0, 0], "locked": true },
+              { "at": [0, 1, 0], "locked": true },
+              { "at": [1, 1, 0], "locked": true },
+              { "at": [0, 0, 1], "locked": true },
+              { "at": [1, 0, 1], "locked": true },
+              { "at": [0, 1, 1], "locked": true },
+              { "at": [1, 1, 1], "locked": true },
+              { "at": [0, 0, 2], "locked": true },
+              { "at": [2, 0, 0], "locked": true }
+            ]
+          },
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "count",
+                "label": "쌓기나무 수",
+                "forms": ["integer"]
+              }
+            ]
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.count.value",
+            "value": "10"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.count.value",
+                "value": "9"
+              },
+              "level": 1,
+              "say": "아래층에서 받쳐 주는 쌓기나무가 있어야 하지 않을까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.count.value",
+                "value": "9"
+              },
+              "level": 2,
+              "say": "보이지 않는 쌓기나무를 점선으로 그렸어요.",
+              "show": { "engine": "E12", "overlay": "hidden-reveal" }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.count.value",
+                "value": "9"
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.sketch-hidden-edges"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 1,
+              "say": "1층, 2층, 3층으로 나누어 세어 볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 2,
+              "say": "층마다 몇 개인지 적어 두고 더해 봐요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 3,
+              "backtrack": "g6s2u3.views-from-directions"
+            }
+          ],
+          "concepts": ["g6s2u3.count-cubes"],
+          "submit": "button"
+        },
+        {
+          "id": "g6s2u3.A1.T3",
+          "prompt": "'앞' 쪽에서 본 모양이 보기와 같도록 쌓기나무를 쌓아요.",
+          "engine": "E12",
+          "mode": "cubes",
+          "cpa": "C",
+          "config": {
+            "mode": "cubes",
+            "grid": [3, 3],
+            "maxHeight": 3,
+            "views": ["top", "side"],
+            "referenceViews": {
+              "front": [
+                [0, 0, 1],
+                [0, 1, 1],
+                [1, 1, 1]
+              ]
+            }
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "projectionMatches",
+            "args": {
+              "view": "front",
+              "cells": [
+                [0, 0, 1],
+                [0, 1, 1],
+                [1, 1, 1]
+              ]
+            }
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 1,
+              "say": "'앞' 쪽에서 보면 왼쪽 줄부터 몇 층, 몇 층, 몇 층으로 보일까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 2,
+              "say": "무대를 돌려 '앞' 표시 쪽에서 보고, 보기 그림과 줄마다 견주어 봐요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 3,
+              "backtrack": "g5s2u5.sketch-hidden-edges"
+            }
+          ],
+          "concepts": ["g6s2u3.views-from-directions"],
+          "submit": "button"
+        },
+        {
+          "id": "g6s2u3.A1.T4",
+          "prompt": "위에서 본 모양과 앞에서 본 모양이 모두 보기와 같도록 쌓아요.",
+          "engine": "E12",
+          "mode": "cubes",
+          "cpa": "P",
+          "config": {
+            "mode": "cubes",
+            "grid": [3, 3],
+            "maxHeight": 3,
+            "views": [],
+            "rotationLocked": true,
+            "referenceViews": {
+              "top": [
+                [1, 1, 0],
+                [0, 1, 0],
+                [1, 1, 1]
+              ],
+              "front": [
+                [0, 1, 0],
+                [0, 1, 1],
+                [1, 1, 1]
+              ]
+            }
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "projectionsMatch",
+            "args": {
+              "top": [
+                [1, 1, 0],
+                [0, 1, 0],
+                [1, 1, 1]
+              ],
+              "front": [
+                [0, 1, 0],
+                [0, 1, 1],
+                [1, 1, 1]
+              ]
+            }
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 1,
+              "say": "위에서 본 모양으로 놓을 자리를 먼저 정하고, 앞에서 본 모양으로 높이를 정해 볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 2,
+              "say": "앞에서 본 모양의 높이에 맞추려면 줄마다 적어도 하나의 기둥은 몇 층이어야 할까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 3,
+              "backtrack": "g5s2u5.sketch-hidden-edges"
+            }
+          ],
+          "concepts": ["g6s2u3.views-from-directions"],
+          "submit": "button"
+        },
+        {
+          "id": "g6s2u3.A1.T5",
+          "prompt": "오른쪽에서 보면 어떤 모양일까요? 칸을 칠해 그려요.",
+          "engine": "E12",
+          "mode": "cubes",
+          "cpa": "P",
+          "config": {
+            "mode": "cubes",
+            "grid": [3, 3],
+            "maxHeight": 2,
+            "views": [],
+            "editable": false,
+            "rotationLocked": true,
+            "paintViews": ["side"],
+            "initial": [
+              { "at": [0, 2, 0], "locked": true },
+              { "at": [1, 2, 0], "locked": true },
+              { "at": [1, 2, 1], "locked": true },
+              { "at": [0, 1, 0], "locked": true },
+              { "at": [0, 1, 1], "locked": true },
+              { "at": [1, 1, 0], "locked": true },
+              { "at": [2, 1, 0], "locked": true },
+              { "at": [0, 0, 0], "locked": true },
+              { "at": [2, 0, 0], "locked": true }
+            ]
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "paintedMatches",
+            "args": { "view": "side" }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "paintedMirrored",
+                "args": { "view": "side" }
+              },
+              "level": 1,
+              "say": "오른쪽에서 볼 때 '앞'은 내 왼쪽일까요, 오른쪽일까요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "paintedMirrored",
+                "args": { "view": "side" }
+              },
+              "level": 2,
+              "say": "오른쪽에서 보는 눈과 그 눈에서 본 '앞' 쪽을 표시했어요.",
+              "show": { "engine": "E12", "overlay": "side-eye" }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "paintedMirrored",
+                "args": { "view": "side" }
+              },
+              "level": 3,
+              "backtrack": "g6s2u3.views-from-directions"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "paintedShorter",
+                "args": { "view": "side" }
+              },
+              "level": 1,
+              "say": "같은 줄에 앞뒤로 선 기둥 중 오른쪽에서 보면 무엇이 보일까요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "paintedShorter",
+                "args": { "view": "side" }
+              },
+              "level": 2,
+              "say": "오른쪽에서 보면 한 줄에 선 기둥 중 가장 높은 것이 보여요. 줄마다 가장 높은 기둥을 찾아봐요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "paintedShorter",
+                "args": { "view": "side" }
+              },
+              "level": 3,
+              "backtrack": "g6s2u3.views-from-directions"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 1,
+              "say": "옆 그림의 '앞' 표시 쪽 줄부터 몇 층인지 세어 볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 2,
+              "say": "앞줄, 가운데 줄, 뒷줄의 기둥을 차례로 짚어 봐요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 3,
+              "backtrack": "g5s2u5.sketch-hidden-edges"
+            }
+          ],
+          "concepts": ["g6s2u3.views-from-directions"],
+          "submit": "button"
+        }
+      ]
+    },
+    {
+      "id": "g6s2u3.A2",
+      "title": "위에서 본 모양에 수 쓰기와 층별 그림",
+      "tasks": [
+        {
+          "id": "g6s2u3.A2.T1",
+          "prompt": "위에서 본 모양의 칸마다 그 자리에 쌓인 쌓기나무 수를 써요.",
+          "engine": "E12",
+          "mode": "cubes",
+          "cpa": "P",
+          "config": {
+            "mode": "cubes",
+            "grid": [3, 3],
+            "maxHeight": 3,
+            "views": [],
+            "editable": false,
+            "numberGrid": { "mode": "input" },
+            "initial": [
+              { "at": [0, 2, 0], "locked": true },
+              { "at": [0, 2, 1], "locked": true },
+              { "at": [0, 2, 2], "locked": true },
+              { "at": [1, 2, 0], "locked": true },
+              { "at": [1, 2, 1], "locked": true },
+              { "at": [2, 2, 0], "locked": true },
+              { "at": [0, 1, 0], "locked": true },
+              { "at": [0, 1, 1], "locked": true },
+              { "at": [1, 1, 0], "locked": true },
+              { "at": [0, 0, 0], "locked": true }
+            ]
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "numbersMatch",
+            "args": {}
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 1,
+              "say": "칸마다 몇 층까지 쌓였는지 무대를 돌려 확인해 볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 2,
+              "say": "가려진 쌓기나무가 있는지 살펴보아요.",
+              "show": { "engine": "E12", "overlay": "hidden-reveal" }
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 3,
+              "backtrack": "g6s2u3.count-cubes"
+            }
+          ],
+          "concepts": ["g6s2u3.top-view-numbers"],
+          "submit": "button"
+        },
+        {
+          "id": "g6s2u3.A2.T2",
+          "prompt": "위에서 본 모양에 쌓기나무 수를 써 놓았어요. 쌓기나무는 모두 몇 개일까요?",
+          "engine": "E12",
+          "mode": "cubes",
+          "cpa": "A",
+          "config": {
+            "mode": "cubes",
+            "grid": [3, 3],
+            "maxHeight": 3,
+            "views": [],
+            "stageHidden": true,
+            "numberGrid": {
+              "mode": "given",
+              "given": [
+                [1, 3, 2],
+                [0, 2, 1],
+                [0, 1, 0]
+              ]
+            }
+          },
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "count",
+                "label": "쌓기나무 수",
+                "forms": ["integer"]
+              }
+            ]
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.count.value",
+            "value": "10"
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 1,
+              "say": "칸에 쓴 수는 무엇을 뜻할까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 2,
+              "say": "칸마다 쓴 수만큼 쌓기나무가 쌓여 있어요. 칸의 수를 모두 모아 봐요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 3,
+              "backtrack": "g6s2u3.count-cubes"
+            }
+          ],
+          "concepts": ["g6s2u3.top-view-numbers", "g6s2u3.count-cubes"],
+          "submit": "button"
+        },
+        {
+          "id": "g6s2u3.A2.T3",
+          "prompt": "2층에 있는 쌓기나무만 '2층' 그림에 칠해요.",
+          "engine": "E12",
+          "mode": "cubes",
+          "cpa": "P",
+          "config": {
+            "mode": "cubes",
+            "grid": [3, 3],
+            "maxHeight": 2,
+            "views": [],
+            "editable": false,
+            "layers": {
+              "slider": false,
+              "panel": "paint"
+            },
+            "initial": [
+              { "at": [0, 2, 0], "locked": true },
+              { "at": [0, 2, 1], "locked": true },
+              { "at": [1, 2, 0], "locked": true },
+              { "at": [0, 1, 0], "locked": true },
+              { "at": [1, 1, 0], "locked": true },
+              { "at": [1, 1, 1], "locked": true },
+              { "at": [2, 1, 0], "locked": true },
+              { "at": [1, 0, 0], "locked": true },
+              { "at": [2, 0, 0], "locked": true },
+              { "at": [2, 0, 1], "locked": true }
+            ]
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "layerPaintMatches",
+            "args": { "layer": 2 }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "layerPaintFloating",
+                "args": { "against": "cubes" }
+              },
+              "level": 1,
+              "say": "이 쌓기나무는 무엇 위에 올라가 있나요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "layerPaintFloating",
+                "args": { "against": "cubes" }
+              },
+              "level": 2,
+              "say": "2층에 칠한 칸 바로 아래 1층에 쌓기나무가 있는지 무대에서 찾아봐요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "layerPaintFloating",
+                "args": { "against": "cubes" }
+              },
+              "level": 3,
+              "backtrack": "g6s2u3.layer-views"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 1,
+              "say": "1층 위에 한 층 더 올라간 쌓기나무는 어디에 있나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 2,
+              "say": "'반투명'을 켜고 무대를 돌려 2층만 찾아봐요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 3,
+              "backtrack": "g6s2u3.top-view-numbers"
+            }
+          ],
+          "concepts": ["g6s2u3.layer-views"],
+          "submit": "button"
+        },
+        {
+          "id": "g6s2u3.A2.T4",
+          "prompt": "층별로 나타낸 그림을 보고 똑같이 쌓아요.",
+          "engine": "E12",
+          "mode": "cubes",
+          "cpa": "P",
+          "config": {
+            "mode": "cubes",
+            "grid": [3, 3],
+            "maxHeight": 3,
+            "views": [],
+            "layers": {
+              "slider": false,
+              "panel": "given",
+              "given": [
+                [
+                  [1, 1, 0],
+                  [1, 1, 1],
+                  [1, 0, 0]
+                ],
+                [
+                  [1, 1, 0],
+                  [1, 0, 0],
+                  [0, 0, 0]
+                ],
+                [
+                  [1, 0, 0],
+                  [0, 0, 0],
+                  [0, 0, 0]
+                ]
+              ]
+            }
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "layersMatch",
+            "args": {
+              "layers": [
+                [
+                  [1, 1, 0],
+                  [1, 1, 1],
+                  [1, 0, 0]
+                ],
+                [
+                  [1, 1, 0],
+                  [1, 0, 0],
+                  [0, 0, 0]
+                ],
+                [
+                  [1, 0, 0],
+                  [0, 0, 0],
+                  [0, 0, 0]
+                ]
+              ]
+            }
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 1,
+              "say": "1층 그림부터 차례로 놓아 볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 2,
+              "say": "그림의 한 칸이 무대의 어느 칸인지 '앞' 표시를 기준으로 맞춰 봐요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 3,
+              "backtrack": "g6s2u3.top-view-numbers"
+            }
+          ],
+          "concepts": ["g6s2u3.layer-views"],
+          "submit": "button"
+        },
+        {
+          "id": "g6s2u3.A2.T5",
+          "prompt": "층별로 나타낸 그림 중 쌓기나무로 쌓을 수 없는 것을 찾아요.",
+          "engine": "E12",
+          "mode": "cubes",
+          "cpa": "A",
+          "config": {
+            "mode": "cubes",
+            "grid": [3, 3],
+            "maxHeight": 2,
+            "views": [],
+            "stageHidden": true,
+            "referenceCards": [
+              {
+                "id": "ga",
+                "label": "가",
+                "kind": "layers",
+                "layers": [
+                  [
+                    [1, 1, 0],
+                    [1, 1, 0],
+                    [0, 1, 0]
+                  ],
+                  [
+                    [1, 0, 0],
+                    [0, 1, 0],
+                    [0, 0, 0]
+                  ]
+                ]
+              },
+              {
+                "id": "na",
+                "label": "나",
+                "kind": "layers",
+                "layers": [
+                  [
+                    [1, 1, 0],
+                    [0, 1, 1],
+                    [0, 0, 1]
+                  ],
+                  [
+                    [0, 1, 0],
+                    [1, 0, 0],
+                    [0, 0, 0]
+                  ]
+                ]
+              },
+              {
+                "id": "da",
+                "label": "다",
+                "kind": "layers",
+                "layers": [
+                  [
+                    [0, 1, 1],
+                    [1, 1, 1],
+                    [0, 0, 0]
+                  ],
+                  [
+                    [0, 1, 1],
+                    [0, 0, 1],
+                    [0, 0, 0]
+                  ]
+                ]
+              }
+            ]
+          },
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "pick",
+                "label": "쌓을 수 없는 그림을 골라요.",
+                "multiple": false,
+                "options": [
+                  { "id": "ga", "label": "가" },
+                  { "id": "na", "label": "나" },
+                  { "id": "da", "label": "다" }
+                ]
+              },
+              {
+                "kind": "choice",
+                "id": "why",
+                "label": "그렇게 생각한 까닭을 골라요.",
+                "multiple": false,
+                "options": [
+                  { "id": "float", "label": "2층 쌓기나무 아래가 비어 있어요" },
+                  { "id": "many", "label": "쌓기나무가 너무 많아요" },
+                  { "id": "wide", "label": "1층이 2층보다 넓어요" }
+                ]
+              }
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "response.pick.selected", "value": ["na"] },
+              { "kind": "equals", "path": "response.why.selected", "value": ["float"] }
+            ]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 1,
+              "say": "2층 그림의 칸마다 그 아래 1층 칸을 짚어 볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 2,
+              "say": "2층 그림과 1층 그림을 겹쳐 놓는다고 생각해 봐요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 3,
+              "backtrack": "g6s2u3.top-view-numbers"
+            }
+          ],
+          "concepts": ["g6s2u3.layer-views"],
+          "submit": "button"
+        }
+      ]
+    },
+    {
+      "id": "g6s2u3.A3",
+      "title": "투영 탐정",
+      "tasks": [
+        {
+          "id": "g6s2u3.A3.T1",
+          "prompt": "위·앞·옆에서 본 모양이 모두 보기와 같도록 쌓아요.",
+          "engine": "E12",
+          "mode": "cubes",
+          "cpa": "P",
+          "config": {
+            "mode": "cubes",
+            "grid": [3, 3],
+            "maxHeight": 3,
+            "views": [],
+            "referenceViews": {
+              "top": [
+                [1, 1, 1],
+                [1, 1, 0],
+                [1, 0, 0]
+              ],
+              "front": [
+                [0, 0, 1],
+                [1, 0, 1],
+                [1, 1, 1]
+              ],
+              "side": [
+                [0, 0, 1],
+                [0, 1, 1],
+                [1, 1, 1]
+              ]
+            },
+            "attemptLog": true
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "viewsMatch",
+            "value": true
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 1,
+              "say": "위에서 본 모양으로 자리를 정하고, 앞과 옆에서 본 모양으로 높이를 정해 볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 2,
+              "say": "보기 세 장을 하나씩 견주며 맞지 않는 줄을 찾아봐요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 3,
+              "backtrack": "g6s2u3.layer-views"
+            }
+          ],
+          "concepts": ["g6s2u3.reconstruct-from-views"],
+          "submit": "button"
+        },
+        {
+          "id": "g6s2u3.A3.T2",
+          "prompt": "보기와 같은 세 모양을 만들 때 쌓기나무를 가장 적게 써서 쌓아요.",
+          "engine": "E12",
+          "mode": "cubes",
+          "cpa": "P",
+          "config": {
+            "mode": "cubes",
+            "grid": [3, 3],
+            "maxHeight": 3,
+            "views": [],
+            "referenceViews": {
+              "top": [
+                [1, 1, 1],
+                [1, 1, 0],
+                [1, 0, 0]
+              ],
+              "front": [
+                [0, 0, 1],
+                [1, 0, 1],
+                [1, 1, 1]
+              ],
+              "side": [
+                [0, 0, 1],
+                [0, 1, 1],
+                [1, 1, 1]
+              ]
+            },
+            "attemptLog": true
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "countIsViewsMin",
+            "args": {}
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "viewsMatch", "value": true },
+              "level": 1,
+              "say": "세 모양은 같아요. 하나라도 더 뺄 수 있을까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "viewsMatch", "value": true },
+              "level": 2,
+              "say": "하나를 빼 보고 세 모양이 그대로인지 '찾은 개수'에서 확인해요."
+            },
+            {
+              "when": { "kind": "equals", "path": "viewsMatch", "value": true },
+              "level": 3,
+              "backtrack": "g6s2u3.layer-views"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 1,
+              "say": "위에서 본 모양으로 자리를 정하고, 앞과 옆에서 본 모양으로 높이를 정해 볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 2,
+              "say": "보기 세 장을 하나씩 견주며 맞지 않는 줄을 찾아봐요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 3,
+              "backtrack": "g6s2u3.layer-views"
+            }
+          ],
+          "concepts": ["g6s2u3.reconstruct-from-views"],
+          "submit": "button"
+        },
+        {
+          "id": "g6s2u3.A3.T3",
+          "prompt": "보기와 같은 세 모양을 만들 때 쌓기나무를 가장 많이 써서 쌓아요.",
+          "engine": "E12",
+          "mode": "cubes",
+          "cpa": "P",
+          "config": {
+            "mode": "cubes",
+            "grid": [3, 3],
+            "maxHeight": 3,
+            "views": [],
+            "referenceViews": {
+              "top": [
+                [1, 1, 1],
+                [1, 1, 0],
+                [1, 0, 0]
+              ],
+              "front": [
+                [0, 0, 1],
+                [1, 0, 1],
+                [1, 1, 1]
+              ],
+              "side": [
+                [0, 0, 1],
+                [0, 1, 1],
+                [1, 1, 1]
+              ]
+            },
+            "attemptLog": true
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "countIsViewsMax",
+            "args": {}
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "viewsMatch", "value": true },
+              "level": 1,
+              "say": "세 모양을 그대로 두고 더 놓을 수 있는 자리가 있을까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "viewsMatch", "value": true },
+              "level": 2,
+              "say": "기둥마다 앞과 옆에서 본 모양보다 높아지지 않게 하나씩 더 놓아 봐요."
+            },
+            {
+              "when": { "kind": "equals", "path": "viewsMatch", "value": true },
+              "level": 3,
+              "backtrack": "g6s2u3.layer-views"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 1,
+              "say": "위에서 본 모양으로 자리를 정하고, 앞과 옆에서 본 모양으로 높이를 정해 볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 2,
+              "say": "보기 세 장을 하나씩 견주며 맞지 않는 줄을 찾아봐요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 3,
+              "backtrack": "g6s2u3.layer-views"
+            }
+          ],
+          "concepts": ["g6s2u3.reconstruct-from-views"],
+          "submit": "button"
+        },
+        {
+          "id": "g6s2u3.A3.T4",
+          "prompt": "세 모양만 알면 쌓은 모양이 하나로 정해질까요? 위에서 본 모양에 수까지 알면 어떨까요?",
+          "engine": "E12",
+          "mode": "cubes",
+          "cpa": "P",
+          "config": {
+            "mode": "cubes",
+            "grid": [3, 3],
+            "maxHeight": 3,
+            "views": [],
+            "referenceViews": {
+              "top": [
+                [1, 1, 1],
+                [1, 1, 0],
+                [1, 0, 0]
+              ],
+              "front": [
+                [0, 0, 1],
+                [1, 0, 1],
+                [1, 1, 1]
+              ],
+              "side": [
+                [0, 0, 1],
+                [0, 1, 1],
+                [1, 1, 1]
+              ]
+            },
+            "attemptLog": true,
+            "numberGrid": {
+              "mode": "given",
+              "given": [
+                [2, 1, 3],
+                [2, 1, 0],
+                [1, 0, 0]
+              ]
+            }
+          },
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "views",
+                "label": "위·앞·옆에서 본 모양만 알 때",
+                "multiple": false,
+                "options": [
+                  { "id": "one", "label": "하나뿐이에요" },
+                  { "id": "many", "label": "여러 가지일 수 있어요" }
+                ]
+              },
+              {
+                "kind": "choice",
+                "id": "nums",
+                "label": "위에서 본 모양에 수까지 알 때",
+                "multiple": false,
+                "options": [
+                  { "id": "one", "label": "하나뿐이에요" },
+                  { "id": "many", "label": "여러 가지일 수 있어요" }
+                ]
+              }
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              { "kind": "equals", "path": "response.views.selected", "value": ["many"] },
+              { "kind": "equals", "path": "response.nums.selected", "value": ["one"] }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.views.selected",
+                "value": ["one"]
+              },
+              "level": 1,
+              "say": "다른 친구가 쌓은 모양도 같은 세 모양이 될 수 있을까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.views.selected",
+                "value": ["one"]
+              },
+              "level": 2,
+              "say": "같은 세 모양을 만드는 두 쌓기를 나란히 그렸어요.",
+              "show": { "engine": "E12", "overlay": "views-twins" }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.views.selected",
+                "value": ["one"]
+              },
+              "level": 3,
+              "backtrack": "g6s2u3.reconstruct-from-views"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 1,
+              "say": "수가 쓰여 있으면 칸마다 높이를 바꿀 수 있을까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 2,
+              "say": "수대로 쌓아 보고, 다른 모양이 나올 수 있는지 생각해 봐요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 3,
+              "backtrack": "g6s2u3.layer-views"
+            }
+          ],
+          "concepts": ["g6s2u3.reconstruct-from-views"],
+          "submit": "button"
+        },
+        {
+          "id": "g6s2u3.A3.T5",
+          "prompt": "보기와 같은 세 모양을 가장 적은 쌓기나무로 만들 때, 위에서 본 모양에 수를 써요.",
+          "engine": "E12",
+          "mode": "cubes",
+          "cpa": "A",
+          "config": {
+            "mode": "cubes",
+            "grid": [3, 3],
+            "maxHeight": 3,
+            "views": [],
+            "stageHidden": true,
+            "referenceViews": {
+              "top": [
+                [1, 1, 1],
+                [1, 1, 0],
+                [1, 0, 0]
+              ],
+              "front": [
+                [0, 0, 1],
+                [1, 0, 1],
+                [1, 1, 1]
+              ],
+              "side": [
+                [0, 0, 1],
+                [0, 1, 1],
+                [1, 1, 1]
+              ]
+            },
+            "numberGrid": { "mode": "input" }
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "numbersMatch",
+            "args": {
+              "numbers": [
+                [1, 1, 3],
+                [2, 1, 0],
+                [1, 0, 0]
+              ]
+            }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "numbersMatch",
+                "args": {
+                  "numbers": [
+                    [2, 1, 3],
+                    [2, 1, 0],
+                    [1, 0, 0]
+                  ]
+                }
+              },
+              "level": 1,
+              "say": "세 모양은 그대로인데 줄일 수 있는 칸이 있을까요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "numbersMatch",
+                "args": {
+                  "numbers": [
+                    [2, 1, 3],
+                    [2, 1, 0],
+                    [1, 0, 0]
+                  ]
+                }
+              },
+              "level": 2,
+              "say": "칸마다 1씩 줄여 보고, 앞과 옆에서 본 모양이 그대로인지 따져 봐요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "numbersMatch",
+                "args": {
+                  "numbers": [
+                    [2, 1, 3],
+                    [2, 1, 0],
+                    [1, 0, 0]
+                  ]
+                }
+              },
+              "level": 3,
+              "backtrack": "g6s2u3.layer-views"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 1,
+              "say": "위에서 본 모양에서 쌓기나무가 있는 칸은 적어도 몇 개일까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 2,
+              "say": "앞에서 본 모양의 줄마다, 옆에서 본 모양의 줄마다 가장 높은 기둥이 어디에 있어야 할지 정해 봐요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 3,
+              "backtrack": "g6s2u3.layer-views"
+            }
+          ],
+          "concepts": ["g6s2u3.reconstruct-from-views"],
+          "submit": "button"
+        }
+      ]
+    }
+  ]
+}
