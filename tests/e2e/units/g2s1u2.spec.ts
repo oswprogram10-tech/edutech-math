@@ -5,6 +5,7 @@ import {
   expectChromeBookCanvasSize,
   expectContentPanelsReachable,
   expectFitCanvasVisible,
+  expectInsideScroller,
 } from '../panel-layout';
 
 /**
@@ -524,6 +525,103 @@ test('아이패드·크롬북·전자칠판 첫 화면에 A2 무대·확인하�
     await expect(slot(page, 'main').getByTestId('cubes-canvas')).toBeInViewport({ ratio: 1 });
   }
   if (testInfo.project.name === 'chromebook') expectChromeBookCanvasSize(boxes);
+});
+
+async function expectViewOnlyUi(mainPanel: Locator): Promise<void> {
+  await expect(mainPanel.getByRole('button', { name: '쌓기', exact: true })).toHaveCount(0);
+  await expect(mainPanel.getByRole('button', { name: '빼기', exact: true })).toHaveCount(0);
+  await expect(mainPanel.getByRole('button', { name: '모두 빼기', exact: true })).toHaveCount(0);
+  await expect(mainPanel.getByTestId('cubes-status')).toHaveText('');
+}
+
+test('아이패드·크롬북·전자칠판 T3·T4 첫 화면·보기 전용·돌리기를 확인한다', async ({ page }) => {
+  await setE12Renderer(page, 'isometric');
+  await openActivity(page, 'g2s1u2.A2', '쌓기나무 그림자 추리');
+
+  await solveA2T1(page);
+
+  // T2 통과 후 T3 진입
+  await focusCubesStage(page);
+  await pressCubesKey(page, 'ArrowUp');
+  await pressCubesKey(page, 'ArrowRight');
+  await pressCubesKey(page, 'Enter');
+  await pressCubesKey(page, 'ArrowRight');
+  await pressCubesKey(page, 'Enter');
+  await submit(page);
+  await expectPassed(page);
+
+  // T3 첫 화면·보기 전용·돌리기 확인
+  const mainPanel = slot(page, 'main');
+  const responsePanel = slot(page, 'response');
+  await expect(mainPanel.getByTestId('cubes-reference-top')).toBeVisible();
+  await page.evaluate(() => window.scrollTo(0, 0));
+
+  await expectContentPanelsReachable(page);
+  const refTop = mainPanel.getByTestId('cubes-reference-top');
+  await expect(refTop).toBeInViewport({ ratio: 1 });
+  const refBox = await refTop.boundingBox();
+  expect(refBox?.width ?? 0).toBeGreaterThanOrEqual(70);
+  expect(refBox?.height ?? 0).toBeGreaterThanOrEqual(70);
+
+  for (const label of ['파란 쌓기나무', '노란 쌓기나무']) {
+    const option = responsePanel.getByRole('button', { name: label, exact: true });
+    await expectInsideScroller(option);
+    await expect(option).toBeVisible();
+  }
+  await expectViewOnlyUi(mainPanel);
+
+  // T3 돌리기 단추: 잘릴 수 있는 뷰포트에서도 판 안 스크롤로 닿고, 단추·Q/E 키로 무대가 돈다.
+  const turnLeft = mainPanel.getByRole('button', { name: '왼쪽으로 돌리기', exact: true });
+  const turnRight = mainPanel.getByRole('button', { name: '오른쪽으로 돌리기', exact: true });
+  await turnLeft.scrollIntoViewIfNeeded();
+  await expect(turnLeft).toBeVisible();
+  await expect(turnLeft).toBeInViewport({ ratio: 1 });
+  const isTurnLeftClipped = await turnLeft.evaluate((el) => {
+    const rect = el.getBoundingClientRect();
+    let cur = el.parentElement;
+    while (cur) {
+      const style = window.getComputedStyle(cur);
+      if (/(hidden|auto|scroll|clip)/.test(`${style.overflowX} ${style.overflowY}`)) {
+        const clip = cur.getBoundingClientRect();
+        if (rect.top < clip.top - 1 || rect.bottom > clip.bottom + 1) return true;
+      }
+      cur = cur.parentElement;
+    }
+    return false;
+  });
+  expect(isTurnLeftClipped).toBe(false);
+
+  const floor00 = mainPanel.locator('[data-floor="0,0"]');
+  const initialPoints = await floor00.getAttribute('points');
+  await turnLeft.click();
+  await expect.poll(() => floor00.getAttribute('points')).not.toBe(initialPoints);
+  await turnRight.click();
+  await expect.poll(() => floor00.getAttribute('points')).toBe(initialPoints);
+
+  await focusCubesStage(page);
+  await page.keyboard.press('q');
+  await expect.poll(() => floor00.getAttribute('points')).not.toBe(initialPoints);
+  await page.keyboard.press('e');
+  await expect.poll(() => floor00.getAttribute('points')).toBe(initialPoints);
+
+  // T3 통과 후 T4 첫 화면·보기 전용 확인
+  await choose(page, 'pick', '파란 쌓기나무');
+  await submit(page);
+  await expectPassed(page);
+
+  await expect(responsePanel.locator('[data-response-field="card"]')).toBeVisible();
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await expectContentPanelsReachable(page);
+  for (const label of [
+    '빨간 쌓기나무 왼쪽에 2개, 뒤에 1개',
+    '빨간 쌓기나무 오른쪽에 2개, 뒤에 1개',
+    '빨간 쌓기나무 왼쪽에 2개, 앞에 1개',
+  ]) {
+    const option = responsePanel.getByRole('button', { name: label, exact: true });
+    await expectInsideScroller(option);
+    await expect(option).toBeVisible();
+  }
+  await expectViewOnlyUi(mainPanel);
 });
 
 test('오프라인에서도 g2s1u2.A2 활동이 열린다', async ({ page, context }) => {

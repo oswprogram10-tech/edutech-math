@@ -372,7 +372,7 @@
           "config": {
             "mode": "cubes",
             "grid": [4, 4],
-            "maxHeight": 4,
+            "maxHeight": 3,
             "maxCubes": 6,
             "views": [],
             "reference": {
@@ -426,7 +426,7 @@
           "config": {
             "mode": "cubes",
             "grid": [4, 4],
-            "maxHeight": 4,
+            "maxHeight": 3,
             "maxCubes": 4,
             "views": [],
             "rotationLocked": true,
@@ -528,6 +528,7 @@
             "maxHeight": 2,
             "maxCubes": 8,
             "views": [],
+            "editable": false,
             "referenceViews": {
               "top": [
                 [1, 0],
@@ -593,9 +594,10 @@
           "config": {
             "mode": "cubes",
             "grid": [4, 4],
-            "maxHeight": 4,
+            "maxHeight": 2,
             "maxCubes": 4,
             "views": [],
+            "editable": false,
             "rotationLocked": true,
             "initial": [
               { "at": [2, 0, 0], "color": "red", "locked": true },
