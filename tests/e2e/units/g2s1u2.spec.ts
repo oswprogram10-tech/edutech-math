@@ -5,6 +5,7 @@ import {
   expectChromeBookCanvasSize,
   expectContentPanelsReachable,
   expectFitCanvasVisible,
+  expectInsideScroller,
 } from '../panel-layout';
 
 /**
@@ -308,5 +309,343 @@ test('오프라인에서도 g2s1u2.A1 활동이 열린다', async ({ page, conte
   await context.setOffline(true);
   await page.reload();
   await expect(page.getByRole('heading', { name: '고무줄 기하판' })).toBeVisible();
+  await expect(page.getByRole('button', { name: '확인하기' })).toBeVisible();
+});
+
+const E12_RENDERER_KEY = 'mathexplorer.e12.renderer.v1';
+
+function cubesStage(page: Page): Locator {
+  return slot(page, 'main').getByTestId('cubes-stage');
+}
+
+async function setE12Renderer(page: Page, renderer: 'isometric' | '3d'): Promise<void> {
+  await page.addInitScript(
+    ([key, value]) => {
+      window.localStorage.setItem(key, value);
+    },
+    [E12_RENDERER_KEY, renderer] as const,
+  );
+}
+
+async function focusCubesStage(page: Page): Promise<void> {
+  const stage = cubesStage(page);
+  await stage.focus();
+  await expect(stage).toBeFocused();
+}
+
+async function pressCubesKey(page: Page, key: string, repeat = 1): Promise<void> {
+  for (let i = 0; i < repeat; i += 1) {
+    await page.keyboard.press(key);
+  }
+}
+
+async function solveA2T1(page: Page): Promise<void> {
+  await focusCubesStage(page);
+  await pressCubesKey(page, 'Enter', 2);
+  await pressCubesKey(page, 'ArrowRight');
+  await pressCubesKey(page, 'Enter');
+  await pressCubesKey(page, 'ArrowRight');
+  await pressCubesKey(page, 'Enter');
+  await submit(page);
+  await expectPassed(page);
+}
+
+test('A2 쌓기나무 그림자 추리 — 대표 오답 뒤 고쳐서 네 과제를 통과한다', async ({ page }) => {
+  await setE12Renderer(page, 'isometric');
+  await openActivity(page, 'g2s1u2.A2', '쌓기나무 그림자 추리');
+  await expect(cubesStage(page)).toHaveAttribute('data-renderer', 'isometric');
+  await screenshot(page, 'g2s1u2-a2.png');
+
+  // T1 — 1층 3개만 쌓아 일반 ①을 본 뒤, (0,0)에 1개를 더 올려 통과한다.
+  await focusCubesStage(page);
+  await pressCubesKey(page, 'Enter');
+  await pressCubesKey(page, 'ArrowRight');
+  await pressCubesKey(page, 'Enter');
+  await pressCubesKey(page, 'ArrowRight');
+  await pressCubesKey(page, 'Enter');
+  await submit(page);
+  await expectFailedWithHint(page, '그림의 쌓기나무를 1층, 2층으로 나누어 세어 볼까요?');
+
+  await focusCubesStage(page);
+  await pressCubesKey(page, 'ArrowLeft', 2);
+  await pressCubesKey(page, 'Enter');
+  await submit(page);
+  await expectPassed(page);
+
+  // T2 — rotationLocked: true로 회전 단추가 없다.
+  // 빨간 쌓기나무(1,1) 위와 왼쪽(0,1)에 놓아 MC-SPATIAL-LEFT-RIGHT ①·②를 본 뒤, 오른쪽(2,1)으로 고쳐 통과한다.
+  await expect(
+    page.getByText("'앞' 쪽에서 보아요. 빨간 쌓기나무 위에 1개, 오른쪽에 1개를 놓아요."),
+  ).toBeVisible();
+  await expect(slot(page, 'main').getByRole('button', { name: '왼쪽으로 돌리기' })).toHaveCount(0);
+  await expect(slot(page, 'main').getByRole('button', { name: '오른쪽으로 돌리기' })).toHaveCount(
+    0,
+  );
+
+  await focusCubesStage(page);
+  await pressCubesKey(page, 'ArrowUp');
+  await pressCubesKey(page, 'ArrowRight');
+  await pressCubesKey(page, 'Enter');
+  await pressCubesKey(page, 'ArrowLeft');
+  await pressCubesKey(page, 'Enter');
+  await submit(page);
+  await expectFailedWithHint(page, '누구 쪽에서 본 오른쪽일까요?', 1);
+  await submit(page);
+  await expectFailedWithHint(
+    page,
+    "바닥의 '앞' 표시 쪽에 서 있다고 생각해 봐요. 오른손은 어느 쪽에 있나요?",
+    2,
+  );
+
+  await focusCubesStage(page);
+  await pressCubesKey(page, 'Backspace');
+  await pressCubesKey(page, 'ArrowRight', 2);
+  await pressCubesKey(page, 'Enter');
+  await submit(page);
+  await expectPassed(page);
+
+  // T3 — 노란 쌓기나무를 골라 일반 ①·②를 본 뒤, 파란 쌓기나무를 골라 통과한다.
+  await expect(
+    page.getByText('그림자는 위에서 내려다본 모양이에요. 그림자와 맞는 쌓기를 골라요.'),
+  ).toBeVisible();
+  await expect(slot(page, 'main').getByTestId('cubes-reference-top')).toBeVisible();
+  await choose(page, 'pick', '노란 쌓기나무');
+  await submit(page);
+  await expectFailedWithHint(
+    page,
+    '위에서 내려다보면 쌓기나무의 윗면만 보여요. 어느 쪽이 그림자와 같을까요?',
+    1,
+  );
+  await submit(page);
+  await expectFailedWithHint(
+    page,
+    '앞에서는 보이지 않는 쌓기나무가 있을 수 있어요. 무대를 돌리거나 위에서 보아요.',
+    2,
+  );
+  await choose(page, 'pick', '파란 쌓기나무');
+  await submit(page);
+  await expectPassed(page);
+
+  // T4 — 앞뒤를 바꾼 카드(c) → 일반 ①, 좌우를 바꾼 카드(b) → MC ②, 정답 카드(a) → 통과.
+  await expect(
+    page.getByText("'앞' 쪽에서 보아요. 이 모양을 바르게 말한 카드를 골라요."),
+  ).toBeVisible();
+  await choose(page, 'card', '빨간 쌓기나무 왼쪽에 2개, 앞에 1개');
+  await submit(page);
+  await expectFailedWithHint(
+    page,
+    '빨간 쌓기나무를 기준으로 앞과 뒤, 왼쪽과 오른쪽을 하나씩 짚어 볼까요?',
+    1,
+  );
+  await choose(page, 'card', '빨간 쌓기나무 오른쪽에 2개, 뒤에 1개');
+  await submit(page);
+  await expectFailedWithHint(
+    page,
+    "'앞' 표시 쪽에 서서 빨간 쌓기나무를 보아요. 나머지 쌓기나무는 어느 손 쪽에 있나요?",
+    2,
+  );
+  await choose(page, 'card', '빨간 쌓기나무 왼쪽에 2개, 뒤에 1개');
+  await submit(page);
+  await expectPassed(page, true);
+});
+
+test('A2 MC-SPATIAL-LEFT-RIGHT 오개념 감지(T2·T4)', async ({ page }) => {
+  await setE12Renderer(page, 'isometric');
+  await openActivity(page, 'g2s1u2.A2', '쌓기나무 그림자 추리');
+
+  await solveA2T1(page);
+
+  // T2 — 좌우 반전 오답 → MC ① 확인 후 정답으로 통과
+  await focusCubesStage(page);
+  await pressCubesKey(page, 'ArrowUp');
+  await pressCubesKey(page, 'ArrowRight');
+  await pressCubesKey(page, 'Enter');
+  await pressCubesKey(page, 'ArrowLeft');
+  await pressCubesKey(page, 'Enter');
+  await submit(page);
+  await expectFailedWithHint(page, '누구 쪽에서 본 오른쪽일까요?', 1);
+  await focusCubesStage(page);
+  await pressCubesKey(page, 'Backspace');
+  await pressCubesKey(page, 'ArrowRight', 2);
+  await pressCubesKey(page, 'Enter');
+  await submit(page);
+  await expectPassed(page);
+
+  // T3 통과 후 T4 진입
+  await choose(page, 'pick', '파란 쌓기나무');
+  await submit(page);
+  await expectPassed(page);
+
+  // T4 — 좌우 반전 선택지(b) → MC ① 확인 후 정답(a)으로 통과
+  await choose(page, 'card', '빨간 쌓기나무 오른쪽에 2개, 뒤에 1개');
+  await submit(page);
+  await expectFailedWithHint(page, '누구 쪽에서 본 왼쪽, 오른쪽일까요?', 1);
+  await choose(page, 'card', '빨간 쌓기나무 왼쪽에 2개, 뒤에 1개');
+  await submit(page);
+  await expectPassed(page, true);
+});
+
+test('A2.T1 3D 무대가 열리고 키보드로 쌓아 통과한다', async ({ page }, testInfo) => {
+  await setE12Renderer(page, '3d');
+  await openActivity(page, 'g2s1u2.A2', '쌓기나무 그림자 추리');
+  const stage = cubesStage(page);
+  await expect.poll(async () => stage.getAttribute('data-renderer')).not.toBe('probe');
+  const renderer = await stage.getAttribute('data-renderer');
+  if (renderer !== '3d') {
+    test.skip(true, `WebGL 사용 불가로 3D 무대 건너뜀(폴백: ${String(renderer)})`);
+    return;
+  }
+
+  await expect(stage.getByTestId('cubes-3d-canvas')).toBeVisible();
+  await expect.poll(async () => stage.getAttribute('data-unit-px')).not.toBeNull();
+  const unitPx = await stage.getAttribute('data-unit-px');
+  console.log(`[g2s1u2.A2 3d unit-px] ${testInfo.project.name}=${String(unitPx)}`);
+  await solveA2T1(page);
+});
+
+test('아이패드·크롬북·전자칠판 첫 화면에 A2 무대·확인하기가 들어온다', async ({
+  page,
+}, testInfo) => {
+  await setE12Renderer(page, 'isometric');
+  await openActivity(page, 'g2s1u2.A2', '쌓기나무 그림자 추리');
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await expectContentPanelsReachable(page);
+  const boxes = await expectFitCanvasVisible(page);
+
+  const floorBox = await slot(page, 'main').locator('[data-floor="0,0"]').boundingBox();
+  const colBox = await slot(page, 'main').locator('[data-col="0,0"]').boundingBox();
+  console.log(
+    `[g2s1u2.A2 iso cell] ${testInfo.project.name} floor=${Math.round(floorBox?.width ?? 0)}x${Math.round(floorBox?.height ?? 0)} col=${Math.round(colBox?.width ?? 0)}x${Math.round(colBox?.height ?? 0)}`,
+  );
+
+  if (testInfo.project.name !== 'ipad') {
+    const panel = slot(page, 'main');
+    await expect(panel).toBeInViewport({ ratio: 1 });
+    await expect(page.getByRole('button', { name: '확인하기' })).toBeInViewport({ ratio: 1 });
+    await expect(slot(page, 'main').getByTestId('cubes-canvas')).toBeInViewport({ ratio: 1 });
+  }
+  if (testInfo.project.name === 'chromebook') expectChromeBookCanvasSize(boxes);
+});
+
+async function expectViewOnlyUi(mainPanel: Locator): Promise<void> {
+  await expect(mainPanel.getByRole('button', { name: '쌓기', exact: true })).toHaveCount(0);
+  await expect(mainPanel.getByRole('button', { name: '빼기', exact: true })).toHaveCount(0);
+  await expect(mainPanel.getByRole('button', { name: '모두 빼기', exact: true })).toHaveCount(0);
+  await expect(mainPanel.getByTestId('cubes-status')).toHaveText('');
+}
+
+test('아이패드·크롬북·전자칠판 T3·T4 첫 화면·보기 전용·돌리기를 확인한다', async ({ page }) => {
+  await setE12Renderer(page, 'isometric');
+  await openActivity(page, 'g2s1u2.A2', '쌓기나무 그림자 추리');
+
+  await solveA2T1(page);
+
+  // T2 통과 후 T3 진입
+  await focusCubesStage(page);
+  await pressCubesKey(page, 'ArrowUp');
+  await pressCubesKey(page, 'ArrowRight');
+  await pressCubesKey(page, 'Enter');
+  await pressCubesKey(page, 'ArrowRight');
+  await pressCubesKey(page, 'Enter');
+  await submit(page);
+  await expectPassed(page);
+
+  // T3 첫 화면·보기 전용·돌리기 확인
+  const mainPanel = slot(page, 'main');
+  const responsePanel = slot(page, 'response');
+  await expect(mainPanel.getByTestId('cubes-reference-top')).toBeVisible();
+  await page.evaluate(() => window.scrollTo(0, 0));
+
+  await expectContentPanelsReachable(page);
+  const refTop = mainPanel.getByTestId('cubes-reference-top');
+  await expect(refTop).toBeInViewport({ ratio: 1 });
+  const refBox = await refTop.boundingBox();
+  expect(refBox?.width ?? 0).toBeGreaterThanOrEqual(70);
+  expect(refBox?.height ?? 0).toBeGreaterThanOrEqual(70);
+
+  for (const label of ['파란 쌓기나무', '노란 쌓기나무']) {
+    const option = responsePanel.getByRole('button', { name: label, exact: true });
+    await expectInsideScroller(option);
+    await expect(option).toBeVisible();
+  }
+  await expectViewOnlyUi(mainPanel);
+
+  // T3 돌리기 단추: 잘릴 수 있는 뷰포트에서도 판 안 스크롤로 닿고, 단추·Q/E 키로 무대가 돈다.
+  const turnLeft = mainPanel.getByRole('button', { name: '왼쪽으로 돌리기', exact: true });
+  const turnRight = mainPanel.getByRole('button', { name: '오른쪽으로 돌리기', exact: true });
+  await turnLeft.scrollIntoViewIfNeeded();
+  await expect(turnLeft).toBeVisible();
+  await expect(turnLeft).toBeInViewport({ ratio: 1 });
+  const isTurnLeftClipped = await turnLeft.evaluate((el) => {
+    const rect = el.getBoundingClientRect();
+    let cur = el.parentElement;
+    while (cur) {
+      const style = window.getComputedStyle(cur);
+      if (/(hidden|auto|scroll|clip)/.test(`${style.overflowX} ${style.overflowY}`)) {
+        const clip = cur.getBoundingClientRect();
+        if (rect.top < clip.top - 1 || rect.bottom > clip.bottom + 1) return true;
+      }
+      cur = cur.parentElement;
+    }
+    return false;
+  });
+  expect(isTurnLeftClipped).toBe(false);
+
+  const floor00 = mainPanel.locator('[data-floor="0,0"]');
+  const initialPoints = await floor00.getAttribute('points');
+  await turnLeft.click();
+  await expect.poll(() => floor00.getAttribute('points')).not.toBe(initialPoints);
+  await turnRight.click();
+  await expect.poll(() => floor00.getAttribute('points')).toBe(initialPoints);
+
+  await focusCubesStage(page);
+  await page.keyboard.press('q');
+  await expect.poll(() => floor00.getAttribute('points')).not.toBe(initialPoints);
+  await page.keyboard.press('e');
+  await expect.poll(() => floor00.getAttribute('points')).toBe(initialPoints);
+
+  // T3 통과 후 T4 첫 화면·보기 전용 확인
+  await choose(page, 'pick', '파란 쌓기나무');
+  await submit(page);
+  await expectPassed(page);
+
+  await expect(responsePanel.locator('[data-response-field="card"]')).toBeVisible();
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await expectContentPanelsReachable(page);
+  for (const label of [
+    '빨간 쌓기나무 왼쪽에 2개, 뒤에 1개',
+    '빨간 쌓기나무 오른쪽에 2개, 뒤에 1개',
+    '빨간 쌓기나무 왼쪽에 2개, 앞에 1개',
+  ]) {
+    const option = responsePanel.getByRole('button', { name: label, exact: true });
+    await expectInsideScroller(option);
+    await expect(option).toBeVisible();
+  }
+  await expectViewOnlyUi(mainPanel);
+});
+
+test('오프라인에서도 g2s1u2.A2 활동이 열린다', async ({ page, context }) => {
+  await setE12Renderer(page, 'isometric');
+  await page.goto(PREVIEW_URL);
+  await page.getByRole('button', { name: '1번', exact: true }).click();
+  await page.getByRole('button', { name: '건너뛰기' }).click();
+  await expect(page).toHaveURL(/#\/map$/);
+  await page.goto(`${PREVIEW_URL}/#/activity/g2s1u2.A2`);
+  await expect(page.getByRole('heading', { name: '쌓기나무 그림자 추리' })).toBeVisible();
+
+  await page.evaluate(async () => {
+    await navigator.serviceWorker.ready;
+    if (!navigator.serviceWorker.controller) {
+      await new Promise<void>((resolve) =>
+        navigator.serviceWorker.addEventListener('controllerchange', () => resolve(), {
+          once: true,
+        }),
+      );
+    }
+  });
+
+  await context.setOffline(true);
+  await page.reload();
+  await expect(page.getByRole('heading', { name: '쌓기나무 그림자 추리' })).toBeVisible();
   await expect(page.getByRole('button', { name: '확인하기' })).toBeVisible();
 });

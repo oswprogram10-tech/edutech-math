@@ -358,6 +358,310 @@
           }
         }
       ]
+    },
+    {
+      "id": "g2s1u2.A2",
+      "title": "쌓기나무 그림자 추리",
+      "tasks": [
+        {
+          "id": "g2s1u2.A2.T1",
+          "prompt": "그림과 똑같은 모양으로 쌓기나무를 쌓아요.",
+          "engine": "E12",
+          "mode": "cubes",
+          "cpa": "C",
+          "config": {
+            "mode": "cubes",
+            "grid": [4, 4],
+            "maxHeight": 3,
+            "maxCubes": 6,
+            "views": [],
+            "reference": {
+              "cubes": [
+                [0, 0, 0],
+                [1, 0, 0],
+                [2, 0, 0],
+                [0, 0, 1]
+              ]
+            }
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "sameShape",
+            "args": {
+              "cubes": [
+                [0, 0, 0],
+                [1, 0, 0],
+                [2, 0, 0],
+                [0, 0, 1]
+              ],
+              "rotate": true
+            }
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 1,
+              "say": "그림의 쌓기나무를 1층, 2층으로 나누어 세어 볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 2,
+              "say": "1층에 몇 개, 2층에 몇 개인지 그림과 내 모양을 하나씩 견주어 봐요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 3,
+              "backtrack": "g1s1u2.shape-properties"
+            }
+          ],
+          "concepts": ["g2s1u2.cube-building"],
+          "submit": "button"
+        },
+        {
+          "id": "g2s1u2.A2.T2",
+          "prompt": "'앞' 쪽에서 보아요. 빨간 쌓기나무 위에 1개, 오른쪽에 1개를 놓아요.",
+          "engine": "E12",
+          "mode": "cubes",
+          "cpa": "C",
+          "config": {
+            "mode": "cubes",
+            "grid": [4, 4],
+            "maxHeight": 3,
+            "maxCubes": 4,
+            "views": [],
+            "rotationLocked": true,
+            "initial": [{ "at": [1, 1, 0], "color": "red", "locked": true }]
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "heightsMatch",
+            "args": {
+              "heights": [
+                [0, 0, 0, 0],
+                [0, 0, 0, 0],
+                [0, 2, 1, 0],
+                [0, 0, 0, 0]
+              ],
+              "shift": false
+            }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "heightsMatch",
+                "args": {
+                  "heights": [
+                    [0, 0, 0, 0],
+                    [0, 0, 0, 0],
+                    [1, 2, 0, 0],
+                    [0, 0, 0, 0]
+                  ],
+                  "shift": false
+                }
+              },
+              "level": 1,
+              "say": "누구 쪽에서 본 오른쪽일까요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "heightsMatch",
+                "args": {
+                  "heights": [
+                    [0, 0, 0, 0],
+                    [0, 0, 0, 0],
+                    [1, 2, 0, 0],
+                    [0, 0, 0, 0]
+                  ],
+                  "shift": false
+                }
+              },
+              "level": 2,
+              "say": "바닥의 '앞' 표시 쪽에 서 있다고 생각해 봐요. 오른손은 어느 쪽에 있나요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "heightsMatch",
+                "args": {
+                  "heights": [
+                    [0, 0, 0, 0],
+                    [0, 0, 0, 0],
+                    [1, 2, 0, 0],
+                    [0, 0, 0, 0]
+                  ],
+                  "shift": false
+                }
+              },
+              "level": 3,
+              "backtrack": "g2s1u2.cube-building"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 1,
+              "say": "빨간 쌓기나무를 기준으로 위와 오른쪽을 다시 살펴볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 2,
+              "say": "빨간 쌓기나무에 손가락을 대고, 위로 한 칸, 오른쪽으로 한 칸 짚어 봐요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 3,
+              "backtrack": "g2s1u2.cube-building"
+            }
+          ],
+          "concepts": ["g2s1u2.cube-building"],
+          "submit": "button"
+        },
+        {
+          "id": "g2s1u2.A2.T3",
+          "prompt": "그림자는 위에서 내려다본 모양이에요. 그림자와 맞는 쌓기를 골라요.",
+          "engine": "E12",
+          "mode": "cubes",
+          "cpa": "P",
+          "config": {
+            "mode": "cubes",
+            "grid": [5, 2],
+            "maxHeight": 2,
+            "maxCubes": 8,
+            "views": [],
+            "editable": false,
+            "referenceViews": {
+              "top": [
+                [1, 0],
+                [1, 1]
+              ]
+            },
+            "initial": [
+              { "at": [0, 0, 0], "color": "blue", "locked": true },
+              { "at": [1, 0, 0], "color": "blue", "locked": true },
+              { "at": [0, 0, 1], "color": "blue", "locked": true },
+              { "at": [0, 1, 0], "color": "blue", "locked": true },
+              { "at": [3, 0, 0], "color": "yellow", "locked": true },
+              { "at": [4, 0, 0], "color": "yellow", "locked": true },
+              { "at": [3, 0, 1], "color": "yellow", "locked": true },
+              { "at": [4, 1, 0], "color": "yellow", "locked": true }
+            ]
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.pick.selected",
+            "value": ["blue"]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 1,
+              "say": "위에서 내려다보면 쌓기나무의 윗면만 보여요. 어느 쪽이 그림자와 같을까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 2,
+              "say": "앞에서는 보이지 않는 쌓기나무가 있을 수 있어요. 무대를 돌리거나 위에서 보아요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 3,
+              "backtrack": "g2s1u2.cube-building"
+            }
+          ],
+          "concepts": ["g2s1u2.cube-building"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "pick",
+                "label": "그림자와 맞는 쌓기를 골라요.",
+                "multiple": false,
+                "options": [
+                  { "id": "blue", "label": "파란 쌓기나무" },
+                  { "id": "yellow", "label": "노란 쌓기나무" }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g2s1u2.A2.T4",
+          "prompt": "'앞' 쪽에서 보아요. 이 모양을 바르게 말한 카드를 골라요.",
+          "engine": "E12",
+          "mode": "cubes",
+          "cpa": "P",
+          "config": {
+            "mode": "cubes",
+            "grid": [4, 4],
+            "maxHeight": 2,
+            "maxCubes": 4,
+            "views": [],
+            "editable": false,
+            "rotationLocked": true,
+            "initial": [
+              { "at": [2, 0, 0], "color": "red", "locked": true },
+              { "at": [1, 0, 0], "locked": true },
+              { "at": [0, 0, 0], "locked": true },
+              { "at": [2, 1, 0], "locked": true }
+            ]
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.card.selected",
+            "value": ["a"]
+          },
+          "hints": [
+            {
+              "when": { "kind": "equals", "path": "response.card.selected", "value": ["b"] },
+              "level": 1,
+              "say": "누구 쪽에서 본 왼쪽, 오른쪽일까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.card.selected", "value": ["b"] },
+              "level": 2,
+              "say": "'앞' 표시 쪽에 서서 빨간 쌓기나무를 보아요. 나머지 쌓기나무는 어느 손 쪽에 있나요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "response.card.selected", "value": ["b"] },
+              "level": 3,
+              "backtrack": "g2s1u2.cube-building"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 1,
+              "say": "빨간 쌓기나무를 기준으로 앞과 뒤, 왼쪽과 오른쪽을 하나씩 짚어 볼까요?"
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 2,
+              "say": "'앞' 표시가 있는 쪽이 앞이에요. 카드의 말을 하나씩 무대에서 찾아봐요."
+            },
+            {
+              "when": { "kind": "equals", "path": "mode", "value": "cubes" },
+              "level": 3,
+              "backtrack": "g2s1u2.cube-building"
+            }
+          ],
+          "concepts": ["g2s1u2.cube-building"],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "card",
+                "label": "맞는 카드를 골라요.",
+                "multiple": false,
+                "options": [
+                  { "id": "a", "label": "빨간 쌓기나무 왼쪽에 2개, 뒤에 1개" },
+                  { "id": "b", "label": "빨간 쌓기나무 오른쪽에 2개, 뒤에 1개" },
+                  { "id": "c", "label": "빨간 쌓기나무 왼쪽에 2개, 앞에 1개" }
+                ]
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }
