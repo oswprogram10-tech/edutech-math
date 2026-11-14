@@ -290,6 +290,12 @@ async function expectFirstScreen(
     return;
   }
   await expectContentPanelsReachable(page);
+  // T137: 넘긴 요소가 (판 안 스크롤이나 페이지 스크롤로) 잘림 없이 닿는지 본다.
+  for (const loc of locators) {
+    await loc.scrollIntoViewIfNeeded();
+    // 스크롤 뒤 소수점 픽셀 반올림(0.999)을 허용한다.
+    await expect(loc).toBeInViewport({ ratio: 0.99 });
+  }
 }
 
 test('g6s2u3.A1 — 위·앞·옆에서 본 모양 5과제 흐름과 오개념·오버레이', async ({
@@ -302,7 +308,7 @@ test('g6s2u3.A1 — 위·앞·옆에서 본 모양 5과제 흐름과 오개념·
   const vp = testInfo.project.name;
 
   // T1 첫 화면 + 대표 스크린샷
-  await expectFirstScreen(page, vp === 'board' ? 'fit' : 'reachable', [
+  await expectFirstScreen(page, vp === 'ipad' ? 'reachable' : 'fit', [
     mainPanel.getByTestId('cubes-stage'),
     mainPanel.getByTestId('cubes-cards'),
     field(page, 'card'),
@@ -513,7 +519,7 @@ test('g6s2u3.A2 — 수 쓰기와 층별 그림 5과제 흐름과 오개념', as
   await expectPassed(page);
 
   // T4 첫 화면 검사 + 1층만 → 일반 ① → 정답 [[3,2,0],[2,1,1],[1,0,0]]
-  await expectFirstScreen(page, vp === 'board' ? 'fit' : 'reachable', [
+  await expectFirstScreen(page, vp === 'ipad' ? 'reachable' : 'fit', [
     mainPanel.getByTestId('cubes-stage'),
     mainPanel.getByTestId('cubes-layer-3'),
   ]);
@@ -526,7 +532,7 @@ test('g6s2u3.A2 — 수 쓰기와 층별 그림 5과제 흐름과 오개념', as
 
   // T5 첫 화면 검사(stageHidden + 층 카드 3장 + 응답 두 칸)
   await expect(mainPanel.getByTestId('cubes-stage')).toHaveCount(0);
-  await expectFirstScreen(page, 'reachable', [
+  await expectFirstScreen(page, vp === 'ipad' ? 'reachable' : 'fit', [
     mainPanel.getByTestId('cubes-cards'),
     field(page, 'pick'),
     field(page, 'why'),
@@ -586,7 +592,7 @@ test('g6s2u3.A3 — 투영 탐정 5과제 흐름과 오개념·views-twins', asy
   await expectPassed(page);
 
   // T4 첫 화면 검사 + 하나뿐·하나뿐 → MC ① → 다시 → ② views-twins → 여러 가지·하나뿐 → 통과
-  await expectFirstScreen(page, 'reachable', [
+  await expectFirstScreen(page, vp === 'ipad' ? 'reachable' : 'fit', [
     mainPanel.getByTestId('cubes-stage'),
     mainPanel.getByTestId('cubes-numbers'),
     field(page, 'views'),

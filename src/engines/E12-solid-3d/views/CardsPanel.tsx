@@ -85,6 +85,7 @@ export function ReferenceCardsPanel({ state }: { readonly state: CubesState }) {
       className={styles.panelBlock}
       data-testid="cubes-cards"
       data-compact-cards={compact ? 'true' : undefined}
+      data-card-count={cards.length}
     >
       <p className={styles.projTitle} style={{ textAlign: 'left' }}>
         {S.referenceCardsTitle}
