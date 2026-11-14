@@ -4,7 +4,6 @@
 import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import type { ThreeEvent } from '@react-three/fiber';
-import { solid3dStrings as S } from '../strings.ko';
 import type { FocusCell, GridCoord } from '../types';
 import { FOCUS_STROKE, isTopFloorFocused } from '../views/focusMatch';
 import type { PressGestureHandlers } from '../views/usePressGesture';
@@ -17,6 +16,7 @@ interface FloorTilesProps {
   readonly focus: FocusCell | null;
   readonly frontMarker: boolean;
   readonly readOnly: boolean;
+  readonly editable?: boolean;
   readonly press: PressGestureHandlers;
 }
 
@@ -43,27 +43,22 @@ function createFrontMarkerTexture(): THREE.CanvasTexture | null {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.strokeStyle = '#1d4fa8';
   ctx.fillStyle = '#1d4fa8';
-  ctx.lineWidth = 10;
+  ctx.lineWidth = 12;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
 
-  // 위쪽(무대 앞 가장자리 쪽)을 향하는 화살표
+  // 위쪽(무대 앞 가장자리 쪽)을 향하는 화살표만 그린다("앞" 글자는 HTML 이름표가 맡는다).
   ctx.beginPath();
-  ctx.moveTo(128, 60);
-  ctx.lineTo(128, 16);
+  ctx.moveTo(128, 118);
+  ctx.lineTo(128, 36);
   ctx.stroke();
 
   ctx.beginPath();
-  ctx.moveTo(128, 8);
-  ctx.lineTo(108, 32);
-  ctx.lineTo(148, 32);
+  ctx.moveTo(128, 16);
+  ctx.lineTo(100, 52);
+  ctx.lineTo(156, 52);
   ctx.closePath();
   ctx.fill();
-
-  ctx.font = '800 56px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(S.front, 128, 106);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
@@ -106,6 +101,7 @@ export function FloorTiles({
   focus,
   frontMarker,
   readOnly,
+  editable = true,
   press,
 }: FloorTilesProps) {
   const resources = useMemo(() => buildFloorResources(), []);
@@ -169,7 +165,7 @@ export function FloorTiles({
     <group>
       {tiles.map(({ x, y, pos }) => {
         const isTopFocus = isTopFloorFocused(x, y, focus, rows);
-        const isCursor = !readOnly && cursor[0] === x && cursor[1] === y;
+        const isCursor = !readOnly && editable && cursor[0] === x && cursor[1] === y;
         return (
           <group key={`tile-${x}-${y}`} position={[pos[0], -0.02, pos[2]]}>
             <mesh

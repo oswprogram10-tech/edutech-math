@@ -221,3 +221,182 @@ test('크롬북에서 힌트 겹쳐 보기 hidden-reveal svg와 cubes-canvas 상
     )
     .toBeLessThanOrEqual(2);
 });
+
+async function assertInsideBox(inner: Locator, outer: Locator): Promise<void> {
+  await expect
+    .poll(async () => {
+      const a = await inner.boundingBox();
+      const b = await outer.boundingBox();
+      if (!a || !b) return false;
+      return (
+        a.x >= b.x - 1 &&
+        a.y >= b.y - 1 &&
+        a.x + a.width <= b.x + b.width + 1 &&
+        a.y + a.height <= b.y + b.height + 1
+      );
+    })
+    .toBe(true);
+}
+
+test('샌드박스 T3 보기 전용 설정에서 그림자 그림이 70px 이상·첫 화면 안이고 편집 단추·상태 줄이 없다', async ({
+  page,
+}, testInfo) => {
+  const t3Config = {
+    mode: 'cubes',
+    grid: [5, 2],
+    maxHeight: 2,
+    maxCubes: 8,
+    views: [],
+    editable: false,
+    stage: 'isometric',
+    referenceViews: {
+      top: [
+        [1, 0],
+        [1, 1],
+      ],
+    },
+    initial: [
+      { at: [0, 0, 0], color: 'blue', locked: true },
+      { at: [1, 0, 0], color: 'blue', locked: true },
+      { at: [0, 0, 1], color: 'blue', locked: true },
+      { at: [0, 1, 0], color: 'blue', locked: true },
+      { at: [3, 0, 0], color: 'yellow', locked: true },
+      { at: [4, 0, 0], color: 'yellow', locked: true },
+      { at: [3, 0, 1], color: 'yellow', locked: true },
+      { at: [4, 1, 0], color: 'yellow', locked: true },
+    ],
+  };
+
+  await page.goto(
+    `/?stage=fit&config=${encodeURIComponent(JSON.stringify(t3Config))}#/sandbox/E12`,
+  );
+  await expect(page.getByRole('heading', { name: '3D 입체' })).toBeVisible();
+
+  const refTop = page.getByTestId('cubes-reference-top');
+  await expect(refTop).toBeVisible();
+  await expect(refTop).toBeInViewport({ ratio: 1 });
+  const refBox = await refTop.boundingBox();
+  expect(refBox).not.toBeNull();
+  expect(refBox?.width ?? 0).toBeGreaterThanOrEqual(70);
+  expect(refBox?.height ?? 0).toBeGreaterThanOrEqual(70);
+
+  await expect(page.getByRole('button', { name: '쌓기', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: '빼기', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: '모두 빼기', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: '왼쪽으로 돌리기', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: '오른쪽으로 돌리기', exact: true })).toBeVisible();
+  await expect(page.getByTestId('cubes-status')).toHaveText('');
+
+  const frontMarkerTextBox = await page
+    .locator('[data-testid="cubes-front-marker"] text')
+    .boundingBox();
+  console.log(
+    `[E12 T3 iso front text] ${testInfo.project.name}=${Math.round(frontMarkerTextBox?.height ?? 0)}px`,
+  );
+
+  const stage = page.getByTestId('cubes-stage');
+  await stage.focus();
+  await expect(stage).toBeFocused();
+  await page.keyboard.press('Enter');
+  expect((await readObservation(page)).count).toBe(8);
+
+  await page.keyboard.press('q');
+  await pollObservation(page, (obs) => obs.viewTurn === 3);
+});
+
+test('과제 보기 블록이 도구 막대보다 DOM 앞에 놓인다', async ({ page }) => {
+  await openEngine(page, {
+    reference: {
+      cubes: [
+        [0, 0, 0],
+        [1, 0, 0],
+      ],
+    },
+    referenceViews: {
+      top: [
+        [1, 0],
+        [1, 1],
+      ],
+    },
+  });
+
+  const isBeforeToolbar = await page.evaluate(() => {
+    const refTop = document.querySelector('[data-testid="cubes-reference-top"]');
+    const toolbar = document.querySelector('[role="toolbar"][aria-label="3D 입체"]');
+    if (!refTop || !toolbar) return false;
+    return Boolean(refTop.compareDocumentPosition(toolbar) & Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+  expect(isBeforeToolbar).toBe(true);
+});
+
+test('3D 무대에서 앞 이름표가 18px 이상이고 시점 전환 뒤에도 무대 상자 안에 있다', async ({
+  page,
+}, testInfo) => {
+  await page.goto(`/?config=${encodeURIComponent(JSON.stringify({ stage: '3d' }))}#/sandbox/E12`);
+  await expect(page.getByRole('heading', { name: '3D 입체' })).toBeVisible();
+
+  const stage = page.getByTestId('cubes-stage');
+  await expect(stage).toBeVisible();
+  await expect.poll(async () => stage.getAttribute('data-renderer')).not.toBe('probe');
+  const renderer = await stage.getAttribute('data-renderer');
+  if (renderer !== '3d') {
+    testInfo.annotations.push({
+      type: 'skip-reason',
+      description: `Headless 환경에서 WebGL 사용 불가(폴백 렌더러: ${String(renderer)})`,
+    });
+    test.skip(true, `WebGL 사용 불가로 3D 이름표 테스트 건너뜀(폴백: ${String(renderer)})`);
+    return;
+  }
+
+  const label = stage.getByTestId('cubes-front-label');
+  await expect(label).toBeVisible();
+  await expect(label).toHaveText('앞');
+  const fontSize = await label.evaluate((el) => Number.parseFloat(getComputedStyle(el).fontSize));
+  expect(fontSize).toBeGreaterThanOrEqual(18);
+  await assertInsideBox(label, stage);
+
+  await page.getByRole('button', { name: '위에서', exact: true }).click();
+  await page.waitForTimeout(400);
+  await expect(label).toBeVisible();
+  await assertInsideBox(label, stage);
+
+  await page.getByRole('button', { name: '비스듬히', exact: true }).click();
+  await page.waitForTimeout(400);
+  await expect(label).toBeVisible();
+  await assertInsideBox(label, stage);
+});
+
+test('rotationLocked: true 안내에 돌리기·손가락 두 개가 없다(등각·3D)', async ({
+  page,
+}, testInfo) => {
+  await openEngine(page, { rotationLocked: true });
+  const frontText5x5 = await page.locator('[data-testid="cubes-front-marker"] text').boundingBox();
+  const canvasBox5x5 = await page.getByTestId('cubes-canvas').boundingBox();
+  console.log(
+    `[E12 5x5 iso front text] ${testInfo.project.name}: textH=${(frontText5x5?.height ?? 0).toFixed(1)}px, canvasH=${Math.round(canvasBox5x5?.height ?? 0)}px`,
+  );
+
+  const engineWrapText = (await page.locator('div[data-cpa]').textContent()) ?? '';
+  expect(engineWrapText).not.toContain('돌리기');
+  expect(engineWrapText).not.toContain('손가락 두 개');
+  await expect(
+    page.getByText('방향키: 칸 옮기기 · Enter: 쌓기 · Backspace: 빼기 · T: 반투명'),
+  ).toBeVisible();
+
+  await page.goto(
+    `/?config=${encodeURIComponent(JSON.stringify({ stage: '3d', rotationLocked: true }))}#/sandbox/E12`,
+  );
+  await expect(page.getByRole('heading', { name: '3D 입체' })).toBeVisible();
+  const stage = page.getByTestId('cubes-stage');
+  await expect.poll(async () => stage.getAttribute('data-renderer')).not.toBe('probe');
+  if ((await stage.getAttribute('data-renderer')) !== '3d') {
+    test.skip(true, 'WebGL 사용 불가로 3D 회전 잠금 안내 테스트 건너뜀');
+    return;
+  }
+  const engineWrapText3d = (await page.locator('div[data-cpa]').textContent()) ?? '';
+  expect(engineWrapText3d).not.toContain('돌리기');
+  expect(engineWrapText3d).not.toContain('손가락 두 개');
+  await expect(
+    page.getByText('방향키: 칸 옮기기 · Enter: 쌓기 · Backspace: 빼기 · T: 반투명'),
+  ).toBeVisible();
+});

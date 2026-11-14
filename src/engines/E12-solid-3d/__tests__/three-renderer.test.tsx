@@ -20,7 +20,9 @@ import {
   ISO_POLAR_RAD,
   MAX_POLAR_RAD,
   azimuthFor,
+  clampStageLabelPoint,
   computeFitZoom,
+  frontMarkerWorld,
   targetAnglesForPreset,
   targetForPreset,
   toWorld,
@@ -139,6 +141,13 @@ describe('3D 카메라·좌표 순수 계산', () => {
 
     expect(computeFitZoom(690, 395, 5, 5, 5, iso.azimuth, iso.polar)).toBeGreaterThanOrEqual(40);
     expect(computeFitZoom(690, 395, 5, 5, 5, top.azimuth, top.polar)).toBeGreaterThanOrEqual(48);
+  });
+
+  it('frontMarkerWorld와 clampStageLabelPoint는 3D 앞 이름표를 무대 가장자리 안으로 묶는다', () => {
+    expect(frontMarkerWorld(5)).toEqual([0, 0, 2.84]);
+    expect(clampStageLabelPoint(200, 300, 690, 395, 40, 28)).toEqual({ x: 200, y: 300 });
+    expect(clampStageLabelPoint(-10, 420, 690, 395, 40, 28)).toEqual({ x: 26, y: 375 });
+    expect(clampStageLabelPoint(800, -5, 690, 395, 40, 28)).toEqual({ x: 664, y: 20 });
   });
 });
 

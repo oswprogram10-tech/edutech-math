@@ -110,6 +110,26 @@
   display: block;
 }
 
+.frontLabel {
+  position: absolute;
+  left: 50%;
+  top: 85%;
+  transform: translate(-50%, -50%);
+  padding: 2px 9px;
+  border: 2px solid #1d4fa8;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #1d4fa8;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  z-index: 2;
+}
+
 .probeLayer {
   position: absolute;
   inset: 0;

@@ -123,7 +123,7 @@ describe('E12 View 기본 동작과 정답 노출 금지', () => {
     expect(container.querySelectorAll('[data-focused-cube="true"]')).toHaveLength(0);
   });
 
-  it('reference와 referenceViews를 보기 그림으로 그린다', () => {
+  it('reference와 referenceViews를 보기 그림으로 그리고 도구 막대 앞에 둔다', () => {
     const { container } = renderHarness({
       reference: {
         cubes: [
@@ -131,10 +131,67 @@ describe('E12 View 기본 동작과 정답 노출 금지', () => {
           [1, 0, 0],
         ],
       },
-      referenceViews: { front: [[1, 1]] },
+      referenceViews: {
+        top: [
+          [1, 0],
+          [1, 1],
+        ],
+      },
     });
-    expect(container.querySelector('[data-testid="cubes-reference"]')).not.toBeNull();
-    expect(container.querySelector('[data-testid="cubes-reference-front"]')).not.toBeNull();
+    const refShape = container.querySelector('[data-testid="cubes-reference"]');
+    const refTop = container.querySelector('[data-testid="cubes-reference-top"]');
+    const toolbar = container.querySelector('[role="toolbar"]');
+    expect(refShape).not.toBeNull();
+    expect(refTop).not.toBeNull();
+    expect(toolbar).not.toBeNull();
+    if (refTop && toolbar) {
+      expect(
+        Boolean(refTop.compareDocumentPosition(toolbar) & Node.DOCUMENT_POSITION_FOLLOWING),
+      ).toBe(true);
+      expect(Number(refTop.getAttribute('width'))).toBeGreaterThanOrEqual(70);
+      expect(Number(refTop.getAttribute('height'))).toBeGreaterThanOrEqual(70);
+    }
+  });
+
+  it('editable이 false면 쌓기·빼기·모두 빼기 단추·커서·상태 문구를 숨기고 Q/E·T만 남긴다', () => {
+    const { container, getByTestId, queryByRole, getByText } = renderHarness({
+      editable: false,
+      maxCubes: 1,
+      initial: [{ at: [0, 0, 0], locked: true }],
+    });
+
+    expect(queryByRole('button', { name: '쌓기' })).toBeNull();
+    expect(queryByRole('button', { name: '빼기' })).toBeNull();
+    expect(queryByRole('button', { name: '모두 빼기' })).toBeNull();
+    expect(queryByRole('button', { name: '왼쪽으로 돌리기' })).not.toBeNull();
+    expect(queryByRole('button', { name: '오른쪽으로 돌리기' })).not.toBeNull();
+    expect(queryByRole('button', { name: '반투명' })).not.toBeNull();
+
+    expect(getByTestId('cubes-status').textContent).toBe('');
+    expect(container.querySelector('[data-testid="cubes-cursor"]')).toBeNull();
+    expect(getByText('쌓기나무를 돌려 보며 살펴보아요.')).not.toBeNull();
+    expect(getByText('Q/E: 돌리기 · T: 반투명')).not.toBeNull();
+
+    const stage = getByTestId('cubes-stage');
+    fireEvent.keyDown(stage, { key: 'Enter' });
+    fireEvent.keyDown(stage, { key: 'Backspace' });
+    expect(container.querySelectorAll('[data-cube]')).toHaveLength(1);
+
+    fireEvent.keyDown(stage, { key: 't' });
+    const topPoly = container.querySelector('[data-cube="0,0,0"] polygon');
+    expect(topPoly?.getAttribute('fill-opacity')).toBe('0.35');
+  });
+
+  it('rotationLocked가 true면 안내 문구에서 돌리기를 빼고, editable:false와 함께일 때 잠금 안내를 쓴다', () => {
+    const editLocked = renderHarness({ rotationLocked: true });
+    expect(
+      editLocked.getByText('방향키: 칸 옮기기 · Enter: 쌓기 · Backspace: 빼기 · T: 반투명'),
+    ).not.toBeNull();
+    cleanup();
+
+    const viewLocked = renderHarness({ editable: false, rotationLocked: true });
+    expect(viewLocked.getByText('쌓기나무를 살펴보아요.')).not.toBeNull();
+    expect(viewLocked.getByText('T: 반투명')).not.toBeNull();
   });
 
   it('오버레이 3개가 안전하게 동작한다(row-lineup 잘못된 인자는 빈 렌더)', () => {

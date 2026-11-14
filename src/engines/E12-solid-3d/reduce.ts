@@ -210,6 +210,7 @@ function buildSettings(config: CubesConfig): CubesSettings {
       : volume;
 
   const rotationLocked = config.rotationLocked === true;
+  const editable = config.editable !== false;
   const stage = config.stage === '3d' || config.stage === 'isometric' ? config.stage : 'auto';
 
   return {
@@ -222,6 +223,7 @@ function buildSettings(config: CubesConfig): CubesSettings {
     frontMarker: config.frontMarker !== false,
     translucentToggle: config.translucentToggle !== false,
     rotationLocked,
+    editable,
     stage,
     reference: sanitizeReference(config.reference),
     referenceViews: sanitizeReferenceViews(config.referenceViews),
@@ -268,6 +270,7 @@ export function reduce(state: SolidState, action: SolidAction): SolidState {
 
   switch (action.type) {
     case 'add': {
+      if (!settings.editable) return state;
       const { x, y } = action;
       if (!Number.isInteger(x) || !Number.isInteger(y)) return state;
       if (x < 0 || x >= cols || y < 0 || y >= rows) return state;
@@ -282,6 +285,7 @@ export function reduce(state: SolidState, action: SolidAction): SolidState {
     }
 
     case 'remove': {
+      if (!settings.editable) return state;
       const { x, y } = action;
       if (!Number.isInteger(x) || !Number.isInteger(y)) return state;
       if (x < 0 || x >= cols || y < 0 || y >= rows) return state;
@@ -297,12 +301,14 @@ export function reduce(state: SolidState, action: SolidAction): SolidState {
     }
 
     case 'select-tool': {
+      if (!settings.editable) return state;
       if (action.tool !== 'add' && action.tool !== 'remove') return state;
       if (state.tool === action.tool) return state;
       return { ...state, tool: action.tool };
     }
 
     case 'move-cursor': {
+      if (!settings.editable) return state;
       const [rawX, rawY] = action.to;
       if (!Number.isFinite(rawX) || !Number.isFinite(rawY)) return state;
       const nx = clamp(Math.round(rawX), 0, cols - 1);
@@ -336,6 +342,7 @@ export function reduce(state: SolidState, action: SolidAction): SolidState {
     }
 
     case 'clear': {
+      if (!settings.editable) return state;
       // 각 칸에서 가장 높은 locked 쌓기나무 이하만 남겨 공중에 뜨지 않게 한다.
       const highestLocked = new Map<string, number>();
       for (const cube of state.cubes) {
