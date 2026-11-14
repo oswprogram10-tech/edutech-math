@@ -494,6 +494,7 @@ export default function Stage3D({
           maxHeight={settings.maxHeight}
           colorHints={settings.colorHints}
           translucent={state.translucent}
+          layerFocus={state.layerFocus}
           cursor={state.cursor}
           focus={state.focus}
           readOnly={readOnly}

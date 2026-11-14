@@ -213,7 +213,14 @@ export function IsoStage({
               const palette = CUBE_PALETTE[effectiveColor];
               const faces = cubeFaces(layout, rx, ry, cube.z);
               const focusedCube = matchesFocus(cube, state.focus, rows, settings.maxHeight);
-              const fillOpacity = state.translucent ? 0.35 : 1;
+              const fillOpacity =
+                state.layerFocus !== null
+                  ? cube.z === state.layerFocus - 1
+                    ? 1
+                    : 0.2
+                  : state.translucent
+                    ? 0.35
+                    : 1;
               return (
                 <g
                   key={`cube-${cube.x}-${cube.y}-${cube.z}`}

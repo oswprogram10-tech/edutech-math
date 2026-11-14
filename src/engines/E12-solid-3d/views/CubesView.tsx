@@ -22,6 +22,7 @@ import type { CubeCoord, CubesAction, CubesConfig, CubesState } from '../types';
 import { columnHeight, frontView, sideView, topView } from '../voxel';
 import styles from '../View.module.css';
 import { CUBE_INK, CUBE_PALETTE } from './focusMatch';
+import { LayerGridPanel, LayerSliderBar, NumberGridPanel, PaintViewPanel } from './InputPanels';
 import { IsoStage } from './IsoStage';
 import { ProjectionGrid } from './ProjectionGrid';
 import { useCubesKeyboard } from './useCubesKeyboard';
@@ -177,7 +178,10 @@ export function CubesView({ state, dispatch, cpa, readOnly = false, targetSize }
   const [liveMessage, setLiveMessage] = useState('');
   const [blockedAdd, setBlockedAdd] = useState(false);
 
-  const webgl = useMemo(() => detectWebGL(), []);
+  const webgl = useMemo(
+    () => (settings.stageHidden ? false : detectWebGL()),
+    [settings.stageHidden],
+  );
   const [storedRenderer, setStoredRenderer] = useState<RendererKind | null>(() =>
     readStoredRenderer(),
   );
@@ -189,29 +193,33 @@ export function CubesView({ state, dispatch, cpa, readOnly = false, targetSize }
 
   const baseDecision: RendererDecision = useMemo(
     () =>
-      decideRenderer({
-        configStage: settings.stage,
-        webgl,
-        stored: storedRenderer,
-        probeFps,
-      }),
-    [settings.stage, webgl, storedRenderer, probeFps],
+      settings.stageHidden
+        ? 'isometric'
+        : decideRenderer({
+            configStage: settings.stage,
+            webgl,
+            stored: storedRenderer,
+            probeFps,
+          }),
+    [settings.stageHidden, settings.stage, webgl, storedRenderer, probeFps],
   );
 
   const rendererDecision: RendererDecision = useMemo(() => {
-    if (!webgl || contextLost || settings.stage === 'isometric') return 'isometric';
+    if (settings.stageHidden || !webgl || contextLost || settings.stage === 'isometric') {
+      return 'isometric';
+    }
     if (studentOverride) return studentOverride;
     return baseDecision;
-  }, [webgl, contextLost, settings.stage, studentOverride, baseDecision]);
+  }, [settings.stageHidden, webgl, contextLost, settings.stage, studentOverride, baseDecision]);
 
   const visibleRenderer: RendererKind = rendererDecision === '3d' ? '3d' : 'isometric';
 
   useEffect(() => {
-    setActiveRenderer(visibleRenderer);
+    setActiveRenderer(settings.stageHidden ? 'isometric' : visibleRenderer);
     return () => {
       setActiveRenderer('isometric');
     };
-  }, [visibleRenderer]);
+  }, [settings.stageHidden, visibleRenderer]);
 
   const canAddAt = useCallback(
     (x: number, y: number): boolean => {
@@ -313,44 +321,75 @@ export function CubesView({ state, dispatch, cpa, readOnly = false, targetSize }
   }, []);
 
   const maxReached = state.cubes.length >= settings.maxCubes;
-  const statusText = settings.editable && (maxReached || blockedAdd) ? S.maxReached : '';
-  const instructionText = settings.editable
-    ? S.instructions
-    : settings.rotationLocked
-      ? S.instructionsViewLocked
-      : S.instructionsView;
+  const statusText =
+    !settings.stageHidden && settings.editable && (maxReached || blockedAdd) ? S.maxReached : '';
+  const instructionText = settings.stageHidden
+    ? S.instructionsStageHidden
+    : settings.editable
+      ? S.instructions
+      : settings.rotationLocked
+        ? S.instructionsViewLocked
+        : S.instructionsView;
 
-  const topMatrix = settings.views.includes('top') ? topView(state.cubes, settings.grid) : null;
-  const frontMatrix = settings.views.includes('front')
-    ? frontView(state.cubes, settings.grid, settings.maxHeight)
-    : null;
-  const sideMatrix = settings.views.includes('side')
-    ? sideView(state.cubes, settings.grid, settings.maxHeight)
-    : null;
+  const overlapViews = useMemo(
+    () => settings.views.filter((v) => settings.paintViews.includes(v)),
+    [settings.views, settings.paintViews],
+  );
+
+  useEffect(() => {
+    if (overlapViews.length > 0) {
+      console.warn(
+        `E12 views와 paintViews에 같은 보기(${overlapViews.join(', ')})가 함께 켜져 있어 실시간 투영을 그리지 않습니다.`,
+      );
+    }
+  }, [overlapViews]);
+
+  const topMatrix =
+    settings.views.includes('top') && !settings.paintViews.includes('top')
+      ? topView(state.cubes, settings.grid)
+      : null;
+  const frontMatrix =
+    settings.views.includes('front') && !settings.paintViews.includes('front')
+      ? frontView(state.cubes, settings.grid, settings.maxHeight)
+      : null;
+  const sideMatrix =
+    settings.views.includes('side') && !settings.paintViews.includes('side')
+      ? sideView(state.cubes, settings.grid, settings.maxHeight)
+      : null;
+  const hasLiveViews = Boolean(topMatrix || frontMatrix || sideMatrix);
 
   const hasRemovable = state.cubes.some((c) => !c.locked);
   const refViews = settings.referenceViews;
   const hasRefViews = Boolean(refViews && (refViews.top || refViews.front || refViews.side));
-  const showRendererSwitch = webgl && !contextLost && settings.stage !== 'isometric';
+  const showRendererSwitch =
+    !settings.stageHidden && webgl && !contextLost && settings.stage !== 'isometric';
   const hasToolbarButtons =
-    settings.editable ||
-    !settings.rotationLocked ||
-    settings.translucentToggle ||
-    showRendererSwitch;
-  const baseKeyHint = settings.editable
-    ? settings.rotationLocked
-      ? S.keyHintLocked
-      : S.keyHint
-    : settings.rotationLocked
-      ? S.keyHintViewLocked
-      : S.keyHintView;
+    !settings.stageHidden &&
+    (settings.editable ||
+      !settings.rotationLocked ||
+      settings.translucentToggle ||
+      showRendererSwitch);
+  const baseKeyHint = settings.stageHidden
+    ? ''
+    : settings.editable
+      ? settings.rotationLocked
+        ? S.keyHintLocked
+        : S.keyHint
+      : settings.rotationLocked
+        ? S.keyHintViewLocked
+        : S.keyHintView;
   const keyHintText =
-    visibleRenderer === '3d' && !settings.rotationLocked
+    !settings.stageHidden && visibleRenderer === '3d' && !settings.rotationLocked
       ? `${baseKeyHint} · ${S.keyHint3d}`
       : baseKeyHint;
 
   return (
-    <div className={styles.wrap} data-target-size={targetSize} data-cpa={cpa}>
+    <div
+      className={styles.wrap}
+      data-target-size={targetSize}
+      data-cpa={cpa}
+      data-stage-hidden={settings.stageHidden ? 'true' : undefined}
+    >
       <p className={styles.instructions}>{instructionText}</p>
       <p className={styles.status} role="status" data-testid="cubes-status">
         {statusText}
@@ -360,79 +399,83 @@ export function CubesView({ state, dispatch, cpa, readOnly = false, targetSize }
       </div>
 
       <div className={styles.stageRow}>
-        <div className={styles.boardArea}>
-          <div
-            ref={stageRef}
-            className={styles.stageHost}
-            role="application"
-            aria-label={S.canvasLabel}
-            tabIndex={readOnly ? -1 : 0}
-            data-testid="cubes-stage"
-            data-renderer={rendererDecision}
-            data-probe-fps={probeFps !== null ? String(Math.round(probeFps)) : undefined}
-            data-unit-px={visibleRenderer === '3d' && unitPx !== null ? String(unitPx) : undefined}
-            onKeyDown={onStageKeyDown}
-            onPointerDown={() => {
-              if (!readOnly && visibleRenderer === '3d') {
-                stageRef.current?.focus({ preventScroll: true });
+        {!settings.stageHidden ? (
+          <div className={styles.boardArea}>
+            <div
+              ref={stageRef}
+              className={styles.stageHost}
+              role="application"
+              aria-label={S.canvasLabel}
+              tabIndex={readOnly ? -1 : 0}
+              data-testid="cubes-stage"
+              data-renderer={rendererDecision}
+              data-probe-fps={probeFps !== null ? String(Math.round(probeFps)) : undefined}
+              data-unit-px={
+                visibleRenderer === '3d' && unitPx !== null ? String(unitPx) : undefined
               }
-            }}
-          >
-            {rendererDecision === '3d' ? (
-              <Suspense
-                fallback={
-                  <>
-                    <IsoStage
-                      state={state}
-                      cpa={cpa}
-                      readOnly={readOnly}
-                      editable={settings.editable}
-                      press={press}
-                      hiddenFromFocus
-                    />
-                    <div className={styles.preparingNote} role="status">
-                      {S.preparing3d}
-                    </div>
-                  </>
+              onKeyDown={onStageKeyDown}
+              onPointerDown={() => {
+                if (!readOnly && visibleRenderer === '3d') {
+                  stageRef.current?.focus({ preventScroll: true });
                 }
-              >
-                <Stage3D
-                  state={state}
-                  readOnly={readOnly}
-                  editable={settings.editable}
-                  press={press}
-                  cameraRequest={cameraRequest}
-                  onContextLost={handleContextLost}
-                  onUnitPxChange={setUnitPx}
-                />
-              </Suspense>
-            ) : (
-              <>
-                <IsoStage
-                  state={state}
-                  cpa={cpa}
-                  readOnly={readOnly}
-                  editable={settings.editable}
-                  press={press}
-                />
-                {rendererDecision === 'probe' ? (
-                  <Suspense fallback={null}>
-                    <Stage3D
-                      state={state}
-                      readOnly
-                      editable={false}
-                      press={press}
-                      cameraRequest={cameraRequest}
-                      onContextLost={handleContextLost}
-                      probe
-                      onProbeComplete={handleProbeComplete}
-                    />
-                  </Suspense>
-                ) : null}
-              </>
-            )}
+              }}
+            >
+              {rendererDecision === '3d' ? (
+                <Suspense
+                  fallback={
+                    <>
+                      <IsoStage
+                        state={state}
+                        cpa={cpa}
+                        readOnly={readOnly}
+                        editable={settings.editable}
+                        press={press}
+                        hiddenFromFocus
+                      />
+                      <div className={styles.preparingNote} role="status">
+                        {S.preparing3d}
+                      </div>
+                    </>
+                  }
+                >
+                  <Stage3D
+                    state={state}
+                    readOnly={readOnly}
+                    editable={settings.editable}
+                    press={press}
+                    cameraRequest={cameraRequest}
+                    onContextLost={handleContextLost}
+                    onUnitPxChange={setUnitPx}
+                  />
+                </Suspense>
+              ) : (
+                <>
+                  <IsoStage
+                    state={state}
+                    cpa={cpa}
+                    readOnly={readOnly}
+                    editable={settings.editable}
+                    press={press}
+                  />
+                  {rendererDecision === 'probe' ? (
+                    <Suspense fallback={null}>
+                      <Stage3D
+                        state={state}
+                        readOnly
+                        editable={false}
+                        press={press}
+                        cameraRequest={cameraRequest}
+                        onContextLost={handleContextLost}
+                        probe
+                        onProbeComplete={handleProbeComplete}
+                      />
+                    </Suspense>
+                  ) : null}
+                </>
+              )}
+            </div>
           </div>
-        </div>
+        ) : null}
 
         <div className={styles.sideStack}>
           {settings.reference || hasRefViews ? (
@@ -469,6 +512,11 @@ export function CubesView({ state, dispatch, cpa, readOnly = false, targetSize }
               </div>
             </div>
           ) : null}
+
+          <NumberGridPanel state={state} dispatch={dispatch} readOnly={readOnly} />
+          <LayerSliderBar state={state} dispatch={dispatch} readOnly={readOnly} />
+          <LayerGridPanel state={state} dispatch={dispatch} readOnly={readOnly} />
+          <PaintViewPanel state={state} dispatch={dispatch} readOnly={readOnly} />
 
           {hasToolbarButtons ? (
             <div className={styles.toolbar} role="toolbar" aria-label={S.name}>
@@ -571,7 +619,7 @@ export function CubesView({ state, dispatch, cpa, readOnly = false, targetSize }
             </div>
           ) : null}
 
-          {visibleRenderer === '3d' && !settings.rotationLocked ? (
+          {!settings.stageHidden && visibleRenderer === '3d' && !settings.rotationLocked ? (
             <div className={styles.toolbar} role="group" aria-label={S.cameraPresets.iso}>
               {PRESET_LIST.map((preset) => (
                 <button
@@ -588,7 +636,7 @@ export function CubesView({ state, dispatch, cpa, readOnly = false, targetSize }
             </div>
           ) : null}
 
-          {settings.views.length > 0 ? (
+          {hasLiveViews ? (
             <div className={styles.panelBlock}>
               <div className={styles.projRow}>
                 {topMatrix ? (
@@ -629,7 +677,7 @@ export function CubesView({ state, dispatch, cpa, readOnly = false, targetSize }
             </div>
           ) : null}
 
-          <p className={styles.hint}>{keyHintText}</p>
+          {keyHintText ? <p className={styles.hint}>{keyHintText}</p> : null}
         </div>
       </div>
     </div>

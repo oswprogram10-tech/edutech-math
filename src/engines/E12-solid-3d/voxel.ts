@@ -11,7 +11,7 @@
  * - frontView: maxHeight × cols, 행 0 = 맨 위(maxHeight - 1), 마지막 행 = 바닥(0)
  * - sideView(오른쪽): maxHeight × rows, 행 0 = 맨 위, 열 0 = 맨 앞(y = 0)
  */
-import type { CubeCoord, CubeItem, ViewTurn } from './types';
+import type { CubeCoord, CubeItem, ProjectionView, ViewTurn } from './types';
 
 export interface HasCoord {
   readonly x: number;
@@ -117,6 +117,23 @@ export function sideView(
     if (targetRow) targetRow[cube.y] = 1;
   }
   return matrix;
+}
+
+/** 투영 방향별 행렬 크기 `[rows, cols]`를 돌려준다. */
+export function projectionSize(
+  view: ProjectionView,
+  grid: readonly [number, number],
+  maxHeight: number,
+): readonly [number, number] {
+  const [cols, rows] = grid;
+  switch (view) {
+    case 'top':
+      return [rows, cols];
+    case 'front':
+      return [maxHeight, cols];
+    case 'side':
+      return [maxHeight, rows];
+  }
 }
 
 interface CellEntry {
@@ -371,4 +388,110 @@ export function findHiddenCubes(
     }
   }
   return hidden;
+}
+
+/**
+ * 쌓기나무 목록을 `maxHeight`장의 층별 0/1 행렬(`top` 방향: 0행=뒷줄, 마지막 행=앞줄)로 만든다.
+ */
+export function layerMatrices(
+  cubes: readonly HasCoord[],
+  grid: readonly [number, number],
+  maxHeight: number,
+): number[][][] {
+  const [cols, rows] = grid;
+  const layers: number[][][] = [];
+  for (let z = 0; z < maxHeight; z += 1) {
+    layers.push(Array.from({ length: rows }, () => Array.from({ length: cols }, () => 0)));
+  }
+  for (const cube of cubes) {
+    if (cube.z < 0 || cube.z >= maxHeight) continue;
+    if (cube.x < 0 || cube.x >= cols || cube.y < 0 || cube.y >= rows) continue;
+    const layer = layers[cube.z];
+    const row = layer?.[rows - 1 - cube.y];
+    if (row) row[cube.x] = 1;
+  }
+  return layers;
+}
+
+/** 두 정수 행렬이 크기와 각 칸 값까지 모두 같은지 검사한다. */
+export function sameIntMatrix(
+  a: readonly (readonly number[])[],
+  b: readonly (readonly number[])[],
+): boolean {
+  if (a.length !== b.length) return false;
+  for (let r = 0; r < a.length; r += 1) {
+    const rowA = a[r];
+    const rowB = b[r];
+    if (!rowA || !rowB || rowA.length !== rowB.length) return false;
+    for (let c = 0; c < rowA.length; c += 1) {
+      if (rowA[c] !== rowB[c]) return false;
+    }
+  }
+  return true;
+}
+
+/** 행렬의 각 행을 좌우(열 순서)로 뒤집은 복사본을 돌려준다. */
+export function flipMatrixCols(matrix: readonly (readonly number[])[]): number[][] {
+  return matrix.map((row) => [...row].reverse());
+}
+
+function layersToCoords(layers: readonly (readonly (readonly number[])[])[]): CubeCoord[] {
+  const coords: CubeCoord[] = [];
+  for (let z = 0; z < layers.length; z += 1) {
+    const layer = layers[z];
+    if (!layer) continue;
+    const rows = layer.length;
+    for (let r = 0; r < rows; r += 1) {
+      const row = layer[r];
+      if (!row) continue;
+      for (let c = 0; c < row.length; c += 1) {
+        if ((row[c] ?? 0) > 0) {
+          coords.push([c, rows - 1 - r, z]);
+        }
+      }
+    }
+  }
+  return coords;
+}
+
+function sortCoords(coords: readonly CubeCoord[]): CubeCoord[] {
+  return [...coords].sort((a, b) => {
+    if (a[0] !== b[0]) return a[0] - b[0];
+    if (a[1] !== b[1]) return a[1] - b[1];
+    return a[2] - b[2];
+  });
+}
+
+/**
+ * 현재 쌓기나무의 층별 그림이 목표 `targetLayers`와 같은지 검사한다.
+ * `shift`가 true면 x·y 평행이동을 허용하고 층 번호(z)는 그대로 맞춘다.
+ */
+export function layersMatchShape(
+  cubes: readonly (HasCoord | CubeCoord)[],
+  targetLayers: readonly (readonly (readonly number[])[])[],
+  grid: readonly [number, number],
+  maxHeight: number,
+  shift = true,
+): boolean {
+  const actualCoords = cubes.map(toCoord);
+  const targetCoords = layersToCoords(targetLayers);
+  if (actualCoords.length !== targetCoords.length) return false;
+  if (shift) {
+    const a = shiftCoordsXY(actualCoords);
+    const b = shiftCoordsXY(targetCoords);
+    return a.length === b.length && compareCoordLists(a, b) === 0;
+  }
+  // shift=false: 각 층의 크기가 grid와 같아야 칸 단위 비교가 유효하다.
+  const [, rows] = grid;
+  const [cols] = grid;
+  for (let z = 0; z < targetLayers.length; z += 1) {
+    const layer = targetLayers[z];
+    if (!layer) continue;
+    if (z >= maxHeight || layer.length !== rows || layer.some((row) => row.length !== cols)) {
+      return false;
+    }
+  }
+  const a = sortCoords(actualCoords);
+  const b = sortCoords(targetCoords);
+  return a.length === b.length && compareCoordLists(a, b) === 0;
 }

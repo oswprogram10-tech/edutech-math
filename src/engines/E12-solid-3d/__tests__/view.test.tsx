@@ -231,3 +231,66 @@ describe('E12 View 기본 동작과 정답 노출 금지', () => {
     expect(lineupOk.container.querySelector('[data-testid="row-lineup"]')).not.toBeNull();
   });
 });
+
+describe('E12 T134 2D 입력판·슬라이더·paintViews·stageHidden', () => {
+  it('numberGrid input은 선택 빈칸만 0을 보이고 클릭·키보드로 수를 넣는다', () => {
+    const { container } = renderHarness({
+      grid: [2, 2],
+      maxHeight: 3,
+      numberGrid: { mode: 'input' },
+    });
+    const grid = container.querySelector('[data-testid="cubes-numbers"]') as HTMLElement;
+    expect(grid).not.toBeNull();
+    // 초기 선택 칸 [0,0]은 "0", 비선택 칸 [0,1]은 빈칸
+    expect(container.querySelector('[data-num-cell="0,0"]')?.textContent).toBe('0');
+    expect(container.querySelector('[data-num-cell="0,1"]')?.textContent).toBe('');
+
+    fireEvent.click(container.querySelector('[data-num-cell="1,0"]') as HTMLElement);
+    fireEvent.keyDown(grid, { key: '2' });
+    expect(container.querySelector('[data-num-cell="1,0"]')?.textContent).toBe('2');
+  });
+
+  it('layers slider와 panel paint가 반투명과 PageUp/PageDown 키보드로 동작한다', () => {
+    const { container } = renderHarness({
+      grid: [2, 2],
+      maxHeight: 3,
+      layers: { slider: true, panel: 'paint' },
+      initial: [{ at: [0, 0, 0] }, { at: [0, 0, 1] }],
+    });
+    const btn2 = container.querySelector('[data-testid="cubes-layer-btn-2"]') as HTMLElement;
+    fireEvent.click(btn2);
+    expect(btn2.getAttribute('aria-pressed')).toBe('true');
+    const cubeBottom = container.querySelector('[data-cube="0,0,0"] polygon');
+    const cubeTwo = container.querySelector('[data-cube="0,0,1"] polygon');
+    expect(cubeBottom?.getAttribute('fill-opacity')).toBe('0.2');
+    expect(cubeTwo?.getAttribute('fill-opacity')).toBe('1');
+    expect(
+      container.querySelector('[data-testid="cubes-layer-2"]')?.getAttribute('data-layer-active'),
+    ).toBe('true');
+
+    const card1 = container.querySelector('[data-testid="cubes-layer-1"]') as HTMLElement;
+    fireEvent.keyDown(card1, { key: 'Enter' });
+    expect(container.querySelector('[data-layer-cell="1,0,0"]')?.getAttribute('data-filled')).toBe(
+      'true',
+    );
+    fireEvent.keyDown(card1, { key: 'PageUp' });
+    expect(document.activeElement?.getAttribute('data-testid')).toBe('cubes-layer-2');
+  });
+
+  it('paintViews와 views가 겹치면 경고를 내고 실시간 투영을 숨기며 stageHidden은 무대를 숨긴다', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { container } = renderHarness({
+      grid: [2, 2],
+      maxHeight: 2,
+      views: ['top', 'front', 'side'],
+      paintViews: ['side'],
+      stageHidden: true,
+    });
+    expect(warnSpy).toHaveBeenCalled();
+    expect(container.querySelector('[data-testid="cubes-stage"]')).toBeNull();
+    expect(container.querySelector('[data-testid="cubes-view-side"]')).toBeNull();
+    expect(container.querySelector('[data-testid="cubes-view-top"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="cubes-paint-side"]')).not.toBeNull();
+    warnSpy.mockRestore();
+  });
+});

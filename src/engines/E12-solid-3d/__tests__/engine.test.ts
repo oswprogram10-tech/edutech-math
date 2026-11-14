@@ -3,7 +3,7 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 import { assertSerializable } from '../../../core/engine-sdk';
-import { emit } from '../events';
+import { emit, predicates } from '../events';
 import { observe } from '../observe';
 import { createInitialState, reduce } from '../reduce';
 import type { SolidAction, SolidConfig, SolidState } from '../types';
@@ -240,5 +240,308 @@ describe('E12 cubes reduce & observe', () => {
 
     const s3 = reduce(s2, { type: 'turn', dir: 'right' });
     expect(emit(s2, s3)).toEqual([{ name: 'view-turned', payload: { viewTurn: 1 } }]);
+  });
+});
+
+describe('E12 T134 2D 입력판 상태·관측·판정(predicate)', () => {
+  it('설정 정규화: 크기가 다른 numberGrid·layers given을 무시하고 수를 자른다', () => {
+    const badNum = createInitialState({
+      grid: [3, 2],
+      maxHeight: 3,
+      numberGrid: {
+        mode: 'given',
+        given: [
+          [1, 2],
+          [0, 1],
+        ],
+      },
+    });
+    expect(badNum.settings.numberGrid).toBeNull();
+
+    const clampedNum = createInitialState({
+      grid: [2, 2],
+      maxHeight: 3,
+      numberGrid: {
+        mode: 'given',
+        given: [
+          [-2, 9],
+          [1.6, 0],
+        ],
+      },
+    });
+    expect(clampedNum.settings.numberGrid?.given).toEqual([
+      [0, 3],
+      [2, 0],
+    ]);
+
+    const badLayer = createInitialState({
+      grid: [2, 2],
+      maxHeight: 2,
+      layers: {
+        slider: true,
+        panel: 'given',
+        given: [
+          [
+            [1, 0],
+            [0, 1],
+          ],
+        ],
+      },
+    });
+    expect(badLayer.settings.layers.slider).toBe(true);
+    expect(badLayer.settings.layers.panel).toBe('off');
+    expect(badLayer.settings.layers.given).toBeUndefined();
+  });
+
+  it('numberGrid input과 drive의 reduce 경계 및 editable·locked·maxCubes를 지킨다', () => {
+    const inputState = createInitialState({
+      grid: [2, 2],
+      maxHeight: 3,
+      editable: false,
+      numberGrid: { mode: 'input' },
+    });
+    const moved = reduce(inputState, { type: 'move-number-cursor', to: [1, 1] });
+    expect(moved.numberCursor).toEqual([1, 1]);
+    const written = reduce(moved, { type: 'set-number', row: 1, col: 1, value: 3 });
+    expect(written.numbers).toEqual([
+      [0, 0],
+      [0, 3],
+    ]);
+    const clamped = reduce(written, { type: 'set-number', row: 0, col: 0, value: 9 });
+    expect(clamped.numbers?.[0]?.[0]).toBe(3);
+    expect(reduce(clamped, { type: 'set-number', row: 5, col: 0, value: 1 })).toBe(clamped);
+
+    const driveState = createInitialState({
+      grid: [2, 2],
+      maxHeight: 3,
+      maxCubes: 4,
+      numberGrid: { mode: 'drive' },
+      initial: [
+        { at: [0, 0, 0], color: 'red', locked: true },
+        { at: [0, 0, 1], color: 'blue', locked: false },
+      ],
+    });
+    // 고정(locked) 아래(0)로 낮추기 무시
+    expect(reduce(driveState, { type: 'set-height', x: 0, y: 0, h: 0 })).toBe(driveState);
+    // maxHeight(3)까지 올리기(총 3개 <= 4)
+    const raised = reduce(driveState, { type: 'set-height', x: 0, y: 0, h: 3 });
+    expect(raised.cubes).toHaveLength(3);
+    // maxCubes(4) 초과(현재 3개 + 2개 = 5개) 무시
+    expect(reduce(raised, { type: 'set-height', x: 1, y: 0, h: 2 })).toBe(raised);
+    // maxHeight(3) 경계 밖 무시
+    expect(reduce(raised, { type: 'set-height', x: 1, y: 0, h: 4 })).toBe(raised);
+    // 비고정 기둥 0으로 낮추기
+    const zeroed = reduce(driveState, { type: 'set-height', x: 0, y: 0, h: 1 });
+    expect(zeroed.cubes).toHaveLength(1);
+    const clearedUnlocked = reduce(driveState, { type: 'set-height', x: 1, y: 1, h: 0 });
+    expect(clearedUnlocked).toBe(driveState);
+
+    const driveLocked = createInitialState({
+      grid: [2, 2],
+      maxHeight: 3,
+      editable: false,
+      numberGrid: { mode: 'drive' },
+    });
+    expect(reduce(driveLocked, { type: 'set-height', x: 0, y: 0, h: 2 })).toBe(driveLocked);
+  });
+
+  it('layers slider·paint와 paintViews action 및 observe 키를 검증한다', () => {
+    const s0 = createInitialState({
+      grid: [3, 2],
+      maxHeight: 3,
+      layers: { slider: true, panel: 'paint' },
+      paintViews: ['front', 'side'],
+      initial: [{ at: [0, 0, 0] }, { at: [0, 0, 1] }],
+    });
+    expect(s0.layerFocus).toBeNull();
+    const s1 = reduce(s0, { type: 'focus-layer', layer: 2 });
+    expect(s1.layerFocus).toBe(2);
+    expect(reduce(s1, { type: 'focus-layer', layer: 5 })).toBe(s1);
+    expect(reduce(s1, { type: 'focus-layer', layer: null }).layerFocus).toBeNull();
+
+    const paintedLayer = reduce(s1, { type: 'toggle-layer-cell', layer: 1, row: 1, col: 0 });
+    expect(paintedLayer.layerPaint?.[0]?.[1]?.[0]).toBe(1);
+    expect(reduce(paintedLayer, { type: 'clear-layer-paint' }).layerPaint?.[0]?.[1]?.[0]).toBe(0);
+
+    const paintedView = reduce(paintedLayer, {
+      type: 'toggle-paint-cell',
+      view: 'side',
+      row: 2,
+      col: 1,
+    });
+    expect(paintedView.painted?.side?.[2]?.[1]).toBe(1);
+    expect(reduce(paintedView, { type: 'clear-paint', view: 'side' }).painted?.side?.[2]?.[1]).toBe(
+      0,
+    );
+
+    const obs = observe(paintedView);
+    expect('numbers' in obs).toBe(false);
+    expect(obs['layerFocus']).toBe(2);
+    expect(obs['layers']).toEqual([
+      [
+        [0, 0, 0],
+        [1, 0, 0],
+      ],
+      [
+        [0, 0, 0],
+        [1, 0, 0],
+      ],
+      [
+        [0, 0, 0],
+        [0, 0, 0],
+      ],
+    ]);
+    expect(obs['layerPaint']).toBeDefined();
+    expect(obs['painted']).toBeDefined();
+
+    const driveObs = observe(
+      createInitialState({
+        grid: [2, 2],
+        numberGrid: { mode: 'drive' },
+        initial: [{ at: [0, 0, 0] }],
+      }),
+    );
+    expect(driveObs['numbers']).toEqual([
+      [0, 0],
+      [1, 0],
+    ]);
+    expect('layerPaint' in driveObs).toBe(false);
+    expect('painted' in driveObs).toBe(false);
+  });
+
+  it('T134 predicate 8종: 정답·오답·오개념 상태를 정확히 판정한다', () => {
+    // 1. numbersMatch & numbersSum
+    let numState = createInitialState({
+      grid: [2, 2],
+      maxHeight: 3,
+      numberGrid: { mode: 'input' },
+      initial: [{ at: [0, 0, 0] }, { at: [0, 0, 1] }, { at: [1, 1, 0] }],
+    });
+    numState = reduce(numState, { type: 'set-number', row: 1, col: 0, value: 2 });
+    expect(predicates['numbersMatch']?.(observe(numState), {})).toBe(false);
+    expect(predicates['numbersSum']?.(observe(numState), { sum: 3 })).toBe(false);
+    numState = reduce(numState, { type: 'set-number', row: 0, col: 1, value: 1 });
+    expect(predicates['numbersMatch']?.(observe(numState), {})).toBe(true);
+    expect(
+      predicates['numbersMatch']?.(observe(numState), {
+        numbers: [
+          [0, 1],
+          [2, 0],
+        ],
+      }),
+    ).toBe(true);
+    expect(predicates['numbersSum']?.(observe(numState), { sum: 3 })).toBe(true);
+
+    // 2. layerPaintMatches & layerPaintFloating (paint/cubes 모두) & layersMatch
+    let layerState = createInitialState({
+      grid: [2, 2],
+      maxHeight: 2,
+      layers: { panel: 'paint' },
+      initial: [{ at: [0, 0, 0] }, { at: [0, 0, 1] }, { at: [1, 0, 0] }],
+    });
+    // 2층 (row=1, col=1) 칠하기: 칠한 1층과 실제 1층은 row=1,col=0 & row=1,col=1 -> paint 기준 뜸, cubes 기준 안 뜸
+    layerState = reduce(layerState, { type: 'toggle-layer-cell', layer: 2, row: 1, col: 1 });
+    expect(predicates['layerPaintFloating']?.(observe(layerState), { against: 'paint' })).toBe(
+      true,
+    );
+    expect(predicates['layerPaintFloating']?.(observe(layerState), { against: 'cubes' })).toBe(
+      false,
+    );
+
+    // cubes 기준도 뜨는 위치: 2층 (row=0, col=0)은 실제 1층이 비어 있음
+    const floatingBoth = reduce(layerState, {
+      type: 'toggle-layer-cell',
+      layer: 2,
+      row: 0,
+      col: 0,
+    });
+    expect(predicates['layerPaintFloating']?.(observe(floatingBoth), { against: 'cubes' })).toBe(
+      true,
+    );
+
+    // 정답대로 칠하기
+    let matchedLayers = reduce(
+      createInitialState({
+        grid: [2, 2],
+        maxHeight: 2,
+        layers: { panel: 'paint' },
+        initial: [{ at: [0, 0, 0] }, { at: [0, 0, 1] }, { at: [1, 0, 0] }],
+      }),
+      { type: 'toggle-layer-cell', layer: 1, row: 1, col: 0 },
+    );
+    matchedLayers = reduce(matchedLayers, { type: 'toggle-layer-cell', layer: 1, row: 1, col: 1 });
+    expect(predicates['layerPaintMatches']?.(observe(matchedLayers), { layer: 1 })).toBe(true);
+    expect(predicates['layerPaintMatches']?.(observe(matchedLayers), {})).toBe(false);
+    matchedLayers = reduce(matchedLayers, { type: 'toggle-layer-cell', layer: 2, row: 1, col: 0 });
+    expect(predicates['layerPaintMatches']?.(observe(matchedLayers), {})).toBe(true);
+    expect(predicates['layerPaintFloating']?.(observe(matchedLayers), { against: 'paint' })).toBe(
+      false,
+    );
+
+    // layersMatch (평행이동 허용 vs 비허용)
+    const shiftedTarget = [
+      [
+        [1, 1],
+        [0, 0],
+      ],
+      [
+        [1, 0],
+        [0, 0],
+      ],
+    ];
+    expect(predicates['layersMatch']?.(observe(matchedLayers), { layers: shiftedTarget })).toBe(
+      true,
+    );
+    expect(
+      predicates['layersMatch']?.(observe(matchedLayers), { layers: shiftedTarget, shift: false }),
+    ).toBe(false);
+
+    // 3. paintedMatches, paintedMirrored, paintedShorter
+    // 앞줄 오른쪽(x=1,y=0) 2층, 뒷줄 왼쪽(x=0,y=1) 1층
+    // side(2x2): col 0(앞) height 2, col 1(뒤) height 1 -> [[1,0],[1,1]]
+    const basePaint = createInitialState({
+      grid: [2, 2],
+      maxHeight: 2,
+      paintViews: ['front', 'side'],
+      initial: [{ at: [1, 0, 0] }, { at: [1, 0, 1] }, { at: [0, 1, 0] }],
+    });
+    // 정답 side: [[1, 0], [1, 1]]
+    let okSide = reduce(basePaint, { type: 'toggle-paint-cell', view: 'side', row: 0, col: 0 });
+    okSide = reduce(okSide, { type: 'toggle-paint-cell', view: 'side', row: 1, col: 0 });
+    okSide = reduce(okSide, { type: 'toggle-paint-cell', view: 'side', row: 1, col: 1 });
+    expect(predicates['paintedMatches']?.(observe(okSide), { view: 'side' })).toBe(true);
+    expect(predicates['paintedMirrored']?.(observe(okSide), { view: 'side' })).toBe(false);
+    expect(predicates['paintedShorter']?.(observe(okSide), { view: 'side' })).toBe(false);
+
+    // 거울 뒤집기 side: [[0, 1], [1, 1]]
+    let mirrorSide = reduce(basePaint, { type: 'toggle-paint-cell', view: 'side', row: 0, col: 1 });
+    mirrorSide = reduce(mirrorSide, { type: 'toggle-paint-cell', view: 'side', row: 1, col: 0 });
+    mirrorSide = reduce(mirrorSide, { type: 'toggle-paint-cell', view: 'side', row: 1, col: 1 });
+    expect(predicates['paintedMirrored']?.(observe(mirrorSide), { view: 'side' })).toBe(true);
+
+    // 깊이 누락(더 낮게 칠함): [[0, 0], [1, 1]] (col 0 높이 1 < 2, col 1 높이 1 == 1)
+    let shorterSide = reduce(basePaint, {
+      type: 'toggle-paint-cell',
+      view: 'side',
+      row: 1,
+      col: 0,
+    });
+    shorterSide = reduce(shorterSide, { type: 'toggle-paint-cell', view: 'side', row: 1, col: 1 });
+    expect(predicates['paintedShorter']?.(observe(shorterSide), { view: 'side' })).toBe(true);
+    expect(predicates['paintedShorter']?.(observe(shorterSide), { view: 'top' })).toBe(false);
+
+    // 대칭 모양에서는 paintedMirrored가 false여야 한다
+    const symState = reduce(
+      createInitialState({
+        grid: [2, 2],
+        maxHeight: 2,
+        paintViews: ['side'],
+        initial: [{ at: [0, 0, 0] }, { at: [0, 1, 0] }],
+      }),
+      { type: 'toggle-paint-cell', view: 'side', row: 1, col: 0 },
+    );
+    const symFull = reduce(symState, { type: 'toggle-paint-cell', view: 'side', row: 1, col: 1 });
+    expect(predicates['paintedMatches']?.(observe(symFull), { view: 'side' })).toBe(true);
+    expect(predicates['paintedMirrored']?.(observe(symFull), { view: 'side' })).toBe(false);
   });
 });
