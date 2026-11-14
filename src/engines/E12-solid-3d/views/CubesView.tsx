@@ -395,12 +395,25 @@ export function CubesView({ state, dispatch, cpa, readOnly = false, targetSize }
       ? `${baseKeyHint} · ${S.keyHint3d}`
       : baseKeyHint;
 
+  // 보기 투영 칸: 카드 4장이면 22px(T135), 수 쓰기 격자와 함께면 24px(T137 — 크롬북 두 칸
+  // 배치에서 수 격자가 첫 화면에 들어오게), 그 밖에는 32px(T133).
+  const refViewCell =
+    settings.referenceCards.length >= 4 ? 22 : settings.numberGrid !== null ? 24 : 32;
+
+  // T137: 2D 입력판·보기 카드가 있는 판은 세로 화면 중간 폭에서도 무대 옆에 패널을 둔다.
+  const richSide =
+    settings.referenceCards.length > 0 ||
+    settings.numberGrid !== null ||
+    settings.layers.panel !== 'off' ||
+    settings.paintViews.length > 0;
+
   return (
     <div
       className={styles.wrap}
       data-target-size={targetSize}
       data-cpa={cpa}
       data-stage-hidden={settings.stageHidden ? 'true' : undefined}
+      data-rich-side={richSide ? 'true' : undefined}
     >
       <p className={styles.instructions}>{instructionText}</p>
       <p
@@ -506,7 +519,7 @@ export function CubesView({ state, dispatch, cpa, readOnly = false, targetSize }
                     matrix={refViews.top}
                     title={S.referenceViewTitle('top')}
                     testId="cubes-reference-top"
-                    cellSize={settings.referenceCards.length >= 4 ? 22 : 32}
+                    cellSize={refViewCell}
                   />
                 ) : null}
                 {refViews?.front ? (
@@ -515,7 +528,7 @@ export function CubesView({ state, dispatch, cpa, readOnly = false, targetSize }
                     matrix={refViews.front}
                     title={S.referenceViewTitle('front')}
                     testId="cubes-reference-front"
-                    cellSize={settings.referenceCards.length >= 4 ? 22 : 32}
+                    cellSize={refViewCell}
                   />
                 ) : null}
                 {refViews?.side ? (
@@ -524,7 +537,7 @@ export function CubesView({ state, dispatch, cpa, readOnly = false, targetSize }
                     matrix={refViews.side}
                     title={S.referenceViewTitle('side')}
                     testId="cubes-reference-side"
-                    cellSize={settings.referenceCards.length >= 4 ? 22 : 32}
+                    cellSize={refViewCell}
                   />
                 ) : null}
               </div>

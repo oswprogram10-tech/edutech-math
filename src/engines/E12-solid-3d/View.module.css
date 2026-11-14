@@ -299,6 +299,89 @@
   overflow: visible;
 }
 
+/* T137: 중간 폭 판(560~819px — 크롬북 두 칸 배치에서 응답 칸 옆 E12 판)도 무대 옆에
+   패널을 둔다. 세로 화면에서는 2D 입력판·보기 카드가 있는 판(data-rich-side)만 나란히
+   두고, 그 밖의 세로 판(g2s1u2 등 저학년 큰 무대)은 지금처럼 쌓는다. */
+@media (orientation: landscape) {
+  @container (min-width: 560px) and (max-width: 819.98px) {
+    .wrap .stageRow {
+      display: flex;
+      flex: 1 1 min(52dvh, 400px);
+      gap: 0.75rem;
+      align-items: stretch;
+      min-height: 200px;
+      overflow: hidden;
+    }
+
+    .wrap .stageRow > .boardArea {
+      flex: 1 1 0;
+      min-width: 200px;
+      min-height: 0;
+    }
+
+    .wrap .sideStack {
+      flex: 0 1 min(58%, 420px);
+      min-width: 260px;
+      min-height: 0;
+      overflow: auto;
+    }
+
+    /* 보기 투영 제목을 격자 폭에 맞춰 줄바꿈해 세 장이 한 줄에 놓이게 한다. */
+    .wrap .projRow > .projCard {
+      width: min-content;
+    }
+
+    .wrap[data-stage-hidden='true'] .sideStack {
+      flex: 1 1 0;
+      min-width: 0;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      align-content: flex-start;
+    }
+  }
+}
+
+@media (orientation: portrait) {
+  @container (min-width: 560px) and (max-width: 819.98px) {
+    .wrap[data-rich-side='true'] .stageRow {
+      display: flex;
+      flex: 1 1000 min(46dvh, 440px);
+      gap: 0.75rem;
+      align-items: stretch;
+      min-height: 200px;
+      overflow: hidden;
+    }
+
+    .wrap[data-rich-side='true'] .stageRow > .boardArea {
+      flex: 1 1 0;
+      min-width: 200px;
+      min-height: 0;
+    }
+
+    .wrap[data-rich-side='true'] .sideStack {
+      flex: 0 1 min(58%, 420px);
+      min-width: 260px;
+      min-height: 0;
+      overflow: auto;
+    }
+
+    /* 보기 투영 제목을 격자 폭에 맞춰 줄바꿈해 세 장이 한 줄에 놓이게 한다. */
+    .wrap[data-rich-side='true'] .projRow > .projCard {
+      width: min-content;
+    }
+
+    .wrap[data-rich-side='true'][data-stage-hidden='true'] .sideStack {
+      flex: 1 1 0;
+      min-width: 0;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      align-content: flex-start;
+    }
+  }
+}
+
 @media (orientation: landscape) {
   @container (min-width: 820px) {
     .stageRow {
@@ -582,6 +665,13 @@ button.numCell {
 @container (min-width: 480px) and (max-width: 819px) {
   [data-compact-cards='true'] .cardsGrid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* T137: 카드 3장은 판이 넓으면 한 줄에 놓는다(카드 한 장 폭 110px 이상이 되는 판 폭). */
+@container (min-width: 600px) {
+  [data-card-count='3'] .cardsGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
