@@ -15,6 +15,7 @@ interface CubeMeshesProps {
   readonly maxHeight: number;
   readonly colorHints: boolean;
   readonly translucent: boolean;
+  readonly layerFocus?: number | null;
   readonly cursor: GridCoord;
   readonly focus: FocusCell | null;
   readonly readOnly: boolean;
@@ -94,15 +95,19 @@ function buildCubeResources() {
     if (texture) textures.set(color, texture);
     const palette = CUBE_PALETTE[color];
 
-    for (const translucent of [false, true]) {
+    for (const variant of [
+      { key: 'o', transparent: false, opacity: 1 },
+      { key: 't', transparent: true, opacity: 0.35 },
+      { key: 'l', transparent: true, opacity: 0.2 },
+    ] as const) {
       const mat = new THREE.MeshLambertMaterial({
         color: texture ? '#ffffff' : color === 'plain' ? palette.top : palette.front,
         map: texture ?? undefined,
-        transparent: translucent,
-        opacity: translucent ? 0.35 : 1,
-        depthWrite: !translucent,
+        transparent: variant.transparent,
+        opacity: variant.opacity,
+        depthWrite: !variant.transparent,
       });
-      materials.set(`${color}-${translucent ? 't' : 'o'}`, mat);
+      materials.set(`${color}-${variant.key}`, mat);
     }
   }
 
@@ -138,6 +143,7 @@ export function CubeMeshes({
   maxHeight,
   colorHints,
   translucent,
+  layerFocus = null,
   cursor,
   focus,
   readOnly,
@@ -159,7 +165,9 @@ export function CubeMeshes({
     <group>
       {cubes.map((cube) => {
         const effectiveColor: CubeColor = colorHints ? cube.color : 'plain';
-        const material = resources.materials.get(`${effectiveColor}-${translucent ? 't' : 'o'}`);
+        const matVariant =
+          layerFocus !== null ? (cube.z === layerFocus - 1 ? 'o' : 'l') : translucent ? 't' : 'o';
+        const material = resources.materials.get(`${effectiveColor}-${matVariant}`);
         if (!material) return null;
         const pos = toWorld(cube.x, cube.y, cube.z, grid);
         const isFocused = matchesFocus(cube, focus, rows, maxHeight);

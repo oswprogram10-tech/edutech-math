@@ -38,6 +38,35 @@ export interface ReferenceViewsConfig {
   readonly side?: readonly (readonly number[])[];
 }
 
+export type NumberGridMode = 'input' | 'drive' | 'given';
+
+export interface NumberGridConfig {
+  readonly mode: NumberGridMode;
+  readonly given?: readonly (readonly number[])[];
+}
+
+export type NumberGridSettings = NumberGridConfig;
+
+export type LayerPanelMode = 'off' | 'live' | 'paint' | 'given';
+
+export interface LayersConfig {
+  readonly slider?: boolean;
+  readonly panel?: LayerPanelMode;
+  readonly given?: readonly (readonly (readonly number[])[])[];
+}
+
+export interface LayersSettings {
+  readonly slider: boolean;
+  readonly panel: LayerPanelMode;
+  readonly given?: readonly (readonly (readonly number[])[])[];
+}
+
+export interface PaintedViewsState {
+  readonly top?: readonly (readonly number[])[];
+  readonly front?: readonly (readonly number[])[];
+  readonly side?: readonly (readonly number[])[];
+}
+
 export interface CubesConfig {
   readonly mode?: 'cubes';
   /** `[cols, rows]`. 각 값은 1~8로 자른다. 기본 `[5, 5]`. */
@@ -67,6 +96,14 @@ export interface CubesConfig {
   readonly reference?: ReferenceShapeConfig;
   /** 과제 보기 투영. */
   readonly referenceViews?: ReferenceViewsConfig;
+  /** 위에서 본 모양에 수 쓰기 격자. */
+  readonly numberGrid?: NumberGridConfig;
+  /** 층별 슬라이더 및 층별 그림 패널. */
+  readonly layers?: LayersConfig;
+  /** 학생이 직접 칠하는 투영 판 목록. */
+  readonly paintViews?: readonly ProjectionView[];
+  /** true면 3D·등각 무대와 무대 도구를 숨기고 2D 패널만 보여 준다. */
+  readonly stageHidden?: boolean;
   /** 뒤 카드·단원 카드 몫(받기만 하고 무시). */
   readonly fallback?: unknown;
   readonly variant?: unknown;
@@ -108,6 +145,10 @@ export interface CubesSettings {
   readonly stage: StageMode;
   readonly reference: ReferenceShapeConfig | null;
   readonly referenceViews: ReferenceViewsConfig | null;
+  readonly numberGrid: NumberGridSettings | null;
+  readonly layers: LayersSettings;
+  readonly paintViews: readonly ProjectionView[];
+  readonly stageHidden: boolean;
 }
 
 export interface CubesState {
@@ -120,6 +161,16 @@ export interface CubesState {
   readonly tool: CubesTool;
   readonly cursor: GridCoord;
   readonly focus: FocusCell | null;
+  /** `numberGrid.mode === 'input'`일 때만 쓰는 학생 수 행렬(`top` 방향). */
+  readonly numbers: readonly (readonly number[])[] | null;
+  /** 수 쓰기 격자의 선택 칸 `[row, col]`. */
+  readonly numberCursor: GridCoord;
+  /** 층 슬라이더에서 고른 층 번호(1..maxHeight). null이면 전체 보기. */
+  readonly layerFocus: number | null;
+  /** `layers.panel === 'paint'`일 때 쓰는 층별 0/1 행렬(`maxHeight`장, `top` 방향). */
+  readonly layerPaint: readonly (readonly (readonly number[])[])[] | null;
+  /** `paintViews`에 지정한 투영별 0/1 행렬. */
+  readonly painted: PaintedViewsState | null;
 }
 
 export type SolidState = CubesState;
@@ -132,6 +183,29 @@ export type CubesAction =
   | { readonly type: 'turn'; readonly dir: 'left' | 'right' }
   | { readonly type: 'set-translucent'; readonly on: boolean }
   | { readonly type: 'focus-cell'; readonly cell: FocusCell | null }
+  | {
+      readonly type: 'set-number';
+      readonly row: number;
+      readonly col: number;
+      readonly value: number;
+    }
+  | { readonly type: 'move-number-cursor'; readonly to: GridCoord }
+  | { readonly type: 'set-height'; readonly x: number; readonly y: number; readonly h: number }
+  | { readonly type: 'focus-layer'; readonly layer: number | null }
+  | {
+      readonly type: 'toggle-layer-cell';
+      readonly layer: number;
+      readonly row: number;
+      readonly col: number;
+    }
+  | { readonly type: 'clear-layer-paint' }
+  | {
+      readonly type: 'toggle-paint-cell';
+      readonly view: ProjectionView;
+      readonly row: number;
+      readonly col: number;
+    }
+  | { readonly type: 'clear-paint'; readonly view: ProjectionView }
   | { readonly type: 'clear' };
 
 export type SolidAction = CubesAction;

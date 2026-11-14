@@ -22,6 +22,10 @@ import type {
   CubesSettings,
   CubesState,
   FocusCell,
+  LayerPanelMode,
+  LayersSettings,
+  NumberGridSettings,
+  PaintedViewsState,
   ProjectionView,
   ReferenceShapeConfig,
   ReferenceViewsConfig,
@@ -30,7 +34,7 @@ import type {
   SolidState,
   ViewTurn,
 } from './types';
-import { columnHeight, sortCubes } from './voxel';
+import { columnHeight, projectionSize, sortCubes } from './voxel';
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -54,13 +58,103 @@ function validColor(value: unknown): CubeColor {
   return 'plain';
 }
 
-function sanitizeViews(value: unknown): readonly ProjectionView[] {
-  if (!Array.isArray(value)) return DEFAULT_VIEWS;
+function sanitizeViews(
+  value: unknown,
+  fallback: readonly ProjectionView[],
+): readonly ProjectionView[] {
+  if (!Array.isArray(value)) return fallback;
   const result: ProjectionView[] = [];
   for (const item of value) {
     if ((item === 'top' || item === 'front' || item === 'side') && !result.includes(item)) {
       result.push(item);
     }
+  }
+  return result;
+}
+
+function zeroMatrix(rows: number, cols: number): number[][] {
+  return Array.from({ length: rows }, () => Array.from({ length: cols }, () => 0));
+}
+
+function sanitizeSizedIntMatrix(
+  value: unknown,
+  expectedRows: number,
+  expectedCols: number,
+  maxValue: number,
+): number[][] | null {
+  if (!Array.isArray(value) || value.length !== expectedRows) return null;
+  const rows: number[][] = [];
+  for (const row of value) {
+    if (!Array.isArray(row) || row.length !== expectedCols) return null;
+    const nums: number[] = [];
+    for (const cell of row) {
+      if (typeof cell !== 'number' || !Number.isFinite(cell)) return null;
+      nums.push(clamp(Math.round(cell), 0, maxValue));
+    }
+    rows.push(nums);
+  }
+  return rows;
+}
+
+function sanitizeNumberGrid(
+  value: unknown,
+  cols: number,
+  rows: number,
+  maxHeight: number,
+): NumberGridSettings | null {
+  if (!isRecord(value)) return null;
+  const mode = value['mode'];
+  if (mode !== 'input' && mode !== 'drive' && mode !== 'given') return null;
+  if (mode === 'given') {
+    const given = sanitizeSizedIntMatrix(value['given'], rows, cols, maxHeight);
+    if (!given) return null;
+    return { mode, given };
+  }
+  return { mode };
+}
+
+function sanitizeLayers(
+  value: unknown,
+  cols: number,
+  rows: number,
+  maxHeight: number,
+): LayersSettings {
+  if (!isRecord(value)) return { slider: false, panel: 'off' };
+  const slider = value['slider'] === true;
+  const rawPanel = value['panel'];
+  const panel: LayerPanelMode =
+    rawPanel === 'live' || rawPanel === 'paint' || rawPanel === 'given' ? rawPanel : 'off';
+  if (panel === 'given') {
+    const rawGiven = value['given'];
+    if (!Array.isArray(rawGiven) || rawGiven.length !== maxHeight) {
+      return { slider, panel: 'off' };
+    }
+    const layers: number[][][] = [];
+    for (const layer of rawGiven) {
+      const mat = sanitizeSizedIntMatrix(layer, rows, cols, 1);
+      if (!mat) return { slider, panel: 'off' };
+      layers.push(mat.map((row) => row.map((cell) => (cell > 0 ? 1 : 0))));
+    }
+    return { slider, panel: 'given', given: layers };
+  }
+  return { slider, panel };
+}
+
+function makeInitialPainted(
+  paintViews: readonly ProjectionView[],
+  cols: number,
+  rows: number,
+  maxHeight: number,
+): PaintedViewsState | null {
+  if (paintViews.length === 0) return null;
+  const result: {
+    top?: number[][];
+    front?: number[][];
+    side?: number[][];
+  } = {};
+  for (const view of paintViews) {
+    const [vRows, vCols] = projectionSize(view, [cols, rows], maxHeight);
+    result[view] = zeroMatrix(vRows, vCols);
   }
   return result;
 }
@@ -218,7 +312,7 @@ function buildSettings(config: CubesConfig): CubesSettings {
     maxHeight,
     maxCubes,
     colorHints: config.colorHints !== false,
-    views: sanitizeViews(config.views),
+    views: sanitizeViews(config.views, DEFAULT_VIEWS),
     sideDirection: 'right',
     frontMarker: config.frontMarker !== false,
     translucentToggle: config.translucentToggle !== false,
@@ -227,6 +321,10 @@ function buildSettings(config: CubesConfig): CubesSettings {
     stage,
     reference: sanitizeReference(config.reference),
     referenceViews: sanitizeReferenceViews(config.referenceViews),
+    numberGrid: sanitizeNumberGrid(config.numberGrid, cols, rows, maxHeight),
+    layers: sanitizeLayers(config.layers, cols, rows, maxHeight),
+    paintViews: sanitizeViews(config.paintViews, []),
+    stageHidden: config.stageHidden === true,
   };
 }
 
@@ -261,6 +359,14 @@ export function createInitialState(config: SolidConfig = {}): CubesState {
     tool: 'add',
     cursor: [0, 0],
     focus: null,
+    numbers: settings.numberGrid?.mode === 'input' ? zeroMatrix(rows, cols) : null,
+    numberCursor: [0, 0],
+    layerFocus: null,
+    layerPaint:
+      settings.layers.panel === 'paint'
+        ? Array.from({ length: settings.maxHeight }, () => zeroMatrix(rows, cols))
+        : null,
+    painted: makeInitialPainted(settings.paintViews, cols, rows, settings.maxHeight),
   };
 }
 
@@ -338,6 +444,134 @@ export function reduce(state: SolidState, action: SolidAction): SolidState {
       return {
         ...state,
         focus: { view: action.cell.view, row: action.cell.row, col: action.cell.col },
+      };
+    }
+
+    case 'set-number': {
+      if (settings.numberGrid?.mode !== 'input' || !state.numbers) return state;
+      const { row, col, value } = action;
+      if (!Number.isInteger(row) || !Number.isInteger(col)) return state;
+      if (row < 0 || row >= rows || col < 0 || col >= cols) return state;
+      if (typeof value !== 'number' || !Number.isFinite(value)) return state;
+      const nextVal = clamp(Math.round(value), 0, settings.maxHeight);
+      if (state.numbers[row]?.[col] === nextVal) return state;
+      const nextNumbers = state.numbers.map((r, rIdx) =>
+        rIdx === row ? r.map((cell, cIdx) => (cIdx === col ? nextVal : cell)) : r,
+      );
+      return { ...state, numbers: nextNumbers };
+    }
+
+    case 'move-number-cursor': {
+      const mode = settings.numberGrid?.mode;
+      if (mode !== 'input' && mode !== 'drive') return state;
+      const [rawRow, rawCol] = action.to;
+      if (!Number.isFinite(rawRow) || !Number.isFinite(rawCol)) return state;
+      const nr = clamp(Math.round(rawRow), 0, rows - 1);
+      const nc = clamp(Math.round(rawCol), 0, cols - 1);
+      if (nr === state.numberCursor[0] && nc === state.numberCursor[1]) return state;
+      return { ...state, numberCursor: [nr, nc] };
+    }
+
+    case 'set-height': {
+      if (!settings.editable) return state;
+      const { x, y, h } = action;
+      if (!Number.isInteger(x) || !Number.isInteger(y) || !Number.isFinite(h)) return state;
+      if (x < 0 || x >= cols || y < 0 || y >= rows) return state;
+      const targetH = Math.round(h);
+      if (targetH < 0 || targetH > settings.maxHeight) return state;
+      const currentH = columnHeight(state.cubes, x, y);
+      if (targetH === currentH) return state;
+      let lockedFloor = 0;
+      for (const cube of state.cubes) {
+        if (cube.x === x && cube.y === y && cube.locked && cube.z + 1 > lockedFloor) {
+          lockedFloor = cube.z + 1;
+        }
+      }
+      if (targetH < lockedFloor) return state;
+      const nextCount = state.cubes.length - currentH + targetH;
+      if (nextCount > settings.maxCubes) return state;
+      if (targetH > currentH) {
+        const added: CubeItem[] = [];
+        for (let z = currentH; z < targetH; z += 1) {
+          added.push({ x, y, z, color: 'plain', locked: false });
+        }
+        return { ...state, cubes: sortCubes([...state.cubes, ...added]) };
+      }
+      return {
+        ...state,
+        cubes: state.cubes.filter((c) => !(c.x === x && c.y === y && c.z >= targetH)),
+      };
+    }
+
+    case 'focus-layer': {
+      if (action.layer === null) {
+        return state.layerFocus === null ? state : { ...state, layerFocus: null };
+      }
+      if (
+        !Number.isInteger(action.layer) ||
+        action.layer < 1 ||
+        action.layer > settings.maxHeight
+      ) {
+        return state;
+      }
+      if (state.layerFocus === action.layer) return state;
+      return { ...state, layerFocus: action.layer };
+    }
+
+    case 'toggle-layer-cell': {
+      if (!state.layerPaint) return state;
+      const { layer, row, col } = action;
+      if (!Number.isInteger(layer) || layer < 1 || layer > settings.maxHeight) return state;
+      if (!Number.isInteger(row) || row < 0 || row >= rows) return state;
+      if (!Number.isInteger(col) || col < 0 || col >= cols) return state;
+      const layerIdx = layer - 1;
+      const nextLayerPaint = state.layerPaint.map((grid, idx) =>
+        idx === layerIdx
+          ? grid.map((r, rIdx) =>
+              rIdx === row ? r.map((cell, cIdx) => (cIdx === col ? (cell > 0 ? 0 : 1) : cell)) : r,
+            )
+          : grid,
+      );
+      return { ...state, layerPaint: nextLayerPaint };
+    }
+
+    case 'clear-layer-paint': {
+      if (!state.layerPaint) return state;
+      const hasAny = state.layerPaint.some((grid) => grid.some((row) => row.some((c) => c > 0)));
+      if (!hasAny) return state;
+      return {
+        ...state,
+        layerPaint: Array.from({ length: settings.maxHeight }, () => zeroMatrix(rows, cols)),
+      };
+    }
+
+    case 'toggle-paint-cell': {
+      if (!state.painted) return state;
+      const { view, row, col } = action;
+      const target = state.painted[view];
+      if (!target) return state;
+      const [vRows, vCols] = projectionSize(view, [cols, rows], settings.maxHeight);
+      if (!Number.isInteger(row) || !Number.isInteger(col)) return state;
+      if (row < 0 || row >= vRows || col < 0 || col >= vCols) return state;
+      const nextMatrix = target.map((r, rIdx) =>
+        rIdx === row ? r.map((cell, cIdx) => (cIdx === col ? (cell > 0 ? 0 : 1) : cell)) : r,
+      );
+      return {
+        ...state,
+        painted: { ...state.painted, [view]: nextMatrix },
+      };
+    }
+
+    case 'clear-paint': {
+      if (!state.painted) return state;
+      const target = state.painted[action.view];
+      if (!target) return state;
+      const hasAny = target.some((row) => row.some((c) => c > 0));
+      if (!hasAny) return state;
+      const [vRows, vCols] = projectionSize(action.view, [cols, rows], settings.maxHeight);
+      return {
+        ...state,
+        painted: { ...state.painted, [action.view]: zeroMatrix(vRows, vCols) },
       };
     }
 
