@@ -544,4 +544,114 @@ describe('E12 T134 2D 입력판 상태·관측·판정(predicate)', () => {
     expect(predicates['paintedMatches']?.(observe(symFull), { view: 'side' })).toBe(true);
     expect(predicates['paintedMirrored']?.(observe(symFull), { view: 'side' })).toBe(false);
   });
+
+  it('T135 attemptLog·viewsMin/Max·countIsViewsMin/Max·referenceCards가 동작한다', () => {
+    const specViews = {
+      top: [
+        [1, 1, 1],
+        [1, 1, 0],
+        [1, 0, 0],
+      ],
+      front: [
+        [0, 0, 1],
+        [1, 0, 1],
+        [1, 1, 1],
+      ],
+      side: [
+        [0, 0, 1],
+        [0, 1, 1],
+        [1, 1, 1],
+      ],
+    };
+
+    const config: SolidConfig = {
+      grid: [3, 3],
+      maxHeight: 3,
+      attemptLog: true,
+      referenceViews: specViews,
+      referenceCards: [
+        { id: 'c1', kind: 'top', label: '위', cells: specViews.top },
+        { id: 'c1', kind: 'front', label: '중복ID', cells: specViews.front },
+        {
+          id: 'c2',
+          kind: 'numbers',
+          label: '수',
+          cells: [
+            [3, 1, 1],
+            [2, 1, 0],
+            [1, 0, 0],
+          ],
+        },
+        { id: 'bad', kind: 'numbers', label: '빈값', cells: [] },
+      ],
+    };
+
+    let state = createInitialState(config);
+    expect(observe(state)).toMatchObject({
+      viewsMin: 9,
+      viewsMax: 10,
+      viewsMatch: false,
+      matchedCounts: [],
+    });
+    expect(state.settings.referenceCards.map((c) => c.id)).toEqual(['c1', 'c2']);
+    expect(state.settings.referenceCards[1]).toEqual({
+      id: 'c2',
+      kind: 'numbers',
+      label: '수',
+      cells: [
+        [3, 1, 1],
+        [2, 1, 0],
+        [1, 0, 0],
+      ],
+    });
+
+    // 맞지 않는 모양은 matchedCounts에 들어가지 않는다
+    state = reduce(state, { type: 'add', x: 0, y: 0 });
+    expect(observe(state)['matchedCounts']).toEqual([]);
+
+    // 10개(max) 정답 만들기: (0,0)=1, (0,1)=2, (1,1)=1, (0,2)=2, (1,2)=1, (2,2)=3
+    state = reduce(state, { type: 'set-height', x: 0, y: 1, h: 2 });
+    state = reduce(state, { type: 'set-height', x: 1, y: 1, h: 1 });
+    state = reduce(state, { type: 'set-height', x: 0, y: 2, h: 2 });
+    state = reduce(state, { type: 'set-height', x: 1, y: 2, h: 1 });
+    state = reduce(state, { type: 'set-height', x: 2, y: 2, h: 3 });
+    expect(observe(state)).toMatchObject({
+      count: 10,
+      viewsMatch: true,
+      matchedCounts: [10],
+    });
+    expect(predicates['countIsViewsMax']?.(observe(state), {})).toBe(true);
+    expect(predicates['countIsViewsMin']?.(observe(state), {})).toBe(false);
+
+    // 9개(min) 정답 만들기: (0,2)에서 1개 빼기 -> 오름차순·중복 제거 [9, 10]
+    state = reduce(state, { type: 'remove', x: 0, y: 2 });
+    expect(observe(state)).toMatchObject({
+      count: 9,
+      viewsMatch: true,
+      matchedCounts: [9, 10],
+    });
+    expect(predicates['countIsViewsMin']?.(observe(state), {})).toBe(true);
+    expect(predicates['countIsViewsMax']?.(observe(state), {})).toBe(false);
+
+    // 같은 개수 9개지만 투영이 어긋나면 countIsViewsMin은 false
+    const wrongNine = reduce(reduce(state, { type: 'set-height', x: 0, y: 2, h: 0 }), {
+      type: 'set-height',
+      x: 1,
+      y: 1,
+      h: 2,
+    });
+    expect(observe(wrongNine)).toMatchObject({ count: 9, viewsMatch: false });
+    expect(predicates['countIsViewsMin']?.(observe(wrongNine), {})).toBe(false);
+
+    // 다시 10개를 만들어도 matchedCounts는 중복 없이 [9, 10] 유지
+    const backToTen = reduce(state, { type: 'add', x: 0, y: 2 });
+    expect(observe(backToTen)['matchedCounts']).toEqual([9, 10]);
+
+    // referenceViews 없음 / 한도 초과 시 viewsMin===null 이고 predicate는 false
+    const noRef = createInitialState({ grid: [2, 2], maxHeight: 2 });
+    expect(observe(noRef)['viewsMin']).toBeNull();
+    expect(observe(noRef)['viewsMax']).toBeNull();
+    expect(predicates['countIsViewsMin']?.(observe(noRef), {})).toBe(false);
+    expect(predicates['countIsViewsMax']?.(observe(noRef), {})).toBe(false);
+  });
 });

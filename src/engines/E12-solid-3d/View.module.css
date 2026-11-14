@@ -29,6 +29,10 @@
   display: none;
 }
 
+.status[data-views-match='true'] {
+  color: #15803d;
+}
+
 .srOnly {
   position: absolute;
   width: 1px;
@@ -76,6 +80,12 @@
   height: 100%;
   min-width: 0;
   min-height: 0;
+}
+
+.stageHost[data-views-match='true'] .stageSvg,
+.stageHost[data-views-match='true'] .stage3dHost {
+  border-color: #16a34a;
+  border-width: 3px;
 }
 
 .stageHost:focus-visible,
@@ -531,4 +541,147 @@ button.numCell {
   border-color: #cbd5e6;
   color: #8b95a7;
   cursor: not-allowed;
+}
+
+.attemptsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.attemptItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.6rem;
+  border: 1.5px solid #cbd5e6;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #1d2330;
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.attemptItem[data-extreme='true'] {
+  border-color: #16a34a;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.cardsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+[data-compact-cards='true'] .cardsGrid {
+  gap: 0.3rem;
+}
+
+@container (min-width: 480px) and (max-width: 819px) {
+  [data-compact-cards='true'] .cardsGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.refCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.35rem 0.4rem;
+  border: 1.5px solid #cbd5e6;
+  border-radius: 10px;
+  background: #ffffff;
+  min-width: 0;
+}
+
+[data-compact-cards='true'] .refCard {
+  gap: 0.12rem;
+  padding: 0.22rem 0.25rem;
+}
+
+.refCardLabel {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: #1d2330;
+  line-height: 1.2;
+}
+
+.miniLayersRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.3rem;
+}
+
+.miniLayerBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.miniLayerTitle {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #3d485c;
+}
+
+.miniGrid {
+  display: inline-grid;
+  gap: 1.5px;
+  padding: 3px;
+  border: 1px solid #d7deea;
+  border-radius: 5px;
+  background: #f8fafc;
+}
+
+.miniLayerCell {
+  width: 14px;
+  height: 14px;
+  border: 1px solid #aab4c6;
+  border-radius: 2px;
+  background: #ffffff;
+}
+
+[data-compact-cards='true'] .miniLayerCell {
+  width: 11px;
+  height: 11px;
+}
+
+.miniLayerCell[data-filled='true'] {
+  border-color: #1d4fa8;
+  background-color: #4f86e8;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(255, 255, 255, 0.28) 0,
+    rgba(255, 255, 255, 0.28) 3px,
+    transparent 3px,
+    transparent 6px
+  );
+}
+
+.miniNumCell {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #aab4c6;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #1d2330;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+[data-compact-cards='true'] .miniNumCell {
+  width: 18px;
+  height: 18px;
+  font-size: 0.75rem;
 }

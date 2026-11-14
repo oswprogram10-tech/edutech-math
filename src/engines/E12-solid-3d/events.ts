@@ -324,6 +324,18 @@ export const predicates: Readonly<Record<string, EnginePredicate>> = {
     }
     return hasLower;
   },
+
+  countIsViewsMin: (observation) => {
+    const min = observation['viewsMin'];
+    if (typeof min !== 'number' || !Number.isFinite(min)) return false;
+    return observation['viewsMatch'] === true && observation['count'] === min;
+  },
+
+  countIsViewsMax: (observation) => {
+    const max = observation['viewsMax'];
+    if (typeof max !== 'number' || !Number.isFinite(max)) return false;
+    return observation['viewsMatch'] === true && observation['count'] === max;
+  },
 };
 
 export function emit(prev: SolidState, next: SolidState): EngineEvent[] {

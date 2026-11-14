@@ -67,6 +67,16 @@ export interface PaintedViewsState {
   readonly side?: readonly (readonly number[])[];
 }
 
+export type ReferenceCardKind = 'top' | 'front' | 'side' | 'layers' | 'numbers';
+
+export interface ReferenceCardConfig {
+  readonly id: string;
+  readonly label: string;
+  readonly kind: ReferenceCardKind;
+  readonly cells?: readonly (readonly number[])[];
+  readonly layers?: readonly (readonly (readonly number[])[])[];
+}
+
 export interface CubesConfig {
   readonly mode?: 'cubes';
   /** `[cols, rows]`. 각 값은 1~8로 자른다. 기본 `[5, 5]`. */
@@ -104,6 +114,10 @@ export interface CubesConfig {
   readonly paintViews?: readonly ProjectionView[];
   /** true면 3D·등각 무대와 무대 도구를 숨기고 2D 패널만 보여 준다. */
   readonly stageHidden?: boolean;
+  /** true면 referenceViews를 만족하는 쌓기나무 개수를 기록하고 맞을 때 초록 테두리를 띄운다. */
+  readonly attemptLog?: boolean;
+  /** 고르기 과제용 읽기 전용 보기 카드 목록(2~4장 권장). */
+  readonly referenceCards?: readonly ReferenceCardConfig[];
   /** 뒤 카드·단원 카드 몫(받기만 하고 무시). */
   readonly fallback?: unknown;
   readonly variant?: unknown;
@@ -149,6 +163,10 @@ export interface CubesSettings {
   readonly layers: LayersSettings;
   readonly paintViews: readonly ProjectionView[];
   readonly stageHidden: boolean;
+  readonly attemptLog: boolean;
+  readonly referenceCards: readonly ReferenceCardConfig[];
+  readonly viewsMin: number | null;
+  readonly viewsMax: number | null;
 }
 
 export interface CubesState {
@@ -171,6 +189,8 @@ export interface CubesState {
   readonly layerPaint: readonly (readonly (readonly number[])[])[] | null;
   /** `paintViews`에 지정한 투영별 0/1 행렬. */
   readonly painted: PaintedViewsState | null;
+  /** `attemptLog`가 켜졌을 때 `referenceViews`를 만족한 쌓기나무 개수 목록(오름차순·중복 없음). */
+  readonly matchedCounts: readonly number[];
 }
 
 export type SolidState = CubesState;

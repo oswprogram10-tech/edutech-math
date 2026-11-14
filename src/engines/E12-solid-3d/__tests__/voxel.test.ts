@@ -1,7 +1,7 @@
 /**
  * E12 voxel·layout 순수 함수 단위 테스트(경계값·T130 5번·6번·13번 목록).
  */
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { sortCubesForPainter } from '../layout';
 import type { CubeCoord } from '../types';
 import {
@@ -18,6 +18,8 @@ import {
   sideView,
   topView,
   unrotateCell,
+  viewsCountRange,
+  viewsCountSolutions,
 } from '../voxel';
 
 describe('E12 voxel 투영 행렬', () => {
@@ -318,5 +320,132 @@ describe('E12 정규화·회전·연결성·가림·화가 정렬', () => {
         { x: 0, y: 0, z: 2 },
       ]),
     ).toBe(true);
+  });
+
+  it('viewsCountRange는 명세 3×3 예시에서 min 9·max 10을 돌려준다', () => {
+    const views = {
+      top: [
+        [1, 1, 1],
+        [1, 1, 0],
+        [1, 0, 0],
+      ],
+      front: [
+        [0, 0, 1],
+        [1, 0, 1],
+        [1, 1, 1],
+      ],
+      side: [
+        [0, 0, 1],
+        [0, 1, 1],
+        [1, 1, 1],
+      ],
+    };
+    const range = viewsCountRange(views);
+    expect(range).toEqual({ min: 9, max: 10 });
+    const solutions = viewsCountSolutions(views);
+    expect(solutions).not.toBeNull();
+    expect(solutions?.min).toBe(9);
+    expect(solutions?.max).toBe(10);
+    const heightSum = (m: readonly (readonly number[])[]) =>
+      m.reduce((acc, row) => acc + row.reduce((s, v) => s + v, 0), 0);
+    expect(heightSum(solutions?.minHeights ?? [])).toBe(9);
+    expect(heightSum(solutions?.maxHeights ?? [])).toBe(10);
+  });
+
+  it('viewsCountRange는 유일 해(L자·한 칸), 2×2×2(6/8), 해 없음, 탐색 한도 초과를 구분한다', () => {
+    // 정육면체 2×2×2의 세 투영(모두 1)은 [[2,1],[1,2]] 6개부터 8개까지 가능
+    expect(
+      viewsCountRange({
+        top: [
+          [1, 1],
+          [1, 1],
+        ],
+        front: [
+          [1, 1],
+          [1, 1],
+        ],
+        side: [
+          [1, 1],
+          [1, 1],
+        ],
+      }),
+    ).toEqual({ min: 6, max: 8 });
+
+    // 유일 해 L자(높이: (0,1)=2, (1,1)=1, (1,0)=1) -> 4/4
+    expect(
+      viewsCountRange({
+        top: [
+          [1, 1],
+          [0, 1],
+        ],
+        front: [
+          [1, 0],
+          [1, 1],
+        ],
+        side: [
+          [0, 1],
+          [1, 1],
+        ],
+      }),
+    ).toEqual({ min: 4, max: 4 });
+
+    expect(
+      viewsCountRange({
+        top: [
+          [0, 0],
+          [1, 0],
+        ],
+        front: [
+          [0, 0],
+          [1, 0],
+        ],
+        side: [
+          [0, 0],
+          [1, 0],
+        ],
+      }),
+    ).toEqual({ min: 1, max: 1 });
+
+    // 뜬 칸(앞면 2층만 있고 1층이 빔)은 만들 수 없다
+    expect(
+      viewsCountRange({
+        top: [
+          [0, 0],
+          [1, 0],
+        ],
+        front: [
+          [1, 0],
+          [0, 0],
+        ],
+        side: [
+          [1, 0],
+          [0, 0],
+        ],
+      }),
+    ).toBeNull();
+
+    // 4×4 모두 켜짐, maxHeight=3 -> 3^16 > 200,000 -> 경고 후 null
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const huge = viewsCountRange({
+      top: [
+        [1, 1, 1, 1],
+        [1, 1, 1, 1],
+        [1, 1, 1, 1],
+        [1, 1, 1, 1],
+      ],
+      front: [
+        [1, 1, 1, 1],
+        [1, 1, 1, 1],
+        [1, 1, 1, 1],
+      ],
+      side: [
+        [1, 1, 1, 1],
+        [1, 1, 1, 1],
+        [1, 1, 1, 1],
+      ],
+    });
+    expect(huge).toBeNull();
+    expect(warnSpy).toHaveBeenCalled();
+    warnSpy.mockRestore();
   });
 });
