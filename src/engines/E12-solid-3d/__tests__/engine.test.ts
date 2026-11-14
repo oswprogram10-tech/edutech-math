@@ -6,7 +6,7 @@ import { assertSerializable } from '../../../core/engine-sdk';
 import { emit, predicates } from '../events';
 import { observe } from '../observe';
 import { createInitialState, reduce } from '../reduce';
-import type { SolidAction, SolidConfig, SolidState } from '../types';
+import type { CubesState, SolidAction, SolidConfig } from '../types';
 import { hasFloatingCubes } from '../voxel';
 
 function deepFreeze<T>(value: T): T {
@@ -19,13 +19,16 @@ function deepFreeze<T>(value: T): T {
   return value;
 }
 
-function apply(config: SolidConfig, actions: readonly SolidAction[]): SolidState {
+function apply(config: SolidConfig, actions: readonly SolidAction[]): CubesState {
   let state = createInitialState(config);
   assertSerializable(state);
   for (const action of actions) {
     deepFreeze(state);
     state = reduce(state, action);
     assertSerializable(state);
+  }
+  if (state.mode !== 'cubes') {
+    throw new Error('Expected cubes state');
   }
   return state;
 }

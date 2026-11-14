@@ -775,3 +775,139 @@ button.numCell {
   height: 18px;
   font-size: 0.75rem;
 }
+
+/* T138 net-fold 전용 스타일 (cubes 배치에는 영향을 주지 않는다). */
+.netBoardArea {
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.netGridHost {
+  display: flex;
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  align-items: center;
+  justify-content: center;
+}
+
+.netGridSvg {
+  display: block;
+  flex: 0 0 auto;
+  border-radius: 14px;
+  background: #fbfaf6;
+  border: 1px solid #d7deea;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.netGridSvg:focus-visible {
+  outline: 3px solid #e8872e;
+  outline-offset: 2px;
+}
+
+.netStageWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.netStageSvg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+  background: #fbfaf6;
+  border: 1px solid #d7deea;
+}
+
+.netStageTurns {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.netStatusText {
+  margin: 0.4rem 0 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #b91c1c;
+  text-align: center;
+}
+
+.netStatusText[data-valid='true'] {
+  color: #15803d;
+}
+
+.netPredictBanner {
+  margin: 0;
+  padding: 0.35rem 0.75rem;
+  border-radius: 10px;
+  background: #eff6ff;
+  border: 1.5px solid #2f6fde;
+  color: #1d4fa8;
+  font-size: 0.95rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.netLogBox {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  width: 100%;
+  max-width: 100%;
+  padding: 0.45rem 0.65rem;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #d7deea;
+}
+
+.netLogRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.netLogThumb {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1.5px solid #cbd5e6;
+}
+
+.netLogThumb[data-highlighted='true'] {
+  border-color: #ea580c;
+  background: #fff7ed;
+  box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.25);
+}
+
+.netDuplicateMsg {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #c2410c;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .netMissingSlot {
+    animation: netMissingPulse 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes netMissingPulse {
+  0%,
+  100% {
+    opacity: 0.95;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}

@@ -6,7 +6,9 @@
  * 쌓기나무 좌표 `(x, y, z)`는 정수 격자 번호이므로 number를 사용한다.
  */
 
-export type SolidMode = 'cubes';
+import type { NetBoxSpec, NetTarget } from './net/geometry';
+
+export type SolidMode = 'cubes' | 'net-fold';
 
 export type CubeColor = 'plain' | 'red' | 'blue' | 'yellow' | 'green';
 
@@ -129,7 +131,53 @@ export interface CubesConfig {
   readonly targetFromStage?: unknown;
 }
 
-export type SolidConfig = CubesConfig;
+export interface NetFaceConfig {
+  readonly at: GridCoord;
+  readonly w: number;
+  readonly h: number;
+  readonly label?: string;
+  readonly locked?: boolean;
+}
+
+export interface NetCardFaceConfig {
+  readonly at: GridCoord;
+  readonly w: number;
+  readonly h: number;
+  readonly label?: string;
+}
+
+export interface NetCardConfig {
+  readonly id: string;
+  readonly label: string;
+  readonly faces: readonly NetCardFaceConfig[];
+}
+
+export interface NetPredictConfig {
+  readonly of: string;
+}
+
+export interface NetFoldConfig {
+  readonly mode: 'net-fold';
+  readonly target?: NetTarget;
+  readonly faceSize?: number;
+  readonly dims?: readonly [number, number, number];
+  readonly grid?: readonly [number, number];
+  readonly maxFaces?: number;
+  readonly given?: readonly NetFaceConfig[];
+  readonly editable?: boolean;
+  readonly foldable?: boolean;
+  readonly animate?: boolean;
+  readonly collisionHighlight?: boolean;
+  readonly pairColors?: boolean;
+  readonly predict?: NetPredictConfig;
+  readonly netLog?: boolean;
+  readonly netCards?: readonly NetCardConfig[];
+  readonly stage?: StageMode;
+  readonly fallback?: unknown;
+  readonly variant?: unknown;
+}
+
+export type SolidConfig = CubesConfig | NetFoldConfig;
 
 export interface CubeItem {
   readonly x: number;
@@ -193,7 +241,44 @@ export interface CubesState {
   readonly matchedCounts: readonly number[];
 }
 
-export type SolidState = CubesState;
+export interface NetFace {
+  readonly x: number;
+  readonly y: number;
+  readonly w: number;
+  readonly h: number;
+  readonly label: string | null;
+  readonly locked: boolean;
+}
+
+export interface NetFoldSettings extends NetBoxSpec {
+  readonly grid: readonly [number, number];
+  readonly maxFaces: number;
+  readonly editable: boolean;
+  readonly foldable: boolean;
+  readonly animate: boolean;
+  readonly collisionHighlight: boolean;
+  readonly pairColors: boolean;
+  readonly predict: NetPredictConfig | null;
+  readonly netLog: boolean;
+  readonly netCards: readonly NetCardConfig[];
+}
+
+export interface NetFoldState {
+  readonly mode: 'net-fold';
+  readonly settings: NetFoldSettings;
+  /** 늘 `(y, x)` 순으로 정렬되어 있다. */
+  readonly faces: readonly NetFace[];
+  readonly shape: readonly [number, number];
+  readonly cursor: GridCoord;
+  readonly folded: boolean;
+  readonly viewTurn: ViewTurn;
+  readonly prediction: string | null;
+  readonly predictedBeforeFold: boolean;
+  /** 정규형 키(오름차순·중복 없음). */
+  readonly foundNets: readonly string[];
+}
+
+export type SolidState = CubesState | NetFoldState;
 
 export type CubesAction =
   | { readonly type: 'add'; readonly x: number; readonly y: number }
@@ -228,7 +313,26 @@ export type CubesAction =
   | { readonly type: 'clear-paint'; readonly view: ProjectionView }
   | { readonly type: 'clear' };
 
-export type SolidAction = CubesAction;
+export type NetFoldAction =
+  | { readonly type: 'place-face'; readonly x: number; readonly y: number }
+  | { readonly type: 'remove-face'; readonly x: number; readonly y: number }
+  | { readonly type: 'select-shape'; readonly w: number; readonly h: number }
+  | { readonly type: 'rotate-shape' }
+  | { readonly type: 'move-cursor'; readonly to: GridCoord }
+  | { readonly type: 'fold' }
+  | { readonly type: 'unfold' }
+  | { readonly type: 'turn'; readonly dir: 'left' | 'right' }
+  | { readonly type: 'predict'; readonly label: string }
+  | { readonly type: 'clear' };
+
+export type SolidAction = CubesAction | NetFoldAction;
+
+export const NET_DEFAULT_GRID: readonly [number, number] = [6, 6];
+export const NET_MIN_GRID = 3;
+export const NET_MAX_GRID = 10;
+export const NET_MIN_FACES = 6;
+export const NET_MAX_FACES = 10;
+export const NET_DEFAULT_MAX_FACES = 8;
 
 export const DEFAULT_GRID: readonly [number, number] = [5, 5];
 export const DEFAULT_MAX_HEIGHT = 5;

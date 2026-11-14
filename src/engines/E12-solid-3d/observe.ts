@@ -4,6 +4,7 @@
  * 회전(`viewTurn`)을 해도 상태 좌표·투영 행렬은 변하지 않는다.
  */
 import type { JsonValue, Observation } from '../../core/engine-sdk';
+import { observeNet } from './net/observe';
 import type { PaintedViewsState, SolidState } from './types';
 import {
   frontView,
@@ -28,6 +29,9 @@ function toJsonPainted(painted: PaintedViewsState): Readonly<Record<string, Json
 }
 
 export function observe(state: SolidState): Observation {
+  if (state.mode === 'net-fold') {
+    return observeNet(state);
+  }
   const {
     grid,
     maxHeight,
