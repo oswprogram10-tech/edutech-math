@@ -170,6 +170,37 @@ describe('E12 cubes reduce & observe', () => {
     expect(reduce(locked, { type: 'turn', dir: 'left' })).toBe(locked);
   });
 
+  it('editable 기본값은 true이고 false면 조작 Action 5종을 무시하며 회전·반투명·강조는 유지한다', () => {
+    expect(createInitialState({}).settings.editable).toBe(true);
+
+    const viewOnly = createInitialState({
+      editable: false,
+      maxCubes: 1,
+      initial: [{ at: [0, 0, 0], color: 'blue', locked: false }],
+    });
+    expect(viewOnly.settings.editable).toBe(false);
+
+    expect(reduce(viewOnly, { type: 'add', x: 1, y: 0 })).toBe(viewOnly);
+    expect(reduce(viewOnly, { type: 'remove', x: 0, y: 0 })).toBe(viewOnly);
+    expect(reduce(viewOnly, { type: 'clear' })).toBe(viewOnly);
+    expect(reduce(viewOnly, { type: 'select-tool', tool: 'remove' })).toBe(viewOnly);
+    expect(reduce(viewOnly, { type: 'move-cursor', to: [2, 2] })).toBe(viewOnly);
+
+    const turned = reduce(viewOnly, { type: 'turn', dir: 'right' });
+    expect(turned.viewTurn).toBe(1);
+    const translucent = reduce(turned, { type: 'set-translucent', on: true });
+    expect(translucent.translucent).toBe(true);
+    const focused = reduce(translucent, {
+      type: 'focus-cell',
+      cell: { view: 'top', row: 0, col: 0 },
+    });
+    expect(focused.focus).toEqual({ view: 'top', row: 0, col: 0 });
+
+    const obs = observe(viewOnly);
+    expect(obs['maxReached']).toBe(true);
+    expect('editable' in obs).toBe(false);
+  });
+
   it('sideDirection left, colorHints false, 미래 키와 잘못된 focus-cell을 안전하게 처리한다', () => {
     const state = createInitialState({
       grid: [3, 3],

@@ -10,6 +10,7 @@ import type { GridCoord, ViewTurn } from '../types';
 
 export interface UseCubesKeyboardOptions {
   readonly readOnly: boolean;
+  readonly editable?: boolean;
   readonly cols: number;
   readonly rows: number;
   readonly cursor: GridCoord;
@@ -25,6 +26,7 @@ export interface UseCubesKeyboardOptions {
 
 export function useCubesKeyboard({
   readOnly,
+  editable = true,
   cols,
   rows,
   cursor,
@@ -42,17 +44,20 @@ export function useCubesKeyboard({
       if (readOnly) return;
       const key = event.key;
       if (key === 'ArrowUp' || key === 'ArrowDown' || key === 'ArrowLeft' || key === 'ArrowRight') {
+        if (!editable) return;
         event.preventDefault();
         const next = stepCursorInScreen(cursor, cols, rows, viewTurn, key);
         onMoveCursor(next);
         return;
       }
       if (key === 'Enter' || key === ' ' || key === 'Spacebar') {
+        if (!editable) return;
         event.preventDefault();
         onAdd(cursor[0], cursor[1]);
         return;
       }
       if (key === 'Backspace' || key === 'Delete') {
+        if (!editable) return;
         event.preventDefault();
         onRemove(cursor[0], cursor[1]);
         return;
@@ -75,6 +80,7 @@ export function useCubesKeyboard({
     },
     [
       readOnly,
+      editable,
       cols,
       rows,
       cursor,

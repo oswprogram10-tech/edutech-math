@@ -138,3 +138,25 @@ export function computeFitZoom(
   const availHeight = Math.max(1, viewportHeight - margin * 2);
   return Math.max(12, Math.min(availWidth / worldWidth, availHeight / worldHeight));
 }
+
+export function frontMarkerWorld(rows: number): readonly [number, number, number] {
+  return [0, 0, rows / 2 + 0.34];
+}
+
+/** 3D '앞' HTML 이름표가 무대 상자 밖으로 나가지 않게 안쪽 가장자리로 붙인다. */
+export function clampStageLabelPoint(
+  rawX: number,
+  rawY: number,
+  stageWidth: number,
+  stageHeight: number,
+  labelWidth: number,
+  labelHeight: number,
+): { readonly x: number; readonly y: number } {
+  const edgeMargin = 6;
+  const padX = Math.min(stageWidth / 2, labelWidth / 2 + edgeMargin);
+  const padY = Math.min(stageHeight / 2, labelHeight / 2 + edgeMargin);
+  return {
+    x: Math.max(padX, Math.min(stageWidth - padX, rawX)),
+    y: Math.max(padY, Math.min(stageHeight - padY, rawY)),
+  };
+}

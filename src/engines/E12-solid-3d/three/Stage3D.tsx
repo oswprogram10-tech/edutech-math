@@ -6,19 +6,22 @@
  *   판 맞춤 E2E와 힌트 ② `CanvasAlignedOverlay`가 정확히 무대 상자를 찾게 한다.
  * - `probe` 모드에서는 5×5×4 = 100개 쌓기나무 장면의 평균 fps만 재고 보고한다.
  */
-import { useEffect, useMemo, useRef } from 'react';
-import type { PointerEvent as ReactPointerEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
+import type { PointerEvent as ReactPointerEvent, RefObject } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { computeStageLayout } from '../layout';
+import { solid3dStrings as S } from '../strings.ko';
 import type { CubeItem, CubesState, ViewTurn } from '../types';
 import styles from '../View.module.css';
 import type { PressGestureHandlers } from '../views/usePressGesture';
 import {
   CAMERA_DISTANCE,
   MAX_POLAR_RAD,
+  clampStageLabelPoint,
   computeFitZoom,
+  frontMarkerWorld,
   shortestAngleDelta,
   sphericalToPosition,
   targetAnglesForPreset,
@@ -39,6 +42,7 @@ export interface CameraRequest {
 export interface Stage3DProps {
   readonly state: CubesState;
   readonly readOnly: boolean;
+  readonly editable?: boolean;
   readonly press: PressGestureHandlers;
   readonly cameraRequest: CameraRequest;
   readonly onContextLost: () => void;
@@ -124,6 +128,8 @@ interface CameraRigProps {
   readonly maxHeight: number;
   readonly viewTurn: ViewTurn;
   readonly rotationLocked: boolean;
+  readonly frontMarker: boolean;
+  readonly frontLabelRef: RefObject<HTMLSpanElement | null>;
   readonly cameraRequest: CameraRequest;
   readonly onUnitPxChange?: (unitPx: number) => void;
 }
@@ -134,11 +140,41 @@ function CameraRig({
   maxHeight,
   viewTurn,
   rotationLocked,
+  frontMarker,
+  frontLabelRef,
   cameraRequest,
   onUnitPxChange,
 }: CameraRigProps) {
   const { gl, size, invalidate, get } = useThree();
   const controlsRef = useRef<OrbitControls | null>(null);
+  const projectedVecRef = useRef(new THREE.Vector3());
+
+  const syncFrontLabel = useCallback(() => {
+    const el = frontLabelRef.current;
+    if (!el || !frontMarker || size.width <= 0 || size.height <= 0) return;
+    const cam = get().camera;
+    cam.updateMatrixWorld();
+    cam.updateProjectionMatrix();
+    const [wx, wy, wz] = frontMarkerWorld(rows);
+    const v = projectedVecRef.current.set(wx, wy, wz).project(cam);
+    const rawX = (v.x * 0.5 + 0.5) * size.width;
+    const rawY = (-v.y * 0.5 + 0.5) * size.height;
+    const clamped = clampStageLabelPoint(
+      rawX,
+      rawY,
+      size.width,
+      size.height,
+      el.offsetWidth || 40,
+      el.offsetHeight || 28,
+    );
+    el.style.left = `${clamped.x.toFixed(1)}px`;
+    el.style.top = `${clamped.y.toFixed(1)}px`;
+  }, [frontLabelRef, frontMarker, get, rows, size.width, size.height]);
+
+  const syncFrontLabelRef = useRef(syncFrontLabel);
+  useEffect(() => {
+    syncFrontLabelRef.current = syncFrontLabel;
+  }, [syncFrontLabel]);
   const animRef = useRef<{
     active: boolean;
     startMs: number;
@@ -186,6 +222,7 @@ function CameraRig({
     controlsRef.current = controls;
 
     const onChange = () => {
+      syncFrontLabelRef.current();
       invalidate();
     };
     controls.addEventListener('change', onChange);
@@ -239,6 +276,7 @@ function CameraRig({
       if (immediate) {
         animRef.current.active = false;
         applyCameraPose(cam, controls, nextTarget, polar, azimuth);
+        syncFrontLabel();
         invalidate();
         return;
       }
@@ -257,6 +295,7 @@ function CameraRig({
         startTarget: [controls.target.x, controls.target.y, controls.target.z],
         endTarget: nextTarget,
       };
+      syncFrontLabel();
       invalidate();
       return;
     }
@@ -279,6 +318,7 @@ function CameraRig({
     controls.maxZoom = fitZoom * 2;
     applyCameraZoom(cam, fitZoom);
     controls.update();
+    syncFrontLabel();
     onUnitPxChange?.(Math.round(fitZoom));
     invalidate();
   }, [
@@ -294,6 +334,7 @@ function CameraRig({
     rotationLocked,
     invalidate,
     onUnitPxChange,
+    syncFrontLabel,
   ]);
 
   useFrame(() => {
@@ -322,6 +363,7 @@ function CameraRig({
         : anim.startTarget[2] + (anim.endTarget[2] - anim.startTarget[2]) * t;
 
     applyCameraPose(cam, controls, [tx, ty, tz], polar, azimuth);
+    syncFrontLabelRef.current();
 
     if (rawT >= 1) {
       anim.active = false;
@@ -336,6 +378,7 @@ function CameraRig({
 export default function Stage3D({
   state,
   readOnly,
+  editable = true,
   press,
   cameraRequest,
   onContextLost,
@@ -348,6 +391,7 @@ export default function Stage3D({
   const layout = computeStageLayout(cols, rows, settings.maxHeight);
   const activePointersRef = useRef<Set<number>>(new Set());
   const cleanupContextRef = useRef<(() => void) | null>(null);
+  const frontLabelRef = useRef<HTMLSpanElement | null>(null);
 
   const initialPos = useMemo(() => {
     const { azimuth, polar } = targetAnglesForPreset('iso', 0);
@@ -429,6 +473,8 @@ export default function Stage3D({
           maxHeight={settings.maxHeight}
           viewTurn={state.viewTurn}
           rotationLocked={settings.rotationLocked}
+          frontMarker={settings.frontMarker}
+          frontLabelRef={frontLabelRef}
           cameraRequest={cameraRequest}
           onUnitPxChange={onUnitPxChange}
         />
@@ -439,6 +485,7 @@ export default function Stage3D({
           focus={state.focus}
           frontMarker={settings.frontMarker}
           readOnly={readOnly}
+          editable={editable}
           press={press}
         />
         <CubeMeshes
@@ -450,6 +497,7 @@ export default function Stage3D({
           cursor={state.cursor}
           focus={state.focus}
           readOnly={readOnly}
+          editable={editable}
           press={press}
         />
       </Canvas>
@@ -460,6 +508,16 @@ export default function Stage3D({
         data-testid="cubes-3d-canvas"
         aria-hidden="true"
       />
+      {settings.frontMarker ? (
+        <span
+          ref={frontLabelRef}
+          className={styles.frontLabel}
+          data-testid="cubes-front-label"
+          aria-hidden="true"
+        >
+          {S.front}
+        </span>
+      ) : null}
     </div>
   );
 }
