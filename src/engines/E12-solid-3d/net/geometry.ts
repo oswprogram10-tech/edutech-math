@@ -152,6 +152,25 @@ export function isAllowedFaceShape(w: number, h: number, spec: NetBoxSpec): bool
   return allowedFaceShapes(spec).some(([aw, ah]) => aw === w && ah === h);
 }
 
+/**
+ * UI 모양 고르기 단추용: 가로·세로 쌍마다 대표 크기 하나씩만 돌려준다(예: 4×3, 4×2, 3×2).
+ * 방향 전환은 '돌리기' 단추와 `R` 키가 맡는다.
+ */
+export function allowedFaceShapePairs(spec: NetBoxSpec): readonly (readonly [number, number])[] {
+  const seen = new Set<string>();
+  const pairs: (readonly [number, number])[] = [];
+  for (const [w, h] of allowedFaceShapes(spec)) {
+    const lo = Math.min(w, h);
+    const hi = Math.max(w, h);
+    const key = `${lo}x${hi}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      pairs.push([w, h]);
+    }
+  }
+  return pairs;
+}
+
 /** 바닥 면 `(w, h)`를 제외한 직육면체 높이 `H`를 구한다. 맞지 않으면 null. */
 export function remainingBoxHeight(w: number, h: number, spec: NetBoxSpec): number | null {
   if (spec.target === 'cube') {

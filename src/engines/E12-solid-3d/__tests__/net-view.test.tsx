@@ -2,6 +2,8 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
+import { bfsPathToFace, foldTransformsWith } from '../net/geometry';
+import { computeFoldPathLayout, isPointInPolygon2D } from '../net/visuals';
 import { FoldCollisionOverlay } from '../overlays/fold-collision';
 import { FoldPathOverlay } from '../overlays/fold-path';
 import { createInitialState, reduce } from '../reduce';
@@ -68,6 +70,10 @@ describe('E12 net-fold View & Overlays', () => {
 
     const grid = screen.getByTestId('net-grid');
     expect(screen.getByTestId('net-shape-4x3').getAttribute('aria-pressed')).toBe('true');
+    // 가로·세로 쌍마다 단추 하나씩만 둔다(3x4·2x4·2x3 중복 없음).
+    expect(screen.queryByTestId('net-shape-3x4')).toBeNull();
+    expect(screen.queryByTestId('net-shape-2x4')).toBeNull();
+    expect(screen.queryByTestId('net-shape-2x3')).toBeNull();
     expect(screen.queryByTestId('net-turn-left')).toBeNull();
 
     // R 키로 모양 회전 (4x3 -> 3x4)
@@ -314,5 +320,140 @@ describe('E12 net-fold View & Overlays', () => {
     expect(
       Number(screen.getByTestId('net-grid').getAttribute('data-cell-size')),
     ).toBeGreaterThanOrEqual(32);
+  });
+
+  it('접힌 상태 투영 범위가 무대 가운데에 있고 짧은 변의 60% 이상을 차지한다', () => {
+    const cases = [
+      { name: 'cross', given: CROSS_GIVEN },
+      {
+        name: 'strip6',
+        given: [0, 1, 2, 3, 4, 5].map((x) => ({ at: [x, 0] as const, w: 1, h: 1 })),
+      },
+    ];
+
+    for (const c of cases) {
+      const view = render(
+        <NetHarness
+          config={{ mode: 'net-fold', animate: false, given: c.given }}
+          initialActions={[{ type: 'fold' }]}
+        />,
+      );
+      const stage = screen.getByTestId('net-fold-stage');
+      const [, , wStr, hStr] = (stage.getAttribute('viewBox') ?? '0 0 216 168').split(' ');
+      const sw = Number(wStr);
+      const sh = Number(hStr);
+      const shortSide = Math.min(sw, sh);
+
+      const polys = [...stage.querySelectorAll('polygon')];
+      expect(polys.length).toBeGreaterThanOrEqual(6);
+
+      let minX = Infinity;
+      let maxX = -Infinity;
+      let minY = Infinity;
+      let maxY = -Infinity;
+      for (const poly of polys) {
+        const ptsAttr = poly.getAttribute('points') ?? '';
+        for (const pair of ptsAttr.trim().split(/\s+/)) {
+          const [px, py] = pair.split(',').map(Number);
+          if (px !== undefined && py !== undefined) {
+            if (px < minX) minX = px;
+            if (px > maxX) maxX = px;
+            if (py < minY) minY = py;
+            if (py > maxY) maxY = py;
+          }
+        }
+      }
+
+      const bboxW = maxX - minX;
+      const bboxH = maxY - minY;
+      const cx = (minX + maxX) / 2;
+      const cy = (minY + maxY) / 2;
+
+      expect(minX).toBeGreaterThanOrEqual(0);
+      expect(maxX).toBeLessThanOrEqual(sw);
+      expect(minY).toBeGreaterThanOrEqual(0);
+      expect(maxY).toBeLessThanOrEqual(sh);
+      expect(Math.abs(cx - sw / 2)).toBeLessThanOrEqual(6);
+      expect(Math.abs(cy - sh / 2)).toBeLessThanOrEqual(6);
+      expect(Math.max(bboxW, bboxH)).toBeGreaterThanOrEqual(shortSide * 0.6);
+      view.unmount();
+    }
+  });
+
+  it('fold-path 오버레이는 ★ 바닥 면이 가리지 않고 고른 면도 보이는 시점을 고르며 ★ 테두리를 맨 위에 그린다', () => {
+    const sampleGiven = [
+      { at: [0, 0] as const, w: 1, h: 1, label: '★' },
+      { at: [0, 1] as const, w: 1, h: 1, label: 'ㄱ' },
+      { at: [1, 1] as const, w: 1, h: 1, label: 'ㄴ' },
+      { at: [2, 1] as const, w: 1, h: 1, label: 'ㄷ' },
+      { at: [3, 1] as const, w: 1, h: 1, label: 'ㄹ' },
+      { at: [2, 2] as const, w: 1, h: 1, label: 'ㅁ' },
+    ];
+
+    render(
+      <NetHarness
+        config={{
+          mode: 'net-fold',
+          editable: false,
+          animate: false,
+          predict: { of: '★' },
+          given: sampleGiven,
+        }}
+      />,
+    );
+
+    fireEvent.click(screen.getByTestId('net-predict-ㄴ'));
+
+    const scene = screen.getByTestId('fold-path-scene');
+    const chosenTurn = Number(scene.getAttribute('data-view-turn')) as 0 | 1 | 2 | 3;
+
+    // 렌더링된 SVG 다각형 순서에서 ★(index 0)보다 뒤에 그려진 면(더 앞쪽 면)이 ★ 중심을 가리지 않아야 한다.
+    const faceGroups = [...scene.querySelectorAll('g[data-face-idx]')];
+    const starPos = faceGroups.findIndex((g) => g.getAttribute('data-face-idx') === '0');
+    expect(starPos).toBeGreaterThanOrEqual(0);
+
+    const parsePoly = (el: Element | null | undefined) =>
+      (el?.getAttribute('points') ?? '')
+        .trim()
+        .split(/\s+/)
+        .map((pair) => {
+          const [x, y] = pair.split(',').map(Number);
+          return { x: x ?? 0, y: y ?? 0 };
+        });
+
+    const starPoly = parsePoly(faceGroups[starPos]?.querySelector('polygon'));
+    const starCx = starPoly.reduce((acc, p) => acc + p.x, 0) / starPoly.length;
+    const starCy = starPoly.reduce((acc, p) => acc + p.y, 0) / starPoly.length;
+
+    const frontGroups = faceGroups.slice(starPos + 1);
+    const starDepth = Number(faceGroups[starPos]?.getAttribute('data-depth'));
+    for (const fg of frontGroups) {
+      if (Number(fg.getAttribute('data-depth')) <= starDepth + 1e-4) continue;
+      const frontPoly = parsePoly(fg.querySelector('polygon'));
+      expect(isPointInPolygon2D(starCx, starCy, frontPoly)).toBe(false);
+    }
+
+    // ★ 테두리가 맨 마지막 요소로 굵은 파란 점선으로 그려진다.
+    const outline = screen.getByTestId('fold-path-target-outline');
+    expect(outline).toBe(scene.lastElementChild);
+    expect(outline.getAttribute('stroke')).toBe('#1d4ed8');
+    expect(outline.getAttribute('stroke-dasharray')).toBe('5 3');
+
+    // 수학 레이아웃 함수도 같은 시점을 고르고 ★ 중심 가림 없음 · 예측 면 가시성을 만족한다.
+    const facesInput = sampleGiven.map((g) => ({
+      x: g.at[0],
+      y: g.at[1],
+      w: g.w,
+      h: g.h,
+      label: g.label,
+    }));
+    const pathSet = bfsPathToFace(facesInput, 0, 2);
+    const transforms = foldTransformsWith(facesInput, 0, (idx) =>
+      pathSet.has(idx) ? Math.PI / 2 : 0,
+    );
+    const layout = computeFoldPathLayout(transforms, 0, 2, 0, 240, 176);
+    expect(layout.viewTurn).toBe(chosenTurn);
+    expect(layout.starCenterVisible).toBe(true);
+    expect(layout.predVisibleRatio).toBeGreaterThan(0.15);
   });
 });

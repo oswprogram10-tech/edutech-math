@@ -5,9 +5,9 @@
  * - 왼쪽: 모눈 `NetGrid`(+ 예측 안내 / `netLog` 썸네일).
  * - 오른쪽: `FoldStage` + 도구 막대 + `NetCardsPanel`.
  */
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { EngineViewProps } from '../../../core/engine-sdk';
-import { allowedFaceShapes, evaluateNet } from '../net/geometry';
+import { allowedFaceShapePairs, evaluateNet } from '../net/geometry';
 import { canPlaceFace, findFaceAtCell } from '../net/reduce';
 import { NET_PLAIN_STYLE } from '../net/visuals';
 import { solid3dStrings as S } from '../strings.ko';
@@ -76,14 +76,14 @@ function NetLogThumb({
 
 function ShapeIcon({ w, h }: { readonly w: number; readonly h: number }) {
   const maxDim = Math.max(w, h, 1);
-  const scale = 22 / maxDim;
-  const rw = Math.max(6, Math.round(w * scale));
-  const rh = Math.max(6, Math.round(h * scale));
+  const scale = 16 / maxDim;
+  const rw = Math.max(5, Math.round(w * scale));
+  const rh = Math.max(5, Math.round(h * scale));
   return (
-    <svg width={26} height={26} viewBox="0 0 26 26" aria-hidden="true">
+    <svg width={20} height={20} viewBox="0 0 20 20" aria-hidden="true">
       <rect
-        x={(26 - rw) / 2}
-        y={(26 - rh) / 2}
+        x={(20 - rw) / 2}
+        y={(20 - rh) / 2}
         width={rw}
         height={rh}
         rx={2}
@@ -104,9 +104,24 @@ export function NetFoldView({
   const [cols, rows] = settings.grid;
   const [liveMessage, setLiveMessage] = useState('');
   const [duplicateKey, setDuplicateKey] = useState<string | null>(null);
+  const foldPanelRef = useRef<HTMLDivElement | null>(null);
+  const prevFoldedRef = useRef(state.folded);
+
+  useEffect(() => {
+    if (prevFoldedRef.current === state.folded) return;
+    prevFoldedRef.current = state.folded;
+    const panel = foldPanelRef.current;
+    if (!panel || typeof panel.scrollIntoView !== 'function') return;
+    const sx = typeof window !== 'undefined' ? window.scrollX : 0;
+    const sy = typeof window !== 'undefined' ? window.scrollY : 0;
+    panel.scrollIntoView({ block: 'nearest' });
+    if (typeof window !== 'undefined' && (window.scrollX !== sx || window.scrollY !== sy)) {
+      window.scrollTo(sx, sy);
+    }
+  }, [state.folded]);
 
   const evaluation = useMemo(() => evaluateNet(state.faces, settings), [state.faces, settings]);
-  const shapes = useMemo(() => allowedFaceShapes(settings), [settings]);
+  const shapePairs = useMemo(() => allowedFaceShapePairs(settings), [settings]);
   const activeDuplicateKey = state.folded ? duplicateKey : null;
 
   const isPredictMode = settings.predict !== null;
@@ -292,6 +307,7 @@ export function NetFoldView({
             readOnly={readOnly}
             dispatch={dispatch}
             onLiveMessage={setLiveMessage}
+            panelRef={foldPanelRef}
           />
 
           <div className={styles.toolbar} role="toolbar" aria-label={S.name}>
@@ -334,26 +350,30 @@ export function NetFoldView({
 
           {settings.target === 'cuboid' && settings.editable ? (
             <div className={styles.panelBlock}>
-              <div className={styles.toolbar} role="group" aria-label={S.net.rotateShape}>
-                {shapes.map(([sw, sh]) => {
-                  const selected = state.shape[0] === sw && state.shape[1] === sh;
+              <div className={styles.netShapeRow} role="group" aria-label={S.net.rotateShape}>
+                {shapePairs.map(([pw, ph]) => {
+                  const selected =
+                    (state.shape[0] === pw && state.shape[1] === ph) ||
+                    (state.shape[0] === ph && state.shape[1] === pw);
+                  const bw = selected ? state.shape[0] : pw;
+                  const bh = selected ? state.shape[1] : ph;
                   return (
                     <button
-                      key={`shape-${sw}x${sh}`}
+                      key={`shape-${pw}x${ph}`}
                       type="button"
                       className={styles.button}
-                      data-testid={`net-shape-${sw}x${sh}`}
+                      data-testid={`net-shape-${bw}x${bh}`}
                       aria-pressed={selected}
-                      aria-label={S.net.shapeAria(sw, sh)}
+                      aria-label={S.net.shapeAria(bw, bh)}
                       disabled={readOnly || state.folded}
                       onClick={() => {
-                        dispatch({ type: 'select-shape', w: sw, h: sh });
-                        setLiveMessage(S.net.live.shapeSelected(sw, sh));
+                        dispatch({ type: 'select-shape', w: bw, h: bh });
+                        setLiveMessage(S.net.live.shapeSelected(bw, bh));
                       }}
                     >
-                      <ShapeIcon w={sw} h={sh} />
+                      <ShapeIcon w={bw} h={bh} />
                       <span>
-                        {sw}×{sh}
+                        {bw}×{bh}
                       </span>
                     </button>
                   );

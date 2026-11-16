@@ -25,7 +25,7 @@ export function FoldCollisionOverlay({ state }: OverlayProps<SolidConfig, SolidS
   const evaluation = evaluateNet(state.faces, state.settings);
   if (evaluation.valid) return null;
 
-  const fit = computeStageFit(state.faces, evaluation, state.viewTurn, INNER_W, INNER_H, 18);
+  const fit = computeStageFit(state.faces, evaluation, state.viewTurn, INNER_W, INNER_H, 18, 1);
   const projectPt = (pt: Vec3) =>
     projectOrthoPoint(pt, fit.center, state.viewTurn, fit.scale, fit.offsetX, fit.offsetY);
 

@@ -5,7 +5,7 @@
  * - 화가 알고리즘(면 중심 깊이순), 채움 불투명도 0.85.
  * - "접기" 시 0 → 90° 를 1.6초 동안 `requestAnimationFrame`으로 움직인다(`animate:false` / `prefers-reduced-motion` 제외).
  */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type Ref } from 'react';
 import { foldTransforms, type NetEvaluation, type Vec3 } from '../net/geometry';
 import {
   boxCenter3D,
@@ -35,6 +35,7 @@ interface FoldStageProps {
   readonly readOnly: boolean;
   readonly dispatch: (action: NetFoldAction) => void;
   readonly onLiveMessage: (msg: string) => void;
+  readonly panelRef?: Ref<HTMLDivElement>;
 }
 
 function prefersReducedMotion(): boolean {
@@ -84,6 +85,7 @@ export function FoldStage({
   readOnly,
   dispatch,
   onLiveMessage,
+  panelRef,
 }: FoldStageProps) {
   const instantOnly = !state.settings.animate || prefersReducedMotion();
   const [animAngle, setAnimAngle] = useState<number>(() => (state.folded ? HALF_PI : 0));
@@ -123,7 +125,15 @@ export function FoldStage({
   const effectiveAngle = instantOnly ? (state.folded ? HALF_PI : 0) : animAngle;
   const isSettled = state.folded && Math.abs(effectiveAngle - HALF_PI) < 0.02;
 
-  const fit = computeStageFit(state.faces, evaluation, state.viewTurn, STAGE_W, STAGE_H, 20);
+  const fit = computeStageFit(
+    state.faces,
+    evaluation,
+    state.viewTurn,
+    STAGE_W,
+    STAGE_H,
+    24,
+    effectiveAngle / HALF_PI,
+  );
   const projectPt = (pt: Vec3) =>
     projectOrthoPoint(pt, fit.center, state.viewTurn, fit.scale, fit.offsetX, fit.offsetY);
 
@@ -185,7 +195,7 @@ export function FoldStage({
     : S.net.unfoldedHint;
 
   return (
-    <div className={styles.panelBlock}>
+    <div ref={panelRef} className={styles.panelBlock}>
       <div className={styles.netStageWrap}>
         <svg
           className={styles.netStageSvg}

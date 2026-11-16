@@ -154,12 +154,21 @@ test('netLog: 회전판 같은 전개도는 개수가 늘지 않고 안내를 �
   await expect(page.getByTestId('net-log-duplicate')).toContainText('이미 찾은 전개도와 같아요');
 });
 
-test('직육면체 4×3×2를 모양 고르기로 그려 접으면 valid다', async ({ page }) => {
-  await openNet(page, {
-    target: 'cuboid',
-    dims: [4, 3, 2],
-    grid: [8, 10],
-  });
+test('직육면체 4×3×2를 모양 고르기로 그려 접으면 valid다', async ({ page }, testInfo) => {
+  await openNet(
+    page,
+    {
+      target: 'cuboid',
+      dims: [4, 3, 2],
+      grid: [8, 10],
+    },
+    testInfo.project.name === 'chromebook',
+  );
+
+  // 가로·세로 중복 단추 없이 쌍당 하나(4x3, 4x2, 3x2) + 돌리기만 보인다.
+  await expect(page.getByTestId('net-shape-3x4')).toHaveCount(0);
+  await expect(page.getByTestId('net-shape-2x4')).toHaveCount(0);
+  await expect(page.getByTestId('net-shape-2x3')).toHaveCount(0);
 
   // 기본 4x3: 바닥(2,2), 위(2,7)
   await page.getByTestId('net-cell-2-2').click();
@@ -173,11 +182,18 @@ test('직육면체 4×3×2를 모양 고르기로 그려 접으면 valid다', as
   // 2x3: 왼(0,2), 오른(6,2)
   await page.getByTestId('net-shape-3x2').click();
   await page.getByTestId('net-rotate-shape').click();
+  await expect(page.getByTestId('net-shape-2x3')).toHaveAttribute('aria-pressed', 'true');
   await page.getByTestId('net-cell-0-2').click();
   await page.getByTestId('net-cell-6-2').click();
 
   await page.getByTestId('net-fold-toggle').click();
   await pollObservation(page, (o) => o.folded === true && o.valid === true);
+
+  if (testInfo.project.name === 'chromebook') {
+    await expect(page.getByTestId('net-fold-stage')).toBeInViewport({ ratio: 1 });
+    await expect(page.getByTestId('net-fold-toggle')).toBeInViewport({ ratio: 1 });
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
+  }
 });
 
 test('키보드만으로 십자를 그려 접는다', async ({ page }) => {
