@@ -5,6 +5,7 @@
  * - 잘못된 predicate 인자는 예외를 던지지 않고 false를 돌려준다.
  */
 import type { EngineEvent, EnginePredicate, JsonValue, Observation } from '../../core/engine-sdk';
+import { emitNet, netPredicates } from './net/predicates';
 import type { CubeCoord, ProjectionView, SolidState } from './types';
 import {
   flipMatrixCols,
@@ -15,7 +16,16 @@ import {
   sameIntMatrix,
 } from './voxel';
 
-export const EVENT_NAMES = ['cube-added', 'cube-removed', 'view-turned'] as const;
+export const EVENT_NAMES = [
+  'cube-added',
+  'cube-removed',
+  'view-turned',
+  'face-placed',
+  'face-removed',
+  'net-folded',
+  'net-unfolded',
+  'prediction-set',
+] as const;
 
 function isRecord(value: JsonValue | undefined): value is Readonly<Record<string, JsonValue>> {
   return (
@@ -122,7 +132,7 @@ function columnExtentHeight(
   };
 }
 
-export const predicates: Readonly<Record<string, EnginePredicate>> = {
+const cubesPredicates: Readonly<Record<string, EnginePredicate>> = {
   countIs: (observation, args) => {
     if (!isRecord(args)) return false;
     const expected = args['count'];
@@ -338,8 +348,31 @@ export const predicates: Readonly<Record<string, EnginePredicate>> = {
   },
 };
 
+function guardCubesPredicate(fn: EnginePredicate): EnginePredicate {
+  return (observation, args) => {
+    if (observation['mode'] === 'net-fold') return false;
+    return fn(observation, args);
+  };
+}
+
+const guardedCubesPredicates: Record<string, EnginePredicate> = {};
+for (const [key, fn] of Object.entries(cubesPredicates)) {
+  guardedCubesPredicates[key] = guardCubesPredicate(fn);
+}
+
+export const predicates: Readonly<Record<string, EnginePredicate>> = {
+  ...guardedCubesPredicates,
+  ...netPredicates,
+};
+
 export function emit(prev: SolidState, next: SolidState): EngineEvent[] {
   if (prev === next) return [];
+  if (prev.mode === 'net-fold' && next.mode === 'net-fold') {
+    return emitNet(prev, next);
+  }
+  if (prev.mode !== 'cubes' || next.mode !== 'cubes') {
+    return [];
+  }
   const events: EngineEvent[] = [];
 
   if (next.cubes.length > prev.cubes.length) {

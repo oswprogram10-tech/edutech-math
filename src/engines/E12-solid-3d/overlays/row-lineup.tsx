@@ -23,7 +23,8 @@ function parseColumnArg(args: unknown, cols: number): number | null {
 export function RowLineupOverlay({ state, args }: OverlayProps<SolidConfig, SolidState>) {
   const activeRenderer = useActiveRenderer();
   const [cols, rows] = state.settings.grid;
-  const layout = computeStageLayout(cols, rows, state.settings.maxHeight);
+  const maxHeight = state.mode === 'cubes' ? state.settings.maxHeight : 1;
+  const layout = computeStageLayout(cols, rows, maxHeight);
   const overlayMetrics = useHelperOverlayMetrics(
     activeRenderer,
     layout.viewBox.width,

@@ -7,6 +7,7 @@
  * - 입력 상태를 절대 변경하지 않는다.
  */
 import { clamp } from '../../core/engine-sdk';
+import { createNetState, reduceNet } from './net/reduce';
 import {
   DEFAULT_GRID,
   DEFAULT_MAX_HEIGHT,
@@ -25,6 +26,8 @@ import type {
   LayerPanelMode,
   LayersSettings,
   NumberGridSettings,
+  NetFoldConfig,
+  NetFoldState,
   PaintedViewsState,
   ProjectionView,
   ReferenceCardConfig,
@@ -437,7 +440,13 @@ function isValidFocus(cell: FocusCell, settings: CubesSettings): boolean {
   return false;
 }
 
-export function createInitialState(config: SolidConfig = {}): CubesState {
+export function createInitialState(config?: CubesConfig): CubesState;
+export function createInitialState(config: NetFoldConfig): NetFoldState;
+export function createInitialState(config: SolidConfig): SolidState;
+export function createInitialState(config: SolidConfig = {}): SolidState {
+  if (config.mode === 'net-fold') {
+    return createNetState(config);
+  }
   const settings = buildSettings(config);
   const [cols, rows] = settings.grid;
   const cubes = sanitizeInitialCubes(
@@ -469,7 +478,13 @@ export function createInitialState(config: SolidConfig = {}): CubesState {
   };
 }
 
+export function reduce(state: CubesState, action: SolidAction): CubesState;
+export function reduce(state: NetFoldState, action: SolidAction): NetFoldState;
+export function reduce(state: SolidState, action: SolidAction): SolidState;
 export function reduce(state: SolidState, action: SolidAction): SolidState {
+  if (state.mode === 'net-fold') {
+    return reduceNet(state, action);
+  }
   const { settings } = state;
   const [cols, rows] = settings.grid;
 
@@ -691,5 +706,8 @@ export function reduce(state: SolidState, action: SolidAction): SolidState {
       if (remaining.length === state.cubes.length) return state;
       return withRecordedMatch({ ...state, cubes: remaining });
     }
+
+    default:
+      return state;
   }
 }

@@ -2,6 +2,8 @@
 import type { EngineDefinition } from '../../core/engine-sdk';
 import { EVENT_NAMES, emit, predicates } from './events';
 import { observe } from './observe';
+import { FoldCollisionOverlay } from './overlays/fold-collision';
+import { FoldPathOverlay } from './overlays/fold-path';
 import { HiddenRevealOverlay } from './overlays/hidden-reveal';
 import { RowLineupOverlay } from './overlays/row-lineup';
 import { SideEyeOverlay } from './overlays/side-eye';
@@ -14,7 +16,7 @@ import { SolidView } from './View';
 const definition: EngineDefinition<SolidConfig, SolidState, SolidAction> = {
   id: 'E12',
   name: solid3dStrings.name,
-  modes: ['cubes'],
+  modes: ['cubes', 'net-fold'],
   createInitialState,
   reduce,
   View: SolidView,
@@ -27,6 +29,8 @@ const definition: EngineDefinition<SolidConfig, SolidState, SolidAction> = {
     'side-eye': SideEyeOverlay,
     'row-lineup': RowLineupOverlay,
     'views-twins': ViewsTwinsOverlay,
+    'fold-collision': FoldCollisionOverlay,
+    'fold-path': FoldPathOverlay,
   },
 };
 
