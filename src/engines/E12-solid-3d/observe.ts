@@ -6,6 +6,7 @@
 import type { JsonValue, Observation } from '../../core/engine-sdk';
 import { observeNet } from './net/observe';
 import { observePrism } from './prism/observe';
+import { observePrismNet } from './prismnet/observe';
 import { observeXray } from './xray/observe';
 import type { PaintedViewsState, SolidState } from './types';
 import {
@@ -31,6 +32,9 @@ function toJsonPainted(painted: PaintedViewsState): Readonly<Record<string, Json
 }
 
 export function observe(state: SolidState): Observation {
+  if (state.mode === 'prism-net') {
+    return observePrismNet(state);
+  }
   if (state.mode === 'net-fold') {
     return observeNet(state);
   }
