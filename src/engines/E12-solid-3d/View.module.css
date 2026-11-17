@@ -327,7 +327,8 @@
     }
 
     .wrap[data-mode='net-fold'] .sideStack,
-    .wrap[data-mode='xray'] .sideStack {
+    .wrap[data-mode='xray'] .sideStack,
+    .wrap[data-mode='prism-pyramid'] .sideStack {
       flex: 0 1 min(42%, 320px);
       min-width: 220px;
     }
@@ -373,7 +374,8 @@
     }
 
     .wrap[data-rich-side='true'][data-mode='net-fold'] .sideStack,
-    .wrap[data-rich-side='true'][data-mode='xray'] .sideStack {
+    .wrap[data-rich-side='true'][data-mode='xray'] .sideStack,
+    .wrap[data-rich-side='true'][data-mode='prism-pyramid'] .sideStack {
       flex: 0 1 min(42%, 320px);
       min-width: 220px;
     }
@@ -423,7 +425,8 @@
     }
 
     .wrap[data-mode='net-fold'] .sideStack,
-    .wrap[data-mode='xray'] .sideStack {
+    .wrap[data-mode='xray'] .sideStack,
+    .wrap[data-mode='prism-pyramid'] .sideStack {
       flex: 0 1 min(42%, 320px);
       min-width: 220px;
     }
@@ -1103,4 +1106,280 @@ button.numCell {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+}
+
+/* T142 prism-pyramid 전용 스타일 (cubes·net-fold·xray 배치에는 영향을 주지 않는다) */
+.wrap[data-mode='prism-pyramid'] .instructions {
+  flex: 0 0 auto;
+}
+
+.wrap[data-mode='prism-pyramid'] .xrayStageSvg [data-prism-kind]:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.wrap[data-mode='prism-pyramid'] .xrayStageSvg [data-prism-kind]:focus-visible {
+  outline: 2px solid #e8872e;
+  outline-offset: 2px;
+}
+
+.prismName {
+  flex: 0 0 auto;
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #1d2330;
+  text-align: center;
+}
+
+.prismStageTools {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.prismControls {
+  display: flex;
+  gap: 0.6rem;
+  align-items: stretch;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid #d7deea;
+  border-radius: 14px;
+  background: #fbfcff;
+}
+
+.prismExtrude {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 0.2rem;
+  align-items: center;
+}
+
+.prismCaption {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #3d485c;
+  text-align: center;
+}
+
+.prismTrack {
+  position: relative;
+  width: 56px;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+}
+
+.prismTrackLine {
+  position: absolute;
+  top: 24px;
+  bottom: 24px;
+  left: 50%;
+  width: 8px;
+  margin-left: -4px;
+  border-radius: 4px;
+  background: #cbd5e1;
+}
+
+.prismTick {
+  position: absolute;
+  left: 50%;
+  width: 18px;
+  height: 6px;
+  margin-left: -9px;
+  border-radius: 3px;
+  background: #94a3b8;
+}
+
+.prismHandle {
+  position: absolute;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: -24px;
+  border: 2px solid #1d4fa8;
+  border-radius: 50%;
+  background: #dbe7ff;
+  color: #1d2330;
+  font-size: 1.3rem;
+  font-weight: 800;
+  box-shadow: 0 2px 4px rgb(0 0 0 / 0.18);
+  cursor: grab;
+}
+
+.prismHandle:focus-visible {
+  outline: 3px solid #e8872e;
+  outline-offset: 3px;
+}
+
+.prismControlsRight {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: 0.2rem;
+  justify-content: space-around;
+  min-width: 0;
+}
+
+.prismSides,
+.prismApex {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  align-items: stretch;
+}
+
+.prismSidesRow {
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.prismSidesRow .button {
+  flex: 0 0 auto;
+  padding: 0;
+  font-size: 1.3rem;
+}
+
+.prismSidesValue {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1d2330;
+  text-align: center;
+}
+
+.prismSwitch {
+  display: flex;
+  min-height: 48px;
+  padding: 3px;
+  gap: 3px;
+  border: 2px solid #2f6fde;
+  border-radius: 12px;
+  background: #ffffff;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1d2330;
+  cursor: pointer;
+}
+
+.prismSwitch > span {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.25rem;
+  border-radius: 8px;
+}
+
+.prismSwitch > span[data-active='true'] {
+  background: #dbe7ff;
+  box-shadow: inset 0 0 0 2px #1d4fa8;
+}
+
+.prismSwitch:focus-visible {
+  outline: 3px solid #e8872e;
+  outline-offset: 3px;
+}
+
+.prismSwitch:disabled {
+  border-color: #aab4c6;
+  color: #7a8497;
+  cursor: not-allowed;
+}
+
+.prismMarkTools {
+  flex-wrap: nowrap;
+  gap: 0.3rem;
+}
+
+.prismMarkTools .button {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0 0.3rem;
+  font-size: 0.85rem;
+}
+
+.prismTable {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid #d7deea;
+  border-radius: 14px;
+  background: #fbfcff;
+}
+
+.prismTableGrid {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 0.82rem;
+}
+
+.prismTableGrid th {
+  padding: 0.15rem 0.1rem;
+  font-weight: 700;
+  color: #3d485c;
+  text-align: center;
+}
+
+.prismTableGrid td {
+  padding: 0.15rem 0.1rem;
+  text-align: center;
+}
+
+.prismTableGrid th:first-child {
+  width: 26%;
+}
+
+.prismTableGrid th:last-child,
+.prismTableGrid td:last-child {
+  width: 48px;
+}
+
+.prismRowName {
+  font-size: 0.85rem;
+  color: #1d2330;
+}
+
+.prismCell {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 48px;
+  padding: 0;
+  border: 2px solid #2f6fde;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #1d2330;
+  font: inherit;
+  font-size: 1.4rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.prismCell:focus-visible {
+  outline: 3px solid #e8872e;
+  outline-offset: 2px;
+}
+
+.prismRowRemove {
+  min-width: 48px;
+  padding: 0;
+}
+
+.wrap[data-mode='prism-pyramid'] .sideStack {
+  gap: 0.35rem;
+}
+
+.prismTable {
+  padding: 0.3rem 0.6rem;
+  gap: 0.25rem;
 }

@@ -17,7 +17,7 @@ import type {
   XrayViewAngle,
 } from './xray/geometry';
 
-export type SolidMode = 'cubes' | 'net-fold' | 'xray';
+export type SolidMode = 'cubes' | 'net-fold' | 'xray' | 'prism-pyramid';
 
 export type CubeColor = 'plain' | 'red' | 'blue' | 'yellow' | 'green';
 
@@ -225,7 +225,45 @@ export interface XrayConfig {
   readonly sketchGrid?: unknown;
 }
 
-export type SolidConfig = CubesConfig | NetFoldConfig | XrayConfig;
+export type PrismTop = 'flat' | 'apex';
+
+export type PrismHandle = 'extrude' | 'apex';
+
+export type PrismOrientation = 'upright' | 'lying';
+
+export type PrismKind = 'base' | 'prism' | 'pyramid';
+
+export interface PrismSidesRangeConfig {
+  readonly min?: number;
+  readonly max?: number;
+}
+
+export interface PrismInitialConfig {
+  readonly sides?: number;
+  readonly height?: number;
+  readonly top?: PrismTop;
+}
+
+export interface PrismConfig {
+  readonly mode: 'prism-pyramid';
+  /** 고를 수 있는 밑면의 변의 수(3~8). 수 하나면 고정이고 n 단추를 숨긴다. */
+  readonly baseSides?: number | PrismSidesRangeConfig;
+  readonly initial?: PrismInitialConfig;
+  readonly handles?: readonly PrismHandle[];
+  readonly orientation?: PrismOrientation;
+  readonly counterTable?: boolean;
+  readonly showName?: boolean;
+  readonly rotate?: boolean;
+  readonly view?: Partial<XrayViewAngle>;
+  readonly xray?: boolean;
+  readonly xrayToggle?: boolean;
+  readonly tools?: readonly XrayTool[];
+  readonly stage?: StageMode;
+  readonly fallback?: unknown;
+  readonly variant?: unknown;
+}
+
+export type SolidConfig = CubesConfig | NetFoldConfig | XrayConfig | PrismConfig;
 
 export interface CubeItem {
   readonly x: number;
@@ -365,7 +403,52 @@ export interface XrayState {
   readonly lineStyle: SketchLineStyle;
 }
 
-export type SolidState = CubesState | NetFoldState | XrayState;
+export interface PrismSettings {
+  readonly sidesMin: number;
+  readonly sidesMax: number;
+  readonly handles: readonly PrismHandle[];
+  readonly orientation: PrismOrientation;
+  readonly counterTable: boolean;
+  readonly showName: boolean;
+  readonly rotate: boolean;
+  readonly view: XrayViewAngle;
+  readonly xray: boolean;
+  readonly xrayToggle: boolean;
+  readonly tools: readonly XrayTool[];
+}
+
+export interface PrismMarkedState {
+  readonly faces: readonly string[];
+  readonly edges: readonly string[];
+  readonly vertices: readonly string[];
+}
+
+export type PrismTableCol = 'faces' | 'edges' | 'vertices';
+
+export interface PrismTableRow {
+  readonly kind: 'prism' | 'pyramid';
+  readonly n: number;
+  readonly faces: number | null;
+  readonly edges: number | null;
+  readonly vertices: number | null;
+}
+
+export interface PrismState {
+  readonly mode: 'prism-pyramid';
+  readonly settings: PrismSettings;
+  readonly sides: number;
+  readonly height: number;
+  readonly top: PrismTop;
+  readonly view: XrayViewAngle;
+  readonly xray: boolean;
+  readonly xrayUsed: boolean;
+  readonly tool: XrayTool | null;
+  readonly marked: PrismMarkedState;
+  readonly apexPlayed: boolean;
+  readonly table: readonly PrismTableRow[];
+}
+
+export type SolidState = CubesState | NetFoldState | XrayState | PrismState;
 
 export type CubesAction =
   | { readonly type: 'add'; readonly x: number; readonly y: number }
@@ -430,11 +513,39 @@ export type XrayAction =
   | { readonly type: 'remove-segment'; readonly a: SketchDot; readonly b: SketchDot }
   | { readonly type: 'clear-sketch' };
 
-export type SolidAction = CubesAction | NetFoldAction | XrayAction;
+export type PrismAction =
+  | Extract<
+      XrayAction,
+      {
+        readonly type:
+          'set-view' | 'rotate-view' | 'toggle-xray' | 'set-tool' | 'toggle-mark' | 'clear-marks';
+      }
+    >
+  | { readonly type: 'set-sides'; readonly n: number }
+  | { readonly type: 'set-height'; readonly h: number }
+  | { readonly type: 'set-top'; readonly top: PrismTop }
+  | { readonly type: 'add-table-row' }
+  | {
+      readonly type: 'set-table-cell';
+      readonly row: number;
+      readonly col: PrismTableCol;
+      readonly value: number | null;
+    }
+  | { readonly type: 'remove-table-row'; readonly row: number };
+
+export type SolidAction = CubesAction | NetFoldAction | XrayAction | PrismAction;
 
 export const XRAY_DEFAULT_SOLID: XraySolidSpec = { type: 'cuboid', w: 4, d: 3, h: 2 };
 export const XRAY_DEFAULT_VIEW: XrayViewAngle = { yaw: 30, pitch: 30 };
 export const XRAY_DEFAULT_TOOLS: readonly XrayTool[] = ['face', 'edge', 'vertex'];
+
+export const PRISM_MIN_SIDES = 3;
+export const PRISM_MAX_SIDES = 8;
+export const PRISM_MAX_HEIGHT = 4;
+export const PRISM_MAX_TABLE_ROWS = 12;
+export const PRISM_DEFAULT_VIEW: XrayViewAngle = { yaw: 30, pitch: 30 };
+export const PRISM_DEFAULT_TOOLS: readonly XrayTool[] = ['face', 'edge', 'vertex'];
+export const PRISM_DEFAULT_HANDLES: readonly PrismHandle[] = ['extrude', 'apex'];
 
 export const NET_DEFAULT_GRID: readonly [number, number] = [6, 6];
 export const NET_MIN_GRID = 3;

@@ -5,6 +5,7 @@
  */
 import type { JsonValue, Observation } from '../../core/engine-sdk';
 import { observeNet } from './net/observe';
+import { observePrism } from './prism/observe';
 import { observeXray } from './xray/observe';
 import type { PaintedViewsState, SolidState } from './types';
 import {
@@ -35,6 +36,9 @@ export function observe(state: SolidState): Observation {
   }
   if (state.mode === 'xray') {
     return observeXray(state);
+  }
+  if (state.mode === 'prism-pyramid') {
+    return observePrism(state);
   }
   const {
     grid,

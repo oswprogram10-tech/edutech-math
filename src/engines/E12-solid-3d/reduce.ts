@@ -8,6 +8,7 @@
  */
 import { clamp } from '../../core/engine-sdk';
 import { createNetState, reduceNet } from './net/reduce';
+import { createPrismState, reducePrism } from './prism/reduce';
 import { createXrayState, reduceXray } from './xray/reduce';
 import {
   DEFAULT_GRID,
@@ -30,6 +31,8 @@ import type {
   NetFoldConfig,
   NetFoldState,
   PaintedViewsState,
+  PrismConfig,
+  PrismState,
   ProjectionView,
   ReferenceCardConfig,
   ReferenceShapeConfig,
@@ -446,6 +449,7 @@ function isValidFocus(cell: FocusCell, settings: CubesSettings): boolean {
 export function createInitialState(config?: CubesConfig): CubesState;
 export function createInitialState(config: NetFoldConfig): NetFoldState;
 export function createInitialState(config: XrayConfig): XrayState;
+export function createInitialState(config: PrismConfig): PrismState;
 export function createInitialState(config: SolidConfig): SolidState;
 export function createInitialState(config: SolidConfig = {}): SolidState {
   if (config.mode === 'net-fold') {
@@ -453,6 +457,9 @@ export function createInitialState(config: SolidConfig = {}): SolidState {
   }
   if (config.mode === 'xray') {
     return createXrayState(config);
+  }
+  if (config.mode === 'prism-pyramid') {
+    return createPrismState(config);
   }
   const settings = buildSettings(config);
   const [cols, rows] = settings.grid;
@@ -488,6 +495,7 @@ export function createInitialState(config: SolidConfig = {}): SolidState {
 export function reduce(state: CubesState, action: SolidAction): CubesState;
 export function reduce(state: NetFoldState, action: SolidAction): NetFoldState;
 export function reduce(state: XrayState, action: SolidAction): XrayState;
+export function reduce(state: PrismState, action: SolidAction): PrismState;
 export function reduce(state: SolidState, action: SolidAction): SolidState;
 export function reduce(state: SolidState, action: SolidAction): SolidState {
   if (state.mode === 'net-fold') {
@@ -495,6 +503,9 @@ export function reduce(state: SolidState, action: SolidAction): SolidState {
   }
   if (state.mode === 'xray') {
     return reduceXray(state, action);
+  }
+  if (state.mode === 'prism-pyramid') {
+    return reducePrism(state, action);
   }
   const { settings } = state;
   const [cols, rows] = settings.grid;
@@ -599,6 +610,7 @@ export function reduce(state: SolidState, action: SolidAction): SolidState {
 
     case 'set-height': {
       if (!settings.editable) return state;
+      if (!('x' in action)) return state;
       const { x, y, h } = action;
       if (!Number.isInteger(x) || !Number.isInteger(y) || !Number.isFinite(h)) return state;
       if (x < 0 || x >= cols || y < 0 || y >= rows) return state;
