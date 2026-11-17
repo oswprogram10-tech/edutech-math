@@ -155,7 +155,7 @@ describe('E12 lathe 화면', () => {
     // 단면 패널에 모양 이름 속성도 없다
     expect(screen.getByTestId('lt-section').getAttribute('data-shape')).toBeNull();
     expect(view.querySelector('[data-shape]')).toBeNull();
-    expect(view.innerHTML).not.toMatch(/cylinder|cone|sphere|rhombus|isosceles/);
+    expect(view.innerHTML).not.toMatch(/cylinder|cone|sphere|kite|isosceles/);
   });
 
   it('회전 손잡이: aria-valuenow가 각도를 따라가고 ← → 로 30°씩 돌린다', () => {

@@ -9,7 +9,7 @@ export type LatheEdge =
   'long' | 'short' | 'leg-vertical' | 'leg-horizontal' | 'hypotenuse' | 'diameter';
 export type LatheSolid = 'cylinder' | 'cone' | 'sphere' | 'double-cone';
 export type LathePlane = 'perpendicular' | 'through-axis';
-export type SectionShape = 'circle' | 'rectangle' | 'isosceles-triangle' | 'rhombus' | 'point';
+export type SectionShape = 'circle' | 'rectangle' | 'isosceles-triangle' | 'kite' | 'point';
 
 export const LATHE_PROFILES: readonly LatheProfile[] = [
   'rectangle',
@@ -95,7 +95,7 @@ export function sectionOf(solid: LatheSolid, plane: LathePlane, t: number): Sect
       case 'sphere':
         return 'circle';
       case 'double-cone':
-        return 'rhombus';
+        return 'kite';
     }
   }
   if (!Number.isInteger(t) || t < 0 || t > LASER_MAX_STEP) return null;

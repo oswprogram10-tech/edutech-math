@@ -32,7 +32,7 @@ const SECTION_SHAPES: readonly SectionShape[] = [
   'circle',
   'rectangle',
   'isosceles-triangle',
-  'rhombus',
+  'kite',
   'point',
 ];
 

@@ -57,7 +57,7 @@ describe('E12 lathe 단면 표(입체 × 면 × 높이)', () => {
       expect(sectionOf('cylinder', 'through-axis', t)).toBe('rectangle');
       expect(sectionOf('cone', 'through-axis', t)).toBe('isosceles-triangle');
       expect(sectionOf('sphere', 'through-axis', t)).toBe('circle');
-      expect(sectionOf('double-cone', 'through-axis', t)).toBe('rhombus');
+      expect(sectionOf('double-cone', 'through-axis', t)).toBe('kite');
     }
   });
 
