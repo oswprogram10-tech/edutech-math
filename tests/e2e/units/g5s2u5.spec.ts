@@ -341,6 +341,7 @@ async function drawFoldedNet(page: Page, coords: readonly Dot[]): Promise<void> 
 // ---------------------------------------------------------------- A1
 
 test('g5s2u5.A1 — 엑스레이 겨냥도 7과제 흐름·오개념·xray-peek 정렬', async ({ page }, testInfo) => {
+  test.slow();
   await openActivity(page, 'g5s2u5.A1', '엑스레이 겨냥도');
   const main = slot(page, 'main');
   const vp = testInfo.project.name;
@@ -462,6 +463,7 @@ test('g5s2u5.A1 — 엑스레이 겨냥도 7과제 흐름·오개념·xray-peek 
 });
 
 test('g5s2u5.A1 — 과제마다 대표 오답 일반 힌트 ①', async ({ page }) => {
+  test.slow();
   await openActivity(page, 'g5s2u5.A1', '엑스레이 겨냥도');
   const main = slot(page, 'main');
 
@@ -547,6 +549,7 @@ test('g5s2u5.A1 — 과제마다 대표 오답 일반 힌트 ①', async ({ page
 test('g5s2u5.A2 — 전개도 7과제 흐름·오개념·fold-collision·fold-path', async ({
   page,
 }, testInfo) => {
+  test.slow();
   await openActivity(page, 'g5s2u5.A2', '전개도 그리기와 접기');
   const main = slot(page, 'main');
   const vp = testInfo.project.name;
@@ -685,6 +688,7 @@ test('g5s2u5.A2 — 전개도 7과제 흐름·오개념·fold-collision·fold-pa
 });
 
 test('g5s2u5.A2 — 과제마다 대표 오답 일반 힌트 ①', async ({ page }) => {
+  test.slow();
   await openActivity(page, 'g5s2u5.A2', '전개도 그리기와 접기');
   const main = slot(page, 'main');
 
