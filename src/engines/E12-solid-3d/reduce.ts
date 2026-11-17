@@ -8,6 +8,7 @@
  */
 import { clamp } from '../../core/engine-sdk';
 import { createNetState, reduceNet } from './net/reduce';
+import { createXrayState, reduceXray } from './xray/reduce';
 import {
   DEFAULT_GRID,
   DEFAULT_MAX_HEIGHT,
@@ -37,6 +38,8 @@ import type {
   SolidConfig,
   SolidState,
   ViewTurn,
+  XrayConfig,
+  XrayState,
 } from './types';
 import {
   columnHeight,
@@ -442,10 +445,14 @@ function isValidFocus(cell: FocusCell, settings: CubesSettings): boolean {
 
 export function createInitialState(config?: CubesConfig): CubesState;
 export function createInitialState(config: NetFoldConfig): NetFoldState;
+export function createInitialState(config: XrayConfig): XrayState;
 export function createInitialState(config: SolidConfig): SolidState;
 export function createInitialState(config: SolidConfig = {}): SolidState {
   if (config.mode === 'net-fold') {
     return createNetState(config);
+  }
+  if (config.mode === 'xray') {
+    return createXrayState(config);
   }
   const settings = buildSettings(config);
   const [cols, rows] = settings.grid;
@@ -480,10 +487,14 @@ export function createInitialState(config: SolidConfig = {}): SolidState {
 
 export function reduce(state: CubesState, action: SolidAction): CubesState;
 export function reduce(state: NetFoldState, action: SolidAction): NetFoldState;
+export function reduce(state: XrayState, action: SolidAction): XrayState;
 export function reduce(state: SolidState, action: SolidAction): SolidState;
 export function reduce(state: SolidState, action: SolidAction): SolidState {
   if (state.mode === 'net-fold') {
     return reduceNet(state, action);
+  }
+  if (state.mode === 'xray') {
+    return reduceXray(state, action);
   }
   const { settings } = state;
   const [cols, rows] = settings.grid;

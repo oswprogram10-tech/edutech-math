@@ -5,6 +5,7 @@
  */
 import type { JsonValue, Observation } from '../../core/engine-sdk';
 import { observeNet } from './net/observe';
+import { observeXray } from './xray/observe';
 import type { PaintedViewsState, SolidState } from './types';
 import {
   frontView,
@@ -31,6 +32,9 @@ function toJsonPainted(painted: PaintedViewsState): Readonly<Record<string, Json
 export function observe(state: SolidState): Observation {
   if (state.mode === 'net-fold') {
     return observeNet(state);
+  }
+  if (state.mode === 'xray') {
+    return observeXray(state);
   }
   const {
     grid,

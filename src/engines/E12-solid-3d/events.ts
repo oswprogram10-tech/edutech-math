@@ -6,6 +6,7 @@
  */
 import type { EngineEvent, EnginePredicate, JsonValue, Observation } from '../../core/engine-sdk';
 import { emitNet, netPredicates } from './net/predicates';
+import { emitXray, xrayPredicates } from './xray/predicates';
 import type { CubeCoord, ProjectionView, SolidState } from './types';
 import {
   flipMatrixCols,
@@ -25,6 +26,12 @@ export const EVENT_NAMES = [
   'net-folded',
   'net-unfolded',
   'prediction-set',
+  'view-changed',
+  'xray-toggled',
+  'mark-toggled',
+  'face-queried',
+  'segment-added',
+  'segment-removed',
 ] as const;
 
 function isRecord(value: JsonValue | undefined): value is Readonly<Record<string, JsonValue>> {
@@ -350,7 +357,7 @@ const cubesPredicates: Readonly<Record<string, EnginePredicate>> = {
 
 function guardCubesPredicate(fn: EnginePredicate): EnginePredicate {
   return (observation, args) => {
-    if (observation['mode'] === 'net-fold') return false;
+    if (observation['mode'] !== undefined && observation['mode'] !== 'cubes') return false;
     return fn(observation, args);
   };
 }
@@ -363,12 +370,16 @@ for (const [key, fn] of Object.entries(cubesPredicates)) {
 export const predicates: Readonly<Record<string, EnginePredicate>> = {
   ...guardedCubesPredicates,
   ...netPredicates,
+  ...xrayPredicates,
 };
 
 export function emit(prev: SolidState, next: SolidState): EngineEvent[] {
   if (prev === next) return [];
   if (prev.mode === 'net-fold' && next.mode === 'net-fold') {
     return emitNet(prev, next);
+  }
+  if (prev.mode === 'xray' && next.mode === 'xray') {
+    return emitXray(prev, next);
   }
   if (prev.mode !== 'cubes' || next.mode !== 'cubes') {
     return [];

@@ -122,7 +122,7 @@ function TwinSketch({
 
 export function ViewsTwinsOverlay({ state }: OverlayProps<SolidConfig, SolidState>) {
   const activeRenderer = useActiveRenderer();
-  const [cols, rows] = state.settings.grid;
+  const [cols, rows] = state.mode === 'cubes' ? state.settings.grid : ([1, 1] as const);
   const maxHeight = state.mode === 'cubes' ? state.settings.maxHeight : 1;
   const layout = computeStageLayout(cols, rows, maxHeight);
   const overlayMetrics = useHelperOverlayMetrics(
