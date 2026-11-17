@@ -209,6 +209,10 @@ test('크롬북 ?stage=fit 크기 기준과 두 칸 배치 측정', async ({ pag
   await expect(page.getByTestId('prism-sides-inc')).toBeInViewport({ ratio: 1 });
   await expect(page.getByTestId('prism-table-add')).toBeInViewport({ ratio: 1 });
   await page.getByTestId('prism-table-add').click();
+  for (const col of ['faces', 'edges', 'vertices']) {
+    await expect(page.getByTestId(`prism-cell-0-${col}`)).toBeInViewport({ ratio: 1 });
+  }
+  await expect(page.getByTestId('prism-row-remove-0')).toBeInViewport({ ratio: 1 });
   const rowBox = await page.getByTestId('prism-row-0').boundingBox();
   const fitView = await page.getByTestId('prism-view').boundingBox();
   const fitStage = await page.getByTestId('prism-stage').boundingBox();
@@ -240,4 +244,13 @@ test('크롬북 ?stage=fit 크기 기준과 두 칸 배치 측정', async ({ pag
   expect(await inView('prism-extrude')).toBe(true);
   expect(await inView('prism-apex')).toBe(true);
   expect(await inView('prism-sides-inc')).toBe(true);
+});
+
+test('표 첫 줄의 칸 3개와 줄 빼기가 첫 화면에 다 보인다(?stage=fit)', async ({ page }) => {
+  await openPrism(page, { counterTable: true, initial: { sides: 5, height: 2 } }, true);
+  await page.getByTestId('prism-table-add').click();
+  for (const col of ['faces', 'edges', 'vertices']) {
+    await expect(page.getByTestId(`prism-cell-0-${col}`)).toBeInViewport({ ratio: 1 });
+  }
+  await expect(page.getByTestId('prism-row-remove-0')).toBeInViewport({ ratio: 1 });
 });

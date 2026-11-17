@@ -17,7 +17,7 @@ import { PrismCounterTable } from './PrismCounterTable';
 import { PrismStage } from './PrismStage';
 
 const HANDLE_PX = 48;
-const TRACK_PX = 168;
+const TRACK_PX = 144;
 
 function solidName(state: PrismState): string {
   const kind = prismKind({ n: state.sides, height: state.height, top: state.top });
