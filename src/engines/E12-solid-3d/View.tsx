@@ -3,6 +3,7 @@ import type { EngineViewProps } from '../../core/engine-sdk';
 import type { CubesConfig, SolidAction, SolidConfig, SolidState } from './types';
 import { CubesView } from './views/CubesView';
 import { NetFoldView } from './views/NetFoldView';
+import { PrismView } from './views/PrismView';
 import { XrayView } from './views/XrayView';
 
 export function SolidView(props: EngineViewProps<SolidConfig, SolidState, SolidAction>) {
@@ -15,7 +16,16 @@ export function SolidView(props: EngineViewProps<SolidConfig, SolidState, SolidA
     const xrayConfig = props.config?.mode === 'xray' ? props.config : { mode: 'xray' as const };
     return <XrayView {...props} config={xrayConfig} state={props.state} />;
   }
+  if (props.state.mode === 'prism-pyramid') {
+    const prismConfig =
+      props.config?.mode === 'prism-pyramid' ? props.config : { mode: 'prism-pyramid' as const };
+    return <PrismView {...props} config={prismConfig} state={props.state} />;
+  }
   const cubesConfig: CubesConfig =
-    props.config?.mode === 'net-fold' || props.config?.mode === 'xray' ? {} : (props.config ?? {});
+    props.config?.mode === 'net-fold' ||
+    props.config?.mode === 'xray' ||
+    props.config?.mode === 'prism-pyramid'
+      ? {}
+      : (props.config ?? {});
   return <CubesView {...props} config={cubesConfig} state={props.state} />;
 }

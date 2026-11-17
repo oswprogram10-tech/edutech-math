@@ -4,9 +4,12 @@ import { EVENT_NAMES, emit, predicates } from './events';
 import { observe } from './observe';
 import { FoldCollisionOverlay } from './overlays/fold-collision';
 import { FoldPathOverlay } from './overlays/fold-path';
+import { ApexGatherOverlay } from './overlays/apex-gather';
 import { HiddenRevealOverlay } from './overlays/hidden-reveal';
+import { PrismPeekOverlay } from './overlays/prism-peek';
 import { RowLineupOverlay } from './overlays/row-lineup';
 import { SideEyeOverlay } from './overlays/side-eye';
+import { StandUpOverlay } from './overlays/stand-up';
 import { ViewsTwinsOverlay } from './overlays/views-twins';
 import { XrayPeekOverlay } from './overlays/xray-peek';
 import { createInitialState, reduce } from './reduce';
@@ -17,7 +20,7 @@ import { SolidView } from './View';
 const definition: EngineDefinition<SolidConfig, SolidState, SolidAction> = {
   id: 'E12',
   name: solid3dStrings.name,
-  modes: ['cubes', 'net-fold', 'xray'],
+  modes: ['cubes', 'net-fold', 'xray', 'prism-pyramid'],
   createInitialState,
   reduce,
   View: SolidView,
@@ -33,6 +36,9 @@ const definition: EngineDefinition<SolidConfig, SolidState, SolidAction> = {
     'fold-collision': FoldCollisionOverlay,
     'fold-path': FoldPathOverlay,
     'xray-peek': XrayPeekOverlay,
+    'apex-gather': ApexGatherOverlay,
+    'prism-peek': PrismPeekOverlay,
+    'stand-up': StandUpOverlay,
   },
 };
 

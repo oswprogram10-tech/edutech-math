@@ -6,6 +6,7 @@
  */
 import type { EngineEvent, EnginePredicate, JsonValue, Observation } from '../../core/engine-sdk';
 import { emitNet, netPredicates } from './net/predicates';
+import { emitPrism, prismAllMarked, prismMarkedCountIs, prismPredicates } from './prism/predicates';
 import { emitXray, xrayPredicates } from './xray/predicates';
 import type { CubeCoord, ProjectionView, SolidState } from './types';
 import {
@@ -32,6 +33,11 @@ export const EVENT_NAMES = [
   'face-queried',
   'segment-added',
   'segment-removed',
+  'sides-changed',
+  'height-changed',
+  'top-changed',
+  'table-row-added',
+  'table-cell-set',
 ] as const;
 
 function isRecord(value: JsonValue | undefined): value is Readonly<Record<string, JsonValue>> {
@@ -367,10 +373,24 @@ for (const [key, fn] of Object.entries(cubesPredicates)) {
   guardedCubesPredicates[key] = guardCubesPredicate(fn);
 }
 
+/** `markedCountIs`·`allMarked`는 xray와 prism이 같은 이름을 쓴다. 관찰의 `mode`로 나눈다. */
+function splitByMode(
+  xrayFn: EnginePredicate | undefined,
+  prismFn: EnginePredicate,
+): EnginePredicate {
+  return (observation, args) =>
+    observation['mode'] === 'prism-pyramid'
+      ? prismFn(observation, args)
+      : (xrayFn?.(observation, args) ?? false);
+}
+
 export const predicates: Readonly<Record<string, EnginePredicate>> = {
   ...guardedCubesPredicates,
   ...netPredicates,
   ...xrayPredicates,
+  ...prismPredicates,
+  markedCountIs: splitByMode(xrayPredicates['markedCountIs'], prismMarkedCountIs),
+  allMarked: splitByMode(xrayPredicates['allMarked'], prismAllMarked),
 };
 
 export function emit(prev: SolidState, next: SolidState): EngineEvent[] {
@@ -380,6 +400,9 @@ export function emit(prev: SolidState, next: SolidState): EngineEvent[] {
   }
   if (prev.mode === 'xray' && next.mode === 'xray') {
     return emitXray(prev, next);
+  }
+  if (prev.mode === 'prism-pyramid' && next.mode === 'prism-pyramid') {
+    return emitPrism(prev, next);
   }
   if (prev.mode !== 'cubes' || next.mode !== 'cubes') {
     return [];
