@@ -1,0 +1,1105 @@
+{
+  "unit": "g6s1u2",
+  "title": "각기둥과 각뿔",
+  "activities": [
+    {
+      "id": "g6s1u2.A1",
+      "title": "수직 엘리베이터와 한 점 모으기",
+      "tasks": [
+        {
+          "id": "g6s1u2.A1.T1",
+          "prompt": "밑면의 변을 골라 오각기둥을 만들어 보세요. 면, 모서리, 꼭짓점을 세어 표에 적어요.",
+          "engine": "E12",
+          "mode": "prism-pyramid",
+          "cpa": "C",
+          "config": {
+            "mode": "prism-pyramid",
+            "baseSides": {
+              "min": 3,
+              "max": 8
+            },
+            "handles": [
+              "extrude",
+              "apex"
+            ],
+            "tools": [
+              "face",
+              "edge",
+              "vertex"
+            ],
+            "counterTable": true
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "tableRowCorrect",
+            "args": {
+              "kind": "prism",
+              "n": 5
+            }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "tableRowIs",
+                    "args": {
+                      "kind": "prism",
+                      "n": 5,
+                      "edges": 10
+                    }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "tableRowIs",
+                    "args": {
+                      "kind": "prism",
+                      "n": 5,
+                      "edges": 11
+                    }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "tableRowIs",
+                    "args": {
+                      "kind": "prism",
+                      "n": 5,
+                      "vertices": 7
+                    }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "tableRowIs",
+                    "args": {
+                      "kind": "prism",
+                      "n": 5,
+                      "vertices": 8
+                    }
+                  }
+                ]
+              },
+              "level": 1,
+              "say": "뒤쪽으로 돌려 보면 보이지 않던 모서리와 꼭짓점이 있을까요?"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "tableRowIs",
+                    "args": {
+                      "kind": "prism",
+                      "n": 5,
+                      "edges": 10
+                    }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "tableRowIs",
+                    "args": {
+                      "kind": "prism",
+                      "n": 5,
+                      "edges": 11
+                    }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "tableRowIs",
+                    "args": {
+                      "kind": "prism",
+                      "n": 5,
+                      "vertices": 7
+                    }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "tableRowIs",
+                    "args": {
+                      "kind": "prism",
+                      "n": 5,
+                      "vertices": 8
+                    }
+                  }
+                ]
+              },
+              "level": 2,
+              "say": "숨어 있는 모서리와 꼭짓점을 비춰 보았어요.",
+              "show": {
+                "engine": "E12",
+                "overlay": "prism-peek"
+              }
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "tableRowIs",
+                    "args": {
+                      "kind": "prism",
+                      "n": 5,
+                      "edges": 10
+                    }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "tableRowIs",
+                    "args": {
+                      "kind": "prism",
+                      "n": 5,
+                      "edges": 11
+                    }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "tableRowIs",
+                    "args": {
+                      "kind": "prism",
+                      "n": 5,
+                      "vertices": 7
+                    }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "tableRowIs",
+                    "args": {
+                      "kind": "prism",
+                      "n": 5,
+                      "vertices": 8
+                    }
+                  }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.sketch-hidden-edges"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "prism-pyramid"
+              },
+              "level": 1,
+              "say": "표시한 것과 아직 표시하지 않은 것을 나누어 세어 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "prism-pyramid"
+              },
+              "level": 2,
+              "say": "무대를 여러 방향으로 돌리거나 엑스레이를 켜서 살펴봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "prism-pyramid"
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.cuboid-parts"
+            }
+          ],
+          "concepts": [
+            "g6s1u2.prism"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g6s1u2.A1.T2",
+          "prompt": "이번에는 밑면이 육각형인 각뿔을 만들어 보세요. 면, 모서리, 꼭짓점을 세어 표에 적어요.",
+          "engine": "E12",
+          "mode": "prism-pyramid",
+          "cpa": "C",
+          "config": {
+            "mode": "prism-pyramid",
+            "baseSides": {
+              "min": 3,
+              "max": 8
+            },
+            "handles": [
+              "extrude",
+              "apex"
+            ],
+            "tools": [
+              "face",
+              "edge",
+              "vertex"
+            ],
+            "counterTable": true
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "tableRowCorrect",
+            "args": {
+              "kind": "pyramid",
+              "n": 6
+            }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "tableRowIs",
+                "args": {
+                  "kind": "pyramid",
+                  "n": 6,
+                  "vertices": 12
+                }
+              },
+              "level": 1,
+              "say": "꼭대기에 꼭짓점이 몇 개 모였을까요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "tableRowIs",
+                "args": {
+                  "kind": "pyramid",
+                  "n": 6,
+                  "vertices": 12
+                }
+              },
+              "level": 2,
+              "say": "윗면의 꼭짓점들이 한 점으로 모이는 모습을 그려 보았어요.",
+              "show": {
+                "engine": "E12",
+                "overlay": "apex-gather"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "tableRowIs",
+                "args": {
+                  "kind": "pyramid",
+                  "n": 6,
+                  "vertices": 12
+                }
+              },
+              "level": 3,
+              "backtrack": "g6s1u2.pyramid"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "prism-pyramid"
+              },
+              "level": 1,
+              "say": "밑면에 있는 것과 옆에 있는 것을 나누어 세어 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "prism-pyramid"
+              },
+              "level": 2,
+              "say": "'한 점으로 모으기'를 껐다 켜며 무엇이 달라지는지 살펴봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "prism-pyramid"
+              },
+              "level": 3,
+              "backtrack": "g6s1u2.prism"
+            }
+          ],
+          "concepts": [
+            "g6s1u2.pyramid"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g6s1u2.A1.T3",
+          "prompt": "여러 가지 각기둥을 만들어 표에 적어 보세요. 각기둥의 꼭짓점 수는 밑면의 변의 수의 몇 배인가요?",
+          "engine": "E12",
+          "mode": "prism-pyramid",
+          "cpa": "P",
+          "config": {
+            "mode": "prism-pyramid",
+            "baseSides": {
+              "min": 3,
+              "max": 8
+            },
+            "handles": [
+              "extrude",
+              "apex"
+            ],
+            "tools": [
+              "face",
+              "edge",
+              "vertex"
+            ],
+            "counterTable": true
+          },
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "times",
+                "label": "몇 배인가요?",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "equals",
+                "path": "response.times.value",
+                "value": "2"
+              },
+              {
+                "kind": "predicate",
+                "name": "tableCorrectAtLeast",
+                "args": {
+                  "count": 2
+                }
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "prism-pyramid"
+              },
+              "level": 1,
+              "say": "표에서 밑면의 변의 수와 꼭짓점 수를 나란히 보면 어떤 관계가 있을까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "prism-pyramid"
+              },
+              "level": 2,
+              "say": "밑면의 변의 수를 하나씩 바꾸며 꼭짓점 수가 어떻게 달라지는지 적어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "prism-pyramid"
+              },
+              "level": 3,
+              "backtrack": "g6s1u2.prism"
+            }
+          ],
+          "concepts": [
+            "g6s1u2.element-count-rule"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g6s1u2.A1.T4",
+          "prompt": "밑면이 십각형인 각기둥의 모서리는 모두 몇 개인가요?",
+          "engine": "E12",
+          "mode": "prism-pyramid",
+          "cpa": "A",
+          "config": {
+            "mode": "prism-pyramid",
+            "baseSides": {
+              "min": 3,
+              "max": 8
+            },
+            "handles": [
+              "extrude",
+              "apex"
+            ],
+            "tools": [
+              "face",
+              "edge",
+              "vertex"
+            ],
+            "counterTable": true
+          },
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "edges",
+                "label": "모서리의 수",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.edges.value",
+            "value": "30"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "prism-pyramid"
+              },
+              "level": 1,
+              "say": "밑면, 윗면, 옆에 있는 모서리를 나누어 생각해 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "prism-pyramid"
+              },
+              "level": 2,
+              "say": "앞에서 적은 표에서 모서리 수가 밑면의 변의 수와 어떤 관계였는지 떠올려 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "prism-pyramid"
+              },
+              "level": 3,
+              "backtrack": "g6s1u2.prism"
+            }
+          ],
+          "concepts": [
+            "g6s1u2.element-count-rule"
+          ],
+          "submit": "button",
+          "showEngine": false
+        },
+        {
+          "id": "g6s1u2.A1.T5",
+          "prompt": "모서리가 18개인 각뿔의 이름은 무엇일까요?",
+          "engine": "E12",
+          "mode": "prism-pyramid",
+          "cpa": "A",
+          "config": {
+            "mode": "prism-pyramid",
+            "baseSides": {
+              "min": 3,
+              "max": 8
+            },
+            "handles": [
+              "extrude",
+              "apex"
+            ],
+            "tools": [
+              "face",
+              "edge",
+              "vertex"
+            ],
+            "counterTable": true
+          },
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "name",
+                "label": "각뿔의 이름을 골라요.",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "yuk",
+                    "label": "육각뿔"
+                  },
+                  {
+                    "id": "gu",
+                    "label": "구각뿔"
+                  },
+                  {
+                    "id": "sippal",
+                    "label": "십팔각뿔"
+                  },
+                  {
+                    "id": "pal",
+                    "label": "팔각뿔"
+                  }
+                ]
+              }
+            ]
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.name.selected",
+            "value": [
+              "gu"
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.name.selected",
+                "value": [
+                  "yuk"
+                ]
+              },
+              "level": 1,
+              "say": "각뿔의 모서리는 밑면에 몇 개, 옆에 몇 개 있을까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.name.selected",
+                "value": [
+                  "yuk"
+                ]
+              },
+              "level": 2,
+              "say": "각뿔은 위에 꼭짓점 하나만 있어요. 윗면 모서리가 있는지 생각해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.name.selected",
+                "value": [
+                  "yuk"
+                ]
+              },
+              "level": 3,
+              "backtrack": "g6s1u2.pyramid"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "prism-pyramid"
+              },
+              "level": 1,
+              "say": "고른 각뿔의 모서리를 세어 18개가 되는지 확인해 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "prism-pyramid"
+              },
+              "level": 2,
+              "say": "밑면의 변의 수를 하나 정해 모서리를 세어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "prism-pyramid"
+              },
+              "level": 3,
+              "backtrack": "g6s1u2.pyramid"
+            }
+          ],
+          "concepts": [
+            "g6s1u2.element-count-rule",
+            "g6s1u2.pyramid"
+          ],
+          "submit": "button",
+          "showEngine": false
+        },
+        {
+          "id": "g6s1u2.A1.T6",
+          "prompt": "옆으로 눕혀 놓은 각기둥이에요. 밑면 두 개를 찾아 눌러 표시해요.",
+          "engine": "E12",
+          "mode": "prism-pyramid",
+          "cpa": "P",
+          "config": {
+            "mode": "prism-pyramid",
+            "baseSides": 3,
+            "initial": {
+              "sides": 3,
+              "height": 4,
+              "top": "flat"
+            },
+            "handles": [],
+            "orientation": "lying",
+            "tools": [
+              "face"
+            ],
+            "counterTable": false
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "markedBasesOk"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "markedCountIs",
+                "args": {
+                  "kind": "face",
+                  "n": 2
+                }
+              },
+              "level": 1,
+              "say": "서로 평행하고 모양과 크기가 같은 두 면은 어디일까요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "markedCountIs",
+                "args": {
+                  "kind": "face",
+                  "n": 2
+                }
+              },
+              "level": 2,
+              "say": "같은 각기둥을 세워 놓은 모습을 옆에 그려 보았어요.",
+              "show": {
+                "engine": "E12",
+                "overlay": "stand-up"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "markedCountIs",
+                "args": {
+                  "kind": "face",
+                  "n": 2
+                }
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.parallel-perpendicular-faces"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "prism-pyramid"
+              },
+              "level": 1,
+              "say": "두 면을 골라 표시했나요? 고른 두 면이 서로 마주 보는지 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "prism-pyramid"
+              },
+              "level": 2,
+              "say": "무대를 돌려 각기둥의 양 끝을 살펴봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "prism-pyramid"
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.cuboid-parts"
+            }
+          ],
+          "concepts": [
+            "g6s1u2.prism"
+          ],
+          "submit": "button"
+        }
+      ]
+    },
+    {
+      "id": "g6s1u2.A2",
+      "title": "각기둥 전개도",
+      "tasks": [
+        {
+          "id": "g6s1u2.A2.T1",
+          "prompt": "밑면 조각과 옆면 조각을 붙여 삼각기둥의 전개도를 만들고 접어 보세요.",
+          "engine": "E12",
+          "mode": "net-fold",
+          "cpa": "P",
+          "config": {
+            "mode": "net-fold",
+            "target": "prism",
+            "baseSides": 3,
+            "sideLen": 2,
+            "height": 3,
+            "pieces": {
+              "base": 2,
+              "rect": 3
+            }
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "prismNetFoldedValid"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "prismNetBothBasesSameEnd"
+              },
+              "level": 1,
+              "say": "접었을 때 두 밑면은 각기둥의 어디에 놓일까요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "prismNetBothBasesSameEnd"
+              },
+              "level": 2,
+              "say": "접으면 같은 자리로 가는 조각에 같은 무늬를 칠해 보았어요.",
+              "show": {
+                "engine": "E12",
+                "overlay": "prism-net-clash"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "prismNetBothBasesSameEnd"
+              },
+              "level": 3,
+              "backtrack": "g6s1u2.prism"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "prism-net"
+              },
+              "level": 1,
+              "say": "조각이 모두 붙었나요? 접었을 때 빈 곳이나 겹치는 곳이 있는지 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "prism-net"
+              },
+              "level": 2,
+              "say": "옆면 조각을 띠처럼 먼저 잇고 밑면을 붙여 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "prism-net"
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.nets"
+            }
+          ],
+          "concepts": [
+            "g6s1u2.prism-net"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g6s1u2.A2.T2",
+          "prompt": "오각기둥의 전개도예요. 옆면 직사각형들의 가로를 모두 더하면 몇 칸인가요? 밑면의 둘레와 비교해 보세요.",
+          "engine": "E12",
+          "mode": "net-fold",
+          "cpa": "P",
+          "config": {
+            "mode": "net-fold",
+            "target": "prism",
+            "baseSides": 5,
+            "sideLen": 2,
+            "height": 3,
+            "editable": false,
+            "foldable": true,
+            "showLengths": true,
+            "given": [
+              {
+                "type": "rect",
+                "parent": null,
+                "locked": true
+              },
+              {
+                "type": "rect",
+                "parent": 0,
+                "parentEdge": 1,
+                "locked": true
+              },
+              {
+                "type": "rect",
+                "parent": 1,
+                "parentEdge": 1,
+                "locked": true
+              },
+              {
+                "type": "rect",
+                "parent": 2,
+                "parentEdge": 1,
+                "locked": true
+              },
+              {
+                "type": "rect",
+                "parent": 3,
+                "parentEdge": 1,
+                "locked": true
+              },
+              {
+                "type": "base",
+                "parent": 0,
+                "parentEdge": 2,
+                "locked": true
+              },
+              {
+                "type": "base",
+                "parent": 0,
+                "parentEdge": 0,
+                "locked": true
+              }
+            ]
+          },
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "width",
+                "label": "옆면 가로의 합(칸)",
+                "forms": [
+                  "integer"
+                ]
+              },
+              {
+                "kind": "choice",
+                "id": "cmp",
+                "label": "밑면의 둘레와 비교해요.",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "same",
+                    "label": "밑면의 둘레와 같아요"
+                  },
+                  {
+                    "id": "longer",
+                    "label": "밑면의 둘레보다 길어요"
+                  },
+                  {
+                    "id": "shorter",
+                    "label": "밑면의 둘레보다 짧아요"
+                  }
+                ]
+              }
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "equals",
+                "path": "response.width.value",
+                "value": "10"
+              },
+              {
+                "kind": "equals",
+                "path": "response.cmp.selected",
+                "value": [
+                  "same"
+                ]
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "prism-net"
+              },
+              "level": 1,
+              "say": "옆면 직사각형의 가로 변은 접었을 때 밑면의 어느 변과 맞닿을까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "prism-net"
+              },
+              "level": 2,
+              "say": "전개도를 접어 보고, 옆면의 가로 변과 밑면의 변을 짝지어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "prism-net"
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.nets"
+            }
+          ],
+          "concepts": [
+            "g6s1u2.prism-net"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g6s1u2.A2.T3",
+          "prompt": "삼각기둥의 전개도가 될 수 없는 것을 골라요.",
+          "engine": "E12",
+          "mode": "net-fold",
+          "cpa": "A",
+          "config": {
+            "mode": "net-fold",
+            "target": "prism",
+            "baseSides": 3,
+            "sideLen": 2,
+            "height": 3,
+            "editable": false,
+            "foldable": false,
+            "netCards": [
+              {
+                "id": "ga",
+                "label": "가",
+                "root": "rect",
+                "steps": [
+                  {
+                    "parent": 0,
+                    "parentEdge": 1,
+                    "type": "rect"
+                  },
+                  {
+                    "parent": 1,
+                    "parentEdge": 1,
+                    "type": "rect"
+                  },
+                  {
+                    "parent": 0,
+                    "parentEdge": 0,
+                    "type": "base"
+                  },
+                  {
+                    "parent": 2,
+                    "parentEdge": 2,
+                    "type": "base"
+                  }
+                ]
+              },
+              {
+                "id": "na",
+                "label": "나",
+                "root": "rect",
+                "steps": [
+                  {
+                    "parent": 0,
+                    "parentEdge": 1,
+                    "type": "rect"
+                  },
+                  {
+                    "parent": 1,
+                    "parentEdge": 1,
+                    "type": "rect"
+                  },
+                  {
+                    "parent": 0,
+                    "parentEdge": 2,
+                    "type": "base"
+                  },
+                  {
+                    "parent": 2,
+                    "parentEdge": 2,
+                    "type": "base"
+                  }
+                ]
+              },
+              {
+                "id": "da",
+                "label": "다",
+                "root": "base",
+                "steps": [
+                  {
+                    "parent": 0,
+                    "parentEdge": 0,
+                    "type": "rect"
+                  },
+                  {
+                    "parent": 0,
+                    "parentEdge": 1,
+                    "type": "rect"
+                  },
+                  {
+                    "parent": 0,
+                    "parentEdge": 2,
+                    "type": "rect"
+                  },
+                  {
+                    "parent": 1,
+                    "parentEdge": 2,
+                    "type": "base"
+                  }
+                ]
+              }
+            ]
+          },
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "pick",
+                "label": "될 수 없는 전개도를 골라요.",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "ga",
+                    "label": "가"
+                  },
+                  {
+                    "id": "na",
+                    "label": "나"
+                  },
+                  {
+                    "id": "da",
+                    "label": "다"
+                  }
+                ]
+              }
+            ]
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.pick.selected",
+            "value": [
+              "na"
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "prism-net"
+              },
+              "level": 1,
+              "say": "카드마다 머릿속으로 접어 보며 겹치거나 빈 곳이 생기는지 살펴볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "prism-net"
+              },
+              "level": 2,
+              "say": "옆면 띠를 먼저 둥글게 말고 밑면을 붙인다고 생각해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "prism-net"
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.nets"
+            }
+          ],
+          "concepts": [
+            "g6s1u2.prism-net"
+          ],
+          "submit": "button"
+        }
+      ]
+    }
+  ]
+}
