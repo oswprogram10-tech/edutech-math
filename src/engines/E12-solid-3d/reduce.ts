@@ -10,6 +10,7 @@ import { clamp } from '../../core/engine-sdk';
 import { createNetState, reduceNet } from './net/reduce';
 import { createPrismState, reducePrism } from './prism/reduce';
 import { createPrismNetState, reducePrismNet } from './prismnet/reduce';
+import { createShapesState, reduceShapes } from './shapes/reduce';
 import { createSvState, reduceSv } from './sv/reduce';
 import { createXrayState, reduceXray } from './xray/reduce';
 import {
@@ -43,6 +44,8 @@ import type {
   ReferenceViewsConfig,
   SolidAction,
   SolidConfig,
+  ShapesSortConfig,
+  ShapesState,
   SolidState,
   SurfaceVolumeConfig,
   SvState,
@@ -458,8 +461,12 @@ export function createInitialState(config: XrayConfig): XrayState;
 export function createInitialState(config: PrismConfig): PrismState;
 export function createInitialState(config: PrismNetConfig): PrismNetState;
 export function createInitialState(config: SurfaceVolumeConfig): SvState;
+export function createInitialState(config: ShapesSortConfig): ShapesState;
 export function createInitialState(config: SolidConfig): SolidState;
 export function createInitialState(config: SolidConfig = {}): SolidState {
+  if (config.mode === 'shapes-sort') {
+    return createShapesState(config);
+  }
   if (config.mode === 'surface-volume') {
     return createSvState(config);
   }
@@ -512,8 +519,12 @@ export function reduce(state: XrayState, action: SolidAction): XrayState;
 export function reduce(state: PrismState, action: SolidAction): PrismState;
 export function reduce(state: PrismNetState, action: SolidAction): PrismNetState;
 export function reduce(state: SvState, action: SolidAction): SvState;
+export function reduce(state: ShapesState, action: SolidAction): ShapesState;
 export function reduce(state: SolidState, action: SolidAction): SolidState;
 export function reduce(state: SolidState, action: SolidAction): SolidState {
+  if (state.mode === 'shapes-sort') {
+    return reduceShapes(state, action);
+  }
   if (state.mode === 'surface-volume') {
     return reduceSv(state, action);
   }

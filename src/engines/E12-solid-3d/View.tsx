@@ -5,10 +5,16 @@ import { CubesView } from './views/CubesView';
 import { NetFoldView } from './views/NetFoldView';
 import { PrismNetView } from './views/PrismNetView';
 import { PrismView } from './views/PrismView';
+import { ShapesView } from './views/ShapesView';
 import { SurfaceVolumeView } from './views/SurfaceVolumeView';
 import { XrayView } from './views/XrayView';
 
 export function SolidView(props: EngineViewProps<SolidConfig, SolidState, SolidAction>) {
+  if (props.state.mode === 'shapes-sort') {
+    const shapesConfig =
+      props.config?.mode === 'shapes-sort' ? props.config : { mode: 'shapes-sort' as const };
+    return <ShapesView {...props} config={shapesConfig} state={props.state} />;
+  }
   if (props.state.mode === 'surface-volume') {
     const svConfig =
       props.config?.mode === 'surface-volume' ? props.config : { mode: 'surface-volume' as const };
@@ -41,7 +47,8 @@ export function SolidView(props: EngineViewProps<SolidConfig, SolidState, SolidA
     props.config?.mode === 'net-fold' ||
     props.config?.mode === 'xray' ||
     props.config?.mode === 'prism-pyramid' ||
-    props.config?.mode === 'surface-volume'
+    props.config?.mode === 'surface-volume' ||
+    props.config?.mode === 'shapes-sort'
       ? {}
       : (props.config ?? {});
   return <CubesView {...props} config={cubesConfig} state={props.state} />;

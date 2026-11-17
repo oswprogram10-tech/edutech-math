@@ -11,6 +11,7 @@ import { PrismPeekOverlay } from './overlays/prism-peek';
 import { RowLineupOverlay } from './overlays/row-lineup';
 import { SideEyeOverlay } from './overlays/side-eye';
 import { StandUpOverlay } from './overlays/stand-up';
+import { TurnSameOverlay } from './overlays/turn-same';
 import { ViewsTwinsOverlay } from './overlays/views-twins';
 import { XrayPeekOverlay } from './overlays/xray-peek';
 import { createInitialState, reduce } from './reduce';
@@ -25,7 +26,7 @@ import { SolidView } from './View';
 const definition: EngineDefinition<SolidConfig, SolidState, SolidAction> = {
   id: 'E12',
   name: solid3dStrings.name,
-  modes: ['cubes', 'net-fold', 'xray', 'prism-pyramid', 'surface-volume'],
+  modes: ['cubes', 'net-fold', 'xray', 'prism-pyramid', 'surface-volume', 'shapes-sort'],
   createInitialState,
   reduce,
   View: SolidView,
@@ -49,6 +50,7 @@ const definition: EngineDefinition<SolidConfig, SolidState, SolidAction> = {
     'wrap-vs-fill': WrapVsFillOverlay,
     'unit-zoom': UnitZoomOverlay,
     'wraps-compare': WrapsCompareOverlay,
+    'turn-same': TurnSameOverlay,
   },
 };
 
