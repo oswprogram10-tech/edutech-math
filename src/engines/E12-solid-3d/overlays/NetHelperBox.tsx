@@ -15,6 +15,8 @@ interface NetHelperBoxProps {
   readonly testId: string;
   readonly titleTestId: string;
   readonly title: string;
+  /** 제목 글자 크기(기본 12.5). 긴 문구를 카드 폭에 맞출 때만 줄인다. */
+  readonly titleSize?: number;
   readonly canvasSelector?: string;
   readonly children: ReactNode;
 }
@@ -23,6 +25,7 @@ export function NetHelperBox({
   testId,
   titleTestId,
   title,
+  titleSize = 12.5,
   canvasSelector = 'svg[data-testid="net-grid"], svg[data-testid="net-fold-stage"]',
   children,
 }: NetHelperBoxProps) {
@@ -48,7 +51,7 @@ export function NetHelperBox({
         <text
           x={20}
           y={32}
-          fontSize={12.5}
+          fontSize={titleSize}
           fontWeight={800}
           fill="#1d4fa8"
           data-testid={titleTestId}

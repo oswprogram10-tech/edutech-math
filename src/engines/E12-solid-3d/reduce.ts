@@ -10,6 +10,7 @@ import { clamp } from '../../core/engine-sdk';
 import { createNetState, reduceNet } from './net/reduce';
 import { createPrismState, reducePrism } from './prism/reduce';
 import { createPrismNetState, reducePrismNet } from './prismnet/reduce';
+import { createSvState, reduceSv } from './sv/reduce';
 import { createXrayState, reduceXray } from './xray/reduce';
 import {
   DEFAULT_GRID,
@@ -43,6 +44,8 @@ import type {
   SolidAction,
   SolidConfig,
   SolidState,
+  SurfaceVolumeConfig,
+  SvState,
   ViewTurn,
   XrayConfig,
   XrayState,
@@ -454,8 +457,12 @@ export function createInitialState(config: NetFoldConfig): NetFoldState;
 export function createInitialState(config: XrayConfig): XrayState;
 export function createInitialState(config: PrismConfig): PrismState;
 export function createInitialState(config: PrismNetConfig): PrismNetState;
+export function createInitialState(config: SurfaceVolumeConfig): SvState;
 export function createInitialState(config: SolidConfig): SolidState;
 export function createInitialState(config: SolidConfig = {}): SolidState {
+  if (config.mode === 'surface-volume') {
+    return createSvState(config);
+  }
   if (config.mode === 'net-fold' && config.target === 'prism') {
     return createPrismNetState(config);
   }
@@ -504,8 +511,12 @@ export function reduce(state: NetFoldState, action: SolidAction): NetFoldState;
 export function reduce(state: XrayState, action: SolidAction): XrayState;
 export function reduce(state: PrismState, action: SolidAction): PrismState;
 export function reduce(state: PrismNetState, action: SolidAction): PrismNetState;
+export function reduce(state: SvState, action: SolidAction): SvState;
 export function reduce(state: SolidState, action: SolidAction): SolidState;
 export function reduce(state: SolidState, action: SolidAction): SolidState {
+  if (state.mode === 'surface-volume') {
+    return reduceSv(state, action);
+  }
   if (state.mode === 'prism-net') {
     return reducePrismNet(state, action);
   }
@@ -711,6 +722,7 @@ export function reduce(state: SolidState, action: SolidAction): SolidState {
     }
 
     case 'clear-paint': {
+      if (!('view' in action)) return state;
       if (!state.painted) return state;
       const target = state.painted[action.view];
       if (!target) return state;

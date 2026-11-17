@@ -75,7 +75,10 @@ export function PrismNetCardsPanel({
           {S.referenceCardsTitle}
         </p>
       )}
-      <div className={large ? styles.cardsRowLarge : styles.cardsGrid}>
+      <div
+        className={large ? styles.cardsRowLarge : styles.cardsGrid}
+        data-one-row={large && cards.length <= 3 ? 'true' : undefined}
+      >
         {cards.map((card) => (
           <div
             key={card.id}
