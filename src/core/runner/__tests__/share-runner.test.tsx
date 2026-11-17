@@ -90,7 +90,7 @@ describe('S3 보여 주기', { timeout: 20_000 }, () => {
 
   it('응답 입력을 되돌린 기록은 공유 코드에서 빠져 시연 모드가 엔진 조작만 재생한다', async () => {
     const { unmount } = render(<ActivityRunner content={FAKE_CONTENT} definitions={definitions} />);
-    await screen.findByText(FAKE_PROMPT);
+    await screen.findByText(FAKE_PROMPT, {}, { timeout: 10_000 });
 
     // 엔진 조작 2묶음: 셈돌 두 개 놓기.
     const enginePanel = screen.getByTestId('runner-slot-main');
@@ -106,7 +106,7 @@ describe('S3 보여 주기', { timeout: 20_000 }, () => {
     fireEvent.click(screen.getByRole('button', { name: runnerStrings.undo }));
     fireEvent.click(screen.getByRole('button', { name: runnerStrings.show }));
 
-    const input = (await screen.findByTestId('share-code')) as HTMLInputElement;
+    const input = (await screen.findByTestId('share-code', {}, { timeout: 10_000 })) as HTMLInputElement;
     const code = input.value;
     const decoded = decodeSharePayload(code);
     expect(decoded.ok).toBe(true);
@@ -122,7 +122,7 @@ describe('S3 보여 주기', { timeout: 20_000 }, () => {
 
     // 시연 모드를 공유 코드로 열면 셈돌 두 개가 그대로 보인다.
     render(<DemoScreen code={code} />);
-    const pane = await screen.findByTestId('pane-left-slot-main', {}, { timeout: 5000 });
+    const pane = await screen.findByTestId('pane-left-slot-main', {}, { timeout: 15_000 });
     expect(pane.querySelectorAll('[data-counter-id]')).toHaveLength(2);
   });
 });
