@@ -32,6 +32,7 @@ export type SolidMode =
   | 'xray'
   | 'prism-pyramid'
   | 'prism-net'
+  | 'cylinder-net'
   | 'surface-volume'
   | 'shapes-sort'
   | 'lathe';
@@ -327,6 +328,34 @@ export interface PrismNetConfig {
   readonly variant?: unknown;
 }
 
+/** 원기둥 전개도(`mode:'net-fold'`, `target:'cylinder'`). 상태·관찰의 `mode`는 `'cylinder-net'`이다. */
+export interface CylinderNetConfig {
+  readonly mode: 'net-fold';
+  readonly target: 'cylinder';
+  /** 밑면 반지름(cm). 1~5, 0.5 단위. */
+  readonly radius?: number | string;
+  /** 높이(cm). 1~10 정수. */
+  readonly height?: number | string;
+  /** 원주율 문자열. `"3.14"`·`"3.1"`·`"3"`. */
+  readonly pi?: string;
+  readonly steps?: readonly CylinderNetStep[];
+  readonly rollPaint?: boolean;
+  readonly showDims?: boolean;
+  /** 맞추기 조각의 처음 크기(소수 문자열). */
+  readonly start?: {
+    readonly width?: string;
+    readonly radius?: string;
+    readonly height?: string;
+  };
+  /** 명세 예시 호환용. 읽기만 하고 쓰지 않는다. */
+  readonly editablePieces?: unknown;
+  readonly stage?: StageMode;
+  readonly fallback?: unknown;
+  readonly variant?: unknown;
+}
+
+export type CylinderNetStep = 'roll' | 'assemble';
+
 /** 직육면체 겉넓이·부피(`mode:'surface-volume'`). 넓이·부피·개수는 관찰에만 있다. */
 export type SvStepId = 'rotate' | 'unfold' | 'paint' | 'fill-voxels';
 export type SvVariant = 'steps' | 'fixed-volume';
@@ -390,6 +419,7 @@ export type SolidConfig =
   | XrayConfig
   | PrismConfig
   | PrismNetConfig
+  | CylinderNetConfig
   | SurfaceVolumeConfig
   | ShapesSortConfig
   | LatheConfig;
@@ -607,6 +637,35 @@ export interface PrismNetState {
   readonly foldCount: number;
 }
 
+export interface CylinderNetSettings {
+  /** 밑면 반지름(0.5cm 단위). */
+  readonly radiusHalves: number;
+  /** 높이(0.5cm 단위). */
+  readonly heightHalves: number;
+  readonly pi: string;
+  readonly steps: readonly CylinderNetStep[];
+  readonly rollPaint: boolean;
+  readonly showDims: boolean;
+}
+
+/** 상태에는 정수만 둔다(1/8바퀴, 0.1cm, 0.5cm 단위). 수학 계산은 `cylnet/model.ts`가 Rational로 한다. */
+export interface CylinderNetState {
+  readonly mode: 'cylinder-net';
+  readonly settings: CylinderNetSettings;
+  readonly step: CylinderNetStep | null;
+  /** 굴린 양(1/8바퀴, 0~8). */
+  readonly rollEighths: number;
+  /** 옆면 가로(0.1cm 단위, 10~400). */
+  readonly widthTenths: number;
+  /** 원 조각 반지름(0.5cm 단위, 1~10). */
+  readonly pieceRadiusHalves: number;
+  /** 옆면 세로(0.5cm 단위, 2~20). */
+  readonly pieceHeightHalves: number;
+  readonly folded: boolean;
+  /** 화면용(0~345, 15 단위). 판정에 쓰지 않는다. */
+  readonly viewYaw: number;
+}
+
 export interface SvSettings {
   readonly variant: SvVariant;
   /** steps: 설정의 solid(1~6). fixed-volume: 처음 상자(1×1×V). */
@@ -710,6 +769,7 @@ export type SolidState =
   | XrayState
   | PrismState
   | PrismNetState
+  | CylinderNetState
   | SvState
   | ShapesState
   | LatheState;
@@ -804,6 +864,18 @@ export type PrismNetAction =
   | { readonly type: 'clear' }
   | { readonly type: 'toggle-fold' };
 
+export type CylinderNetAction =
+  | { readonly type: 'cn-set-step'; readonly step: CylinderNetStep }
+  | { readonly type: 'cn-roll'; readonly by: number }
+  | { readonly type: 'cn-roll-full' }
+  | { readonly type: 'cn-roll-reset' }
+  | { readonly type: 'cn-width'; readonly by: number }
+  | { readonly type: 'cn-radius'; readonly by: number }
+  | { readonly type: 'cn-height'; readonly by: number }
+  | { readonly type: 'cn-fold' }
+  | { readonly type: 'cn-unfold' }
+  | { readonly type: 'cn-rotate-view'; readonly by: number };
+
 export type SvAction =
   | Extract<XrayAction, { readonly type: 'set-view' | 'rotate-view' }>
   | { readonly type: 'go-step'; readonly step: SvStepId }
@@ -846,6 +918,7 @@ export type SolidAction =
   | XrayAction
   | PrismAction
   | PrismNetAction
+  | CylinderNetAction
   | SvAction
   | ShapesAction
   | LatheAction;

@@ -7,6 +7,7 @@
  * - 입력 상태를 절대 변경하지 않는다.
  */
 import { clamp } from '../../core/engine-sdk';
+import { createCylinderNetState, reduceCylinderNet } from './cylnet/reduce';
 import { createLatheState, reduceLathe } from './lathe/reduce';
 import { createNetState, reduceNet } from './net/reduce';
 import { createPrismState, reducePrism } from './prism/reduce';
@@ -29,6 +30,8 @@ import type {
   CubesSettings,
   CubesState,
   FocusCell,
+  CylinderNetConfig,
+  CylinderNetState,
   LatheConfig,
   LatheState,
   LayerPanelMode,
@@ -463,6 +466,7 @@ export function createInitialState(config: NetFoldConfig): NetFoldState;
 export function createInitialState(config: XrayConfig): XrayState;
 export function createInitialState(config: PrismConfig): PrismState;
 export function createInitialState(config: PrismNetConfig): PrismNetState;
+export function createInitialState(config: CylinderNetConfig): CylinderNetState;
 export function createInitialState(config: SurfaceVolumeConfig): SvState;
 export function createInitialState(config: ShapesSortConfig): ShapesState;
 export function createInitialState(config: LatheConfig): LatheState;
@@ -479,6 +483,9 @@ export function createInitialState(config: SolidConfig = {}): SolidState {
   }
   if (config.mode === 'net-fold' && config.target === 'prism') {
     return createPrismNetState(config);
+  }
+  if (config.mode === 'net-fold' && config.target === 'cylinder') {
+    return createCylinderNetState(config);
   }
   if (config.mode === 'net-fold') {
     return createNetState(config);
@@ -525,6 +532,7 @@ export function reduce(state: NetFoldState, action: SolidAction): NetFoldState;
 export function reduce(state: XrayState, action: SolidAction): XrayState;
 export function reduce(state: PrismState, action: SolidAction): PrismState;
 export function reduce(state: PrismNetState, action: SolidAction): PrismNetState;
+export function reduce(state: CylinderNetState, action: SolidAction): CylinderNetState;
 export function reduce(state: SvState, action: SolidAction): SvState;
 export function reduce(state: ShapesState, action: SolidAction): ShapesState;
 export function reduce(state: LatheState, action: SolidAction): LatheState;
@@ -541,6 +549,9 @@ export function reduce(state: SolidState, action: SolidAction): SolidState {
   }
   if (state.mode === 'prism-net') {
     return reducePrismNet(state, action);
+  }
+  if (state.mode === 'cylinder-net') {
+    return reduceCylinderNet(state, action);
   }
   if (state.mode === 'net-fold') {
     return reduceNet(state, action);
