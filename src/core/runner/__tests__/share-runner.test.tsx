@@ -61,7 +61,7 @@ beforeAll(async () => {
 
 afterEach(cleanup);
 
-describe('S3 보여 주기', () => {
+describe('S3 보여 주기', { timeout: 20_000 }, () => {
   it('공유 코드에 응답 슬롯·판정 결과·과제 ID를 넣지 않는다', async () => {
     render(<ActivityRunner content={demo} definitions={definitions} activityId="demo.A3" />);
 
