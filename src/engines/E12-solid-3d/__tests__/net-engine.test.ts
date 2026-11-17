@@ -137,7 +137,7 @@ describe('E12 net-fold reduce, observe, predicates, events', () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const state = createInitialState({
       mode: 'net-fold',
-      target: 'prism' as unknown as 'cube',
+      target: 'sphere' as unknown as 'cube',
       faceSize: 2,
       grid: [6, 6],
       given: [

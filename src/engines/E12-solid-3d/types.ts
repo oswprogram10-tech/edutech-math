@@ -7,6 +7,7 @@
  */
 
 import type { NetBoxSpec, NetTarget } from './net/geometry';
+import type { PrismPiece, PrismPieceType } from './prismnet/model';
 import type {
   SketchDot,
   SketchLineStyle,
@@ -17,7 +18,7 @@ import type {
   XrayViewAngle,
 } from './xray/geometry';
 
-export type SolidMode = 'cubes' | 'net-fold' | 'xray' | 'prism-pyramid';
+export type SolidMode = 'cubes' | 'net-fold' | 'xray' | 'prism-pyramid' | 'prism-net';
 
 export type CubeColor = 'plain' | 'red' | 'blue' | 'yellow' | 'green';
 
@@ -263,7 +264,54 @@ export interface PrismConfig {
   readonly variant?: unknown;
 }
 
-export type SolidConfig = CubesConfig | NetFoldConfig | XrayConfig | PrismConfig;
+export interface PrismNetPiecesConfig {
+  readonly base?: number;
+  readonly rect?: number;
+}
+
+export interface PrismNetGivenConfig {
+  readonly type: PrismPieceType;
+  /** `given` 목록 안의 앞 항목 번호. 첫 항목(뿌리)은 null. */
+  readonly parent: number | null;
+  readonly parentEdge?: number;
+  readonly locked?: boolean;
+}
+
+export interface PrismNetCardStep {
+  readonly parent: number;
+  readonly parentEdge: number;
+  readonly type: PrismPieceType;
+}
+
+export interface PrismNetCardConfig {
+  readonly id: string;
+  readonly label: string;
+  readonly n?: number;
+  readonly root: PrismPieceType;
+  readonly steps: readonly PrismNetCardStep[];
+}
+
+/** 각기둥 전개도(`mode:'net-fold'`, `target:'prism'`). 상태·관찰의 `mode`는 `'prism-net'`이다. */
+export interface PrismNetConfig {
+  readonly mode: 'net-fold';
+  readonly target: 'prism';
+  readonly baseSides?: number;
+  readonly sideLen?: number;
+  readonly height?: number;
+  /** 쓸 수 있는 조각 수. 명세의 배열 형식(`["triangle","rect",…]`)도 받아 개수로 바꾼다. */
+  readonly pieces?: PrismNetPiecesConfig | readonly string[];
+  readonly given?: readonly PrismNetGivenConfig[];
+  readonly editable?: boolean;
+  readonly foldable?: boolean;
+  readonly showLengths?: boolean;
+  readonly collisionHighlight?: boolean;
+  readonly netCards?: readonly PrismNetCardConfig[];
+  readonly stage?: StageMode;
+  readonly fallback?: unknown;
+  readonly variant?: unknown;
+}
+
+export type SolidConfig = CubesConfig | NetFoldConfig | XrayConfig | PrismConfig | PrismNetConfig;
 
 export interface CubeItem {
   readonly x: number;
@@ -448,7 +496,37 @@ export interface PrismState {
   readonly table: readonly PrismTableRow[];
 }
 
-export type SolidState = CubesState | NetFoldState | XrayState | PrismState;
+export interface PrismNetCardSettings {
+  readonly id: string;
+  readonly label: string;
+  readonly n: number;
+  readonly root: PrismPieceType;
+  readonly steps: readonly PrismNetCardStep[];
+}
+
+export interface PrismNetSettings {
+  readonly n: number;
+  readonly sideLen: number;
+  readonly height: number;
+  /** 쓸 수 있는 조각 수(처음 놓인 조각 포함). */
+  readonly total: { readonly base: number; readonly rect: number };
+  readonly editable: boolean;
+  readonly foldable: boolean;
+  readonly showLengths: boolean;
+  readonly collisionHighlight: boolean;
+  readonly netCards: readonly PrismNetCardSettings[];
+}
+
+export interface PrismNetState {
+  readonly mode: 'prism-net';
+  readonly settings: PrismNetSettings;
+  readonly pieces: readonly PrismPiece[];
+  readonly selectedType: PrismPieceType | null;
+  readonly folded: boolean;
+  readonly foldCount: number;
+}
+
+export type SolidState = CubesState | NetFoldState | XrayState | PrismState | PrismNetState;
 
 export type CubesAction =
   | { readonly type: 'add'; readonly x: number; readonly y: number }
@@ -533,7 +611,14 @@ export type PrismAction =
     }
   | { readonly type: 'remove-table-row'; readonly row: number };
 
-export type SolidAction = CubesAction | NetFoldAction | XrayAction | PrismAction;
+export type PrismNetAction =
+  | { readonly type: 'select-piece-type'; readonly pieceType: PrismPieceType | null }
+  | { readonly type: 'attach'; readonly parent: number | null; readonly parentEdge: number }
+  | { readonly type: 'remove-piece'; readonly id: number }
+  | { readonly type: 'clear' }
+  | { readonly type: 'toggle-fold' };
+
+export type SolidAction = CubesAction | NetFoldAction | XrayAction | PrismAction | PrismNetAction;
 
 export const XRAY_DEFAULT_SOLID: XraySolidSpec = { type: 'cuboid', w: 4, d: 3, h: 2 };
 export const XRAY_DEFAULT_VIEW: XrayViewAngle = { yaw: 30, pitch: 30 };

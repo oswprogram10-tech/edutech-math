@@ -85,9 +85,15 @@ function EngineSandbox({ definition }: EngineSandboxProps) {
   }, [definition, config, reset]);
 
   const stateMode = (state as { readonly mode?: string }).mode;
+  // 설정의 모드와 상태의 `mode`가 다른 경우(E12 `net-fold`+`target:'prism'` → 상태 `prism-net`)도
+  // 있으므로, 지금 설정으로 만든 초기 상태의 `mode`와 비교한다.
+  const initialStateMode = (initial as { readonly mode?: string }).mode;
   // `mode`가 없는 엔진(E00 등)은 상태를 그대로 보여 준다. 모드가 있는 엔진은
   // 모드 전환 직후 effect가 상태를 새로 만들기 전까지 초기 상태를 보여 준다.
-  const activeState = stateMode === undefined || stateMode === mode ? state : initial;
+  const activeState =
+    stateMode === undefined || stateMode === mode || stateMode === initialStateMode
+      ? state
+      : initial;
   const observation = definition.observe(activeState, config);
   const View = definition.View;
 

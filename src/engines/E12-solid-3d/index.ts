@@ -6,6 +6,7 @@ import { FoldCollisionOverlay } from './overlays/fold-collision';
 import { FoldPathOverlay } from './overlays/fold-path';
 import { ApexGatherOverlay } from './overlays/apex-gather';
 import { HiddenRevealOverlay } from './overlays/hidden-reveal';
+import { PrismNetClashOverlay } from './overlays/prism-net-clash';
 import { PrismPeekOverlay } from './overlays/prism-peek';
 import { RowLineupOverlay } from './overlays/row-lineup';
 import { SideEyeOverlay } from './overlays/side-eye';
@@ -39,6 +40,7 @@ const definition: EngineDefinition<SolidConfig, SolidState, SolidAction> = {
     'apex-gather': ApexGatherOverlay,
     'prism-peek': PrismPeekOverlay,
     'stand-up': StandUpOverlay,
+    'prism-net-clash': PrismNetClashOverlay,
   },
 };
 

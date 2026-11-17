@@ -6,6 +6,7 @@
  */
 import type { EngineEvent, EnginePredicate, JsonValue, Observation } from '../../core/engine-sdk';
 import { emitNet, netPredicates } from './net/predicates';
+import { emitPrismNet, prismNetPredicates } from './prismnet/predicates';
 import { emitPrism, prismAllMarked, prismMarkedCountIs, prismPredicates } from './prism/predicates';
 import { emitXray, xrayPredicates } from './xray/predicates';
 import type { CubeCoord, ProjectionView, SolidState } from './types';
@@ -38,6 +39,10 @@ export const EVENT_NAMES = [
   'top-changed',
   'table-row-added',
   'table-cell-set',
+  'piece-attached',
+  'piece-removed',
+  'prism-net-folded',
+  'prism-net-unfolded',
 ] as const;
 
 function isRecord(value: JsonValue | undefined): value is Readonly<Record<string, JsonValue>> {
@@ -389,12 +394,16 @@ export const predicates: Readonly<Record<string, EnginePredicate>> = {
   ...netPredicates,
   ...xrayPredicates,
   ...prismPredicates,
+  ...prismNetPredicates,
   markedCountIs: splitByMode(xrayPredicates['markedCountIs'], prismMarkedCountIs),
   allMarked: splitByMode(xrayPredicates['allMarked'], prismAllMarked),
 };
 
 export function emit(prev: SolidState, next: SolidState): EngineEvent[] {
   if (prev === next) return [];
+  if (prev.mode === 'prism-net' && next.mode === 'prism-net') {
+    return emitPrismNet(prev, next);
+  }
   if (prev.mode === 'net-fold' && next.mode === 'net-fold') {
     return emitNet(prev, next);
   }
