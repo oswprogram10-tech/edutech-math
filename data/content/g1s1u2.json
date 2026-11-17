@@ -1,0 +1,577 @@
+{
+  "unit": "g1s1u2",
+  "title": "여러 가지 모양",
+  "activities": [
+    {
+      "id": "g1s1u2.A2",
+      "title": "굴리고 쌓아 보기",
+      "tasks": [
+        {
+          "id": "g1s1u2.A2.T1",
+          "prompt": "경사로에 모양을 올리고 ▶를 눌러 봐요. 어느 쪽으로 놓아도 잘 굴러가는 모양은 무엇일까요?",
+          "engine": "E12",
+          "mode": "shapes-sort",
+          "cpa": "C",
+          "config": {
+            "mode": "shapes-sort",
+            "scene": "ramp",
+            "objects": [
+              "box",
+              "cylinder",
+              "sphere"
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "equals",
+                "path": "response.shape.selected",
+                "value": [
+                  "sphere"
+                ]
+              },
+              {
+                "kind": "predicate",
+                "name": "triedKind",
+                "args": {
+                  "kind": "sphere"
+                }
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.shape.selected",
+                "value": [
+                  "cylinder"
+                ]
+              },
+              "level": 1,
+              "say": "둥근기둥 모양을 세워서도 굴려 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.shape.selected",
+                "value": [
+                  "cylinder"
+                ]
+              },
+              "level": 2,
+              "say": "세우기 단추를 누르고 ▶를 눌러 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.shape.selected",
+                "value": [
+                  "cylinder"
+                ]
+              },
+              "level": 3,
+              "backtrack": "g1s1u2.shape-families"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "shapes-sort"
+              },
+              "level": 1,
+              "say": "모양마다 경사로에 올려 굴려 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "shapes-sort"
+              },
+              "level": 2,
+              "say": "▶를 누르고 끝까지 가는지 지켜봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "shapes-sort"
+              },
+              "level": 3,
+              "backtrack": "g1s1u2.shape-families"
+            }
+          ],
+          "concepts": [
+            "g1s1u2.shape-properties"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "shape",
+                "label": "모양을 골라요.",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "box",
+                    "label": "상자 모양"
+                  },
+                  {
+                    "id": "cylinder",
+                    "label": "둥근기둥 모양"
+                  },
+                  {
+                    "id": "sphere",
+                    "label": "공 모양"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g1s1u2.A2.T2",
+          "prompt": "높이 쌓을 수 있는 모양 3개로 탑을 만들어요.",
+          "engine": "E12",
+          "mode": "shapes-sort",
+          "cpa": "C",
+          "config": {
+            "mode": "shapes-sort",
+            "scene": "tower",
+            "towerMax": 4,
+            "objects": [
+              {
+                "id": "b1",
+                "kind": "box",
+                "color": "red",
+                "size": "large"
+              },
+              {
+                "id": "s1",
+                "kind": "sphere",
+                "color": "blue",
+                "size": "large"
+              },
+              {
+                "id": "b2",
+                "kind": "box",
+                "color": "yellow",
+                "size": "small"
+              },
+              {
+                "id": "c1",
+                "kind": "cylinder",
+                "color": "green",
+                "size": "large"
+              },
+              {
+                "id": "s2",
+                "kind": "sphere",
+                "color": "red",
+                "size": "small"
+              },
+              {
+                "id": "b3",
+                "kind": "box",
+                "color": "blue",
+                "size": "small"
+              }
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "towerHeightIs",
+                "args": {
+                  "n": 3
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "towerAllFlatStackers"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "towerHeightIs",
+                "args": {
+                  "n": 3
+                }
+              },
+              "level": 1,
+              "say": "누운 둥근기둥 위에 더 쌓을 수 있을까요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "towerHeightIs",
+                "args": {
+                  "n": 3
+                }
+              },
+              "level": 2,
+              "say": "둥근기둥을 세워서 다시 쌓아 봐요.",
+              "show": {
+                "engine": "E12",
+                "overlay": "turn-same"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "towerHeightIs",
+                "args": {
+                  "n": 3
+                }
+              },
+              "level": 3,
+              "backtrack": "g1s1u2.shape-families"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "fallenAtLeast",
+                "args": {
+                  "n": 1
+                }
+              },
+              "level": 1,
+              "say": "떨어진 모양은 어떤 모양이었나요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "fallenAtLeast",
+                "args": {
+                  "n": 1
+                }
+              },
+              "level": 2,
+              "say": "평평한 곳이 위아래에 있는 모양을 골라 봐요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "fallenAtLeast",
+                "args": {
+                  "n": 1
+                }
+              },
+              "level": 3,
+              "backtrack": "g1s1u2.shape-families"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "shapes-sort"
+              },
+              "level": 1,
+              "say": "모양을 하나씩 탑에 올려 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "shapes-sort"
+              },
+              "level": 2,
+              "say": "탑에 올리기를 세 번 눌러 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "shapes-sort"
+              },
+              "level": 3,
+              "backtrack": "g1s1u2.shape-families"
+            }
+          ],
+          "concepts": [
+            "g1s1u2.shape-properties"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g1s1u2.A2.T3",
+          "prompt": "눕히면 굴러가고 세우면 안 굴러가는 모양은 무엇일까요? 세워 보고 눕혀 보며 굴려 봐요.",
+          "engine": "E12",
+          "mode": "shapes-sort",
+          "cpa": "C",
+          "config": {
+            "mode": "shapes-sort",
+            "scene": "ramp",
+            "objects": [
+              "box",
+              "cylinder",
+              "sphere"
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "equals",
+                "path": "response.shape.selected",
+                "value": [
+                  "cylinder"
+                ]
+              },
+              {
+                "kind": "equals",
+                "path": "response.same.selected",
+                "value": [
+                  "yes"
+                ]
+              },
+              {
+                "kind": "predicate",
+                "name": "cylinderTriedBothPoses"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "misconception": "MC-SHAPE-ORIENTATION"
+              },
+              "level": 1,
+              "say": "둥근기둥을 돌려 놓으면 다른 물건이 될까요?"
+            },
+            {
+              "when": {
+                "misconception": "MC-SHAPE-ORIENTATION"
+              },
+              "level": 2,
+              "say": "같은 둥근기둥을 세웠다가 눕혀 봐요.",
+              "show": {
+                "engine": "E12",
+                "overlay": "turn-same"
+              }
+            },
+            {
+              "when": {
+                "misconception": "MC-SHAPE-ORIENTATION"
+              },
+              "level": 3,
+              "backtrack": "g1s1u2.ignore-irrelevant"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "shapes-sort"
+              },
+              "level": 1,
+              "say": "둥근기둥 모양을 세워서 한 번, 눕혀서 한 번 굴려 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "shapes-sort"
+              },
+              "level": 2,
+              "say": "세우기와 눕히기 단추를 번갈아 눌러 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "shapes-sort"
+              },
+              "level": 3,
+              "backtrack": "g1s1u2.shape-families"
+            }
+          ],
+          "concepts": [
+            "g1s1u2.shape-properties",
+            "g1s1u2.ignore-irrelevant"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "shape",
+                "label": "모양을 골라요.",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "box",
+                    "label": "상자 모양"
+                  },
+                  {
+                    "id": "cylinder",
+                    "label": "둥근기둥 모양"
+                  },
+                  {
+                    "id": "sphere",
+                    "label": "공 모양"
+                  }
+                ]
+              },
+              {
+                "kind": "choice",
+                "id": "same",
+                "label": "세운 것과 눕힌 것은 같은 물건일까요?",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "yes",
+                    "label": "같은 물건이에요"
+                  },
+                  {
+                    "id": "no",
+                    "label": "다른 물건이에요"
+                  }
+                ]
+              }
+            ]
+          },
+          "diagnose": [
+            {
+              "code": "MC-SHAPE-ORIENTATION",
+              "args": {
+                "trap": "no"
+              },
+              "path": "response.same.selected.0"
+            }
+          ]
+        },
+        {
+          "id": "g1s1u2.A2.T4",
+          "prompt": "천 속 물건을 만져 보고, 어떤 모양인지 골라 봐요.",
+          "engine": "E12",
+          "mode": "shapes-sort",
+          "cpa": "P",
+          "config": {
+            "mode": "shapes-sort",
+            "scene": "mystery",
+            "mystery": {
+              "kind": "cylinder",
+              "shadow": "side"
+            }
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "equals",
+                "path": "response.shape.selected",
+                "value": [
+                  "cylinder"
+                ]
+              },
+              {
+                "kind": "predicate",
+                "name": "cluesShownAtLeast",
+                "args": {
+                  "n": 2
+                }
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.shape.selected",
+                "value": [
+                  "box"
+                ]
+              },
+              "level": 1,
+              "say": "뾰족한 곳이 있었나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.shape.selected",
+                "value": [
+                  "box"
+                ]
+              },
+              "level": 2,
+              "say": "만져 보기를 한 번 더 눌러 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.shape.selected",
+                "value": [
+                  "box"
+                ]
+              },
+              "level": 3,
+              "backtrack": "g1s1u2.shape-families"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "shapes-sort"
+              },
+              "level": 1,
+              "say": "만져 보기를 눌러 무엇이 느껴지는지 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "shapes-sort"
+              },
+              "level": 2,
+              "say": "그림자와 만진 느낌을 함께 생각해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "shapes-sort"
+              },
+              "level": 3,
+              "backtrack": "g1s1u2.shape-families"
+            }
+          ],
+          "concepts": [
+            "g1s1u2.shape-families"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "shape",
+                "label": "모양을 골라요.",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "box",
+                    "label": "상자 모양"
+                  },
+                  {
+                    "id": "cylinder",
+                    "label": "둥근기둥 모양"
+                  },
+                  {
+                    "id": "sphere",
+                    "label": "공 모양"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
