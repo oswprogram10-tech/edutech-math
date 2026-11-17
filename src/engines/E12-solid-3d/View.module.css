@@ -1686,6 +1686,26 @@ button.numCell {
   padding: 0 0.4rem;
 }
 
+.svFixedStage {
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  width: 100%;
+}
+
+/* 힌트 ② 오버레이가 맞출 빈 앵커(무대 줄 전체). 보이지 않고 누르기도 막지 않는다. */
+.svFixedAnchor {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
 .svPickers {
   display: flex;
   flex: 0 0 auto;
@@ -1788,4 +1808,203 @@ button.numCell {
 .svLogRemove {
   min-width: 48px;
   padding: 0;
+}
+
+/* ---- shapes-sort(굴리고 쌓기·만져 맞히기). 1학년 화면이라 모든 조작 단추는 64px 이상이다. ---- */
+.wrap[data-mode='shapes-sort'] {
+  gap: 0.4rem;
+}
+
+.ssScenes {
+  display: flex;
+  flex: 1 1 min(44dvh, 380px);
+  gap: 0.75rem;
+  align-items: stretch;
+  min-height: 160px;
+  min-width: 0;
+}
+
+.ssScene {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+  min-height: 0;
+  align-items: center;
+}
+
+.ssScene[data-testid='ss-tower-scene'] {
+  flex: 0.62 1 0;
+}
+
+.ssSvg {
+  display: block;
+  flex: 1 1 0;
+  min-height: 0;
+  width: 100%;
+  max-height: 100%;
+  border-radius: 16px;
+  background: #fbfaf6;
+  border: 1px solid #d7deea;
+}
+
+.ssActions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: center;
+}
+
+.wrap[data-mode='shapes-sort'] .ssBtn {
+  min-height: 64px;
+  min-width: 64px;
+  font-size: 1.05rem;
+}
+
+.ssPlay {
+  border-color: #1d7a3e;
+  font-weight: 800;
+}
+
+.ssTrials {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ssTrials:empty {
+  display: none;
+}
+
+.ssTrial {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.1rem 0.3rem;
+  border: 1px solid #d7deea;
+  border-radius: 10px;
+  background: #fbfcff;
+}
+
+.ssShelfRow {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.ssShelf {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid #d7deea;
+  border-bottom: 6px solid #c9b88f;
+  border-radius: 12px;
+  background: #f6f1e4;
+}
+
+.wrap[data-mode='shapes-sort'] .ssShelfBtn {
+  position: relative;
+  min-width: 72px;
+  min-height: 72px;
+  padding: 0.15rem;
+  border-width: 3px;
+}
+
+.wrap[data-mode='shapes-sort'] .ssShelfBtn[aria-pressed='true'] {
+  border-width: 5px;
+  border-color: #1d4fa8;
+  background: #dbe7ff;
+}
+
+.ssCheck {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #1d4fa8;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.ssPoses {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.ssMysteryRow {
+  display: flex;
+  flex: 1 1 0;
+  gap: 0.6rem;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 0;
+}
+
+.ssMysteryRow .ssSvg {
+  flex: 1 1 0;
+  height: 100%;
+}
+
+.ssShadow {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 0.2rem;
+  align-items: center;
+  margin: 0;
+  font-size: 0.85rem;
+  color: #3b4558;
+}
+
+.ssClues {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ssClues:empty {
+  display: none;
+}
+
+.ssClue {
+  display: inline-flex;
+  gap: 0.4rem;
+  align-items: center;
+  padding: 0.25rem 0.6rem;
+  border: 2px solid #2f6fde;
+  border-radius: 14px;
+  background: #ffffff;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1d2330;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wrap[data-mode='shapes-sort'] * {
+    transition: none;
+    animation: none;
+  }
 }

@@ -8,6 +8,7 @@
 
 import type { NetBoxSpec, NetTarget } from './net/geometry';
 import type { PrismPiece, PrismPieceType } from './prismnet/model';
+import type { RampOutcome, ShadowView, ShapeItem, ShapeKind, ShapePose } from './shapes/rules';
 import type {
   SketchDot,
   SketchLineStyle,
@@ -19,7 +20,7 @@ import type {
 } from './xray/geometry';
 
 export type SolidMode =
-  'cubes' | 'net-fold' | 'xray' | 'prism-pyramid' | 'prism-net' | 'surface-volume';
+  'cubes' | 'net-fold' | 'xray' | 'prism-pyramid' | 'prism-net' | 'surface-volume' | 'shapes-sort';
 
 export type CubeColor = 'plain' | 'red' | 'blue' | 'yellow' | 'green';
 
@@ -331,8 +332,35 @@ export interface SurfaceVolumeConfig {
   readonly fallback?: unknown;
 }
 
+export type ShapesScene = 'ramp' | 'tower' | 'ramp-and-tower' | 'mystery';
+
+export interface ShapesMysteryConfig {
+  readonly kind: ShapeKind;
+  readonly shadow?: ShadowView;
+}
+
+/** 상자·둥근기둥·공 모양 굴리기·쌓기·만져서 맞히기(`mode:'shapes-sort'`). 결과는 정해진 규칙의 연출이다. */
+export interface ShapesSortConfig {
+  readonly mode: 'shapes-sort';
+  readonly scene?: ShapesScene;
+  /** 선반에 놓일 물건. 종류만 주면 색과 크기를 차례로 정한다. */
+  readonly objects?: readonly (ShapeItem | ShapeKind | string)[];
+  /** 탑 칸 수 1~5. 기본 4. */
+  readonly towerMax?: number;
+  readonly mystery?: ShapesMysteryConfig | null;
+  /** 받기만 하고 무시한다(`"scripted"`). */
+  readonly physics?: unknown;
+  readonly fallback?: unknown;
+}
+
 export type SolidConfig =
-  CubesConfig | NetFoldConfig | XrayConfig | PrismConfig | PrismNetConfig | SurfaceVolumeConfig;
+  | CubesConfig
+  | NetFoldConfig
+  | XrayConfig
+  | PrismConfig
+  | PrismNetConfig
+  | SurfaceVolumeConfig
+  | ShapesSortConfig;
 
 export interface CubeItem {
   readonly x: number;
@@ -580,8 +608,47 @@ export interface SvState {
   readonly logRows: readonly SvLogRow[];
 }
 
+export interface ShapesSettings {
+  readonly scene: ShapesScene;
+  readonly objects: readonly ShapeItem[];
+  readonly towerMax: number;
+  readonly mystery: { readonly kind: ShapeKind; readonly shadow: ShadowView | null } | null;
+}
+
+export interface ShapeTrial {
+  readonly id: string;
+  readonly kind: ShapeKind;
+  readonly pose: ShapePose;
+  readonly result: RampOutcome;
+}
+
+export interface ShapeFall {
+  readonly id: string;
+  readonly kind: ShapeKind;
+  readonly pose: ShapePose;
+}
+
+export interface ShapesState {
+  readonly mode: 'shapes-sort';
+  readonly settings: ShapesSettings;
+  /** 선반에서 고른 물건 id. */
+  readonly selected: string | null;
+  /** 물건마다 놓는 방향(둥근기둥만 바꿀 수 있다). */
+  readonly pose: Readonly<Record<string, ShapePose>>;
+  readonly rampItem: string | null;
+  readonly rampPlayed: boolean;
+  /** ▶ 기록(최대 20, 오래된 것부터). */
+  readonly trials: readonly ShapeTrial[];
+  /** 탑에 쌓인 물건 id(아래부터). */
+  readonly tower: readonly string[];
+  /** 탑에서 떨어진 기록(최대 20). */
+  readonly fallen: readonly ShapeFall[];
+  /** 만져 보기로 드러난 단서 수. */
+  readonly cluesShown: number;
+}
+
 export type SolidState =
-  CubesState | NetFoldState | XrayState | PrismState | PrismNetState | SvState;
+  CubesState | NetFoldState | XrayState | PrismState | PrismNetState | SvState | ShapesState;
 
 export type CubesAction =
   | { readonly type: 'add'; readonly x: number; readonly y: number }
@@ -689,8 +756,19 @@ export type SvAction =
   | { readonly type: 'set-log-surface'; readonly row: number; readonly value: number | null }
   | { readonly type: 'remove-log-row'; readonly row: number };
 
+export type ShapesAction =
+  | { readonly type: 'ss-select'; readonly id: string }
+  | { readonly type: 'ss-set-pose'; readonly id: string; readonly pose: ShapePose }
+  | { readonly type: 'ss-place-ramp' }
+  | { readonly type: 'ss-play' }
+  | { readonly type: 'ss-reset-ramp' }
+  | { readonly type: 'ss-stack' }
+  | { readonly type: 'ss-unstack' }
+  | { readonly type: 'ss-clear-tower' }
+  | { readonly type: 'ss-touch' };
+
 export type SolidAction =
-  CubesAction | NetFoldAction | XrayAction | PrismAction | PrismNetAction | SvAction;
+  CubesAction | NetFoldAction | XrayAction | PrismAction | PrismNetAction | SvAction | ShapesAction;
 
 export const XRAY_DEFAULT_SOLID: XraySolidSpec = { type: 'cuboid', w: 4, d: 3, h: 2 };
 export const XRAY_DEFAULT_VIEW: XrayViewAngle = { yaw: 30, pitch: 30 };

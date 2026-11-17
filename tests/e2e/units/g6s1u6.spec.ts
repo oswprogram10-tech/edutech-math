@@ -515,21 +515,28 @@ test('g6s1u6.A2 — 포장지를 아끼는 상자 3과제 흐름·오개념·wra
   await expectFailedWithHint(page, '기록표에서 겉넓이가 모두 같았나요?', 1);
   await submit(page);
   await expectFailedWithHint(page, '두 상자의 포장지를 칸으로 비교해 봐요.', 2);
-  // fixed-volume은 본 그림이 div(`sv-board`)라 오버레이가 판 전체 칸에 펼쳐진다. 정렬 1px 대신
-  // 오버레이 svg가 판 칸 안에 있고 두 상자 전개도가 모두 그려지는지 본다(메모 '엔진 수정 요청').
+  // fixed-volume도 무대 줄의 앵커 svg(`sv-fixed-stage-anchor`)에 1px 이내로 맞는다.
+  await expectOverlayAligned(main, 'wraps-compare', 'sv-fixed-stage-anchor');
   const wc = main.locator('[data-overlay="wraps-compare"]');
-  await expect(wc).toBeVisible();
   await expect(wc.getByTestId('wraps-compare-long')).toBeVisible();
   await expect(wc.getByTestId('wraps-compare-best')).toBeVisible();
+  // 오버레이 상자가 가로·세로 고르기 단추와 '기록하기'를 가리지 않는다.
   const wcBox = await wc.locator('svg').boundingBox();
-  const panelBox = await main.boundingBox();
   expect(wcBox).not.toBeNull();
-  expect(panelBox).not.toBeNull();
-  if (wcBox && panelBox) {
-    expect(wcBox.x).toBeGreaterThanOrEqual(panelBox.x - 1);
-    expect(wcBox.y).toBeGreaterThanOrEqual(panelBox.y - 1);
-    expect(wcBox.x + wcBox.width).toBeLessThanOrEqual(panelBox.x + panelBox.width + 1);
-    expect(wcBox.y + wcBox.height).toBeLessThanOrEqual(panelBox.y + panelBox.height + 1);
+  const covered = main.locator(
+    '[data-testid^="sv-w-"], [data-testid^="sv-d-"], [data-testid="sv-log-add"]',
+  );
+  const coveredCount = await covered.count();
+  expect(coveredCount).toBeGreaterThan(0);
+  for (let i = 0; i < coveredCount; i += 1) {
+    const box = await covered.nth(i).boundingBox();
+    if (!wcBox || !box) continue;
+    const overlaps =
+      box.x < wcBox.x + wcBox.width &&
+      box.x + box.width > wcBox.x &&
+      box.y < wcBox.y + wcBox.height &&
+      box.y + box.height > wcBox.y;
+    expect(overlaps, `단추 ${i}가 오버레이에 가려짐`).toBe(false);
   }
   await choose(page, 'claim', '맞지 않아요');
   await submit(page);

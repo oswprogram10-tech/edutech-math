@@ -7,6 +7,7 @@ import type { JsonValue, Observation } from '../../core/engine-sdk';
 import { observeNet } from './net/observe';
 import { observePrism } from './prism/observe';
 import { observePrismNet } from './prismnet/observe';
+import { observeShapes } from './shapes/observe';
 import { observeSv } from './sv/observe';
 import { observeXray } from './xray/observe';
 import type { PaintedViewsState, SolidState } from './types';
@@ -33,6 +34,9 @@ function toJsonPainted(painted: PaintedViewsState): Readonly<Record<string, Json
 }
 
 export function observe(state: SolidState): Observation {
+  if (state.mode === 'shapes-sort') {
+    return observeShapes(state);
+  }
   if (state.mode === 'surface-volume') {
     return observeSv(state);
   }

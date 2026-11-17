@@ -177,7 +177,15 @@ export function SurfaceVolumeView({
   );
 
   const stage = fixed ? (
-    <SvStackedBox state={state} />
+    <div className={styles.svFixedStage} data-testid="sv-fixed-stage">
+      <SvStackedBox state={state} />
+      <svg
+        className={styles.svFixedAnchor}
+        data-testid="sv-fixed-stage-anchor"
+        aria-hidden="true"
+        focusable="false"
+      />
+    </div>
   ) : state.step === 'rotate' ? (
     <SvBoxStage
       state={state}

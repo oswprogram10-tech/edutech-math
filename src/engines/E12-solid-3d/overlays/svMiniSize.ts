@@ -8,10 +8,11 @@ export function isoBoxSize(w: number, d: number, h: number, unit: number) {
 
 /**
  * 오버레이를 맞출 본 그림 선택자. steps는 단계별 무대 svg, fixed-volume은 가늘고 긴 상자 그림이라
- * 오버레이가 너무 작아지므로 무대와 고르기 단추를 담은 칸(`sv-board`)에 맞춘다.
+ * 오버레이가 너무 작아지므로 무대 줄 전체를 덮는 빈 앵커 svg(`sv-fixed-stage-anchor`)에 맞춘다.
+ * 앵커는 고르기 단추 위쪽 무대 줄만 덮으므로 오버레이가 단추를 가리지 않는다.
  */
 export function svOverlayAnchor(variant: 'steps' | 'fixed-volume'): string {
   return variant === 'fixed-volume'
-    ? '[data-testid="sv-board"]'
+    ? 'svg[data-testid="sv-fixed-stage-anchor"]'
     : 'svg[data-testid="sv-net-stage"], svg[data-testid="sv-box-stage"], svg[data-testid="sv-fill-stage"]';
 }
