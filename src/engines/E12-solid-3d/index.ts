@@ -14,6 +14,10 @@ import { StandUpOverlay } from './overlays/stand-up';
 import { ViewsTwinsOverlay } from './overlays/views-twins';
 import { XrayPeekOverlay } from './overlays/xray-peek';
 import { createInitialState, reduce } from './reduce';
+import { UnitZoomOverlay } from './overlays/unit-zoom';
+import { UnpaintedBlinkOverlay } from './overlays/unpainted-blink';
+import { WrapsCompareOverlay } from './overlays/wraps-compare';
+import { WrapVsFillOverlay } from './overlays/wrap-vs-fill';
 import { solid3dStrings } from './strings.ko';
 import type { SolidAction, SolidConfig, SolidState } from './types';
 import { SolidView } from './View';
@@ -21,7 +25,7 @@ import { SolidView } from './View';
 const definition: EngineDefinition<SolidConfig, SolidState, SolidAction> = {
   id: 'E12',
   name: solid3dStrings.name,
-  modes: ['cubes', 'net-fold', 'xray', 'prism-pyramid'],
+  modes: ['cubes', 'net-fold', 'xray', 'prism-pyramid', 'surface-volume'],
   createInitialState,
   reduce,
   View: SolidView,
@@ -41,6 +45,10 @@ const definition: EngineDefinition<SolidConfig, SolidState, SolidAction> = {
     'prism-peek': PrismPeekOverlay,
     'stand-up': StandUpOverlay,
     'prism-net-clash': PrismNetClashOverlay,
+    'unpainted-blink': UnpaintedBlinkOverlay,
+    'wrap-vs-fill': WrapVsFillOverlay,
+    'unit-zoom': UnitZoomOverlay,
+    'wraps-compare': WrapsCompareOverlay,
   },
 };
 

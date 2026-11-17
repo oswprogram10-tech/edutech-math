@@ -18,7 +18,8 @@ import type {
   XrayViewAngle,
 } from './xray/geometry';
 
-export type SolidMode = 'cubes' | 'net-fold' | 'xray' | 'prism-pyramid' | 'prism-net';
+export type SolidMode =
+  'cubes' | 'net-fold' | 'xray' | 'prism-pyramid' | 'prism-net' | 'surface-volume';
 
 export type CubeColor = 'plain' | 'red' | 'blue' | 'yellow' | 'green';
 
@@ -311,7 +312,27 @@ export interface PrismNetConfig {
   readonly variant?: unknown;
 }
 
-export type SolidConfig = CubesConfig | NetFoldConfig | XrayConfig | PrismConfig | PrismNetConfig;
+/** 직육면체 겉넓이·부피(`mode:'surface-volume'`). 넓이·부피·개수는 관찰에만 있다. */
+export type SvStepId = 'rotate' | 'unfold' | 'paint' | 'fill-voxels';
+export type SvVariant = 'steps' | 'fixed-volume';
+
+export interface SurfaceVolumeConfig {
+  readonly mode: 'surface-volume';
+  readonly variant?: SvVariant;
+  readonly solid?: { readonly w?: number; readonly d?: number; readonly h?: number };
+  /** 단계 이름 목록. `surface-expr`·`volume-expr`은 받기만 하고 무시한다. */
+  readonly steps?: readonly string[];
+  readonly startStep?: string;
+  readonly layerFill?: boolean;
+  readonly pairColors?: boolean;
+  readonly volume?: number;
+  readonly log?: boolean;
+  readonly stage?: StageMode;
+  readonly fallback?: unknown;
+}
+
+export type SolidConfig =
+  CubesConfig | NetFoldConfig | XrayConfig | PrismConfig | PrismNetConfig | SurfaceVolumeConfig;
 
 export interface CubeItem {
   readonly x: number;
@@ -526,7 +547,41 @@ export interface PrismNetState {
   readonly foldCount: number;
 }
 
-export type SolidState = CubesState | NetFoldState | XrayState | PrismState | PrismNetState;
+export interface SvSettings {
+  readonly variant: SvVariant;
+  /** steps: 설정의 solid(1~6). fixed-volume: 처음 상자(1×1×V). */
+  readonly solid: { readonly w: number; readonly d: number; readonly h: number };
+  readonly steps: readonly SvStepId[];
+  readonly layerFill: boolean;
+  readonly pairColors: boolean;
+  readonly volume: number;
+  readonly log: boolean;
+}
+
+export interface SvLogRow {
+  readonly w: number;
+  readonly d: number;
+  readonly h: number;
+  readonly surface: number | null;
+}
+
+export interface SvState {
+  readonly mode: 'surface-volume';
+  readonly settings: SvSettings;
+  readonly step: SvStepId;
+  readonly view: XrayViewAngle;
+  readonly unfolded: boolean;
+  /** 칠한 면(고정 순서). */
+  readonly painted: readonly XrayFaceId[];
+  /** 채운 쌓기나무 `[x, y, z]`(사전순). */
+  readonly filled: readonly (readonly [number, number, number])[];
+  readonly layer: number;
+  readonly dims: readonly [number, number, number];
+  readonly logRows: readonly SvLogRow[];
+}
+
+export type SolidState =
+  CubesState | NetFoldState | XrayState | PrismState | PrismNetState | SvState;
 
 export type CubesAction =
   | { readonly type: 'add'; readonly x: number; readonly y: number }
@@ -618,7 +673,24 @@ export type PrismNetAction =
   | { readonly type: 'clear' }
   | { readonly type: 'toggle-fold' };
 
-export type SolidAction = CubesAction | NetFoldAction | XrayAction | PrismAction | PrismNetAction;
+export type SvAction =
+  | Extract<XrayAction, { readonly type: 'set-view' | 'rotate-view' }>
+  | { readonly type: 'go-step'; readonly step: SvStepId }
+  | { readonly type: 'toggle-unfold' }
+  | { readonly type: 'paint-face'; readonly face: XrayFaceId }
+  | { readonly type: 'clear-paint' }
+  | { readonly type: 'place-cube'; readonly x: number; readonly y: number }
+  | { readonly type: 'remove-cube'; readonly x: number; readonly y: number }
+  | { readonly type: 'fill-layer' }
+  | { readonly type: 'set-layer'; readonly layer: number }
+  | { readonly type: 'clear-cubes' }
+  | { readonly type: 'set-dims'; readonly w: number; readonly d: number }
+  | { readonly type: 'add-log-row' }
+  | { readonly type: 'set-log-surface'; readonly row: number; readonly value: number | null }
+  | { readonly type: 'remove-log-row'; readonly row: number };
+
+export type SolidAction =
+  CubesAction | NetFoldAction | XrayAction | PrismAction | PrismNetAction | SvAction;
 
 export const XRAY_DEFAULT_SOLID: XraySolidSpec = { type: 'cuboid', w: 4, d: 3, h: 2 };
 export const XRAY_DEFAULT_VIEW: XrayViewAngle = { yaw: 30, pitch: 30 };

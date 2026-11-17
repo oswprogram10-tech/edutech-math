@@ -5,9 +5,15 @@ import { CubesView } from './views/CubesView';
 import { NetFoldView } from './views/NetFoldView';
 import { PrismNetView } from './views/PrismNetView';
 import { PrismView } from './views/PrismView';
+import { SurfaceVolumeView } from './views/SurfaceVolumeView';
 import { XrayView } from './views/XrayView';
 
 export function SolidView(props: EngineViewProps<SolidConfig, SolidState, SolidAction>) {
+  if (props.state.mode === 'surface-volume') {
+    const svConfig =
+      props.config?.mode === 'surface-volume' ? props.config : { mode: 'surface-volume' as const };
+    return <SurfaceVolumeView {...props} config={svConfig} state={props.state} />;
+  }
   if (props.state.mode === 'prism-net') {
     const prismNetConfig =
       props.config?.mode === 'net-fold' && props.config.target === 'prism'
@@ -34,7 +40,8 @@ export function SolidView(props: EngineViewProps<SolidConfig, SolidState, SolidA
   const cubesConfig: CubesConfig =
     props.config?.mode === 'net-fold' ||
     props.config?.mode === 'xray' ||
-    props.config?.mode === 'prism-pyramid'
+    props.config?.mode === 'prism-pyramid' ||
+    props.config?.mode === 'surface-volume'
       ? {}
       : (props.config ?? {});
   return <CubesView {...props} config={cubesConfig} state={props.state} />;

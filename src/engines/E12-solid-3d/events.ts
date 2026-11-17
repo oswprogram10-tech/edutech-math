@@ -8,6 +8,7 @@ import type { EngineEvent, EnginePredicate, JsonValue, Observation } from '../..
 import { emitNet, netPredicates } from './net/predicates';
 import { emitPrismNet, prismNetPredicates } from './prismnet/predicates';
 import { emitPrism, prismAllMarked, prismMarkedCountIs, prismPredicates } from './prism/predicates';
+import { emitSv, svPredicates } from './sv/predicates';
 import { emitXray, xrayPredicates } from './xray/predicates';
 import type { CubeCoord, ProjectionView, SolidState } from './types';
 import {
@@ -43,6 +44,14 @@ export const EVENT_NAMES = [
   'piece-removed',
   'prism-net-folded',
   'prism-net-unfolded',
+  'sv-step-changed',
+  'sv-unfold-toggled',
+  'sv-face-painted',
+  'sv-cube-placed',
+  'sv-cube-removed',
+  'sv-dims-changed',
+  'sv-log-row-added',
+  'sv-log-surface-set',
 ] as const;
 
 function isRecord(value: JsonValue | undefined): value is Readonly<Record<string, JsonValue>> {
@@ -395,12 +404,16 @@ export const predicates: Readonly<Record<string, EnginePredicate>> = {
   ...xrayPredicates,
   ...prismPredicates,
   ...prismNetPredicates,
+  ...svPredicates,
   markedCountIs: splitByMode(xrayPredicates['markedCountIs'], prismMarkedCountIs),
   allMarked: splitByMode(xrayPredicates['allMarked'], prismAllMarked),
 };
 
 export function emit(prev: SolidState, next: SolidState): EngineEvent[] {
   if (prev === next) return [];
+  if (prev.mode === 'surface-volume' && next.mode === 'surface-volume') {
+    return emitSv(prev, next);
+  }
   if (prev.mode === 'prism-net' && next.mode === 'prism-net') {
     return emitPrismNet(prev, next);
   }

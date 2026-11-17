@@ -38,8 +38,8 @@ function taskConfig(taskId: string): Record<string, unknown> {
 // 첫 화면 기준(뷰포트별): 판이 '확인하기'까지 한 화면에 다 들어오면 'fit', 아니면 'reachable'.
 const FIT_A1_T1: Record<string, 'fit' | 'reachable'> = {};
 const FIT_A2_T1: Record<string, 'fit' | 'reachable'> = {};
-// 크롬북(1366×768)은 카드 세 장이 두 줄로 줄바꿈되어 '다' 카드 아래가 판 안 스크롤로 닿는다.
-const FIT_A2_T3: Record<string, 'fit' | 'reachable'> = { chromebook: 'reachable' };
+// T145: 카드가 3장 이하이면 판 폭에 맞춰 한 줄에 놓이므로 크롬북도 카드 세 장이 첫 화면에 다 들어온다.
+const FIT_A2_T3: Record<string, 'fit' | 'reachable'> = {};
 
 function slot(page: Page, name: string): Locator {
   return page.getByTestId(`runner-slot-${name}`);
