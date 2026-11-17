@@ -5,6 +5,7 @@
  * - 잘못된 predicate 인자는 예외를 던지지 않고 false를 돌려준다.
  */
 import type { EngineEvent, EnginePredicate, JsonValue, Observation } from '../../core/engine-sdk';
+import { cylinderNetPredicates, cylinderNetValid, emitCylinderNet } from './cylnet/predicates';
 import { emitLathe, lathePredicates, latheSolidIs } from './lathe/predicates';
 import { emitNet, netPredicates } from './net/predicates';
 import { emitPrismNet, prismNetPredicates } from './prismnet/predicates';
@@ -62,6 +63,10 @@ export const EVENT_NAMES = [
   'edge-attached',
   'angle-changed',
   'laser-set',
+  'cyl-rolled',
+  'cyl-net-resized',
+  'cyl-net-folded',
+  'cyl-net-unfolded',
 ] as const;
 
 function isRecord(value: JsonValue | undefined): value is Readonly<Record<string, JsonValue>> {
@@ -414,6 +419,14 @@ function splitSolidIs(prismFn: EnginePredicate): EnginePredicate {
     observation['mode'] === 'lathe' ? latheSolidIs(observation, args) : prismFn(observation, args);
 }
 
+/** `netValid`는 net-fold와 cylinder-net이 같은 이름을 쓴다. 관찰의 `mode`로 나눈다. */
+function splitNetValid(netFn: EnginePredicate): EnginePredicate {
+  return (observation, args) =>
+    observation['mode'] === 'cylinder-net'
+      ? cylinderNetValid(observation, args)
+      : netFn(observation, args);
+}
+
 export const predicates: Readonly<Record<string, EnginePredicate>> = {
   ...guardedCubesPredicates,
   ...netPredicates,
@@ -423,6 +436,8 @@ export const predicates: Readonly<Record<string, EnginePredicate>> = {
   ...svPredicates,
   ...shapesPredicates,
   ...lathePredicates,
+  ...cylinderNetPredicates,
+  netValid: splitNetValid(netPredicates['netValid'] ?? (() => false)),
   solidIs: splitSolidIs(prismPredicates['solidIs'] ?? (() => false)),
   markedCountIs: splitByMode(xrayPredicates['markedCountIs'], prismMarkedCountIs),
   allMarked: splitByMode(xrayPredicates['allMarked'], prismAllMarked),
@@ -441,6 +456,9 @@ export function emit(prev: SolidState, next: SolidState): EngineEvent[] {
   }
   if (prev.mode === 'prism-net' && next.mode === 'prism-net') {
     return emitPrismNet(prev, next);
+  }
+  if (prev.mode === 'cylinder-net' && next.mode === 'cylinder-net') {
+    return emitCylinderNet(prev, next);
   }
   if (prev.mode === 'net-fold' && next.mode === 'net-fold') {
     return emitNet(prev, next);

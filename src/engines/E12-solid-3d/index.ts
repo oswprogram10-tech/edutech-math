@@ -10,6 +10,7 @@ import { HiddenRevealOverlay } from './overlays/hidden-reveal';
 import { NGrowOverlay } from './overlays/n-grow';
 import { PrismNetClashOverlay } from './overlays/prism-net-clash';
 import { PrismPeekOverlay } from './overlays/prism-peek';
+import { RollMatchOverlay } from './overlays/roll-match';
 import { RowLineupOverlay } from './overlays/row-lineup';
 import { SideEyeOverlay } from './overlays/side-eye';
 import { StandUpOverlay } from './overlays/stand-up';
@@ -55,6 +56,7 @@ const definition: EngineDefinition<SolidConfig, SolidState, SolidAction> = {
     'turn-same': TurnSameOverlay,
     'axis-compare': AxisCompareOverlay,
     'n-grow': NGrowOverlay,
+    'roll-match': RollMatchOverlay,
   },
 };
 

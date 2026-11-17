@@ -2,6 +2,7 @@
 import type { EngineViewProps } from '../../core/engine-sdk';
 import type { CubesConfig, SolidAction, SolidConfig, SolidState } from './types';
 import { CubesView } from './views/CubesView';
+import { CylinderNetView } from './views/CylinderNetView';
 import { LatheView } from './views/LatheView';
 import { NetFoldView } from './views/NetFoldView';
 import { PrismNetView } from './views/PrismNetView';
@@ -32,9 +33,18 @@ export function SolidView(props: EngineViewProps<SolidConfig, SolidState, SolidA
         : { mode: 'net-fold' as const, target: 'prism' as const };
     return <PrismNetView {...props} config={prismNetConfig} state={props.state} />;
   }
+  if (props.state.mode === 'cylinder-net') {
+    const cylinderConfig =
+      props.config?.mode === 'net-fold' && props.config.target === 'cylinder'
+        ? props.config
+        : { mode: 'net-fold' as const, target: 'cylinder' as const };
+    return <CylinderNetView {...props} config={cylinderConfig} state={props.state} />;
+  }
   if (props.state.mode === 'net-fold') {
     const netConfig =
-      props.config?.mode === 'net-fold' && props.config.target !== 'prism'
+      props.config?.mode === 'net-fold' &&
+      props.config.target !== 'prism' &&
+      props.config.target !== 'cylinder'
         ? props.config
         : { mode: 'net-fold' as const };
     return <NetFoldView {...props} config={netConfig} state={props.state} />;

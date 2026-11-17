@@ -2162,3 +2162,65 @@ button.numCell {
     }
   }
 }
+
+/* T150 cylinder-net(원기둥 전개도) 전용 스타일 (다른 모드 배치에는 영향을 주지 않는다) */
+.wrap[data-mode='cylinder-net'] .instructions {
+  flex: 0 0 auto;
+}
+
+/* 무대 테두리가 칸 가장자리에서 반올림으로 잘리지 않게 여백을 둔다. */
+.wrap[data-mode='cylinder-net'] .boardArea {
+  padding: 2px;
+  box-sizing: border-box;
+}
+
+.wrap[data-mode='cylinder-net'] .sideStack {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: flex-start;
+  align-items: flex-start;
+  gap: 0.5rem 1rem;
+}
+
+.wrap[data-mode='cylinder-net'] .xrayStageSvg:focus-visible {
+  outline: 3px solid #1d4fa8;
+  outline-offset: 2px;
+}
+
+.cnGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.cnGroupLabel {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #3d485c;
+}
+
+.cnBtnRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+/* 가로로 넓은 판(크롬북·전자칠판)은 무대 옆에 둔다. */
+@media (orientation: landscape) {
+  @container (min-width: 560px) {
+    .wrap[data-mode='cylinder-net'] .sideStack {
+      flex: 0 1 min(46%, 380px);
+      min-width: 280px;
+    }
+  }
+
+  @container (min-width: 940px) {
+    .wrap[data-mode='cylinder-net'] .sideStack {
+      flex: 0 1 min(50%, 580px);
+      min-width: 440px;
+    }
+  }
+}
