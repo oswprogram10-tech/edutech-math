@@ -5,7 +5,9 @@ import { observe } from './observe';
 import { FoldCollisionOverlay } from './overlays/fold-collision';
 import { FoldPathOverlay } from './overlays/fold-path';
 import { ApexGatherOverlay } from './overlays/apex-gather';
+import { AxisCompareOverlay } from './overlays/axis-compare';
 import { HiddenRevealOverlay } from './overlays/hidden-reveal';
+import { NGrowOverlay } from './overlays/n-grow';
 import { PrismNetClashOverlay } from './overlays/prism-net-clash';
 import { PrismPeekOverlay } from './overlays/prism-peek';
 import { RowLineupOverlay } from './overlays/row-lineup';
@@ -26,7 +28,7 @@ import { SolidView } from './View';
 const definition: EngineDefinition<SolidConfig, SolidState, SolidAction> = {
   id: 'E12',
   name: solid3dStrings.name,
-  modes: ['cubes', 'net-fold', 'xray', 'prism-pyramid', 'surface-volume', 'shapes-sort'],
+  modes: ['cubes', 'net-fold', 'xray', 'prism-pyramid', 'surface-volume', 'shapes-sort', 'lathe'],
   createInitialState,
   reduce,
   View: SolidView,
@@ -51,6 +53,8 @@ const definition: EngineDefinition<SolidConfig, SolidState, SolidAction> = {
     'unit-zoom': UnitZoomOverlay,
     'wraps-compare': WrapsCompareOverlay,
     'turn-same': TurnSameOverlay,
+    'axis-compare': AxisCompareOverlay,
+    'n-grow': NGrowOverlay,
   },
 };
 

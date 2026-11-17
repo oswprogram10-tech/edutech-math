@@ -10,6 +10,13 @@ import type { NetBoxSpec, NetTarget } from './net/geometry';
 import type { PrismPiece, PrismPieceType } from './prismnet/model';
 import type { RampOutcome, ShadowView, ShapeItem, ShapeKind, ShapePose } from './shapes/rules';
 import type {
+  LatheEdge,
+  LathePlane,
+  LatheProfile,
+  LatheSolid,
+  SectionShape,
+} from './lathe/profiles';
+import type {
   SketchDot,
   SketchLineStyle,
   SketchSegment,
@@ -20,7 +27,14 @@ import type {
 } from './xray/geometry';
 
 export type SolidMode =
-  'cubes' | 'net-fold' | 'xray' | 'prism-pyramid' | 'prism-net' | 'surface-volume' | 'shapes-sort';
+  | 'cubes'
+  | 'net-fold'
+  | 'xray'
+  | 'prism-pyramid'
+  | 'prism-net'
+  | 'surface-volume'
+  | 'shapes-sort'
+  | 'lathe';
 
 export type CubeColor = 'plain' | 'red' | 'blue' | 'yellow' | 'green';
 
@@ -353,6 +367,23 @@ export interface ShapesSortConfig {
   readonly fallback?: unknown;
 }
 
+/** 평면도형을 축으로 돌려 원기둥·원뿔·구를 만들고 레이저로 단면을 보는 모드(`mode:'lathe'`). */
+export interface LatheConfig {
+  readonly mode: 'lathe';
+  /** 고를 수 있는 도형 카드. `'custom'`은 받기만 하고 무시한다. 기본은 셋 모두. */
+  readonly profiles?: readonly (LatheProfile | string)[];
+  /** 받기만 한다(`"vertical"`). */
+  readonly axis?: unknown;
+  /** 처음부터 붙여 360° 돌린 상태로 시작한다(단면 과제용). */
+  readonly preset?: { readonly profile: LatheProfile; readonly edge: LatheEdge } | null;
+  readonly crossSection?: { readonly planes?: readonly LathePlane[] } | false;
+  /** false면 단면 패널에 그림 대신 "?"를 보인다(예측 과제). 기본 true. */
+  readonly showSection?: boolean;
+  /** false면 회전 손잡이를 숨긴다(preset 과제). 기본 true. */
+  readonly rotateHandle?: boolean;
+  readonly fallback?: unknown;
+}
+
 export type SolidConfig =
   | CubesConfig
   | NetFoldConfig
@@ -360,7 +391,8 @@ export type SolidConfig =
   | PrismConfig
   | PrismNetConfig
   | SurfaceVolumeConfig
-  | ShapesSortConfig;
+  | ShapesSortConfig
+  | LatheConfig;
 
 export interface CubeItem {
   readonly x: number;
@@ -647,8 +679,40 @@ export interface ShapesState {
   readonly cluesShown: number;
 }
 
+export interface LatheSettings {
+  readonly profiles: readonly LatheProfile[];
+  readonly preset: { readonly profile: LatheProfile; readonly edge: LatheEdge } | null;
+  readonly planes: readonly LathePlane[];
+  readonly showSection: boolean;
+  readonly rotateHandle: boolean;
+}
+
+export interface LatheLaser {
+  readonly plane: LathePlane;
+  /** 수평 레이저 높이 0~10(정수). 축을 포함하는 레이저에서는 쓰지 않는다. */
+  readonly t: number;
+}
+
+export interface LatheState {
+  readonly mode: 'lathe';
+  readonly settings: LatheSettings;
+  readonly profile: LatheProfile | null;
+  readonly edge: LatheEdge | null;
+  /** 회전 각도 0~360(30 단위). 360이면 입체 완성. */
+  readonly angle: number;
+  readonly laser: LatheLaser | null;
+  readonly view: XrayViewAngle;
+}
+
 export type SolidState =
-  CubesState | NetFoldState | XrayState | PrismState | PrismNetState | SvState | ShapesState;
+  | CubesState
+  | NetFoldState
+  | XrayState
+  | PrismState
+  | PrismNetState
+  | SvState
+  | ShapesState
+  | LatheState;
 
 export type CubesAction =
   | { readonly type: 'add'; readonly x: number; readonly y: number }
@@ -767,8 +831,26 @@ export type ShapesAction =
   | { readonly type: 'ss-clear-tower' }
   | { readonly type: 'ss-touch' };
 
+export type LatheAction =
+  | Extract<XrayAction, { readonly type: 'set-view' | 'rotate-view' }>
+  | { readonly type: 'lt-pick-profile'; readonly profile: LatheProfile }
+  | { readonly type: 'lt-attach'; readonly edge: LatheEdge }
+  | { readonly type: 'lt-set-angle'; readonly angle: number }
+  | { readonly type: 'lt-reset' }
+  | { readonly type: 'lt-set-laser'; readonly plane: LathePlane; readonly t: number }
+  | { readonly type: 'lt-clear-laser' };
+
 export type SolidAction =
-  CubesAction | NetFoldAction | XrayAction | PrismAction | PrismNetAction | SvAction | ShapesAction;
+  | CubesAction
+  | NetFoldAction
+  | XrayAction
+  | PrismAction
+  | PrismNetAction
+  | SvAction
+  | ShapesAction
+  | LatheAction;
+
+export type { LatheEdge, LathePlane, LatheProfile, LatheSolid, SectionShape };
 
 export const XRAY_DEFAULT_SOLID: XraySolidSpec = { type: 'cuboid', w: 4, d: 3, h: 2 };
 export const XRAY_DEFAULT_VIEW: XrayViewAngle = { yaw: 30, pitch: 30 };

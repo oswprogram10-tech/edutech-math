@@ -2,6 +2,7 @@
 import type { EngineViewProps } from '../../core/engine-sdk';
 import type { CubesConfig, SolidAction, SolidConfig, SolidState } from './types';
 import { CubesView } from './views/CubesView';
+import { LatheView } from './views/LatheView';
 import { NetFoldView } from './views/NetFoldView';
 import { PrismNetView } from './views/PrismNetView';
 import { PrismView } from './views/PrismView';
@@ -10,6 +11,10 @@ import { SurfaceVolumeView } from './views/SurfaceVolumeView';
 import { XrayView } from './views/XrayView';
 
 export function SolidView(props: EngineViewProps<SolidConfig, SolidState, SolidAction>) {
+  if (props.state.mode === 'lathe') {
+    const latheConfig = props.config?.mode === 'lathe' ? props.config : { mode: 'lathe' as const };
+    return <LatheView {...props} config={latheConfig} state={props.state} />;
+  }
   if (props.state.mode === 'shapes-sort') {
     const shapesConfig =
       props.config?.mode === 'shapes-sort' ? props.config : { mode: 'shapes-sort' as const };
@@ -48,7 +53,8 @@ export function SolidView(props: EngineViewProps<SolidConfig, SolidState, SolidA
     props.config?.mode === 'xray' ||
     props.config?.mode === 'prism-pyramid' ||
     props.config?.mode === 'surface-volume' ||
-    props.config?.mode === 'shapes-sort'
+    props.config?.mode === 'shapes-sort' ||
+    props.config?.mode === 'lathe'
       ? {}
       : (props.config ?? {});
   return <CubesView {...props} config={cubesConfig} state={props.state} />;

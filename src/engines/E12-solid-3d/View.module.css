@@ -2008,3 +2008,157 @@ button.numCell {
     animation: none;
   }
 }
+
+/* T149 lathe 전용 스타일 (다른 모드 배치에는 영향을 주지 않는다) */
+.wrap[data-mode='lathe'] .instructions {
+  flex: 0 0 auto;
+}
+
+/* 무대 테두리가 칸 가장자리에서 반올림으로 잘리지 않게 여백을 둔다. */
+.wrap[data-mode='lathe'] .boardArea {
+  padding: 2px;
+  box-sizing: border-box;
+}
+
+/* 만들기 칸과 자르기 칸을 가로로 놓고, 자리가 좁으면 아래로 접는다. */
+.wrap[data-mode='lathe'] .ltSide {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: flex-start;
+  align-items: flex-start;
+  gap: 0.5rem 1rem;
+}
+
+.ltCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.ltRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.ltBtnCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.wrap[data-mode='lathe'] .ltCard {
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  padding: 0;
+  border-width: 3px;
+}
+
+.wrap[data-mode='lathe'] .ltCard[aria-pressed='true'] {
+  border-width: 5px;
+}
+
+.wrap[data-mode='lathe'] .ltEdge {
+  flex-direction: column;
+  gap: 0;
+  min-width: 56px;
+  padding: 0.1rem 0.3rem;
+  font-size: 0.85rem;
+  line-height: 1.1;
+}
+
+.wrap[data-mode='lathe'] .ltEdge[aria-pressed='true'] {
+  border-width: 4px;
+}
+
+.ltDial {
+  flex: 0 0 auto;
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+}
+
+.ltDial:focus-visible {
+  outline: 3px solid #1d4fa8;
+  outline-offset: 2px;
+}
+
+.ltDial[data-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ltCutRow {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.ltSlider {
+  flex: 0 0 auto;
+  width: 48px;
+  min-height: 140px;
+  margin: 0;
+  writing-mode: vertical-lr;
+  direction: rtl;
+  accent-color: #dc2626;
+  -webkit-appearance: slider-vertical;
+  appearance: auto;
+}
+
+.ltSection {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 0.2rem;
+  width: 150px;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid #d7deea;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.ltSectionCaption {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #3d485c;
+}
+
+.ltSectionSvg {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid #d7deea;
+}
+
+.ltSectionHint {
+  font-size: 0.8rem;
+  color: var(--muted, #5b6577);
+}
+
+/* 가로로 넓은 판(크롬북·전자칠판)은 무대 옆에 둔다. */
+@media (orientation: landscape) {
+  @container (min-width: 560px) {
+    .wrap[data-mode='lathe'] .sideStack {
+      flex: 0 1 min(46%, 380px);
+      min-width: 280px;
+    }
+  }
+
+  @container (min-width: 940px) {
+    .wrap[data-mode='lathe'] .sideStack {
+      flex: 0 1 min(50%, 580px);
+      min-width: 440px;
+    }
+  }
+}

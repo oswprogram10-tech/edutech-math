@@ -5,6 +5,7 @@
  * - 잘못된 predicate 인자는 예외를 던지지 않고 false를 돌려준다.
  */
 import type { EngineEvent, EnginePredicate, JsonValue, Observation } from '../../core/engine-sdk';
+import { emitLathe, lathePredicates, latheSolidIs } from './lathe/predicates';
 import { emitNet, netPredicates } from './net/predicates';
 import { emitPrismNet, prismNetPredicates } from './prismnet/predicates';
 import { emitPrism, prismAllMarked, prismMarkedCountIs, prismPredicates } from './prism/predicates';
@@ -57,6 +58,10 @@ export const EVENT_NAMES = [
   'shape-stacked',
   'shape-fell',
   'clue-shown',
+  'profile-picked',
+  'edge-attached',
+  'angle-changed',
+  'laser-set',
 ] as const;
 
 function isRecord(value: JsonValue | undefined): value is Readonly<Record<string, JsonValue>> {
@@ -403,6 +408,12 @@ function splitByMode(
       : (xrayFn?.(observation, args) ?? false);
 }
 
+/** `solidIs`는 prism-pyramid와 lathe가 같은 이름을 쓴다. 관찰의 `mode`로 나눈다. */
+function splitSolidIs(prismFn: EnginePredicate): EnginePredicate {
+  return (observation, args) =>
+    observation['mode'] === 'lathe' ? latheSolidIs(observation, args) : prismFn(observation, args);
+}
+
 export const predicates: Readonly<Record<string, EnginePredicate>> = {
   ...guardedCubesPredicates,
   ...netPredicates,
@@ -411,12 +422,17 @@ export const predicates: Readonly<Record<string, EnginePredicate>> = {
   ...prismNetPredicates,
   ...svPredicates,
   ...shapesPredicates,
+  ...lathePredicates,
+  solidIs: splitSolidIs(prismPredicates['solidIs'] ?? (() => false)),
   markedCountIs: splitByMode(xrayPredicates['markedCountIs'], prismMarkedCountIs),
   allMarked: splitByMode(xrayPredicates['allMarked'], prismAllMarked),
 };
 
 export function emit(prev: SolidState, next: SolidState): EngineEvent[] {
   if (prev === next) return [];
+  if (prev.mode === 'lathe' && next.mode === 'lathe') {
+    return emitLathe(prev, next);
+  }
   if (prev.mode === 'shapes-sort' && next.mode === 'shapes-sort') {
     return emitShapes(prev, next);
   }
