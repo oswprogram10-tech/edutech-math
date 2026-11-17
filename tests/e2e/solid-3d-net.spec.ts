@@ -307,3 +307,83 @@ test('크롬북 [8,10] 모눈 크기·넘침 측정', async ({ page }, testInfo)
     );
   }
 });
+
+// ---------------------------------------------------------------- T141 카드만 보기
+
+function faceAt(x: number, y: number) {
+  return { at: [x, y], w: 1, h: 1 };
+}
+
+const CARDS_ONLY_CONFIG = {
+  target: 'cube',
+  grid: [3, 3],
+  editable: false,
+  foldable: false,
+  netCards: [
+    {
+      id: 'ga',
+      label: '가',
+      faces: [faceAt(1, 0), faceAt(0, 1), faceAt(1, 1), faceAt(2, 1), faceAt(1, 2), faceAt(1, 3)],
+    },
+    {
+      id: 'na',
+      label: '나',
+      faces: [faceAt(0, 1), faceAt(1, 1), faceAt(2, 1), faceAt(3, 1), faceAt(4, 1), faceAt(1, 0)],
+    },
+    {
+      id: 'da',
+      label: '다',
+      faces: [faceAt(0, 0), faceAt(1, 0), faceAt(1, 1), faceAt(2, 1), faceAt(2, 2), faceAt(3, 2)],
+    },
+  ],
+};
+
+async function openNetNoGrid(page: Page, config: Record<string, unknown>) {
+  const merged = { animate: false, ...config };
+  await page.goto(`/?config=${encodeURIComponent(JSON.stringify(merged))}#/sandbox/E12`);
+  await expect(page.getByRole('heading', { name: '3D 입체' })).toBeVisible();
+  await page.getByLabel('모드').selectOption('net-fold');
+  await expect(page.getByTestId('net-view')).toBeVisible();
+}
+
+test('카드만 보기: 모눈·접기 단추 없이 카드 3장이 잘리지 않고 보인다', async ({ page }) => {
+  await openNetNoGrid(page, CARDS_ONLY_CONFIG);
+  const view = page.getByTestId('net-view');
+  await expect(view).toHaveAttribute('data-net-cards-only', 'true');
+  await expect(page.getByTestId('net-grid')).toHaveCount(0);
+  await expect(page.getByTestId('net-fold-stage')).toHaveCount(0);
+  await expect(page.getByTestId('net-fold-toggle')).toHaveCount(0);
+  await expect(page.getByTestId('net-clear')).toHaveCount(0);
+  for (const id of ['ga', 'na', 'da']) {
+    await expect(page.getByTestId(`net-card-${id}`)).toBeInViewport({ ratio: 1 });
+  }
+  await expect(page.getByLabel('전개도 카드 가')).toBeVisible();
+
+  // 한 줄: 세 카드의 위쪽 좌표가 같다.
+  const tops = await Promise.all(
+    ['ga', 'na', 'da'].map(
+      async (id) => (await page.getByTestId(`net-card-${id}`).boundingBox())?.y,
+    ),
+  );
+  expect(new Set(tops.map((t) => Math.round(t ?? -1))).size).toBe(1);
+
+  // 조작할 것이 없다: F 키가 아무 일도 하지 않는다.
+  await page.keyboard.press('f');
+  await expect(page.getByTestId('net-fold-stage')).toHaveCount(0);
+  await expect(view).toHaveAttribute('data-net-cards-only', 'true');
+
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+  });
+  await expect(view).toHaveScreenshot('solid-3d-net-cards-only.png', {
+    maxDiffPixelRatio: 0.02,
+    animations: 'disabled',
+  });
+});
+
+test('카드만 보기 회귀: foldable만 켜면 모눈과 접기 단추가 있다', async ({ page }) => {
+  await openNet(page, { ...CARDS_ONLY_CONFIG, foldable: true });
+  await expect(page.getByTestId('net-view')).not.toHaveAttribute('data-net-cards-only', 'true');
+  await expect(page.getByTestId('net-grid')).toBeVisible();
+  await expect(page.getByTestId('net-fold-toggle')).toBeVisible();
+});

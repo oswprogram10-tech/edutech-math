@@ -8,6 +8,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { EngineViewProps } from '../../../core/engine-sdk';
 import { allowedFaceShapePairs, evaluateNet } from '../net/geometry';
+import { isNetCardsOnly } from '../net/cards-only';
 import { canPlaceFace, findFaceAtCell } from '../net/reduce';
 import { NET_PLAIN_STYLE } from '../net/visuals';
 import { solid3dStrings as S } from '../strings.ko';
@@ -234,6 +235,27 @@ export function NetFoldView({
       }
     }
   };
+
+  if (isNetCardsOnly(state)) {
+    return (
+      <div
+        className={styles.wrap}
+        data-mode="net-fold"
+        data-rich-side="true"
+        data-net-cards-only="true"
+        data-testid="net-view"
+        onKeyDown={handleKeyDown}
+      >
+        <p className={styles.instructions}>{S.net.instructionsCards}</p>
+        <div role="status" aria-live="polite" className={styles.srOnly}>
+          {liveMessage}
+        </div>
+        <div className={styles.netCardsOnlyArea}>
+          <NetCardsPanel state={state} size="large" />
+        </div>
+      </div>
+    );
+  }
 
   const hasRemovable =
     state.faces.some((f) => !f.locked) || state.folded || state.prediction !== null;
