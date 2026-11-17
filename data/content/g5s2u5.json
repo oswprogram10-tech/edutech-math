@@ -1,0 +1,1802 @@
+{
+  "unit": "g5s2u5",
+  "title": "직육면체와 정육면체",
+  "activities": [
+    {
+      "id": "g5s2u5.A1",
+      "title": "엑스레이 겨냥도",
+      "tasks": [
+        {
+          "id": "g5s2u5.A1.T1",
+          "prompt": "직육면체를 돌려 보며 면, 모서리, 꼭짓점을 눌러 표시해 보세요. 각각 몇 개인가요?",
+          "engine": "E12",
+          "mode": "xray",
+          "cpa": "C",
+          "config": {
+            "mode": "xray",
+            "solid": {
+              "type": "cuboid",
+              "w": 4,
+              "d": 3,
+              "h": 2
+            },
+            "xrayToggle": false,
+            "tools": [
+              "face",
+              "edge",
+              "vertex"
+            ]
+          },
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "faces",
+                "label": "면의 수",
+                "forms": [
+                  "integer"
+                ]
+              },
+              {
+                "kind": "number",
+                "id": "edges",
+                "label": "모서리의 수",
+                "forms": [
+                  "integer"
+                ]
+              },
+              {
+                "kind": "number",
+                "id": "vertices",
+                "label": "꼭짓점의 수",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "equals",
+                "path": "response.faces.value",
+                "value": "6"
+              },
+              {
+                "kind": "equals",
+                "path": "response.edges.value",
+                "value": "12"
+              },
+              {
+                "kind": "equals",
+                "path": "response.vertices.value",
+                "value": "8"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.edges.value",
+                    "value": "9"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.vertices.value",
+                    "value": "7"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.faces.value",
+                    "value": "3"
+                  }
+                ]
+              },
+              "level": 1,
+              "say": "뒤쪽으로 돌려 보면 보이지 않던 모서리가 있을까요?"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.edges.value",
+                    "value": "9"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.vertices.value",
+                    "value": "7"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.faces.value",
+                    "value": "3"
+                  }
+                ]
+              },
+              "level": 2,
+              "say": "숨어 있는 모서리와 꼭짓점을 점선과 빈 동그라미로 비춰 보았어요.",
+              "show": {
+                "engine": "E12",
+                "overlay": "xray-peek"
+              }
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.edges.value",
+                    "value": "9"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.vertices.value",
+                    "value": "7"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.faces.value",
+                    "value": "3"
+                  }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.sketch-hidden-edges"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "xray"
+              },
+              "level": 1,
+              "say": "표시한 것과 아직 표시하지 않은 것을 나누어 세어 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "xray"
+              },
+              "level": 2,
+              "say": "무대를 여러 방향으로 돌려 표시가 없는 곳을 찾아봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "xray"
+              },
+              "level": 3,
+              "backtrack": "g4s2u4.perpendicular-parallel"
+            }
+          ],
+          "concepts": [
+            "g5s2u5.cuboid-parts"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g5s2u5.A1.T2",
+          "prompt": "'면 관계 보기'로 면을 하나씩 눌러 보세요. 서로 평행한 면은 모두 몇 쌍인가요?",
+          "engine": "E12",
+          "mode": "xray",
+          "cpa": "C",
+          "config": {
+            "mode": "xray",
+            "solid": {
+              "type": "cuboid",
+              "w": 4,
+              "d": 3,
+              "h": 2
+            },
+            "tools": [],
+            "faceQuery": true
+          },
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "pairs",
+                "label": "평행한 면의 쌍 수",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.pairs.value",
+            "value": "3"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "xray"
+              },
+              "level": 1,
+              "say": "한 면을 눌렀을 때 함께 칠해지는 면은 몇 개인가요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "xray"
+              },
+              "level": 2,
+              "say": "앞, 옆, 위 면을 차례로 눌러 보고 짝을 적어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "xray"
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.cuboid-parts"
+            }
+          ],
+          "concepts": [
+            "g5s2u5.parallel-perpendicular-faces"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g5s2u5.A1.T3",
+          "prompt": "색칠된 면과 평행한 면을 찾아 눌러 표시해요.",
+          "engine": "E12",
+          "mode": "xray",
+          "cpa": "P",
+          "config": {
+            "mode": "xray",
+            "solid": {
+              "type": "cuboid",
+              "w": 4,
+              "d": 3,
+              "h": 2
+            },
+            "tools": [
+              "face"
+            ],
+            "highlightFace": "front"
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "markedFacesParallelTo",
+            "args": {
+              "face": "front"
+            }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "markedCountIs",
+                "args": {
+                  "kind": "face",
+                  "n": 0
+                }
+              },
+              "level": 1,
+              "say": "색칠된 면의 뒤쪽에는 무엇이 있을까요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "markedCountIs",
+                "args": {
+                  "kind": "face",
+                  "n": 0
+                }
+              },
+              "level": 2,
+              "say": "무대를 돌려 뒤쪽을 살펴봐요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "markedCountIs",
+                "args": {
+                  "kind": "face",
+                  "n": 0
+                }
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.cuboid-parts"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "xray"
+              },
+              "level": 1,
+              "say": "색칠된 면과 만나지 않는 면은 어디일까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "xray"
+              },
+              "level": 2,
+              "say": "두 면을 아무리 늘여도 만나지 않는지 생각해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "xray"
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.cuboid-parts"
+            }
+          ],
+          "concepts": [
+            "g5s2u5.parallel-perpendicular-faces"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g5s2u5.A1.T4",
+          "prompt": "색칠된 면과 수직인 면을 모두 찾아 눌러 표시해요.",
+          "engine": "E12",
+          "mode": "xray",
+          "cpa": "P",
+          "config": {
+            "mode": "xray",
+            "solid": {
+              "type": "cuboid",
+              "w": 4,
+              "d": 3,
+              "h": 2
+            },
+            "tools": [
+              "face"
+            ],
+            "highlightFace": "top"
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "markedFacesPerpendicularTo",
+            "args": {
+              "face": "top"
+            }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "markedCountIs",
+                    "args": {
+                      "kind": "face",
+                      "n": 2
+                    }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "xrayUsedIs",
+                    "args": {
+                      "value": false
+                    }
+                  }
+                ]
+              },
+              "level": 1,
+              "say": "뒤쪽으로 돌려 보면 색칠된 면과 만나는 면이 더 있을까요?"
+            },
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "markedCountIs",
+                    "args": {
+                      "kind": "face",
+                      "n": 2
+                    }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "xrayUsedIs",
+                    "args": {
+                      "value": false
+                    }
+                  }
+                ]
+              },
+              "level": 2,
+              "say": "숨어 있는 모서리를 점선으로 비춰 보았어요.",
+              "show": {
+                "engine": "E12",
+                "overlay": "xray-peek"
+              }
+            },
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "markedCountIs",
+                    "args": {
+                      "kind": "face",
+                      "n": 2
+                    }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "xrayUsedIs",
+                    "args": {
+                      "value": false
+                    }
+                  }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.sketch-hidden-edges"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "xray"
+              },
+              "level": 1,
+              "say": "색칠된 면과 모서리를 함께 쓰는 면을 하나씩 짚어 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "xray"
+              },
+              "level": 2,
+              "say": "색칠된 면의 모서리마다 붙어 있는 면을 찾아봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "xray"
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.cuboid-parts"
+            }
+          ],
+          "concepts": [
+            "g5s2u5.parallel-perpendicular-faces"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g5s2u5.A1.T5",
+          "prompt": "보이는 모서리는 그려 두었어요. 보이지 않는 모서리를 그려 겨냥도를 완성해요.",
+          "engine": "E12",
+          "mode": "xray",
+          "cpa": "P",
+          "config": {
+            "mode": "xray",
+            "solid": {
+              "type": "cuboid",
+              "w": 4,
+              "d": 3,
+              "h": 2
+            },
+            "sketch": {
+              "prefill": "visible"
+            }
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "sketchComplete",
+            "args": {}
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "sketchHiddenDrawnSolid",
+                "args": {}
+              },
+              "level": 1,
+              "say": "보이지 않는 모서리는 어떤 선으로 그릴까요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "sketchHiddenDrawnSolid",
+                "args": {}
+              },
+              "level": 2,
+              "say": "엑스레이로 숨은 모서리를 비춰 보았어요.",
+              "show": {
+                "engine": "E12",
+                "overlay": "xray-peek"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "sketchHiddenDrawnSolid",
+                "args": {}
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.cuboid-parts"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "xray"
+              },
+              "level": 1,
+              "say": "그려진 선이 모이지 않은 꼭짓점 하나를 찾아볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "xray"
+              },
+              "level": 2,
+              "say": "보이지 않는 꼭짓점에서는 모서리가 몇 방향으로 뻗어 나갈까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "xray"
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.cuboid-parts"
+            }
+          ],
+          "concepts": [
+            "g5s2u5.sketch-hidden-edges"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g5s2u5.A1.T6",
+          "prompt": "정육면체의 겨냥도를 그려요. 보이지 않는 모서리는 점선으로 그려요.",
+          "engine": "E12",
+          "mode": "xray",
+          "cpa": "P",
+          "config": {
+            "mode": "xray",
+            "solid": {
+              "type": "cube",
+              "w": 2,
+              "d": 2,
+              "h": 2
+            },
+            "sketch": {
+              "prefill": "none"
+            }
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "sketchComplete",
+            "args": {}
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "sketchHiddenDrawnSolid",
+                "args": {}
+              },
+              "level": 1,
+              "say": "보이지 않는 모서리는 어떤 선으로 그릴까요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "sketchHiddenDrawnSolid",
+                "args": {}
+              },
+              "level": 2,
+              "say": "엑스레이로 숨은 모서리를 비춰 보았어요.",
+              "show": {
+                "engine": "E12",
+                "overlay": "xray-peek"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "sketchHiddenDrawnSolid",
+                "args": {}
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.cuboid-parts"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "xray"
+              },
+              "level": 1,
+              "say": "앞면부터 그리고, 뒤로 가는 모서리를 이어 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "xray"
+              },
+              "level": 2,
+              "say": "작은 무대를 돌려 모서리가 모두 몇 군데로 뻗는지 살펴봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "xray"
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.cuboid-parts"
+            }
+          ],
+          "concepts": [
+            "g5s2u5.sketch-hidden-edges"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g5s2u5.A1.T7",
+          "prompt": "겨냥도에서 보이지 않는 모서리는 몇 개인가요?",
+          "engine": "E12",
+          "mode": "xray",
+          "cpa": "A",
+          "config": {
+            "mode": "xray",
+            "solid": {
+              "type": "cuboid",
+              "w": 4,
+              "d": 3,
+              "h": 2
+            },
+            "display": "sketch",
+            "xrayToggle": false,
+            "tools": []
+          },
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "hidden",
+                "label": "보이지 않는 모서리의 수",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.hidden.value",
+            "value": "3"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.hidden.value",
+                "value": "9"
+              },
+              "level": 1,
+              "say": "실선과 점선 중 어느 선이 보이지 않는 모서리일까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.hidden.value",
+                "value": "9"
+              },
+              "level": 2,
+              "say": "점선으로 그린 선만 손가락으로 짚어 세어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.hidden.value",
+                "value": "9"
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.sketch-hidden-edges"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "xray"
+              },
+              "level": 1,
+              "say": "점선은 무엇을 나타낼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "xray"
+              },
+              "level": 2,
+              "say": "겨냥도의 점선만 따라가 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "xray"
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.cuboid-parts"
+            }
+          ],
+          "concepts": [
+            "g5s2u5.sketch-hidden-edges"
+          ],
+          "submit": "button"
+        }
+      ]
+    },
+    {
+      "id": "g5s2u5.A2",
+      "title": "전개도 그리기와 접기",
+      "tasks": [
+        {
+          "id": "g5s2u5.A2.T1",
+          "prompt": "모눈을 눌러 정육면체 전개도를 그리고 '접기'로 확인해요.",
+          "engine": "E12",
+          "mode": "net-fold",
+          "cpa": "C",
+          "config": {
+            "mode": "net-fold",
+            "target": "cube",
+            "grid": [
+              6,
+              6
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "netValid",
+                "args": {}
+              },
+              {
+                "kind": "equals",
+                "path": "folded",
+                "value": true
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "netSixInvalid",
+                "args": {}
+              },
+              "level": 1,
+              "say": "접으면 어디가 겹칠지 먼저 상상해 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "netSixInvalid",
+                "args": {}
+              },
+              "level": 2,
+              "say": "접었을 때 겹치는 곳과 빈 곳을 표시했어요.",
+              "show": {
+                "engine": "E12",
+                "overlay": "fold-collision"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "netSixInvalid",
+                "args": {}
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.parallel-perpendicular-faces"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "net-fold"
+              },
+              "level": 1,
+              "say": "정육면체에는 면이 몇 개 있었나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "net-fold"
+              },
+              "level": 2,
+              "say": "한 면을 바닥으로 정하고 둘레에 붙일 면을 생각해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "net-fold"
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.parallel-perpendicular-faces"
+            }
+          ],
+          "concepts": [
+            "g5s2u5.nets"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g5s2u5.A2.T2",
+          "prompt": "정육면체 전개도를 서로 다르게 3가지 찾아 접어 보세요.",
+          "engine": "E12",
+          "mode": "net-fold",
+          "cpa": "C",
+          "config": {
+            "mode": "net-fold",
+            "target": "cube",
+            "grid": [
+              6,
+              6
+            ],
+            "netLog": true
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "foundNetsAtLeast",
+            "args": {
+              "n": 3
+            }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "netSixInvalid",
+                "args": {}
+              },
+              "level": 1,
+              "say": "접으면 어디가 겹칠지 먼저 상상해 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "netSixInvalid",
+                "args": {}
+              },
+              "level": 2,
+              "say": "접었을 때 겹치는 곳과 빈 곳을 표시했어요.",
+              "show": {
+                "engine": "E12",
+                "overlay": "fold-collision"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "netSixInvalid",
+                "args": {}
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.parallel-perpendicular-faces"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "net-fold"
+              },
+              "level": 1,
+              "say": "찾은 전개도를 돌리거나 뒤집으면 같아지지 않나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "net-fold"
+              },
+              "level": 2,
+              "say": "면 하나를 다른 자리로 옮겨 붙여 보고 접어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "net-fold"
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.parallel-perpendicular-faces"
+            }
+          ],
+          "concepts": [
+            "g5s2u5.nets"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g5s2u5.A2.T3",
+          "prompt": "접기 전에 ★면과 마주 보는 면을 골라요. 그다음 접어서 확인해요.",
+          "engine": "E12",
+          "mode": "net-fold",
+          "cpa": "P",
+          "config": {
+            "mode": "net-fold",
+            "target": "cube",
+            "grid": [
+              5,
+              4
+            ],
+            "editable": false,
+            "predict": {
+              "of": "★"
+            },
+            "given": [
+              {
+                "at": [
+                  0,
+                  1
+                ],
+                "w": 1,
+                "h": 1,
+                "label": "★",
+                "locked": true
+              },
+              {
+                "at": [
+                  1,
+                  1
+                ],
+                "w": 1,
+                "h": 1,
+                "label": "ㄱ",
+                "locked": true
+              },
+              {
+                "at": [
+                  2,
+                  1
+                ],
+                "w": 1,
+                "h": 1,
+                "label": "ㄴ",
+                "locked": true
+              },
+              {
+                "at": [
+                  3,
+                  1
+                ],
+                "w": 1,
+                "h": 1,
+                "label": "ㄷ",
+                "locked": true
+              },
+              {
+                "at": [
+                  1,
+                  0
+                ],
+                "w": 1,
+                "h": 1,
+                "label": "ㄹ",
+                "locked": true
+              },
+              {
+                "at": [
+                  2,
+                  2
+                ],
+                "w": 1,
+                "h": 1,
+                "label": "ㅁ",
+                "locked": true
+              }
+            ]
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "predictedOpposite",
+            "args": {
+              "of": "★"
+            }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "predictedAdjacent",
+                "args": {
+                  "of": "★"
+                }
+              },
+              "level": 1,
+              "say": "★면과 붙어 있는 면이 마주 볼 수 있을까요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "predictedAdjacent",
+                "args": {
+                  "of": "★"
+                }
+              },
+              "level": 2,
+              "say": "고른 면을 세워 보았어요.",
+              "show": {
+                "engine": "E12",
+                "overlay": "fold-path"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "predictedAdjacent",
+                "args": {
+                  "of": "★"
+                }
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.parallel-perpendicular-faces"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "net-fold"
+              },
+              "level": 1,
+              "say": "★면을 바닥에 놓으면 어느 면이 뚜껑이 될까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "net-fold"
+              },
+              "level": 2,
+              "say": "한 줄로 이어진 면들을 차례로 접어 올려 본다고 생각해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "net-fold"
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.parallel-perpendicular-faces"
+            }
+          ],
+          "concepts": [
+            "g5s2u5.nets"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g5s2u5.A2.T4",
+          "prompt": "접지 않고 생각해요. ★면과 마주 보는 면을 골라요.",
+          "engine": "E12",
+          "mode": "net-fold",
+          "cpa": "A",
+          "config": {
+            "mode": "net-fold",
+            "target": "cube",
+            "grid": [
+              3,
+              4
+            ],
+            "editable": false,
+            "foldable": false,
+            "predict": {
+              "of": "★"
+            },
+            "given": [
+              {
+                "at": [
+                  1,
+                  0
+                ],
+                "w": 1,
+                "h": 1,
+                "label": "★",
+                "locked": true
+              },
+              {
+                "at": [
+                  0,
+                  1
+                ],
+                "w": 1,
+                "h": 1,
+                "label": "ㄱ",
+                "locked": true
+              },
+              {
+                "at": [
+                  1,
+                  1
+                ],
+                "w": 1,
+                "h": 1,
+                "label": "ㄴ",
+                "locked": true
+              },
+              {
+                "at": [
+                  2,
+                  1
+                ],
+                "w": 1,
+                "h": 1,
+                "label": "ㄷ",
+                "locked": true
+              },
+              {
+                "at": [
+                  1,
+                  2
+                ],
+                "w": 1,
+                "h": 1,
+                "label": "ㄹ",
+                "locked": true
+              },
+              {
+                "at": [
+                  1,
+                  3
+                ],
+                "w": 1,
+                "h": 1,
+                "label": "ㅁ",
+                "locked": true
+              }
+            ]
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "predictedOpposite",
+            "args": {
+              "of": "★"
+            }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "predictedAdjacent",
+                "args": {
+                  "of": "★"
+                }
+              },
+              "level": 1,
+              "say": "★면과 붙어 있는 면이 마주 볼 수 있을까요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "predictedAdjacent",
+                "args": {
+                  "of": "★"
+                }
+              },
+              "level": 2,
+              "say": "고른 면을 세워 보았어요.",
+              "show": {
+                "engine": "E12",
+                "overlay": "fold-path"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "predictedAdjacent",
+                "args": {
+                  "of": "★"
+                }
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.parallel-perpendicular-faces"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "net-fold"
+              },
+              "level": 1,
+              "say": "★면 바로 옆 면들은 마주 볼 수 있을까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "net-fold"
+              },
+              "level": 2,
+              "say": "★면에서 옆으로 한 면씩 짚어 가며, 어디쯤에서 반대쪽이 될지 생각해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "net-fold"
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.parallel-perpendicular-faces"
+            }
+          ],
+          "concepts": [
+            "g5s2u5.nets"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g5s2u5.A2.T5",
+          "prompt": "접지 않고 생각해요. ★면과 마주 보는 면을 골라요.",
+          "engine": "E12",
+          "mode": "net-fold",
+          "cpa": "A",
+          "config": {
+            "mode": "net-fold",
+            "target": "cube",
+            "grid": [
+              5,
+              2
+            ],
+            "editable": false,
+            "foldable": false,
+            "predict": {
+              "of": "★"
+            },
+            "given": [
+              {
+                "at": [
+                  0,
+                  0
+                ],
+                "w": 1,
+                "h": 1,
+                "label": "ㄱ",
+                "locked": true
+              },
+              {
+                "at": [
+                  1,
+                  0
+                ],
+                "w": 1,
+                "h": 1,
+                "label": "★",
+                "locked": true
+              },
+              {
+                "at": [
+                  2,
+                  0
+                ],
+                "w": 1,
+                "h": 1,
+                "label": "ㄴ",
+                "locked": true
+              },
+              {
+                "at": [
+                  2,
+                  1
+                ],
+                "w": 1,
+                "h": 1,
+                "label": "ㄷ",
+                "locked": true
+              },
+              {
+                "at": [
+                  3,
+                  1
+                ],
+                "w": 1,
+                "h": 1,
+                "label": "ㄹ",
+                "locked": true
+              },
+              {
+                "at": [
+                  4,
+                  1
+                ],
+                "w": 1,
+                "h": 1,
+                "label": "ㅁ",
+                "locked": true
+              }
+            ]
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "predictedOpposite",
+            "args": {
+              "of": "★"
+            }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "predictedAdjacent",
+                "args": {
+                  "of": "★"
+                }
+              },
+              "level": 1,
+              "say": "★면과 붙어 있는 면이 마주 볼 수 있을까요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "predictedAdjacent",
+                "args": {
+                  "of": "★"
+                }
+              },
+              "level": 2,
+              "say": "고른 면을 세워 보았어요.",
+              "show": {
+                "engine": "E12",
+                "overlay": "fold-path"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "predictedAdjacent",
+                "args": {
+                  "of": "★"
+                }
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.parallel-perpendicular-faces"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "net-fold"
+              },
+              "level": 1,
+              "say": "★면 바로 옆 면들은 마주 볼 수 있을까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "net-fold"
+              },
+              "level": 2,
+              "say": "★면에서 옆으로 한 면씩 짚어 가며, 어디쯤에서 반대쪽이 될지 생각해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "net-fold"
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.parallel-perpendicular-faces"
+            }
+          ],
+          "concepts": [
+            "g5s2u5.nets"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g5s2u5.A2.T6",
+          "prompt": "가로 4칸, 세로 3칸, 높이 2칸인 직육면체의 전개도를 그려 접어 보세요.",
+          "engine": "E12",
+          "mode": "net-fold",
+          "cpa": "C",
+          "config": {
+            "mode": "net-fold",
+            "target": "cuboid",
+            "dims": [
+              4,
+              3,
+              2
+            ],
+            "grid": [
+              8,
+              10
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "netValid",
+                "args": {}
+              },
+              {
+                "kind": "equals",
+                "path": "folded",
+                "value": true
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "netSixInvalid",
+                "args": {}
+              },
+              "level": 1,
+              "say": "접으면 어디가 겹칠지 먼저 상상해 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "netSixInvalid",
+                "args": {}
+              },
+              "level": 2,
+              "say": "접었을 때 겹치는 곳과 빈 곳을 표시했어요.",
+              "show": {
+                "engine": "E12",
+                "overlay": "fold-collision"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "netSixInvalid",
+                "args": {}
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.parallel-perpendicular-faces"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "net-fold"
+              },
+              "level": 1,
+              "say": "마주 보는 두 면은 크기가 어떤가요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "net-fold"
+              },
+              "level": 2,
+              "say": "같은 크기 면이 몇 장씩 필요한지 먼저 세어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "net-fold"
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.parallel-perpendicular-faces"
+            }
+          ],
+          "concepts": [
+            "g5s2u5.nets"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g5s2u5.A2.T7",
+          "prompt": "정육면체 전개도가 될 수 없는 것을 고르고, 그 까닭도 골라요.",
+          "engine": "E12",
+          "mode": "net-fold",
+          "cpa": "A",
+          "config": {
+            "mode": "net-fold",
+            "target": "cube",
+            "grid": [
+              3,
+              3
+            ],
+            "editable": false,
+            "foldable": false,
+            "netCards": [
+              {
+                "id": "ga",
+                "label": "가",
+                "faces": [
+                  {
+                    "at": [
+                      1,
+                      0
+                    ],
+                    "w": 1,
+                    "h": 1
+                  },
+                  {
+                    "at": [
+                      0,
+                      1
+                    ],
+                    "w": 1,
+                    "h": 1
+                  },
+                  {
+                    "at": [
+                      1,
+                      1
+                    ],
+                    "w": 1,
+                    "h": 1
+                  },
+                  {
+                    "at": [
+                      2,
+                      1
+                    ],
+                    "w": 1,
+                    "h": 1
+                  },
+                  {
+                    "at": [
+                      1,
+                      2
+                    ],
+                    "w": 1,
+                    "h": 1
+                  },
+                  {
+                    "at": [
+                      1,
+                      3
+                    ],
+                    "w": 1,
+                    "h": 1
+                  }
+                ]
+              },
+              {
+                "id": "na",
+                "label": "나",
+                "faces": [
+                  {
+                    "at": [
+                      0,
+                      1
+                    ],
+                    "w": 1,
+                    "h": 1
+                  },
+                  {
+                    "at": [
+                      1,
+                      1
+                    ],
+                    "w": 1,
+                    "h": 1
+                  },
+                  {
+                    "at": [
+                      2,
+                      1
+                    ],
+                    "w": 1,
+                    "h": 1
+                  },
+                  {
+                    "at": [
+                      3,
+                      1
+                    ],
+                    "w": 1,
+                    "h": 1
+                  },
+                  {
+                    "at": [
+                      1,
+                      0
+                    ],
+                    "w": 1,
+                    "h": 1
+                  },
+                  {
+                    "at": [
+                      2,
+                      0
+                    ],
+                    "w": 1,
+                    "h": 1
+                  }
+                ]
+              },
+              {
+                "id": "da",
+                "label": "다",
+                "faces": [
+                  {
+                    "at": [
+                      0,
+                      0
+                    ],
+                    "w": 1,
+                    "h": 1
+                  },
+                  {
+                    "at": [
+                      1,
+                      0
+                    ],
+                    "w": 1,
+                    "h": 1
+                  },
+                  {
+                    "at": [
+                      1,
+                      1
+                    ],
+                    "w": 1,
+                    "h": 1
+                  },
+                  {
+                    "at": [
+                      2,
+                      1
+                    ],
+                    "w": 1,
+                    "h": 1
+                  },
+                  {
+                    "at": [
+                      2,
+                      2
+                    ],
+                    "w": 1,
+                    "h": 1
+                  },
+                  {
+                    "at": [
+                      3,
+                      2
+                    ],
+                    "w": 1,
+                    "h": 1
+                  }
+                ]
+              }
+            ]
+          },
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "pick",
+                "label": "될 수 없는 전개도를 골라요.",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "ga",
+                    "label": "가"
+                  },
+                  {
+                    "id": "na",
+                    "label": "나"
+                  },
+                  {
+                    "id": "da",
+                    "label": "다"
+                  }
+                ]
+              },
+              {
+                "kind": "choice",
+                "id": "why",
+                "label": "그렇게 생각한 까닭을 골라요.",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "overlap",
+                    "label": "접으면 두 면이 겹쳐요"
+                  },
+                  {
+                    "id": "count",
+                    "label": "면이 6개가 아니에요"
+                  },
+                  {
+                    "id": "line",
+                    "label": "네 면이 한 줄로 이어져 있어요"
+                  }
+                ]
+              }
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "equals",
+                "path": "response.pick.selected",
+                "value": [
+                  "na"
+                ]
+              },
+              {
+                "kind": "equals",
+                "path": "response.why.selected",
+                "value": [
+                  "overlap"
+                ]
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "net-fold"
+              },
+              "level": 1,
+              "say": "카드마다 한 면을 바닥으로 정하고 차례로 접어 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "net-fold"
+              },
+              "level": 2,
+              "say": "같은 자리로 접혀 올라가는 두 면이 있는지 찾아봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "net-fold"
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.parallel-perpendicular-faces"
+            }
+          ],
+          "concepts": [
+            "g5s2u5.nets"
+          ],
+          "submit": "button"
+        }
+      ]
+    }
+  ]
+}
