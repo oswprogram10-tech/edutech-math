@@ -15,14 +15,21 @@ interface NetHelperBoxProps {
   readonly testId: string;
   readonly titleTestId: string;
   readonly title: string;
+  readonly canvasSelector?: string;
   readonly children: ReactNode;
 }
 
-export function NetHelperBox({ testId, titleTestId, title, children }: NetHelperBoxProps) {
+export function NetHelperBox({
+  testId,
+  titleTestId,
+  title,
+  canvasSelector = 'svg[data-testid="net-grid"], svg[data-testid="net-fold-stage"]',
+  children,
+}: NetHelperBoxProps) {
   return (
     <CanvasAlignedOverlay
       testId={testId}
-      canvasSelector='svg[data-testid="net-grid"], svg[data-testid="net-fold-stage"]'
+      canvasSelector={canvasSelector}
       logicalWidth={NET_OVERLAY_W}
       logicalHeight={NET_OVERLAY_H}
     >

@@ -7,8 +7,17 @@
  */
 
 import type { NetBoxSpec, NetTarget } from './net/geometry';
+import type {
+  SketchDot,
+  SketchLineStyle,
+  SketchSegment,
+  XrayEdgeId,
+  XrayFaceId,
+  XrayVertexId,
+  XrayViewAngle,
+} from './xray/geometry';
 
-export type SolidMode = 'cubes' | 'net-fold';
+export type SolidMode = 'cubes' | 'net-fold' | 'xray';
 
 export type CubeColor = 'plain' | 'red' | 'blue' | 'yellow' | 'green';
 
@@ -177,7 +186,46 @@ export interface NetFoldConfig {
   readonly variant?: unknown;
 }
 
-export type SolidConfig = CubesConfig | NetFoldConfig;
+export type XraySolidType = 'cuboid' | 'cube';
+
+export type XrayDisplayMode = 'solid' | 'sketch';
+
+export type XrayTool = 'face' | 'edge' | 'vertex';
+
+export type XrayActiveTool = XrayTool | 'query';
+
+export type XraySketchPrefill = 'visible' | 'none';
+
+export interface XraySolidConfig {
+  readonly type?: XraySolidType;
+  readonly w?: number;
+  readonly d?: number;
+  readonly h?: number;
+}
+
+export interface XraySketchConfig {
+  readonly prefill?: XraySketchPrefill;
+}
+
+export interface XrayConfig {
+  readonly mode: 'xray';
+  readonly solid?: XraySolidConfig;
+  readonly display?: XrayDisplayMode;
+  readonly rotate?: boolean;
+  readonly view?: Partial<XrayViewAngle>;
+  readonly xray?: boolean;
+  readonly xrayToggle?: boolean;
+  readonly tools?: readonly XrayTool[];
+  readonly faceQuery?: boolean;
+  readonly highlightFace?: XrayFaceId | null;
+  readonly sketch?: false | XraySketchConfig;
+  readonly stage?: StageMode;
+  readonly fallback?: unknown;
+  readonly variant?: unknown;
+  readonly sketchGrid?: unknown;
+}
+
+export type SolidConfig = CubesConfig | NetFoldConfig | XrayConfig;
 
 export interface CubeItem {
   readonly x: number;
@@ -278,7 +326,46 @@ export interface NetFoldState {
   readonly foundNets: readonly string[];
 }
 
-export type SolidState = CubesState | NetFoldState;
+export interface XraySolidSpec {
+  readonly type: XraySolidType;
+  readonly w: number;
+  readonly d: number;
+  readonly h: number;
+}
+
+export interface XraySettings {
+  readonly solid: XraySolidSpec;
+  readonly display: XrayDisplayMode;
+  readonly rotate: boolean;
+  readonly view: XrayViewAngle;
+  readonly xray: boolean;
+  readonly xrayToggle: boolean;
+  readonly tools: readonly XrayTool[];
+  readonly faceQuery: boolean;
+  readonly highlightFace: XrayFaceId | null;
+  readonly sketch: false | { readonly prefill: XraySketchPrefill };
+}
+
+export interface XrayMarkedState {
+  readonly faces: readonly XrayFaceId[];
+  readonly edges: readonly XrayEdgeId[];
+  readonly vertices: readonly XrayVertexId[];
+}
+
+export interface XrayState {
+  readonly mode: 'xray';
+  readonly settings: XraySettings;
+  readonly view: XrayViewAngle;
+  readonly xray: boolean;
+  readonly xrayUsed: boolean;
+  readonly tool: XrayActiveTool | null;
+  readonly marked: XrayMarkedState;
+  readonly queryFace: XrayFaceId | null;
+  readonly segments: readonly SketchSegment[];
+  readonly lineStyle: SketchLineStyle;
+}
+
+export type SolidState = CubesState | NetFoldState | XrayState;
 
 export type CubesAction =
   | { readonly type: 'add'; readonly x: number; readonly y: number }
@@ -325,7 +412,29 @@ export type NetFoldAction =
   | { readonly type: 'predict'; readonly label: string }
   | { readonly type: 'clear' };
 
-export type SolidAction = CubesAction | NetFoldAction;
+export type XrayAction =
+  | { readonly type: 'set-view'; readonly yaw: number; readonly pitch: number }
+  | { readonly type: 'rotate-view'; readonly dYaw: number; readonly dPitch: number }
+  | { readonly type: 'toggle-xray' }
+  | { readonly type: 'set-tool'; readonly tool: XrayActiveTool }
+  | { readonly type: 'toggle-mark'; readonly kind: XrayTool; readonly id: string }
+  | { readonly type: 'query-face'; readonly face: XrayFaceId }
+  | { readonly type: 'clear-marks' }
+  | { readonly type: 'set-line-style'; readonly style: SketchLineStyle }
+  | {
+      readonly type: 'add-segment';
+      readonly a: SketchDot;
+      readonly b: SketchDot;
+      readonly style: SketchLineStyle;
+    }
+  | { readonly type: 'remove-segment'; readonly a: SketchDot; readonly b: SketchDot }
+  | { readonly type: 'clear-sketch' };
+
+export type SolidAction = CubesAction | NetFoldAction | XrayAction;
+
+export const XRAY_DEFAULT_SOLID: XraySolidSpec = { type: 'cuboid', w: 4, d: 3, h: 2 };
+export const XRAY_DEFAULT_VIEW: XrayViewAngle = { yaw: 30, pitch: 30 };
+export const XRAY_DEFAULT_TOOLS: readonly XrayTool[] = ['face', 'edge', 'vertex'];
 
 export const NET_DEFAULT_GRID: readonly [number, number] = [6, 6];
 export const NET_MIN_GRID = 3;
