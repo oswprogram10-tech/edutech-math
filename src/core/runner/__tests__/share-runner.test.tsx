@@ -106,7 +106,11 @@ describe('S3 보여 주기', { timeout: 20_000 }, () => {
     fireEvent.click(screen.getByRole('button', { name: runnerStrings.undo }));
     fireEvent.click(screen.getByRole('button', { name: runnerStrings.show }));
 
-    const input = (await screen.findByTestId('share-code', {}, { timeout: 10_000 })) as HTMLInputElement;
+    const input = (await screen.findByTestId(
+      'share-code',
+      {},
+      { timeout: 10_000 },
+    )) as HTMLInputElement;
     const code = input.value;
     const decoded = decodeSharePayload(code);
     expect(decoded.ok).toBe(true);
