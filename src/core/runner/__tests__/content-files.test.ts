@@ -1,8 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import type { EngineId, GoalSpec, HintRule, LoadedEngine } from '../../engine-sdk';
 import { hasEngine, listEngineIds, loadEngine } from '../../engine-sdk';
 import { diagnoseDetectorOf, misconceptionOf } from '../../feedback';
 import { parseUnitContent } from '../content-schema';
+import { engineIdsOfContent } from '../views';
 import type { UnitContent } from '../types';
 
 interface UnitsFile {
@@ -63,6 +64,19 @@ describe('data/content 파일', () => {
     engineCache.set(engine, loaded);
     return loaded;
   }
+
+  // 전체 실행 부하에서 엔진 동적 import가 앞쪽 테스트에 몰려 5초를 넘기므로 미리 불러온다.
+  beforeAll(async () => {
+    const ids = new Set<string>();
+    for (const file of files) {
+      try {
+        for (const id of engineIdsOfContent(parseUnitContent(file.input))) ids.add(id);
+      } catch {
+        // 스키마 오류는 각 파일 테스트가 보고한다.
+      }
+    }
+    await Promise.all([...ids].map((id) => definitionOf(id)));
+  }, 60_000);
 
   it('파일이 하나 이상 있다', () => {
     expect(files.length).toBeGreaterThan(0);
@@ -228,7 +242,7 @@ describe('data/content 파일', () => {
       }
 
       expect(errors).toEqual([]);
-    });
+    }, 20_000);
   }
 
   it('demo 단원은 units.json에 없어도 된다', () => {
