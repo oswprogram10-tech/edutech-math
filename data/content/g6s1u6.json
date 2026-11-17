@@ -1,0 +1,1012 @@
+{
+  "unit": "g6s1u6",
+  "title": "직육면체의 겉넓이와 부피",
+  "activities": [
+    {
+      "id": "g6s1u6.A1",
+      "title": "펼쳐 칠하고 채워 보기",
+      "tasks": [
+        {
+          "id": "g6s1u6.A1.T1",
+          "prompt": "상자를 돌려 보고 펼쳐서 모든 면을 칠해 보세요. 칠한 넓이는 모두 몇 cm²인가요?",
+          "engine": "E12",
+          "mode": "surface-volume",
+          "cpa": "C",
+          "config": {
+            "mode": "surface-volume",
+            "solid": {
+              "w": 4,
+              "d": 3,
+              "h": 2
+            },
+            "steps": [
+              "rotate",
+              "unfold",
+              "paint"
+            ]
+          },
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "area",
+                "label": "겉넓이(cm²)",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "allFacesPainted"
+              },
+              {
+                "kind": "equals",
+                "path": "response.area.value",
+                "value": "52"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.area.value",
+                "value": "26"
+              },
+              "level": 1,
+              "say": "전개도에 면이 몇 개였을까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.area.value",
+                "value": "26"
+              },
+              "level": 2,
+              "say": "전개도의 면을 하나씩 짚으며 모두 셌는지 확인해 봐요.",
+              "show": {
+                "engine": "E12",
+                "overlay": "unpainted-blink"
+              }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.area.value",
+                "value": "26"
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.nets"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "paintedFacesIs",
+                "args": {
+                  "count": 0
+                }
+              },
+              "level": 1,
+              "say": "펼친 전개도의 면을 눌러 칠해 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "paintedFacesIs",
+                "args": {
+                  "count": 0
+                }
+              },
+              "level": 2,
+              "say": "'펼치기' 단계로 가서 면을 하나씩 눌러 봐요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "paintedFacesIs",
+                "args": {
+                  "count": 0
+                }
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.nets"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "surface-volume"
+              },
+              "level": 1,
+              "say": "칠한 면마다 칸이 몇 개인지 세어 더해 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "surface-volume"
+              },
+              "level": 2,
+              "say": "마주 보는 두 면은 칸 수가 같은지 살펴봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "surface-volume"
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.nets"
+            }
+          ],
+          "concepts": [
+            "g6s1u6.surface-area"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g6s1u6.A1.T2",
+          "prompt": "서로 다른 면 세 개의 넓이를 구하고, 겉넓이를 구하려면 그 합을 몇 배 해야 하는지 적어요.",
+          "engine": "E12",
+          "mode": "surface-volume",
+          "cpa": "P",
+          "config": {
+            "mode": "surface-volume",
+            "solid": {
+              "w": 4,
+              "d": 3,
+              "h": 2
+            },
+            "steps": [
+              "rotate",
+              "unfold",
+              "paint"
+            ]
+          },
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "top",
+                "label": "윗면 넓이(cm²)",
+                "forms": [
+                  "integer"
+                ]
+              },
+              {
+                "kind": "number",
+                "id": "front",
+                "label": "앞면 넓이(cm²)",
+                "forms": [
+                  "integer"
+                ]
+              },
+              {
+                "kind": "number",
+                "id": "side",
+                "label": "옆면 넓이(cm²)",
+                "forms": [
+                  "integer"
+                ]
+              },
+              {
+                "kind": "number",
+                "id": "times",
+                "label": "몇 배",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "equals",
+                "path": "response.top.value",
+                "value": "12"
+              },
+              {
+                "kind": "equals",
+                "path": "response.front.value",
+                "value": "8"
+              },
+              {
+                "kind": "equals",
+                "path": "response.side.value",
+                "value": "6"
+              },
+              {
+                "kind": "equals",
+                "path": "response.times.value",
+                "value": "2"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.times.value",
+                "value": "1"
+              },
+              "level": 1,
+              "say": "보이지 않는 쪽에도 같은 면이 있을까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.times.value",
+                "value": "1"
+              },
+              "level": 2,
+              "say": "펼친 전개도에서 마주 보는 면을 짝지어 봐요.",
+              "show": {
+                "engine": "E12",
+                "overlay": "unpainted-blink"
+              }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.times.value",
+                "value": "1"
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.nets"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "surface-volume"
+              },
+              "level": 1,
+              "say": "윗면은 가로와 세로가 각각 몇 cm인가요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "surface-volume"
+              },
+              "level": 2,
+              "say": "펼친 전개도에서 같은 무늬 면끼리 짝지어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "surface-volume"
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.nets"
+            }
+          ],
+          "concepts": [
+            "g6s1u6.surface-area"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g6s1u6.A1.T3",
+          "prompt": "빈 상자에 1cm³ 쌓기나무를 아래층부터 채워 보세요. 상자의 부피는 몇 cm³인가요?",
+          "engine": "E12",
+          "mode": "surface-volume",
+          "cpa": "C",
+          "config": {
+            "mode": "surface-volume",
+            "solid": {
+              "w": 4,
+              "d": 3,
+              "h": 2
+            },
+            "steps": [
+              "fill-voxels"
+            ]
+          },
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "vol",
+                "label": "부피(cm³)",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "voxelsComplete"
+              },
+              {
+                "kind": "equals",
+                "path": "response.vol.value",
+                "value": "24"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.vol.value",
+                "value": "52"
+              },
+              "level": 1,
+              "say": "상자를 감싸는 양을 구했나요, 채우는 양을 구했나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.vol.value",
+                "value": "52"
+              },
+              "level": 2,
+              "say": "겉을 감싸는 것과 속을 채우는 것을 나란히 놓고 비교해 봐요.",
+              "show": {
+                "engine": "E12",
+                "overlay": "wrap-vs-fill"
+              }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.vol.value",
+                "value": "52"
+              },
+              "level": 3,
+              "backtrack": "g6s1u6.volume-unit-cube"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "surface-volume"
+              },
+              "level": 1,
+              "say": "한 층에 쌓기나무가 몇 개 들어가나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "surface-volume"
+              },
+              "level": 2,
+              "say": "'한 층 채우기'로 한 층씩 채우며 층 수를 세어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "surface-volume"
+              },
+              "level": 3,
+              "backtrack": "g6s1u6.volume-unit-cube"
+            }
+          ],
+          "concepts": [
+            "g6s1u6.volume-unit-cube",
+            "g6s1u6.volume-formula"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g6s1u6.A1.T4",
+          "prompt": "한 모서리가 5cm인 정육면체의 겉넓이와 부피를 구해요.",
+          "engine": "E12",
+          "mode": "surface-volume",
+          "cpa": "A",
+          "config": {
+            "mode": "surface-volume",
+            "solid": {
+              "w": 5,
+              "d": 5,
+              "h": 5
+            },
+            "steps": [
+              "rotate"
+            ]
+          },
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "area",
+                "label": "겉넓이(cm²)",
+                "forms": [
+                  "integer"
+                ]
+              },
+              {
+                "kind": "number",
+                "id": "vol",
+                "label": "부피(cm³)",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "equals",
+                "path": "response.area.value",
+                "value": "150"
+              },
+              {
+                "kind": "equals",
+                "path": "response.vol.value",
+                "value": "125"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.area.value",
+                    "value": "125"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.vol.value",
+                    "value": "150"
+                  }
+                ]
+              },
+              "level": 1,
+              "say": "어느 쪽이 감싸는 양이고 어느 쪽이 채우는 양일까요?"
+            },
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.area.value",
+                    "value": "125"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.vol.value",
+                    "value": "150"
+                  }
+                ]
+              },
+              "level": 2,
+              "say": "겉을 감싸는 것과 속을 채우는 것을 비교해 봐요.",
+              "show": {
+                "engine": "E12",
+                "overlay": "wrap-vs-fill"
+              }
+            },
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.area.value",
+                    "value": "125"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.vol.value",
+                    "value": "150"
+                  }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g6s1u6.volume-unit-cube"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.area.value",
+                "value": "75"
+              },
+              "level": 1,
+              "say": "정육면체에는 면이 몇 개 있을까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.area.value",
+                "value": "75"
+              },
+              "level": 2,
+              "say": "보이지 않는 쪽 면도 세었는지 상자를 돌려 확인해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.area.value",
+                "value": "75"
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.nets"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "surface-volume"
+              },
+              "level": 1,
+              "say": "한 면의 넓이는 얼마이고, 쌓기나무는 한 층에 몇 개일까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "surface-volume"
+              },
+              "level": 2,
+              "say": "한 면의 넓이와 한 층의 개수부터 구해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "surface-volume"
+              },
+              "level": 3,
+              "backtrack": "g6s1u6.volume-unit-cube"
+            }
+          ],
+          "concepts": [
+            "g6s1u6.surface-area",
+            "g6s1u6.volume-formula"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g6s1u6.A1.T5",
+          "prompt": "한 모서리가 1m인 정육면체에 1cm³ 쌓기나무를 빈틈없이 채우려고 해요. 1m³는 몇 cm³인가요?",
+          "engine": "E12",
+          "mode": "surface-volume",
+          "cpa": "A",
+          "config": {
+            "mode": "surface-volume",
+            "solid": {
+              "w": 1,
+              "d": 1,
+              "h": 1
+            },
+            "steps": [
+              "rotate"
+            ]
+          },
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "cm3",
+                "label": "1m³는 몇 cm³",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.cm3.value",
+            "value": "1000000"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.cm3.value",
+                    "value": "100"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.cm3.value",
+                    "value": "10000"
+                  }
+                ]
+              },
+              "level": 1,
+              "say": "1m 한 줄에 1cm³ 쌓기나무가 몇 개 들어갈까요? 한 층에는요?"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.cm3.value",
+                    "value": "100"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.cm3.value",
+                    "value": "10000"
+                  }
+                ]
+              },
+              "level": 2,
+              "say": "한 줄, 한 층, 전체로 차례로 늘려 생각해 봐요.",
+              "show": {
+                "engine": "E12",
+                "overlay": "unit-zoom"
+              }
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.cm3.value",
+                    "value": "100"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.cm3.value",
+                    "value": "10000"
+                  }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g6s1u6.volume-formula"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "surface-volume"
+              },
+              "level": 1,
+              "say": "1m는 몇 cm인지 떠올려 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "surface-volume"
+              },
+              "level": 2,
+              "say": "가로, 세로, 높이에 각각 몇 개씩 놓이는지 생각해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "surface-volume"
+              },
+              "level": 3,
+              "backtrack": "g6s1u6.volume-formula"
+            }
+          ],
+          "concepts": [
+            "g6s1u6.volume-units"
+          ],
+          "submit": "button"
+        }
+      ]
+    },
+    {
+      "id": "g6s1u6.A2",
+      "title": "포장지를 아끼는 상자",
+      "tasks": [
+        {
+          "id": "g6s1u6.A2.T1",
+          "prompt": "쌓기나무 24개로 만들 수 있는 상자를 가로와 세로를 바꿔 가며 4가지 기록해요.",
+          "engine": "E12",
+          "mode": "surface-volume",
+          "cpa": "P",
+          "config": {
+            "mode": "surface-volume",
+            "variant": "fixed-volume",
+            "volume": 24,
+            "log": true
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "logDistinctAtLeast",
+            "args": {
+              "count": 4
+            }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "surface-volume"
+              },
+              "level": 1,
+              "say": "가로나 세로를 바꾸면 높이는 어떻게 달라지나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "surface-volume"
+              },
+              "level": 2,
+              "say": "가로 단추와 세로 단추를 바꿀 때마다 '기록하기'를 눌러요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "surface-volume"
+              },
+              "level": 3,
+              "backtrack": "g6s1u6.volume-unit-cube"
+            }
+          ],
+          "concepts": [
+            "g6s1u6.volume-formula"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g6s1u6.A2.T2",
+          "prompt": "기록한 상자의 겉넓이를 표에 적고, 포장지가 가장 적게 드는 상자를 찾아요. 그 상자의 겉넓이는 몇 cm²인가요?",
+          "engine": "E12",
+          "mode": "surface-volume",
+          "cpa": "A",
+          "config": {
+            "mode": "surface-volume",
+            "variant": "fixed-volume",
+            "volume": 24,
+            "log": true
+          },
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "least",
+                "label": "가장 작은 겉넓이(cm²)",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "logHasMinSurface"
+              },
+              {
+                "kind": "equals",
+                "path": "response.least.value",
+                "value": "52"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "logSurfaceIs",
+                "args": {
+                  "w": 2,
+                  "d": 3,
+                  "h": 4,
+                  "value": 26
+                }
+              },
+              "level": 1,
+              "say": "상자의 면은 모두 몇 개였을까요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "logSurfaceIs",
+                "args": {
+                  "w": 2,
+                  "d": 3,
+                  "h": 4,
+                  "value": 26
+                }
+              },
+              "level": 2,
+              "say": "기록한 상자의 면 6개를 모두 더했는지 확인해 봐요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "logSurfaceIs",
+                "args": {
+                  "w": 2,
+                  "d": 3,
+                  "h": 4,
+                  "value": 26
+                }
+              },
+              "level": 3,
+              "backtrack": "g5s2u5.nets"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "surface-volume"
+              },
+              "level": 1,
+              "say": "기록한 상자들 가운데 겉넓이가 가장 작은 것은 어떤 모양인가요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "surface-volume"
+              },
+              "level": 2,
+              "say": "가로, 세로, 높이가 서로 비슷한 상자도 기록해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "surface-volume"
+              },
+              "level": 3,
+              "backtrack": "g6s1u6.surface-area"
+            }
+          ],
+          "concepts": [
+            "g6s1u6.surface-vs-volume"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g6s1u6.A2.T3",
+          "prompt": "'부피가 같으면 겉넓이도 같다'는 말이 맞을까요? 상자 두 개 이상을 기록하고 겉넓이를 적은 뒤 골라요.",
+          "engine": "E12",
+          "mode": "surface-volume",
+          "cpa": "A",
+          "config": {
+            "mode": "surface-volume",
+            "variant": "fixed-volume",
+            "volume": 24,
+            "log": true
+          },
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "claim",
+                "label": "이 말이 맞을까요?",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "yes",
+                    "label": "맞아요"
+                  },
+                  {
+                    "id": "no",
+                    "label": "맞지 않아요"
+                  }
+                ]
+              }
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "equals",
+                "path": "response.claim.selected",
+                "value": [
+                  "no"
+                ]
+              },
+              {
+                "kind": "predicate",
+                "name": "logDistinctAtLeast",
+                "args": {
+                  "count": 2
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "logAllCorrect"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.claim.selected",
+                "value": [
+                  "yes"
+                ]
+              },
+              "level": 1,
+              "say": "기록표에서 겉넓이가 모두 같았나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.claim.selected",
+                "value": [
+                  "yes"
+                ]
+              },
+              "level": 2,
+              "say": "두 상자의 포장지를 칸으로 비교해 봐요.",
+              "show": {
+                "engine": "E12",
+                "overlay": "wraps-compare"
+              }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.claim.selected",
+                "value": [
+                  "yes"
+                ]
+              },
+              "level": 3,
+              "backtrack": "g5s1u6.perimeter-vs-area"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "surface-volume"
+              },
+              "level": 1,
+              "say": "기록한 상자들의 겉넓이를 다시 계산해 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "surface-volume"
+              },
+              "level": 2,
+              "say": "상자마다 면 6개의 넓이를 더했는지 확인해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "surface-volume"
+              },
+              "level": 3,
+              "backtrack": "g6s1u6.surface-area"
+            }
+          ],
+          "concepts": [
+            "g6s1u6.surface-vs-volume"
+          ],
+          "submit": "button"
+        }
+      ]
+    }
+  ]
+}
