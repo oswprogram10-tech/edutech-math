@@ -1,0 +1,503 @@
+import { readFileSync } from 'node:fs';
+import { expect, test } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
+import { PREVIEW_URL } from '../../../playwright.config';
+import { expectContentPanelsReachable, expectNoPanelInnerScroll } from '../panel-layout';
+
+/**
+ * T151 g1s1u2 「여러 가지 모양」 A2 「굴리고 쌓아 보기」 4과제 단원 E2E.
+ * (A1은 W6이라 이 카드에 없다.)
+ * - 과제 4개 정답 통과, 상태 규칙·MC-SHAPE-ORIENTATION ①②, 일반 ① 대표 오답
+ * - `turn-same` 오버레이가 그려지고 장면에 정렬 1px
+ * - 첫 화면(크롬북 두 칸 배치 장면 높이), 64px 타깃, 키보드, 오프라인, 스냅샷
+ * - 학생 화면에는 결론 글과 정답 모양 이름이 보이지 않고 "학년" 표시도 없다.
+ * 움직임 줄이기를 켜서 연출이 바로 끝 위치로 가게 한다.
+ */
+
+test.describe.configure({ timeout: 300_000 });
+test.use({ actionTimeout: 20_000 });
+
+interface UnitTask {
+  readonly id: string;
+  readonly prompt: string;
+  readonly config: Record<string, unknown>;
+}
+interface UnitContent {
+  readonly activities: readonly { readonly id: string; readonly tasks: readonly UnitTask[] }[];
+}
+
+const content = JSON.parse(
+  readFileSync(new URL('../../../data/content/g1s1u2.json', import.meta.url), 'utf-8'),
+) as UnitContent;
+
+test('콘텐츠 설정이 명세를 따른다(A2만, 과제 4개)', () => {
+  expect(content.activities.map((a) => a.id)).toEqual(['g1s1u2.A2']);
+  const tasks = content.activities[0]?.tasks ?? [];
+  expect(tasks.map((t) => t.id)).toEqual([
+    'g1s1u2.A2.T1',
+    'g1s1u2.A2.T2',
+    'g1s1u2.A2.T3',
+    'g1s1u2.A2.T4',
+  ]);
+  expect(tasks[1]?.config['scene']).toBe('tower');
+  expect(tasks[1]?.config['towerMax']).toBe(4);
+  expect(tasks[3]?.config['mystery']).toEqual({ kind: 'cylinder', shadow: 'side' });
+});
+
+// 첫 화면 기준(뷰포트별): 판이 '확인하기'까지 한 화면에 다 들어오면 'fit', 아니면 'reachable'.
+const FIRST_SCREEN: Record<string, Record<string, 'fit' | 'reachable'>> = {
+  'A2.T1': { ipad: 'reachable' },
+  'A2.T2': {},
+  'A2.T3': { ipad: 'reachable' },
+  'A2.T4': { ipad: 'reachable' },
+};
+
+function slot(page: Page, name: string): Locator {
+  return page.getByTestId(`runner-slot-${name}`);
+}
+
+function main(page: Page): Locator {
+  return slot(page, 'main');
+}
+
+function field(page: Page, id: string): Locator {
+  return slot(page, 'response').locator(`[data-response-field="${id}"]`);
+}
+
+async function openActivity(page: Page): Promise<void> {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/');
+  await page.getByRole('button', { name: '1번', exact: true }).click();
+  await page.getByRole('button', { name: '건너뛰기' }).click();
+  await expect(page).toHaveURL(/#\/map$/);
+  await page.goto('/#/activity/g1s1u2.A2');
+  await expect(page.getByRole('heading', { name: '굴리고 쌓아 보기' })).toBeVisible();
+  await expect(page.getByRole('button', { name: '확인하기' })).toBeVisible();
+  await expect(main(page).getByTestId('ss-view')).toBeVisible();
+}
+
+async function choose(page: Page, id: string, label: string): Promise<void> {
+  await field(page, id).getByRole('button', { name: label, exact: true }).click();
+}
+
+async function submit(page: Page): Promise<void> {
+  await page.getByRole('button', { name: '확인하기' }).click();
+}
+
+async function expectFailedWithHint(
+  page: Page,
+  text: string | null,
+  level: 1 | 2 | 3 = 1,
+): Promise<void> {
+  await expect(page.getByRole('alert')).toBeVisible();
+  await expect(page.getByTestId('hint')).toHaveAttribute('data-hint-level', String(level));
+  if (text !== null) {
+    await expect(page.getByTestId('hint-text')).toContainText(text);
+  }
+}
+
+async function expectPassed(page: Page, last = false): Promise<void> {
+  await expect(page.getByText('좋아요, 통과했어요!')).toBeVisible();
+  if (last) {
+    await expect(page.getByText('모든 과제를 마쳤어요.')).toBeVisible();
+    return;
+  }
+  await page.getByRole('button', { name: '다음 과제' }).click();
+}
+
+async function screenshot(page: Page, name: string): Promise<void> {
+  await page.evaluate(() => {
+    window.scrollTo(0, 0);
+    document.querySelector('main')?.scrollTo(0, 0);
+  });
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+  });
+  await expect(page).toHaveScreenshot(name, {
+    maxDiffPixelRatio: 0.02,
+    animations: 'disabled',
+    fullPage: true,
+  });
+}
+
+async function expectOverlayAligned(
+  panel: Locator,
+  overlayName: string,
+  canvasTestId: string,
+): Promise<void> {
+  const overlay = panel.locator(`[data-overlay="${overlayName}"]`);
+  await expect(overlay).toBeVisible();
+  const canvas = panel.getByTestId(canvasTestId);
+  await expect
+    .poll(async () => {
+      const overlayBox = await overlay.locator('svg').boundingBox();
+      const canvasBox = await canvas.boundingBox();
+      if (!overlayBox || !canvasBox) return Number.POSITIVE_INFINITY;
+      return Math.max(
+        Math.abs(overlayBox.x - canvasBox.x),
+        Math.abs(overlayBox.y - canvasBox.y),
+        Math.abs(overlayBox.width - canvasBox.width),
+        Math.abs(overlayBox.height - canvasBox.height),
+      );
+    })
+    .toBeLessThanOrEqual(1);
+  await expect(overlay.locator('svg')).toHaveCount(1);
+  await expect(overlay.getByTestId('turn-same-standing')).toBeVisible();
+  await expect(overlay.getByTestId('turn-same-lying')).toBeVisible();
+}
+
+async function expectFirstScreen(
+  page: Page,
+  mode: 'fit' | 'reachable',
+  locators: readonly Locator[] = [],
+): Promise<void> {
+  await expectNoPanelInnerScroll(page);
+  if (mode === 'fit') {
+    for (const loc of locators) {
+      await expect(loc).toBeInViewport({ ratio: 0.99 });
+    }
+    await expect(page.getByRole('button', { name: '확인하기' })).toBeInViewport({ ratio: 1 });
+    return;
+  }
+  await expectContentPanelsReachable(page);
+  for (const loc of locators) {
+    await loc.scrollIntoViewIfNeeded();
+    await expect(loc).toBeInViewport({ ratio: 0.99 });
+  }
+}
+
+/** 학생 화면에 결론 글·학년 표시가 없는지 확인한다. */
+async function expectNoConclusionText(page: Page): Promise<void> {
+  const text = (await page.locator('body').textContent()) ?? '';
+  expect(text).not.toMatch(/굴러가요|멈춰 있어요|쌓여요|떨어져요|쌓였|[1-6]학년/);
+}
+
+// ---------------------------------------------------------------- 도우미
+
+async function selectShelf(page: Page, id: string): Promise<void> {
+  const shelf = main(page).getByTestId(`ss-shelf-${id}`);
+  if ((await shelf.getAttribute('aria-pressed')) !== 'true') await shelf.click();
+  await expect(shelf).toHaveAttribute('aria-pressed', 'true');
+}
+
+/** 물건을 골라 경사로에 올리고 ▶를 누른다. */
+async function roll(page: Page, id: string, pose?: 'standing' | 'lying'): Promise<void> {
+  await selectShelf(page, id);
+  if (pose) await main(page).getByTestId(`ss-pose-${pose}`).click();
+  await main(page).getByTestId('ss-ramp-place').click();
+  await main(page).getByTestId('ss-play').click();
+}
+
+async function stack(page: Page, id: string, pose?: 'standing' | 'lying'): Promise<void> {
+  await selectShelf(page, id);
+  if (pose) await main(page).getByTestId(`ss-pose-${pose}`).click();
+  await main(page).getByTestId('ss-tower-stack').click();
+}
+
+async function passT1(page: Page): Promise<void> {
+  await roll(page, 'sphere');
+  await choose(page, 'shape', '공 모양');
+  await submit(page);
+  await expectPassed(page);
+}
+
+async function passT2(page: Page): Promise<void> {
+  await stack(page, 'b1');
+  await stack(page, 'b2');
+  await stack(page, 'b3');
+  await submit(page);
+  await expectPassed(page);
+}
+
+async function passT3(page: Page): Promise<void> {
+  await roll(page, 'cylinder', 'standing');
+  await roll(page, 'cylinder', 'lying');
+  await choose(page, 'shape', '둥근기둥 모양');
+  await choose(page, 'same', '같은 물건이에요');
+  await submit(page);
+  await expectPassed(page);
+}
+
+async function touch(page: Page, times: number): Promise<void> {
+  for (let i = 0; i < times; i += 1) {
+    await main(page).getByTestId('ss-touch').click();
+  }
+}
+
+// ---------------------------------------------------------------- 활동 흐름
+
+test('g1s1u2.A2 — 굴리고 쌓아 보기 4과제 흐름·상태 규칙·MC-SHAPE-ORIENTATION·turn-same 정렬', async ({
+  page,
+}, testInfo) => {
+  test.slow();
+  await openActivity(page);
+  const vp = testInfo.project.name;
+  const m = main(page);
+
+  // T1 첫 화면 + 스냅샷 + 장면 높이 측정
+  await expect(m.getByTestId('ss-ramp')).toBeVisible();
+  await expectFirstScreen(page, FIRST_SCREEN['A2.T1']?.[vp] ?? 'fit', [
+    m.getByTestId('ss-ramp'),
+    m.getByTestId('ss-shelf-box'),
+    m.getByTestId('ss-shelf-cylinder'),
+    m.getByTestId('ss-shelf-sphere'),
+    m.getByTestId('ss-ramp-place'),
+    m.getByTestId('ss-play'),
+    field(page, 'shape'),
+  ]);
+  const sceneBox = await m.getByTestId('ss-ramp').boundingBox();
+  const mainBox = await m.boundingBox();
+  const respBox = await slot(page, 'response').boundingBox();
+  console.log(
+    `[T151 ${vp}] T1 장면 ${Math.round(sceneBox?.width ?? 0)}x${Math.round(sceneBox?.height ?? 0)}, 교구 판 ${Math.round(mainBox?.width ?? 0)}x${Math.round(mainBox?.height ?? 0)}, 응답 판 ${Math.round(respBox?.width ?? 0)}x${Math.round(respBox?.height ?? 0)}`,
+  );
+  expect(sceneBox?.height ?? 0).toBeGreaterThanOrEqual(170);
+  await expectNoConclusionText(page);
+  await screenshot(page, 'g1s1u2-a2.png');
+
+  // T1: 둥근기둥 → 상태 ① → 다시 → 상태 ② → 공을 굴려 보고 공 → 통과
+  await choose(page, 'shape', '둥근기둥 모양');
+  await submit(page);
+  await expectFailedWithHint(page, '둥근기둥 모양을 세워서도 굴려 볼까요?', 1);
+  await submit(page);
+  await expectFailedWithHint(page, '세우기 단추를 누르고 ▶를 눌러 봐요.', 2);
+  await roll(page, 'sphere');
+  await choose(page, 'shape', '공 모양');
+  await submit(page);
+  await expectPassed(page);
+
+  // T2: 장면 높이 측정 → 상자 2개 + 누운 둥근기둥 → 상태 1 ① → 다시 → ② + turn-same(정렬) → 상자 3개 통과
+  await expect(m.getByTestId('ss-tower')).toBeVisible();
+  const towerBox = await m.getByTestId('ss-tower').boundingBox();
+  console.log(
+    `[T151 ${vp}] T2 장면 ${Math.round(towerBox?.width ?? 0)}x${Math.round(towerBox?.height ?? 0)}`,
+  );
+  expect(towerBox?.height ?? 0).toBeGreaterThanOrEqual(170);
+  await expectFirstScreen(page, FIRST_SCREEN['A2.T2']?.[vp] ?? 'fit', [
+    m.getByTestId('ss-tower'),
+    m.getByTestId('ss-shelf-b1'),
+    m.getByTestId('ss-shelf-b3'),
+    m.getByTestId('ss-tower-stack'),
+  ]);
+  await stack(page, 'b1');
+  await stack(page, 'b2');
+  await stack(page, 'c1', 'lying');
+  await expect(m.getByTestId('ss-tower-slot-2')).toHaveAttribute('data-filled', 'true');
+  await submit(page);
+  await expectFailedWithHint(page, '누운 둥근기둥 위에 더 쌓을 수 있을까요?', 1);
+  await submit(page);
+  await expectFailedWithHint(page, '둥근기둥을 세워서 다시 쌓아 봐요.', 2);
+  await expectOverlayAligned(m, 'turn-same', 'ss-tower');
+  await m.getByTestId('ss-tower-unstack').click();
+  await stack(page, 'b3');
+  await submit(page);
+  await expectPassed(page);
+
+  // T3: 둥근기둥·다른 물건 → MC ① → 다시 → MC ② + turn-same(정렬) → 두 방향 굴리고 같은 물건 통과
+  await expect(m.getByTestId('ss-ramp')).toBeVisible();
+  const ramp3 = await m.getByTestId('ss-ramp').boundingBox();
+  expect(ramp3?.height ?? 0).toBeGreaterThanOrEqual(170);
+  await expectFirstScreen(page, FIRST_SCREEN['A2.T3']?.[vp] ?? 'fit', [
+    m.getByTestId('ss-ramp'),
+    m.getByTestId('ss-shelf-cylinder'),
+    m.getByTestId('ss-play'),
+    field(page, 'same'),
+  ]);
+  await choose(page, 'shape', '둥근기둥 모양');
+  await choose(page, 'same', '다른 물건이에요');
+  await submit(page);
+  await expectFailedWithHint(page, '둥근기둥을 돌려 놓으면 다른 물건이 될까요?', 1);
+  await submit(page);
+  await expectFailedWithHint(page, '같은 둥근기둥을 세웠다가 눕혀 봐요.', 2);
+  await expectOverlayAligned(m, 'turn-same', 'ss-ramp');
+  await roll(page, 'cylinder', 'standing');
+  await roll(page, 'cylinder', 'lying');
+  await choose(page, 'same', '같은 물건이에요');
+  await submit(page);
+  await expectPassed(page);
+
+  // T4: 단서 2개 + 상자 → 상태 ① → 둥근기둥 → 통과
+  await expect(m.getByTestId('ss-mystery')).toBeVisible();
+  const mys = await m.getByTestId('ss-mystery').boundingBox();
+  console.log(
+    `[T151 ${vp}] T4 장면 ${Math.round(mys?.width ?? 0)}x${Math.round(mys?.height ?? 0)}`,
+  );
+  expect(mys?.height ?? 0).toBeGreaterThanOrEqual(170);
+  await touch(page, 2);
+  await expect(m.getByTestId('ss-clue-1')).toBeVisible();
+  await expectFirstScreen(page, FIRST_SCREEN['A2.T4']?.[vp] ?? 'fit', [
+    m.getByTestId('ss-mystery'),
+    m.getByTestId('ss-touch'),
+    field(page, 'shape'),
+  ]);
+  await choose(page, 'shape', '상자 모양');
+  await submit(page);
+  await expectFailedWithHint(page, '뾰족한 곳이 있었나요?', 1);
+  await choose(page, 'shape', '둥근기둥 모양');
+  await submit(page);
+  await expectPassed(page, true);
+});
+
+test('g1s1u2.A2 — 과제마다 대표 오답은 일반 힌트 ①이 뜬다', async ({ page }) => {
+  test.slow();
+  await openActivity(page);
+  const m = main(page);
+
+  // T1: 굴려 보지 않고 공 → 일반 ①
+  await choose(page, 'shape', '공 모양');
+  await submit(page);
+  await expectFailedWithHint(page, '모양마다 경사로에 올려 굴려 볼까요?', 1);
+  await roll(page, 'sphere');
+  await submit(page);
+  await expectPassed(page);
+
+  // T2: 상자 2개만 → 일반 ①
+  await stack(page, 'b1');
+  await stack(page, 'b2');
+  await submit(page);
+  await expectFailedWithHint(page, '모양을 하나씩 탑에 올려 볼까요?', 1);
+  await stack(page, 'b3');
+  await submit(page);
+  await expectPassed(page);
+
+  // T3: 세워서만 굴리고 둥근기둥·같은 물건 → 일반 ①
+  await roll(page, 'cylinder', 'standing');
+  await choose(page, 'shape', '둥근기둥 모양');
+  await choose(page, 'same', '같은 물건이에요');
+  await submit(page);
+  await expectFailedWithHint(page, '둥근기둥 모양을 세워서 한 번, 눕혀서 한 번 굴려 볼까요?', 1);
+  await roll(page, 'cylinder', 'lying');
+  await submit(page);
+  await expectPassed(page);
+
+  // T4: 단서 1개에서 둥근기둥 → 일반 ①
+  await touch(page, 1);
+  await choose(page, 'shape', '둥근기둥 모양');
+  await submit(page);
+  await expectFailedWithHint(page, '만져 보기를 눌러 무엇이 느껴지는지 볼까요?', 1);
+  await touch(page, 1);
+  await submit(page);
+  await expectPassed(page, true);
+  // 정답 모양 이름이 장면 글에 없다
+  await expect(m.getByTestId('ss-view')).not.toContainText(/상자|둥근기둥|원기둥|공/);
+});
+
+test('g1s1u2.A2.T2 — 공을 올리면 떨어짐(상태 2), 세운 둥근기둥은 허용한다', async ({ page }) => {
+  test.slow();
+  await openActivity(page);
+  const m = main(page);
+  await passT1(page);
+
+  // 상자 위에 공 → 떨어짐 → 상태 2 ① → 다시 → ②
+  await stack(page, 'b1');
+  await stack(page, 's1');
+  await expect(m.getByTestId('ss-tower-fallen-0')).toBeVisible();
+  await submit(page);
+  await expectFailedWithHint(page, '떨어진 모양은 어떤 모양이었나요?', 1);
+  await submit(page);
+  await expectFailedWithHint(page, '평평한 곳이 위아래에 있는 모양을 골라 봐요.', 2);
+
+  // 모두 내리고 상자 2개 + 세운 둥근기둥 → 통과
+  await m.getByTestId('ss-tower-clear').click();
+  await stack(page, 'b1');
+  await stack(page, 'b2');
+  await stack(page, 'c1', 'standing');
+  await submit(page);
+  await expectPassed(page);
+});
+
+test('g1s1u2.A2 — 키보드만으로 A2.T2를 푼다(선반 방향키 + T)', async ({ page }) => {
+  test.slow();
+  await openActivity(page);
+  const m = main(page);
+  await passT1(page);
+
+  await m.getByTestId('ss-shelf-b1').focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(m.getByTestId('ss-shelf-b1')).toHaveAttribute('aria-pressed', 'true');
+  await page.keyboard.press('t');
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('ArrowRight');
+  await expect(m.getByTestId('ss-shelf-b2')).toHaveAttribute('aria-pressed', 'true');
+  await page.keyboard.press('t');
+  for (let i = 0; i < 3; i += 1) await page.keyboard.press('ArrowRight');
+  await expect(m.getByTestId('ss-shelf-b3')).toHaveAttribute('aria-pressed', 'true');
+  await page.keyboard.press('t');
+  await expect(m.getByTestId('ss-tower-slot-2')).toHaveAttribute('data-filled', 'true');
+  await expect(m.getByTestId('ss-tower-slot-3')).toHaveAttribute('data-filled', 'false');
+  await page.getByRole('button', { name: '확인하기' }).focus();
+  await page.keyboard.press('Enter');
+  await expectPassed(page);
+});
+
+test('g1s1u2.A2 — 조작 단추는 64px 이상이다(저학년 모드)', async ({ page }) => {
+  await openActivity(page);
+  const m = main(page);
+  await m.getByTestId('ss-shelf-cylinder').click();
+  const ids = [
+    'ss-shelf-box',
+    'ss-shelf-cylinder',
+    'ss-shelf-sphere',
+    'ss-pose-standing',
+    'ss-pose-lying',
+    'ss-ramp-place',
+    'ss-play',
+  ];
+  for (const id of ids) {
+    const box = await m.getByTestId(id).boundingBox();
+    expect(box, id).not.toBeNull();
+    if (!box) continue;
+    expect(box.width, `${id} 너비`).toBeGreaterThanOrEqual(63.5);
+    expect(box.height, `${id} 높이`).toBeGreaterThanOrEqual(63.5);
+  }
+  for (const label of ['상자 모양', '둥근기둥 모양', '공 모양']) {
+    const box = await field(page, 'shape').getByRole('button', { name: label }).boundingBox();
+    expect(box?.height ?? 0).toBeGreaterThanOrEqual(63.5);
+  }
+});
+
+test('g1s1u2.A2.T4 — 단서와 그림자만 보이고 정답 모양 이름은 판에 없다', async ({ page }) => {
+  test.slow();
+  await openActivity(page);
+  const m = main(page);
+  await passT1(page);
+  await passT2(page);
+  await passT3(page);
+  await expect(m.getByTestId('ss-mystery')).toBeVisible();
+  await expect(m.getByTestId('ss-shadow')).toBeVisible();
+  await touch(page, 2);
+  await expect(m.getByTestId('ss-touch')).toBeDisabled();
+  await expect(m).not.toContainText(/상자|둥근기둥|원기둥|공/);
+  await expectNoConclusionText(page);
+  await screenshot(page, 'g1s1u2-a2-t4.png');
+  await choose(page, 'shape', '둥근기둥 모양');
+  await submit(page);
+  await expectPassed(page, true);
+});
+
+// ---------------------------------------------------------------- 오프라인
+
+test('오프라인에서도 g1s1u2.A2 활동이 열린다', async ({ page, context }) => {
+  await page.goto(PREVIEW_URL);
+  await page.getByRole('button', { name: '1번', exact: true }).click();
+  await page.getByRole('button', { name: '건너뛰기' }).click();
+  await expect(page).toHaveURL(/#\/map$/);
+  await page.goto(`${PREVIEW_URL}/#/activity/g1s1u2.A2`);
+  await expect(page.getByRole('heading', { name: '굴리고 쌓아 보기' })).toBeVisible();
+
+  await page.evaluate(async () => {
+    await navigator.serviceWorker.ready;
+    if (!navigator.serviceWorker.controller) {
+      await new Promise<void>((resolve) =>
+        navigator.serviceWorker.addEventListener('controllerchange', () => resolve(), {
+          once: true,
+        }),
+      );
+    }
+  });
+
+  await context.setOffline(true);
+  await page.reload();
+  await expect(page.getByRole('heading', { name: '굴리고 쌓아 보기' })).toBeVisible();
+  await expect(page.getByRole('button', { name: '확인하기' })).toBeVisible();
+});
