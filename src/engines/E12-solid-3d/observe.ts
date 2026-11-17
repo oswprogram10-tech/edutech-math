@@ -4,6 +4,7 @@
  * 회전(`viewTurn`)을 해도 상태 좌표·투영 행렬은 변하지 않는다.
  */
 import type { JsonValue, Observation } from '../../core/engine-sdk';
+import { observeLathe } from './lathe/observe';
 import { observeNet } from './net/observe';
 import { observePrism } from './prism/observe';
 import { observePrismNet } from './prismnet/observe';
@@ -34,6 +35,9 @@ function toJsonPainted(painted: PaintedViewsState): Readonly<Record<string, Json
 }
 
 export function observe(state: SolidState): Observation {
+  if (state.mode === 'lathe') {
+    return observeLathe(state);
+  }
   if (state.mode === 'shapes-sort') {
     return observeShapes(state);
   }
