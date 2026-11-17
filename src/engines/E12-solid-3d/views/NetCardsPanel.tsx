@@ -7,9 +7,18 @@ import type { NetCardConfig, NetFoldState } from '../types';
 import styles from '../View.module.css';
 
 const CARD_CELL = 18;
+const CARD_CELL_LARGE = 30;
 const CARD_PAD = 3;
 
-function NetCardMiniSvg({ card }: { readonly card: NetCardConfig }) {
+function NetCardMiniSvg({
+  card,
+  cell,
+  ariaLabel,
+}: {
+  readonly card: NetCardConfig;
+  readonly cell: number;
+  readonly ariaLabel?: string;
+}) {
   let minX = Infinity;
   let minY = Infinity;
   let maxX = -Infinity;
@@ -22,16 +31,23 @@ function NetCardMiniSvg({ card }: { readonly card: NetCardConfig }) {
   }
   const cols = Math.max(1, maxX - minX);
   const rows = Math.max(1, maxY - minY);
-  const w = cols * CARD_CELL + CARD_PAD * 2;
-  const h = rows * CARD_CELL + CARD_PAD * 2;
+  const w = cols * cell + CARD_PAD * 2;
+  const h = rows * cell + CARD_PAD * 2;
 
   return (
-    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} aria-hidden="true">
+    <svg
+      width={w}
+      height={h}
+      viewBox={`0 0 ${w} ${h}`}
+      aria-hidden={ariaLabel ? undefined : 'true'}
+      role={ariaLabel ? 'img' : undefined}
+      aria-label={ariaLabel}
+    >
       {card.faces.map((f, i) => {
-        const fx = CARD_PAD + (f.at[0] - minX) * CARD_CELL;
-        const fy = CARD_PAD + (f.at[1] - minY) * CARD_CELL;
-        const fw = f.w * CARD_CELL;
-        const fh = f.h * CARD_CELL;
+        const fx = CARD_PAD + (f.at[0] - minX) * cell;
+        const fy = CARD_PAD + (f.at[1] - minY) * cell;
+        const fw = f.w * cell;
+        const fh = f.h * cell;
         return (
           <g key={`card-face-${i}`}>
             <rect
@@ -63,26 +79,45 @@ function NetCardMiniSvg({ card }: { readonly card: NetCardConfig }) {
   );
 }
 
-export function NetCardsPanel({ state }: { readonly state: NetFoldState }) {
+export function NetCardsPanel({
+  state,
+  size = 'normal',
+}: {
+  readonly state: NetFoldState;
+  readonly size?: 'normal' | 'large';
+}) {
   const cards = state.settings.netCards;
   if (cards.length === 0) return null;
   const compact = cards.length >= 4;
+  const large = size === 'large';
+  const cell = large ? CARD_CELL_LARGE : CARD_CELL;
 
   return (
     <div
-      className={styles.panelBlock}
+      className={large ? styles.netCardsLarge : styles.panelBlock}
       data-testid="net-cards"
       data-compact-cards={compact ? 'true' : undefined}
       data-card-count={cards.length}
+      data-card-size={large ? 'large' : undefined}
     >
-      <p className={styles.projTitle} style={{ textAlign: 'left' }}>
-        {S.referenceCardsTitle}
-      </p>
-      <div className={styles.cardsGrid}>
+      {large ? null : (
+        <p className={styles.projTitle} style={{ textAlign: 'left' }}>
+          {S.referenceCardsTitle}
+        </p>
+      )}
+      <div className={large ? styles.cardsRowLarge : styles.cardsGrid}>
         {cards.map((card) => (
-          <div key={card.id} className={styles.refCard} data-testid={`net-card-${card.id}`}>
-            <p className={styles.refCardLabel}>{card.label}</p>
-            <NetCardMiniSvg card={card} />
+          <div
+            key={card.id}
+            className={large ? `${styles.refCard} ${styles.refCardLarge}` : styles.refCard}
+            data-testid={`net-card-${card.id}`}
+          >
+            <p className={large ? styles.refCardLabelLarge : styles.refCardLabel}>{card.label}</p>
+            <NetCardMiniSvg
+              card={card}
+              cell={cell}
+              ariaLabel={large ? S.net.cardAria(card.label) : undefined}
+            />
           </div>
         ))}
       </div>

@@ -89,6 +89,8 @@ export const solid3dStrings = {
     instructionsEditable: '모눈 칸을 눌러 면을 놓고, 면을 다시 눌러 뺄 수 있어요.',
     instructionsPredict: '접기 전에 마주 볼 것 같은 면을 먼저 골라 보세요.',
     instructionsView: '전개도와 접힌 모양을 살펴보아요.',
+    instructionsCards: '전개도 카드를 하나씩 살펴보아요.',
+    cardAria: (label: string) => `전개도 카드 ${label}`,
     keyHint:
       '방향키: 칸 옮기기 · Enter/Space: 놓기·빼기 · R: 모양 돌리기 · F: 접기·펼치기 · [/]: 돌리기',
     keyHintPredict: 'Tab으로 면을 고르고 Enter로 예측해요 · F: 접기·펼치기 · [/]: 돌리기',

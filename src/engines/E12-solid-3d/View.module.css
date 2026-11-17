@@ -718,6 +718,44 @@ button.numCell {
   line-height: 1.2;
 }
 
+.refCardLarge {
+  gap: 0.4rem;
+  padding: 0.6rem 0.8rem;
+}
+
+.refCardLabelLarge {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #1d2330;
+  line-height: 1.2;
+}
+
+/* T141: 카드만 보기. 판 너비 전체에 카드를 크게 한 줄로 놓고 좁으면 줄을 바꾼다. */
+.netCardsOnlyArea {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.netCardsLarge {
+  width: 100%;
+  min-width: 0;
+}
+
+.cardsRowLarge {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.cardsRowLarge > .refCard {
+  width: auto;
+}
+
 .miniLayersRow {
   display: flex;
   flex-wrap: wrap;

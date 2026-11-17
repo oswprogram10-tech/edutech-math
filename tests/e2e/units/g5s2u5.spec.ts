@@ -656,17 +656,16 @@ test('g5s2u5.A2 — 전개도 7과제 흐름·오개념·fold-collision·fold-pa
   await expectPassed(page);
 
   // T7 첫 화면 + 가·겹침 → 일반 ① → 나·겹침 → 통과
+  await expect(main.getByTestId('net-grid')).toHaveCount(0);
   const t7Cards = [
     main.getByTestId('net-card-ga'),
     main.getByTestId('net-card-na'),
     main.getByTestId('net-card-da'),
   ];
   if (vp === 'chromebook') {
-    // 측정(엔진 수정 요청): 크롬북 1366×768에서 보기 카드가 `.sideStack`(overflow:auto) 안에서
-    // 아래쪽 약 5%(5.6px)가 잘린다(카드 아랫변이 안 보임). 응답 칸과 '확인하기'는 모두 들어온다.
     await expectNoPanelInnerScroll(page);
     for (const card of t7Cards) {
-      await expect(card).toBeInViewport({ ratio: 0.9 });
+      await expect(card).toBeInViewport({ ratio: 1 });
     }
     await expect(field(page, 'pick')).toBeInViewport({ ratio: 1 });
     await expect(field(page, 'why')).toBeInViewport({ ratio: 1 });
