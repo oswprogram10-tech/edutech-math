@@ -65,6 +65,12 @@ export const graphStrings = {
     tooltip: (cat: string, value: number, unit: string) => `${cat}: ${value}${unit}`,
   },
 
+  dataset: {
+    group: '자료 묶음',
+    pickHint: '자료를 하나 골라요',
+    source: (text: string) => `자료: ${text}`,
+  },
+
   scroll: {
     moreAbove: '▲ 위에 칸이 더 있어요',
     moreSide: '▶ 옆에 칸이 더 있어요',

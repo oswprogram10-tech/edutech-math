@@ -189,6 +189,7 @@ function observeBase(state: GraphState): Observation {
     offGridCategories,
     misconceptions: [...misconceptions].sort(),
   };
+  if (settings.datasets.length > 0) result['datasetId'] = state.datasetId;
   if (data !== null) {
     result['tableMatchesData'] =
       categories.length > 0 && categories.every((cat) => table[cat] === data[cat]);

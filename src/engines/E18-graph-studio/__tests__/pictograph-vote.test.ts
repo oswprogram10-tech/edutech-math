@@ -574,6 +574,7 @@ describe('class-vote', () => {
     expect(Object.keys(state).sort()).toEqual(
       [
         'bars',
+        'datasetId',
         'marks',
         'mode',
         'orientation',
