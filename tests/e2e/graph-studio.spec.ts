@@ -2227,7 +2227,7 @@ test.describe('T163: line-graph 기준 스크린샷', () => {
 });
 
 test.describe('T166: band-circle 띠·원그래프', () => {
-  const BAND_H = 730;
+  const BAND_H = 760;
   const FRUIT_DATA = [
     ['사과', 9],
     ['포도', 6],
@@ -2248,10 +2248,10 @@ test.describe('T166: band-circle 띠·원그래프', () => {
     startAs: 'circle',
     compare: { title: '2반', data: { 사과: 20, 포도: 10, 딸기: 10, 기타: 10 } },
   };
-  // 논리 좌표: 띠는 x 60~860(한 칸 8), 가운데 선 y 130, 손잡이 y 208.
-  const BAND_X = 60;
-  const CELL = 8;
-  const HANDLE_Y = 208;
+  // 논리 좌표: 띠는 x 50~950(한 칸 9), 가운데 선 y 140, 손잡이 y 228.
+  const BAND_X = 50;
+  const CELL = 9;
+  const HANDLE_Y = 228;
 
   function handle(page: Page, cat: string): Locator {
     return page.locator(`[data-testid="band-handle"][data-cat="${cat}"]`);
@@ -2349,14 +2349,14 @@ test.describe('T166: band-circle 띠·원그래프', () => {
     const canvas = page.getByTestId('graph-canvas');
     // 조금만 끌면 놓았을 때 띠로 붙는다.
     const start = await center(page.getByTestId('band-morph-hit'));
-    await dragTo(page, start, await bandPoint(page, BAND_X + 700, 130));
+    await dragTo(page, start, await bandPoint(page, BAND_X + 700, 140));
     await waitCurl(page, 0);
     await pollObservation(page, (o) => o['circleShown'] === false && o['curl'] === 0);
     // 끌어 돌려 말면(왼쪽 끝 가까이로) 원그래프로 붙는다.
     await dragTo(
       page,
       await center(page.getByTestId('band-morph-hit')),
-      await bandPoint(page, BAND_X + 130, 130),
+      await bandPoint(page, BAND_X + 130, 140),
     );
     await waitCurl(page, 100);
     await pollObservation(page, (o) => o['circleShown'] === true && o['curl'] === 100);
@@ -2376,10 +2376,10 @@ test.describe('T166: band-circle 띠·원그래프', () => {
   test('모핑 중간(curl 40)에도 조각이 순서대로 이어져 있다', async ({ page }) => {
     await openEngine(page, { ...config, band: 'given' }, { mode: 'band-circle' });
     const start = await center(page.getByTestId('band-morph-hit'));
-    // 현 길이 약 509(curl 40)가 되도록 끈 채 멈춘다.
+    // 현 길이 약 573(curl 40)가 되도록 끈 채 멈춘다.
     await page.mouse.move(start.x, start.y);
     await page.mouse.down();
-    const target = await bandPoint(page, BAND_X + 509, 130);
+    const target = await bandPoint(page, BAND_X + 573, 140);
     await page.mouse.move(target.x, target.y, { steps: 6 });
     const shown = Number(await page.getByTestId('graph-canvas').getAttribute('data-curl'));
     expect(shown).toBeGreaterThan(35);
@@ -2415,7 +2415,7 @@ test.describe('T166: band-circle 띠·원그래프', () => {
     await expect(page.getByText(/정답|오답|틀렸|맞았/)).toHaveCount(0);
   });
 
-  test('손잡이를 누르는 영역은 48px 이상이고 띠 한 칸은 5px 이상이다', async ({ page }) => {
+  test('손잡이를 누르는 영역은 48px 이상이고 띠 한 칸은 6px 이상이다', async ({ page }) => {
     await openEngine(page, { ...config, band: 'student' }, { mode: 'band-circle' });
     const hits = [
       page.locator('[data-testid="band-handle"] [data-testid="band-handle-hit"]').first(),
@@ -2434,9 +2434,7 @@ test.describe('T166: band-circle 띠·원그래프', () => {
     if (!frame) throw new Error('띠를 찾지 못했습니다.');
     const cell = frame.width / 100;
     console.log(`[T166 ${test.info().project.name}] 띠 한 칸 ${cell.toFixed(2)}px`);
-    // 카드 기준은 아이패드(5px). 크롬북·전자칠판은 그림이 더 작거나 커서 참고만 한다.
-    if (test.info().project.name === 'ipad') expect(cell).toBeGreaterThanOrEqual(5);
-    else expect(cell).toBeGreaterThanOrEqual(4);
+    expect(cell).toBeGreaterThanOrEqual(6);
   });
 
   test('원그래프 지름이 크다(아이패드 300px 이상)', async ({ page }) => {
@@ -2452,6 +2450,42 @@ test.describe('T166: band-circle 띠·원그래프', () => {
       .boundingBox();
     expect(compare?.width ?? 0).toBeCloseTo(circle.width, 0);
     if (test.info().project.name === 'ipad') expect(diameter).toBeGreaterThanOrEqual(300);
+  });
+
+  test('원그래프에서 10칸 눈금은 원둘레 바깥의 짧은 선이고 반지름 선은 조각 경계뿐이다', async ({
+    page,
+  }) => {
+    await openEngine(
+      page,
+      { ...config, band: 'given', startAs: 'circle' },
+      { mode: 'band-circle' },
+    );
+    await waitCurl(page, 100);
+    const ticks = await page
+      .locator('[data-testid="band-tick"]')
+      .evaluateAll((nodes) =>
+        nodes.map((node) =>
+          ['x1', 'y1', 'x2', 'y2'].map((name) => Number(node.getAttribute(name))),
+        ),
+      );
+    expect(ticks).toHaveLength(11);
+    for (const [x1, y1, x2, y2] of ticks as [number, number, number, number][]) {
+      // 주 원: 중심 (500, 460), 반지름 225. 눈금은 둘레에서 바깥으로 반지름의 8%(18)만 뻗는다.
+      expect(Math.hypot((x1 ?? 0) - 500, (y1 ?? 0) - 460)).toBeCloseTo(225, 0);
+      expect(Math.hypot((x2 ?? 0) - 500, (y2 ?? 0) - 460)).toBeCloseTo(243, 0);
+    }
+  });
+
+  test('compare가 있으면 주 원 위에도 이름이 있고(circleTitle, 없으면 title) 전체 제목은 가운데에 있다', async ({
+    page,
+  }) => {
+    await openEngine(page, compareConfig, { mode: 'band-circle' });
+    await waitCurl(page, 100);
+    await expect(page.getByTestId('band-circle-title')).toHaveText('좋아하는 과일');
+    await expect(page.getByTestId('band-title')).toHaveAttribute('text-anchor', 'middle');
+    await openEngine(page, { ...compareConfig, circleTitle: '1반' }, { mode: 'band-circle' });
+    await waitCurl(page, 100);
+    await expect(page.getByTestId('band-circle-title')).toHaveText('1반');
   });
 
   test('좁은 판(660x420)에서는 두 원이 위아래로 쌓인다', async ({ page }) => {

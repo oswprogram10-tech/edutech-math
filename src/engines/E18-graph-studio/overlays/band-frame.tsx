@@ -24,7 +24,7 @@ export function BandFrameOverlay({ state }: OverlayProps<GraphConfig, GraphState
       testId="band-frame"
       canvasSelector={CANVAS_SELECTOR}
       logicalWidth={1000}
-      logicalHeight={730}
+      logicalHeight={760}
     >
       {(info) => {
         if (state.mode !== 'band-circle') return null;

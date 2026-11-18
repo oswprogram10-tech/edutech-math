@@ -18,8 +18,8 @@ export const RING_CURL = 80;
 export const MAX_CURL = 100;
 
 const MARGIN = 12;
-const BAND_LENGTH = 800;
-const BAND_THICKNESS = 80;
+const BAND_LENGTH = 900;
+const BAND_THICKNESS = 100;
 
 export interface BandFrame {
   /** 논리 크기(viewBox). */
@@ -41,15 +41,15 @@ export interface BandFrame {
 }
 
 const PIE_R = 225;
-const PIE_CY = 440;
+const PIE_CY = 460;
 
 /** 논리 틀. `compare`가 있으면 두 번째 원을 오른쪽(좁으면 `stacked`로 아래)에 둔다. */
 export function bandFrameOf(compare: boolean, stacked: boolean): BandFrame {
-  const band = { x: 60, y: 130, length: BAND_LENGTH, thickness: BAND_THICKNESS };
+  const band = { x: 50, y: 140, length: BAND_LENGTH, thickness: BAND_THICKNESS };
   if (!compare) {
     return {
       width: 1000,
-      height: 730,
+      height: 760,
       band,
       pie: { cx: 500, cy: PIE_CY, r: PIE_R },
       compare: null,
@@ -69,7 +69,7 @@ export function bandFrameOf(compare: boolean, stacked: boolean): BandFrame {
   }
   return {
     width: 1000,
-    height: 730,
+    height: 760,
     band,
     pie: { cx: 260, cy: PIE_CY, r: PIE_R },
     compare: { cx: 740, cy: PIE_CY },

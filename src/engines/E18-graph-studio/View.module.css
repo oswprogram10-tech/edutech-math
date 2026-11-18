@@ -559,7 +559,7 @@
 }
 
 /* T166 띠·원그래프(band-circle): 그래프 아래에 표를 둔다. 판이 내용 높이면 그래프 영역이 가로 폭의 비율
-   (논리 1000:730)만큼 높이를 갖는다(화면 높이 상한 안에서). 표까지 합쳐 판보다 길면 판 전체가 세로로 스크롤한다
+   (논리 1000:760)만큼 높이를 갖는다(화면 높이 상한 안에서). 표까지 합쳐 판보다 길면 판 전체가 세로로 스크롤한다
    (그림그래프와 같은 방식). 그래프 영역은 줄어들지 않아 원이 작아지지 않는다. */
 .wrap[data-mode='band-circle'] {
   overflow-x: hidden;
@@ -576,7 +576,7 @@
 }
 
 .views[data-band='true'] > .boardArea {
-  --band-board-height: min(73cqw, max(calc(100dvh - 330px), 380px));
+  --band-board-height: min(76cqw, max(calc(100dvh - 240px), 520px));
   flex: 0 0 auto;
   height: var(--band-board-height);
   min-height: 200px;

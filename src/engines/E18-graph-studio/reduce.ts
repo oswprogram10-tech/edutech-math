@@ -202,6 +202,7 @@ function normalizeBandCircle(
     morph,
     startAs: record['startAs'] === 'circle' ? 'circle' : 'band',
     sliceLabels,
+    circleTitle: stringOf(record['circleTitle']) || stringOf(record['title']),
     compare: normalizeCompare(record['compare']),
     total,
     truePercents: Object.fromEntries(

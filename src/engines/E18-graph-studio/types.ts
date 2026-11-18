@@ -86,6 +86,8 @@ interface GraphConfigBase {
   readonly startAs?: 'band' | 'circle';
   readonly sliceLabels?: SliceLabels;
   readonly compare?: { readonly title?: unknown; readonly data?: unknown };
+  /** compare가 있을 때 주 원그래프 위의 이름. 없으면 `title`. */
+  readonly circleTitle?: string;
 }
 
 export interface TableToGraphConfig extends GraphConfigBase {
@@ -164,6 +166,8 @@ export interface BandCircleSettings {
   readonly morph: MorphSetting;
   readonly startAs: 'band' | 'circle';
   readonly sliceLabels: SliceLabels;
+  /** 주 원그래프 위에 쓰는 이름(`circleTitle`, 없으면 `title`). */
+  readonly circleTitle: string;
   readonly compare: CompareSettings | null;
   readonly total: number;
   readonly truePercents: Readonly<Record<string, string>>;

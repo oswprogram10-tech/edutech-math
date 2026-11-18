@@ -303,30 +303,38 @@ export function BandCanvas({ state, dispatch, readOnly, targetSize, stacked }: B
 
   const overflowD = sum > BAND_CELLS ? regionPath(frame, shown, 1, sum / BAND_CELLS) : '';
 
-  // 굵은 눈금(10칸마다)과 가는 눈금(한 칸마다). 가는 눈금은 띠가 말리기 시작하면 흐려진다.
-  const gridLine = (k: number, bold: boolean) => {
+  // 10칸 눈금과 한 칸 눈금. 띠(말리는 중 포함)에서는 띠 두께 방향으로 긋고, 원그래프(80~100)에서는
+  // 조각 경계선과 헷갈리지 않게 원둘레 바깥쪽에 반지름의 8%만 짧게 긋는다. 가는 눈금은 말리기 시작하면 흐려진다.
+  const outward = shown > 80;
+  const tickLine = (k: number, tenth: boolean) => {
     const a = mapper.at(k / BAND_CELLS, 0);
-    const b = mapper.at(k / BAND_CELLS, 1);
+    let b = mapper.at(k / BAND_CELLS, 1);
+    if (outward) {
+      const width = Math.hypot(b.x - a.x, b.y - a.y);
+      const out = (frame.pie.r * 0.08) / Math.max(width, 1);
+      b = mapper.at(k / BAND_CELLS, -out);
+    }
     return (
       <line
-        key={`${bold ? 'b' : 't'}-${k}`}
+        key={`${tenth ? 'b' : 't'}-${k}`}
         x1={a.x}
         y1={a.y}
         x2={b.x}
         y2={b.y}
         stroke={INK}
-        strokeWidth={bold ? 3 : 1}
-        opacity={bold ? 0.85 : 0.35}
+        strokeWidth={tenth ? 2 : 1}
+        opacity={tenth ? 0.85 : 0.35}
         pointerEvents="none"
+        data-testid={tenth ? 'band-tick' : undefined}
       />
     );
   };
   const gridLines = [];
   const thinOpacity = Math.max(0, 1 - shown / 20);
   for (let k = 0; k <= BAND_CELLS; k += 1) {
-    const bold = k % 10 === 0;
-    if (bold) gridLines.push(gridLine(k, true));
-    else if (thinOpacity > 0.02) gridLines.push(gridLine(k, false));
+    const tenth = k % 10 === 0;
+    if (tenth) gridLines.push(tickLine(k, true));
+    else if (thinOpacity > 0.02 && !outward) gridLines.push(tickLine(k, false));
   }
 
   // 두 번째 원그래프(읽기 전용, 원그래프일 때만).
@@ -386,8 +394,29 @@ export function BandCanvas({ state, dispatch, readOnly, targetSize, stacked }: B
       </defs>
       <rect width={frame.width} height={frame.height} fill={PAPER} />
       {settings.title ? (
-        <text x={60} y={20 + fs(26)} fontSize={fs(26)} fontWeight={700} fill={INK}>
+        <text
+          x={frame.compare !== null ? frame.width / 2 : 60}
+          y={20 + fs(26)}
+          textAnchor={frame.compare !== null ? 'middle' : 'start'}
+          fontSize={fs(26)}
+          fontWeight={700}
+          fill={INK}
+          data-testid="band-title"
+        >
           {settings.title}
+        </text>
+      ) : null}
+      {frame.compare !== null && isCircle && band?.circleTitle ? (
+        <text
+          x={frame.pie.cx}
+          y={frame.pie.cy - frame.pie.r - 34}
+          textAnchor="middle"
+          fontSize={fs(24)}
+          fontWeight={700}
+          fill={INK}
+          data-testid="band-circle-title"
+        >
+          {band.circleTitle}
         </text>
       ) : null}
 
@@ -399,8 +428,8 @@ export function BandCanvas({ state, dispatch, readOnly, targetSize, stacked }: B
               key={slice.cat}
               d={slice.d}
               fill={sliceColor(slice.index)}
-              stroke="#ffffff"
-              strokeWidth={2}
+              stroke={INK}
+              strokeWidth={3.5}
               strokeLinejoin="round"
               role="img"
               aria-label={S.band.slice(slice.cat, slice.cells)}
@@ -462,7 +491,7 @@ export function BandCanvas({ state, dispatch, readOnly, targetSize, stacked }: B
           {compare.title ? (
             <text
               x={frame.compare.cx}
-              y={frame.compare.cy - frame.pie.r - 14}
+              y={frame.compare.cy - frame.pie.r - 34}
               textAnchor="middle"
               fontSize={fs(24)}
               fontWeight={700}
@@ -478,8 +507,8 @@ export function BandCanvas({ state, dispatch, readOnly, targetSize, stacked }: B
                 key={slice.cat}
                 d={slice.d}
                 fill={sliceColor(slice.index)}
-                stroke="#ffffff"
-                strokeWidth={2}
+                stroke={INK}
+                strokeWidth={3.5}
                 strokeLinejoin="round"
                 role="img"
                 aria-label={S.band.slice(slice.cat, slice.cells)}

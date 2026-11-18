@@ -20,7 +20,7 @@ export function TotalBarsOverlay({ state }: OverlayProps<GraphConfig, GraphState
       testId="total-bars"
       canvasSelector={CANVAS_SELECTOR}
       logicalWidth={1000}
-      logicalHeight={730}
+      logicalHeight={760}
     >
       {(info) => {
         if (state.mode !== 'band-circle' || state.curl < 100) return null;

@@ -80,6 +80,14 @@ describe('band-circle 설정 정규화', () => {
     expect(empty).toEqual({ a: '0', b: '0' });
   });
 
+  it('circleTitle은 없으면 title을 쓴다', () => {
+    expect(make({ title: '과일' }).settings.bandCircle?.circleTitle).toBe('과일');
+    expect(make({ title: '과일', circleTitle: '1반' }).settings.bandCircle?.circleTitle).toBe(
+      '1반',
+    );
+    expect(make().settings.bandCircle?.circleTitle).toBe('');
+  });
+
   it('startAs circle은 처음부터 curl 100이다', () => {
     expect(make({ startAs: 'circle' }).curl).toBe(100);
     expect(make({ startAs: 'circle', morph: 'none' }).curl).toBe(100);
