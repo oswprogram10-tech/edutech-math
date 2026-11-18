@@ -5,7 +5,7 @@
  * - 막대는 끝을 끌어 칸에 붙이고(Pointer Events), 키보드 화살표로 한 칸씩 바꾼다.
  * - ○ 칸은 누르거나 Enter/Space로 채우고 비운다.
  */
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { minTouchRadius, pointerToLogical, useDrag, useRenderedSize } from '../../core/engine-sdk';
 import type { TargetSize } from '../../core/engine-sdk';
@@ -16,6 +16,8 @@ import {
   barThickness,
   cellLength,
   frameOf,
+  isTouchOMark,
+  minPictureSize,
   markRect,
   markSide,
   positionToCells,
@@ -72,6 +74,16 @@ export function GraphCanvas({
   const student = settings.graph === 'student';
   const isBar = settings.graphType === 'bar';
   const interactive = student && !readOnly;
+  // 누르는 ○ 그래프는 칸이 targetSize 이상이 되는 크기를 지키고, 판이 작으면 판 안에서 스크롤한다.
+  const scrolls = isTouchOMark(settings);
+  const minSize = scrolls ? minPictureSize(frame, targetSize) : null;
+  const scrollKey = `${state.orientation}|${cells}|${settings.categories.length}|${targetSize}`;
+  useEffect(() => {
+    const host = svgRef.current?.parentElement;
+    if (!scrolls || !host) return;
+    // 처음 위치: 축(0번 칸)이 보이는 쪽. 세로 그래프는 맨 아래, 가로 그래프는 맨 왼쪽.
+    host.scrollTo?.({ top: vertical ? host.scrollHeight : 0, left: 0 });
+  }, [scrolls, scrollKey, vertical]);
   const unit = settings.valueLabel;
 
   const snap = (point: { readonly x: number; readonly y: number }): number => {
@@ -517,6 +529,8 @@ export function GraphCanvas({
       data-testid="graph-canvas"
       data-orientation={state.orientation}
       data-graph-type={settings.graphType}
+      data-scroll={scrolls ? 'true' : undefined}
+      style={minSize ? { minWidth: minSize.width, minHeight: minSize.height } : undefined}
       {...(interactive && isBar ? drag.handlers : {})}
     >
       <defs>

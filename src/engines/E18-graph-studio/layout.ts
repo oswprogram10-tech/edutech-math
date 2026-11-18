@@ -5,7 +5,7 @@
  * 가로 그래프: 범주는 y축 왼쪽(처음 범주가 위), 값 눈금은 x축 아래(0이 왼쪽).
  * View와 오버레이가 같은 계산을 쓴다.
  */
-import type { Orientation } from './types';
+import type { GraphSettings, Orientation } from './types';
 import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from './types';
 
 export interface Rect {
@@ -128,3 +128,28 @@ export function tickCells(cells: number): number[] {
 }
 
 export { LOGICAL_HEIGHT, LOGICAL_WIDTH };
+
+/** 학생이 누르는 ○ 그래프(칸마다 눌러 채움)인가. 이 그래프는 칸이 targetSize 이상이 되도록 스크롤한다. */
+export function isTouchOMark(settings: GraphSettings): boolean {
+  return settings.graph === 'student' && settings.graphType === 'o-mark';
+}
+
+/**
+ * ○ 칸 한 변이 화면에서 `targetSize`px 이상이 되는 그림 배율(화면 px / 논리 좌표).
+ * 칸 간격(값 축 방향)과 범주 띠 폭(범주 축 방향) 둘 다 본다.
+ */
+export function minTouchScale(frame: Frame, targetSize: number): number {
+  // markSide = min(칸 간격, 띠 폭 × 0.8) − 4 이므로 둘을 각각 targetSize로 맞춘다.
+  const along = Math.max(1, cellLength(frame) - 4);
+  const across = Math.max(1, bandLength(frame) * 0.8 - 4);
+  return Math.max(targetSize / along, targetSize / across);
+}
+
+/** 위 배율에서 SVG가 가져야 할 최소 화면 크기. */
+export function minPictureSize(
+  frame: Frame,
+  targetSize: number,
+): { readonly width: number; readonly height: number } {
+  const scale = minTouchScale(frame, targetSize);
+  return { width: Math.ceil(LOGICAL_WIDTH * scale), height: Math.ceil(LOGICAL_HEIGHT * scale) };
+}

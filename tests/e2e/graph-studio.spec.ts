@@ -453,6 +453,45 @@ test.describe('오버레이 5개', () => {
   });
 });
 
+test.describe('○ 칸 터치 크기(판 전체 폭, axisMax 7)', () => {
+  const config = {
+    data: { 가: 3, 나: 5, 다: 2 },
+    graph: 'student',
+    graphType: 'o-mark',
+    axisMax: 7,
+    orientationFlip: true,
+  };
+
+  for (const orientation of ['vertical', 'horizontal'] as const) {
+    for (const target of [48, 64] as const) {
+      test(`${orientation} · targetSize ${target}: ○ 칸 한 변이 ${target}px 이상이고 맨 위 칸도 눌러 채운다`, async ({
+        page,
+      }) => {
+        await openEngine(page, { ...config, orientation }, { stageFit: true });
+        if (target === 64) await page.getByRole('button', { name: '터치 48px' }).click();
+        await expect(page.getByTestId('graph-canvas')).toHaveAttribute('data-scroll', 'true');
+        for (const index of [0, 3, 6]) {
+          const box = await cell(page, '가', index).locator('rect').first().boundingBox();
+          if (!box) throw new Error('칸 크기를 알 수 없습니다.');
+          expect(box.width).toBeGreaterThanOrEqual(target - 0.5);
+          expect(box.height).toBeGreaterThanOrEqual(target - 0.5);
+        }
+        // 처음에는 축(0번 칸)이 보이는 쪽이다.
+        const area = await page.locator('[data-scroll="true"]').first().boundingBox();
+        const first = await cell(page, '가', 0).boundingBox();
+        if (!area || !first) throw new Error('상자를 찾지 못했습니다.');
+        expect(first.x).toBeGreaterThanOrEqual(area.x - 1);
+        expect(first.y + first.height).toBeLessThanOrEqual(area.y + area.height + 1);
+        // 맨 위(6번) 칸까지 스크롤해 누를 수 있다.
+        const top = cell(page, '가', 6);
+        await top.scrollIntoViewIfNeeded();
+        await top.click();
+        await expect(top).toHaveAttribute('data-filled', 'true');
+      });
+    }
+  }
+});
+
 test.describe('기준 스크린샷', () => {
   test('주어진 세로 막대그래프와 표', async ({ page }) => {
     await openEngine(
@@ -555,7 +594,9 @@ test.describe('크롬북 두 칸 폭(660×420) ?stage=fit', () => {
       const mode = variant.config['mode'] as 'table-to-graph' | 'scale';
       await openEngine(page, variant.config, { stageFit: true, mode });
       await page.waitForTimeout(200);
-      const measured = await expectSandboxCanvasVisible(page);
+      // 누르는 ○ 그래프는 칸 크기를 지키려고 그래프 영역 안에서 스크롤할 수 있다(캔버스가 판보다 클 수 있음).
+      const scrolls = variant.config['graphType'] === 'o-mark';
+      const measured = scrolls ? { width: 0, height: 0 } : await expectSandboxCanvasVisible(page);
       const svg = await page.getByTestId('graph-canvas').boundingBox();
       if (!svg) throw new Error('캔버스 크기를 알 수 없습니다.');
       // 상자 안에 그림이 가로·세로 중 작은 쪽 배율로 앉으므로 실제 그림 높이를 따로 잰다.
@@ -567,7 +608,7 @@ test.describe('크롬북 두 칸 폭(660×420) ?stage=fit', () => {
         sandbox: `${Math.round(measured.width)}x${Math.round(measured.height)}`,
       });
       expect(svg.height).toBeGreaterThanOrEqual(200);
-      expect(picture).toBeGreaterThanOrEqual(200);
+      if (!scrolls) expect(picture).toBeGreaterThanOrEqual(200);
       // 모든 조작 단추가 보이는 칸 안에 완전히 들어온다.
       const buttons = page.locator('main > div[class*="stage"] button');
       const stage = await page.locator('main > div[class*="stage"]').boundingBox();

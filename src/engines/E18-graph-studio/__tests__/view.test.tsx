@@ -289,3 +289,47 @@ describe('E18 그림 속성', () => {
     expect(container.querySelector('[data-testid="graph-table"]')).not.toBeNull();
   });
 });
+
+describe('E18 ○ 그래프 터치 크기', () => {
+  it('누르는 ○ 그래프 SVG는 targetSize에서 계산한 최소 크기를 갖는다', () => {
+    const config: GraphConfig = {
+      data: { 가: 3, 나: 2 },
+      graph: 'student',
+      graphType: 'o-mark',
+      axisMax: 7,
+    };
+    const state = createInitialState(config);
+    const view = (targetSize: 48 | 64) =>
+      render(
+        <GraphView
+          config={config}
+          state={state}
+          dispatch={() => {}}
+          cpa="C"
+          mode={state.mode}
+          targetSize={targetSize}
+        />,
+      ).container.querySelector<SVGSVGElement>('[data-testid="graph-canvas"]');
+    const big = view(64);
+    expect(big?.getAttribute('data-scroll')).toBe('true');
+    const heightOf = (svg: SVGSVGElement | null) => Number.parseFloat(svg?.style.minHeight ?? '0');
+    const height64 = heightOf(big);
+    cleanup();
+    const height48 = heightOf(view(48));
+    expect(height64).toBeGreaterThan(height48);
+    expect(height64).toBeGreaterThanOrEqual(660);
+  });
+
+  it('주어진 ○ 그래프와 막대그래프는 최소 크기를 두지 않는다', () => {
+    for (const config of [
+      { data: { 가: 3 }, graphType: 'o-mark' } as GraphConfig,
+      { data: { 가: 3 }, graph: 'student' } as GraphConfig,
+    ]) {
+      const { container } = renderConfig(config);
+      const svg = container.querySelector<SVGSVGElement>('[data-testid="graph-canvas"]');
+      expect(svg?.getAttribute('data-scroll')).toBeNull();
+      expect(svg?.style.minHeight).toBe('');
+      cleanup();
+    }
+  });
+});

@@ -5,6 +5,7 @@
  */
 import type { EngineViewProps } from '../../core/engine-sdk';
 import { GraphCanvas } from './GraphCanvas';
+import { isTouchOMark } from './layout';
 import { graphStrings as S } from './strings.ko';
 import type { GraphAction, GraphConfig, GraphState } from './types';
 import styles from './View.module.css';
@@ -163,7 +164,10 @@ export function GraphView({ state, dispatch, cpa, readOnly = false, targetSize }
         ) : null}
 
         {settings.showGraph ? (
-          <div className={styles.boardArea}>
+          <div
+            className={styles.boardArea}
+            data-scroll={isTouchOMark(settings) ? 'true' : undefined}
+          >
             <GraphCanvas
               state={state}
               dispatch={dispatch}
