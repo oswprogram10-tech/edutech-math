@@ -36,9 +36,11 @@ function recordOf(observation: Observation, key: string): Record<string, unknown
 describe('E18 정의', () => {
   it('엔진 ID·모드·오버레이 이름이 카드대로다', () => {
     expect(definition.id).toBe('E18');
-    expect(definition.modes).toEqual(['table-to-graph', 'scale']);
+    expect(definition.modes).toEqual(['table-to-graph', 'scale', 'pictograph', 'class-vote']);
     expect(definition.layout).toBe('fit');
     expect(Object.keys(definition.overlays ?? {}).sort()).toEqual([
+      'expand-compare',
+      'expand-icons',
       'gap-compare',
       'length-only',
       'scale-count',
@@ -495,6 +497,11 @@ describe('E18 이벤트', () => {
       'graph-changed',
       'scale-changed',
       'flipped',
+      'rows-changed',
+      'compressed',
+      'expanded',
+      'legend-changed',
+      'vote-changed',
     ]);
   });
 

@@ -3,10 +3,19 @@
  *
  * - 설정은 `normalizeSettings`로 정리해 상태에 복사한다(reduce가 config를 받지 않는다).
  * - 정수가 아니거나 0~100 밖인 자료 값은 그 범주를 0으로 본다.
- * - 정답 높이를 저장하지 않는다. 학생이 그린 칸 수(`bars`·`marks`)와 표 값만 둔다.
+ * - 정답 높이를 저장하지 않는다. 학생이 그린 칸 수(`bars`·`marks`)·그림 수(`rows`)와 표 값만 둔다.
+ * - T156: `pictograph`(그림 놓기·묶기·펼치기·범례)와 `class-vote`(투표 쌓기)를 더했다.
  */
-import { DATA_MAX, DEFAULT_SCALE_OPTIONS } from './types';
+import {
+  DATA_MAX,
+  DEFAULT_LEGEND_BIG,
+  DEFAULT_LEGEND_OPTIONS,
+  DEFAULT_SCALE_OPTIONS,
+  DEFAULT_VOTE_AXIS_MAX,
+} from './types';
 import type {
+  BuildSource,
+  ClassVoteState,
   GraphAction,
   GraphConfig,
   GraphMode,
@@ -14,13 +23,19 @@ import type {
   GraphSource,
   GraphState,
   GraphType,
+  IconKind,
+  LegendChange,
   Orientation,
+  PictographRow,
+  PictographState,
   TableSource,
   TooltipSetting,
 } from './types';
 
 /** 같은 상한을 쓰는 눈금 칸 수(안전 장치). */
 const MAX_AXIS_CELLS = 200;
+
+const ICONS: readonly IconKind[] = ['apple', 'person', 'box', 'star'];
 
 function recordOf(value: unknown): Readonly<Record<string, unknown>> {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) return {};
@@ -42,8 +57,27 @@ function toPositiveInt(value: unknown): number | null {
   return typeof value === 'number' && Number.isInteger(value) && value > 0 ? value : null;
 }
 
+/** 큰 그림이 나타내는 수는 2 이상의 정수여야 한다(1이면 묶을 수 없다). */
+function toLegendInt(value: unknown): number | null {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 2 ? value : null;
+}
+
 export function inferMode(config: GraphConfig | undefined): GraphMode {
-  return recordOf(config)['mode'] === 'scale' ? 'scale' : 'table-to-graph';
+  const mode = recordOf(config)['mode'];
+  return mode === 'scale' || mode === 'pictograph' || mode === 'class-vote'
+    ? mode
+    : 'table-to-graph';
+}
+
+/** 값을 (큰 그림, 작은 그림)으로 가른다. */
+export function splitValue(value: number, legendBig: number): PictographRow {
+  const safe = Math.max(0, Math.floor(value));
+  return { big: Math.floor(safe / legendBig), small: safe % legendBig };
+}
+
+/** 행 하나가 나타내는 값: 큰 그림 × legendBig + 작은 그림. */
+export function rowValueOf(row: PictographRow, legendBig: number): number {
+  return row.big * legendBig + row.small;
 }
 
 function uniqueStrings(values: unknown): string[] {
@@ -69,7 +103,10 @@ export function normalizeSettings(config: GraphConfig | undefined, mode: GraphMo
 
   let categories: string[];
   let data: Record<string, number> | null = null;
-  if (dataRecord) {
+  if (mode === 'class-vote') {
+    categories = uniqueStrings(record['options']);
+    if (categories.length === 0) categories = uniqueStrings(record['categories']);
+  } else if (dataRecord) {
     categories = Object.keys(dataRecord);
     data = Object.fromEntries(categories.map((cat) => [cat, toCount(dataRecord[cat])]));
   } else {
@@ -88,10 +125,20 @@ export function normalizeSettings(config: GraphConfig | undefined, mode: GraphMo
     graphRaw === 'student' || graphRaw === 'none' || graphRaw === 'given' ? graphRaw : 'given';
   if (graphRaw === undefined && record['studentDraw'] === true) graph = 'student';
 
-  const graphType: GraphType = record['graphType'] === 'o-mark' ? 'o-mark' : 'bar';
+  const build: BuildSource = record['build'] === 'given' ? 'given' : 'student';
+  if (mode === 'pictograph') graph = build === 'student' ? 'student' : 'given';
+  if (mode === 'class-vote') {
+    graph = 'given';
+    if (table !== 'hidden') table = 'given';
+  }
+
+  const graphType: GraphType =
+    mode === 'class-vote' || (record['graphType'] === 'o-mark' && mode !== 'pictograph')
+      ? 'o-mark'
+      : 'bar';
   const orientation: Orientation =
     record['orientation'] === 'horizontal' ? 'horizontal' : 'vertical';
-  const scale = toPositiveInt(record['scale']) ?? 1;
+  const scale = mode === 'class-vote' ? 1 : (toPositiveInt(record['scale']) ?? 1);
 
   const optionsRaw = Array.isArray(record['scaleOptions'])
     ? (record['scaleOptions'] as unknown[])
@@ -109,7 +156,25 @@ export function normalizeSettings(config: GraphConfig | undefined, mode: GraphMo
     tooltipsRaw === 'show' || tooltipsRaw === 'hide' ? tooltipsRaw : 'auto';
 
   const viewsRaw = record['views'];
-  const views = Array.isArray(viewsRaw) ? viewsRaw : ['table', 'graph'];
+  const views = Array.isArray(viewsRaw)
+    ? viewsRaw
+    : mode === 'pictograph'
+      ? ['table', 'pictograph']
+      : ['table', 'graph'];
+
+  // 그림그래프: `legend`가 `compressGroup`보다 우선한다.
+  const legendRecord = recordOf(record['legend']);
+  const legendBig =
+    toLegendInt(legendRecord['big']) ?? toLegendInt(record['compressGroup']) ?? DEFAULT_LEGEND_BIG;
+  const legendOptionList = Array.isArray(record['legendOptions'])
+    ? [...new Set((record['legendOptions'] as unknown[]).map(toLegendInt))].filter(
+        (value): value is number => value !== null,
+      )
+    : [];
+  const iconRaw = record['icon'];
+  const icon: IconKind = ICONS.find((kind) => kind === iconRaw) ?? 'apple';
+  const legendChange: LegendChange =
+    record['legendChange'] === 'recalculate' ? 'recalculate' : 'keep-icons';
 
   return {
     categories,
@@ -121,15 +186,25 @@ export function normalizeSettings(config: GraphConfig | undefined, mode: GraphMo
     orientation,
     orientationFlip: record['orientationFlip'] === true,
     scale,
-    scaleOptions,
-    axisMax: toPositiveInt(record['axisMax']),
+    scaleOptions: mode === 'class-vote' ? [] : scaleOptions,
+    axisMax:
+      toPositiveInt(record['axisMax']) ?? (mode === 'class-vote' ? DEFAULT_VOTE_AXIS_MAX : null),
     valueLabel: stringOf(record['valueLabel']),
     categoryAxisTitle: stringOf(record['categoryAxisTitle']),
     valueAxisTitle: stringOf(record['valueAxisTitle']),
     title: stringOf(record['title']),
-    tooltips,
+    tooltips: mode === 'class-vote' ? 'hide' : tooltips,
     showTable: table !== 'hidden' && views.includes('table'),
-    showGraph: graph !== 'none' && views.includes('graph'),
+    showGraph: mode !== 'pictograph' && graph !== 'none' && views.includes('graph'),
+    showPictograph:
+      (mode === 'pictograph' || mode === 'table-to-graph') && views.includes('pictograph'),
+    icon,
+    legendBig,
+    legendEditable: record['legendEditable'] === true,
+    legendOptions: legendOptionList.length > 0 ? legendOptionList : [...DEFAULT_LEGEND_OPTIONS],
+    legendChange,
+    build,
+    question: stringOf(record['question']),
   };
 }
 
@@ -152,6 +227,28 @@ function sortedUnique(values: readonly number[]): number[] {
   return [...new Set(values)].sort((a, b) => a - b);
 }
 
+/** 그림그래프 행의 처음 모양. `fromData`면 자료 값으로 채우고, 아니면 비운다. */
+function rowsFromData(
+  settings: GraphSettings,
+  legendBig: number,
+  fromData: boolean,
+): Record<string, PictographRow> {
+  const rows: Record<string, PictographRow> = {};
+  for (const cat of settings.categories) {
+    rows[cat] = fromData ? splitValue(settings.data?.[cat] ?? 0, legendBig) : { big: 0, small: 0 };
+  }
+  return rows;
+}
+
+/** 학급 투표에서 선택지 하나가 쌓을 수 있는 ○의 수. */
+export function voteLimit(settings: GraphSettings): number {
+  return settings.axisMax ?? DEFAULT_VOTE_AXIS_MAX;
+}
+
+export function voteCountOf(votes: readonly string[], option: string): number {
+  return votes.filter((vote) => vote === option).length;
+}
+
 export function createInitialState(config: GraphConfig | undefined): GraphState {
   const mode = inferMode(config);
   const settings = normalizeSettings(config, mode);
@@ -163,16 +260,118 @@ export function createInitialState(config: GraphConfig | undefined): GraphState 
     marks[cat] = [];
     bars[cat] = 0;
   }
-  return {
-    mode,
+  const base = {
     settings,
     table,
-    tallied: [],
+    tallied: [] as number[],
     marks,
     bars,
     scale: settings.scale,
     orientation: settings.orientation,
   };
+  if (mode === 'pictograph') {
+    return {
+      ...base,
+      mode,
+      rows: rowsFromData(settings, settings.legendBig, settings.build === 'given'),
+      legendBig: settings.legendBig,
+      compressions: 0,
+      expansions: 0,
+    };
+  }
+  if (mode === 'class-vote') return { ...base, mode, votes: [] };
+  return { ...base, mode };
+}
+
+type PictographAction = Extract<
+  GraphAction,
+  {
+    readonly type:
+      | 'add-small'
+      | 'remove-small'
+      | 'remove-big'
+      | 'compress'
+      | 'expand'
+      | 'set-legend'
+      | 'reset-rows';
+  }
+>;
+
+function reducePictograph(state: PictographState, action: PictographAction): PictographState {
+  const { settings } = state;
+  const withRow = (cat: string, row: PictographRow): PictographState => ({
+    ...state,
+    rows: { ...state.rows, [cat]: row },
+  });
+
+  if (action.type === 'reset-rows') {
+    if (settings.build !== 'student') return state;
+    return { ...state, rows: rowsFromData(settings, state.legendBig, false) };
+  }
+
+  if (action.type === 'set-legend') {
+    if (!settings.legendOptions.includes(action.big) || action.big === state.legendBig) {
+      return state;
+    }
+    // 주어진 그림그래프는 늘 자료 값으로 다시 그린다. 학생이 만드는 쪽은 `legendChange`를 따른다.
+    const recalculate = settings.build === 'given' || settings.legendChange === 'recalculate';
+    let rows = state.rows;
+    if (recalculate) {
+      const next: Record<string, PictographRow> = {};
+      for (const cat of settings.categories) {
+        const value = settings.data
+          ? (settings.data[cat] ?? 0)
+          : rowValueOf(state.rows[cat] ?? { big: 0, small: 0 }, state.legendBig);
+        next[cat] = splitValue(value, action.big);
+      }
+      rows = next;
+    }
+    return { ...state, rows, legendBig: action.big };
+  }
+
+  // 그림을 놓고 빼고 묶는 조작은 학생이 만드는 그림그래프에서만 한다.
+  if (settings.build !== 'student' || !settings.categories.includes(action.cat)) return state;
+  const row = state.rows[action.cat] ?? { big: 0, small: 0 };
+
+  switch (action.type) {
+    case 'add-small':
+      if (rowValueOf(row, state.legendBig) + 1 > DATA_MAX) return state;
+      return withRow(action.cat, { big: row.big, small: row.small + 1 });
+    case 'remove-small':
+      if (row.small < 1) return state;
+      return withRow(action.cat, { big: row.big, small: row.small - 1 });
+    case 'remove-big':
+      if (row.big < 1) return state;
+      return withRow(action.cat, { big: row.big - 1, small: row.small });
+    case 'compress':
+      if (row.small < state.legendBig) return state;
+      return {
+        ...withRow(action.cat, { big: row.big + 1, small: row.small - state.legendBig }),
+        compressions: state.compressions + 1,
+      };
+    case 'expand':
+      if (row.big < 1) return state;
+      return {
+        ...withRow(action.cat, { big: row.big - 1, small: row.small + state.legendBig }),
+        expansions: state.expansions + 1,
+      };
+  }
+}
+
+type VoteAction = Extract<GraphAction, { readonly type: 'vote' | 'undo-vote' | 'reset-votes' }>;
+
+function reduceVote(state: ClassVoteState, action: VoteAction): ClassVoteState {
+  switch (action.type) {
+    case 'vote': {
+      if (!state.settings.categories.includes(action.option)) return state;
+      if (voteCountOf(state.votes, action.option) >= voteLimit(state.settings)) return state;
+      return { ...state, votes: [...state.votes, action.option] };
+    }
+    case 'undo-vote':
+      return state.votes.length === 0 ? state : { ...state, votes: state.votes.slice(0, -1) };
+    case 'reset-votes':
+      return state.votes.length === 0 ? state : { ...state, votes: [] };
+  }
 }
 
 export function reduce(state: GraphState, action: GraphAction): GraphState {
@@ -215,6 +414,7 @@ export function reduce(state: GraphState, action: GraphAction): GraphState {
 
     case 'set-bar': {
       if (settings.graph !== 'student' || settings.graphType !== 'bar') return state;
+      if (state.mode === 'pictograph') return state;
       if (!hasCategory(action.cat) || !Number.isFinite(action.cells)) return state;
       const cells = clampInt(Math.round(action.cells), 0, axisCells(settings, state.scale));
       if (cells === (state.bars[action.cat] ?? 0)) return state;
@@ -246,6 +446,20 @@ export function reduce(state: GraphState, action: GraphAction): GraphState {
         orientation: state.orientation === 'vertical' ? 'horizontal' : 'vertical',
       };
     }
+
+    case 'add-small':
+    case 'remove-small':
+    case 'remove-big':
+    case 'compress':
+    case 'expand':
+    case 'set-legend':
+    case 'reset-rows':
+      return state.mode === 'pictograph' ? reducePictograph(state, action) : state;
+
+    case 'vote':
+    case 'undo-vote':
+    case 'reset-votes':
+      return state.mode === 'class-vote' ? reduceVote(state, action) : state;
 
     case 'reset-graph': {
       const marks: Record<string, readonly number[]> = {};

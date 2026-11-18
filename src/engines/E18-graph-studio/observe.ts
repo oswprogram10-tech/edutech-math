@@ -4,11 +4,16 @@
  * 값은 모두 정수(number)다. 학생 그래프의 값은 칸 수 × scale로 계산한다.
  */
 import type { JsonValue, Observation } from '../../core/engine-sdk';
-import type { GraphState } from './types';
+import { rowValueOf } from './reduce';
+import type { GraphState, PictographState } from './types';
+import { isClassVote, voteCounts, voteViewState } from './vote';
 
 /** 그래프가 지금 나타내는 값(칸 × scale, given이면 data 값). */
 export function graphValueOf(state: GraphState, cat: string): number {
   const { settings } = state;
+  if (state.mode === 'pictograph') {
+    return rowValueOf(state.rows[cat] ?? { big: 0, small: 0 }, state.legendBig);
+  }
   if (settings.graph === 'given') return settings.data?.[cat] ?? 0;
   return graphCellsOf(state, cat) * state.scale;
 }
@@ -16,6 +21,10 @@ export function graphValueOf(state: GraphState, cat: string): number {
 /** 막대 칸 수 또는 ○ 수. given이면 값 ÷ scale을 내린 값. */
 export function graphCellsOf(state: GraphState, cat: string): number {
   const { settings } = state;
+  if (state.mode === 'pictograph') {
+    const row = state.rows[cat] ?? { big: 0, small: 0 };
+    return row.big + row.small;
+  }
   if (settings.graph === 'given') return Math.floor((settings.data?.[cat] ?? 0) / state.scale);
   if (settings.graphType === 'o-mark') return (state.marks[cat] ?? []).length;
   return state.bars[cat] ?? 0;
@@ -48,6 +57,7 @@ export function tableReferenceOf(state: GraphState, cat: string): number | null 
 /** 학생 그래프를 다 그렸고(모든 범주 1칸 이상) 표와 다른 범주들. 다 그리기 전에는 빈 배열. */
 export function mismatchCategoriesOf(state: GraphState): string[] {
   const { settings } = state;
+  if (state.mode === 'pictograph') return [];
   if (settings.graph !== 'student' || settings.categories.length === 0) return [];
   if (!settings.categories.every((cat) => graphCellsOf(state, cat) >= 1)) return [];
   return settings.categories.filter((cat) => {
@@ -65,7 +75,60 @@ function tableTotalOf(state: GraphState): number {
   return state.settings.categories.reduce((sum, cat) => sum + (state.table[cat] ?? 0), 0);
 }
 
+/** 그림그래프(pictograph) 모드에만 있는 Observation 키. */
+function pictographKeys(state: PictographState): Record<string, JsonValue> {
+  const { settings } = state;
+  const rows: Record<string, JsonValue> = {};
+  const rowValues: Record<string, number> = {};
+  let iconTotal = 0;
+  for (const cat of settings.categories) {
+    const row = state.rows[cat] ?? { big: 0, small: 0 };
+    rows[cat] = { big: row.big, small: row.small };
+    rowValues[cat] = rowValueOf(row, state.legendBig);
+    iconTotal += row.big + row.small;
+  }
+  const data = settings.data;
+  return {
+    rows,
+    rowValues,
+    legendBig: state.legendBig,
+    rowsMatchData:
+      data !== null &&
+      settings.categories.length > 0 &&
+      settings.categories.every((cat) => rowValues[cat] === data[cat]),
+    iconTotal,
+    compressions: state.compressions,
+    expansions: state.expansions,
+  };
+}
+
 export function observe(state: GraphState): Observation {
+  if (isClassVote(state)) {
+    const counts = voteCounts(state);
+    const total = state.votes.length;
+    // 자료가 따로 없는 투표이므로 "자료와 같은가"를 뜻하는 키는 뺀다.
+    const {
+      graphMatchesData: _graphMatchesData,
+      graphMatchesTable: _graphMatchesTable,
+      tableMatchesData: _tableMatchesData,
+      ...rest
+    } = observeBase(voteViewState(state));
+    void [_graphMatchesData, _graphMatchesTable, _tableMatchesData];
+    return { ...rest, mode: 'class-vote', voteTotal: total, voteCounts: counts };
+  }
+  const base = observeBase(state);
+  if (state.mode !== 'pictograph') return base;
+  const keys = pictographKeys(state);
+  return {
+    ...base,
+    ...keys,
+    // 그림그래프의 그래프 판정 키는 행 값으로 채운다(`graphValues`는 이미 행 값이다).
+    graphType: 'pictograph',
+    graphMatchesData: keys['rowsMatchData'] === true,
+  };
+}
+
+function observeBase(state: GraphState): Observation {
   const { settings } = state;
   const categories = settings.categories;
   const graphValues: Record<string, number> = {};

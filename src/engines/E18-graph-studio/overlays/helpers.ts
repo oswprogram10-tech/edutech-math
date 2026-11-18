@@ -4,8 +4,8 @@
  */
 import { frameOf, isTouchOMark } from '../layout';
 import type { Frame } from '../layout';
-import { axisCells } from '../reduce';
-import type { GraphState } from '../types';
+import { axisCells, splitValue } from '../reduce';
+import type { GraphState, PictographRow } from '../types';
 
 export const CANVAS_SELECTOR = 'svg[data-testid="graph-canvas"]';
 
@@ -35,4 +35,30 @@ export function targetCategory(
   if (cat === undefined) return null;
   const index = state.settings.categories.indexOf(cat);
   return index < 0 ? null : { cat, index };
+}
+
+/** 그림그래프 오버레이가 그리는 행과 범례. `pictograph`는 학생이 놓은 행, 그 밖(`table-to-graph`)은 자료로 가른 행. */
+export function pictoRowsOf(state: GraphState): {
+  readonly rows: Readonly<Record<string, PictographRow>>;
+  readonly legendBig: number;
+} {
+  if (state.mode === 'pictograph') return { rows: state.rows, legendBig: state.legendBig };
+  const legendBig = state.settings.legendBig;
+  return {
+    legendBig,
+    rows: Object.fromEntries(
+      state.settings.categories.map((cat) => [
+        cat,
+        splitValue(state.settings.data?.[cat] ?? 0, legendBig),
+      ]),
+    ),
+  };
+}
+
+export function argCats(args: unknown): string[] {
+  if (args === null || typeof args !== 'object' || Array.isArray(args)) return [];
+  const value = (args as Readonly<Record<string, unknown>>)['cats'];
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === 'string')
+    : [];
 }

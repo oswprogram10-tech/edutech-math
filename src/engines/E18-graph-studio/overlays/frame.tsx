@@ -3,6 +3,9 @@
  * 그래프 영역이 스크롤될 때(누르는 ○ 그래프) 다음 두 가지를 더 한다.
  * - 스크롤할 때마다 다시 재서 칸과 어긋나지 않게 한다.
  * - 스크롤 칸(그래프 영역) 밖으로 나간 부분은 잘라서 표·단추 위로 번지지 않게 한다.
+ *   (본 svg 위쪽 조상 중 넘침을 자르는 칸이 있으면 모두 겹친 영역 밖을 자른다.)
+ * - 그림그래프처럼 그림 크기를 화면 폭에 맞춰 정하는 캔버스는 `data-logical-width`·`data-logical-height`·
+ *   `data-icon-side` 속성으로 자기 크기를 알린다. 이때는 children을 함수로 주면 그 값을 받는다.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -14,6 +17,27 @@ interface Frame {
   readonly height: number;
   /** 본 svg 상자 안에서 잘라 낼 크기(top right bottom left). */
   readonly clip: readonly [number, number, number, number];
+  /** 캔버스가 알린 논리 크기와 작은 그림 한 변(없으면 null). */
+  readonly info: CanvasInfo | null;
+}
+
+export interface CanvasInfo {
+  readonly width: number;
+  readonly height: number;
+  readonly icon: number;
+}
+
+function infoOf(canvas: Element): CanvasInfo | null {
+  const width = Number(canvas.getAttribute('data-logical-width'));
+  const height = Number(canvas.getAttribute('data-logical-height'));
+  const icon = Number(canvas.getAttribute('data-icon-side'));
+  if (!(width > 0) || !(height > 0)) return null;
+  return { width, height, icon: icon > 0 ? icon : 0 };
+}
+
+function sameInfo(a: CanvasInfo | null, b: CanvasInfo | null): boolean {
+  if (a === null || b === null) return a === b;
+  return a.width === b.width && a.height === b.height && a.icon === b.icon;
 }
 
 function same(a: Frame | null, b: Frame | null): boolean {
@@ -23,16 +47,17 @@ function same(a: Frame | null, b: Frame | null): boolean {
     Math.abs(a.top - b.top) < 0.5 &&
     Math.abs(a.width - b.width) < 0.5 &&
     Math.abs(a.height - b.height) < 0.5 &&
-    a.clip.every((value, index) => Math.abs(value - (b.clip[index] ?? 0)) < 0.5)
+    a.clip.every((value, index) => Math.abs(value - (b.clip[index] ?? 0)) < 0.5) &&
+    sameInfo(a.info, b.info)
   );
 }
 
 export interface GraphOverlayFrameProps {
   readonly testId?: string;
   readonly canvasSelector: string;
-  readonly logicalWidth: number;
-  readonly logicalHeight: number;
-  readonly children: ReactNode;
+  readonly logicalWidth?: number;
+  readonly logicalHeight?: number;
+  readonly children: ReactNode | ((info: CanvasInfo) => ReactNode);
 }
 
 export function GraphOverlayFrame({
@@ -58,7 +83,25 @@ export function GraphOverlayFrame({
     const hostBox = element.getBoundingClientRect();
     const box = canvas.getBoundingClientRect();
     if (box.width < 1 || box.height < 1) return;
-    const area = canvas.parentElement?.getBoundingClientRect() ?? box;
+    // 본 svg의 조상 중 넘침을 자르는 칸(overflow가 visible이 아닌 것)을 모두 겹친 영역.
+    let area = { top: box.top, right: box.right, bottom: box.bottom, left: box.left };
+    let clipped = false;
+    for (let node = canvas.parentElement; node; node = node.parentElement) {
+      const style = getComputedStyle(node);
+      if (style.overflowX !== 'visible' || style.overflowY !== 'visible') {
+        const rect = node.getBoundingClientRect();
+        area = clipped
+          ? {
+              top: Math.max(area.top, rect.top),
+              right: Math.min(area.right, rect.right),
+              bottom: Math.min(area.bottom, rect.bottom),
+              left: Math.max(area.left, rect.left),
+            }
+          : { top: rect.top, right: rect.right, bottom: rect.bottom, left: rect.left };
+        clipped = true;
+      }
+      if (node === container) break;
+    }
     const clip: [number, number, number, number] = [
       Math.max(0, area.top - box.top),
       Math.max(0, box.right - area.right),
@@ -71,6 +114,7 @@ export function GraphOverlayFrame({
       width: box.width,
       height: box.height,
       clip,
+      info: infoOf(canvas),
     };
     setFrame((current) => (same(current, next) ? current : next));
   }, [canvasSelector]);
@@ -101,6 +145,9 @@ export function GraphOverlayFrame({
   }, [measure, canvasSelector]);
 
   const clipped = frame ? frame.clip.some((value) => value > 0.5) : false;
+  const info = frame?.info ?? null;
+  const viewWidth = info?.width ?? logicalWidth ?? 1000;
+  const viewHeight = info?.height ?? logicalHeight ?? 700;
   return (
     <div ref={hostRef} style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
       <div
@@ -120,14 +167,14 @@ export function GraphOverlayFrame({
         }
       >
         <svg
-          viewBox={`0 0 ${logicalWidth} ${logicalHeight}`}
+          viewBox={`0 0 ${viewWidth} ${viewHeight}`}
           width="100%"
           height="100%"
           data-testid={testId}
           aria-hidden="true"
           style={{ display: 'block' }}
         >
-          {children}
+          {typeof children === 'function' ? (info ? children(info) : null) : children}
         </svg>
       </div>
     </div>

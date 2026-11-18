@@ -3,17 +3,104 @@
  *
  * 학생이 그린 그래프가 자료와 맞는지는 화면에 나타내지 않는다(맞음 표시·색 바뀜 없음).
  */
+import { useMemo } from 'react';
 import type { EngineViewProps } from '../../core/engine-sdk';
 import { GraphCanvas } from './GraphCanvas';
+import { PictoIconSvg } from './icons';
 import { isTouchOMark } from './layout';
+import { PictographBoard } from './PictographBoard';
+import { splitValue } from './reduce';
 import { graphStrings as S } from './strings.ko';
-import type { GraphAction, GraphConfig, GraphState } from './types';
+import type { GraphAction, GraphConfig, GraphSettings, GraphState, PictographRow } from './types';
 import styles from './View.module.css';
+import { VoteView } from './VoteView';
 
 type GraphViewProps = EngineViewProps<GraphConfig, GraphState, GraphAction>;
 
-export function GraphView({ state, dispatch, cpa, readOnly = false, targetSize }: GraphViewProps) {
+export function GraphView(props: GraphViewProps) {
+  const { state } = props;
+  if (state.mode === 'class-vote') {
+    return (
+      <VoteView
+        state={state}
+        dispatch={props.dispatch}
+        readOnly={props.readOnly}
+        targetSize={props.targetSize}
+      />
+    );
+  }
+  return <StandardView {...props} />;
+}
+
+/** 범례: 작은 그림 = 1, 큰 그림 = n. `legendEditable`이면 큰 그림 값을 고르는 단추 줄이 된다. */
+function Legend({
+  settings,
+  legendBig,
+  editable,
+  readOnly,
+  dispatch,
+}: {
+  readonly settings: GraphSettings;
+  readonly legendBig: number;
+  readonly editable: boolean;
+  readonly readOnly: boolean;
+  readonly dispatch: (action: GraphAction) => void;
+}) {
+  const unit = settings.valueLabel;
+  return (
+    <div
+      className={styles.legend}
+      role="group"
+      aria-label={S.pictograph.legendLabel}
+      data-testid="pictograph-legend"
+    >
+      <span className={styles.legendItem}>
+        <PictoIconSvg kind={settings.icon} side={28} />
+        {S.pictograph.legendSmall(unit)}
+      </span>
+      {editable ? (
+        <span className={styles.scaleRow} role="radiogroup" aria-label={S.pictograph.legendGroup}>
+          {settings.legendOptions.map((option) => (
+            <button
+              key={option}
+              type="button"
+              role="radio"
+              aria-checked={legendBig === option}
+              className={styles.button}
+              data-legend={option}
+              disabled={readOnly}
+              onClick={() => dispatch({ type: 'set-legend', big: option })}
+            >
+              {S.pictograph.legendBig(option, unit)}
+            </button>
+          ))}
+        </span>
+      ) : (
+        <span className={styles.legendItem}>
+          <PictoIconSvg kind={settings.icon} side={45} big />
+          {S.pictograph.legendBig(legendBig, unit)}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function StandardView({ state, dispatch, cpa, readOnly = false, targetSize }: GraphViewProps) {
   const { settings } = state;
+  // 그림그래프: `pictograph` 모드는 학생이 놓은 행, `table-to-graph`의 그림그래프 보기는 자료로 그린 행.
+  const pictoLegendBig = state.mode === 'pictograph' ? state.legendBig : settings.legendBig;
+  const givenRows = useMemo<Record<string, PictographRow>>(
+    () =>
+      Object.fromEntries(
+        settings.categories.map((cat) => [
+          cat,
+          splitValue(settings.data?.[cat] ?? 0, settings.legendBig),
+        ]),
+      ),
+    [settings.categories, settings.data, settings.legendBig],
+  );
+  const pictoRows = state.mode === 'pictograph' ? state.rows : givenRows;
+  const pictoInteractive = state.mode === 'pictograph' && settings.build === 'student' && !readOnly;
   const student = settings.graph === 'student';
   const tooltipsOn =
     !student &&
@@ -23,7 +110,12 @@ export function GraphView({ state, dispatch, cpa, readOnly = false, targetSize }
   const showScaleRow = state.mode === 'scale' && settings.scaleOptions.length > 0;
 
   return (
-    <div className={styles.wrap} data-target-size={targetSize} data-mode={state.mode}>
+    <div
+      className={styles.wrap}
+      data-target-size={targetSize}
+      data-mode={state.mode}
+      data-picto={settings.showPictograph ? 'true' : undefined}
+    >
       <div className={styles.toolbar}>
         {showScaleRow ? (
           <div
@@ -58,6 +150,25 @@ export function GraphView({ state, dispatch, cpa, readOnly = false, targetSize }
             onClick={() => dispatch({ type: 'flip' })}
           >
             {S.graph.flip}
+          </button>
+        ) : null}
+        {settings.showPictograph ? (
+          <Legend
+            settings={settings}
+            legendBig={pictoLegendBig}
+            editable={state.mode === 'pictograph' && settings.legendEditable}
+            readOnly={readOnly}
+            dispatch={dispatch}
+          />
+        ) : null}
+        {pictoInteractive ? (
+          <button
+            type="button"
+            className={styles.button}
+            data-testid="pictograph-reset"
+            onClick={() => dispatch({ type: 'reset-rows' })}
+          >
+            {S.pictograph.resetRows}
           </button>
         ) : null}
         {student && settings.showGraph ? (
@@ -161,6 +272,18 @@ export function GraphView({ state, dispatch, cpa, readOnly = false, targetSize }
               </tbody>
             </table>
           </div>
+        ) : null}
+
+        {settings.showPictograph ? (
+          <PictographBoard
+            settings={settings}
+            rows={pictoRows}
+            legendBig={pictoLegendBig}
+            interactive={pictoInteractive}
+            dispatch={dispatch}
+            targetSize={targetSize}
+            tooltipsOn={tooltipsOn}
+          />
         ) : null}
 
         {settings.showGraph ? (
