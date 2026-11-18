@@ -1,0 +1,757 @@
+{
+  "unit": "g3s2u6",
+  "title": "그림그래프",
+  "activities": [
+    {
+      "id": "g3s2u6.A1",
+      "title": "아이콘 압축 그림그래프 만들기",
+      "tasks": [
+        {
+          "id": "g3s2u6.A1.T1",
+          "prompt": "표를 보고 그림그래프를 완성해요. 작은 그림 10개는 큰 그림 1개로 묶어요.",
+          "engine": "E18",
+          "mode": "pictograph",
+          "cpa": "C",
+          "config": {
+            "mode": "pictograph",
+            "data": {
+              "가": 32,
+              "나": 25,
+              "다": 41,
+              "라": 18
+            },
+            "icon": "apple",
+            "legend": {
+              "big": 10,
+              "small": 1
+            },
+            "build": "student",
+            "table": "given",
+            "valueLabel": "상자"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "rowsMatchData"
+              },
+              {
+                "kind": "predicate",
+                "name": "allRowsCompressed"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "rowsMatchData"
+              },
+              "level": 1,
+              "say": "작은 그림이 10개 넘게 있는 줄이 있나요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "rowsMatchData"
+              },
+              "level": 2,
+              "say": "올가미로 작은 그림 10개를 묶거나 '묶기' 단추를 눌러 봐요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "rowsMatchData"
+              },
+              "level": 3,
+              "backtrack": "g3s2u6.pictograph-units"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "pictograph"
+              },
+              "level": 1,
+              "say": "줄마다 큰 그림과 작은 그림이 몇 상자인지 세어 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "pictograph"
+              },
+              "level": 2,
+              "say": "큰 그림 1개는 10상자, 작은 그림 1개는 1상자이에요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "pictograph"
+              },
+              "level": 3,
+              "backtrack": "g3s2u6.pictograph-units"
+            }
+          ],
+          "concepts": [
+            "g3s2u6.pictograph-units"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g3s2u6.A1.T2",
+          "prompt": "가 마을 줄에서 작은 그림만으로 나타낼 때와 묶어서 나타낼 때, 그림은 몇 개 줄었나요?",
+          "engine": "E18",
+          "mode": "pictograph",
+          "cpa": "P",
+          "config": {
+            "mode": "pictograph",
+            "data": {
+              "가": 32
+            },
+            "icon": "apple",
+            "legend": {
+              "big": 10,
+              "small": 1
+            },
+            "build": "student",
+            "table": "given",
+            "valueLabel": "상자"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "rowValueIs",
+                "args": {
+                  "cat": "가",
+                  "value": 32
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "allRowsCompressed"
+              },
+              {
+                "kind": "equals",
+                "path": "response.fewer.value",
+                "value": "27"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "pictograph"
+              },
+              "level": 1,
+              "say": "묶기 전 그림 수와 묶은 뒤 그림 수를 각각 세어 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "pictograph"
+              },
+              "level": 2,
+              "say": "묶기 전 그림 수에서 묶은 뒤 그림 수를 빼 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "pictograph"
+              },
+              "level": 3,
+              "backtrack": "g3s2u6.pictograph-units"
+            }
+          ],
+          "concepts": [
+            "g3s2u6.pictograph-units"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "fewer",
+                "label": "몇 개 줄었나요?",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s2u6.A1.T3",
+          "prompt": "범례를 큰 그림 = 5상자로 바꾸고, 그림그래프를 다시 나타내요.",
+          "engine": "E18",
+          "mode": "pictograph",
+          "cpa": "P",
+          "config": {
+            "mode": "pictograph",
+            "data": {
+              "가": 32,
+              "나": 25,
+              "다": 41,
+              "라": 18
+            },
+            "icon": "apple",
+            "legend": {
+              "big": 10,
+              "small": 1
+            },
+            "build": "student",
+            "table": "given",
+            "valueLabel": "상자",
+            "legendEditable": true,
+            "legendOptions": [
+              10,
+              5
+            ],
+            "legendChange": "keep-icons"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "legendIs",
+                "args": {
+                  "big": 5
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "rowsMatchData"
+              },
+              {
+                "kind": "predicate",
+                "name": "allRowsCompressed"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "rowsMatchData"
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "legendIs",
+                    "args": {
+                      "big": 10
+                    }
+                  }
+                ]
+              },
+              "level": 1,
+              "say": "범례를 바꿨나요?"
+            },
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "rowsMatchData"
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "legendIs",
+                    "args": {
+                      "big": 10
+                    }
+                  }
+                ]
+              },
+              "level": 2,
+              "say": "범례에서 큰 그림 = 5를 골라 봐요."
+            },
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "rowsMatchData"
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "legendIs",
+                    "args": {
+                      "big": 10
+                    }
+                  }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g3s2u6.pictograph-units"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "pictograph"
+              },
+              "level": 1,
+              "say": "큰 그림 1개가 이제 몇 상자인지 범례를 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "pictograph"
+              },
+              "level": 2,
+              "say": "작은 그림 5개를 큰 그림 1개로 묶어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "pictograph"
+              },
+              "level": 3,
+              "backtrack": "g3s2u6.pictograph-units"
+            }
+          ],
+          "concepts": [
+            "g3s2u6.pictograph-units"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g3s2u6.A1.T4",
+          "prompt": "우리 반이 좋아하는 계절을 그림그래프로 나타내요.",
+          "engine": "E18",
+          "mode": "pictograph",
+          "cpa": "A",
+          "config": {
+            "mode": "pictograph",
+            "data": {
+              "봄": 12,
+              "여름": 15,
+              "가을": 9,
+              "겨울": 6
+            },
+            "icon": "person",
+            "legend": {
+              "big": 10,
+              "small": 1
+            },
+            "build": "student",
+            "table": "given",
+            "valueLabel": "명"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "rowsMatchData"
+              },
+              {
+                "kind": "predicate",
+                "name": "allRowsCompressed"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "rowsMatchData"
+              },
+              "level": 1,
+              "say": "작은 그림이 10개 넘게 있는 줄이 있나요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "rowsMatchData"
+              },
+              "level": 2,
+              "say": "올가미로 작은 그림 10개를 묶거나 '묶기' 단추를 눌러 봐요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "rowsMatchData"
+              },
+              "level": 3,
+              "backtrack": "g3s2u6.pictograph-units"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "pictograph"
+              },
+              "level": 1,
+              "say": "줄마다 큰 그림과 작은 그림이 몇 명인지 세어 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "pictograph"
+              },
+              "level": 2,
+              "say": "큰 그림 1개는 10명, 작은 그림 1개는 1명이에요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "pictograph"
+              },
+              "level": 3,
+              "backtrack": "g3s2u6.pictograph-units"
+            }
+          ],
+          "concepts": [
+            "g3s2u6.collect-organize",
+            "g3s2u6.pictograph-units"
+          ],
+          "submit": "button"
+        }
+      ]
+    },
+    {
+      "id": "g3s2u6.A2",
+      "title": "그림그래프 읽기와 해석",
+      "tasks": [
+        {
+          "id": "g3s2u6.A2.T1",
+          "prompt": "다 마을에서 수확한 사과는 몇 상자인가요?",
+          "engine": "E18",
+          "mode": "table-to-graph",
+          "cpa": "P",
+          "config": {
+            "mode": "table-to-graph",
+            "data": {
+              "가": 32,
+              "나": 25,
+              "다": 41,
+              "라": 18
+            },
+            "views": [
+              "pictograph"
+            ],
+            "legend": {
+              "big": 10,
+              "small": 1
+            },
+            "icon": "apple",
+            "tooltips": "hide",
+            "valueLabel": "상자",
+            "title": "마을별 사과 수확량"
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.value.value",
+            "value": "41"
+          },
+          "hints": [
+            {
+              "when": {
+                "misconception": "MC-GRAPH-ICON-VALUE"
+              },
+              "level": 1,
+              "say": "큰 사과 하나는 몇 상자였지? 범례를 볼까?"
+            },
+            {
+              "when": {
+                "misconception": "MC-GRAPH-ICON-VALUE"
+              },
+              "level": 2,
+              "say": "큰 그림 하나를 작은 그림으로 펼쳐 봐요.",
+              "show": {
+                "engine": "E18",
+                "overlay": "expand-icons",
+                "args": {
+                  "cat": "다"
+                }
+              }
+            },
+            {
+              "when": {
+                "misconception": "MC-GRAPH-ICON-VALUE"
+              },
+              "level": 3,
+              "backtrack": "g3s2u6.pictograph-units"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 1,
+              "say": "큰 그림과 작은 그림을 따로 세어 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 2,
+              "say": "큰 그림은 10상자, 작은 그림은 1상자씩 더해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 3,
+              "backtrack": "g3s2u6.read-pictograph"
+            }
+          ],
+          "concepts": [
+            "g3s2u6.read-pictograph"
+          ],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-GRAPH-ICON-VALUE",
+              "args": {
+                "icons": "5",
+                "expected": "41"
+              },
+              "path": "response.value.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "value",
+                "label": "몇 상자인가요?",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s2u6.A2.T2",
+          "prompt": "사과를 가장 많이 수확한 마을과 가장 적게 수확한 마을의 차는 몇 상자인가요?",
+          "engine": "E18",
+          "mode": "table-to-graph",
+          "cpa": "A",
+          "config": {
+            "mode": "table-to-graph",
+            "data": {
+              "가": 32,
+              "나": 25,
+              "다": 41,
+              "라": 18
+            },
+            "views": [
+              "pictograph"
+            ],
+            "legend": {
+              "big": 10,
+              "small": 1
+            },
+            "icon": "apple",
+            "tooltips": "hide",
+            "valueLabel": "상자",
+            "title": "마을별 사과 수확량"
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.diff.value",
+            "value": "23"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 1,
+              "say": "가장 많은 마을과 가장 적은 마을의 값을 먼저 읽어 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 2,
+              "say": "두 값을 읽은 뒤 큰 값에서 작은 값을 빼 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 3,
+              "backtrack": "g3s2u6.read-pictograph"
+            }
+          ],
+          "concepts": [
+            "g3s2u6.read-pictograph"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "diff",
+                "label": "몇 상자 차이가 나나요?",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s2u6.A2.T3",
+          "prompt": "그림 개수가 가장 많은 마을은 라 마을이에요. 라 마을이 사과를 가장 많이 수확했을까요?",
+          "engine": "E18",
+          "mode": "table-to-graph",
+          "cpa": "P",
+          "config": {
+            "mode": "table-to-graph",
+            "data": {
+              "가": 32,
+              "나": 25,
+              "다": 41,
+              "라": 18
+            },
+            "views": [
+              "pictograph"
+            ],
+            "legend": {
+              "big": 10,
+              "small": 1
+            },
+            "icon": "apple",
+            "tooltips": "hide",
+            "valueLabel": "상자",
+            "title": "마을별 사과 수확량"
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.most.selected",
+            "value": [
+              "no"
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "misconception": "MC-GRAPH-ICON-COUNT-COMPARE"
+              },
+              "level": 1,
+              "say": "큰 그림 1개와 작은 그림 9개 중 무엇이 더 많을까?"
+            },
+            {
+              "when": {
+                "misconception": "MC-GRAPH-ICON-COUNT-COMPARE"
+              },
+              "level": 2,
+              "say": "두 줄을 모두 작은 그림으로 펼쳐 길이를 비교해 봐요.",
+              "show": {
+                "engine": "E18",
+                "overlay": "expand-compare",
+                "args": {
+                  "cats": [
+                    "라",
+                    "다"
+                  ]
+                }
+              }
+            },
+            {
+              "when": {
+                "misconception": "MC-GRAPH-ICON-COUNT-COMPARE"
+              },
+              "level": 3,
+              "backtrack": "g3s2u6.pictograph-units"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 1,
+              "say": "라 마을과 다른 마을의 그림을 같은 크기로 견주어 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 2,
+              "say": "큰 그림 1개가 작은 그림 몇 개인지 범례를 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 3,
+              "backtrack": "g3s2u6.read-pictograph"
+            }
+          ],
+          "concepts": [
+            "g3s2u6.read-pictograph"
+          ],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-GRAPH-ICON-COUNT-COMPARE",
+              "args": {
+                "trap": "yes"
+              },
+              "path": "response.most.selected.0"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "most",
+                "label": "라 마을이 가장 많이 수확했나요?",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "yes",
+                    "label": "네, 가장 많아요"
+                  },
+                  {
+                    "id": "no",
+                    "label": "아니요, 아니에요"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
