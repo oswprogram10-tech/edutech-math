@@ -484,3 +484,30 @@
   width: 24px;
   writing-mode: vertical-rl;
 }
+
+/* T161: 자료 묶음 고르기. 좁으면 줄을 바꾼다(잘리지 않게). */
+.datasetRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.datasetHint {
+  margin: 0;
+  padding: 1rem 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #3d485c;
+}
+
+.datasetSource {
+  flex: 0 0 auto;
+  margin: 0;
+  font-size: 14px;
+  color: #3d485c;
+}
+
+.wrap[data-target-size='64'] .datasetSource {
+  font-size: 16px;
+}

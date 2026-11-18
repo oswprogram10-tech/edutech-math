@@ -16,6 +16,7 @@ import {
 import type {
   BuildSource,
   ClassVoteState,
+  DatasetOption,
   GraphAction,
   GraphConfig,
   GraphMode,
@@ -89,6 +90,38 @@ function uniqueStrings(values: unknown): string[] {
   return result;
 }
 
+/** 자료 묶음 목록을 정리한다. id·title이 문자열이 아니거나 겹치면 그 묶음은 뺀다. */
+function normalizeDatasets(
+  raw: unknown,
+  record: Readonly<Record<string, unknown>>,
+): DatasetOption[] {
+  if (!Array.isArray(raw)) return [];
+  const result: DatasetOption[] = [];
+  for (const item of raw as unknown[]) {
+    const entry = recordOf(item);
+    const id = entry['id'];
+    const title = entry['title'];
+    const data = entry['data'];
+    if (typeof id !== 'string' || id === '' || typeof title !== 'string') continue;
+    if (data === null || typeof data !== 'object' || Array.isArray(data)) continue;
+    if (result.some((option) => option.id === id)) continue;
+    const dataRecord = data as Readonly<Record<string, unknown>>;
+    const categories = Object.keys(dataRecord);
+    result.push({
+      id,
+      title,
+      categories,
+      data: Object.fromEntries(categories.map((cat) => [cat, toCount(dataRecord[cat])])),
+      valueLabel: stringOf(entry['valueLabel']) || stringOf(record['valueLabel']),
+      categoryAxisTitle:
+        stringOf(entry['categoryAxisTitle']) || stringOf(record['categoryAxisTitle']),
+      valueAxisTitle: stringOf(entry['valueAxisTitle']) || stringOf(record['valueAxisTitle']),
+      source: stringOf(entry['source']),
+    });
+  }
+  return result;
+}
+
 export function normalizeSettings(config: GraphConfig | undefined, mode: GraphMode): GraphSettings {
   const record = recordOf(config);
 
@@ -101,9 +134,14 @@ export function normalizeSettings(config: GraphConfig | undefined, mode: GraphMo
     ? (record['rawItems'] as unknown[]).filter((item): item is string => typeof item === 'string')
     : [];
 
+  const datasets = mode === 'class-vote' ? [] : normalizeDatasets(record['datasets'], record);
+
   let categories: string[];
   let data: Record<string, number> | null = null;
-  if (mode === 'class-vote') {
+  if (datasets.length > 0) {
+    // 묶음을 고르기 전에는 범주가 없다.
+    categories = [];
+  } else if (mode === 'class-vote') {
     categories = uniqueStrings(record['options']);
     if (categories.length === 0) categories = uniqueStrings(record['categories']);
   } else if (dataRecord) {
@@ -205,6 +243,8 @@ export function normalizeSettings(config: GraphConfig | undefined, mode: GraphMo
     legendChange,
     build,
     question: stringOf(record['question']),
+    datasets,
+    source: '',
   };
 }
 
@@ -268,6 +308,7 @@ export function createInitialState(config: GraphConfig | undefined): GraphState 
     bars,
     scale: settings.scale,
     orientation: settings.orientation,
+    datasetId: null,
   };
   if (mode === 'pictograph') {
     return {
@@ -460,6 +501,33 @@ export function reduce(state: GraphState, action: GraphAction): GraphState {
     case 'undo-vote':
     case 'reset-votes':
       return state.mode === 'class-vote' ? reduceVote(state, action) : state;
+
+    case 'pick-dataset': {
+      const option = settings.datasets.find((item) => item.id === action.id);
+      if (!option || state.datasetId === option.id) return state;
+      const next: GraphSettings = {
+        ...settings,
+        categories: option.categories,
+        data: option.data,
+        valueLabel: option.valueLabel,
+        categoryAxisTitle: option.categoryAxisTitle,
+        valueAxisTitle: option.valueAxisTitle,
+        source: option.source,
+      };
+      const table: Record<string, number | null> = {};
+      const marks: Record<string, readonly number[]> = {};
+      const bars: Record<string, number> = {};
+      for (const cat of next.categories) {
+        table[cat] = next.table === 'student' ? null : (next.data?.[cat] ?? null);
+        marks[cat] = [];
+        bars[cat] = 0;
+      }
+      const base = { ...state, settings: next, datasetId: option.id, table, marks, bars };
+      if (base.mode === 'pictograph') {
+        return { ...base, rows: rowsFromData(next, base.legendBig, next.build === 'given') };
+      }
+      return base;
+    }
 
     case 'reset-graph': {
       const marks: Record<string, readonly number[]> = {};

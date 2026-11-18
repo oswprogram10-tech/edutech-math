@@ -72,7 +72,7 @@ export function PictographBoard({
     const update = () => {
       const top =
         host.getBoundingClientRect().top - wrap.getBoundingClientRect().top + wrap.scrollTop;
-      const next = Math.floor(wrap.clientHeight - top - 2);
+      const next = Math.floor(wrap.clientHeight - top);
       setAvail((current) => (current === next ? current : next));
     };
     update();
@@ -92,7 +92,8 @@ export function PictographBoard({
   const iconSide = useMemo(() => {
     if (interactive || avail <= 0) return targetSize;
     for (let side = targetSize; side >= MIN_FIT_ICON; side -= 2) {
-      if (pictoLayout(settings.categories, rows, width, side).height <= avail) return side;
+      // 1px는 넘어도 된다: 판 높이가 내용으로 정해질 때 한 칸씩 계속 줄어드는 되먹임을 막는다.
+      if (pictoLayout(settings.categories, rows, width, side).height <= avail + 1) return side;
     }
     return Math.min(targetSize, MIN_FIT_ICON);
   }, [interactive, avail, settings.categories, rows, width, targetSize]);

@@ -138,6 +138,8 @@ export const predicates: Readonly<Record<string, EnginePredicate>> = {
     return recordOf(observation['graphCells'])[cat] === cells;
   },
 
+  datasetPicked: (observation) => typeof observation['datasetId'] === 'string',
+
   rowsMatchData: (observation) => observation['rowsMatchData'] === true,
 
   rowValueIs: (observation, args) => {

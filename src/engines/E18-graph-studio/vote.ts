@@ -34,6 +34,7 @@ export function voteViewState(state: ClassVoteState): TableToGraphState {
     bars: state.bars,
     scale: 1,
     orientation: state.orientation,
+    datasetId: state.datasetId,
   };
 }
 

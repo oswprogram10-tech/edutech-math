@@ -1465,3 +1465,142 @@ test.describe('T160: 그림그래프 배치(읽기용 맞춤, 행 조작은 그 
     });
   }
 });
+
+test.describe('T161: 자료 묶음 고르기(datasets)', () => {
+  const picker = {
+    mode: 'table-to-graph',
+    graph: 'student',
+    graphType: 'bar',
+    table: 'given',
+    scale: 1,
+    valueLabel: '명',
+    datasets: [
+      { id: 'food', title: '좋아하는 음식', data: { 피자: 3, 떡볶이: 2 }, source: '우리 반 조사' },
+      {
+        id: 'pet',
+        title: '키우고 싶은 동물',
+        data: { 강아지: 4, 고양이: 1, 토끼: 2 },
+        valueLabel: '마리',
+      },
+      { id: 'game', title: '하고 싶은 놀이 이름이 아주 긴 묶음', data: { 술래잡기: 5, 피구: 3 } },
+    ],
+  };
+
+  async function drawBars(page: Page, values: Readonly<Record<string, number>>) {
+    for (const [cat, cells] of Object.entries(values)) {
+      for (let i = 0; i < cells; i += 1) await press(bar(page, cat), 'ArrowUp');
+      await expect(bar(page, cat)).toHaveAttribute('data-cells', String(cells));
+    }
+  }
+
+  test('고르기 전에는 안내만 있고, 고른 뒤 막대를 그리면 graphMatches가 맞는다', async ({
+    page,
+  }) => {
+    await openEngine(page, picker, { stageFit: true });
+    await expect(page.getByTestId('graph-dataset-hint')).toHaveText('자료를 하나 골라요');
+    await expect(page.getByTestId('graph-canvas')).toHaveCount(0);
+    await page.getByRole('radio', { name: '키우고 싶은 동물' }).click();
+    await expect(page.getByTestId('graph-dataset-hint')).toHaveCount(0);
+    await pollObservation(page, (o) => o['datasetId'] === 'pet');
+    await drawBars(page, { 강아지: 4, 고양이: 1, 토끼: 2 });
+    await pollObservation(page, (o) => o['graphMatchesData'] === true);
+    // 다른 묶음을 고르면 그래프가 비워진다.
+    await page.getByRole('radio', { name: '좋아하는 음식' }).click();
+    await pollObservation(
+      page,
+      (o) => o['datasetId'] === 'food' && o['graphMatchesData'] === false,
+    );
+    await expect(bar(page, '피자')).toHaveAttribute('data-cells', '0');
+    await expect(page.getByTestId('graph-dataset-source')).toHaveText('자료: 우리 반 조사');
+    const sourceSize = await page
+      .getByTestId('graph-dataset-source')
+      .evaluate((element) => Number.parseFloat(window.getComputedStyle(element).fontSize));
+    expect(sourceSize).toBeGreaterThanOrEqual(14);
+  });
+
+  for (const viewport of [null, { width: 660, height: 420 }] as const) {
+    test(`단추 줄이 잘리지 않고 단추는 targetSize 이상이다${viewport ? '(두 칸 폭 660x420)' : ''}`, async ({
+      page,
+    }) => {
+      if (viewport) await page.setViewportSize(viewport);
+      await openEngine(page, picker, { stageFit: true });
+      const row = page.getByTestId('graph-dataset-row');
+      const wrap = page.locator('[data-mode="table-to-graph"]').first();
+      const rowBox = await row.boundingBox();
+      const wrapBox = await wrap.boundingBox();
+      if (!rowBox || !wrapBox) throw new Error('단추 줄을 찾지 못했습니다.');
+      const buttons = row.getByRole('radio');
+      await expect(buttons).toHaveCount(3);
+      for (let i = 0; i < 3; i += 1) {
+        const box = await buttons.nth(i).boundingBox();
+        if (!box) throw new Error('단추를 찾지 못했습니다.');
+        expect(box.height).toBeGreaterThanOrEqual(47.5);
+        expect(box.x).toBeGreaterThanOrEqual(wrapBox.x - 1);
+        expect(box.x + box.width).toBeLessThanOrEqual(wrapBox.x + wrapBox.width + 1);
+      }
+      expect(rowBox.width).toBeLessThanOrEqual(wrapBox.width + 1);
+      expect(
+        await row.evaluate((element) => element.scrollWidth - element.clientWidth),
+      ).toBeLessThanOrEqual(1);
+    });
+  }
+
+  test('기준 스크린샷(묶음을 고른 뒤)', async ({ page }) => {
+    await openEngine(page, picker, { stageFit: true });
+    await page.getByRole('radio', { name: '좋아하는 음식' }).click();
+    await drawBars(page, { 피자: 3 });
+    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+    await page.mouse.move(0, 0);
+    if (test.info().project.name.toLowerCase().includes('chromebook')) {
+      await stageShot(page, 'dataset-picked');
+    }
+  });
+});
+
+test.describe('T161: 고른 묶음 표시와 그래프 영역 크기', () => {
+  const picker = {
+    mode: 'table-to-graph',
+    graph: 'student',
+    graphType: 'bar',
+    table: 'given',
+    scale: 1,
+    datasets: [
+      { id: 'food', title: '좋아하는 음식', data: { 피자: 3, 떡볶이: 2 } },
+      { id: 'pet', title: '키우고 싶은 동물', data: { 강아지: 4, 고양이: 1, 토끼: 2 } },
+    ],
+  };
+
+  test('고른 단추에는 색 말고 ✓ 글자도 있다', async ({ page }) => {
+    await openEngine(page, picker, { stageFit: true });
+    const food = page.getByRole('radio', { name: '좋아하는 음식' });
+    await expect(food).not.toContainText('✓');
+    await food.click();
+    await expect(food).toContainText('✓');
+    await expect(food).toHaveAttribute('aria-checked', 'true');
+    await expect(page.getByRole('radio', { name: '키우고 싶은 동물' })).not.toContainText('✓');
+  });
+
+  for (const viewport of [null, { width: 660, height: 420 }] as const) {
+    test(`고른 뒤 막대 그래프 영역은 높이 200px 이상이다${viewport ? '(두 칸 폭 660x420)' : ''}`, async ({
+      page,
+    }, testInfo) => {
+      if (viewport) await page.setViewportSize(viewport);
+      await openEngine(page, picker, { stageFit: true });
+      await page.getByRole('radio', { name: '좋아하는 음식' }).click();
+      const box = await page.locator('[data-testid="graph-canvas"]').boundingBox();
+      const area = await page.locator('[data-testid="graph-canvas"]').evaluate((element) => {
+        const parent = element.parentElement?.getBoundingClientRect();
+        return parent ? `${Math.round(parent.width)}x${Math.round(parent.height)}` : '?';
+      });
+      if (!box) throw new Error('그래프를 찾지 못했습니다.');
+      console.log(
+        'T161 graph',
+        testInfo.project.name,
+        viewport ? '660x420' : 'full',
+        `svg ${Math.round(box.width)}x${Math.round(box.height)}`,
+        `area ${area}`,
+      );
+      expect(box.height).toBeGreaterThanOrEqual(200);
+    });
+  }
+});

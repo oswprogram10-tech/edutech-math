@@ -65,6 +65,8 @@ interface GraphConfigBase {
   readonly question?: string;
   readonly options?: readonly unknown[];
   readonly transport?: string;
+  /** T161: 학생이 하나 고르는 자료 묶음. 있으면 `data`·축 제목·`valueLabel`은 고른 묶음 것을 쓴다. */
+  readonly datasets?: readonly unknown[];
 }
 
 export interface TableToGraphConfig extends GraphConfigBase {
@@ -84,6 +86,18 @@ export interface ClassVoteConfig extends GraphConfigBase {
 }
 
 export type GraphConfig = TableToGraphConfig | ScaleConfig | PictographConfig | ClassVoteConfig;
+
+/** 정규화한 자료 묶음. 빠진 글은 설정 맨 위 키로 채운다. */
+export interface DatasetOption {
+  readonly id: string;
+  readonly title: string;
+  readonly categories: readonly string[];
+  readonly data: Readonly<Record<string, number>>;
+  readonly valueLabel: string;
+  readonly categoryAxisTitle: string;
+  readonly valueAxisTitle: string;
+  readonly source: string;
+}
 
 /** 정규화한 설정. 상태에 복사해 두어 reduce가 config 없이 쓴다. */
 export interface GraphSettings {
@@ -116,6 +130,10 @@ export interface GraphSettings {
   readonly legendChange: LegendChange;
   readonly build: BuildSource;
   readonly question: string;
+  /** 고를 수 있는 자료 묶음(T161). 없으면 빈 배열. */
+  readonly datasets: readonly DatasetOption[];
+  /** 지금 고른 묶음의 출처 글. 안 골랐거나 없으면 빈 문자열. */
+  readonly source: string;
 }
 
 interface GraphStateBase {
@@ -130,6 +148,8 @@ interface GraphStateBase {
   readonly bars: Readonly<Record<string, number>>;
   readonly scale: number;
   readonly orientation: Orientation;
+  /** 고른 자료 묶음 id. 묶음이 없거나 아직 안 골랐으면 null. */
+  readonly datasetId: string | null;
 }
 
 export interface TableToGraphState extends GraphStateBase {
@@ -180,7 +200,8 @@ export type GraphAction =
   | { readonly type: 'reset-rows' }
   | { readonly type: 'vote'; readonly option: string }
   | { readonly type: 'undo-vote' }
-  | { readonly type: 'reset-votes' };
+  | { readonly type: 'reset-votes' }
+  | { readonly type: 'pick-dataset'; readonly id: string };
 
 export const DEFAULT_SCALE_OPTIONS: readonly number[] = [1, 2, 5, 10];
 
