@@ -223,6 +223,10 @@ async function expectGraphHeight(page: Page, label: string, vp: string): Promise
     `[T164 ${vp}] ${label} 그래프 ${Math.round(graphBox?.width ?? 0)}x${Math.round(graphBox?.height ?? 0)}, 교구 판 ${Math.round(mainBox?.width ?? 0)}x${Math.round(mainBox?.height ?? 0)}, 응답 판 ${Math.round(respBox?.width ?? 0)}x${Math.round(respBox?.height ?? 0)}`,
   );
   expect(graphBox?.height ?? 0).toBeGreaterThanOrEqual(200);
+  // T165: 응답 칸이 없는 A1.T1·T2는 판을 채운다(아이패드 높이 350px 이상, 크롬북 300px 이상).
+  if ((label === 'A1.T1' || label === 'A1.T2') && vp !== 'board') {
+    expect(graphBox?.height ?? 0).toBeGreaterThanOrEqual(vp === 'ipad' ? 350 : 300);
+  }
 }
 
 /** 0.5cm 한 칸(plotStep)의 화면 높이(px)를 재어 기록하고 6px 이상인지 단언한다. */
@@ -236,9 +240,8 @@ async function expectPlotStepHeight(page: Page, label: string, vp: string): Prom
   console.log(
     `[T164 ${vp}] ${label} 0.5cm 한 칸 ${px.toFixed(1)}px (그래프 ${Math.round(box.width)}x${Math.round(box.height)}, 논리 폭 ${width})`,
   );
-  // 크롬북·전자칠판은 6px 이상이어야 한다(카드 기준). 아이패드 세로 화면은 그래프가 가로로 스크롤되는 좁은 판이라
-  // 5px대이고, 점은 끌기·키보드 ↑로 0.5cm에 붙으므로 기록만 하고 5px 이상만 확인한다.
-  expect(px).toBeGreaterThanOrEqual(vp === 'ipad' ? 5 : 6);
+  // T165: 판 높이를 채워 모든 기기에서 6px 이상이다(아이패드 약 13px, 크롬북 약 10px).
+  expect(px).toBeGreaterThanOrEqual(6);
 }
 
 // ---------------------------------------------------------------- 도우미

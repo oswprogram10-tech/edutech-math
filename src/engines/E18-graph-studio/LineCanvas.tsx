@@ -27,6 +27,7 @@ import {
   plotBottom,
   plotStepCountAt,
   snapValue,
+  tickSkip,
   tickValueOf,
   valueOf,
   yOfCell,
@@ -259,7 +260,7 @@ export function LineCanvas({ state, dispatch, readOnly, targetSize, tooltipsOn }
   const lane = laneWidth(g);
 
   const numberSize = fs(20);
-  const skip = Math.max(1, Math.ceil((numberSize * 1.2) / g.unit));
+  const skip = tickSkip(g.step, Math.ceil((numberSize * 1.2) / g.unit));
   const ticks = lineTickCells(g.cells, skip);
 
   const onLaneKey = (event: ReactKeyboardEvent<SVGGElement>, index: number) => {
