@@ -75,6 +75,21 @@ const W3_UNITS = new Set([
   'g5s2u3',
   'g6s2u5',
 ]);
+const W5_UNITS = new Set([
+  'g1s2u5',
+  'g2s2u5',
+  'g2s2u6',
+  'g3s2u6',
+  'g4s1u5',
+  'g4s1u6',
+  'g4s2u5',
+  'g5s1u1',
+  'g5s1u3',
+  'g5s2u6',
+  'g6s1u4',
+  'g6s1u5',
+  'g6s2u4',
+]);
 
 /** docs/05 §5 표를 코드 → 단원 목록으로 읽는다. */
 function documentedRows(): Map<string, string[]> {
@@ -102,7 +117,7 @@ function documentedCodes(units: ReadonlySet<string>): Set<string> {
   return codes;
 }
 
-describe('W1·W2·W3 오개념 레지스트리', () => {
+describe('W1·W2·W3·W5 오개념 레지스트리', () => {
   const units = new Set(dataAt<UnitsFile>('/units.json').units.map((unit) => unit.id));
   const concepts = new Set(
     dataAt<ConceptsFile>('/concepts.json').concepts.map((concept) => concept.id),
@@ -117,13 +132,29 @@ describe('W1·W2·W3 오개념 레지스트리', () => {
     expect(registryW1.sort()).toEqual([...documented].sort());
   });
 
-  it('docs/05 §5의 W1·W2·W3 코드를 모두 담는다', () => {
-    const union = new Set([...W1_UNITS, ...W2_UNITS, ...W3_UNITS]);
+  it('docs/05 §5의 W1·W2·W3·W5 코드를 모두 담는다', () => {
+    const union = new Set([...W1_UNITS, ...W2_UNITS, ...W3_UNITS, ...W5_UNITS]);
     const documented = documentedCodes(union);
     expect(W2_UNITS.size).toBe(26);
     expect(W3_UNITS.size).toBe(12);
-    expect(documented.size).toBe(125);
+    expect(W5_UNITS.size).toBe(13);
+    expect(documented.size).toBe(158);
     expect([...MISCONCEPTIONS.map((item) => item.code)].sort()).toEqual([...documented].sort());
+  });
+
+  it('W5 코드 33개는 수 13개·고르기 10개·관찰 10개 구성이고 W1~W3와 겹치지 않는다', () => {
+    const prior = new Set([...W1_UNITS, ...W2_UNITS, ...W3_UNITS]);
+    const priorCodes = documentedCodes(prior);
+    const w5Only = [...documentedCodes(W5_UNITS)].filter((code) => !priorCodes.has(code));
+    expect(w5Only).toHaveLength(33);
+    const items = w5Only.map((code) => misconceptionOf(code));
+    expect(items.every((item) => item !== undefined)).toBe(true);
+    expect(items.filter((item) => item?.detect === 'diagnose')).toHaveLength(23);
+    expect(items.filter((item) => item?.detect === 'observation')).toHaveLength(10);
+    // W2에 이미 있는 두 코드는 W5에서 다시 등록하지 않고, units에 W5 단원이 들어 있다.
+    expect(misconceptionOf('MC-COUNT-ONE-TO-ONE')?.units).toContain('g2s2u5');
+    expect(misconceptionOf('MC-CHART-ROW-COL')?.units).toContain('g2s2u6');
+    expect(new Set(MISCONCEPTIONS.map((item) => item.code)).size).toBe(MISCONCEPTIONS.length);
   });
 
   it('각 항목의 units가 docs/05 §5 표의 단원 열 전체와 같다', () => {

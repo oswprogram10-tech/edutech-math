@@ -12,8 +12,8 @@
  * `detect: 'observation'` 코드(예: MC-GEO-RAY-LINE-CONFUSE)는 여기에 없다.
  * 그 코드는 엔진 predicate `hasMisconception`이나 GoalSpec이 맡는다.
  */
-import type { DiagnoseDetector, DiagnoseInput } from './diagnose-shared';
-import { rationalOf, recordOf, studentValue } from './diagnose-shared';
+import type { DiagnoseDetector } from './diagnose-shared';
+import { rationalOf, studentValue, trapChoice } from './diagnose-shared';
 import { Rational } from './rational';
 
 const ZERO = 0n;
@@ -27,21 +27,6 @@ const RIGHT_ANGLE = 90n;
 /** `v ≠ 정답`을 모든 조건에 붙이기 위한 도우미. */
 function wrongAndNotCorrect(student: Rational, wrong: Rational, correct: Rational): boolean {
   return student.equals(wrong) && !student.equals(correct);
-}
-
-/** `args.trap`(문자열 또는 문자열 배열)을 읽는다. 비었거나 형식이 다르면 null. */
-function trapsOf(input: DiagnoseInput): string[] | null {
-  const record = recordOf(input.args);
-  if (record === null) return null;
-  const value = record.trap;
-  if (typeof value === 'string' && value.length > 0) return [value];
-  if (!Array.isArray(value) || value.length === 0) return null;
-  const traps: string[] = [];
-  for (const item of value) {
-    if (typeof item !== 'string' || item.length === 0) return null;
-    traps.push(item);
-  }
-  return traps;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -155,19 +140,6 @@ const shapeVertexCount: DiagnoseDetector = (input) => {
 // ─────────────────────────────────────────────────────────────
 // 고르기 감지(10개)
 // ─────────────────────────────────────────────────────────────
-
-/**
- * 고르기 응답 감지. `args.trap`은 오개념 선택지 id(문자열 또는 문자열 배열)다.
- * `args.expected`가 있으면 그 선택지는 정답이므로 감지하지 않는다.
- */
-const trapChoice: DiagnoseDetector = (input) => {
-  if (input.value === null) return false;
-  const traps = trapsOf(input);
-  if (traps === null) return false;
-  const expected = recordOf(input.args)?.expected;
-  if (typeof expected === 'string' && input.value === expected) return false;
-  return traps.includes(input.value);
-};
 
 /**
  * `detect: 'diagnose'`인 W3 코드의 감지 함수(19개).
