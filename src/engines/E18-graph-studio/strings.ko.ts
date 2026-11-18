@@ -41,7 +41,39 @@ export const graphStrings = {
     cellMark: '○',
   },
 
+  pictograph: {
+    label: '그림그래프',
+    board: '그림그래프 그리기',
+    addSmall: '+ 작은 그림',
+    compress: '묶기',
+    expand: '펼치기',
+    resetRows: '그림 지우기',
+    legendLabel: '범례',
+    legendGroup: '큰 그림 하나가 나타내는 수',
+    legendBig: (n: number, unit: string) => `큰 그림 = ${n}${unit}`,
+    legendSmall: (unit: string) => `작은 그림 = 1${unit}`,
+    lassoHint: (n: number) => `작은 그림 ${n}개를 한 줄에서 묶어요`,
+    rowLabel: (cat: string) => `${cat} 줄`,
+    controlsGroup: (cat: string) => `${cat} 그림 조작`,
+    addSmallLabel: (cat: string) => `${cat} 작은 그림 놓기`,
+    compressLabel: (cat: string, n: number) => `${cat} 작은 그림 ${n}개를 큰 그림 1개로 묶기`,
+    expandLabel: (cat: string) => `${cat} 큰 그림 1개를 작은 그림으로 펼치기`,
+    smallIcon: (cat: string, index: number) => `${cat} 작은 그림 ${index + 1}번, 누르면 뺍니다`,
+    bigIcon: (cat: string, index: number) =>
+      `${cat} 큰 그림 ${index + 1}번, 엔터를 누르면 펼칩니다`,
+    tooltip: (cat: string, value: number, unit: string) => `${cat}: ${value}${unit}`,
+  },
+
+  vote: {
+    stampGroup: '스탬프',
+    stamp: (option: string) => `${option} 스탬프 찍기`,
+    undo: '하나 지우기',
+    tableLabel: '투표 결과',
+    graphLabel: '투표 그래프',
+  },
+
   overlay: {
+    equals: '=',
     tableValue: (value: number) => `표: ${value}`,
     more: '…↑',
     moreHorizontal: '…→',

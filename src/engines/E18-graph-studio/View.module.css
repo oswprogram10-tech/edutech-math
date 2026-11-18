@@ -261,3 +261,158 @@
   max-height: none;
   touch-action: pan-x pan-y;
 }
+
+/* 범례(그림그래프) */
+.legend {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 1rem;
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 700;
+  color: #1d2330;
+}
+
+/* 그림그래프 판. 그림 크기를 화면 폭에 맞춰 정하므로 가로 스크롤이 없고, 세로가 길면 판 전체가 스크롤한다. */
+.wrap[data-picto='true'],
+.wrap[data-mode='class-vote'] {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.wrap[data-picto='true'] > .views {
+  flex: 0 0 auto;
+}
+
+.wrap[data-mode='class-vote'] > .views {
+  flex: 1 0 auto;
+}
+
+.pictoBox {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+@container (min-width: 560px) {
+  .views > .pictoBox {
+    flex: 1 1 0;
+  }
+}
+
+.pictoHint {
+  margin: 0;
+  font-weight: 600;
+  color: #3d485c;
+}
+
+.pictoHint[data-miss] {
+  color: #8a4b00;
+}
+
+.pictoHost {
+  width: 100%;
+  min-width: 0;
+}
+
+.pictoSvg {
+  display: block;
+  border-radius: 16px;
+  background: #fbfaf6;
+  /* 테두리는 상자 크기를 바꾸지 않는 outline으로 둔다(오버레이 svg와 정확히 겹치도록). */
+  outline: 1px solid #d7deea;
+  outline-offset: -1px;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.pictoSvg [role='button']:focus-visible {
+  outline: 3px solid #e8872e;
+  outline-offset: 3px;
+}
+
+.pictoControls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.pictoControlRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.pictoControlName {
+  min-width: 3rem;
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.button[data-picked='true'] {
+  border-color: #e8872e;
+  box-shadow: inset 0 -4px 0 #e8872e;
+}
+
+/* 학급 투표 */
+.question {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #1d2330;
+}
+
+.stamps {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+/* 전자칠판에서 멀리서도 보이게 크고, 학생이 한 번에 누르기 쉽게 한다. */
+.stamp {
+  min-width: 96px;
+  min-height: 96px;
+  padding: 0 0.8rem;
+  border: 3px solid #2f6fde;
+  border-radius: 20px;
+  background: #ffffff;
+  color: #1d2330;
+  font: inherit;
+  font-size: 3rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.stamp:active {
+  background: #dbe7ff;
+}
+
+.stamp:disabled {
+  border-color: #aab4c6;
+  color: #7a8497;
+  cursor: not-allowed;
+}
+
+.stamp:focus-visible {
+  outline: 3px solid #e8872e;
+  outline-offset: 3px;
+}
+
+/* 두 칸 배치처럼 좁은 판에서는 조금 줄이되 64px 아래로 내려가지 않는다. */
+@container (max-width: 559px) {
+  .stamp {
+    min-width: 72px;
+    min-height: 72px;
+    font-size: 2.2rem;
+  }
+}
