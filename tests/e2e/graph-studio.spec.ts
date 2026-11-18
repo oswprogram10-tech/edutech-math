@@ -3,6 +3,13 @@ import type { Locator, Page } from '@playwright/test';
 import { logicalToScreen } from './canvas-point';
 import { expectSandboxCanvasVisible } from './panel-layout';
 import { bandCenter, frameOf, valuePosition } from '../../src/engines/E18-graph-studio/layout';
+import { Rational } from '../../src/core/math';
+import {
+  laneCenter,
+  lineGeometry,
+  normalizeLine,
+  yOfValue,
+} from '../../src/engines/E18-graph-studio/line';
 
 /**
  * E18 그래프 스튜디오 샌드박스 E2E. 아이패드(WebKit)·크롬북·전자칠판 뷰포트에서 모두 돈다.
@@ -44,7 +51,7 @@ interface OpenOptions {
   readonly stageFit?: boolean;
   readonly overlay?: string;
   readonly overlayArgs?: unknown;
-  readonly mode?: 'table-to-graph' | 'scale' | 'pictograph' | 'class-vote';
+  readonly mode?: 'table-to-graph' | 'scale' | 'pictograph' | 'class-vote' | 'line-graph';
 }
 
 async function openEngine(page: Page, config: unknown, options: OpenOptions = {}) {
@@ -1603,4 +1610,547 @@ test.describe('T161: 고른 묶음 표시와 그래프 영역 크기', () => {
       expect(box.height).toBeGreaterThanOrEqual(200);
     });
   }
+});
+
+test.describe('T163: line-graph(꺾은선그래프)', () => {
+  const POINTS = [
+    { x: '1일', y: '36.5' },
+    { x: '2일', y: '36.8' },
+    { x: '3일', y: '37.2' },
+    { x: '4일', y: '36.6' },
+    { x: '5일', y: '36.9' },
+  ];
+  const base = {
+    mode: 'line-graph',
+    points: POINTS,
+    title: '체온 변화',
+    categoryAxisTitle: '날짜',
+    valueAxisTitle: '체온(℃)',
+    valueLabel: '℃',
+    yStep: '0.5',
+    plotStep: '0.1',
+    yFromOptions: ['0', '36'],
+  };
+  // 시작값 36부터: 세로 36~38이 판을 채워 plotStep 0.1(눈금 한 칸의 1/5)을 아이패드에서도 정확히 누를 수 있다.
+  const student = { ...base, graph: 'student', yFrom: '36' };
+
+  function lane(page: Page, x: string): Locator {
+    return page.locator(`[data-testid="line-lane"][data-x="${x}"]`);
+  }
+
+  function pointOf(page: Page, x: string, kind = 'actual'): Locator {
+    return page.locator(`[data-testid="line-point"][data-x="${x}"][data-kind="${kind}"]`);
+  }
+
+  /** 레인 번호와 값(문자열)의 화면 좌표. 그림이 화면 밖이면 스크롤해서 가져온다. */
+  async function screenOf(page: Page, config: Record<string, unknown>, index: number, y: string) {
+    const canvas = page.getByTestId('graph-canvas');
+    await canvas.scrollIntoViewIfNeeded();
+    const box = await canvas.boundingBox();
+    if (!box) throw new Error('그래프를 찾지 못했습니다.');
+    const width = Number(await canvas.getAttribute('data-logical-width'));
+    const from = (await canvas.getAttribute('data-y-from')) ?? '0';
+    const g = lineGeometry(normalizeLine(config), from, width);
+    return {
+      x: box.x + (laneCenter(g, index) * box.width) / width,
+      y: box.y + (yOfValue(g, Rational.parse(y)) * box.height) / LOGICAL_H,
+    };
+  }
+
+  test('레인을 누르면 plotStep에 붙은 점이 찍히고 이웃 점과 이어진다(connect: auto)', async ({
+    page,
+  }) => {
+    await openEngine(page, student, { stageFit: true, mode: 'line-graph' });
+    const first = await screenOf(page, student, 0, '36.5');
+    await page.mouse.click(first.x, first.y);
+    await expect(pointOf(page, '1일')).toHaveAttribute('data-y', '36.5');
+    const second = await screenOf(page, student, 1, '36.8');
+    await page.mouse.click(second.x, second.y);
+    await expect(pointOf(page, '2일')).toHaveAttribute('data-y', '36.8');
+    await expect(page.locator('[data-testid="line-segment"][data-a="0"][data-b="1"]')).toHaveCount(
+      1,
+    );
+    await pollObservation(
+      page,
+      (o) => (o['linePoints'] as Record<string, string | null>)['1일'] === '73/2',
+    );
+    // 정오 표시·말풍선이 없다.
+    await expect(page.getByTestId('graph-tooltip')).toHaveCount(0);
+  });
+
+  test('레인에서 끌면 손을 뗀 높이에 점이 찍힌다', async ({ page }) => {
+    await openEngine(page, student, { stageFit: true, mode: 'line-graph' });
+    const from = await screenOf(page, student, 2, '36.2');
+    const to = await screenOf(page, student, 2, '37.2');
+    await page.mouse.move(from.x, from.y);
+    await page.mouse.down();
+    await page.mouse.move(from.x + 4, (from.y + to.y) / 2, { steps: 4 });
+    await page.mouse.move(to.x, to.y, { steps: 4 });
+    await expect(page.getByTestId('line-preview')).toHaveCount(1);
+    await page.mouse.up();
+    await expect(pointOf(page, '3일')).toHaveAttribute('data-y', '37.2');
+    await expect(page.getByTestId('line-preview')).toHaveCount(0);
+  });
+
+  test('키보드: ↑↓로 plotStep씩 움직이고 Delete로 지운다', async ({ page }) => {
+    await openEngine(page, student, { stageFit: true, mode: 'line-graph' });
+    const target = lane(page, '2일');
+    await press(target, 'ArrowUp'); // 처음에는 시작값(36)
+    await expect(pointOf(page, '2일')).toHaveAttribute('data-y', '36');
+    await press(target, 'ArrowUp');
+    await press(target, 'ArrowUp');
+    await expect(pointOf(page, '2일')).toHaveAttribute('data-y', '36.2');
+    await press(target, 'ArrowDown');
+    await expect(pointOf(page, '2일')).toHaveAttribute('data-y', '36.1');
+    await press(target, 'Delete');
+    await expect(pointOf(page, '2일')).toHaveCount(0);
+  });
+
+  test('connect: student — 끌어서 잇고, 선분을 누르면 끊고, 점 둘에서 Enter로도 잇는다', async ({
+    page,
+  }) => {
+    const config = { ...student, connect: 'student' };
+    await openEngine(page, config, { stageFit: true, mode: 'line-graph' });
+    for (const [index, point] of POINTS.entries()) {
+      const at = await screenOf(page, config, index, point.y);
+      await page.mouse.click(at.x, at.y);
+    }
+    await expect(page.locator('[data-testid="line-segment"]')).toHaveCount(0);
+    const a = await screenOf(page, config, 0, '36.5');
+    const b = await screenOf(page, config, 1, '36.8');
+    await page.mouse.move(a.x, a.y);
+    await page.mouse.down();
+    await page.mouse.move(b.x, b.y, { steps: 6 });
+    await page.mouse.up();
+    const segment = page.locator('[data-testid="line-segment"][data-a="0"][data-b="1"]');
+    await expect(segment).toHaveCount(1);
+    await pollObservation(page, (o) => JSON.stringify(o['segments']) === '[[0,1]]');
+    // 건너뛴 쌍도 이을 수 있고 순서 판정은 거짓이다.
+    const c = await screenOf(page, config, 3, '36.6');
+    await page.mouse.move(a.x, a.y);
+    await page.mouse.down();
+    await page.mouse.move(c.x, c.y, { steps: 6 });
+    await page.mouse.up();
+    await expect(page.locator('[data-testid="line-segment"][data-a="0"][data-b="3"]')).toHaveCount(
+      1,
+    );
+    await pollObservation(page, (o) => o['segmentsInOrder'] === false);
+    // 선분을 누르면 끊어진다(나중에 이은 건너뛴 선분의 가운데).
+    const skip = page.locator('[data-testid="line-segment"][data-a="0"][data-b="3"]');
+    const mid = await skip.locator('line').nth(1).boundingBox();
+    if (!mid) throw new Error('선분을 찾지 못했습니다.');
+    await page.mouse.click(mid.x + mid.width / 2, mid.y + mid.height / 2);
+    await expect(skip).toHaveCount(0);
+    await press(segment, 'Delete');
+    await expect(page.locator('[data-testid="line-segment"]')).toHaveCount(0);
+    // 점 둘을 차례로 눌러 잇는다.
+    await page.mouse.click(a.x, a.y);
+    await page.mouse.click(b.x, b.y);
+    await expect(segment).toHaveCount(1);
+    // 키보드: 점에서 Enter → 다른 점에서 Enter.
+    await press(lane(page, '2일'), 'Enter');
+    await press(lane(page, '3일'), 'Enter');
+    await expect(page.locator('[data-testid="line-segment"][data-a="1"][data-b="2"]')).toHaveCount(
+      1,
+    );
+  });
+
+  test('이웃한 쌍을 모두 이으면 segmentsInOrder가 참이다', async ({ page }) => {
+    const config = { ...student, connect: 'student' };
+    await openEngine(page, config, { stageFit: true, mode: 'line-graph' });
+    for (const [index, point] of POINTS.entries()) {
+      const at = await screenOf(page, config, index, point.y);
+      await page.mouse.click(at.x, at.y);
+    }
+    for (let index = 0; index < 4; index += 1) {
+      await press(lane(page, POINTS[index]?.x ?? ''), 'Enter');
+      await press(lane(page, POINTS[index + 1]?.x ?? ''), 'Enter');
+    }
+    await pollObservation(
+      page,
+      (o) => o['segmentsInOrder'] === true && o['pointsMatchData'] === true,
+    );
+  });
+
+  test('물결선 단추로 data-y-from·data-wavy가 바뀌고 낮은 점은 지워진다', async ({ page }) => {
+    // 0부터 보이는 판은 36~38의 0.1을 정확히 누르기 어렵다(물결선을 쓰는 까닭). 여기서는 낮은 점만 만든다.
+    await openEngine(
+      page,
+      { ...student, yFrom: '0', plotStep: '1' },
+      { stageFit: true, mode: 'line-graph' },
+    );
+    const canvas = page.getByTestId('graph-canvas');
+    await expect(canvas).toHaveAttribute('data-y-from', '0');
+    await expect(canvas).toHaveAttribute('data-wavy', 'false');
+    await expect(page.getByTestId('line-wavy')).toHaveCount(0);
+    const low = await screenOf(page, student, 0, '30');
+    await page.mouse.click(low.x, low.y);
+    const lowY = Number(await pointOf(page, '1일').getAttribute('data-y'));
+    expect(lowY).toBeGreaterThan(20);
+    expect(lowY).toBeLessThan(36);
+    await page.getByRole('radio', { name: '36부터' }).click();
+    await expect(canvas).toHaveAttribute('data-y-from', '36');
+    await expect(canvas).toHaveAttribute('data-wavy', 'true');
+    await expect(page.getByTestId('line-wavy')).toBeVisible();
+    await expect(pointOf(page, '1일')).toHaveCount(0);
+    await pollObservation(page, (o) => o['wavyShown'] === true && o['yFrom'] === '36');
+    // 바뀐 축에서는 36 이상만 찍힌다.
+    const at = await screenOf(page, student, 0, '37');
+    await page.mouse.click(at.x, at.y);
+    await expect(pointOf(page, '1일')).toHaveAttribute('data-y', '37');
+    await page.getByRole('radio', { name: '0부터' }).click();
+    await expect(canvas).toHaveAttribute('data-wavy', 'false');
+  });
+
+  test('예측 → 실제 자료 보기: 점선·빈 원과 실선·채운 원을 범례 글로도 구별한다', async ({
+    page,
+  }) => {
+    const config = { ...base, graph: 'given', predict: true, yFromOptions: undefined };
+    await openEngine(page, config, { stageFit: true, mode: 'line-graph' });
+    await expect(page.getByTestId('graph-table')).toHaveCount(0);
+    await expect(pointOf(page, '1일', 'actual')).toHaveCount(0);
+    const legend = page.getByTestId('line-legend');
+    await expect(legend).toContainText('예측');
+    await expect(legend).toContainText('실제');
+    const finish = page.getByTestId('line-finish-predict');
+    await expect(finish).toBeDisabled();
+    for (const [index, y] of ['36.4', '36.9', '37.5'].entries()) {
+      const at = await screenOf(page, config, index, y);
+      await page.mouse.click(at.x, at.y);
+    }
+    await expect(pointOf(page, '3일', 'prediction')).toHaveCount(1);
+    await expect(page.locator('[data-testid="line-segment"][data-kind="prediction"]')).toHaveCount(
+      2,
+    );
+    const dash = await page
+      .locator('[data-testid="line-segment"][data-kind="prediction"] line')
+      .first()
+      .getAttribute('stroke-dasharray');
+    expect(dash).toBeTruthy();
+    await expect(pointOf(page, '3일', 'prediction').locator('circle').first()).toHaveAttribute(
+      'fill',
+      '#fbfaf6',
+    );
+    await pollObservation(page, (o) => o['phase'] === 'predict' && o['predictionCount'] === 3);
+    await finish.click();
+    await pollObservation(page, (o) => o['phase'] === 'actual' && o['predictionDone'] === true);
+    await expect(pointOf(page, '3일', 'actual')).toHaveAttribute('data-y', '37.2');
+    await expect(page.locator('[data-testid="line-segment"][data-kind="actual"]')).toHaveCount(4);
+    await expect(pointOf(page, '3일', 'prediction')).toHaveCount(1);
+    await expect(page.getByTestId('graph-table')).toBeVisible();
+    const solid = await page
+      .locator('[data-testid="line-segment"][data-kind="actual"] line')
+      .first()
+      .getAttribute('stroke-dasharray');
+    expect(solid).toBeNull();
+    // 예측은 더 바꿀 수 없다.
+    await expect(page.getByTestId('line-finish-predict')).toHaveCount(0);
+  });
+
+  test('given + tooltips: show는 점을 눌러 값을 본다', async ({ page }) => {
+    await openEngine(
+      page,
+      { ...base, graph: 'given', tooltips: 'show' },
+      { stageFit: true, mode: 'line-graph' },
+    );
+    await pointOf(page, '3일').locator('circle').nth(1).click({ force: true });
+    await expect(page.getByTestId('graph-tooltip')).toContainText('3일: 37.2℃');
+  });
+
+  test('글자는 화면에서 14px 이상이다', async ({ page }) => {
+    await openEngine(page, { ...base, graph: 'given' }, { stageFit: true, mode: 'line-graph' });
+    const canvas = page.getByTestId('graph-canvas');
+    const box = await canvas.boundingBox();
+    if (!box) throw new Error('그래프를 찾지 못했습니다.');
+    const width = Number(await canvas.getAttribute('data-logical-width'));
+    const scale = Math.min(box.width / width, box.height / LOGICAL_H);
+    // WebKit은 SVG 글자의 화면 상자를 주지 않아, 글꼴 크기 속성(논리)에 화면 배율을 곱해 본다.
+    const sizes = await canvas.locator('text').evaluateAll((nodes) =>
+      nodes.map((node) => ({
+        text: node.textContent ?? '',
+        font: Number.parseFloat(node.closest('[font-size]')?.getAttribute('font-size') ?? '0'),
+      })),
+    );
+    expect(sizes.length).toBeGreaterThan(5);
+    expect(sizes.filter((item) => item.font * scale < 13.9)).toEqual([]);
+  });
+
+  test('레인이 좁으면 targetSize까지 폭을 늘려 가로 스크롤하고 안내 띠를 보인다', async ({
+    page,
+  }) => {
+    const many = {
+      ...student,
+      points: Array.from({ length: 14 }, (_, index) => ({
+        x: `${index + 1}일`,
+        y: `${36 + (index % 5) / 10}`,
+      })),
+    };
+    await page.setViewportSize({ width: 700, height: 520 });
+    await openEngine(page, many, { stageFit: true, mode: 'line-graph' });
+    await page.getByRole('button', { name: '터치 48px' }).click();
+    const cue = page.getByTestId('graph-scroll-cue');
+    await expect(cue).toBeVisible();
+    const widths = await page
+      .locator('[data-testid="line-lane"] rect')
+      .evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().width));
+    expect(Math.min(...widths)).toBeGreaterThanOrEqual(63);
+    const area = page.locator('div[data-scroll="true"]');
+    expect(await area.evaluate((element) => element.scrollWidth > element.clientWidth + 1)).toBe(
+      true,
+    );
+    await area.evaluate((element) => element.scrollTo({ left: element.scrollWidth }));
+    await expect(cue).toBeHidden();
+    // 맨 오른쪽 레인도 눌린다.
+    const at = await screenOf(page, many, 13, '36.4');
+    await page.mouse.click(at.x, at.y);
+    await expect(pointOf(page, '14일')).toHaveAttribute('data-y', '36.4');
+  });
+});
+
+test.describe('T163: line-graph 오버레이 4개', () => {
+  const config = {
+    mode: 'line-graph',
+    graph: 'given',
+    points: [
+      { x: '1일', y: '36.5' },
+      { x: '2일', y: '36.8' },
+      { x: '3일', y: '37.2' },
+      { x: '4일', y: '36.6' },
+    ],
+    yStep: '0.5',
+    plotStep: '0.1',
+    yFrom: '36',
+    yFromOptions: ['0', '36'],
+    valueLabel: '℃',
+  };
+
+  async function numbers(element: Locator, attributes: readonly string[]) {
+    return Promise.all(attributes.map(async (name) => Number(await element.getAttribute(name))));
+  }
+
+  test('change-bars: 구간마다 늘면 위, 줄면 아래 막대이고 글자가 없다', async ({ page }) => {
+    await openEngine(page, config, { stageFit: true, mode: 'line-graph', overlay: 'change-bars' });
+    await showOverlay(page);
+    const overlay = await expectOverlayAligned(page, 'change-bars');
+    const bars = overlay.locator('[data-change-index]');
+    await expect(bars).toHaveCount(3);
+    await expect(bars.nth(0)).toHaveAttribute('data-change-dir', 'up');
+    await expect(bars.nth(1)).toHaveAttribute('data-change-dir', 'up');
+    await expect(bars.nth(2)).toHaveAttribute('data-change-dir', 'down');
+    const [h0] = await numbers(bars.nth(0), ['height']);
+    const [h1] = await numbers(bars.nth(1), ['height']);
+    expect(h1).toBeGreaterThan(h0 ?? 0); // 0.4 > 0.3
+    await expect(overlay.locator('text')).toHaveCount(0);
+  });
+
+  test('unfold-axis: 펼친 작은 그림과 물결선 자리 괄호를 그리고 글자가 없다', async ({ page }) => {
+    await openEngine(page, config, { stageFit: true, mode: 'line-graph', overlay: 'unfold-axis' });
+    await showOverlay(page);
+    const overlay = await expectOverlayAligned(page, 'unfold-axis');
+    await expect(overlay.getByTestId('unfold-axis-box')).toBeVisible();
+    await expect(overlay.getByTestId('unfold-axis-bracket')).toHaveCount(1);
+    await expect(overlay.getByTestId('unfold-axis-bracket-main')).toHaveCount(1);
+    await expect(overlay.locator('text')).toHaveCount(0);
+  });
+
+  test('scale-count: 시작값부터 두 칸까지만 값을 쓰고 그 위는 …이다', async ({ page }) => {
+    await openEngine(page, config, {
+      stageFit: true,
+      mode: 'line-graph',
+      overlay: 'scale-count',
+      overlayArgs: { x: '2일' },
+    });
+    await showOverlay(page);
+    const overlay = await expectOverlayAligned(page, 'scale-count');
+    await expect(overlay.locator('[data-scale-count]')).toHaveCount(2);
+    await expect(overlay.locator('[data-scale-count="36.5"]')).toHaveCount(1);
+    await expect(overlay.locator('[data-scale-count="37"]')).toHaveCount(1);
+    await expect(overlay.getByTestId('scale-count-more')).toContainText('…');
+    // 글자는 2일 레인 오른쪽에 있다(논리 좌표 속성으로 본다).
+    const [x] = await numbers(overlay.locator('[data-scale-count="36.5"]'), ['x']);
+    const canvas = page.getByTestId('graph-canvas');
+    const width = Number(await canvas.getAttribute('data-logical-width'));
+    const g = lineGeometry(normalizeLine(config), '36', width);
+    expect(x).toBeGreaterThan(laneCenter(g, 1));
+    expect(x).toBeLessThan(laneCenter(g, 2));
+  });
+
+  test('interp-guide: a와 a+1 사이 t 자리에 점선과 깜빡이는 표시를 그린다', async ({ page }) => {
+    await openEngine(page, config, {
+      stageFit: true,
+      mode: 'line-graph',
+      overlay: 'interp-guide',
+      overlayArgs: { a: 1, t: 0.5 },
+    });
+    await showOverlay(page);
+    const overlay = await expectOverlayAligned(page, 'interp-guide');
+    const canvas = page.getByTestId('graph-canvas');
+    const width = Number(await canvas.getAttribute('data-logical-width'));
+    const g = lineGeometry(normalizeLine(config), '36', width);
+    const [x1] = await numbers(overlay.getByTestId('interp-guide-line'), ['x1']);
+    expect(x1).toBeCloseTo((laneCenter(g, 1) + laneCenter(g, 2)) / 2, 1);
+    const mark = overlay.getByTestId('interp-guide-mark');
+    await expect(mark).toHaveAttribute('data-blink', 'on');
+    const [cy] = await numbers(mark.locator('circle'), ['cy']);
+    const expectedY =
+      (yOfValue(g, Rational.parse('36.8')) + yOfValue(g, Rational.parse('37.2'))) / 2;
+    expect(cy).toBeCloseTo(expectedY, 1);
+    await expect(overlay.locator('text')).toHaveCount(0);
+  });
+
+  test('interp-guide: 동작 줄이기 설정이면 깜빡이지 않는다', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await openEngine(page, config, {
+      stageFit: true,
+      mode: 'line-graph',
+      overlay: 'interp-guide',
+      overlayArgs: { a: 0, t: 0.25 },
+    });
+    await showOverlay(page);
+    const overlay = await expectOverlayAligned(page, 'interp-guide');
+    await expect(overlay.getByTestId('interp-guide-mark')).toHaveAttribute('data-blink', 'off');
+    await expect(overlay.locator('animate')).toHaveCount(0);
+  });
+
+  test('학생 그래프에 점을 찍은 뒤에도 오버레이가 1px 안에서 맞는다', async ({ page }) => {
+    const student = { ...config, graph: 'student', yFrom: '0' };
+    await openEngine(page, student, { stageFit: true, mode: 'line-graph', overlay: 'change-bars' });
+    await press(page.locator('[data-testid="line-lane"][data-x="1일"]'), 'ArrowUp');
+    await press(page.locator('[data-testid="line-lane"][data-x="2일"]'), 'ArrowUp');
+    await press(page.locator('[data-testid="line-lane"][data-x="2일"]'), 'ArrowUp');
+    await showOverlay(page);
+    const overlay = await expectOverlayAligned(page, 'change-bars');
+    await expect(overlay.locator('[data-change-index]')).toHaveCount(1);
+  });
+});
+
+test.describe('T163: line-graph 크롬북 두 칸 폭(660×420) ?stage=fit', () => {
+  const variants: readonly { readonly name: string; readonly config: Record<string, unknown> }[] = [
+    {
+      name: '학생 그리기·물결선·잇기',
+      config: {
+        mode: 'line-graph',
+        graph: 'student',
+        connect: 'student',
+        title: '체온',
+        categoryAxisTitle: '날짜',
+        valueAxisTitle: '체온(℃)',
+        yStep: '0.5',
+        plotStep: '0.1',
+        yFromOptions: ['0', '36'],
+        points: [
+          { x: '1일', y: '36.5' },
+          { x: '2일', y: '36.8' },
+          { x: '3일', y: '37.2' },
+          { x: '4일', y: '36.6' },
+          { x: '5일', y: '36.9' },
+        ],
+      },
+    },
+    {
+      name: '주어진 그래프·예측 단계',
+      config: {
+        mode: 'line-graph',
+        graph: 'given',
+        predict: true,
+        yStep: '1',
+        yFromOptions: ['0', '35'],
+        valueAxisTitle: '키(cm)',
+        categoryAxisTitle: '날짜',
+        points: [
+          { x: '1일', y: '0.5' },
+          { x: '3일', y: '2' },
+          { x: '5일', y: '5.5' },
+          { x: '7일', y: '9.5' },
+          { x: '9일', y: '11' },
+        ],
+      },
+    },
+  ];
+
+  for (const variant of variants) {
+    test(`그래프 SVG 높이 ≥ 200px이고 단추가 잘리지 않는다 — ${variant.name}`, async ({
+      page,
+    }, testInfo) => {
+      test.skip(testInfo.project.name !== 'chromebook', '크롬북 전용 측정');
+      await page.setViewportSize({ width: 660, height: 420 });
+      await openEngine(page, variant.config, { stageFit: true, mode: 'line-graph' });
+      await page.waitForTimeout(300);
+      const svg = await page.getByTestId('graph-canvas').boundingBox();
+      if (!svg) throw new Error('캔버스 크기를 알 수 없습니다.');
+      console.log(
+        'T163 two-column',
+        variant.name,
+        `${Math.round(svg.width)}x${Math.round(svg.height)}`,
+      );
+      expect(svg.height).toBeGreaterThanOrEqual(200);
+      const buttons = page.locator('main > div[class*="stage"] button');
+      const stage = await page.locator('main > div[class*="stage"]').boundingBox();
+      if (!stage) throw new Error('판 크기를 알 수 없습니다.');
+      const count = await buttons.count();
+      for (let index = 0; index < count; index += 1) {
+        const box = await buttons.nth(index).boundingBox();
+        if (!box) continue;
+        expect(box.x).toBeGreaterThanOrEqual(stage.x - 1);
+        expect(box.x + box.width).toBeLessThanOrEqual(stage.x + stage.width + 1);
+        expect(box.y).toBeGreaterThanOrEqual(stage.y - 1);
+        expect(box.y + box.height).toBeLessThanOrEqual(stage.y + stage.height + 1);
+      }
+    });
+  }
+});
+
+test.describe('T163: line-graph 기준 스크린샷', () => {
+  const config = {
+    mode: 'line-graph',
+    graph: 'student',
+    connect: 'auto',
+    title: '체온 변화',
+    categoryAxisTitle: '날짜',
+    valueAxisTitle: '체온(℃)',
+    valueLabel: '℃',
+    yStep: '0.5',
+    plotStep: '0.1',
+    yFromOptions: ['0', '36'],
+    points: [
+      { x: '1일', y: '36.5' },
+      { x: '2일', y: '36.8' },
+      { x: '3일', y: '37.2' },
+      { x: '4일', y: '36.6' },
+      { x: '5일', y: '36.9' },
+    ],
+  };
+
+  async function plotAll(page: Page, wavy: boolean) {
+    const canvas = page.getByTestId('graph-canvas');
+    if (wavy) await page.getByRole('radio', { name: '36부터' }).click();
+    const box = await canvas.boundingBox();
+    if (!box) throw new Error('그래프를 찾지 못했습니다.');
+    const width = Number(await canvas.getAttribute('data-logical-width'));
+    const g = lineGeometry(normalizeLine(config), wavy ? '36' : '0', width);
+    for (const [index, point] of config.points.entries()) {
+      await page.mouse.click(
+        box.x + (laneCenter(g, index) * box.width) / width,
+        box.y + (yOfValue(g, Rational.parse(point.y)) * box.height) / LOGICAL_H,
+      );
+    }
+    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+    await page.mouse.move(0, 0);
+  }
+
+  test('학생이 찍은 꺾은선그래프(0부터)', async ({ page }) => {
+    await openEngine(page, config, { stageFit: true, mode: 'line-graph' });
+    await plotAll(page, false);
+    if (test.info().project.name.toLowerCase().includes('chromebook')) {
+      await stageShot(page, 'line-graph-student');
+    }
+  });
+
+  test('물결선(36부터)으로 그린 꺾은선그래프', async ({ page }) => {
+    await openEngine(page, config, { stageFit: true, mode: 'line-graph' });
+    await plotAll(page, true);
+    if (test.info().project.name.toLowerCase().includes('chromebook')) {
+      await stageShot(page, 'line-graph-wavy');
+    }
+  });
 });

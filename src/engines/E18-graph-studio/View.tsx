@@ -9,6 +9,7 @@ import { GraphCanvas } from './GraphCanvas';
 import { ScrollBoard } from './ScrollBoard';
 import { PictoIconSvg } from './icons';
 import { isTouchOMark } from './layout';
+import { LineView } from './LineView';
 import { PictographBoard } from './PictographBoard';
 import { splitValue } from './reduce';
 import { graphStrings as S } from './strings.ko';
@@ -30,6 +31,7 @@ export function GraphView(props: GraphViewProps) {
       />
     );
   }
+  if (state.mode === 'line-graph') return <LineView {...props} state={state} />;
   return <StandardView {...props} />;
 }
 

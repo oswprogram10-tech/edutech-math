@@ -13,6 +13,7 @@ import {
   DEFAULT_SCALE_OPTIONS,
   DEFAULT_VOTE_AXIS_MAX,
 } from './types';
+import { autoSegments, normalizeLine, normalizePair, snapValue, valueOf } from './line';
 import type {
   BuildSource,
   ClassVoteState,
@@ -26,6 +27,7 @@ import type {
   GraphType,
   IconKind,
   LegendChange,
+  LineGraphState,
   Orientation,
   PictographRow,
   PictographState,
@@ -65,7 +67,7 @@ function toLegendInt(value: unknown): number | null {
 
 export function inferMode(config: GraphConfig | undefined): GraphMode {
   const mode = recordOf(config)['mode'];
-  return mode === 'scale' || mode === 'pictograph' || mode === 'class-vote'
+  return mode === 'scale' || mode === 'pictograph' || mode === 'class-vote' || mode === 'line-graph'
     ? mode
     : 'table-to-graph';
 }
@@ -134,11 +136,18 @@ export function normalizeSettings(config: GraphConfig | undefined, mode: GraphMo
     ? (record['rawItems'] as unknown[]).filter((item): item is string => typeof item === 'string')
     : [];
 
-  const datasets = mode === 'class-vote' ? [] : normalizeDatasets(record['datasets'], record);
+  const datasets =
+    mode === 'class-vote' || mode === 'line-graph'
+      ? []
+      : normalizeDatasets(record['datasets'], record);
+  const line = mode === 'line-graph' ? normalizeLine(record) : null;
 
   let categories: string[];
   let data: Record<string, number> | null = null;
-  if (datasets.length > 0) {
+  if (line !== null) {
+    // 꺾은선그래프의 가로축 이름이 범주다. 세로 값은 Rational이라 `data`(정수)에는 넣지 않는다.
+    categories = [...line.xs];
+  } else if (datasets.length > 0) {
     // 묶음을 고르기 전에는 범주가 없다.
     categories = [];
   } else if (mode === 'class-vote') {
@@ -167,6 +176,10 @@ export function normalizeSettings(config: GraphConfig | undefined, mode: GraphMo
   if (mode === 'pictograph') graph = build === 'student' ? 'student' : 'given';
   if (mode === 'class-vote') {
     graph = 'given';
+    if (table !== 'hidden') table = 'given';
+  }
+  if (mode === 'line-graph') {
+    if (graph === 'none') graph = 'given';
     if (table !== 'hidden') table = 'given';
   }
 
@@ -245,6 +258,7 @@ export function normalizeSettings(config: GraphConfig | undefined, mode: GraphMo
     question: stringOf(record['question']),
     datasets,
     source: '',
+    line,
   };
 }
 
@@ -321,7 +335,121 @@ export function createInitialState(config: GraphConfig | undefined): GraphState 
     };
   }
   if (mode === 'class-vote') return { ...base, mode, votes: [] };
-  return { ...base, mode };
+  if (mode === 'line-graph' && settings.line !== null) {
+    const empty = Object.fromEntries(settings.line.xs.map((x) => [x, null]));
+    return {
+      ...base,
+      mode,
+      points: empty,
+      segments: [],
+      yFrom: settings.line.yFrom,
+      phase: settings.line.predict ? 'predict' : 'actual',
+      prediction: { ...empty },
+    };
+  }
+  return { ...base, mode: mode === 'scale' ? 'scale' : 'table-to-graph' };
+}
+
+type LineAction = Extract<
+  GraphAction,
+  {
+    readonly type:
+      'set-point' | 'clear-point' | 'connect' | 'disconnect' | 'set-y-from' | 'finish-predict';
+  }
+>;
+
+function withSegments(
+  state: LineGraphState,
+  points: Readonly<Record<string, string | null>>,
+): LineGraphState {
+  const line = state.settings.line;
+  if (line === null) return state;
+  const segments =
+    line.connect === 'auto'
+      ? autoSegments(line.xs, points)
+      : state.segments.filter(
+          ([a, b]) =>
+            (points[line.xs[a] as string] ?? null) !== null &&
+            (points[line.xs[b] as string] ?? null) !== null,
+        );
+  return { ...state, points, segments };
+}
+
+/** 학생이 점을 찍을 수 있는 때: 예측 단계는 늘, 실제 단계는 학생이 그리는 그래프만. */
+function canEditPoints(state: LineGraphState): boolean {
+  return state.phase === 'predict' || state.settings.graph === 'student';
+}
+
+function reduceLine(state: LineGraphState, action: LineAction): LineGraphState {
+  const line = state.settings.line;
+  if (line === null) return state;
+  const key = state.phase === 'predict' ? 'prediction' : 'points';
+
+  switch (action.type) {
+    case 'set-point': {
+      if (!canEditPoints(state) || !line.xs.includes(action.x)) return state;
+      const raw = valueOf(action.y);
+      if (raw === null) return state;
+      const snapped = snapValue(line, state.yFrom, raw);
+      if (snapped === null) return state;
+      const text = snapped.toJSON();
+      if (state[key][action.x] === text) return state;
+      const next = { ...state[key], [action.x]: text };
+      return key === 'prediction' ? { ...state, prediction: next } : withSegments(state, next);
+    }
+
+    case 'clear-point': {
+      if (!canEditPoints(state) || !line.xs.includes(action.x)) return state;
+      if ((state[key][action.x] ?? null) === null) return state;
+      const next = { ...state[key], [action.x]: null };
+      return key === 'prediction' ? { ...state, prediction: next } : withSegments(state, next);
+    }
+
+    case 'connect':
+    case 'disconnect': {
+      if (state.phase !== 'actual' || state.settings.graph !== 'student') return state;
+      if (line.connect !== 'student') return state;
+      const pair = normalizePair(action.a, action.b, line.xs.length);
+      if (pair === null) return state;
+      const exists = state.segments.some((s) => s[0] === pair[0] && s[1] === pair[1]);
+      if (action.type === 'disconnect') {
+        if (!exists) return state;
+        return {
+          ...state,
+          segments: state.segments.filter((s) => !(s[0] === pair[0] && s[1] === pair[1])),
+        };
+      }
+      const hasBoth =
+        (state.points[line.xs[pair[0]] as string] ?? null) !== null &&
+        (state.points[line.xs[pair[1]] as string] ?? null) !== null;
+      if (!hasBoth || exists) return state;
+      return { ...state, segments: [...state.segments, pair] };
+    }
+
+    case 'set-y-from': {
+      const wanted = valueOf(action.value);
+      if (wanted === null) return state;
+      const option = line.yFromOptions.find((item) => valueOf(item)?.equals(wanted) === true);
+      if (option === undefined || valueOf(state.yFrom)?.equals(wanted) === true) return state;
+      const lower = (points: Readonly<Record<string, string | null>>) =>
+        Object.fromEntries(
+          Object.entries(points).map(([x, value]) => {
+            const point = valueOf(value);
+            return [x, point !== null && point.compareTo(wanted) < 0 ? null : value];
+          }),
+        );
+      return withSegments(
+        { ...state, yFrom: option, prediction: lower(state.prediction) },
+        lower(state.points),
+      );
+    }
+
+    case 'finish-predict': {
+      if (state.phase !== 'predict') return state;
+      if (!line.xs.some((x) => (state.prediction[x] ?? null) !== null)) return state;
+      return { ...state, phase: 'actual' };
+    }
+  }
 }
 
 type PictographAction = Extract<
@@ -529,7 +657,23 @@ export function reduce(state: GraphState, action: GraphAction): GraphState {
       return base;
     }
 
+    case 'set-point':
+    case 'clear-point':
+    case 'connect':
+    case 'disconnect':
+    case 'set-y-from':
+    case 'finish-predict':
+      return state.mode === 'line-graph' ? reduceLine(state, action) : state;
+
     case 'reset-graph': {
+      if (state.mode === 'line-graph') {
+        const line = state.settings.line;
+        if (line === null) return state;
+        const empty = Object.fromEntries(line.xs.map((x) => [x, null]));
+        return state.phase === 'predict'
+          ? { ...state, prediction: empty }
+          : { ...state, points: empty, segments: [] };
+      }
       const marks: Record<string, readonly number[]> = {};
       const bars: Record<string, number> = {};
       for (const cat of settings.categories) {

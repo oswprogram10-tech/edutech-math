@@ -5,6 +5,7 @@
  * 그림그래프 `rows-changed`·`compressed`·`expanded`·`legend-changed`, 학급 투표 `vote-changed`.
  */
 import type { EngineEvent, EnginePredicate, JsonValue } from '../../core/engine-sdk';
+import { Rational } from '../../core/math';
 import type { GraphAction, GraphState } from './types';
 
 export const EVENT_NAMES = [
@@ -17,6 +18,10 @@ export const EVENT_NAMES = [
   'expanded',
   'legend-changed',
   'vote-changed',
+  'point-changed',
+  'segment-changed',
+  'y-from-changed',
+  'prediction-finished',
 ] as const;
 
 export function emit(prev: GraphState, next: GraphState, action: GraphAction): EngineEvent[] {
@@ -85,6 +90,24 @@ export function emit(prev: GraphState, next: GraphState, action: GraphAction): E
     }
   }
 
+  if (prev.mode === 'line-graph' && next.mode === 'line-graph') {
+    const line = next.settings.line;
+    for (const x of line?.xs ?? []) {
+      const changed =
+        prev.points[x] !== next.points[x] || prev.prediction[x] !== next.prediction[x];
+      if (changed) events.push({ name: 'point-changed', payload: { x } });
+    }
+    if (JSON.stringify(prev.segments) !== JSON.stringify(next.segments)) {
+      events.push({ name: 'segment-changed', payload: {} });
+    }
+    if (prev.yFrom !== next.yFrom) {
+      events.push({ name: 'y-from-changed', payload: { value: next.yFrom } });
+    }
+    if (prev.phase === 'predict' && next.phase === 'actual') {
+      events.push({ name: 'prediction-finished', payload: {} });
+    }
+  }
+
   return events;
 }
 
@@ -96,6 +119,17 @@ function recordOf(value: JsonValue | undefined): Readonly<Record<string, JsonVal
 function stringList(value: JsonValue | undefined): string[] {
   if (!Array.isArray(value)) return [];
   return value.filter((item): item is string => typeof item === 'string');
+}
+
+/** 문자열(소수·분수) 또는 정수를 `Rational`로 읽는다. 읽을 수 없으면 null. */
+function rationalOf(value: JsonValue | undefined): Rational | null {
+  try {
+    if (typeof value === 'string') return Rational.parse(value);
+    if (typeof value === 'number' && Number.isSafeInteger(value)) return Rational.of(value);
+  } catch {
+    return null;
+  }
+  return null;
 }
 
 export const predicates: Readonly<Record<string, EnginePredicate>> = {
@@ -184,6 +218,51 @@ export const predicates: Readonly<Record<string, EnginePredicate>> = {
     const value = recordOf(recordOf(observation['response'])[field])['value'];
     if (typeof value === 'string') return /^\d+$/.test(value) && Number(value) === total;
     return typeof value === 'number' && Number.isInteger(value) && value === total;
+  },
+
+  pointsMatch: (observation, args) =>
+    recordOf(args)['source'] === 'data' && observation['pointsMatchData'] === true,
+
+  segmentsInOrder: (observation) => observation['segmentsInOrder'] === true,
+
+  /** 세로축 시작값이 `value` 이상이다. */
+  yFromAtLeast: (observation, args) => {
+    const wanted = rationalOf(recordOf(args)['value']);
+    const current = rationalOf(observation['yFrom']);
+    return wanted !== null && current !== null && current.compareTo(wanted) >= 0;
+  },
+
+  wavyShown: (observation) => observation['wavyShown'] === true,
+
+  predictionDone: (observation) => observation['predictionDone'] === true,
+
+  /**
+   * 응답 칸 `response[field].value`(Rational 문자열)를 `value`(소수 문자열 가능)와 Rational로 비교한다.
+   * 값이 없거나 읽을 수 없으면 false다.
+   */
+  responseCompare: (observation, args) => {
+    const record = recordOf(args);
+    const field = record['field'];
+    const op = record['op'];
+    if (typeof field !== 'string' || typeof op !== 'string') return false;
+    const actual = rationalOf(recordOf(recordOf(observation['response'])[field])['value']);
+    const wanted = rationalOf(record['value']);
+    if (actual === null || wanted === null) return false;
+    const order = actual.compareTo(wanted);
+    switch (op) {
+      case 'lt':
+        return order < 0;
+      case 'le':
+        return order <= 0;
+      case 'eq':
+        return order === 0;
+      case 'ge':
+        return order >= 0;
+      case 'gt':
+        return order > 0;
+      default:
+        return false;
+    }
   },
 
   hasMisconception: (observation, args) => {

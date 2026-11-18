@@ -11,7 +11,7 @@ export const LOGICAL_HEIGHT = 700;
 
 export const DATA_MAX = 100;
 
-export type GraphMode = 'table-to-graph' | 'scale' | 'pictograph' | 'class-vote';
+export type GraphMode = 'table-to-graph' | 'scale' | 'pictograph' | 'class-vote' | 'line-graph';
 
 export type TableSource = 'given' | 'student' | 'hidden';
 export type GraphSource = 'given' | 'student' | 'none';
@@ -67,6 +67,15 @@ interface GraphConfigBase {
   readonly transport?: string;
   /** T161: 학생이 하나 고르는 자료 묶음. 있으면 `data`·축 제목·`valueLabel`은 고른 묶음 것을 쓴다. */
   readonly datasets?: readonly unknown[];
+  /** T163: 꺾은선그래프(line-graph). 세로 값은 문자열(소수·분수)로 받는다. */
+  readonly points?: readonly unknown[];
+  readonly yStep?: unknown;
+  readonly yMax?: unknown;
+  readonly plotStep?: unknown;
+  readonly yFrom?: unknown;
+  readonly yFromOptions?: readonly unknown[];
+  readonly connect?: LineConnect;
+  readonly predict?: boolean;
 }
 
 export interface TableToGraphConfig extends GraphConfigBase {
@@ -85,7 +94,33 @@ export interface ClassVoteConfig extends GraphConfigBase {
   readonly mode?: 'class-vote';
 }
 
-export type GraphConfig = TableToGraphConfig | ScaleConfig | PictographConfig | ClassVoteConfig;
+export interface LineGraphConfig extends GraphConfigBase {
+  readonly mode?: 'line-graph';
+}
+
+export type GraphConfig =
+  TableToGraphConfig | ScaleConfig | PictographConfig | ClassVoteConfig | LineGraphConfig;
+
+export type LineConnect = 'auto' | 'student';
+export type LinePhase = 'predict' | 'actual';
+
+/**
+ * 꺾은선그래프 설정(정규화). 세로 값은 모두 `Rational.toJSON()` 문자열이다.
+ * 가로축 이름 `xs[i]`의 자료 값이 `values[i]`다.
+ */
+export interface LineSettings {
+  readonly xs: readonly string[];
+  readonly values: readonly string[];
+  readonly yStep: string;
+  readonly yMax: string;
+  readonly plotStep: string;
+  /** 처음 세로축 시작값. */
+  readonly yFrom: string;
+  /** 물결선 고르기 줄에 보일 시작값(정렬·중복 없음). 비면 줄이 없다. */
+  readonly yFromOptions: readonly string[];
+  readonly connect: LineConnect;
+  readonly predict: boolean;
+}
 
 /** 정규화한 자료 묶음. 빠진 글은 설정 맨 위 키로 채운다. */
 export interface DatasetOption {
@@ -134,6 +169,8 @@ export interface GraphSettings {
   readonly datasets: readonly DatasetOption[];
   /** 지금 고른 묶음의 출처 글. 안 골랐거나 없으면 빈 문자열. */
   readonly source: string;
+  /** line-graph 모드의 설정. 다른 모드는 null. */
+  readonly line: LineSettings | null;
 }
 
 interface GraphStateBase {
@@ -181,7 +218,21 @@ export interface ClassVoteState extends GraphStateBase {
   readonly votes: readonly string[];
 }
 
-export type GraphState = TableToGraphState | ScaleState | PictographState | ClassVoteState;
+export interface LineGraphState extends GraphStateBase {
+  readonly mode: 'line-graph';
+  /** 가로축 이름 → 학생이 찍은 점의 값(`Rational` 문자열). 없으면 null. */
+  readonly points: Readonly<Record<string, string | null>>;
+  /** 이은 선분: 가로축 인덱스 쌍(작은 쪽이 앞). */
+  readonly segments: readonly (readonly [number, number])[];
+  /** 지금 세로축 시작값. */
+  readonly yFrom: string;
+  readonly phase: LinePhase;
+  /** 예측 점. */
+  readonly prediction: Readonly<Record<string, string | null>>;
+}
+
+export type GraphState =
+  TableToGraphState | ScaleState | PictographState | ClassVoteState | LineGraphState;
 
 export type GraphAction =
   | { readonly type: 'set-table'; readonly cat: string; readonly value: number | null }
@@ -201,7 +252,13 @@ export type GraphAction =
   | { readonly type: 'vote'; readonly option: string }
   | { readonly type: 'undo-vote' }
   | { readonly type: 'reset-votes' }
-  | { readonly type: 'pick-dataset'; readonly id: string };
+  | { readonly type: 'pick-dataset'; readonly id: string }
+  | { readonly type: 'set-point'; readonly x: string; readonly y: string }
+  | { readonly type: 'clear-point'; readonly x: string }
+  | { readonly type: 'connect'; readonly a: number; readonly b: number }
+  | { readonly type: 'disconnect'; readonly a: number; readonly b: number }
+  | { readonly type: 'set-y-from'; readonly value: string }
+  | { readonly type: 'finish-predict' };
 
 export const DEFAULT_SCALE_OPTIONS: readonly number[] = [1, 2, 5, 10];
 
