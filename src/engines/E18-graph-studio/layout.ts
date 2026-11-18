@@ -1,0 +1,130 @@
+/**
+ * E18 그래프 그림의 논리 좌표(1000×700). 화면 좌표만 실수다.
+ *
+ * 세로 그래프: 범주는 x축 아래, 값 눈금은 y축 왼쪽(0이 아래).
+ * 가로 그래프: 범주는 y축 왼쪽(처음 범주가 위), 값 눈금은 x축 아래(0이 왼쪽).
+ * View와 오버레이가 같은 계산을 쓴다.
+ */
+import type { Orientation } from './types';
+import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from './types';
+
+export interface Rect {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+export interface Frame {
+  readonly orientation: Orientation;
+  readonly plot: Rect;
+  /** 범주 수(0이면 1로 본다). */
+  readonly count: number;
+  /** 값 축의 칸 수. */
+  readonly cells: number;
+}
+
+const VERTICAL_PLOT: Rect = { x: 150, y: 80, width: 810, height: 490 };
+const HORIZONTAL_PLOT: Rect = { x: 220, y: 80, width: 740, height: 500 };
+
+export function frameOf(orientation: Orientation, count: number, cells: number): Frame {
+  return {
+    orientation,
+    plot: orientation === 'vertical' ? VERTICAL_PLOT : HORIZONTAL_PLOT,
+    count: Math.max(1, count),
+    cells: Math.max(1, cells),
+  };
+}
+
+/** 값 축 한 칸의 길이. */
+export function cellLength(frame: Frame): number {
+  const length = frame.orientation === 'vertical' ? frame.plot.height : frame.plot.width;
+  return length / frame.cells;
+}
+
+/** 범주 하나가 차지하는 띠의 길이. */
+export function bandLength(frame: Frame): number {
+  const length = frame.orientation === 'vertical' ? frame.plot.width : frame.plot.height;
+  return length / frame.count;
+}
+
+/** 범주 띠의 시작(범주 축 방향 좌표). */
+export function bandStart(frame: Frame, index: number): number {
+  const origin = frame.orientation === 'vertical' ? frame.plot.x : frame.plot.y;
+  return origin + index * bandLength(frame);
+}
+
+/** 범주 띠의 가운데(범주 축 방향 좌표). */
+export function bandCenter(frame: Frame, index: number): number {
+  return bandStart(frame, index) + bandLength(frame) / 2;
+}
+
+/** 값 축에서 `cells`칸 위치의 좌표. 칸 0은 축에 붙은 선이다. */
+export function valuePosition(frame: Frame, cells: number): number {
+  const step = cellLength(frame);
+  return frame.orientation === 'vertical'
+    ? frame.plot.y + frame.plot.height - cells * step
+    : frame.plot.x + cells * step;
+}
+
+/** 값 축 방향 좌표를 칸 수(실수)로 바꾼다. */
+export function positionToCells(frame: Frame, position: number): number {
+  const step = cellLength(frame);
+  return frame.orientation === 'vertical'
+    ? (frame.plot.y + frame.plot.height - position) / step
+    : (position - frame.plot.x) / step;
+}
+
+/** 범주 축 방향 좌표가 속한 범주 번호. 그림 밖이면 null. */
+export function bandIndexAt(frame: Frame, position: number): number | null {
+  const origin = frame.orientation === 'vertical' ? frame.plot.x : frame.plot.y;
+  const length = frame.orientation === 'vertical' ? frame.plot.width : frame.plot.height;
+  if (position < origin || position > origin + length) return null;
+  const index = Math.floor((position - origin) / bandLength(frame));
+  return Math.min(frame.count - 1, Math.max(0, index));
+}
+
+/** 막대 굵기(모든 막대가 같다). */
+export function barThickness(frame: Frame): number {
+  return Math.min(bandLength(frame) * 0.55, 120);
+}
+
+/** 막대가 `cells`칸(실수)만큼 자란 상자. 축에서 시작한다. */
+export function barRect(frame: Frame, index: number, cells: number): Rect {
+  const thickness = barThickness(frame);
+  const center = bandCenter(frame, index);
+  const end = valuePosition(frame, cells);
+  const base = valuePosition(frame, 0);
+  if (frame.orientation === 'vertical') {
+    return { x: center - thickness / 2, y: end, width: thickness, height: base - end };
+  }
+  return { x: base, y: center - thickness / 2, width: end - base, height: thickness };
+}
+
+/** ○ 칸 한 변. 값 축 한 칸·범주 띠의 80% 중 작은 쪽이다(정사각형). */
+export function markSide(frame: Frame): number {
+  return Math.min(cellLength(frame), bandLength(frame) * 0.8) - 4;
+}
+
+/** ○ 그래프 칸 번호(0은 축에 붙은 칸)의 정사각형 상자. */
+export function markRect(frame: Frame, index: number, cell: number): Rect {
+  const side = markSide(frame);
+  const center = bandCenter(frame, index);
+  const step = cellLength(frame);
+  if (frame.orientation === 'vertical') {
+    const slotTop = valuePosition(frame, cell + 1);
+    return { x: center - side / 2, y: slotTop + (step - side) / 2, width: side, height: side };
+  }
+  const slotLeft = valuePosition(frame, cell);
+  return { x: slotLeft + (step - side) / 2, y: center - side / 2, width: side, height: side };
+}
+
+/** 값 축 눈금 글자를 쓸 칸 번호들. 칸이 20개를 넘으면 5칸마다. */
+export function tickCells(cells: number): number[] {
+  const every = cells > 20 ? 5 : 1;
+  const ticks: number[] = [];
+  for (let cell = 0; cell <= cells; cell += every) ticks.push(cell);
+  return ticks;
+}
+
+export { LOGICAL_HEIGHT, LOGICAL_WIDTH };
