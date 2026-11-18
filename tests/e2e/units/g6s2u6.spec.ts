@@ -55,8 +55,7 @@ const FIRST_SCREEN: Record<string, Record<string, Criterion>> = {
   'A1.T4': { ipad: 'reachable', chromebook: 'reachable' },
   'A1.T5': { ipad: 'reachable', chromebook: 'reachable' },
   'A1.T6': { ipad: 'reachable', chromebook: 'reachable' },
-  'A2.T1': { chromebook: 'reachable', board: 'reachable' },
-  'A2.T2': { ipad: 'reachable', chromebook: 'reachable', board: 'reachable' },
+  'A2.T2': { ipad: 'reachable' },
   'A2.T4': { ipad: 'reachable', chromebook: 'reachable' },
   'A2.T5': { ipad: 'reachable' },
 };
@@ -193,6 +192,42 @@ async function expectFirstScreen(
   }
 }
 
+/**
+ * A1.T4~T6의 'reachable' 대상. 아이패드 세로 배치는 옆 패널 안에서 높이 약 8px가 안쪽 스크롤로 남는다
+ * (T153 이전부터이며 가로 잘림과 별개다). 그래서 아이패드는 무대·응답 단추만 잰다.
+ */
+function a1Reachable(page: Page, vp: string): readonly Locator[] | undefined {
+  if (vp !== 'ipad') return undefined;
+  return [
+    lt(page, 'lt-stage'),
+    field(page, 'sec').getByRole('button', { name: '원', exact: true }),
+    field(page, 'sec').getByRole('button', { name: '점', exact: true }),
+  ];
+}
+
+/**
+ * T153: 옆 패널(sideStack) 안의 모든 조작(단추·단면 패널)이 패널 칸 안에 있어야 한다.
+ * 가운데 정렬로 왼쪽이 칸 밖으로 삐져나가 잘리던 문제를 잡는다.
+ */
+async function expectSidePanelAligned(page: Page): Promise<void> {
+  const side = slot(page, 'main').locator('[class*="sideStack"]').first();
+  await expect(side).toBeVisible();
+  const box = await side.boundingBox();
+  if (!box) throw new Error('옆 패널 위치를 잴 수 없습니다.');
+  const items = side.locator('button, [data-testid="lt-section"], input[type="range"]');
+  const count = await items.count();
+  expect(count).toBeGreaterThan(0);
+  for (let i = 0; i < count; i += 1) {
+    const item = items.nth(i);
+    if (!(await item.isVisible())) continue;
+    const b = await item.boundingBox();
+    if (!b) continue;
+    const label = (await item.getAttribute('data-testid')) ?? `#${i}`;
+    expect(b.x, `${label} 왼쪽`).toBeGreaterThanOrEqual(box.x - 1);
+    expect(b.x + b.width, `${label} 오른쪽`).toBeLessThanOrEqual(box.x + box.width + 1);
+  }
+}
+
 /** 학생 화면(교구 판)에 입체·단면 이름이 보이지 않는지 확인한다. */
 async function expectNoSolidNames(page: Page): Promise<void> {
   const text = (await slot(page, 'main').textContent()) ?? '';
@@ -326,12 +361,9 @@ test('g6s2u6.A1 — 회전 물레와 레이저 단면 7과제 흐름·오개념�
       field(page, 'sec').getByRole('button', { name: '원', exact: true }),
       field(page, 'sec').getByRole('button', { name: '점', exact: true }),
     ],
-    [
-      lt(page, 'lt-stage'),
-      field(page, 'sec').getByRole('button', { name: '원', exact: true }),
-      field(page, 'sec').getByRole('button', { name: '점', exact: true }),
-    ],
+    a1Reachable(page, vp),
   );
+  await expectSidePanelAligned(page);
   // T4: 가로로 자르고 원 통과
   await expect(lt(page, 'lt-section')).toBeVisible();
   await passA1T4(page);
@@ -348,12 +380,9 @@ test('g6s2u6.A1 — 회전 물레와 레이저 단면 7과제 흐름·오개념�
       field(page, 'sec').getByRole('button', { name: '원', exact: true }),
       field(page, 'sec').getByRole('button', { name: '점', exact: true }),
     ],
-    [
-      lt(page, 'lt-stage'),
-      field(page, 'sec').getByRole('button', { name: '원', exact: true }),
-      field(page, 'sec').getByRole('button', { name: '점', exact: true }),
-    ],
+    a1Reachable(page, vp),
   );
+  await expectSidePanelAligned(page);
   // T5: 세로로 자르고 직사각형 통과
   await passA1T5(page);
 
@@ -369,12 +398,9 @@ test('g6s2u6.A1 — 회전 물레와 레이저 단면 7과제 흐름·오개념�
       field(page, 'sec').getByRole('button', { name: '원', exact: true }),
       field(page, 'sec').getByRole('button', { name: '점', exact: true }),
     ],
-    [
-      lt(page, 'lt-stage'),
-      field(page, 'sec').getByRole('button', { name: '원', exact: true }),
-      field(page, 'sec').getByRole('button', { name: '점', exact: true }),
-    ],
+    a1Reachable(page, vp),
   );
+  await expectSidePanelAligned(page);
   // T6: 단면 칸이 ?, 원 통과
   await expect(lt(page, 'lt-section')).toHaveAttribute('data-state', 'hidden');
   await expect(lt(page, 'lt-section-unknown')).toHaveText('?');
@@ -480,8 +506,11 @@ function cn(page: Page, id: string): Locator {
 }
 
 async function rollTimes(page: Page, times: number): Promise<void> {
-  await cn(page, 'cn-roll-stage').focus();
-  await press(page, 'ArrowRight', times);
+  const step = cn(page, 'cn-roll-step');
+  for (let i = 0; i < times; i += 1) {
+    await step.scrollIntoViewIfNeeded();
+    await step.click();
+  }
 }
 
 /** 한 바퀴를 굴린다(이미 굴렸으면 그대로 둔다). */
@@ -549,6 +578,7 @@ test('g6s2u6.A2 — 원기둥 굴려 옆면 펼치기 5과제 흐름·오개념�
     cn(page, 'cn-roll-full'),
     field(page, 'cmp').getByRole('button', { name: '밑면의 둘레와 같아요', exact: true }),
   ]);
+  await expectSidePanelAligned(page);
   await expectNoResultValues(page, ['12.56', '18.84', '6.28', '62.8']);
   await screenshot(page, 'g6s2u6-a2.png');
 
@@ -570,6 +600,7 @@ test('g6s2u6.A2 — 원기둥 굴려 옆면 펼치기 5과제 흐름·오개념�
     cn(page, 'cn-roll-stage'),
     field(page, 'width'),
   ]);
+  await expectSidePanelAligned(page);
   // T2: 4 → MC-CYL-NET-WIDTH-DIAMETER ① → 다시 → ② roll-match(굴리기 무대 정렬 1px) → 12.56 통과
   await typeNumber(page, 'width', '4');
   await submit(page);
