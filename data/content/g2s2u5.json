@@ -1,0 +1,889 @@
+{
+  "unit": "g2s2u5",
+  "title": "표와 그래프",
+  "activities": [
+    {
+      "id": "g2s2u5.A1",
+      "title": "학급 투표 스탬프 그래프",
+      "tasks": [
+        {
+          "id": "g2s2u5.A1.T1",
+          "prompt": "좋아하는 과일에 스탬프를 눌러 투표해요. 모두 몇 표인지 표를 보고 알아봐요.",
+          "engine": "E18",
+          "mode": "class-vote",
+          "cpa": "C",
+          "config": {
+            "mode": "class-vote",
+            "question": "좋아하는 과일",
+            "options": [
+              "🍎",
+              "🍌",
+              "🍇",
+              "🍓"
+            ],
+            "transport": "local-device",
+            "axisMax": 10
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "responseEqualsVoteTotal",
+            "args": {
+              "field": "total"
+            }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "class-vote"
+              },
+              "level": 1,
+              "say": "표에 있는 수를 모두 더해 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "class-vote"
+              },
+              "level": 2,
+              "say": "과일마다 몇 표인지 하나씩 짚으며 세어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "class-vote"
+              },
+              "level": 3,
+              "backtrack": "g2s2u5.collect-table"
+            }
+          ],
+          "concepts": [
+            "g2s2u5.collect-table"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "total",
+                "label": "모두 몇 표인가요?",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g2s2u5.A1.T2",
+          "prompt": "스티커를 하나씩 세어 표를 채워요. 센 스티커는 눌러서 표시해요.",
+          "engine": "E18",
+          "mode": "table-to-graph",
+          "cpa": "C",
+          "config": {
+            "mode": "table-to-graph",
+            "categories": [
+              "🍎",
+              "🍌",
+              "🍇",
+              "🍓"
+            ],
+            "data": {
+              "🍎": 4,
+              "🍌": 3,
+              "🍇": 2,
+              "🍓": 3
+            },
+            "rawItems": [
+              "🍎",
+              "🍌",
+              "🍇",
+              "🍓",
+              "🍎",
+              "🍌",
+              "🍓",
+              "🍎",
+              "🍇",
+              "🍌",
+              "🍓",
+              "🍎"
+            ],
+            "table": "student",
+            "graph": "none"
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "tableMatchesData"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-COUNT-ONE-TO-ONE"
+                }
+              },
+              "level": 1,
+              "say": "센 것에 표시해 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-COUNT-ONE-TO-ONE"
+                }
+              },
+              "level": 2,
+              "say": "아직 표시하지 않은 스티커가 있는지 봐요.",
+              "show": {
+                "engine": "E18",
+                "overlay": "tally-check"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-COUNT-ONE-TO-ONE"
+                }
+              },
+              "level": 3,
+              "backtrack": "g1s1u1.one-to-one"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 1,
+              "say": "종류마다 스티커를 다시 세어 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 2,
+              "say": "한 종류씩 골라 센 스티커를 눌러 표시해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 3,
+              "backtrack": "g2s2u5.collect-table"
+            }
+          ],
+          "concepts": [
+            "g2s2u5.collect-table"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g2s2u5.A1.T3",
+          "prompt": "표를 보고 ○를 이용한 그래프를 그려요. 아래에서부터 칸을 눌러요.",
+          "engine": "E18",
+          "mode": "table-to-graph",
+          "cpa": "P",
+          "config": {
+            "mode": "table-to-graph",
+            "data": {
+              "🍎": 4,
+              "🍌": 3,
+              "🍇": 5,
+              "🍓": 2
+            },
+            "table": "given",
+            "graph": "student",
+            "graphType": "o-mark",
+            "orientation": "vertical",
+            "axisMax": 6,
+            "valueLabel": "명"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "graphMatches",
+                "args": {
+                  "source": "table"
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "marksFromBottom"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-GRAPH-GAP-ORDER"
+                }
+              },
+              "level": 1,
+              "say": "아래부터 빈칸 없이 채웠어?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-GRAPH-GAP-ORDER"
+                }
+              },
+              "level": 2,
+              "say": "빈칸이 있으면 높이를 비교하기 어려워요.",
+              "show": {
+                "engine": "E18",
+                "overlay": "gap-compare"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-GRAPH-GAP-ORDER"
+                }
+              },
+              "level": 3,
+              "backtrack": "g2s2u5.simple-graph"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-GRAPH-TABLE-MISMATCH"
+                }
+              },
+              "level": 1,
+              "say": "표에는 몇이라고 되어 있어?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-GRAPH-TABLE-MISMATCH"
+                }
+              },
+              "level": 2,
+              "say": "표의 수와 ○의 수를 하나씩 맞춰 봐요.",
+              "show": {
+                "engine": "E18",
+                "overlay": "table-link"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-GRAPH-TABLE-MISMATCH"
+                }
+              },
+              "level": 3,
+              "backtrack": "g2s2u5.collect-table"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 1,
+              "say": "과일마다 표의 수만큼 ○를 그렸나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 2,
+              "say": "한 과일씩 표를 보고 ○를 세어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 3,
+              "backtrack": "g2s2u5.simple-graph"
+            }
+          ],
+          "concepts": [
+            "g2s2u5.simple-graph"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g2s2u5.A1.T4",
+          "prompt": "같은 표를 가로로 된 ○ 그래프로 그려요. 왼쪽에서부터 칸을 눌러요.",
+          "engine": "E18",
+          "mode": "table-to-graph",
+          "cpa": "P",
+          "config": {
+            "mode": "table-to-graph",
+            "data": {
+              "🍎": 4,
+              "🍌": 3,
+              "🍇": 5,
+              "🍓": 2
+            },
+            "table": "given",
+            "graph": "student",
+            "graphType": "o-mark",
+            "orientation": "horizontal",
+            "axisMax": 6,
+            "valueLabel": "명"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "graphMatches",
+                "args": {
+                  "source": "table"
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "marksFromBottom"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-GRAPH-GAP-ORDER"
+                }
+              },
+              "level": 1,
+              "say": "왼쪽부터 빈칸 없이 채웠어?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-GRAPH-GAP-ORDER"
+                }
+              },
+              "level": 2,
+              "say": "빈칸이 있으면 높이를 비교하기 어려워요.",
+              "show": {
+                "engine": "E18",
+                "overlay": "gap-compare"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-GRAPH-GAP-ORDER"
+                }
+              },
+              "level": 3,
+              "backtrack": "g2s2u5.simple-graph"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-GRAPH-TABLE-MISMATCH"
+                }
+              },
+              "level": 1,
+              "say": "표에는 몇이라고 되어 있어?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-GRAPH-TABLE-MISMATCH"
+                }
+              },
+              "level": 2,
+              "say": "표의 수와 ○의 수를 하나씩 맞춰 봐요.",
+              "show": {
+                "engine": "E18",
+                "overlay": "table-link"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-GRAPH-TABLE-MISMATCH"
+                }
+              },
+              "level": 3,
+              "backtrack": "g2s2u5.collect-table"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 1,
+              "say": "과일마다 표의 수만큼 ○를 그렸나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 2,
+              "say": "한 과일씩 표를 보고 ○를 세어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 3,
+              "backtrack": "g2s2u5.simple-graph"
+            }
+          ],
+          "concepts": [
+            "g2s2u5.simple-graph"
+          ],
+          "submit": "button"
+        }
+      ]
+    },
+    {
+      "id": "g2s2u5.A2",
+      "title": "표와 그래프 비교",
+      "tasks": [
+        {
+          "id": "g2s2u5.A2.T1",
+          "prompt": "표와 그래프를 보고 답해요. 가장 많은 학생이 기르고 싶은 동물은 무엇일까요?",
+          "engine": "E18",
+          "mode": "table-to-graph",
+          "cpa": "P",
+          "config": {
+            "mode": "table-to-graph",
+            "data": {
+              "강아지": 6,
+              "고양이": 4,
+              "물고기": 2,
+              "햄스터": 3
+            },
+            "table": "given",
+            "graph": "given",
+            "graphType": "o-mark",
+            "axisMax": 7,
+            "valueLabel": "명",
+            "title": "기르고 싶은 동물",
+            "tooltips": "hide",
+            "views": [
+              "table",
+              "graph"
+            ]
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.most.selected",
+            "value": [
+              "dog"
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 1,
+              "say": "○가 가장 높이 쌓인 동물은 무엇일까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 2,
+              "say": "그래프의 열 높이를 나란히 비교해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 3,
+              "backtrack": "g2s2u5.read-compare"
+            }
+          ],
+          "concepts": [
+            "g2s2u5.read-compare"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "most",
+                "label": "동물을 골라요.",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "dog",
+                    "label": "강아지"
+                  },
+                  {
+                    "id": "cat",
+                    "label": "고양이"
+                  },
+                  {
+                    "id": "fish",
+                    "label": "물고기"
+                  },
+                  {
+                    "id": "hamster",
+                    "label": "햄스터"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g2s2u5.A2.T2",
+          "prompt": "강아지를 기르고 싶은 학생은 몇 명인가요?",
+          "engine": "E18",
+          "mode": "table-to-graph",
+          "cpa": "P",
+          "config": {
+            "mode": "table-to-graph",
+            "data": {
+              "강아지": 6,
+              "고양이": 4,
+              "물고기": 2,
+              "햄스터": 3
+            },
+            "table": "given",
+            "graph": "given",
+            "graphType": "o-mark",
+            "axisMax": 7,
+            "valueLabel": "명",
+            "title": "기르고 싶은 동물",
+            "tooltips": "hide",
+            "views": [
+              "table",
+              "graph"
+            ]
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.count.value",
+            "value": "6"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 1,
+              "say": "강아지 줄의 ○를 하나씩 세어 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 2,
+              "say": "표에서도 같은 수를 찾아봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 3,
+              "backtrack": "g2s2u5.read-compare"
+            }
+          ],
+          "concepts": [
+            "g2s2u5.read-compare"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "count",
+                "label": "몇 명인가요?",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g2s2u5.A2.T3",
+          "prompt": "고양이를 고른 학생은 물고기를 고른 학생보다 몇 명 더 많나요?",
+          "engine": "E18",
+          "mode": "table-to-graph",
+          "cpa": "A",
+          "config": {
+            "mode": "table-to-graph",
+            "data": {
+              "강아지": 6,
+              "고양이": 4,
+              "물고기": 2,
+              "햄스터": 3
+            },
+            "table": "given",
+            "graph": "given",
+            "graphType": "o-mark",
+            "axisMax": 7,
+            "valueLabel": "명",
+            "title": "기르고 싶은 동물",
+            "tooltips": "hide",
+            "views": [
+              "table"
+            ]
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.diff.value",
+            "value": "2"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 1,
+              "say": "표에서 두 수를 찾아 비교해 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 2,
+              "say": "큰 수에서 작은 수를 빼 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 3,
+              "backtrack": "g2s2u5.read-compare"
+            }
+          ],
+          "concepts": [
+            "g2s2u5.read-compare"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "diff",
+                "label": "몇 명 더 많나요?",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g2s2u5.A2.T4",
+          "prompt": "가장 많은 것을 찾을 때 표와 그래프 중 어느 쪽이 더 편했나요?",
+          "engine": "E18",
+          "mode": "table-to-graph",
+          "cpa": "P",
+          "config": {
+            "mode": "table-to-graph",
+            "data": {
+              "강아지": 6,
+              "고양이": 4,
+              "물고기": 2,
+              "햄스터": 3
+            },
+            "table": "given",
+            "graph": "given",
+            "graphType": "o-mark",
+            "axisMax": 7,
+            "valueLabel": "명",
+            "title": "기르고 싶은 동물",
+            "tooltips": "hide",
+            "views": [
+              "table",
+              "graph"
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.easier.selected",
+                    "value": [
+                      "table"
+                    ]
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.easier.selected",
+                    "value": [
+                      "graph"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.reason.selected",
+                    "value": [
+                      "exact"
+                    ]
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.reason.selected",
+                    "value": [
+                      "height"
+                    ]
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.reason.selected",
+                    "value": [
+                      "other"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 1,
+              "say": "두 가지를 모두 골랐나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 2,
+              "say": "편했던 쪽과 그 까닭을 골라 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 3,
+              "backtrack": "g2s2u5.read-compare"
+            }
+          ],
+          "concepts": [
+            "g2s2u5.read-compare"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "easier",
+                "label": "더 편한 쪽을 골라요.",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "table",
+                    "label": "표"
+                  },
+                  {
+                    "id": "graph",
+                    "label": "그래프"
+                  }
+                ]
+              },
+              {
+                "kind": "choice",
+                "id": "reason",
+                "label": "그 까닭을 골라요.",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "exact",
+                    "label": "수가 바로 보여서"
+                  },
+                  {
+                    "id": "height",
+                    "label": "높이로 한눈에 비교돼서"
+                  },
+                  {
+                    "id": "other",
+                    "label": "다른 까닭"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
