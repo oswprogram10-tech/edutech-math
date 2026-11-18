@@ -4,12 +4,11 @@
  * 그래프의 범주 이름 옆에 표 값 글("표: 5")을 쓰고, 학생이 채운 칸마다 1, 2, 3… 번호를 단다.
  * 표 값은 이미 화면에 있는 값이고, 학생이 그리지 않은 칸은 번호를 달지 않는다.
  */
-import { CanvasAlignedOverlay } from '../../../core/engine-sdk';
+import { GraphOverlayFrame } from './frame';
 import type { OverlayProps } from '../../../core/engine-sdk';
 import { bandCenter, markRect, valuePosition } from '../layout';
 import { mismatchCategoriesOf, tableReferenceOf } from '../observe';
 import { graphStrings as S } from '../strings.ko';
-import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../types';
 import type { GraphConfig, GraphState } from '../types';
 import { CANVAS_SELECTOR, overlayFrame, targetCategory } from './helpers';
 
@@ -57,11 +56,11 @@ export function TableLinkOverlay({ state, args }: OverlayProps<GraphConfig, Grap
   }
 
   return (
-    <CanvasAlignedOverlay
+    <GraphOverlayFrame
       testId="table-link"
       canvasSelector={CANVAS_SELECTOR}
-      logicalWidth={LOGICAL_WIDTH}
-      logicalHeight={LOGICAL_HEIGHT}
+      logicalWidth={frame.width}
+      logicalHeight={frame.height}
     >
       <g data-testid="table-link-value">
         <rect
@@ -88,6 +87,6 @@ export function TableLinkOverlay({ state, args }: OverlayProps<GraphConfig, Grap
       {numbers.map((item) => (
         <Badge key={item.number} {...item} />
       ))}
-    </CanvasAlignedOverlay>
+    </GraphOverlayFrame>
   );
 }

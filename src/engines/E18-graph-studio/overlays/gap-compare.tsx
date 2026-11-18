@@ -4,11 +4,10 @@
  * 학생이 채운 ○ 개수만큼을 축부터 빈틈없이 쌓은 반투명 열을 그 열 옆에 그리고,
  * 두 열 꼭대기 사이에 ↕(가로 그래프는 ↔)를 둔다. 학생이 채운 칸 수만 쓴다.
  */
-import { CanvasAlignedOverlay } from '../../../core/engine-sdk';
+import { GraphOverlayFrame } from './frame';
 import type { OverlayProps } from '../../../core/engine-sdk';
 import { markRect, markSide, valuePosition } from '../layout';
 import { gapCategoriesOf } from '../observe';
-import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../types';
 import type { GraphConfig, GraphState } from '../types';
 import { CANVAS_SELECTOR, overlayFrame, targetCategory } from './helpers';
 
@@ -20,7 +19,8 @@ export function GapCompareOverlay({ state, args }: OverlayProps<GraphConfig, Gra
   const frame = overlayFrame(state);
   const vertical = frame.orientation === 'vertical';
   const side = markSide(frame);
-  const shift = side + 14;
+  const shift = side + 4;
+  const half = side / 2;
   const count = marks.length;
   const top = Math.max(...marks) + 1;
   const studentEnd = valuePosition(frame, top);
@@ -29,11 +29,11 @@ export function GapCompareOverlay({ state, args }: OverlayProps<GraphConfig, Gra
   const mid = (studentEnd + ghostEnd) / 2;
 
   return (
-    <CanvasAlignedOverlay
+    <GraphOverlayFrame
       testId="gap-compare"
       canvasSelector={CANVAS_SELECTOR}
-      logicalWidth={LOGICAL_WIDTH}
-      logicalHeight={LOGICAL_HEIGHT}
+      logicalWidth={frame.width}
+      logicalHeight={frame.height}
     >
       {Array.from({ length: count }, (_, cell) => {
         const rect = markRect(frame, target.index, cell);
@@ -43,8 +43,8 @@ export function GapCompareOverlay({ state, args }: OverlayProps<GraphConfig, Gra
             data-ghost-cell={cell}
             x={rect.x + (vertical ? shift : 0)}
             y={rect.y + (vertical ? 0 : shift)}
-            width={rect.width}
-            height={rect.height}
+            width={vertical ? half : rect.width}
+            height={vertical ? rect.height : half}
             rx={6}
             fill="#e8872e"
             fillOpacity={0.32}
@@ -57,7 +57,7 @@ export function GapCompareOverlay({ state, args }: OverlayProps<GraphConfig, Gra
         <>
           <line
             x1={first.x - 16}
-            x2={first.x + shift + side + 16}
+            x2={first.x + shift + half + 16}
             y1={studentEnd}
             y2={studentEnd}
             stroke="#b45309"
@@ -66,7 +66,7 @@ export function GapCompareOverlay({ state, args }: OverlayProps<GraphConfig, Gra
           />
           <line
             x1={first.x - 16}
-            x2={first.x + shift + side + 16}
+            x2={first.x + shift + half + 16}
             y1={ghostEnd}
             y2={ghostEnd}
             stroke="#b45309"
@@ -75,7 +75,8 @@ export function GapCompareOverlay({ state, args }: OverlayProps<GraphConfig, Gra
           />
           <text
             data-testid="gap-arrow"
-            x={first.x + shift + side + 30}
+            x={first.x + shift + half / 2}
+            textAnchor="middle"
             y={mid + 12}
             fontSize={36}
             fontWeight={800}
@@ -88,7 +89,7 @@ export function GapCompareOverlay({ state, args }: OverlayProps<GraphConfig, Gra
         <>
           <line
             y1={first.y - 16}
-            y2={first.y + shift + side + 16}
+            y2={first.y + shift + half + 16}
             x1={studentEnd}
             x2={studentEnd}
             stroke="#b45309"
@@ -97,7 +98,7 @@ export function GapCompareOverlay({ state, args }: OverlayProps<GraphConfig, Gra
           />
           <line
             y1={first.y - 16}
-            y2={first.y + shift + side + 16}
+            y2={first.y + shift + half + 16}
             x1={ghostEnd}
             x2={ghostEnd}
             stroke="#b45309"
@@ -107,7 +108,7 @@ export function GapCompareOverlay({ state, args }: OverlayProps<GraphConfig, Gra
           <text
             data-testid="gap-arrow"
             x={mid}
-            y={first.y + shift + side + 46}
+            y={first.y + shift + half / 2 + 12}
             textAnchor="middle"
             fontSize={36}
             fontWeight={800}
@@ -117,6 +118,6 @@ export function GapCompareOverlay({ state, args }: OverlayProps<GraphConfig, Gra
           </text>
         </>
       )}
-    </CanvasAlignedOverlay>
+    </GraphOverlayFrame>
   );
 }

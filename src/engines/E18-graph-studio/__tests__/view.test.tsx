@@ -317,7 +317,7 @@ describe('E18 ○ 그래프 터치 크기', () => {
     cleanup();
     const height48 = heightOf(view(48));
     expect(height64).toBeGreaterThan(height48);
-    expect(height64).toBeGreaterThanOrEqual(660);
+    expect(height64).toBeGreaterThanOrEqual(600);
   });
 
   it('주어진 ○ 그래프와 막대그래프는 최소 크기를 두지 않는다', () => {

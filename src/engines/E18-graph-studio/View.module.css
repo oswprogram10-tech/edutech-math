@@ -212,7 +212,9 @@
   aspect-ratio: 1000 / 700;
   border-radius: 16px;
   background: #fbfaf6;
-  border: 1px solid #d7deea;
+  /* 테두리는 상자 크기를 바꾸지 않는 outline으로 둔다(오버레이 svg와 정확히 겹치도록). */
+  outline: 1px solid #d7deea;
+  outline-offset: -1px;
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;

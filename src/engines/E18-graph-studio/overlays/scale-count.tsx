@@ -4,11 +4,10 @@
  * 한 막대 옆에 첫 두 칸까지만 누적 값(예 2, 4)을 쓰고 그 위는 "…" 화살표로 둔다.
  * 끝까지 쓰면 읽을 값이 그대로 보이므로 두 칸까지만 쓴다.
  */
-import { CanvasAlignedOverlay } from '../../../core/engine-sdk';
+import { GraphOverlayFrame } from './frame';
 import type { OverlayProps } from '../../../core/engine-sdk';
 import { barRect, valuePosition } from '../layout';
 import { graphStrings as S } from '../strings.ko';
-import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../types';
 import type { GraphConfig, GraphState } from '../types';
 import { CANVAS_SELECTOR, overlayFrame, targetCategory } from './helpers';
 
@@ -25,11 +24,11 @@ export function ScaleCountOverlay({ state, args }: OverlayProps<GraphConfig, Gra
   const shown = Math.min(SHOWN_CELLS, frame.cells);
 
   return (
-    <CanvasAlignedOverlay
+    <GraphOverlayFrame
       testId="scale-count"
       canvasSelector={CANVAS_SELECTOR}
-      logicalWidth={LOGICAL_WIDTH}
-      logicalHeight={LOGICAL_HEIGHT}
+      logicalWidth={frame.width}
+      logicalHeight={frame.height}
     >
       {Array.from({ length: shown }, (_, index) => {
         const middle = valuePosition(frame, index + 0.5);
@@ -63,6 +62,6 @@ export function ScaleCountOverlay({ state, args }: OverlayProps<GraphConfig, Gra
           {vertical ? S.overlay.more : S.overlay.moreHorizontal}
         </text>
       ) : null}
-    </CanvasAlignedOverlay>
+    </GraphOverlayFrame>
   );
 }

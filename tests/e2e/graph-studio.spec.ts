@@ -492,6 +492,72 @@ test.describe('○ 칸 터치 크기(판 전체 폭, axisMax 7)', () => {
   }
 });
 
+test.describe('○ 학생 그리기: 가로 스크롤 없음·스크롤 중 오버레이 정렬', () => {
+  const config = {
+    data: { 가: 3, 나: 5, 다: 2, 라: 4 },
+    graph: 'student',
+    graphType: 'o-mark',
+    axisMax: 7,
+    orientationFlip: true,
+  };
+
+  test('범주 4개·7칸·targetSize 64: 가로 스크롤이 없다', async ({ page }) => {
+    await openEngine(page, config, { stageFit: true });
+    await page.getByRole('button', { name: '터치 48px' }).click();
+    const area = page.locator('div[data-scroll="true"]');
+    await expect(area).toBeVisible();
+    const sizes = await area.evaluate((element) => ({
+      scrollWidth: element.scrollWidth,
+      clientWidth: element.clientWidth,
+      scrollHeight: element.scrollHeight,
+      clientHeight: element.clientHeight,
+    }));
+    console.log('T155 scroll', test.info().project.name, JSON.stringify(sizes));
+    expect(sizes.scrollWidth).toBeLessThanOrEqual(sizes.clientWidth);
+  });
+
+  test('gap-compare가 스크롤해도 칸과 1px 안에서 맞는다', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name === 'board', '스크롤이 생기는 아이패드·크롬북에서 확인');
+    await openEngine(page, config, { stageFit: true, overlay: 'gap-compare' });
+    await page.getByRole('button', { name: '터치 48px' }).click();
+    for (const index of [1, 3]) {
+      await cell(page, '가', index).scrollIntoViewIfNeeded();
+      await cell(page, '가', index).click();
+    }
+    await showOverlay(page);
+    await expectOverlayAligned(page, 'gap-compare');
+    const area = page.locator('div[data-scroll="true"]');
+    for (const top of [true, false]) {
+      await area.evaluate((element, toTop) => {
+        element.scrollTo({ top: toTop ? 0 : element.scrollHeight, left: 0 });
+      }, top);
+      await expectOverlayAligned(page, 'gap-compare');
+      // 선 굵기를 뺀 도형 자체의 상자로 잰다(Playwright boundingBox는 선 굵기를 포함한다).
+      await expect
+        .poll(async () =>
+          page.evaluate(() => {
+            const rectOf = (element: Element | null) => {
+              if (!element) return null;
+              const box = element.getBoundingClientRect();
+              return { x: box.x, y: box.y, width: box.width, height: box.height };
+            };
+            const ghost = rectOf(document.querySelector('[data-ghost-cell="1"]'));
+            const real = rectOf(document.querySelector('g[data-cat="가"][data-cell="1"] rect'));
+            if (!ghost || !real) return Number.POSITIVE_INFINITY;
+            const unit = real.width / 66; // 논리 좌표 1이 화면에서 몇 px인지
+            return Math.max(
+              Math.abs(ghost.y - real.y),
+              Math.abs(ghost.height - real.height),
+              Math.abs(ghost.x - (real.x + real.width + unit * 4)),
+              Math.abs(ghost.width - real.width / 2),
+            );
+          }),
+        )
+        .toBeLessThanOrEqual(1);
+    }
+  });
+});
+
 test.describe('기준 스크린샷', () => {
   test('주어진 세로 막대그래프와 표', async ({ page }) => {
     await openEngine(

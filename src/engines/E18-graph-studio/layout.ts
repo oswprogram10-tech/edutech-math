@@ -17,6 +17,9 @@ export interface Rect {
 
 export interface Frame {
   readonly orientation: Orientation;
+  /** 그림의 논리 크기(viewBox). 누르는 ○ 그래프는 범주·칸 수에 맞춰 정하고, 나머지는 1000×700이다. */
+  readonly width: number;
+  readonly height: number;
   readonly plot: Rect;
   /** 범주 수(0이면 1로 본다). */
   readonly count: number;
@@ -27,12 +30,49 @@ export interface Frame {
 const VERTICAL_PLOT: Rect = { x: 150, y: 80, width: 810, height: 490 };
 const HORIZONTAL_PLOT: Rect = { x: 220, y: 80, width: 740, height: 500 };
 
-export function frameOf(orientation: Orientation, count: number, cells: number): Frame {
+/** 누르는 ○ 그래프의 논리 치수: 칸 간격, 범주 띠 폭(칸 한 변 + 여백), 가장자리 여백. */
+const TOUCH_CELL = 70;
+const TOUCH_BAND = 106;
+const TOUCH_TOP = 60;
+
+export function frameOf(
+  orientation: Orientation,
+  count: number,
+  cells: number,
+  /** 누르는 ○ 그래프(`isTouchOMark`)면 true. */
+  touch = false,
+): Frame {
+  const n = Math.max(1, count);
+  const c = Math.max(1, cells);
+  if (!touch) {
+    return {
+      orientation,
+      width: LOGICAL_WIDTH,
+      height: LOGICAL_HEIGHT,
+      plot: orientation === 'vertical' ? VERTICAL_PLOT : HORIZONTAL_PLOT,
+      count: n,
+      cells: c,
+    };
+  }
+  if (orientation === 'vertical') {
+    const plot: Rect = { x: 110, y: TOUCH_TOP, width: n * TOUCH_BAND, height: c * TOUCH_CELL };
+    return {
+      orientation,
+      plot,
+      width: plot.x + plot.width + 30,
+      height: plot.y + plot.height + 110,
+      count: n,
+      cells: c,
+    };
+  }
+  const plot: Rect = { x: 170, y: TOUCH_TOP, width: c * TOUCH_CELL, height: n * TOUCH_BAND };
   return {
     orientation,
-    plot: orientation === 'vertical' ? VERTICAL_PLOT : HORIZONTAL_PLOT,
-    count: Math.max(1, count),
-    cells: Math.max(1, cells),
+    plot,
+    width: plot.x + plot.width + 40,
+    height: plot.y + plot.height + 90,
+    count: n,
+    cells: c,
   };
 }
 
@@ -151,5 +191,5 @@ export function minPictureSize(
   targetSize: number,
 ): { readonly width: number; readonly height: number } {
   const scale = minTouchScale(frame, targetSize);
-  return { width: Math.ceil(LOGICAL_WIDTH * scale), height: Math.ceil(LOGICAL_HEIGHT * scale) };
+  return { width: Math.ceil(frame.width * scale), height: Math.ceil(frame.height * scale) };
 }

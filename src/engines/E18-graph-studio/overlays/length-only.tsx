@@ -4,10 +4,9 @@
  * 모든 막대를 같은 회색 + 같은 굵기로 덮고, 축에서 막대 끝까지 길이 괄호(⟷)를 그린다.
  * 값 글자는 쓰지 않는다. 막대그래프에서만 그린다.
  */
-import { CanvasAlignedOverlay } from '../../../core/engine-sdk';
+import { GraphOverlayFrame } from './frame';
 import type { OverlayProps } from '../../../core/engine-sdk';
 import { barRect, valuePosition } from '../layout';
-import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../types';
 import type { GraphConfig, GraphState } from '../types';
 import { CANVAS_SELECTOR, overlayFrame } from './helpers';
 
@@ -24,11 +23,11 @@ export function LengthOnlyOverlay({ state }: OverlayProps<GraphConfig, GraphStat
   const base = valuePosition(frame, 0);
 
   return (
-    <CanvasAlignedOverlay
+    <GraphOverlayFrame
       testId="length-only"
       canvasSelector={CANVAS_SELECTOR}
-      logicalWidth={LOGICAL_WIDTH}
-      logicalHeight={LOGICAL_HEIGHT}
+      logicalWidth={frame.width}
+      logicalHeight={frame.height}
     >
       {settings.categories.map((cat, index) => {
         const exact =
@@ -70,6 +69,6 @@ export function LengthOnlyOverlay({ state }: OverlayProps<GraphConfig, GraphStat
           </g>
         );
       })}
-    </CanvasAlignedOverlay>
+    </GraphOverlayFrame>
   );
 }

@@ -28,11 +28,9 @@ import type { Frame } from './layout';
 import { graphCellsOf, graphValueOf } from './observe';
 import { axisCells } from './reduce';
 import { graphStrings as S } from './strings.ko';
-import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from './types';
 import type { GraphAction, GraphState } from './types';
 import styles from './View.module.css';
 
-const LOGICAL = { width: LOGICAL_WIDTH, height: LOGICAL_HEIGHT };
 const INK = '#1d2330';
 const GRID = '#d3dbe9';
 const BLUE = '#1d4fa8';
@@ -61,6 +59,14 @@ export function GraphCanvas({
   const { settings } = state;
   const svgRef = useRef<SVGSVGElement>(null);
   const rendered = useRenderedSize(svgRef);
+  const cells = axisCells(settings, state.scale);
+  const frame: Frame = frameOf(
+    state.orientation,
+    settings.categories.length,
+    cells,
+    isTouchOMark(settings),
+  );
+  const LOGICAL = { width: frame.width, height: frame.height };
   const hit = Math.max(10, Math.ceil(minTouchRadius(targetSize, rendered, LOGICAL)));
   const [picked, setPicked] = useState<string | null>(null);
   const [preview, setPreview] = useState<{ readonly cat: string; readonly cells: number } | null>(
@@ -68,8 +74,6 @@ export function GraphCanvas({
   );
   const pressed = useRef<string | null>(null);
 
-  const cells = axisCells(settings, state.scale);
-  const frame: Frame = frameOf(state.orientation, settings.categories.length, cells);
   const vertical = state.orientation === 'vertical';
   const student = settings.graph === 'student';
   const isBar = settings.graphType === 'bar';
@@ -247,7 +251,7 @@ export function GraphCanvas({
   const renderTitles = () => (
     <g fontSize={22} fill={INK} fontWeight={700}>
       {settings.title ? (
-        <text x={LOGICAL_WIDTH / 2} y={44} textAnchor="middle" fontSize={26}>
+        <text x={frame.width / 2} y={44} textAnchor="middle" fontSize={26}>
           {settings.title}
         </text>
       ) : null}
@@ -262,14 +266,14 @@ export function GraphCanvas({
             {settings.valueAxisTitle}
           </text>
         ) : (
-          <text x={plot.x + plot.width / 2} y={LOGICAL_HEIGHT - 20} textAnchor="middle">
+          <text x={plot.x + plot.width / 2} y={frame.height - 20} textAnchor="middle">
             {settings.valueAxisTitle}
           </text>
         )
       ) : null}
       {settings.categoryAxisTitle ? (
         vertical ? (
-          <text x={plot.x + plot.width / 2} y={LOGICAL_HEIGHT - 20} textAnchor="middle">
+          <text x={plot.x + plot.width / 2} y={frame.height - 20} textAnchor="middle">
             {settings.categoryAxisTitle}
           </text>
         ) : (
@@ -325,8 +329,8 @@ export function GraphCanvas({
     const center = bandCenter(frame, index);
     const rawX = vertical ? center - width / 2 : end + 14;
     const rawY = vertical ? end - 56 : center - 22;
-    const x = Math.min(LOGICAL_WIDTH - width - 8, Math.max(8, rawX));
-    const y = Math.min(LOGICAL_HEIGHT - 50, Math.max(8, rawY));
+    const x = Math.min(frame.width - width - 8, Math.max(8, rawX));
+    const y = Math.min(frame.height - 50, Math.max(8, rawY));
     return (
       <g key={`tip-${cat}`} data-testid="graph-tooltip" data-cat={cat} pointerEvents="none">
         <rect
@@ -523,7 +527,7 @@ export function GraphCanvas({
     <svg
       ref={svgRef}
       className={styles.canvasSvg}
-      viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
+      viewBox={`0 0 ${frame.width} ${frame.height}`}
       role="group"
       aria-label={S.graph.orientation[state.orientation]}
       data-testid="graph-canvas"
@@ -545,7 +549,7 @@ export function GraphCanvas({
           <line x1="0" y1="0" x2="0" y2="12" stroke={BLUE} strokeWidth="4" />
         </pattern>
       </defs>
-      <rect width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} fill={PAPER} />
+      <rect width={frame.width} height={frame.height} fill={PAPER} />
       <g key={state.orientation} className={styles.flipIn}>
         {renderTitles()}
         {renderAxes()}
