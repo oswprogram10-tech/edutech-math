@@ -145,6 +145,10 @@ test.describe('table-to-graph', () => {
 
   test('○ 칸을 누르면 채우고 다시 누르면 비운다', async ({ page }) => {
     await openEngine(page, config);
+    // ○ 그래프 눈금 숫자는 칸 가운데에 1부터 쓰고 0은 쓰지 않는다.
+    const numbers = page.locator('[data-testid="graph-canvas"] text[data-cell-number]');
+    await expect(numbers.first()).toHaveText('1');
+    await expect(numbers).toHaveText(['1', '2', '3', '4', '5', '6']);
     await cell(page, '🍎', 0).click();
     await expect(cell(page, '🍎', 0)).toHaveAttribute('data-filled', 'true');
     await pollObservation(page, (o) => o.graphCells?.['🍎'] === 1);

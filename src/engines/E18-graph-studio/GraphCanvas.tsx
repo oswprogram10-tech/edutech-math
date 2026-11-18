@@ -129,8 +129,44 @@ export function GraphCanvas({
   const bandSpan = vertical ? plot.width / frame.count : 190;
   const base = valuePosition(frame, 0);
 
+  const oMark = settings.graphType === 'o-mark';
+  // ○ 그래프: 칸 줄마다 1, 2, 3…을 칸 가운데에 쓰고 0은 쓰지 않는다(칸이 20개를 넘으면 5칸마다).
+  const cellNumbers = oMark
+    ? Array.from({ length: cells }, (_, index) => index + 1).filter(
+        (number) => cells <= 20 || number % 5 === 0,
+      )
+    : [];
+
   const renderAxes = () => (
     <g>
+      {cellNumbers.map((number) => {
+        const middle = valuePosition(frame, number - 0.5);
+        return vertical ? (
+          <text
+            key={`num-${number}`}
+            data-cell-number={number}
+            x={plot.x - 14}
+            y={middle + 7}
+            textAnchor="end"
+            fontSize={20}
+            fill={INK}
+          >
+            {number}
+          </text>
+        ) : (
+          <text
+            key={`num-${number}`}
+            data-cell-number={number}
+            x={middle}
+            y={plot.y + plot.height + 28}
+            textAnchor="middle"
+            fontSize={20}
+            fill={INK}
+          >
+            {number}
+          </text>
+        );
+      })}
       {ticks.map((tick) => {
         const position = valuePosition(frame, tick);
         return (
@@ -145,9 +181,11 @@ export function GraphCanvas({
                   stroke={GRID}
                   strokeWidth={tick === 0 ? 0 : 1.5}
                 />
-                <text x={plot.x - 14} y={position + 7} textAnchor="end" fontSize={20} fill={INK}>
-                  {tick * state.scale}
-                </text>
+                {oMark ? null : (
+                  <text x={plot.x - 14} y={position + 7} textAnchor="end" fontSize={20} fill={INK}>
+                    {tick * state.scale}
+                  </text>
+                )}
               </>
             ) : (
               <>
@@ -159,15 +197,17 @@ export function GraphCanvas({
                   stroke={GRID}
                   strokeWidth={tick === 0 ? 0 : 1.5}
                 />
-                <text
-                  x={position}
-                  y={plot.y + plot.height + 28}
-                  textAnchor="middle"
-                  fontSize={20}
-                  fill={INK}
-                >
-                  {tick * state.scale}
-                </text>
+                {oMark ? null : (
+                  <text
+                    x={position}
+                    y={plot.y + plot.height + 28}
+                    textAnchor="middle"
+                    fontSize={20}
+                    fill={INK}
+                  >
+                    {tick * state.scale}
+                  </text>
+                )}
               </>
             )}
           </g>
