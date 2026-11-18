@@ -1,7 +1,7 @@
 /**
  * 오개념 감지 함수가 함께 쓰는 입력 타입과 도우미(순수 함수).
  *
- * W1(`diagnose.ts`)과 W2(`diagnose-w2.ts`)가 이 파일에서만 가져다 쓴다.
+ * W1(`diagnose.ts`)과 W2·W3·W5(`diagnose-w*.ts`)가 이 파일에서만 가져다 쓴다.
  * 두 파일이 서로를 import하지 않게 하려고 따로 두었다.
  * `diagnose.ts`는 기존 import 경로를 위해 이 이름들을 다시 export한다.
  */
@@ -54,3 +54,31 @@ export function studentValue(input: DiagnoseInput): Rational | null {
     return null;
   }
 }
+
+/** `args.trap`(문자열 또는 문자열 배열)을 읽는다. 비었거나 형식이 다르면 null. */
+export function trapsOf(input: DiagnoseInput): string[] | null {
+  const record = recordOf(input.args);
+  if (record === null) return null;
+  const value = record.trap;
+  if (typeof value === 'string' && value.length > 0) return [value];
+  if (!Array.isArray(value) || value.length === 0) return null;
+  const traps: string[] = [];
+  for (const item of value) {
+    if (typeof item !== 'string' || item.length === 0) return null;
+    traps.push(item);
+  }
+  return traps;
+}
+
+/**
+ * 고르기 응답 감지. `args.trap`은 오개념 선택지 id(문자열 또는 문자열 배열)다.
+ * `args.expected`가 있으면 그 선택지는 정답이므로 감지하지 않는다.
+ */
+export const trapChoice: DiagnoseDetector = (input) => {
+  if (input.value === null) return false;
+  const traps = trapsOf(input);
+  if (traps === null) return false;
+  const expected = recordOf(input.args)?.expected;
+  if (typeof expected === 'string' && input.value === expected) return false;
+  return traps.includes(input.value);
+};
