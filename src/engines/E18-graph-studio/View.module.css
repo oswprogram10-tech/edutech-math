@@ -511,3 +511,19 @@
 .wrap[data-target-size='64'] .datasetSource {
   font-size: 16px;
 }
+
+/* 꺾은선그래프: 그래프 아래에 가로로 긴 표를 둔다(두 칸 폭에서도 그래프 높이를 지킨다). */
+.views[data-line='true'] {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.lineTableBox {
+  flex: 0 0 auto;
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.lineTableBox .table {
+  font-size: 0.95rem;
+}

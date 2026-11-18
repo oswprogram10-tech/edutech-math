@@ -85,6 +85,26 @@ export const graphStrings = {
     graphLabel: '투표 그래프',
   },
 
+  line: {
+    board: '꺾은선그래프',
+    tableLabel: '표',
+    xHeader: '구분',
+    yHeader: '값',
+    wavyGroup: '물결선',
+    wavyOption: (value: string) => `${value}부터`,
+    finishPredict: '실제 자료 보기',
+    legendGroup: '그래프 범례',
+    legendPrediction: '예측',
+    legendActual: '실제',
+    reset: '점 지우기',
+    lane: (x: string, value: string | null, unit: string) =>
+      value === null ? `${x} 줄, 점 없음` : `${x} 줄, 점 ${value}${unit}`,
+    point: (x: string, value: string, unit: string) => `${x} 점, ${value}${unit}`,
+    segment: (a: string, b: string) => `${a}과 ${b} 사이 선분, 누르면 끊어요`,
+    tooltip: (x: string, value: string, unit: string) => `${x}: ${value}${unit}`,
+    connectHint: '점에서 점으로 끌어서 이어요',
+  },
+
   overlay: {
     equals: '=',
     tableValue: (value: number) => `표: ${value}`,

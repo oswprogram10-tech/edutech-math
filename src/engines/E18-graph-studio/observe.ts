@@ -4,8 +4,9 @@
  * 값은 모두 정수(number)다. 학생 그래프의 값은 칸 수 × scale로 계산한다.
  */
 import type { JsonValue, Observation } from '../../core/engine-sdk';
+import { adjacentPairs, isInOrder, valueOf } from './line';
 import { rowValueOf } from './reduce';
-import type { GraphState, PictographState } from './types';
+import type { GraphState, LineGraphState, PictographState } from './types';
 import { isClassVote, voteCounts, voteViewState } from './vote';
 
 /** 그래프가 지금 나타내는 값(칸 × scale, given이면 data 값). */
@@ -102,7 +103,52 @@ function pictographKeys(state: PictographState): Record<string, JsonValue> {
   };
 }
 
+/** line-graph 모드의 Observation. 세로 값은 `Rational.toJSON()` 문자열이다. */
+function observeLine(state: LineGraphState): Observation {
+  const line = state.settings.line;
+  const xs = line?.xs ?? [];
+  const given = state.settings.graph === 'given';
+  const linePoints: Record<string, JsonValue> = {};
+  const prediction: Record<string, JsonValue> = {};
+  xs.forEach((x, index) => {
+    linePoints[x] = given ? (line?.values[index] ?? null) : (state.points[x] ?? null);
+    prediction[x] = state.prediction[x] ?? null;
+  });
+  const segments: [number, number][] = given
+    ? adjacentPairs(xs.length)
+    : state.segments.map(([a, b]): [number, number] => [a, b]);
+  const complete = xs.length > 0 && xs.every((x) => linePoints[x] !== null);
+  const matchesData =
+    line !== null &&
+    complete &&
+    xs.every((x, index) => {
+      const point = valueOf(linePoints[x] as string);
+      const expected = valueOf(line.values[index]);
+      return point !== null && expected !== null && point.equals(expected);
+    });
+  const yFrom = valueOf(state.yFrom);
+  const predictionCount = xs.filter((x) => prediction[x] !== null).length;
+  return {
+    mode: 'line-graph',
+    graphSource: state.settings.graph,
+    lineX: [...xs],
+    linePoints,
+    pointsComplete: complete,
+    pointsMatchData: matchesData,
+    segments,
+    segmentsInOrder: isInOrder(segments, xs.length),
+    yFrom: state.yFrom,
+    wavyShown: yFrom !== null && !yFrom.isZero() && !yFrom.isNegative(),
+    phase: state.phase,
+    prediction,
+    predictionCount,
+    predictionDone: line?.predict === true && state.phase === 'actual',
+    misconceptions: [],
+  };
+}
+
 export function observe(state: GraphState): Observation {
+  if (state.mode === 'line-graph') return observeLine(state);
   if (isClassVote(state)) {
     const counts = voteCounts(state);
     const total = state.votes.length;
