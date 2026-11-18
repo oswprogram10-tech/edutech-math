@@ -1,0 +1,1146 @@
+{
+  "unit": "g4s2u5",
+  "title": "꺾은선그래프",
+  "activities": [
+    {
+      "id": "g4s2u5.A1",
+      "title": "강낭콩 키 자료로 꺾은선그래프 그리기",
+      "tasks": [
+        {
+          "id": "g4s2u5.A1.T1",
+          "prompt": "표를 보고 날짜마다 강낭콩 키를 점으로 찍어요. 세로 눈금 한 칸은 1cm예요.",
+          "engine": "E18",
+          "mode": "line-graph",
+          "cpa": "P",
+          "config": {
+            "mode": "line-graph",
+            "points": [
+              {
+                "x": "1일",
+                "y": "0.5"
+              },
+              {
+                "x": "3일",
+                "y": "2"
+              },
+              {
+                "x": "5일",
+                "y": "5.5"
+              },
+              {
+                "x": "7일",
+                "y": "9.5"
+              },
+              {
+                "x": "9일",
+                "y": "11"
+              }
+            ],
+            "yStep": "1",
+            "plotStep": "0.5",
+            "yMax": "12",
+            "valueLabel": "cm",
+            "categoryAxisTitle": "날짜",
+            "valueAxisTitle": "키(cm)",
+            "title": "강낭콩 키",
+            "graph": "student",
+            "connect": "auto",
+            "table": "given"
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "pointsMatch",
+            "args": {
+              "source": "data"
+            }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "line-graph"
+              },
+              "level": 1,
+              "say": "점마다 표의 키와 같은 높이에 찍었나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "line-graph"
+              },
+              "level": 2,
+              "say": "날짜 줄을 누른 채 위아래로 움직여 표의 키에 맞춰 봐요. 한 칸의 절반은 0.5cm예요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "line-graph"
+              },
+              "level": 3,
+              "backtrack": "g4s2u5.line-graph-make"
+            }
+          ],
+          "concepts": [
+            "g4s2u5.line-graph-make"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g4s2u5.A1.T2",
+          "prompt": "점을 찍고, 날짜 순서대로 점과 점을 선분으로 이어 꺾은선그래프를 완성해요.",
+          "engine": "E18",
+          "mode": "line-graph",
+          "cpa": "P",
+          "config": {
+            "mode": "line-graph",
+            "points": [
+              {
+                "x": "1일",
+                "y": "0.5"
+              },
+              {
+                "x": "3일",
+                "y": "2"
+              },
+              {
+                "x": "5일",
+                "y": "5.5"
+              },
+              {
+                "x": "7일",
+                "y": "9.5"
+              },
+              {
+                "x": "9일",
+                "y": "11"
+              }
+            ],
+            "yStep": "1",
+            "plotStep": "0.5",
+            "yMax": "12",
+            "valueLabel": "cm",
+            "categoryAxisTitle": "날짜",
+            "valueAxisTitle": "키(cm)",
+            "title": "강낭콩 키",
+            "graph": "student",
+            "connect": "student",
+            "table": "given"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "pointsMatch",
+                "args": {
+                  "source": "data"
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "segmentsInOrder"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "pointsMatchData",
+                    "value": true
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "segmentsInOrder",
+                    "value": false
+                  }
+                ]
+              },
+              "level": 1,
+              "say": "날짜 순서대로 바로 옆 점끼리 이었나요?"
+            },
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "pointsMatchData",
+                    "value": true
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "segmentsInOrder",
+                    "value": false
+                  }
+                ]
+              },
+              "level": 2,
+              "say": "1일 점부터 차례로 옆 날짜 점과 이어 봐요. 건너뛴 선분은 눌러서 끊을 수 있어요."
+            },
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "pointsMatchData",
+                    "value": true
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "segmentsInOrder",
+                    "value": false
+                  }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g4s2u5.line-graph-make"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "line-graph"
+              },
+              "level": 1,
+              "say": "점마다 표의 키와 같은 높이에 찍었나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "line-graph"
+              },
+              "level": 2,
+              "say": "날짜 줄을 누른 채 위아래로 움직여 표의 키에 맞춰 봐요. 한 칸의 절반은 0.5cm예요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "line-graph"
+              },
+              "level": 3,
+              "backtrack": "g4s2u5.line-graph-make"
+            }
+          ],
+          "concepts": [
+            "g4s2u5.line-graph-make"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g4s2u5.A1.T3",
+          "prompt": "강낭콩이 가장 많이 자란 기간은 언제인가요?",
+          "engine": "E18",
+          "mode": "line-graph",
+          "cpa": "A",
+          "config": {
+            "mode": "line-graph",
+            "points": [
+              {
+                "x": "1일",
+                "y": "0.5"
+              },
+              {
+                "x": "3일",
+                "y": "2"
+              },
+              {
+                "x": "5일",
+                "y": "5.5"
+              },
+              {
+                "x": "7일",
+                "y": "9.5"
+              },
+              {
+                "x": "9일",
+                "y": "11"
+              }
+            ],
+            "yStep": "1",
+            "plotStep": "0.5",
+            "yMax": "12",
+            "valueLabel": "cm",
+            "categoryAxisTitle": "날짜",
+            "valueAxisTitle": "키(cm)",
+            "title": "강낭콩 키",
+            "graph": "given",
+            "table": "hidden",
+            "tooltips": "hide"
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.period.selected",
+            "value": [
+              "p57"
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "misconception": "MC-GRAPH-HEIGHT-NOT-CHANGE"
+              },
+              "level": 1,
+              "say": "키가 '가장 큰 날'과 '가장 많이 자란 기간'은 같은 질문일까?"
+            },
+            {
+              "when": {
+                "misconception": "MC-GRAPH-HEIGHT-NOT-CHANGE"
+              },
+              "level": 2,
+              "say": "기간마다 얼마나 자랐는지 그래프 아래에 작은 막대로 보여 줘요. 가장 긴 막대를 찾아봐요.",
+              "show": {
+                "engine": "E18",
+                "overlay": "change-bars"
+              }
+            },
+            {
+              "when": {
+                "misconception": "MC-GRAPH-HEIGHT-NOT-CHANGE"
+              },
+              "level": 3,
+              "backtrack": "g4s2u5.read-change"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "line-graph"
+              },
+              "level": 1,
+              "say": "선분이 가장 가파르게 올라간 곳을 찾아볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "line-graph"
+              },
+              "level": 2,
+              "say": "기간마다 선분이 얼마나 기울었는지 비교해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "line-graph"
+              },
+              "level": 3,
+              "backtrack": "g4s2u5.read-change"
+            }
+          ],
+          "concepts": [
+            "g4s2u5.read-change"
+          ],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-GRAPH-HEIGHT-NOT-CHANGE",
+              "args": {
+                "trap": "p79"
+              },
+              "path": "response.period.selected.0"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "period",
+                "label": "가장 많이 자란 기간을 골라요",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "p13",
+                    "label": "1일~3일"
+                  },
+                  {
+                    "id": "p35",
+                    "label": "3일~5일"
+                  },
+                  {
+                    "id": "p57",
+                    "label": "5일~7일"
+                  },
+                  {
+                    "id": "p79",
+                    "label": "7일~9일"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g4s2u5.A1.T4",
+          "prompt": "강낭콩 키가 어떻게 변할지 먼저 예측 점을 찍어 보고, '실제 자료 보기'를 눌러 비교해요. 어디가 가장 많이 달랐나요?",
+          "engine": "E18",
+          "mode": "line-graph",
+          "cpa": "P",
+          "config": {
+            "mode": "line-graph",
+            "points": [
+              {
+                "x": "1일",
+                "y": "0.5"
+              },
+              {
+                "x": "3일",
+                "y": "2"
+              },
+              {
+                "x": "5일",
+                "y": "5.5"
+              },
+              {
+                "x": "7일",
+                "y": "9.5"
+              },
+              {
+                "x": "9일",
+                "y": "11"
+              }
+            ],
+            "yStep": "1",
+            "plotStep": "0.5",
+            "yMax": "12",
+            "valueLabel": "cm",
+            "categoryAxisTitle": "날짜",
+            "valueAxisTitle": "키(cm)",
+            "title": "강낭콩 키",
+            "graph": "given",
+            "predict": true,
+            "table": "given",
+            "tooltips": "hide"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "predictionDone"
+              },
+              {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.diff.selected",
+                    "value": [
+                      "early"
+                    ]
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.diff.selected",
+                    "value": [
+                      "middle"
+                    ]
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.diff.selected",
+                    "value": [
+                      "late"
+                    ]
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.diff.selected",
+                    "value": [
+                      "close"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "line-graph"
+              },
+              "level": 1,
+              "say": "예측 점을 찍고 '실제 자료 보기'를 눌렀나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "line-graph"
+              },
+              "level": 2,
+              "say": "날짜 줄을 눌러 예측 점을 찍은 뒤 '실제 자료 보기'를 눌러 두 선을 비교해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "line-graph"
+              },
+              "level": 3,
+              "backtrack": "g4s2u5.read-change"
+            }
+          ],
+          "concepts": [
+            "g4s2u5.read-change"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "diff",
+                "label": "예측과 실제가 가장 다른 곳을 골라요",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "early",
+                    "label": "처음 며칠"
+                  },
+                  {
+                    "id": "middle",
+                    "label": "가운데 날들"
+                  },
+                  {
+                    "id": "late",
+                    "label": "마지막 며칠"
+                  },
+                  {
+                    "id": "close",
+                    "label": "거의 비슷했어요"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "g4s2u5.A2",
+      "title": "물결선 아코디언과 예측기",
+      "tasks": [
+        {
+          "id": "g4s2u5.A2.T1",
+          "prompt": "체온이 어떻게 변하는지 잘 보이도록 물결선으로 세로축을 줄여요.",
+          "engine": "E18",
+          "mode": "line-graph",
+          "cpa": "P",
+          "config": {
+            "mode": "line-graph",
+            "points": [
+              {
+                "x": "9시",
+                "y": "36.4"
+              },
+              {
+                "x": "10시",
+                "y": "36.8"
+              },
+              {
+                "x": "11시",
+                "y": "37.2"
+              },
+              {
+                "x": "12시",
+                "y": "37"
+              },
+              {
+                "x": "13시",
+                "y": "36.6"
+              }
+            ],
+            "yStep": "0.2",
+            "plotStep": "0.1",
+            "yMax": "37.6",
+            "valueLabel": "℃",
+            "categoryAxisTitle": "시각",
+            "valueAxisTitle": "체온(℃)",
+            "title": "하루 체온",
+            "graph": "given",
+            "yFrom": "0",
+            "yFromOptions": [
+              "0",
+              "35",
+              "36"
+            ],
+            "table": "given",
+            "tooltips": "hide"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "yFromAtLeast",
+                "args": {
+                  "value": "35"
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "wavyShown"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "line-graph"
+              },
+              "level": 1,
+              "say": "0부터 그린 그래프에서 체온 변화가 잘 보이나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "line-graph"
+              },
+              "level": 2,
+              "say": "'물결선' 줄에서 더 큰 시작값을 골라 그래프가 어떻게 바뀌는지 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "line-graph"
+              },
+              "level": 3,
+              "backtrack": "g4s2u5.wavy-line"
+            }
+          ],
+          "concepts": [
+            "g4s2u5.wavy-line"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g4s2u5.A2.T2",
+          "prompt": "11시 30분에는 체온을 재지 않았어요. 그때 체온을 알 수 있을까요? 알 수 있다면 어림해 써요.",
+          "engine": "E18",
+          "mode": "line-graph",
+          "cpa": "A",
+          "config": {
+            "mode": "line-graph",
+            "points": [
+              {
+                "x": "9시",
+                "y": "36.4"
+              },
+              {
+                "x": "10시",
+                "y": "36.8"
+              },
+              {
+                "x": "11시",
+                "y": "37.2"
+              },
+              {
+                "x": "12시",
+                "y": "37"
+              },
+              {
+                "x": "13시",
+                "y": "36.6"
+              }
+            ],
+            "yStep": "0.2",
+            "plotStep": "0.1",
+            "yMax": "37.6",
+            "valueLabel": "℃",
+            "categoryAxisTitle": "시각",
+            "valueAxisTitle": "체온(℃)",
+            "title": "하루 체온",
+            "graph": "given",
+            "yFrom": "36",
+            "table": "hidden",
+            "tooltips": "hide"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "equals",
+                "path": "response.can.selected",
+                "value": [
+                  "yes"
+                ]
+              },
+              {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.temp.value",
+                    "value": "37"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.temp.value",
+                    "value": "371/10"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.temp.value",
+                    "value": "186/5"
+                  }
+                ]
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "misconception": "MC-GRAPH-NO-INTERPOLATE"
+              },
+              "level": 1,
+              "say": "선분 위에서 11시 30분은 어디쯤일까?"
+            },
+            {
+              "when": {
+                "misconception": "MC-GRAPH-NO-INTERPOLATE"
+              },
+              "level": 2,
+              "say": "11시와 12시 가운데에 세로선을 그었어요. 선분과 만나는 곳을 봐요.",
+              "show": {
+                "engine": "E18",
+                "overlay": "interp-guide",
+                "args": {
+                  "a": 2,
+                  "t": 0.5
+                }
+              }
+            },
+            {
+              "when": {
+                "misconception": "MC-GRAPH-NO-INTERPOLATE"
+              },
+              "level": 3,
+              "backtrack": "g4s2u5.interpolate-predict"
+            },
+            {
+              "when": {
+                "misconception": "MC-GRAPH-WAVY-LINE"
+              },
+              "level": 1,
+              "say": "물결선이 무엇을 줄여 놓은 표시였지?"
+            },
+            {
+              "when": {
+                "misconception": "MC-GRAPH-WAVY-LINE"
+              },
+              "level": 2,
+              "say": "줄여 놓은 세로축을 0부터 다시 펼쳐 보여 줘요.",
+              "show": {
+                "engine": "E18",
+                "overlay": "unfold-axis"
+              }
+            },
+            {
+              "when": {
+                "misconception": "MC-GRAPH-WAVY-LINE"
+              },
+              "level": 3,
+              "backtrack": "g4s2u5.wavy-line"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "line-graph"
+              },
+              "level": 1,
+              "say": "11시 점과 12시 점을 잇는 선분의 가운데를 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "line-graph"
+              },
+              "level": 2,
+              "say": "선분 가운데 높이에서 옆으로 가서 세로 눈금을 읽어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "line-graph"
+              },
+              "level": 3,
+              "backtrack": "g4s2u5.interpolate-predict"
+            }
+          ],
+          "concepts": [
+            "g4s2u5.interpolate-predict",
+            "g4s2u5.wavy-line"
+          ],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-GRAPH-NO-INTERPOLATE",
+              "args": {
+                "trap": "no"
+              },
+              "path": "response.can.selected.0"
+            },
+            {
+              "code": "MC-GRAPH-WAVY-LINE",
+              "args": {
+                "trap": [
+                  "1",
+                  "1.1",
+                  "1.2"
+                ],
+                "expected": "37.1"
+              },
+              "path": "response.temp.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "can",
+                "label": "11시 30분 체온을 알 수 있나요?",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "yes",
+                    "label": "선분을 보고 어림할 수 있어요"
+                  },
+                  {
+                    "id": "no",
+                    "label": "재지 않아서 알 수 없어요"
+                  }
+                ]
+              },
+              {
+                "kind": "number",
+                "id": "temp",
+                "label": "11시 30분 체온(℃)",
+                "forms": [
+                  "decimal"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g4s2u5.A2.T3",
+          "prompt": "체온이 가장 많이 오른 때는 언제인가요? 맞는 것을 하나 골라요.",
+          "engine": "E18",
+          "mode": "line-graph",
+          "cpa": "A",
+          "config": {
+            "mode": "line-graph",
+            "points": [
+              {
+                "x": "9시",
+                "y": "36.4"
+              },
+              {
+                "x": "10시",
+                "y": "36.8"
+              },
+              {
+                "x": "11시",
+                "y": "37.2"
+              },
+              {
+                "x": "12시",
+                "y": "37"
+              },
+              {
+                "x": "13시",
+                "y": "36.6"
+              }
+            ],
+            "yStep": "0.2",
+            "plotStep": "0.1",
+            "yMax": "37.6",
+            "valueLabel": "℃",
+            "categoryAxisTitle": "시각",
+            "valueAxisTitle": "체온(℃)",
+            "title": "하루 체온",
+            "graph": "given",
+            "yFrom": "36",
+            "table": "hidden",
+            "tooltips": "hide"
+          },
+          "goal": {
+            "kind": "any",
+            "of": [
+              {
+                "kind": "equals",
+                "path": "response.rise.selected",
+                "value": [
+                  "h9"
+                ]
+              },
+              {
+                "kind": "equals",
+                "path": "response.rise.selected",
+                "value": [
+                  "h10"
+                ]
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "line-graph"
+              },
+              "level": 1,
+              "say": "선분이 오른쪽 위로 올라간 곳 중 가장 가파른 곳을 찾아볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "line-graph"
+              },
+              "level": 2,
+              "say": "올라간 선분마다 눈금 몇 칸만큼 올랐는지 세어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "line-graph"
+              },
+              "level": 3,
+              "backtrack": "g4s2u5.read-change"
+            }
+          ],
+          "concepts": [
+            "g4s2u5.read-change"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "rise",
+                "label": "가장 많이 오른 때를 골라요",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "h9",
+                    "label": "9시~10시"
+                  },
+                  {
+                    "id": "h10",
+                    "label": "10시~11시"
+                  },
+                  {
+                    "id": "h11",
+                    "label": "11시~12시"
+                  },
+                  {
+                    "id": "h12",
+                    "label": "12시~13시"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g4s2u5.A2.T4",
+          "prompt": "14시 체온은 어떻게 될까요? 근거를 고르고, 그 근거에 맞게 체온을 예측해 써요.",
+          "engine": "E18",
+          "mode": "line-graph",
+          "cpa": "A",
+          "config": {
+            "mode": "line-graph",
+            "points": [
+              {
+                "x": "9시",
+                "y": "36.4"
+              },
+              {
+                "x": "10시",
+                "y": "36.8"
+              },
+              {
+                "x": "11시",
+                "y": "37.2"
+              },
+              {
+                "x": "12시",
+                "y": "37"
+              },
+              {
+                "x": "13시",
+                "y": "36.6"
+              }
+            ],
+            "yStep": "0.2",
+            "plotStep": "0.1",
+            "yMax": "37.6",
+            "valueLabel": "℃",
+            "categoryAxisTitle": "시각",
+            "valueAxisTitle": "체온(℃)",
+            "title": "하루 체온",
+            "graph": "given",
+            "yFrom": "36",
+            "table": "hidden",
+            "tooltips": "hide"
+          },
+          "goal": {
+            "kind": "any",
+            "of": [
+              {
+                "kind": "all",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.reason.selected",
+                    "value": [
+                      "down"
+                    ]
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "responseCompare",
+                    "args": {
+                      "field": "next",
+                      "op": "lt",
+                      "value": "36.6"
+                    }
+                  }
+                ]
+              },
+              {
+                "kind": "all",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.reason.selected",
+                    "value": [
+                      "up"
+                    ]
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "responseCompare",
+                    "args": {
+                      "field": "next",
+                      "op": "gt",
+                      "value": "36.6"
+                    }
+                  }
+                ]
+              },
+              {
+                "kind": "all",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.reason.selected",
+                    "value": [
+                      "same"
+                    ]
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "responseCompare",
+                    "args": {
+                      "field": "next",
+                      "op": "eq",
+                      "value": "36.6"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "line-graph"
+              },
+              "level": 1,
+              "say": "고른 근거와 예측한 체온이 서로 맞나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "line-graph"
+              },
+              "level": 2,
+              "say": "13시 체온보다 낮을지, 높을지, 같을지 근거에 맞춰 생각해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "line-graph"
+              },
+              "level": 3,
+              "backtrack": "g4s2u5.interpolate-predict"
+            }
+          ],
+          "concepts": [
+            "g4s2u5.interpolate-predict"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "reason",
+                "label": "어떤 근거로 예측하나요?",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "down",
+                    "label": "11시부터 계속 내려가고 있어서"
+                  },
+                  {
+                    "id": "up",
+                    "label": "다시 올라갈 것 같아서"
+                  },
+                  {
+                    "id": "same",
+                    "label": "13시와 비슷할 것 같아서"
+                  }
+                ]
+              },
+              {
+                "kind": "number",
+                "id": "next",
+                "label": "14시 체온(℃)",
+                "forms": [
+                  "decimal"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
