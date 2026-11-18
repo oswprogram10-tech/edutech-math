@@ -8,13 +8,13 @@
  * - 펼치기: 큰 그림에서 Enter/Space 또는 "펼치기" 단추. 놓인 그림을 누르면(작은 그림) 하나 뺀다.
  *   올가미가 포인터를 잡으면 `click`이 SVG로 가므로, 누르기는 올가미의 탭으로 받아 그림 위치를 직접 찾는다.
  */
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { pointerToLogical, useLasso, useRenderedSize } from '../../core/engine-sdk';
 import type { TargetSize } from '../../core/engine-sdk';
 import { PictoIcon } from './icons';
-import { ICON_GAP, iconAt, lassoOutcome, pictoLayout } from './picto-layout';
-import type { PictoItem } from './picto-layout';
+import { ICON_GAP, iconAt, labelWidthOf, lassoOutcome, pictoLayout } from './picto-layout';
+import type { PictoControlsOption, PictoItem } from './picto-layout';
 import { rowValueOf } from './reduce';
 import { graphStrings as S } from './strings.ko';
 import type { GraphAction, GraphSettings, PictographRow } from './types';
@@ -26,6 +26,11 @@ const BLUE = '#1d4fa8';
 const PAPER = '#fbfaf6';
 const ORANGE = '#e8872e';
 const FALLBACK_WIDTH = 480;
+/** 읽기용 그림그래프를 판에 맞추려고 줄일 수 있는 작은 그림 한 변의 하한(px). */
+const MIN_FIT_ICON = 20;
+/** 행 오른쪽 끝에 두는 단추 묶음(+ 작은 그림, 묶기, 펼치기) 폭(px)과, 그림 칸에 최소로 남길 폭(작은 그림 10개). */
+const CONTROLS_WIDTH = 300;
+const MIN_ICON_ROOM = 10;
 
 interface PictographBoardProps {
   readonly settings: GraphSettings;
@@ -56,9 +61,45 @@ export function PictographBoard({
   const svgRef = useRef<SVGSVGElement>(null);
   const measured = useRenderedSize(hostRef);
   const width = Math.max(240, Math.floor(measured.width) || FALLBACK_WIDTH);
+
+  // 읽기용(given)은 그래프가 판 안에 다 들어오도록 그림을 줄인다(하한 MIN_FIT_ICON, 걸리면 판 스크롤).
+  const [avail, setAvail] = useState(0);
+  useEffect(() => {
+    if (interactive) return;
+    const host = hostRef.current;
+    const wrap = host?.closest<HTMLElement>('[data-picto="true"]');
+    if (!host || !wrap) return;
+    const update = () => {
+      const top =
+        host.getBoundingClientRect().top - wrap.getBoundingClientRect().top + wrap.scrollTop;
+      const next = Math.floor(wrap.clientHeight - top - 2);
+      setAvail((current) => (current === next ? current : next));
+    };
+    update();
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(update);
+    observer?.observe(wrap);
+    return () => observer?.disconnect();
+  }, [interactive]);
+
+  // 학생 만들기: 행 오른쪽 끝에 단추를 두고, 그림 칸이 너무 좁으면 그 행 바로 아래 줄로 내린다.
+  const controls = useMemo<PictoControlsOption | undefined>(() => {
+    if (!interactive) return undefined;
+    const room = width - labelWidthOf(width) - CONTROLS_WIDTH - 30;
+    const mode = room >= MIN_ICON_ROOM * (targetSize + ICON_GAP) ? 'side' : 'below';
+    return { mode, width: CONTROLS_WIDTH, height: targetSize };
+  }, [interactive, width, targetSize]);
+
+  const iconSide = useMemo(() => {
+    if (interactive || avail <= 0) return targetSize;
+    for (let side = targetSize; side >= MIN_FIT_ICON; side -= 2) {
+      if (pictoLayout(settings.categories, rows, width, side).height <= avail) return side;
+    }
+    return Math.min(targetSize, MIN_FIT_ICON);
+  }, [interactive, avail, settings.categories, rows, width, targetSize]);
+
   const layout = useMemo(
-    () => pictoLayout(settings.categories, rows, width, targetSize),
-    [settings.categories, rows, width, targetSize],
+    () => pictoLayout(settings.categories, rows, width, iconSide, controls),
+    [settings.categories, rows, width, iconSide, controls],
   );
   const size = { width: layout.width, height: layout.height };
   const [pickedBig, setPickedBig] = useState<string | null>(null);
@@ -212,7 +253,13 @@ export function PictographBoard({
             const data = rows[row.cat] ?? { big: 0, small: 0 };
             const lastSmall = data.small - 1;
             return (
-              <g key={row.cat} data-row={row.cat}>
+              <g
+                key={row.cat}
+                data-row={row.cat}
+                data-row-top={row.top}
+                data-row-height={row.height}
+                data-row-area={row.areaHeight}
+              >
                 <line
                   x1={0}
                   x2={layout.width}
@@ -225,7 +272,7 @@ export function PictographBoard({
                   x={layout.labelWidth / 2}
                   y={
                     row.top +
-                    row.height / 2 +
+                    row.areaHeight / 2 +
                     labelSize(layout.labelWidth, row.cat, targetSize >= 64 ? 16 : 14) / 3
                   }
                   textAnchor="middle"
@@ -301,6 +348,55 @@ export function PictographBoard({
                     </g>
                   );
                 })}
+                {interactive && row.controls ? (
+                  <foreignObject
+                    x={row.controls.x}
+                    y={row.controls.y}
+                    width={row.controls.width}
+                    height={row.controls.height}
+                    style={{ overflow: 'visible' }}
+                  >
+                    <div
+                      className={styles.pictoControlRow}
+                      role="group"
+                      aria-label={S.pictograph.controlsGroup(row.cat)}
+                      data-cat={row.cat}
+                      data-controls={controls?.mode}
+                      onPointerDown={(event) => event.stopPropagation()}
+                    >
+                      <button
+                        type="button"
+                        className={styles.button}
+                        data-action="add-small"
+                        aria-label={S.pictograph.addSmallLabel(row.cat)}
+                        onClick={() => dispatch({ type: 'add-small', cat: row.cat })}
+                      >
+                        {S.pictograph.addSmall}
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.button}
+                        data-action="compress"
+                        aria-label={S.pictograph.compressLabel(row.cat, legendBig)}
+                        disabled={(rows[row.cat]?.small ?? 0) < legendBig}
+                        onClick={() => dispatch({ type: 'compress', cat: row.cat })}
+                      >
+                        {S.pictograph.compress}
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.button}
+                        data-action="expand"
+                        data-picked={pickedBig === row.cat ? 'true' : undefined}
+                        aria-label={S.pictograph.expandLabel(row.cat)}
+                        disabled={(rows[row.cat]?.big ?? 0) < 1}
+                        onClick={() => dispatch({ type: 'expand', cat: row.cat })}
+                      >
+                        {S.pictograph.expand}
+                      </button>
+                    </div>
+                  </foreignObject>
+                ) : null}
               </g>
             );
           })}
@@ -308,7 +404,7 @@ export function PictographBoard({
             renderTooltip(
               row.cat,
               row.top,
-              row.height,
+              row.areaHeight,
               rowValueOf(rows[row.cat] ?? { big: 0, small: 0 }, legendBig),
             ),
           )}
@@ -324,55 +420,6 @@ export function PictographBoard({
           ) : null}
         </svg>
       </div>
-
-      {interactive ? (
-        <div className={styles.pictoControls} data-testid="pictograph-controls">
-          {settings.categories.map((cat) => {
-            const row = rows[cat] ?? { big: 0, small: 0 };
-            return (
-              <div
-                key={cat}
-                className={styles.pictoControlRow}
-                role="group"
-                aria-label={S.pictograph.controlsGroup(cat)}
-                data-cat={cat}
-              >
-                <span className={styles.pictoControlName}>{cat}</span>
-                <button
-                  type="button"
-                  className={styles.button}
-                  data-action="add-small"
-                  aria-label={S.pictograph.addSmallLabel(cat)}
-                  onClick={() => dispatch({ type: 'add-small', cat })}
-                >
-                  {S.pictograph.addSmall}
-                </button>
-                <button
-                  type="button"
-                  className={styles.button}
-                  data-action="compress"
-                  aria-label={S.pictograph.compressLabel(cat, legendBig)}
-                  disabled={row.small < legendBig}
-                  onClick={() => dispatch({ type: 'compress', cat })}
-                >
-                  {S.pictograph.compress}
-                </button>
-                <button
-                  type="button"
-                  className={styles.button}
-                  data-action="expand"
-                  data-picked={pickedBig === cat ? 'true' : undefined}
-                  aria-label={S.pictograph.expandLabel(cat)}
-                  disabled={row.big < 1}
-                  onClick={() => dispatch({ type: 'expand', cat })}
-                >
-                  {S.pictograph.expand}
-                </button>
-              </div>
-            );
-          })}
-        </div>
-      ) : null}
     </div>
   );
 }

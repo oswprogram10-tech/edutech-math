@@ -664,3 +664,56 @@ describe('class-vote predicates', () => {
     expect(call('responseEqualsVoteTotal', merged, { field: 'total' })).toBe(true);
   });
 });
+
+describe('T160: 행 조작 단추 자리', () => {
+  const cats = ['가', '나', '다'];
+  const rows = { 가: { big: 3, small: 2 }, 나: { big: 0, small: 0 }, 다: { big: 1, small: 8 } };
+
+  it('side: 단추는 행 오른쪽 끝, 그림은 그 왼쪽에만 놓이고 행 높이는 단추 높이 이상이다', () => {
+    const layout = pictoLayout(cats, rows, 1200, 48, { mode: 'side', width: 300, height: 64 });
+    for (const row of layout.rows) {
+      const controls = row.controls;
+      expect(controls).toBeDefined();
+      if (!controls) continue;
+      expect(row.height).toBeGreaterThanOrEqual(64);
+      expect(controls.y).toBeGreaterThanOrEqual(row.top);
+      expect(controls.y + controls.height).toBeLessThanOrEqual(row.top + row.height);
+      expect(controls.x + controls.width).toBeLessThanOrEqual(layout.width);
+      for (const item of row.items) {
+        expect(item.x + item.side).toBeLessThanOrEqual(controls.x);
+        expect(item.y).toBeGreaterThanOrEqual(row.top);
+        expect(item.y + item.side).toBeLessThanOrEqual(row.top + row.height);
+      }
+    }
+  });
+
+  it('below: 단추는 그 행 그림 칸 바로 아래 줄이고 다른 행과 섞이지 않는다', () => {
+    const layout = pictoLayout(cats, rows, 600, 48, { mode: 'below', width: 300, height: 64 });
+    layout.rows.forEach((row, index) => {
+      const controls = row.controls;
+      expect(controls).toBeDefined();
+      if (!controls) return;
+      expect(controls.y).toBeCloseTo(row.top + row.areaHeight, 5);
+      expect(controls.y + controls.height).toBeLessThanOrEqual(row.top + row.height);
+      const next = layout.rows[index + 1];
+      if (next) expect(row.top + row.height).toBeCloseTo(next.top, 5);
+      for (const item of row.items) {
+        expect(item.y + item.side).toBeLessThanOrEqual(row.top + row.areaHeight);
+      }
+    });
+  });
+
+  it('단추 옵션이 없으면 지금과 같은 배치다(읽기용)', () => {
+    const plain = pictoLayout(cats, rows, 800, 48);
+    for (const row of plain.rows) {
+      expect(row.controls).toBeUndefined();
+      expect(row.areaHeight).toBe(row.height);
+    }
+  });
+
+  it('작은 그림을 줄이면(읽기용 맞춤) 전체 높이가 줄어든다', () => {
+    const big = pictoLayout(cats, rows, 600, 48).height;
+    const small = pictoLayout(cats, rows, 600, 20).height;
+    expect(small).toBeLessThan(big);
+  });
+});

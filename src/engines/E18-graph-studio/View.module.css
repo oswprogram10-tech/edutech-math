@@ -347,23 +347,17 @@
   outline-offset: 3px;
 }
 
-.pictoControls {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
 .pictoControlRow {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 0.4rem;
+  gap: 6px;
+  height: 100%;
 }
 
-.pictoControlName {
-  min-width: 3rem;
-  font-size: 1.2rem;
-  font-weight: 800;
+.pictoControlRow .button {
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .button[data-picked='true'] {
