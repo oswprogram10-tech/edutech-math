@@ -1084,7 +1084,8 @@ test.describe('크롬북 두 칸 폭(660×420) ?stage=fit — 그림그래프·�
     const small = await smalls(page, '라').first().locator('[data-art-box]').boundingBox();
     if (!small) throw new Error('그림 상자를 찾지 못했습니다.');
     console.log('T156 two-column picto', { small: Math.round(small.width) });
-    expect(small.width).toBeGreaterThanOrEqual(48 - 0.5);
+    // T160: 읽기용 그림그래프는 판에 맞춰 줄어든다(하한 20px). 판에 안 들어가면 지금처럼 스크롤한다.
+    expect(small.width).toBeGreaterThanOrEqual(20 - 0.5);
     const scroller = page.locator('[data-picto="true"]');
     const sizes = await scroller.evaluate((element) => ({
       sw: element.scrollWidth,
@@ -1358,6 +1359,109 @@ test.describe('T158: ○ 그리기 크기·스크롤 안내·글자 크기', () 
           await expect.poll(() => smallestText(page)).toBeGreaterThanOrEqual(floor - 0.5);
         }
       }
+    });
+  }
+});
+
+// ---------------------------------------------------------------- T160
+
+test.describe('T160: 그림그래프 배치(읽기용 맞춤, 행 조작은 그 행 옆)', () => {
+  const read = {
+    mode: 'table-to-graph',
+    data: { 가: 32, 나: 25, 다: 41, 라: 18 },
+    views: ['pictograph'],
+    legend: { big: 10, small: 1 },
+    icon: 'apple',
+    tooltips: 'hide',
+    valueLabel: '상자',
+    title: '마을별 사과 수확량',
+  };
+
+  for (const viewport of [null, { width: 660, height: 420 }] as const) {
+    test(`읽기용 그림그래프 4행이 판 안에 다 들어간다${viewport ? '(두 칸 폭 660x420)' : ''}`, async ({
+      page,
+    }) => {
+      if (viewport) await page.setViewportSize(viewport);
+      await openEngine(page, read, { stageFit: true });
+      const wrap = page.locator('[data-picto="true"]');
+      await expect
+        .poll(async () =>
+          wrap.evaluate((element) => {
+            const svg = element.querySelector('[data-testid="graph-canvas"]');
+            const svgBox = svg?.getBoundingClientRect();
+            const wrapBox = element.getBoundingClientRect();
+            if (!svgBox) return Number.POSITIVE_INFINITY;
+            return Math.max(
+              element.scrollHeight - element.clientHeight,
+              svgBox.bottom - wrapBox.bottom - 1,
+            );
+          }),
+        )
+        .toBeLessThanOrEqual(1);
+      // 네 줄 이름이 모두 보이고, 작은 그림은 20px 이상이다.
+      const side = Number(await page.getByTestId('graph-canvas').getAttribute('data-icon-side'));
+      console.log('T160 given icon', test.info().project.name, viewport ? '660x420' : 'full', side);
+      expect(side).toBeGreaterThanOrEqual(20);
+      const wrapBox = await wrap.boundingBox();
+      if (!wrapBox) throw new Error('판을 찾지 못했습니다.');
+      for (const cat of ['가', '나', '다', '라']) {
+        const label = await page
+          .locator(`[data-testid="graph-canvas"] g[data-row="${cat}"] text`)
+          .boundingBox();
+        if (!label) throw new Error('행 이름을 찾지 못했습니다.');
+        expect(label.y).toBeGreaterThanOrEqual(wrapBox.y - 1);
+        expect(label.y + label.height).toBeLessThanOrEqual(wrapBox.y + wrapBox.height + 1);
+      }
+    });
+  }
+
+  for (const viewport of [null, { width: 660, height: 420 }] as const) {
+    test(`학생 만들기: 각 행의 단추가 그 행 안(좁으면 바로 아래)에 있다${viewport ? '(두 칸 폭)' : ''}`, async ({
+      page,
+    }) => {
+      if (viewport) await page.setViewportSize(viewport);
+      await openEngine(
+        page,
+        { ...PICTO, legend: { big: 10, small: 1 }, table: 'given' },
+        { mode: 'pictograph', stageFit: true },
+      );
+      const svg = page.getByTestId('graph-canvas');
+      const mode = await page.locator('[data-controls]').first().getAttribute('data-controls');
+      const svgBox = await svg.boundingBox();
+      if (!svgBox) throw new Error('그림그래프를 찾지 못했습니다.');
+      for (const cat of ['가', '나', '다', '라']) {
+        const row = page.locator(`[data-testid="graph-canvas"] g[data-row="${cat}"]`);
+        const top = Number(await row.getAttribute('data-row-top'));
+        const height = Number(await row.getAttribute('data-row-height'));
+        const area = Number(await row.getAttribute('data-row-area'));
+        const button = page.getByRole('button', { name: `${cat} 작은 그림 놓기` });
+        const box = await button.boundingBox();
+        if (!box) throw new Error('단추를 찾지 못했습니다.');
+        // SVG 논리 좌표는 화면 px와 같다. 스크롤해도 SVG 상자 기준 상대 위치로 잰다.
+        const center = box.y + box.height / 2 - svgBox.y;
+        const lo = mode === 'below' ? top + area : top;
+        const hi = top + height;
+        console.log(
+          'T160 controls',
+          test.info().project.name,
+          mode,
+          cat,
+          Math.round(center),
+          lo,
+          hi,
+        );
+        expect(center).toBeGreaterThanOrEqual(lo - 1);
+        expect(center).toBeLessThanOrEqual(hi + 1);
+        // 단추는 targetSize(48) 이상이다.
+        expect(box.height).toBeGreaterThanOrEqual(47.5);
+        expect(box.width).toBeGreaterThanOrEqual(47.5);
+      }
+      // 판 아래에 따로 떨어진 단추 줄은 없다.
+      await expect(page.getByTestId('pictograph-controls')).toHaveCount(0);
+      // 동작은 그대로다: 놓기 → 묶기.
+      await addSmall(page, '가', 10);
+      await page.getByRole('button', { name: '가 작은 그림 10개를 큰 그림 1개로 묶기' }).click();
+      await expect(bigs(page, '가')).toHaveCount(1);
     });
   }
 });

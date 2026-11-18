@@ -29,12 +29,34 @@ export interface PictoItem {
   readonly side: number;
 }
 
+/** 행 조작 단추 묶음의 자리(논리 좌표 = 화면 px). */
+export interface PictoControlsRect {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+
 export interface PictoRowLayout {
   readonly cat: string;
   readonly index: number;
   readonly top: number;
   readonly height: number;
+  /** 그림 칸의 높이(행 높이에서 단추 줄 `below`를 뺀 것). 행 이름은 이 안에서 가운데다. */
+  readonly areaHeight: number;
   readonly items: readonly PictoItem[];
+  /** 학생이 만드는 그림그래프의 행 조작 단추 자리. 없으면 undefined. */
+  readonly controls?: PictoControlsRect;
+}
+
+/**
+ * 행 조작 단추 배치. `side`는 행 오른쪽 끝(그림은 그 왼쪽에만 놓는다), `below`는 그 행 바로 아래 줄.
+ * `width`는 `side`일 때 단추 묶음 폭, `height`는 단추 높이(targetSize)다.
+ */
+export interface PictoControlsOption {
+  readonly mode: 'side' | 'below';
+  readonly width: number;
+  readonly height: number;
 }
 
 export interface PictoLayout {
@@ -61,12 +83,16 @@ export function pictoLayout(
   rows: Readonly<Record<string, PictographRow>>,
   width: number,
   icon: number,
+  controls?: PictoControlsOption,
 ): PictoLayout {
   const w = Math.max(1, Math.floor(width));
   const bigSide = bigSideOf(icon);
   const labelWidth = labelWidthOf(w);
   const left = labelWidth + SIDE_PAD;
-  const right = w - SIDE_PAD;
+  const sideWidth = controls?.mode === 'side' ? controls.width : 0;
+  const right = w - SIDE_PAD - (sideWidth > 0 ? sideWidth + SIDE_PAD : 0);
+  const strip = controls?.mode === 'below' ? controls.height + ROW_PAD : 0;
+  const minArea = controls?.mode === 'side' ? controls.height + 2 * ROW_PAD : 0;
   const smallLine = icon + ICON_GAP;
   const bigLine = bigSide + ICON_GAP;
 
@@ -111,8 +137,37 @@ export function pictoLayout(
       }
       lineTop += lineHeight;
     }
-    const height = lineTop + ROW_PAD - top;
-    laid.push({ cat, index: rowIndex, top, height, items });
+    const content = lineTop + ROW_PAD - top;
+    const areaHeight = Math.max(content, minArea);
+    // 단추 줄이 그림보다 높으면(side) 그림을 세로 가운데로 옮긴다.
+    const shift = (areaHeight - content) / 2;
+    const shifted = shift > 0 ? items.map((item) => ({ ...item, y: item.y + shift })) : items;
+    const height = areaHeight + strip;
+    let rect: PictoControlsRect | undefined;
+    if (controls?.mode === 'side') {
+      rect = {
+        x: w - SIDE_PAD - controls.width,
+        y: top + (areaHeight - controls.height) / 2,
+        width: controls.width,
+        height: controls.height,
+      };
+    } else if (controls) {
+      rect = {
+        x: left,
+        y: top + areaHeight,
+        width: Math.max(1, w - left - SIDE_PAD),
+        height: controls.height,
+      };
+    }
+    laid.push({
+      cat,
+      index: rowIndex,
+      top,
+      height,
+      areaHeight,
+      items: shifted,
+      ...(rect ? { controls: rect } : {}),
+    });
     cursorY += height;
   });
 

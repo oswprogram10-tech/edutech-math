@@ -62,8 +62,8 @@ test('콘텐츠 설정이 명세를 따른다(A1 4과제, A2 3과제, A2는 그�
 // 첫 화면 기준(뷰포트별): 판이 '확인하기'까지 한 화면에 다 들어오면 'fit', 아니면 'reachable'.
 type Mode = 'fit' | 'reachable';
 const FIRST_SCREEN: Record<string, Record<string, Mode>> = {
-  'A1.T1': { ipad: 'reachable', chromebook: 'reachable', board: 'reachable' },
-  'A2.T1': { ipad: 'reachable', chromebook: 'reachable' },
+  'A1.T1': {},
+  'A2.T1': { ipad: 'reachable' },
 };
 
 const ROWS: Record<string, { readonly big: number; readonly small: number }> = {
@@ -497,7 +497,13 @@ test('g3s2u6.A2 — 읽기 3과제 흐름과 오개념 ①②·오버레이 정�
     `[T159 ${vp}] A2.T1 그래프 ${Math.round(graphBox?.width ?? 0)}x${Math.round(graphBox?.height ?? 0)}, 교구 판 ${Math.round(mainBox?.width ?? 0)}x${Math.round(mainBox?.height ?? 0)}, 응답 판 ${Math.round(respBox?.width ?? 0)}x${Math.round(respBox?.height ?? 0)}`,
   );
   expect(graphBox?.height ?? 0).toBeGreaterThanOrEqual(200);
-  await expectFirstScreen(page, FIRST_SCREEN['A2.T1']?.[vp] ?? 'fit', [field(page, 'value')]);
+  await expectFirstScreen(page, FIRST_SCREEN['A2.T1']?.[vp] ?? 'fit', [
+    canvas(page),
+    field(page, 'value'),
+  ]);
+  // T160: 넷째 줄(라) 이름까지 판 안에 다 보인다(그림을 판에 맞춰 줄인다).
+  await expect(canvas(page).locator('g[data-row="라"] text')).toBeInViewport({ ratio: 1 });
+  console.log(`[T160 ${vp}] A2.T1 그림 ${await canvas(page).getAttribute('data-icon-side')}px`);
   await expectNoConclusionText(page);
   await screenshot(page, 'g3s2u6-a2.png');
   // 그림을 눌러도 말풍선(값)이 뜨지 않는다(tooltips: hide).
