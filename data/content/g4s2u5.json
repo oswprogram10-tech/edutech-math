@@ -833,7 +833,7 @@
               {
                 "kind": "number",
                 "id": "temp",
-                "label": "11시 30분 체온(℃)",
+                "label": "11시 30분 체온(℃, 소수 첫째 자리까지)",
                 "forms": [
                   "decimal"
                 ]
@@ -1132,7 +1132,7 @@
               {
                 "kind": "number",
                 "id": "next",
-                "label": "14시 체온(℃)",
+                "label": "14시 체온(℃, 소수 첫째 자리까지)",
                 "forms": [
                   "decimal"
                 ]
