@@ -159,9 +159,9 @@ export function markRect(frame: Frame, index: number, cell: number): Rect {
   return { x: slotLeft + (step - side) / 2, y: center - side / 2, width: side, height: side };
 }
 
-/** 값 축 눈금 글자를 쓸 칸 번호들. 칸이 20개를 넘으면 5칸마다. */
-export function tickCells(cells: number): number[] {
-  const every = cells > 20 ? 5 : 1;
+/** 값 축 눈금 글자를 쓸 칸 번호들. 칸이 20개를 넘으면 5칸마다, 글자가 겹치면 `minEvery`칸마다. */
+export function tickCells(cells: number, minEvery = 1): number[] {
+  const every = Math.max(cells > 20 ? 5 : 1, minEvery);
   const ticks: number[] = [];
   for (let cell = 0; cell <= cells; cell += every) ticks.push(cell);
   return ticks;
@@ -192,4 +192,35 @@ export function minPictureSize(
 ): { readonly width: number; readonly height: number } {
   const scale = minTouchScale(frame, targetSize);
   return { width: Math.ceil(frame.width * scale), height: Math.ceil(frame.height * scale) };
+}
+
+/**
+ * 누르는 ○ 그래프의 화면 배율(화면 px / 논리 좌표) = max(minTouchScale, fitScale).
+ * fitScale은 그래프 영역 안에 그림 전체가 들어가는 배율이다(영역 크기를 모르면 0).
+ * 판 폭을 채우려고 더 키우지 않는다.
+ */
+export function touchScale(
+  frame: Frame,
+  targetSize: number,
+  host: { readonly width: number; readonly height: number },
+): number {
+  const fit =
+    host.width > 0 && host.height > 0
+      ? Math.min(host.width / frame.width, host.height / frame.height)
+      : 0;
+  return Math.max(minTouchScale(frame, targetSize), fit);
+}
+
+/** 글자의 화면 최소 크기(px): 저학년 모드(targetSize 64)는 16, 그 밖은 14. */
+export function minTextPx(targetSize: number): number {
+  return targetSize >= 64 ? 16 : 14;
+}
+
+/**
+ * 논리 글자 크기. 화면에서 `minTextPx` 이상이 되도록 키우되, 너무 커지지 않게 기본 크기의 2배까지만 키운다.
+ * `scale`은 화면 px / 논리 좌표다.
+ */
+export function textSize(base: number, scale: number, targetSize: number): number {
+  if (!(scale > 0)) return base;
+  return Math.max(base, Math.min(minTextPx(targetSize) / scale, base * 2));
 }

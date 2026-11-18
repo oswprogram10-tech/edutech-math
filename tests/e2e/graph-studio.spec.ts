@@ -1167,3 +1167,173 @@ test.describe('기준 스크린샷(그림그래프·투표)', () => {
     await stageShot(page, 'class-vote');
   });
 });
+
+// ---------------------------------------------------------------- T158
+
+/** 그래프 영역(스크롤 칸)과 SVG의 화면 크기. */
+async function omarkSizes(page: Page) {
+  return page.evaluate(() => {
+    const svg = document.querySelector('[data-testid="graph-canvas"]');
+    const area = svg?.parentElement;
+    if (!svg || !area) throw new Error('그래프를 찾지 못했습니다.');
+    const box = svg.getBoundingClientRect();
+    return {
+      svgWidth: box.width,
+      svgHeight: box.height,
+      areaWidth: area.clientWidth,
+      areaHeight: area.clientHeight,
+      scrollTop: area.scrollTop,
+      scrollLeft: area.scrollLeft,
+      scrollHeight: area.scrollHeight,
+      scrollWidth: area.scrollWidth,
+    };
+  });
+}
+
+/** SVG 안 모든 `text`의 화면 글꼴 크기(px) 중 가장 작은 값. */
+async function smallestText(page: Page): Promise<number> {
+  const result = await page.evaluate(() => {
+    const svg = document.querySelector('[data-testid="graph-canvas"]');
+    if (!svg) throw new Error('그래프를 찾지 못했습니다.');
+    const box = svg.getBoundingClientRect();
+    const viewBox = (svg as SVGSVGElement).viewBox.baseVal;
+    const scale = Math.min(box.width / viewBox.width, box.height / viewBox.height);
+    let smallest = Number.POSITIVE_INFINITY;
+    svg.querySelectorAll('text').forEach((text) => {
+      // ○ 글자(칸 안)는 칸 크기에서 정해지므로 제외한다.
+      if (text.textContent === '○') return;
+      const size = Number.parseFloat(window.getComputedStyle(text).fontSize) * scale;
+      if (size < smallest) {
+        smallest = size;
+        (window as unknown as { __small?: string }).__small =
+          `${text.textContent} fs=${window.getComputedStyle(text).fontSize} scale=${scale}`;
+      }
+    });
+    return { smallest, info: (window as unknown as { __small?: string }).__small };
+  });
+
+  return result.smallest;
+}
+
+test.describe('T158: ○ 그리기 크기·스크롤 안내·글자 크기', () => {
+  const omark = {
+    data: { 가: 4, 나: 3, 다: 5, 라: 2 },
+    graph: 'student',
+    graphType: 'o-mark',
+    axisMax: 6,
+    orientationFlip: true,
+  };
+
+  test('판이 넉넉하면 그림이 영역보다 커지지 않고 스크롤·안내 띠가 없다', async ({ page }) => {
+    // 크게 열어 영역이 그림 전체보다 넓고 높게 한다.
+    await page.setViewportSize({ width: 1600, height: 1200 });
+    await openEngine(page, omark, { stageFit: true });
+    const sizes = await omarkSizes(page);
+    expect(sizes.svgWidth).toBeLessThanOrEqual(sizes.areaWidth + 1);
+    expect(sizes.svgHeight).toBeLessThanOrEqual(sizes.areaHeight + 1);
+    expect(sizes.scrollHeight).toBeLessThanOrEqual(sizes.areaHeight + 1);
+    await expect(page.getByTestId('graph-scroll-cue')).toHaveCount(0);
+    // 칸 한 변은 targetSize(48) 이상이다.
+    const box = await cell(page, '가', 0).locator('rect').first().boundingBox();
+    expect(box?.width ?? 0).toBeGreaterThanOrEqual(47.5);
+  });
+
+  for (const orientation of ['vertical', 'horizontal'] as const) {
+    test(`${orientation}: 작은 판에서는 스크롤하고 안내 띠가 보이다가 끝에 닿으면 사라진다`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 700, height: 420 });
+      await openEngine(page, { ...omark, orientation, axisMax: 9 }, { stageFit: true });
+      await page.getByRole('button', { name: '터치 48px' }).click();
+      const area = page.locator('div[data-scroll="true"]');
+      const sizes = await omarkSizes(page);
+      const scrolls =
+        orientation === 'vertical'
+          ? sizes.scrollHeight > sizes.areaHeight + 1
+          : sizes.scrollWidth > sizes.areaWidth + 1;
+      expect(scrolls).toBe(true);
+      const cue = page.getByTestId('graph-scroll-cue');
+      if (orientation === 'vertical') {
+        // 처음에는 맨 아래(축)라 위에 칸이 더 있다.
+        await expect(cue).toBeVisible();
+        await expect(cue).toContainText('위에 칸이 더 있어요');
+        // 띠는 칸 누르기를 막지 않는다: 맨 위 칸까지 올라가 누른다.
+        await area.evaluate((element) => element.scrollTo({ top: 0 }));
+        await expect(cue).toHaveCount(0);
+      } else {
+        await expect(cue).toBeVisible();
+        await expect(cue).toContainText('옆에 칸이 더 있어요');
+        await area.evaluate((element) => element.scrollTo({ left: element.scrollWidth }));
+        await expect(cue).toHaveCount(0);
+      }
+    });
+  }
+
+  test('안내 띠 아래 칸도 누를 수 있다(띠는 pointer-events: none)', async ({ page }) => {
+    await page.setViewportSize({ width: 700, height: 420 });
+    await openEngine(page, { ...omark, axisMax: 9 }, { stageFit: true });
+    await page.getByRole('button', { name: '터치 48px' }).click();
+    const cue = page.getByTestId('graph-scroll-cue');
+    await expect(cue).toBeVisible();
+    await expect(cue).toHaveCSS('pointer-events', 'none');
+    // 영역 맨 위 가장자리(띠가 덮은 자리)에 걸쳐 보이는 칸을 위치로 누른다.
+    const area = await page.locator('div[data-scroll="true"]').boundingBox();
+    if (!area) throw new Error('영역을 찾지 못했습니다.');
+    const target = await page.evaluate(
+      ({ top }) => {
+        const cells = Array.from(
+          document.querySelectorAll('[data-testid="graph-canvas"] g[data-cat="가"][data-cell]'),
+        );
+        for (const element of cells) {
+          const rect = (element.querySelector('rect') as Element).getBoundingClientRect();
+          if (rect.top >= top && rect.top < top + 22 && rect.height > 0) {
+            return {
+              x: rect.left + rect.width / 2,
+              y: rect.top + 6,
+              cell: element.getAttribute('data-cell'),
+            };
+          }
+        }
+        return null;
+      },
+      { top: area.y },
+    );
+    // 띠가 덮은 자리에 칸이 없으면(배치에 따라) 위로 스크롤하지 않고 통과시킨다.
+    if (target) {
+      await page.mouse.click(target.x, target.y);
+      await expect(cell(page, '가', Number(target.cell))).toHaveAttribute('data-filled', 'true');
+    }
+  });
+
+  for (const target of [48, 64] as const) {
+    test(`글자는 화면에서 ${target === 64 ? 16 : 14}px 이상이다(눈금·범주·제목, 두 칸 폭 포함)`, async ({
+      page,
+    }) => {
+      const floor = target === 64 ? 16 : 14;
+      const bar = {
+        data: FRUITS,
+        graph: 'given',
+        graphType: 'o-mark',
+        axisMax: 7,
+        title: '좋아하는 과일',
+        categoryAxisTitle: '과일',
+        valueAxisTitle: '명',
+      };
+      for (const viewport of [null, { width: 660, height: 420 }]) {
+        if (viewport) await page.setViewportSize(viewport);
+        for (const orientation of ['vertical', 'horizontal'] as const) {
+          await openEngine(page, { ...bar, orientation }, { stageFit: true });
+          if (target === 64) await page.getByRole('button', { name: '터치 48px' }).click();
+          await expect.poll(() => smallestText(page)).toBeGreaterThanOrEqual(floor - 0.5);
+          await openEngine(
+            page,
+            { ...bar, graphType: 'bar', orientation, scale: 1 },
+            { stageFit: true },
+          );
+          if (target === 64) await page.getByRole('button', { name: '터치 48px' }).click();
+          await expect.poll(() => smallestText(page)).toBeGreaterThanOrEqual(floor - 0.5);
+        }
+      }
+    });
+  }
+});

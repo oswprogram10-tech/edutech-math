@@ -6,6 +6,7 @@
 import { useMemo } from 'react';
 import type { EngineViewProps } from '../../core/engine-sdk';
 import { GraphCanvas } from './GraphCanvas';
+import { ScrollBoard } from './ScrollBoard';
 import { PictoIconSvg } from './icons';
 import { isTouchOMark } from './layout';
 import { PictographBoard } from './PictographBoard';
@@ -287,18 +288,27 @@ function StandardView({ state, dispatch, cpa, readOnly = false, targetSize }: Gr
         ) : null}
 
         {settings.showGraph ? (
-          <div
-            className={styles.boardArea}
-            data-scroll={isTouchOMark(settings) ? 'true' : undefined}
-          >
-            <GraphCanvas
-              state={state}
-              dispatch={dispatch}
-              readOnly={readOnly}
-              targetSize={targetSize}
-              tooltipsOn={tooltipsOn}
-            />
-          </div>
+          isTouchOMark(settings) ? (
+            <ScrollBoard vertical={state.orientation === 'vertical'} targetSize={targetSize}>
+              <GraphCanvas
+                state={state}
+                dispatch={dispatch}
+                readOnly={readOnly}
+                targetSize={targetSize}
+                tooltipsOn={tooltipsOn}
+              />
+            </ScrollBoard>
+          ) : (
+            <div className={styles.boardArea}>
+              <GraphCanvas
+                state={state}
+                dispatch={dispatch}
+                readOnly={readOnly}
+                targetSize={targetSize}
+                tooltipsOn={tooltipsOn}
+              />
+            </div>
+          )
         ) : null}
       </div>
     </div>
