@@ -1,0 +1,1323 @@
+{
+  "unit": "g6s2u6",
+  "title": "원기둥, 원뿔, 구",
+  "activities": [
+    {
+      "id": "g6s2u6.A1",
+      "title": "회전 물레와 레이저 단면",
+      "tasks": [
+        {
+          "id": "g6s2u6.A1.T1",
+          "prompt": "평면도형 하나를 골라 축에 붙이고 한 바퀴 돌려서 원기둥을 만들어 보세요.",
+          "engine": "E12",
+          "mode": "lathe",
+          "cpa": "C",
+          "config": {
+            "mode": "lathe",
+            "profiles": [
+              "rectangle",
+              "right-triangle",
+              "semicircle"
+            ]
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "solidIs",
+            "args": {
+              "kind": "cylinder"
+            }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "latheComplete"
+              },
+              "level": 1,
+              "say": "만든 입체의 옆면은 어떤 모양인가요? 다른 도형으로도 돌려 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "latheComplete"
+              },
+              "level": 2,
+              "say": "옆면이 곧게 서는 도형을 골라 봐요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "latheComplete"
+              },
+              "level": 3,
+              "backtrack": "g6s1u2.prism"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "lathe"
+              },
+              "level": 1,
+              "say": "도형을 고르고 축에 붙일 변을 정했나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "lathe"
+              },
+              "level": 2,
+              "say": "'한 바퀴 돌리기'를 눌러 끝까지 돌려 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "lathe"
+              },
+              "level": 3,
+              "backtrack": "g6s1u2.prism"
+            }
+          ],
+          "concepts": [
+            "g6s2u6.solids-of-revolution"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g6s2u6.A1.T2",
+          "prompt": "직각삼각형을 돌려서 원뿔을 만들어 보세요. 어느 변을 축에 붙여야 할까요?",
+          "engine": "E12",
+          "mode": "lathe",
+          "cpa": "C",
+          "config": {
+            "mode": "lathe",
+            "profiles": [
+              "right-triangle"
+            ]
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "solidIs",
+            "args": {
+              "kind": "cone"
+            }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "solidIs",
+                "args": {
+                  "kind": "double-cone"
+                }
+              },
+              "level": 1,
+              "say": "축은 어느 변에 붙여야 꼭짓점이 하나로 모일까요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "solidIs",
+                "args": {
+                  "kind": "double-cone"
+                }
+              },
+              "level": 2,
+              "say": "붙인 변에 따라 돌린 모습이 어떻게 다른지 비교해 봐요.",
+              "show": {
+                "engine": "E12",
+                "overlay": "axis-compare"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "solidIs",
+                "args": {
+                  "kind": "double-cone"
+                }
+              },
+              "level": 3,
+              "backtrack": "g6s2u6.solids-of-revolution"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "lathe"
+              },
+              "level": 1,
+              "say": "직각을 낀 변 가운데 하나를 축에 붙여 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "lathe"
+              },
+              "level": 2,
+              "say": "붙일 변을 바꾸고 다시 한 바퀴 돌려 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "lathe"
+              },
+              "level": 3,
+              "backtrack": "g6s1u2.prism"
+            }
+          ],
+          "concepts": [
+            "g6s2u6.solids-of-revolution"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g6s2u6.A1.T3",
+          "prompt": "평면도형을 돌려서 구를 만들어 보세요.",
+          "engine": "E12",
+          "mode": "lathe",
+          "cpa": "C",
+          "config": {
+            "mode": "lathe",
+            "profiles": [
+              "rectangle",
+              "right-triangle",
+              "semicircle"
+            ]
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "solidIs",
+            "args": {
+              "kind": "sphere"
+            }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "lathe"
+              },
+              "level": 1,
+              "say": "어느 쪽에서 보아도 둥근 입체가 되려면 어떤 도형이 좋을까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "lathe"
+              },
+              "level": 2,
+              "say": "둥근 테두리가 있는 도형을 골라 돌려 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "lathe"
+              },
+              "level": 3,
+              "backtrack": "g6s1u2.prism"
+            }
+          ],
+          "concepts": [
+            "g6s2u6.solids-of-revolution"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g6s2u6.A1.T4",
+          "prompt": "원뿔을 축에 수직으로 잘라 보세요. 단면은 어떤 모양인가요?",
+          "engine": "E12",
+          "mode": "lathe",
+          "cpa": "P",
+          "config": {
+            "mode": "lathe",
+            "profiles": [
+              "right-triangle"
+            ],
+            "preset": {
+              "profile": "right-triangle",
+              "edge": "leg-vertical"
+            },
+            "rotateHandle": false,
+            "crossSection": {
+              "planes": [
+                "perpendicular",
+                "through-axis"
+              ]
+            }
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "laserPlaneIs",
+                "args": {
+                  "plane": "perpendicular"
+                }
+              },
+              {
+                "kind": "equals",
+                "path": "response.sec.selected",
+                "value": [
+                  "circle"
+                ]
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "lathe"
+              },
+              "level": 1,
+              "say": "'가로로 자르기'를 누르고 레이저를 위아래로 움직여 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "lathe"
+              },
+              "level": 2,
+              "say": "옆 칸에 나타난 단면 그림을 살펴봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "lathe"
+              },
+              "level": 3,
+              "backtrack": "g6s2u6.solids-of-revolution"
+            }
+          ],
+          "concepts": [
+            "g6s2u6.parts-of-round-solids"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "sec",
+                "label": "단면은 어떤 모양일까요?",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "circle",
+                    "label": "원"
+                  },
+                  {
+                    "id": "triangle",
+                    "label": "이등변삼각형"
+                  },
+                  {
+                    "id": "rect",
+                    "label": "직사각형"
+                  },
+                  {
+                    "id": "point",
+                    "label": "점"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g6s2u6.A1.T5",
+          "prompt": "원기둥을 축을 품도록 세로로 잘라 보세요. 단면은 어떤 모양인가요?",
+          "engine": "E12",
+          "mode": "lathe",
+          "cpa": "P",
+          "config": {
+            "mode": "lathe",
+            "profiles": [
+              "rectangle"
+            ],
+            "preset": {
+              "profile": "rectangle",
+              "edge": "long"
+            },
+            "rotateHandle": false,
+            "crossSection": {
+              "planes": [
+                "perpendicular",
+                "through-axis"
+              ]
+            }
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "laserPlaneIs",
+                "args": {
+                  "plane": "through-axis"
+                }
+              },
+              {
+                "kind": "equals",
+                "path": "response.sec.selected",
+                "value": [
+                  "rect"
+                ]
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "lathe"
+              },
+              "level": 1,
+              "say": "'세로로 자르기'를 눌러 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "lathe"
+              },
+              "level": 2,
+              "say": "축을 지나는 면이 원기둥을 어떻게 가르는지 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "lathe"
+              },
+              "level": 3,
+              "backtrack": "g6s2u6.solids-of-revolution"
+            }
+          ],
+          "concepts": [
+            "g6s2u6.parts-of-round-solids"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "sec",
+                "label": "단면은 어떤 모양일까요?",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "circle",
+                    "label": "원"
+                  },
+                  {
+                    "id": "triangle",
+                    "label": "이등변삼각형"
+                  },
+                  {
+                    "id": "rect",
+                    "label": "직사각형"
+                  },
+                  {
+                    "id": "point",
+                    "label": "점"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g6s2u6.A1.T6",
+          "prompt": "구를 가로로 자르거나 세로로 자르면 단면은 어떤 모양일까요? 그림 없이 먼저 생각해 보세요.",
+          "engine": "E12",
+          "mode": "lathe",
+          "cpa": "A",
+          "config": {
+            "mode": "lathe",
+            "profiles": [
+              "semicircle"
+            ],
+            "preset": {
+              "profile": "semicircle",
+              "edge": "diameter"
+            },
+            "rotateHandle": false,
+            "crossSection": {
+              "planes": [
+                "perpendicular",
+                "through-axis"
+              ]
+            },
+            "showSection": false
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.sec.selected",
+            "value": [
+              "circle"
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "lathe"
+              },
+              "level": 1,
+              "say": "구의 어느 쪽에서 보아도 테두리는 어떤 모양인가요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "lathe"
+              },
+              "level": 2,
+              "say": "레이저를 가로와 세로로 대 보며 잘린 테두리를 상상해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "lathe"
+              },
+              "level": 3,
+              "backtrack": "g6s2u6.solids-of-revolution"
+            }
+          ],
+          "concepts": [
+            "g6s2u6.parts-of-round-solids"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "sec",
+                "label": "단면은 어떤 모양일까요?",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "circle",
+                    "label": "원"
+                  },
+                  {
+                    "id": "triangle",
+                    "label": "이등변삼각형"
+                  },
+                  {
+                    "id": "rect",
+                    "label": "직사각형"
+                  },
+                  {
+                    "id": "point",
+                    "label": "점"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g6s2u6.A1.T7",
+          "prompt": "원뿔을 각뿔의 한 가지라고 할 수 있을까요?",
+          "engine": "E12",
+          "mode": "lathe",
+          "cpa": "P",
+          "config": {
+            "mode": "lathe",
+            "profiles": [
+              "right-triangle"
+            ],
+            "preset": {
+              "profile": "right-triangle",
+              "edge": "leg-vertical"
+            },
+            "rotateHandle": false
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.pyr.selected",
+            "value": [
+              "no"
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.pyr.selected",
+                "value": [
+                  "yes"
+                ]
+              },
+              "level": 1,
+              "say": "원뿔의 밑면은 다각형일까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.pyr.selected",
+                "value": [
+                  "yes"
+                ]
+              },
+              "level": 2,
+              "say": "각뿔의 밑면 변을 늘려 가며 원뿔과 비교해 봐요.",
+              "show": {
+                "engine": "E12",
+                "overlay": "n-grow"
+              }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.pyr.selected",
+                "value": [
+                  "yes"
+                ]
+              },
+              "level": 3,
+              "backtrack": "g6s1u2.pyramid"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "lathe"
+              },
+              "level": 1,
+              "say": "각뿔의 밑면과 옆면은 어떤 모양이었나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "lathe"
+              },
+              "level": 2,
+              "say": "원뿔의 밑면과 옆면을 각뿔과 하나씩 비교해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "lathe"
+              },
+              "level": 3,
+              "backtrack": "g6s2u6.parts-of-round-solids"
+            }
+          ],
+          "concepts": [
+            "g6s2u6.compare-prism-cylinder"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "pyr",
+                "label": "원뿔은 각뿔일까요?",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "yes",
+                    "label": "각뿔이라고 할 수 있어요"
+                  },
+                  {
+                    "id": "no",
+                    "label": "각뿔이라고 할 수 없어요"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "g6s2u6.A2",
+      "title": "원기둥 굴려 옆면 펼치기",
+      "tasks": [
+        {
+          "id": "g6s2u6.A2.T1",
+          "prompt": "원기둥을 한 바퀴 굴려 자국을 찍어 보세요. 자국의 가로는 밑면의 둘레와 비교하면 어떤가요?",
+          "engine": "E12",
+          "mode": "net-fold",
+          "cpa": "C",
+          "config": {
+            "mode": "net-fold",
+            "target": "cylinder",
+            "radius": 2,
+            "height": 5,
+            "pi": "3.14",
+            "steps": [
+              "roll"
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "rollComplete"
+              },
+              {
+                "kind": "equals",
+                "path": "response.cmp.selected",
+                "value": [
+                  "same"
+                ]
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.cmp.selected",
+                "value": [
+                  "same"
+                ]
+              },
+              "level": 1,
+              "say": "한 바퀴를 끝까지 굴려 보았나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.cmp.selected",
+                "value": [
+                  "same"
+                ]
+              },
+              "level": 2,
+              "say": "표시점이 다시 바닥에 닿을 때까지 굴려 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.cmp.selected",
+                "value": [
+                  "same"
+                ]
+              },
+              "level": 3,
+              "backtrack": "g6s2u5.circumference-formula"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "cylinder-net"
+              },
+              "level": 1,
+              "say": "밑면의 표시점이 다시 바닥에 닿을 때까지 굴러간 거리는 어디와 맞닿았나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "cylinder-net"
+              },
+              "level": 2,
+              "say": "밑면이 한 바퀴 구르며 남긴 선을 자국과 나란히 놓아 봐요.",
+              "show": {
+                "engine": "E12",
+                "overlay": "roll-match"
+              }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "cylinder-net"
+              },
+              "level": 3,
+              "backtrack": "g6s2u5.circumference-formula"
+            }
+          ],
+          "concepts": [
+            "g6s2u6.cylinder-net"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "cmp",
+                "label": "자국의 가로와 밑면의 둘레를 비교하면",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "same",
+                    "label": "밑면의 둘레와 같아요"
+                  },
+                  {
+                    "id": "longer",
+                    "label": "밑면의 둘레보다 길어요"
+                  },
+                  {
+                    "id": "shorter",
+                    "label": "밑면의 둘레보다 짧아요"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g6s2u6.A2.T2",
+          "prompt": "반지름이 2cm, 높이가 5cm인 원기둥의 전개도에서 옆면의 가로는 몇 cm인가요? 원주율은 3.14로 계산해요.",
+          "engine": "E12",
+          "mode": "net-fold",
+          "cpa": "P",
+          "config": {
+            "mode": "net-fold",
+            "target": "cylinder",
+            "radius": 2,
+            "height": 5,
+            "pi": "3.14",
+            "steps": [
+              "roll"
+            ]
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.width.value",
+            "value": "314/25"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.width.value",
+                    "value": "4"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.width.value",
+                    "value": "2"
+                  }
+                ]
+              },
+              "level": 1,
+              "say": "옆면을 굴렸을 때 바닥에 찍힌 길이는 밑면의 어디와 맞닿았나요?"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.width.value",
+                    "value": "4"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.width.value",
+                    "value": "2"
+                  }
+                ]
+              },
+              "level": 2,
+              "say": "밑면이 한 바퀴 구른 길이와 지름을 나란히 비교해 봐요.",
+              "show": {
+                "engine": "E12",
+                "overlay": "roll-match"
+              }
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.width.value",
+                    "value": "4"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.width.value",
+                    "value": "2"
+                  }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g6s2u5.circumference-formula"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "cylinder-net"
+              },
+              "level": 1,
+              "say": "밑면 원의 둘레는 어떻게 구했나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "cylinder-net"
+              },
+              "level": 2,
+              "say": "지름에 원주율을 곱했는지 확인해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "cylinder-net"
+              },
+              "level": 3,
+              "backtrack": "g6s2u5.circumference-formula"
+            }
+          ],
+          "concepts": [
+            "g6s2u6.cylinder-net"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "width",
+                "label": "옆면의 가로(cm)",
+                "forms": [
+                  "decimal",
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g6s2u6.A2.T3",
+          "prompt": "옆면과 밑면 두 개의 크기를 맞추어 반지름 2cm, 높이 5cm인 원기둥의 전개도를 만들고 접어 보세요.",
+          "engine": "E12",
+          "mode": "net-fold",
+          "cpa": "P",
+          "config": {
+            "mode": "net-fold",
+            "target": "cylinder",
+            "radius": 2,
+            "height": 5,
+            "pi": "3.14",
+            "steps": [
+              "assemble"
+            ]
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "netFoldedClosed"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "netWidthIs",
+                "args": {
+                  "value": "4"
+                }
+              },
+              "level": 1,
+              "say": "옆면의 가로는 밑면 원의 어느 길이와 같아야 할까요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "netWidthIs",
+                "args": {
+                  "value": "4"
+                }
+              },
+              "level": 2,
+              "say": "밑면이 한 바퀴 구른 길이를 옆면 가로 아래에 대어 봐요.",
+              "show": {
+                "engine": "E12",
+                "overlay": "roll-match"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "netWidthIs",
+                "args": {
+                  "value": "4"
+                }
+              },
+              "level": 3,
+              "backtrack": "g6s2u5.circumference-formula"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "cylinder-net"
+              },
+              "level": 1,
+              "say": "접어 보았을 때 옆면이 밑면을 빈틈없이 감쌌나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "cylinder-net"
+              },
+              "level": 2,
+              "say": "틈이 보이면 가로를 늘리고, 겹치면 줄여 봐요. 밑면과 높이도 확인해요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "cylinder-net"
+              },
+              "level": 3,
+              "backtrack": "g6s2u5.circumference-formula"
+            }
+          ],
+          "concepts": [
+            "g6s2u6.cylinder-net"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g6s2u6.A2.T4",
+          "prompt": "원기둥과 각기둥을 비교해 표를 채워요.",
+          "engine": "E12",
+          "mode": "net-fold",
+          "cpa": "P",
+          "config": {
+            "mode": "net-fold",
+            "target": "cylinder",
+            "radius": 2,
+            "height": 5,
+            "pi": "3.14",
+            "steps": []
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "equals",
+                "path": "response.cylBase.selected",
+                "value": [
+                  "circle"
+                ]
+              },
+              {
+                "kind": "equals",
+                "path": "response.prismBase.selected",
+                "value": [
+                  "polygon"
+                ]
+              },
+              {
+                "kind": "equals",
+                "path": "response.cylSide.selected",
+                "value": [
+                  "curved"
+                ]
+              },
+              {
+                "kind": "equals",
+                "path": "response.prismSide.selected",
+                "value": [
+                  "flat"
+                ]
+              },
+              {
+                "kind": "equals",
+                "path": "response.cylVertex.selected",
+                "value": [
+                  "none"
+                ]
+              },
+              {
+                "kind": "equals",
+                "path": "response.prismVertex.selected",
+                "value": [
+                  "some"
+                ]
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "cylinder-net"
+              },
+              "level": 1,
+              "say": "원기둥의 밑면과 옆면을 하나씩 짚어 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "cylinder-net"
+              },
+              "level": 2,
+              "say": "각기둥은 면이 모두 평평한지, 원기둥은 어떤지 비교해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "cylinder-net"
+              },
+              "level": 3,
+              "backtrack": "g6s2u6.parts-of-round-solids"
+            }
+          ],
+          "concepts": [
+            "g6s2u6.compare-prism-cylinder"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "cylBase",
+                "label": "원기둥의 밑면 모양",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "circle",
+                    "label": "원"
+                  },
+                  {
+                    "id": "polygon",
+                    "label": "다각형"
+                  }
+                ]
+              },
+              {
+                "kind": "choice",
+                "id": "prismBase",
+                "label": "각기둥의 밑면 모양",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "circle",
+                    "label": "원"
+                  },
+                  {
+                    "id": "polygon",
+                    "label": "다각형"
+                  }
+                ]
+              },
+              {
+                "kind": "choice",
+                "id": "cylSide",
+                "label": "원기둥의 옆면",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "curved",
+                    "label": "굽은 면"
+                  },
+                  {
+                    "id": "flat",
+                    "label": "평평한 면"
+                  }
+                ]
+              },
+              {
+                "kind": "choice",
+                "id": "prismSide",
+                "label": "각기둥의 옆면",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "curved",
+                    "label": "굽은 면"
+                  },
+                  {
+                    "id": "flat",
+                    "label": "평평한 면"
+                  }
+                ]
+              },
+              {
+                "kind": "choice",
+                "id": "cylVertex",
+                "label": "원기둥의 꼭짓점",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "none",
+                    "label": "없어요"
+                  },
+                  {
+                    "id": "some",
+                    "label": "있어요"
+                  }
+                ]
+              },
+              {
+                "kind": "choice",
+                "id": "prismVertex",
+                "label": "각기둥의 꼭짓점",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "none",
+                    "label": "없어요"
+                  },
+                  {
+                    "id": "some",
+                    "label": "있어요"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g6s2u6.A2.T5",
+          "prompt": "반지름이 3cm, 높이가 7cm인 원기둥의 전개도에서 옆면의 가로는 몇 cm인가요? 원주율은 3.14로 계산해요.",
+          "engine": "E12",
+          "mode": "net-fold",
+          "cpa": "A",
+          "config": {
+            "mode": "net-fold",
+            "target": "cylinder",
+            "radius": 3,
+            "height": 7,
+            "pi": "3.14",
+            "steps": []
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.width.value",
+            "value": "471/25"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.width.value",
+                    "value": "6"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.width.value",
+                    "value": "3"
+                  }
+                ]
+              },
+              "level": 1,
+              "say": "옆면을 굴렸을 때 바닥에 찍힌 길이는 밑면의 어디와 맞닿았나요?"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.width.value",
+                    "value": "6"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.width.value",
+                    "value": "3"
+                  }
+                ]
+              },
+              "level": 2,
+              "say": "밑면이 한 바퀴 구를 때 가는 거리를 떠올려 봐요."
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.width.value",
+                    "value": "6"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.width.value",
+                    "value": "3"
+                  }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g6s2u5.circumference-formula"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "cylinder-net"
+              },
+              "level": 1,
+              "say": "밑면 원의 둘레를 구하는 식을 떠올려 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "cylinder-net"
+              },
+              "level": 2,
+              "say": "지름에 원주율을 곱해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "cylinder-net"
+              },
+              "level": 3,
+              "backtrack": "g6s2u5.circumference-formula"
+            }
+          ],
+          "concepts": [
+            "g6s2u6.cylinder-net"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "width",
+                "label": "옆면의 가로(cm)",
+                "forms": [
+                  "decimal",
+                  "integer"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
