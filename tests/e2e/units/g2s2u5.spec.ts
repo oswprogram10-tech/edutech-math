@@ -711,8 +711,12 @@ test('g2s2u5.A1.T3 — 첫 화면 스냅샷(결론·값 노출 없음)', async (
   if (measured.svgHeight > measured.areaHeight + 1) {
     await expect(cue).toBeVisible();
     await expect(cue).toContainText('위에 칸이 더 있어요');
+    // 띠는 스크롤 칸 바로 위 별도 줄이라 그래프 칸과 겹치지 않는다.
+    const cueBox = await cue.boundingBox();
+    const svgBox = await area.boundingBox();
+    expect((cueBox?.y ?? 0) + (cueBox?.height ?? 0)).toBeLessThanOrEqual((svgBox?.y ?? 0) + 1);
     await area.evaluate((element) => element.scrollTo({ top: 0 }));
-    await expect(cue).toHaveCount(0);
+    await expect(cue).toBeHidden();
     await area.evaluate((element) => element.scrollTo({ top: element.scrollHeight }));
   } else {
     expect(measured.rows).toBe(6);

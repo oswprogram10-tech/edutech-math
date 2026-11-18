@@ -1259,51 +1259,75 @@ test.describe('T158: ○ 그리기 크기·스크롤 안내·글자 크기', () 
         await expect(cue).toContainText('위에 칸이 더 있어요');
         // 띠는 칸 누르기를 막지 않는다: 맨 위 칸까지 올라가 누른다.
         await area.evaluate((element) => element.scrollTo({ top: 0 }));
-        await expect(cue).toHaveCount(0);
+        await expect(cue).toBeHidden();
       } else {
         await expect(cue).toBeVisible();
         await expect(cue).toContainText('옆에 칸이 더 있어요');
         await area.evaluate((element) => element.scrollTo({ left: element.scrollWidth }));
-        await expect(cue).toHaveCount(0);
+        await expect(cue).toBeHidden();
       }
     });
   }
 
-  test('안내 띠 아래 칸도 누를 수 있다(띠는 pointer-events: none)', async ({ page }) => {
-    await page.setViewportSize({ width: 700, height: 420 });
-    await openEngine(page, { ...omark, axisMax: 9 }, { stageFit: true });
-    await page.getByRole('button', { name: '터치 48px' }).click();
-    const cue = page.getByTestId('graph-scroll-cue');
-    await expect(cue).toBeVisible();
-    await expect(cue).toHaveCSS('pointer-events', 'none');
-    // 영역 맨 위 가장자리(띠가 덮은 자리)에 걸쳐 보이는 칸을 위치로 누른다.
-    const area = await page.locator('div[data-scroll="true"]').boundingBox();
-    if (!area) throw new Error('영역을 찾지 못했습니다.');
-    const target = await page.evaluate(
-      ({ top }) => {
-        const cells = Array.from(
-          document.querySelectorAll('[data-testid="graph-canvas"] g[data-cat="가"][data-cell]'),
+  for (const orientation of ['vertical', 'horizontal'] as const) {
+    test(`${orientation}: 안내 띠는 스크롤 칸 밖에 있어 SVG와 겹치지 않고 안 보일 때도 자리를 지킨다`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 700, height: 420 });
+      await openEngine(page, { ...omark, orientation, axisMax: 9 }, { stageFit: true });
+      await page.getByRole('button', { name: '터치 48px' }).click();
+      const cue = page.getByTestId('graph-scroll-cue');
+      await expect(cue).toBeVisible();
+      await expect(cue).toHaveCSS('pointer-events', 'none');
+      const canvasBox = async () => {
+        // 스크롤된 SVG는 영역 밖으로 나가므로, 눈에 보이는 부분(SVG ∩ 스크롤 칸)으로 잰다.
+        const svg = await page.getByTestId('graph-canvas').boundingBox();
+        const host = await page.locator('div[data-scroll="true"]').boundingBox();
+        if (!svg || !host) throw new Error('그래프를 찾지 못했습니다.');
+        const x = Math.max(svg.x, host.x);
+        const y = Math.max(svg.y, host.y);
+        return {
+          x,
+          y,
+          width: Math.min(svg.x + svg.width, host.x + host.width) - x,
+          height: Math.min(svg.y + svg.height, host.y + host.height) - y,
+        };
+      };
+      const apart = async () => {
+        const c = await cue.boundingBox();
+        const g = await canvasBox();
+        if (!c) throw new Error('안내를 찾지 못했습니다.');
+        // 상자가 서로 겹치지 않는다(가로·세로 어느 한 축에서 떨어져 있다).
+        return (
+          c.y + c.height <= g.y + 1 ||
+          g.y + g.height <= c.y + 1 ||
+          c.x + c.width <= g.x + 1 ||
+          g.x + g.width <= c.x + 1
         );
-        for (const element of cells) {
-          const rect = (element.querySelector('rect') as Element).getBoundingClientRect();
-          if (rect.top >= top && rect.top < top + 22 && rect.height > 0) {
-            return {
-              x: rect.left + rect.width / 2,
-              y: rect.top + 6,
-              cell: element.getAttribute('data-cell'),
-            };
-          }
-        }
-        return null;
-      },
-      { top: area.y },
-    );
-    // 띠가 덮은 자리에 칸이 없으면(배치에 따라) 위로 스크롤하지 않고 통과시킨다.
-    if (target) {
-      await page.mouse.click(target.x, target.y);
-      await expect(cell(page, '가', Number(target.cell))).toHaveAttribute('data-filled', 'true');
-    }
-  });
+      };
+      expect(await apart()).toBe(true);
+      // 세로 그래프는 SVG 바로 위, 가로 그래프는 바로 오른쪽에 있고 SVG와 같은 폭(높이)이다.
+      const c1 = await cue.boundingBox();
+      const g1 = await canvasBox();
+      if (!c1) throw new Error('안내를 찾지 못했습니다.');
+      if (orientation === 'vertical') {
+        expect(c1.y + c1.height).toBeLessThanOrEqual(g1.y + 1);
+        expect(Math.abs(c1.width - g1.width)).toBeLessThanOrEqual(1);
+      } else {
+        expect(c1.x).toBeGreaterThanOrEqual(g1.x + g1.width - 1);
+        expect(Math.abs(c1.height - g1.height)).toBeLessThanOrEqual(1);
+      }
+      // 끝까지 스크롤해 안내가 안 보여도 같은 자리에 상자가 남는다(화면이 들썩이지 않는다).
+      await page.locator('div[data-scroll="true"]').evaluate((element, vertical) => {
+        element.scrollTo(vertical ? { top: 0 } : { left: element.scrollWidth });
+      }, orientation === 'vertical');
+      await expect(cue).toBeHidden();
+      const c2 = await cue.boundingBox();
+      expect(c2?.x).toBeCloseTo(c1.x, 0);
+      expect(c2?.y).toBeCloseTo(c1.y, 0);
+      expect(await apart()).toBe(true);
+    });
+  }
 
   for (const target of [48, 64] as const) {
     test(`글자는 화면에서 ${target === 64 ? 16 : 14}px 이상이다(눈금·범주·제목, 두 칸 폭 포함)`, async ({

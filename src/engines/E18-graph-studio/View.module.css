@@ -439,17 +439,42 @@
   min-height: 0;
 }
 
+.boardWrap[data-vertical='true'] {
+  flex-direction: column;
+  align-items: center;
+}
+
+.boardWrap[data-vertical='true'] > .boardArea {
+  align-self: stretch;
+}
+
+.boardWrap[data-vertical='false'] {
+  flex-direction: row;
+  align-items: center;
+}
+
+.boardWrap[data-vertical='false'] > .boardArea {
+  align-self: stretch;
+}
+
+/* 안내 줄: 스크롤 칸 밖에 있어 칸을 덮지 않는다. 안 보일 때도 자리는 차지한다. */
 .cueTop,
 .cueRight {
-  position: absolute;
-  z-index: 2;
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
   pointer-events: none;
   color: #1d2330;
+  background: #e7edf8;
+  border-radius: 8px;
   font-size: 14px;
   font-weight: 700;
+}
+
+.cueTop[data-visible='false'],
+.cueRight[data-visible='false'] {
+  visibility: hidden;
 }
 
 .cueTop[data-target-size='64'],
@@ -458,18 +483,10 @@
 }
 
 .cueTop {
-  top: 0;
-  left: 0;
-  right: 0;
   height: 24px;
-  background: linear-gradient(to bottom, rgba(251, 250, 246, 0.96), rgba(251, 250, 246, 0));
 }
 
 .cueRight {
-  top: 0;
-  right: 0;
-  bottom: 0;
   width: 24px;
   writing-mode: vertical-rl;
-  background: linear-gradient(to left, rgba(251, 250, 246, 0.96), rgba(251, 250, 246, 0));
 }
