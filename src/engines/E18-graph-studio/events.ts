@@ -22,6 +22,9 @@ export const EVENT_NAMES = [
   'segment-changed',
   'y-from-changed',
   'prediction-finished',
+  'percent-changed',
+  'band-changed',
+  'curl-changed',
 ] as const;
 
 export function emit(prev: GraphState, next: GraphState, action: GraphAction): EngineEvent[] {
@@ -87,6 +90,20 @@ export function emit(prev: GraphState, next: GraphState, action: GraphAction): E
   if (prev.mode === 'class-vote' && next.mode === 'class-vote') {
     if (prev.votes.length !== next.votes.length) {
       events.push({ name: 'vote-changed', payload: { total: next.votes.length } });
+    }
+  }
+
+  if (prev.mode === 'band-circle' && next.mode === 'band-circle') {
+    for (const cat of categories) {
+      if ((prev.percents[cat] ?? null) !== (next.percents[cat] ?? null)) {
+        events.push({ name: 'percent-changed', payload: { cat } });
+      }
+      if ((prev.bandCells[cat] ?? null) !== (next.bandCells[cat] ?? null)) {
+        events.push({ name: 'band-changed', payload: { cat } });
+      }
+    }
+    if (prev.curl !== next.curl) {
+      events.push({ name: 'curl-changed', payload: { value: next.curl } });
     }
   }
 
@@ -235,6 +252,21 @@ export const predicates: Readonly<Record<string, EnginePredicate>> = {
   wavyShown: (observation) => observation['wavyShown'] === true,
 
   predictionDone: (observation) => observation['predictionDone'] === true,
+
+  /** 학생이 쓴 백분율이 모두 참 백분율과 같다. */
+  percentsMatch: (observation) => observation['percentsMatchData'] === true,
+
+  /** 학생이 쓴 백분율이 모두 채워졌고 합이 `value`다. */
+  percentSumIs: (observation, args) => {
+    const value = recordOf(args)['value'];
+    return typeof value === 'number' && observation['percentSum'] === value;
+  },
+
+  /** 띠 칸 수가 모두 참 백분율과 같다. */
+  bandMatch: (observation) => observation['bandMatchesData'] === true,
+
+  /** 원그래프로 말려 있다(curl 100). */
+  circleShown: (observation) => observation['circleShown'] === true,
 
   /**
    * 응답 칸 `response[field].value`(Rational 문자열)를 `value`(소수 문자열 가능)와 Rational로 비교한다.

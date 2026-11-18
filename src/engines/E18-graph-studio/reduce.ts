@@ -13,10 +13,15 @@ import {
   DEFAULT_SCALE_OPTIONS,
   DEFAULT_VOTE_AXIS_MAX,
 } from './types';
+import { Rational } from '../../core/math';
 import { autoSegments, normalizeLine, normalizePair, snapValue, valueOf } from './line';
 import type {
+  BandCircleSettings,
+  BandCircleState,
+  BandSource,
   BuildSource,
   ClassVoteState,
+  CompareSettings,
   DatasetOption,
   GraphAction,
   GraphConfig,
@@ -28,9 +33,12 @@ import type {
   IconKind,
   LegendChange,
   LineGraphState,
+  MorphSetting,
   Orientation,
+  PercentEntry,
   PictographRow,
   PictographState,
+  SliceLabels,
   TableSource,
   TooltipSetting,
 } from './types';
@@ -67,7 +75,11 @@ function toLegendInt(value: unknown): number | null {
 
 export function inferMode(config: GraphConfig | undefined): GraphMode {
   const mode = recordOf(config)['mode'];
-  return mode === 'scale' || mode === 'pictograph' || mode === 'class-vote' || mode === 'line-graph'
+  return mode === 'scale' ||
+    mode === 'pictograph' ||
+    mode === 'class-vote' ||
+    mode === 'line-graph' ||
+    mode === 'band-circle'
     ? mode
     : 'table-to-graph';
 }
@@ -124,10 +136,84 @@ function normalizeDatasets(
   return result;
 }
 
+/** 명세의 `[[이름, 값], …]` 배열 모양 자료를 객체로 바꾼다. 객체는 그대로, 그 밖은 null. */
+function pairsToRecord(value: unknown): Readonly<Record<string, unknown>> | null {
+  if (Array.isArray(value)) {
+    const result: Record<string, unknown> = {};
+    for (const item of value as unknown[]) {
+      if (Array.isArray(item) && typeof item[0] === 'string') result[item[0]] = item[1];
+    }
+    return result;
+  }
+  if (value !== null && typeof value === 'object') {
+    return value as Readonly<Record<string, unknown>>;
+  }
+  return null;
+}
+
+/** 개수 × 100 / 전체. 전체가 0이면 0. */
+export function truePercentOf(count: number, total: number): Rational {
+  return total > 0 ? Rational.of(count * 100, total) : Rational.of(0);
+}
+
+/** 0 이상 유리수를 가장 가까운 정수로(0.5는 올림). */
+export function roundPercent(value: Rational): number {
+  return Number((2n * value.n + value.d) / (2n * value.d));
+}
+
+function normalizeCompare(value: unknown): CompareSettings | null {
+  const record = recordOf(value);
+  const data = pairsToRecord(record['data']);
+  if (data === null) return null;
+  const categories = Object.keys(data);
+  if (categories.length === 0) return null;
+  const counts = Object.fromEntries(categories.map((cat) => [cat, toCount(data[cat])]));
+  return {
+    title: stringOf(record['title']),
+    categories,
+    data: counts,
+    total: categories.reduce((sum, cat) => sum + (counts[cat] ?? 0), 0),
+  };
+}
+
+function normalizeBandCircle(
+  record: Readonly<Record<string, unknown>>,
+  categories: readonly string[],
+  data: Readonly<Record<string, number>> | null,
+): BandCircleSettings {
+  const entryRaw = record['percentEntry'];
+  const percentEntry: PercentEntry =
+    entryRaw === 'student' || entryRaw === 'given' || entryRaw === 'hidden'
+      ? entryRaw
+      : record['requirePercentEntry'] === true
+        ? 'student'
+        : 'given';
+  const bandRaw = record['band'];
+  const band: BandSource =
+    bandRaw === 'student' || bandRaw === 'given' || bandRaw === 'auto' ? bandRaw : 'auto';
+  const morphRaw = record['morph'];
+  const morph: MorphSetting =
+    morphRaw === 'button' || morphRaw === 'none' || morphRaw === 'drag' ? morphRaw : 'drag';
+  const total = categories.reduce((sum, cat) => sum + (data?.[cat] ?? 0), 0);
+  const sliceLabels: SliceLabels = record['sliceLabels'] === 'name' ? 'name' : 'name-percent';
+  return {
+    percentEntry,
+    band,
+    morph,
+    startAs: record['startAs'] === 'circle' ? 'circle' : 'band',
+    sliceLabels,
+    compare: normalizeCompare(record['compare']),
+    total,
+    truePercents: Object.fromEntries(
+      categories.map((cat) => [cat, truePercentOf(data?.[cat] ?? 0, total).toJSON()]),
+    ),
+  };
+}
+
 export function normalizeSettings(config: GraphConfig | undefined, mode: GraphMode): GraphSettings {
   const record = recordOf(config);
 
-  const rawData = record['data'];
+  const rawData = mode === 'band-circle' ? pairsToRecord(record['data']) : record['data'];
   const dataRecord =
     rawData !== null && typeof rawData === 'object' && !Array.isArray(rawData)
       ? (rawData as Readonly<Record<string, unknown>>)
@@ -137,7 +223,7 @@ export function normalizeSettings(config: GraphConfig | undefined, mode: GraphMo
     : [];
 
   const datasets =
-    mode === 'class-vote' || mode === 'line-graph'
+    mode === 'class-vote' || mode === 'line-graph' || mode === 'band-circle'
       ? []
       : normalizeDatasets(record['datasets'], record);
   const line = mode === 'line-graph' ? normalizeLine(record) : null;
@@ -180,6 +266,10 @@ export function normalizeSettings(config: GraphConfig | undefined, mode: GraphMo
   }
   if (mode === 'line-graph') {
     if (graph === 'none') graph = 'given';
+    if (table !== 'hidden') table = 'given';
+  }
+  if (mode === 'band-circle') {
+    graph = 'given';
     if (table !== 'hidden') table = 'given';
   }
 
@@ -259,6 +349,7 @@ export function normalizeSettings(config: GraphConfig | undefined, mode: GraphMo
     datasets,
     source: '',
     line,
+    bandCircle: mode === 'band-circle' ? normalizeBandCircle(record, categories, data) : null,
   };
 }
 
@@ -303,6 +394,11 @@ export function voteCountOf(votes: readonly string[], option: string): number {
   return votes.filter((vote) => vote === option).length;
 }
 
+/** 처음 말기 정도: `startAs: 'circle'`이면 원그래프, 아니면 곧은 띠다. */
+export function initialCurl(band: BandCircleSettings): number {
+  return band.startAs === 'circle' ? 100 : 0;
+}
+
 export function createInitialState(config: GraphConfig | undefined): GraphState {
   const mode = inferMode(config);
   const settings = normalizeSettings(config, mode);
@@ -335,6 +431,19 @@ export function createInitialState(config: GraphConfig | undefined): GraphState 
     };
   }
   if (mode === 'class-vote') return { ...base, mode, votes: [] };
+  if (mode === 'band-circle' && settings.bandCircle !== null) {
+    const band = settings.bandCircle;
+    const percents: Record<string, number | null> = {};
+    const bandCells: Record<string, number | null> = {};
+    for (const cat of settings.categories) {
+      percents[cat] =
+        band.percentEntry === 'given'
+          ? roundPercent(Rational.parse(band.truePercents[cat] ?? '0'))
+          : null;
+      bandCells[cat] = null;
+    }
+    return { ...base, mode, percents, bandCells, curl: initialCurl(band) };
+  }
   if (mode === 'line-graph' && settings.line !== null) {
     const empty = Object.fromEntries(settings.line.xs.map((x) => [x, null]));
     return {
@@ -448,6 +557,38 @@ function reduceLine(state: LineGraphState, action: LineAction): LineGraphState {
       if (state.phase !== 'predict') return state;
       if (!line.xs.some((x) => (state.prediction[x] ?? null) !== null)) return state;
       return { ...state, phase: 'actual' };
+    }
+  }
+}
+
+type BandAction = Extract<GraphAction, { readonly type: 'set-percent' | 'set-band' | 'set-curl' }>;
+
+function reduceBand(state: BandCircleState, action: BandAction): BandCircleState {
+  const band = state.settings.bandCircle;
+  if (band === null) return state;
+  switch (action.type) {
+    case 'set-percent': {
+      if (band.percentEntry !== 'student' || !state.settings.categories.includes(action.cat)) {
+        return state;
+      }
+      let value: number | null;
+      if (action.value === null) value = null;
+      else if (Number.isFinite(action.value)) value = clampInt(Math.round(action.value), 0, 100);
+      else return state;
+      if (value === (state.percents[action.cat] ?? null)) return state;
+      return { ...state, percents: { ...state.percents, [action.cat]: value } };
+    }
+    case 'set-band': {
+      if (band.band !== 'student' || !state.settings.categories.includes(action.cat)) return state;
+      if (!Number.isFinite(action.cells)) return state;
+      const cells = clampInt(Math.round(action.cells), 0, 100);
+      if (cells === (state.bandCells[action.cat] ?? null)) return state;
+      return { ...state, bandCells: { ...state.bandCells, [action.cat]: cells } };
+    }
+    case 'set-curl': {
+      if (!Number.isFinite(action.value)) return state;
+      const curl = clampInt(Math.round(action.value), 0, 100);
+      return curl === state.curl ? state : { ...state, curl };
     }
   }
 }
@@ -630,6 +771,11 @@ export function reduce(state: GraphState, action: GraphAction): GraphState {
     case 'reset-votes':
       return state.mode === 'class-vote' ? reduceVote(state, action) : state;
 
+    case 'set-percent':
+    case 'set-band':
+    case 'set-curl':
+      return state.mode === 'band-circle' ? reduceBand(state, action) : state;
+
     case 'pick-dataset': {
       const option = settings.datasets.find((item) => item.id === action.id);
       if (!option || state.datasetId === option.id) return state;
@@ -666,6 +812,12 @@ export function reduce(state: GraphState, action: GraphAction): GraphState {
       return state.mode === 'line-graph' ? reduceLine(state, action) : state;
 
     case 'reset-graph': {
+      if (state.mode === 'band-circle') {
+        const band = state.settings.bandCircle;
+        if (band === null) return state;
+        const cleared = Object.fromEntries(state.settings.categories.map((cat) => [cat, null]));
+        return { ...state, bandCells: cleared, curl: initialCurl(band) };
+      }
       if (state.mode === 'line-graph') {
         const line = state.settings.line;
         if (line === null) return state;

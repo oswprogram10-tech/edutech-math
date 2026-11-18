@@ -11,7 +11,8 @@ export const LOGICAL_HEIGHT = 700;
 
 export const DATA_MAX = 100;
 
-export type GraphMode = 'table-to-graph' | 'scale' | 'pictograph' | 'class-vote' | 'line-graph';
+export type GraphMode =
+  'table-to-graph' | 'scale' | 'pictograph' | 'class-vote' | 'line-graph' | 'band-circle';
 
 export type TableSource = 'given' | 'student' | 'hidden';
 export type GraphSource = 'given' | 'student' | 'none';
@@ -26,7 +27,7 @@ export type BuildSource = 'student' | 'given';
 /** 두 모드가 같이 쓰는 설정. 받기만 하고 무시하는 키는 마지막에 모았다. */
 interface GraphConfigBase {
   /** 범주 이름 → 값. 범주 순서는 JSON 키 순서. */
-  readonly data?: Readonly<Record<string, unknown>>;
+  readonly data?: Readonly<Record<string, unknown>> | readonly unknown[];
   /** `data`가 없을 때 쓰는 범주 목록. */
   readonly categories?: readonly unknown[];
   /** 셀 자료 낱개. 각 값은 범주 이름. 있으면 자료 카드 줄을 보인다. */
@@ -76,6 +77,15 @@ interface GraphConfigBase {
   readonly yFromOptions?: readonly unknown[];
   readonly connect?: LineConnect;
   readonly predict?: boolean;
+  /** T166: 띠·원그래프(band-circle). */
+  readonly percentEntry?: PercentEntry;
+  /** 명세 키. `percentEntry: 'student'`와 같고 둘 다 오면 `percentEntry`가 이긴다. */
+  readonly requirePercentEntry?: boolean;
+  readonly band?: BandSource;
+  readonly morph?: MorphSetting;
+  readonly startAs?: 'band' | 'circle';
+  readonly sliceLabels?: SliceLabels;
+  readonly compare?: { readonly title?: unknown; readonly data?: unknown };
 }
 
 export interface TableToGraphConfig extends GraphConfigBase {
@@ -98,8 +108,22 @@ export interface LineGraphConfig extends GraphConfigBase {
   readonly mode?: 'line-graph';
 }
 
+export interface BandCircleConfig extends GraphConfigBase {
+  readonly mode?: 'band-circle';
+}
+
 export type GraphConfig =
-  TableToGraphConfig | ScaleConfig | PictographConfig | ClassVoteConfig | LineGraphConfig;
+  | TableToGraphConfig
+  | ScaleConfig
+  | PictographConfig
+  | ClassVoteConfig
+  | LineGraphConfig
+  | BandCircleConfig;
+
+export type PercentEntry = 'student' | 'given' | 'hidden';
+export type BandSource = 'auto' | 'student' | 'given';
+export type MorphSetting = 'drag' | 'button' | 'none';
+export type SliceLabels = 'name' | 'name-percent';
 
 export type LineConnect = 'auto' | 'student';
 export type LinePhase = 'predict' | 'actual';
@@ -120,6 +144,29 @@ export interface LineSettings {
   readonly yFromOptions: readonly string[];
   readonly connect: LineConnect;
   readonly predict: boolean;
+}
+
+/** 전체 수가 다른 두 번째 원그래프(읽기 전용). */
+export interface CompareSettings {
+  readonly title: string;
+  readonly categories: readonly string[];
+  readonly data: Readonly<Record<string, number>>;
+  readonly total: number;
+}
+
+/**
+ * 띠·원그래프(band-circle) 설정(정규화).
+ * `truePercents`는 개수 × 100 / 전체의 `Rational.toJSON()` 문자열이다.
+ */
+export interface BandCircleSettings {
+  readonly percentEntry: PercentEntry;
+  readonly band: BandSource;
+  readonly morph: MorphSetting;
+  readonly startAs: 'band' | 'circle';
+  readonly sliceLabels: SliceLabels;
+  readonly compare: CompareSettings | null;
+  readonly total: number;
+  readonly truePercents: Readonly<Record<string, string>>;
 }
 
 /** 정규화한 자료 묶음. 빠진 글은 설정 맨 위 키로 채운다. */
@@ -171,6 +218,8 @@ export interface GraphSettings {
   readonly source: string;
   /** line-graph 모드의 설정. 다른 모드는 null. */
   readonly line: LineSettings | null;
+  /** band-circle 모드의 설정. 다른 모드는 null. */
+  readonly bandCircle: BandCircleSettings | null;
 }
 
 interface GraphStateBase {
@@ -231,8 +280,23 @@ export interface LineGraphState extends GraphStateBase {
   readonly prediction: Readonly<Record<string, string | null>>;
 }
 
+export interface BandCircleState extends GraphStateBase {
+  readonly mode: 'band-circle';
+  /** 범주 → 학생(또는 주어진) 백분율(0~100 정수). 아직 안 썼으면 null. */
+  readonly percents: Readonly<Record<string, number | null>>;
+  /** 범주 → 학생이 정한 띠 칸 수(0~100 정수). `band: 'student'`일 때만 쓴다. */
+  readonly bandCells: Readonly<Record<string, number | null>>;
+  /** 말기 정도 0(곧은 띠)~100(원그래프). 화면 애니메이션 값이라 정수다. */
+  readonly curl: number;
+}
+
 export type GraphState =
-  TableToGraphState | ScaleState | PictographState | ClassVoteState | LineGraphState;
+  | TableToGraphState
+  | ScaleState
+  | PictographState
+  | ClassVoteState
+  | LineGraphState
+  | BandCircleState;
 
 export type GraphAction =
   | { readonly type: 'set-table'; readonly cat: string; readonly value: number | null }
@@ -258,7 +322,10 @@ export type GraphAction =
   | { readonly type: 'connect'; readonly a: number; readonly b: number }
   | { readonly type: 'disconnect'; readonly a: number; readonly b: number }
   | { readonly type: 'set-y-from'; readonly value: string }
-  | { readonly type: 'finish-predict' };
+  | { readonly type: 'finish-predict' }
+  | { readonly type: 'set-percent'; readonly cat: string; readonly value: number | null }
+  | { readonly type: 'set-band'; readonly cat: string; readonly cells: number }
+  | { readonly type: 'set-curl'; readonly value: number };
 
 export const DEFAULT_SCALE_OPTIONS: readonly number[] = [1, 2, 5, 10];
 
