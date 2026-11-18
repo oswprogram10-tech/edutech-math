@@ -66,23 +66,28 @@ export function PictographBoard({
   const [miss, setMiss] = useState<'empty' | 'rows' | 'count' | null>(null);
   const unit = settings.valueLabel;
 
+  // 올가미는 도구로 켜고 끈다. 꺼져 있으면 SVG는 pan-y라 손가락으로 끌면 판이 스크롤된다.
+  const [lassoOn, setLassoOn] = useState(false);
+
+  const tapIcon = (cat: string, kind: 'big' | 'small') => {
+    setMiss(null);
+    if (kind === 'small') dispatch({ type: 'remove-small', cat });
+    else setPickedBig((current) => (current === cat ? null : cat));
+  };
+
   const lasso = useLasso({
     getPoint: (event) => pointerToLogical(event, svgRef.current, size),
-    disabled: !interactive,
+    disabled: !interactive || !lassoOn,
     onGesture: ({ points, isTap }) => {
       if (isTap) {
         const point = points[0];
         const hit = point ? iconAt(layout, point) : null;
-        setMiss(null);
         if (!hit) {
+          setMiss(null);
           setPickedBig(null);
           return;
         }
-        if (hit.kind === 'small') {
-          dispatch({ type: 'remove-small', cat: hit.cat });
-        } else {
-          setPickedBig((current) => (current === hit.cat ? null : hit.cat));
-        }
+        tapIcon(hit.cat, hit.kind);
         return;
       }
       const outcome = lassoOutcome(layout, points, legendBig);
@@ -159,14 +164,28 @@ export function PictographBoard({
   return (
     <div className={styles.pictoBox} data-testid="pictograph-board">
       {interactive ? (
-        <p
-          className={styles.pictoHint}
-          data-testid="pictograph-hint"
-          data-miss={miss ?? undefined}
-          role="status"
-        >
-          {S.pictograph.lassoHint(legendBig)}
-        </p>
+        <div className={styles.pictoTools}>
+          <button
+            type="button"
+            className={styles.button}
+            data-testid="pictograph-lasso-toggle"
+            aria-pressed={lassoOn}
+            onClick={() => {
+              setLassoOn((current) => !current);
+              setMiss(null);
+            }}
+          >
+            {S.pictograph.lassoToggle}
+          </button>
+          <p
+            className={styles.pictoHint}
+            data-testid="pictograph-hint"
+            data-miss={miss ?? undefined}
+            role="status"
+          >
+            {S.pictograph.lassoHint(legendBig)}
+          </p>
+        </div>
       ) : null}
 
       <div ref={hostRef} className={styles.pictoHost}>
@@ -184,7 +203,9 @@ export function PictographBoard({
           data-logical-height={layout.height}
           data-icon-side={layout.icon}
           data-legend-big={legendBig}
-          {...(interactive ? lasso.handlers : {})}
+          style={{ touchAction: interactive && lassoOn ? 'none' : 'pan-y' }}
+          data-lasso={interactive && lassoOn ? 'on' : 'off'}
+          {...(interactive && lassoOn ? lasso.handlers : {})}
         >
           <rect width={layout.width} height={layout.height} fill={PAPER} />
           {layout.rows.map((row) => {
@@ -214,8 +235,12 @@ export function PictographBoard({
                   const key = `${item.kind}-${item.index}`;
                   const focusable =
                     interactive && (item.kind === 'big' || item.index === lastSmall);
-                  const press =
-                    !interactive && tooltipsOn
+                  // 올가미가 꺼져 있으면 그림 누르기는 click, 켜져 있으면 올가미의 탭이 맡는다.
+                  const press = interactive
+                    ? lassoOn
+                      ? undefined
+                      : () => tapIcon(row.cat, item.kind)
+                    : tooltipsOn
                       ? () => setTip((current) => (current === row.cat ? null : row.cat))
                       : undefined;
                   const label =
@@ -226,8 +251,8 @@ export function PictographBoard({
                   return (
                     <g
                       key={key}
-                      role={focusable || press ? 'button' : 'img'}
-                      tabIndex={focusable || press ? 0 : undefined}
+                      role={focusable || (!interactive && press) ? 'button' : 'img'}
+                      tabIndex={focusable || (!interactive && press) ? 0 : undefined}
                       aria-label={label}
                       aria-pressed={item.kind === 'big' && interactive ? isPicked : undefined}
                       data-cat={row.cat}
@@ -236,7 +261,9 @@ export function PictographBoard({
                       data-picked={isPicked ? 'true' : undefined}
                       onClick={press}
                       onKeyDown={
-                        focusable || press ? (event) => onItemKey(event, row.cat, item) : undefined
+                        focusable || (!interactive && press)
+                          ? (event) => onItemKey(event, row.cat, item)
+                          : undefined
                       }
                     >
                       <rect

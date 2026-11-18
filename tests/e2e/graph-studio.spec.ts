@@ -776,6 +776,11 @@ test.describe('pictograph (학생이 만드는 그림그래프)', () => {
     page,
   }) => {
     await openEngine(page, PICTO, { mode: 'pictograph' });
+    await page.getByTestId('pictograph-lasso-toggle').click();
+    await expect(page.getByTestId('pictograph-lasso-toggle')).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
     await addSmall(page, '가', 10);
     await expect(smalls(page, '가')).toHaveCount(10);
     await expect(page.getByTestId('pictograph-hint')).toContainText(
@@ -893,6 +898,40 @@ test.describe('pictograph (학생이 만드는 그림그래프)', () => {
         .evaluate((element) => ({ sw: element.scrollWidth, cw: element.clientWidth }));
       expect(scroll.sw).toBeLessThanOrEqual(scroll.cw);
     }
+  });
+});
+
+test.describe('올가미 토글(태블릿 스크롤)', () => {
+  const touchAction = (page: Page) =>
+    page.getByTestId('graph-canvas').evaluate((element) => getComputedStyle(element).touchAction);
+
+  test('꺼져 있으면 SVG는 pan-y이고 끌어도 묶이지 않으며, 켜면 none이고 묶은 뒤에도 켜져 있다', async ({
+    page,
+  }) => {
+    await openEngine(page, PICTO, { mode: 'pictograph' });
+    const toggle = page.getByTestId('pictograph-lasso-toggle');
+    await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+    expect(await touchAction(page)).toBe('pan-y');
+    await addSmall(page, '가', 10);
+    // 꺼진 상태에서 10개를 둘러싸는 경로로 끌어도 compress가 일어나지 않는다.
+    await lassoSmalls(page, '가', 0, 10);
+    await expect(smalls(page, '가')).toHaveCount(10);
+    await expect(bigs(page, '가')).toHaveCount(0);
+    await pollObservation(page, (o) => o['compressions'] === 0);
+    // 꺼진 상태에서도 그림을 누르면(탭) 하나 빠진다.
+    await smalls(page, '가').nth(3).click();
+    await expect(smalls(page, '가')).toHaveCount(9);
+    await addSmall(page, '가', 1);
+    await toggle.click();
+    expect(await touchAction(page)).toBe('none');
+    await lassoSmalls(page, '가', 0, 10);
+    await expect(bigs(page, '가')).toHaveCount(1);
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+    expect(await touchAction(page)).toBe('none');
+    // 켜 둔 채로 탭하면 하나 빠진다(올가미 탭 경로).
+    await addSmall(page, '가', 2);
+    await smalls(page, '가').first().click();
+    await expect(smalls(page, '가')).toHaveCount(1);
   });
 });
 

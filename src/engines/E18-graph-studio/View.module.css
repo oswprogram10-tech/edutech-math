@@ -307,6 +307,13 @@
   }
 }
 
+.pictoTools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .pictoHint {
   margin: 0;
   font-weight: 600;

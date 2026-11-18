@@ -52,6 +52,7 @@ export const graphStrings = {
     legendGroup: '큰 그림 하나가 나타내는 수',
     legendBig: (n: number, unit: string) => `큰 그림 = ${n}${unit}`,
     legendSmall: (unit: string) => `작은 그림 = 1${unit}`,
+    lassoToggle: '올가미로 묶기',
     lassoHint: (n: number) => `작은 그림 ${n}개를 한 줄에서 묶어요`,
     rowLabel: (cat: string) => `${cat} 줄`,
     controlsGroup: (cat: string) => `${cat} 그림 조작`,
