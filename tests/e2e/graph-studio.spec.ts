@@ -1556,3 +1556,51 @@ test.describe('T161: 자료 묶음 고르기(datasets)', () => {
     }
   });
 });
+
+test.describe('T161: 고른 묶음 표시와 그래프 영역 크기', () => {
+  const picker = {
+    mode: 'table-to-graph',
+    graph: 'student',
+    graphType: 'bar',
+    table: 'given',
+    scale: 1,
+    datasets: [
+      { id: 'food', title: '좋아하는 음식', data: { 피자: 3, 떡볶이: 2 } },
+      { id: 'pet', title: '키우고 싶은 동물', data: { 강아지: 4, 고양이: 1, 토끼: 2 } },
+    ],
+  };
+
+  test('고른 단추에는 색 말고 ✓ 글자도 있다', async ({ page }) => {
+    await openEngine(page, picker, { stageFit: true });
+    const food = page.getByRole('radio', { name: '좋아하는 음식' });
+    await expect(food).not.toContainText('✓');
+    await food.click();
+    await expect(food).toContainText('✓');
+    await expect(food).toHaveAttribute('aria-checked', 'true');
+    await expect(page.getByRole('radio', { name: '키우고 싶은 동물' })).not.toContainText('✓');
+  });
+
+  for (const viewport of [null, { width: 660, height: 420 }] as const) {
+    test(`고른 뒤 막대 그래프 영역은 높이 200px 이상이다${viewport ? '(두 칸 폭 660x420)' : ''}`, async ({
+      page,
+    }, testInfo) => {
+      if (viewport) await page.setViewportSize(viewport);
+      await openEngine(page, picker, { stageFit: true });
+      await page.getByRole('radio', { name: '좋아하는 음식' }).click();
+      const box = await page.locator('[data-testid="graph-canvas"]').boundingBox();
+      const area = await page.locator('[data-testid="graph-canvas"]').evaluate((element) => {
+        const parent = element.parentElement?.getBoundingClientRect();
+        return parent ? `${Math.round(parent.width)}x${Math.round(parent.height)}` : '?';
+      });
+      if (!box) throw new Error('그래프를 찾지 못했습니다.');
+      console.log(
+        'T161 graph',
+        testInfo.project.name,
+        viewport ? '660x420' : 'full',
+        `svg ${Math.round(box.width)}x${Math.round(box.height)}`,
+        `area ${area}`,
+      );
+      expect(box.height).toBeGreaterThanOrEqual(200);
+    });
+  }
+});

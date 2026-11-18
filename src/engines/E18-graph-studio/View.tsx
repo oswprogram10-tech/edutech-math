@@ -136,6 +136,9 @@ function StandardView({ state, dispatch, cpa, readOnly = false, targetSize }: Gr
               disabled={readOnly}
               onClick={() => dispatch({ type: 'pick-dataset', id: option.id })}
             >
+              {state.datasetId === option.id ? (
+                <span aria-hidden="true">{S.dataset.checked}</span>
+              ) : null}
               {option.title}
             </button>
           ))}

@@ -67,6 +67,7 @@ export const graphStrings = {
 
   dataset: {
     group: '자료 묶음',
+    checked: '✓ ',
     pickHint: '자료를 하나 골라요',
     source: (text: string) => `자료: ${text}`,
   },
