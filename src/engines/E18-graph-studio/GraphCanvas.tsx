@@ -17,7 +17,8 @@ import {
   cellLength,
   frameOf,
   isTouchOMark,
-  minPictureSize,
+  textSize,
+  touchScale,
   markRect,
   markSide,
   positionToCells,
@@ -45,8 +46,8 @@ interface GraphCanvasProps {
   readonly tooltipsOn: boolean;
 }
 
-function labelSize(span: number, text: string, max: number): number {
-  return Math.max(14, Math.min(max, (span - 12) / Math.max(1, [...text].length)));
+function labelSize(span: number, text: string, max: number, floor: number): number {
+  return Math.max(floor, Math.min(max, (span - 12) / Math.max(1, [...text].length)));
 }
 
 export function GraphCanvas({
@@ -80,7 +81,37 @@ export function GraphCanvas({
   const interactive = student && !readOnly;
   // 누르는 ○ 그래프는 칸이 targetSize 이상이 되는 크기를 지키고, 판이 작으면 판 안에서 스크롤한다.
   const scrolls = isTouchOMark(settings);
-  const minSize = scrolls ? minPictureSize(frame, targetSize) : null;
+  const [host, setHost] = useState({ width: 0, height: 0 });
+  useEffect(() => {
+    const element = svgRef.current?.parentElement;
+    if (!scrolls || !element) return;
+    const update = () => {
+      const width = Math.floor(element.clientWidth);
+      const height = Math.floor(element.clientHeight);
+      setHost((current) =>
+        current.width === width && current.height === height ? current : { width, height },
+      );
+    };
+    update();
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(update);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [scrolls]);
+  // 화면 배율: 누르는 ○ 그래프는 max(minTouchScale, fitScale)(판 폭을 채우려고 더 키우지 않는다).
+  const pictureScale = scrolls ? touchScale(frame, targetSize, host) : null;
+  const minSize = pictureScale
+    ? {
+        width: Math.ceil(frame.width * pictureScale),
+        height: Math.ceil(frame.height * pictureScale),
+      }
+    : null;
+  const textScale =
+    pictureScale ??
+    (rendered.width > 0 && rendered.height > 0
+      ? Math.min(rendered.width / frame.width, rendered.height / frame.height)
+      : 1);
+  const fs = (base: number) => textSize(base, textScale, targetSize);
   const scrollKey = `${state.orientation}|${cells}|${settings.categories.length}|${targetSize}`;
   useEffect(() => {
     const host = svgRef.current?.parentElement;
@@ -140,7 +171,10 @@ export function GraphCanvas({
     }
   };
 
-  const ticks = tickCells(cells);
+  const numberSize = fs(20);
+  // 눈금 글자끼리 겹치면 건너뛰어 쓴다(칸 간격이 글자 크기의 1.2배보다 좁을 때).
+  const skip = Math.max(1, Math.ceil((numberSize * 1.2) / cellLength(frame)));
+  const ticks = tickCells(cells, skip);
   const plot = frame.plot;
   const bandSpan = vertical ? plot.width / frame.count : 190;
   const base = valuePosition(frame, 0);
@@ -149,7 +183,7 @@ export function GraphCanvas({
   // ○ 그래프: 칸 줄마다 1, 2, 3…을 칸 가운데에 쓰고 0은 쓰지 않는다(칸이 20개를 넘으면 5칸마다).
   const cellNumbers = oMark
     ? Array.from({ length: cells }, (_, index) => index + 1).filter(
-        (number) => cells <= 20 || number % 5 === 0,
+        (number) => (cells <= 20 || number % 5 === 0) && number % skip === 0,
       )
     : [];
 
@@ -162,9 +196,9 @@ export function GraphCanvas({
             key={`num-${number}`}
             data-cell-number={number}
             x={plot.x - 14}
-            y={middle + 7}
+            y={middle + numberSize * 0.35}
             textAnchor="end"
-            fontSize={20}
+            fontSize={numberSize}
             fill={INK}
           >
             {number}
@@ -174,9 +208,9 @@ export function GraphCanvas({
             key={`num-${number}`}
             data-cell-number={number}
             x={middle}
-            y={plot.y + plot.height + 28}
+            y={plot.y + plot.height + 8 + numberSize}
             textAnchor="middle"
-            fontSize={20}
+            fontSize={numberSize}
             fill={INK}
           >
             {number}
@@ -198,7 +232,13 @@ export function GraphCanvas({
                   strokeWidth={tick === 0 ? 0 : 1.5}
                 />
                 {oMark ? null : (
-                  <text x={plot.x - 14} y={position + 7} textAnchor="end" fontSize={20} fill={INK}>
+                  <text
+                    x={plot.x - 14}
+                    y={position + numberSize * 0.35}
+                    textAnchor="end"
+                    fontSize={numberSize}
+                    fill={INK}
+                  >
                     {tick * state.scale}
                   </text>
                 )}
@@ -216,9 +256,9 @@ export function GraphCanvas({
                 {oMark ? null : (
                   <text
                     x={position}
-                    y={plot.y + plot.height + 28}
+                    y={plot.y + plot.height + 8 + numberSize}
                     textAnchor="middle"
-                    fontSize={20}
+                    fontSize={numberSize}
                     fill={INK}
                   >
                     {tick * state.scale}
@@ -249,9 +289,9 @@ export function GraphCanvas({
   );
 
   const renderTitles = () => (
-    <g fontSize={22} fill={INK} fontWeight={700}>
+    <g fontSize={fs(22)} fill={INK} fontWeight={700}>
       {settings.title ? (
-        <text x={frame.width / 2} y={44} textAnchor="middle" fontSize={26}>
+        <text x={frame.width / 2} y={20 + fs(26)} textAnchor="middle" fontSize={fs(26)}>
           {settings.title}
         </text>
       ) : null}
@@ -294,7 +334,7 @@ export function GraphCanvas({
     <g fill={INK} fontWeight={600}>
       {settings.categories.map((cat, index) => {
         const center = bandCenter(frame, index);
-        const size = labelSize(bandSpan, cat, 30);
+        const size = labelSize(bandSpan, cat, 30, Math.min(fs(20), 40));
         return vertical ? (
           <text
             key={cat}
@@ -311,7 +351,7 @@ export function GraphCanvas({
             x={plot.x - 16}
             y={center + size / 3}
             textAnchor="end"
-            fontSize={labelSize(190, cat, 30)}
+            fontSize={labelSize(190, cat, 30, Math.min(fs(20), 40))}
           >
             {cat}
           </text>
@@ -534,7 +574,7 @@ export function GraphCanvas({
       data-orientation={state.orientation}
       data-graph-type={settings.graphType}
       data-scroll={scrolls ? 'true' : undefined}
-      style={minSize ? { minWidth: minSize.width, minHeight: minSize.height } : undefined}
+      style={minSize ? { width: minSize.width, height: minSize.height } : undefined}
       {...(interactive && isBar ? drag.handlers : {})}
     >
       <defs>

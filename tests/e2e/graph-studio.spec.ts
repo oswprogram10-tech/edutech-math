@@ -1167,3 +1167,197 @@ test.describe('기준 스크린샷(그림그래프·투표)', () => {
     await stageShot(page, 'class-vote');
   });
 });
+
+// ---------------------------------------------------------------- T158
+
+/** 그래프 영역(스크롤 칸)과 SVG의 화면 크기. */
+async function omarkSizes(page: Page) {
+  return page.evaluate(() => {
+    const svg = document.querySelector('[data-testid="graph-canvas"]');
+    const area = svg?.parentElement;
+    if (!svg || !area) throw new Error('그래프를 찾지 못했습니다.');
+    const box = svg.getBoundingClientRect();
+    return {
+      svgWidth: box.width,
+      svgHeight: box.height,
+      areaWidth: area.clientWidth,
+      areaHeight: area.clientHeight,
+      scrollTop: area.scrollTop,
+      scrollLeft: area.scrollLeft,
+      scrollHeight: area.scrollHeight,
+      scrollWidth: area.scrollWidth,
+    };
+  });
+}
+
+/** SVG 안 모든 `text`의 화면 글꼴 크기(px) 중 가장 작은 값. */
+async function smallestText(page: Page): Promise<number> {
+  const result = await page.evaluate(() => {
+    const svg = document.querySelector('[data-testid="graph-canvas"]');
+    if (!svg) throw new Error('그래프를 찾지 못했습니다.');
+    const box = svg.getBoundingClientRect();
+    const viewBox = (svg as SVGSVGElement).viewBox.baseVal;
+    const scale = Math.min(box.width / viewBox.width, box.height / viewBox.height);
+    let smallest = Number.POSITIVE_INFINITY;
+    svg.querySelectorAll('text').forEach((text) => {
+      // ○ 글자(칸 안)는 칸 크기에서 정해지므로 제외한다.
+      if (text.textContent === '○') return;
+      const size = Number.parseFloat(window.getComputedStyle(text).fontSize) * scale;
+      if (size < smallest) {
+        smallest = size;
+        (window as unknown as { __small?: string }).__small =
+          `${text.textContent} fs=${window.getComputedStyle(text).fontSize} scale=${scale}`;
+      }
+    });
+    return { smallest, info: (window as unknown as { __small?: string }).__small };
+  });
+
+  return result.smallest;
+}
+
+test.describe('T158: ○ 그리기 크기·스크롤 안내·글자 크기', () => {
+  const omark = {
+    data: { 가: 4, 나: 3, 다: 5, 라: 2 },
+    graph: 'student',
+    graphType: 'o-mark',
+    axisMax: 6,
+    orientationFlip: true,
+  };
+
+  test('판이 넉넉하면 그림이 영역보다 커지지 않고 스크롤·안내 띠가 없다', async ({ page }) => {
+    // 크게 열어 영역이 그림 전체보다 넓고 높게 한다.
+    await page.setViewportSize({ width: 1600, height: 1200 });
+    await openEngine(page, omark, { stageFit: true });
+    const sizes = await omarkSizes(page);
+    expect(sizes.svgWidth).toBeLessThanOrEqual(sizes.areaWidth + 1);
+    expect(sizes.svgHeight).toBeLessThanOrEqual(sizes.areaHeight + 1);
+    expect(sizes.scrollHeight).toBeLessThanOrEqual(sizes.areaHeight + 1);
+    await expect(page.getByTestId('graph-scroll-cue')).toHaveCount(0);
+    // 칸 한 변은 targetSize(48) 이상이다.
+    const box = await cell(page, '가', 0).locator('rect').first().boundingBox();
+    expect(box?.width ?? 0).toBeGreaterThanOrEqual(47.5);
+  });
+
+  for (const orientation of ['vertical', 'horizontal'] as const) {
+    test(`${orientation}: 작은 판에서는 스크롤하고 안내 띠가 보이다가 끝에 닿으면 사라진다`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 700, height: 420 });
+      await openEngine(page, { ...omark, orientation, axisMax: 9 }, { stageFit: true });
+      await page.getByRole('button', { name: '터치 48px' }).click();
+      const area = page.locator('div[data-scroll="true"]');
+      const sizes = await omarkSizes(page);
+      const scrolls =
+        orientation === 'vertical'
+          ? sizes.scrollHeight > sizes.areaHeight + 1
+          : sizes.scrollWidth > sizes.areaWidth + 1;
+      expect(scrolls).toBe(true);
+      const cue = page.getByTestId('graph-scroll-cue');
+      if (orientation === 'vertical') {
+        // 처음에는 맨 아래(축)라 위에 칸이 더 있다.
+        await expect(cue).toBeVisible();
+        await expect(cue).toContainText('위에 칸이 더 있어요');
+        // 띠는 칸 누르기를 막지 않는다: 맨 위 칸까지 올라가 누른다.
+        await area.evaluate((element) => element.scrollTo({ top: 0 }));
+        await expect(cue).toBeHidden();
+      } else {
+        await expect(cue).toBeVisible();
+        await expect(cue).toContainText('옆에 칸이 더 있어요');
+        await area.evaluate((element) => element.scrollTo({ left: element.scrollWidth }));
+        await expect(cue).toBeHidden();
+      }
+    });
+  }
+
+  for (const orientation of ['vertical', 'horizontal'] as const) {
+    test(`${orientation}: 안내 띠는 스크롤 칸 밖에 있어 SVG와 겹치지 않고 안 보일 때도 자리를 지킨다`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 700, height: 420 });
+      await openEngine(page, { ...omark, orientation, axisMax: 9 }, { stageFit: true });
+      await page.getByRole('button', { name: '터치 48px' }).click();
+      const cue = page.getByTestId('graph-scroll-cue');
+      await expect(cue).toBeVisible();
+      await expect(cue).toHaveCSS('pointer-events', 'none');
+      const canvasBox = async () => {
+        // 스크롤된 SVG는 영역 밖으로 나가므로, 눈에 보이는 부분(SVG ∩ 스크롤 칸)으로 잰다.
+        const svg = await page.getByTestId('graph-canvas').boundingBox();
+        const host = await page.locator('div[data-scroll="true"]').boundingBox();
+        if (!svg || !host) throw new Error('그래프를 찾지 못했습니다.');
+        const x = Math.max(svg.x, host.x);
+        const y = Math.max(svg.y, host.y);
+        return {
+          x,
+          y,
+          width: Math.min(svg.x + svg.width, host.x + host.width) - x,
+          height: Math.min(svg.y + svg.height, host.y + host.height) - y,
+        };
+      };
+      const apart = async () => {
+        const c = await cue.boundingBox();
+        const g = await canvasBox();
+        if (!c) throw new Error('안내를 찾지 못했습니다.');
+        // 상자가 서로 겹치지 않는다(가로·세로 어느 한 축에서 떨어져 있다).
+        return (
+          c.y + c.height <= g.y + 1 ||
+          g.y + g.height <= c.y + 1 ||
+          c.x + c.width <= g.x + 1 ||
+          g.x + g.width <= c.x + 1
+        );
+      };
+      expect(await apart()).toBe(true);
+      // 세로 그래프는 SVG 바로 위, 가로 그래프는 바로 오른쪽에 있고 SVG와 같은 폭(높이)이다.
+      const c1 = await cue.boundingBox();
+      const g1 = await canvasBox();
+      if (!c1) throw new Error('안내를 찾지 못했습니다.');
+      if (orientation === 'vertical') {
+        expect(c1.y + c1.height).toBeLessThanOrEqual(g1.y + 1);
+        expect(Math.abs(c1.width - g1.width)).toBeLessThanOrEqual(1);
+      } else {
+        expect(c1.x).toBeGreaterThanOrEqual(g1.x + g1.width - 1);
+        expect(Math.abs(c1.height - g1.height)).toBeLessThanOrEqual(1);
+      }
+      // 끝까지 스크롤해 안내가 안 보여도 같은 자리에 상자가 남는다(화면이 들썩이지 않는다).
+      await page.locator('div[data-scroll="true"]').evaluate((element, vertical) => {
+        element.scrollTo(vertical ? { top: 0 } : { left: element.scrollWidth });
+      }, orientation === 'vertical');
+      await expect(cue).toBeHidden();
+      const c2 = await cue.boundingBox();
+      expect(c2?.x).toBeCloseTo(c1.x, 0);
+      expect(c2?.y).toBeCloseTo(c1.y, 0);
+      expect(await apart()).toBe(true);
+    });
+  }
+
+  for (const target of [48, 64] as const) {
+    test(`글자는 화면에서 ${target === 64 ? 16 : 14}px 이상이다(눈금·범주·제목, 두 칸 폭 포함)`, async ({
+      page,
+    }) => {
+      const floor = target === 64 ? 16 : 14;
+      const bar = {
+        data: FRUITS,
+        graph: 'given',
+        graphType: 'o-mark',
+        axisMax: 7,
+        title: '좋아하는 과일',
+        categoryAxisTitle: '과일',
+        valueAxisTitle: '명',
+      };
+      for (const viewport of [null, { width: 660, height: 420 }]) {
+        if (viewport) await page.setViewportSize(viewport);
+        for (const orientation of ['vertical', 'horizontal'] as const) {
+          await openEngine(page, { ...bar, orientation }, { stageFit: true });
+          if (target === 64) await page.getByRole('button', { name: '터치 48px' }).click();
+          await expect.poll(() => smallestText(page)).toBeGreaterThanOrEqual(floor - 0.5);
+          await openEngine(
+            page,
+            { ...bar, graphType: 'bar', orientation, scale: 1 },
+            { stageFit: true },
+          );
+          if (target === 64) await page.getByRole('button', { name: '터치 48px' }).click();
+          await expect.poll(() => smallestText(page)).toBeGreaterThanOrEqual(floor - 0.5);
+        }
+      }
+    });
+  }
+});

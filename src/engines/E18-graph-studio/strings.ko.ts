@@ -65,6 +65,11 @@ export const graphStrings = {
     tooltip: (cat: string, value: number, unit: string) => `${cat}: ${value}${unit}`,
   },
 
+  scroll: {
+    moreAbove: '▲ 위에 칸이 더 있어요',
+    moreSide: '▶ 옆에 칸이 더 있어요',
+  },
+
   vote: {
     stampGroup: '스탬프',
     stamp: (option: string) => `${option} 스탬프 찍기`,

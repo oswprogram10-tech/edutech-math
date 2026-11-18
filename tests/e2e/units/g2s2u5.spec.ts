@@ -74,7 +74,7 @@ type Mode = 'fit' | 'reachable';
 const FIRST_SCREEN: Record<string, Record<string, Mode>> = {
   'A1.T1': { ipad: 'reachable' },
   'A1.T2': {},
-  'A1.T3': { chromebook: 'reachable', board: 'reachable' },
+  'A1.T3': { chromebook: 'reachable' },
   'A2.T1': {},
   'A2.T2': { ipad: 'reachable' },
   'A2.T3': { ipad: 'reachable' },
@@ -678,10 +678,50 @@ test('g2s2u5.A1.T3 — 첫 화면 스냅샷(결론·값 노출 없음)', async (
     main(page).getByTestId('graph-table'),
     canvas(page).locator('xpath=..'),
   ]);
-  const box = await canvas(page).boundingBox();
-  console.log(
-    `[T157 ${vp}] A1.T3 그래프 상자 ${Math.round(box?.width ?? 0)}x${Math.round(box?.height ?? 0)}`,
-  );
+  // T158: 그림은 필요 이상으로 커지지 않는다(배율 = max(minTouchScale, fitScale)).
+  // 보이는 ○ 줄 수를 재고(최소 3줄), 스크롤이 있으면 안내 띠가 보이다가 맨 위에서 사라진다.
+  const area = canvas(page).locator('xpath=..');
+  const measured = await page.evaluate(() => {
+    const svg = document.querySelector('[data-testid="graph-canvas"]');
+    const host = svg?.parentElement;
+    if (!svg || !host) throw new Error('그래프를 찾지 못했습니다.');
+    const hostBox = host.getBoundingClientRect();
+    const svgBox = svg.getBoundingClientRect();
+    let rows = 0;
+    let side = 0;
+    svg.querySelectorAll('g[data-cat="🍎"][data-cell]').forEach((element) => {
+      const rect = (element.querySelector('rect') as Element).getBoundingClientRect();
+      side = rect.width;
+      if (rect.top >= hostBox.top - 1 && rect.bottom <= hostBox.bottom + 1) rows += 1;
+    });
+    return {
+      svgWidth: svgBox.width,
+      svgHeight: svgBox.height,
+      areaWidth: host.clientWidth,
+      areaHeight: host.clientHeight,
+      rows,
+      side,
+    };
+  });
+  console.log(`[T158 ${vp}] A1.T3 ${JSON.stringify(measured)}`);
+  expect(measured.side).toBeGreaterThanOrEqual(63.5);
+  expect(measured.rows).toBeGreaterThanOrEqual(3);
+  expect(measured.svgWidth).toBeLessThanOrEqual(measured.areaWidth + 1);
+  const cue = main(page).getByTestId('graph-scroll-cue');
+  if (measured.svgHeight > measured.areaHeight + 1) {
+    await expect(cue).toBeVisible();
+    await expect(cue).toContainText('위에 칸이 더 있어요');
+    // 띠는 스크롤 칸 바로 위 별도 줄이라 그래프 칸과 겹치지 않는다.
+    const cueBox = await cue.boundingBox();
+    const svgBox = await area.boundingBox();
+    expect((cueBox?.y ?? 0) + (cueBox?.height ?? 0)).toBeLessThanOrEqual((svgBox?.y ?? 0) + 1);
+    await area.evaluate((element) => element.scrollTo({ top: 0 }));
+    await expect(cue).toBeHidden();
+    await area.evaluate((element) => element.scrollTo({ top: element.scrollHeight }));
+  } else {
+    expect(measured.rows).toBe(6);
+    await expect(cue).toHaveCount(0);
+  }
   await expectNoConclusionText(page);
   await screenshot(page, 'g2s2u5-a1-t3.png');
 });

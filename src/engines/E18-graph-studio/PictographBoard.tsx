@@ -39,8 +39,8 @@ interface PictographBoardProps {
   readonly tooltipsOn: boolean;
 }
 
-function labelSize(span: number, text: string): number {
-  return Math.max(14, Math.min(26, (span - 12) / Math.max(1, [...text].length)));
+function labelSize(span: number, text: string, floor: number): number {
+  return Math.max(floor, Math.min(26, (span - 12) / Math.max(1, [...text].length)));
 }
 
 export function PictographBoard({
@@ -223,9 +223,13 @@ export function PictographBoard({
                 />
                 <text
                   x={layout.labelWidth / 2}
-                  y={row.top + row.height / 2 + labelSize(layout.labelWidth, row.cat) / 3}
+                  y={
+                    row.top +
+                    row.height / 2 +
+                    labelSize(layout.labelWidth, row.cat, targetSize >= 64 ? 16 : 14) / 3
+                  }
                   textAnchor="middle"
-                  fontSize={labelSize(layout.labelWidth, row.cat)}
+                  fontSize={labelSize(layout.labelWidth, row.cat, targetSize >= 64 ? 16 : 14)}
                   fontWeight={700}
                   fill={INK}
                 >

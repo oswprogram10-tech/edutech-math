@@ -312,7 +312,7 @@ describe('E18 ○ 그래프 터치 크기', () => {
       ).container.querySelector<SVGSVGElement>('[data-testid="graph-canvas"]');
     const big = view(64);
     expect(big?.getAttribute('data-scroll')).toBe('true');
-    const heightOf = (svg: SVGSVGElement | null) => Number.parseFloat(svg?.style.minHeight ?? '0');
+    const heightOf = (svg: SVGSVGElement | null) => Number.parseFloat(svg?.style.height ?? '0');
     const height64 = heightOf(big);
     cleanup();
     const height48 = heightOf(view(48));
