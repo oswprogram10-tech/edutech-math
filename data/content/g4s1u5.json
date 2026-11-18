@@ -1,0 +1,826 @@
+{
+  "unit": "g4s1u5",
+  "title": "막대그래프",
+  "activities": [
+    {
+      "id": "g4s1u5.A1",
+      "title": "눈금 슬라이더와 가로·세로 플립",
+      "tasks": [
+        {
+          "id": "g4s1u5.A1.T1",
+          "prompt": "표를 보고 세로 막대그래프를 그려요. 눈금 한 칸은 1명이에요.",
+          "engine": "E18",
+          "mode": "table-to-graph",
+          "cpa": "P",
+          "config": {
+            "mode": "table-to-graph",
+            "data": {
+              "축구": 12,
+              "피구": 8,
+              "줄넘기": 5,
+              "수영": 10
+            },
+            "table": "given",
+            "graph": "student",
+            "graphType": "bar",
+            "orientation": "vertical",
+            "scale": 1,
+            "valueLabel": "명",
+            "categoryAxisTitle": "운동",
+            "valueAxisTitle": "학생 수(명)"
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "graphMatches",
+            "args": {
+              "source": "data"
+            }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 1,
+              "say": "막대 끝이 표의 수와 같은 눈금에 닿았나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 2,
+              "say": "운동마다 표의 수를 보고 막대 끝을 그 눈금까지 끌어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 3,
+              "backtrack": "g4s1u5.bar-graph-make"
+            }
+          ],
+          "concepts": [
+            "g4s1u5.bar-graph-make"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g4s1u5.A1.T2",
+          "prompt": "눈금 한 칸을 2명으로 바꾸면 축구 막대는 몇 칸이 될까요?",
+          "engine": "E18",
+          "mode": "scale",
+          "cpa": "P",
+          "config": {
+            "mode": "scale",
+            "data": {
+              "축구": 12,
+              "피구": 8,
+              "줄넘기": 5,
+              "수영": 10
+            },
+            "graph": "given",
+            "graphType": "bar",
+            "scale": 1,
+            "scaleOptions": [
+              1,
+              2,
+              5,
+              10
+            ],
+            "table": "given",
+            "tooltips": "hide",
+            "valueLabel": "명",
+            "categoryAxisTitle": "운동",
+            "valueAxisTitle": "학생 수(명)"
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.cells.value",
+            "value": "6"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "scale"
+              },
+              "level": 1,
+              "say": "눈금 한 칸이 몇 명인지 바꿔 보고 축구 막대의 칸을 세어 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "scale"
+              },
+              "level": 2,
+              "say": "눈금 단추에서 2명을 고른 뒤 축구 막대가 몇 칸인지 세어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "scale"
+              },
+              "level": 3,
+              "backtrack": "g4s1u5.scale-unit"
+            }
+          ],
+          "concepts": [
+            "g4s1u5.scale-unit"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "cells",
+                "label": "몇 칸인가요?",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g4s1u5.A1.T3",
+          "prompt": "눈금 한 칸을 5명으로 바꾸면 어떤 문제가 생길까요?",
+          "engine": "E18",
+          "mode": "scale",
+          "cpa": "P",
+          "config": {
+            "mode": "scale",
+            "data": {
+              "축구": 12,
+              "피구": 8,
+              "줄넘기": 5,
+              "수영": 10
+            },
+            "graph": "given",
+            "graphType": "bar",
+            "scale": 1,
+            "scaleOptions": [
+              1,
+              2,
+              5,
+              10
+            ],
+            "table": "given",
+            "tooltips": "hide",
+            "valueLabel": "명",
+            "categoryAxisTitle": "운동",
+            "valueAxisTitle": "학생 수(명)"
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.issue.selected",
+            "value": [
+              "off"
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "scale"
+              },
+              "level": 1,
+              "say": "눈금 5명을 골라 막대 끝이 어디에 닿는지 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "scale"
+              },
+              "level": 2,
+              "say": "막대 끝이 눈금 줄 사이에 있는 운동이 있는지 찾아봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "scale"
+              },
+              "level": 3,
+              "backtrack": "g4s1u5.scale-unit"
+            }
+          ],
+          "concepts": [
+            "g4s1u5.scale-unit"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "issue",
+                "label": "어떤 문제가 생기나요?",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "off",
+                    "label": "어떤 막대는 끝이 눈금 줄에 딱 맞지 않아요"
+                  },
+                  {
+                    "id": "long",
+                    "label": "막대가 너무 길어져요"
+                  },
+                  {
+                    "id": "none",
+                    "label": "아무 문제가 없어요"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g4s1u5.A1.T4",
+          "prompt": "그래프를 가로 막대그래프로 바꾼 뒤, 가장 많은 학생이 좋아하는 운동을 골라요.",
+          "engine": "E18",
+          "mode": "table-to-graph",
+          "cpa": "P",
+          "config": {
+            "mode": "table-to-graph",
+            "data": {
+              "수영": 10,
+              "피구": 8,
+              "축구": 12,
+              "줄넘기": 5
+            },
+            "graph": "given",
+            "graphType": "bar",
+            "orientation": "vertical",
+            "orientationFlip": true,
+            "table": "hidden",
+            "tooltips": "hide",
+            "scale": 1,
+            "valueLabel": "명",
+            "categoryAxisTitle": "운동",
+            "valueAxisTitle": "학생 수(명)"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "orientationIs",
+                "args": {
+                  "orientation": "horizontal"
+                }
+              },
+              {
+                "kind": "equals",
+                "path": "response.most.selected",
+                "value": [
+                  "soccer"
+                ]
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.most.selected",
+                    "value": [
+                      "soccer"
+                    ]
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "orientation",
+                    "value": "vertical"
+                  }
+                ]
+              },
+              "level": 1,
+              "say": "그래프를 가로 막대그래프로 바꿨나요?"
+            },
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.most.selected",
+                    "value": [
+                      "soccer"
+                    ]
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "orientation",
+                    "value": "vertical"
+                  }
+                ]
+              },
+              "level": 2,
+              "say": "'가로·세로 바꾸기' 단추를 눌러 봐요."
+            },
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.most.selected",
+                    "value": [
+                      "soccer"
+                    ]
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "orientation",
+                    "value": "vertical"
+                  }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g4s1u5.bar-graph-make"
+            },
+            {
+              "when": {
+                "misconception": "MC-GRAPH-BAR-WIDTH"
+              },
+              "level": 1,
+              "say": "막대의 무엇으로 크기를 비교했지?"
+            },
+            {
+              "when": {
+                "misconception": "MC-GRAPH-BAR-WIDTH"
+              },
+              "level": 2,
+              "say": "모든 막대를 같은 색·같은 굵기로 바꿨어요. 길이만 비교해 봐요.",
+              "show": {
+                "engine": "E18",
+                "overlay": "length-only"
+              }
+            },
+            {
+              "when": {
+                "misconception": "MC-GRAPH-BAR-WIDTH"
+              },
+              "level": 3,
+              "backtrack": "g4s1u5.bar-graph-make"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 1,
+              "say": "막대 길이가 가장 긴 것을 찾아볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 2,
+              "say": "축에서 막대 끝까지의 길이를 비교해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 3,
+              "backtrack": "g4s1u5.bar-graph-make"
+            }
+          ],
+          "concepts": [
+            "g4s1u5.bar-graph-make",
+            "g4s1u5.interpret-bar"
+          ],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-GRAPH-BAR-WIDTH",
+              "args": {
+                "trap": "swim"
+              },
+              "path": "response.most.selected.0"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "most",
+                "label": "가장 많은 학생이 좋아하는 운동은 무엇인가요?",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "soccer",
+                    "label": "축구"
+                  },
+                  {
+                    "id": "dodge",
+                    "label": "피구"
+                  },
+                  {
+                    "id": "rope",
+                    "label": "줄넘기"
+                  },
+                  {
+                    "id": "swim",
+                    "label": "수영"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g4s1u5.A1.T5",
+          "prompt": "수영을 좋아하는 학생은 몇 명인가요?",
+          "engine": "E18",
+          "mode": "table-to-graph",
+          "cpa": "A",
+          "config": {
+            "mode": "table-to-graph",
+            "data": {
+              "축구": 12,
+              "피구": 8,
+              "줄넘기": 5,
+              "수영": 10
+            },
+            "graph": "given",
+            "graphType": "bar",
+            "scale": 2,
+            "table": "hidden",
+            "tooltips": "hide",
+            "valueLabel": "명",
+            "categoryAxisTitle": "운동",
+            "valueAxisTitle": "학생 수(명)"
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.value.value",
+            "value": "10"
+          },
+          "hints": [
+            {
+              "when": {
+                "misconception": "MC-GRAPH-SCALE-ONE"
+              },
+              "level": 1,
+              "say": "세로 눈금에 쓰인 수를 볼까? 한 칸은 몇 명이지?"
+            },
+            {
+              "when": {
+                "misconception": "MC-GRAPH-SCALE-ONE"
+              },
+              "level": 2,
+              "say": "칸마다 몇 명씩 늘어나는지 이어서 세어 봐요.",
+              "show": {
+                "engine": "E18",
+                "overlay": "scale-count",
+                "args": {
+                  "cat": "수영"
+                }
+              }
+            },
+            {
+              "when": {
+                "misconception": "MC-GRAPH-SCALE-ONE"
+              },
+              "level": 3,
+              "backtrack": "g4s1u5.scale-unit"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 1,
+              "say": "수영 막대 끝이 어느 눈금에 닿았는지 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 2,
+              "say": "막대 끝에서 옆으로 가서 세로 눈금의 수를 읽어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 3,
+              "backtrack": "g4s1u5.scale-unit"
+            }
+          ],
+          "concepts": [
+            "g4s1u5.scale-unit",
+            "g4s1u5.interpret-bar"
+          ],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-GRAPH-SCALE-ONE",
+              "args": {
+                "cells": "5",
+                "expected": "10"
+              },
+              "path": "response.value.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "value",
+                "label": "몇 명인가요?",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "g4s1u5.A2",
+      "title": "우리 관심사 자료 그래프",
+      "tasks": [
+        {
+          "id": "g4s1u5.A2.T1",
+          "prompt": "자료를 하나 골라 표를 보고 막대그래프를 그려요. 눈금 한 칸은 1이에요.",
+          "engine": "E18",
+          "mode": "table-to-graph",
+          "cpa": "P",
+          "config": {
+            "mode": "table-to-graph",
+            "datasets": [
+              {
+                "id": "snack",
+                "title": "우리 반이 좋아하는 간식",
+                "data": {
+                  "떡볶이": 9,
+                  "과자": 6,
+                  "과일": 7,
+                  "아이스크림": 11
+                },
+                "valueLabel": "명",
+                "categoryAxisTitle": "간식",
+                "valueAxisTitle": "학생 수(명)"
+              },
+              {
+                "id": "garden",
+                "title": "학교 텃밭 채소 수확",
+                "data": {
+                  "상추": 14,
+                  "고추": 8,
+                  "토마토": 12,
+                  "오이": 6
+                },
+                "valueLabel": "개",
+                "categoryAxisTitle": "채소",
+                "valueAxisTitle": "수확한 수(개)"
+              },
+              {
+                "id": "library",
+                "title": "도서관에서 하루에 빌린 책",
+                "data": {
+                  "동화": 12,
+                  "과학": 7,
+                  "역사": 4,
+                  "만화": 10
+                },
+                "valueLabel": "권",
+                "categoryAxisTitle": "책 종류",
+                "valueAxisTitle": "빌린 책(권)"
+              }
+            ],
+            "table": "given",
+            "graph": "student",
+            "graphType": "bar",
+            "scale": 1
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "datasetPicked"
+              },
+              {
+                "kind": "predicate",
+                "name": "graphMatches",
+                "args": {
+                  "source": "data"
+                }
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 1,
+              "say": "막대 끝이 표의 수와 같은 눈금에 닿았나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 2,
+              "say": "표의 수를 하나씩 보고 막대 끝을 그 눈금까지 끌어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 3,
+              "backtrack": "g4s1u5.bar-graph-make"
+            }
+          ],
+          "concepts": [
+            "g4s1u5.bar-graph-make"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g4s1u5.A2.T2",
+          "prompt": "텃밭에서 가장 많이 거둔 채소와 가장 적게 거둔 채소의 차는 몇 개인가요?",
+          "engine": "E18",
+          "mode": "table-to-graph",
+          "cpa": "A",
+          "config": {
+            "mode": "table-to-graph",
+            "data": {
+              "상추": 14,
+              "고추": 8,
+              "토마토": 12,
+              "오이": 6
+            },
+            "graph": "given",
+            "graphType": "bar",
+            "scale": 2,
+            "table": "hidden",
+            "tooltips": "hide",
+            "valueLabel": "개",
+            "categoryAxisTitle": "채소",
+            "valueAxisTitle": "수확한 수(개)"
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.diff.value",
+            "value": "8"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 1,
+              "say": "가장 긴 막대와 가장 짧은 막대의 값을 먼저 읽어 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 2,
+              "say": "눈금 한 칸이 몇 개인지 확인하고 두 값을 읽은 뒤 빼 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 3,
+              "backtrack": "g4s1u5.interpret-bar"
+            }
+          ],
+          "concepts": [
+            "g4s1u5.interpret-bar"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "diff",
+                "label": "몇 개 차이가 나나요?",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g4s1u5.A2.T3",
+          "prompt": "도서관에서 동화책은 역사책의 약 몇 배만큼 빌렸나요? 막대 길이로 어림해요.",
+          "engine": "E18",
+          "mode": "table-to-graph",
+          "cpa": "A",
+          "config": {
+            "mode": "table-to-graph",
+            "data": {
+              "동화": 12,
+              "과학": 7,
+              "역사": 4,
+              "만화": 10
+            },
+            "graph": "given",
+            "graphType": "bar",
+            "scale": 1,
+            "table": "hidden",
+            "tooltips": "hide",
+            "orientation": "horizontal",
+            "valueLabel": "권",
+            "categoryAxisTitle": "책 종류",
+            "valueAxisTitle": "빌린 책(권)"
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.times.value",
+            "value": "3"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 1,
+              "say": "역사 막대를 몇 번 이어 붙이면 동화 막대 길이가 될까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 2,
+              "say": "역사 막대 길이로 동화 막대를 재어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "table-to-graph"
+              },
+              "level": 3,
+              "backtrack": "g4s1u5.interpret-bar"
+            }
+          ],
+          "concepts": [
+            "g4s1u5.interpret-bar"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "times",
+                "label": "약 몇 배인가요?",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
