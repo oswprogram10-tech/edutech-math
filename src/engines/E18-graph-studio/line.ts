@@ -315,6 +315,32 @@ export function lineTickCells(cells: number, skip: number): number[] {
   return result;
 }
 
+const ONE = Rational.of(1);
+const TEN = Rational.of(10);
+
+/** 값이 1·2·5 × 10ⁿ(n은 음수도 가능) 꼴인가. 0 이하는 아니다. */
+export function isNiceStep(value: Rational): boolean {
+  if (value.compareTo(ZERO) <= 0) return false;
+  let rest = value;
+  // 10ⁿ 곱으로 [1, 10) 안에 넣는다. 유한소수·정수가 아니면 곧 끝나지 않으므로 반복을 제한한다.
+  for (let i = 0; i < 40 && rest.compareTo(TEN) >= 0; i += 1) rest = rest.div(TEN);
+  for (let i = 0; i < 40 && rest.compareTo(ONE) < 0; i += 1) rest = rest.mul(TEN);
+  return [1, 2, 5].some((digit) => rest.equals(Rational.of(digit)));
+}
+
+/**
+ * 눈금 글자를 건너뛰는 칸 수. `minSkip`(글자가 겹치지 않는 최소 칸 수) 이상이면서
+ * `skip × yStep`이 1·2·5 × 10ⁿ 꼴이 되는 가장 작은 정수. 그런 값이 없으면 `minSkip`.
+ */
+export function tickSkip(yStep: Rational, minSkip: number): number {
+  const start = Math.max(1, Math.ceil(minSkip));
+  const limit = start + 1000;
+  for (let skip = start; skip <= limit; skip += 1) {
+    if (isNiceStep(yStep.mul(Rational.of(skip)))) return skip;
+  }
+  return start;
+}
+
 /** 눈금 칸 번호 k의 값. */
 export function tickValueOf(g: LineGeometry, k: number): Rational {
   return g.from.add(g.step.mul(Rational.of(k)));

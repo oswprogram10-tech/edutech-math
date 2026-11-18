@@ -518,10 +518,40 @@
   align-items: stretch;
 }
 
+/* 학생이 찍는 그래프: 판이 내용 높이로 정해질 때도 그래프가 가로 폭의 7/10(논리 비율)까지 높이를 갖는다.
+   화면 높이로 상한을 둬 한 화면에 들어오게 하고, 높이가 정해진 판이면 줄어든다(max-height). */
+.views[data-line='true'] > .boardWrap,
+.views[data-line='true'] > .boardArea {
+  --line-board-height: min(70cqw, calc(100dvh - 400px));
+  flex: 1 1 auto;
+  height: var(--line-board-height);
+  min-height: 200px;
+  max-height: 100%;
+}
+
 .lineTableBox {
   flex: 0 0 auto;
   min-width: 0;
   overflow-x: auto;
+}
+
+/* 아주 넓은 판(크롬북·전자칠판)은 표를 그래프 옆에 두어 그래프 높이를 늘린다. */
+@container (min-width: 900px) {
+  .views[data-line='true'] {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  .views[data-line='true'] > .boardWrap,
+  .views[data-line='true'] > .boardArea {
+    flex: 1 1 0;
+    --line-board-height: min(60cqw, calc(100dvh - 400px));
+  }
+
+  .views[data-line='true'] > .lineTableBox {
+    align-self: center;
+    max-width: 38%;
+  }
 }
 
 .lineTableBox .table {

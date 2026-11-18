@@ -1907,6 +1907,76 @@ test.describe('T163: line-graph(꺾은선그래프)', () => {
   });
 });
 
+test.describe('T165: line-graph 판 채우기·눈금 건너뛰기', () => {
+  const POINTS = [
+    { x: '1일', y: '0.5' },
+    { x: '3일', y: '2' },
+    { x: '5일', y: '5.5' },
+    { x: '7일', y: '9.5' },
+    { x: '9일', y: '11' },
+  ];
+  const config = {
+    mode: 'line-graph',
+    points: POINTS,
+    title: '강낭콩 키',
+    categoryAxisTitle: '날짜',
+    valueAxisTitle: '키(cm)',
+    valueLabel: 'cm',
+    yStep: '1',
+    plotStep: '0.5',
+    yMax: '12',
+    graph: 'student',
+  };
+
+  for (const viewport of [null, { width: 660, height: 420 }] as const) {
+    test(`학생 그리기 그래프가 판의 남는 높이를 쓰고 0.5 한 칸이 8px 이상이다${viewport ? '(660x420)' : ''}`, async ({
+      page,
+    }) => {
+      if (viewport) await page.setViewportSize(viewport);
+      await openEngine(page, config, { stageFit: true, mode: 'line-graph' });
+      const canvas = page.getByTestId('graph-canvas');
+      await expect(canvas).toBeVisible();
+      const box = await canvas.boundingBox();
+      const area = await page.locator('div[data-scroll="true"]').boundingBox();
+      if (!box || !area) throw new Error('그래프를 찾지 못했습니다.');
+      const width = Number(await canvas.getAttribute('data-logical-width'));
+      const g = lineGeometry(normalizeLine(config), '0', width);
+      const scale = box.height / LOGICAL_H;
+      const px = g.unit * 0.5 * scale;
+      console.log(
+        `[T165 ${test.info().project.name}${viewport ? ' 660x420' : ''}] 그래프 ${Math.round(box.width)}x${Math.round(box.height)}, 영역 ${Math.round(area.width)}x${Math.round(area.height)}, 0.5 한 칸 ${px.toFixed(1)}px`,
+      );
+      expect(box.height).toBeGreaterThanOrEqual(area.height * 0.9);
+      // 660x420 두 칸 폭은 판이 낮아 그래프 높이 기준(8px)을 완화한다.
+      expect(px).toBeGreaterThanOrEqual(viewport ? 6 : 8);
+    });
+  }
+
+  test('yStep 0.2, 0부터 넓은 범위: 눈금 글자가 5 단위(0, 5, 10, …)로 찍힌다', async ({ page }) => {
+    const wide = {
+      ...config,
+      points: [
+        { x: '9시', y: '36.5' },
+        { x: '10시', y: '37.2' },
+      ],
+      yStep: '0.2',
+      plotStep: '0.1',
+      yMax: '37.6',
+      graph: 'given',
+    };
+    await openEngine(page, wide, { stageFit: true, mode: 'line-graph' });
+    const canvas = page.getByTestId('graph-canvas');
+    await expect(canvas).toBeVisible();
+    const labels = await canvas
+      .locator('g > text[text-anchor="end"]')
+      .evaluateAll((nodes) => nodes.map((node) => node.textContent ?? ''));
+    expect(labels.length).toBeGreaterThan(2);
+    for (const label of labels) expect(Number(label) % 5, label).toBe(0);
+    expect(labels[0]).toBe('0');
+    expect(labels[1]).toBe('5');
+  });
+});
+
 test.describe('T163: line-graph 오버레이 4개', () => {
   const config = {
     mode: 'line-graph',
