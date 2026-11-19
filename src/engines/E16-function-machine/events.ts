@@ -1,7 +1,8 @@
 /**
  * E16의 공개 이벤트·판정. 둘 다 순수 함수다.
  *
- * 이벤트: `trial-added {x, y}`, `rule-tested {valid, holdsAll}`, `cell-entered {cell}`, `x-changed {x}`.
+ * 이벤트: `trial-added {x, y}`, `rule-tested {valid, holdsAll}`, `cell-entered {cell}`, `x-changed {x}`,
+ * `laser-fired {valid, hitCount, allHit}`(rule-shooter).
  * Predicate는 인자가 잘못되면 false를 돌려준다.
  */
 import type { EngineEvent, EnginePredicate, JsonValue, Observation } from '../../core/engine-sdk';
@@ -9,7 +10,13 @@ import { formatRelation } from '../../core/math';
 import { judge, rationalOf, tryParse } from './relation-check';
 import type { FunctionAction, FunctionState } from './types';
 
-export const EVENT_NAMES = ['trial-added', 'rule-tested', 'cell-entered', 'x-changed'] as const;
+export const EVENT_NAMES = [
+  'trial-added',
+  'rule-tested',
+  'cell-entered',
+  'x-changed',
+  'laser-fired',
+] as const;
 
 export function emit(
   prev: FunctionState,
@@ -25,7 +32,25 @@ export function emit(
       events.push({ name: 'trial-added', payload: { x, y } });
     }
   }
-  if (action.type === 'test-rule' && next.tested !== prev.tested && next.tested !== null) {
+  if (
+    next.mode === 'rule-shooter' &&
+    (action.type === 'fire' || action.type === 'test-rule') &&
+    next.tested !== prev.tested &&
+    next.tested !== null
+  ) {
+    const j = judge(next);
+    const last = next.shots[next.shots.length - 1];
+    const hitCount = next.tested.ok && last !== undefined ? last.hits.length : 0;
+    events.push({
+      name: 'laser-fired',
+      payload: {
+        valid: next.tested.ok,
+        hitCount,
+        allHit:
+          j.ruleValid && next.settings.gems.length >= 2 && hitCount === next.settings.gems.length,
+      },
+    });
+  } else if (action.type === 'test-rule' && next.tested !== prev.tested && next.tested !== null) {
     events.push({
       name: 'rule-tested',
       payload: { valid: next.tested.ok, holdsAll: judge(next).holdsAll },
@@ -34,6 +59,8 @@ export function emit(
   if (
     prev.mode !== 'black-box' &&
     next.mode !== 'black-box' &&
+    prev.mode !== 'rule-shooter' &&
+    next.mode !== 'rule-shooter' &&
     (action.type === 'type' || action.type === 'backspace' || action.type === 'clear') &&
     action.target === 'input' &&
     next.active !== null &&
@@ -86,7 +113,11 @@ export const predicates: Readonly<Record<string, EnginePredicate>> = {
   },
   ruleFormDiffers: (observation, args) => {
     const from = recordOf(args).from;
-    if (typeof from !== 'string' || observation.matchesHidden !== true) return false;
+    const matched =
+      observation.mode === 'rule-shooter'
+        ? observation.allHit === true
+        : observation.matchesHidden === true;
+    if (typeof from !== 'string' || !matched) return false;
     const parsed = tryParse(from);
     if (!parsed.ok) return false;
     return observation.ruleFormatted !== formatRelation(parsed.rel);
@@ -94,6 +125,16 @@ export const predicates: Readonly<Record<string, EnginePredicate>> = {
   trialsAtMost: (observation, args) => {
     const n = intArg(recordOf(args), 'n');
     const count = observation.trialCount;
+    return n !== null && typeof count === 'number' && count <= n;
+  },
+  allHit: (observation) => observation.allHit === true,
+  hitCountAtLeast: (observation, args) => {
+    const n = intArg(recordOf(args), 'n');
+    return n !== null && numberOf(observation, 'hitCount') >= n;
+  },
+  shotsAtMost: (observation, args) => {
+    const n = intArg(recordOf(args), 'n');
+    const count = observation.shotCount;
     return n !== null && typeof count === 'number' && count <= n;
   },
   cellsCorrect: (observation) => observation.cellsCorrect === true,

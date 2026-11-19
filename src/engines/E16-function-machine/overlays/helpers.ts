@@ -11,6 +11,12 @@ import type { TableLayout } from '../table-layout';
 import type { FunctionState } from '../types';
 
 export const RELATION_CANVAS = 'svg[data-testid="relation-canvas"]';
+export const SHOOTER_CANVAS = 'svg[data-testid="shooter-canvas"]';
+
+/** rule-shooter 격자 모양이면 본 캔버스가 대응표가 아니라 격자다(표 기준 오버레이는 그리지 않는다). */
+export function onGrid(state: FunctionState): boolean {
+  return state.mode === 'rule-shooter' && state.settings.look === 'grid';
+}
 
 export function argsOf(args: unknown): Readonly<Record<string, unknown>> {
   if (args === null || typeof args !== 'object' || Array.isArray(args)) return {};

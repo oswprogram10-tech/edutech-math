@@ -1,7 +1,8 @@
-/** E16 대응 관계 화면. 상태의 `mode`에 따라 세 모드 화면으로 나눈다. 설정 오류면 빈 판을 그린다. */
+/** E16 대응 관계 화면. 상태의 `mode`에 따라 네 모드 화면으로 나눈다. 설정 오류면 빈 판을 그린다. */
 import type { EngineViewProps } from '../../core/engine-sdk';
 import { BlackBoxView } from './BlackBoxView';
 import { CovaryView } from './CovaryView';
+import { ShooterView } from './ShooterView';
 import { TableView } from './TableView';
 import { functionStrings as S } from './strings.ko';
 import type { FunctionAction, FunctionConfig, FunctionState } from './types';
@@ -22,6 +23,7 @@ export function FunctionView(
     );
   }
   if (state.mode === 'table') return <TableView {...props} state={state} />;
+  if (state.mode === 'rule-shooter') return <ShooterView {...props} state={state} />;
   if (state.mode === 'covary') return <CovaryView {...props} state={state} />;
   return <BlackBoxView {...props} state={state} />;
 }

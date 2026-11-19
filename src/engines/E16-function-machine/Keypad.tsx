@@ -7,6 +7,7 @@ import styles from './View.module.css';
 
 const DIGITS: readonly string[] = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
 const SYMBOLS: readonly string[] = ['○', '□', '+', '−', '×', '÷', '(', ')', '='];
+const OPERATOR_KEYS: ReadonlySet<string> = new Set(['+', '−', '×', '÷']);
 
 interface PadProps {
   readonly disabled: boolean;
@@ -63,9 +64,24 @@ export function NumberPad({ disabled, onKey, onBackspace, onDone }: NumberPadPro
 export interface ExprPadProps extends PadProps {
   readonly onClear: () => void;
   readonly onTest: () => void;
+  /** 보일 연산 단추(`+ − × ÷`). 없으면 넷 다 보인다. */
+  readonly ops?: readonly string[];
+  /** 시험 단추 이름(기본 "규칙 시험하기"). */
+  readonly testLabel?: string;
 }
 
-export function ExprPad({ disabled, onKey, onBackspace, onClear, onTest }: ExprPadProps) {
+export function ExprPad({
+  disabled,
+  onKey,
+  onBackspace,
+  onClear,
+  onTest,
+  ops,
+  testLabel,
+}: ExprPadProps) {
+  const symbols = SYMBOLS.filter(
+    (symbol) => ops === undefined || !OPERATOR_KEYS.has(symbol) || ops.includes(symbol),
+  );
   return (
     <div className={styles.pad} role="group" aria-label={S.keypad.exprPad} data-testid="expr-pad">
       {DIGITS.map((digit) => (
@@ -79,7 +95,7 @@ export function ExprPad({ disabled, onKey, onBackspace, onClear, onTest }: ExprP
           {S.keypad.digit(digit)}
         </button>
       ))}
-      {SYMBOLS.map((symbol) => (
+      {symbols.map((symbol) => (
         <button
           key={symbol}
           type="button"
@@ -112,7 +128,7 @@ export function ExprPad({ disabled, onKey, onBackspace, onClear, onTest }: ExprP
         disabled={disabled}
         onClick={onTest}
       >
-        {S.keypad.test}
+        {testLabel ?? S.keypad.test}
       </button>
     </div>
   );

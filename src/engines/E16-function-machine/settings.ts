@@ -13,6 +13,9 @@ import type {
   CovarySettings,
   FunctionConfig,
   SceneId,
+  ShooterConfig,
+  ShooterOp,
+  ShooterSettings,
   TableConfig,
   TableRowConfig,
   TableSettings,
@@ -156,10 +159,98 @@ export function covarySettings(config: CovaryConfig): CovarySettings {
   return { ...base, error, scene, xMin, xMax, blankRows, look };
 }
 
+export const DEFAULT_GEMS: [number, number][] = [
+  [1, 4],
+  [2, 7],
+  [3, 10],
+  [5, 16],
+];
+export const MIN_GEMS = 2;
+export const MAX_GEMS = 8;
+const OP_KEYS: Readonly<Record<ShooterOp, string>> = { '+': '+', '-': '−', '×': '×', '÷': '÷' };
+
+function ceilInt(value: Rational): number {
+  const whole = Number(value.integerPart());
+  return value.isInteger() ? whole : whole + 1;
+}
+
+/**
+ * rule-shooter 설정. `rule`은 선택(없으면 판정은 보석을 모두 맞혔는가). 보석은 2~8개이고
+ * 0 이상 수여야 한다. `gems`를 아예 쓰지 않으면(샌드박스) 기본 보석을 쓴다.
+ */
+export function shooterSettings(config: ShooterConfig): ShooterSettings {
+  const ruleGiven = typeof config.rule === 'string' && config.rule !== '';
+  let error: string | null = null;
+  if (ruleGiven && hiddenOf(config.rule as string) === null) {
+    error = 'rule';
+    warn(`rule이 읽히지 않거나 □ 하나로 풀린 꼴이 아닙니다: ${config.rule}`);
+  }
+  const source: readonly unknown[] = Array.isArray(config.gems) ? config.gems : DEFAULT_GEMS;
+  const gems: [string, string][] = [];
+  let maxX = Rational.of(0);
+  let maxY = Rational.of(0);
+  for (const gem of source) {
+    const a = Array.isArray(gem) && gem.length === 2 ? gem[0] : undefined;
+    const b = Array.isArray(gem) && gem.length === 2 ? gem[1] : undefined;
+    const x = typeof a === 'number' || typeof a === 'string' ? rationalOf(String(a)) : null;
+    const y = typeof b === 'number' || typeof b === 'string' ? rationalOf(String(b)) : null;
+    if (x === null || y === null || x.isNegative() || y.isNegative()) {
+      error = error ?? 'gems';
+      warn('보석 좌표는 0 이상 수(정수 또는 분수 문자열) 쌍이어야 합니다.');
+      continue;
+    }
+    gems.push([x.toString(), y.toString()]);
+    if (x.compareTo(maxX) > 0) maxX = x;
+    if (y.compareTo(maxY) > 0) maxY = y;
+  }
+  if (gems.length < MIN_GEMS || gems.length > MAX_GEMS) {
+    error = error ?? 'gems';
+    warn(`보석은 ${MIN_GEMS}~${MAX_GEMS}개여야 합니다.`);
+  }
+  let grid = { xMax: ceilInt(maxX) + 2, yMax: ceilInt(maxY) + 3 };
+  const given = config.grid;
+  if (given !== undefined) {
+    if (
+      given !== null &&
+      isInt(given.xMax) &&
+      isInt(given.yMax) &&
+      given.xMax >= 1 &&
+      given.yMax >= 1 &&
+      Rational.of(given.xMax).compareTo(maxX) >= 0 &&
+      Rational.of(given.yMax).compareTo(maxY) >= 0
+    ) {
+      grid = { xMax: given.xMax, yMax: given.yMax };
+    } else {
+      error = error ?? 'grid';
+      warn('grid는 1 이상 정수이고 모든 보석을 담아야 합니다.');
+    }
+  }
+  const ops = Array.isArray(config.allowedOps)
+    ? config.allowedOps.filter((op): op is ShooterOp => op in OP_KEYS)
+    : (Object.keys(OP_KEYS) as ShooterOp[]);
+  return {
+    rule: ruleGiven ? (config.rule as string) : '',
+    xLabel: typeof config.xLabel === 'string' && config.xLabel !== '' ? config.xLabel : '○',
+    yLabel: typeof config.yLabel === 'string' && config.yLabel !== '' ? config.yLabel : '□',
+    ruleInput: true,
+    domain: range(config.domain, DEFAULT_DOMAIN),
+    error,
+    gems,
+    grid,
+    allowedOps: [...new Set(ops)].map((op) => OP_KEYS[op]),
+    look: config.look === 'table' ? 'table' : 'grid',
+    missPanel: config.missPanel !== false,
+    avoidForm: typeof config.avoidForm === 'string' ? config.avoidForm : null,
+  };
+}
+
 export function settingsFor(config: FunctionConfig | undefined) {
   const mode = (config as { mode?: unknown } | undefined)?.mode;
   if (mode === 'table') return { mode, settings: tableSettings(config as TableConfig) } as const;
   if (mode === 'covary') return { mode, settings: covarySettings(config as CovaryConfig) } as const;
+  if (mode === 'rule-shooter') {
+    return { mode, settings: shooterSettings(config as ShooterConfig) } as const;
+  }
   return {
     mode: 'black-box',
     settings: blackBoxSettings((config ?? { mode: 'black-box' }) as BlackBoxConfig),

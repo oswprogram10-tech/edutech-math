@@ -27,6 +27,10 @@ export interface FrameProps {
   /** 조작 묶음의 모드별 부분(입력 줄·슬라이더·표). */
   readonly side: ReactNode;
   readonly status?: string;
+  /** 식 키패드에 보일 연산 단추(없으면 넷 다). */
+  readonly exprOps?: readonly string[];
+  /** 식 키패드의 시험 단추 이름. */
+  readonly testLabel?: string;
 }
 
 const OPERATORS = new Set([...'+−×÷=']);
@@ -85,10 +89,14 @@ export function Frame({
   boardTall = false,
   side,
   status = '',
+  exprOps,
+  testLabel,
 }: FrameProps) {
   const settings = state.settings;
   const target = state.target;
   const showRulePad = settings.ruleInput && target === 'rule';
+  const testAction: FunctionAction =
+    state.mode === 'rule-shooter' ? { type: 'fire' } : { type: 'test-rule' };
   const wrongRule =
     state.tested !== null && !state.tested.ok && state.tested.text === state.ruleText;
 
@@ -100,7 +108,7 @@ export function Frame({
       if (onButton) return;
       event.preventDefault();
       event.stopPropagation();
-      if (target === 'rule') dispatch({ type: 'test-rule' });
+      if (target === 'rule') dispatch(testAction);
       else if (state.mode === 'black-box') dispatch({ type: 'insert-input' });
       else if (settings.ruleInput) dispatch({ type: 'focus', target: 'rule' });
       return;
@@ -187,7 +195,9 @@ export function Frame({
               onKey={(key) => dispatch({ type: 'type', target: 'rule', key })}
               onBackspace={() => dispatch({ type: 'backspace', target: 'rule' })}
               onClear={() => dispatch({ type: 'clear', target: 'rule' })}
-              onTest={() => dispatch({ type: 'test-rule' })}
+              onTest={() => dispatch(testAction)}
+              ops={exprOps}
+              testLabel={testLabel}
             />
           ) : (
             <NumberPad
