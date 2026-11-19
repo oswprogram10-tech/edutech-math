@@ -226,6 +226,8 @@ T172는 소넷 구현 → 검수(수정 없음)를 거쳐 main에 병합했다(2
 T173은 소넷 구현 → 검수 1회(판 전체 화면 기준 스냅샷 6장, 키패드 맨 아래 단추가 스크롤로 닿는지 E2E, 식 입력 칸 띄어 쓰기 표시)를 거쳐 main에 병합했다(2026-11-20). 대응표 칸은 오버레이 정렬 때문에 논리 80×64로 고정하고, 표 아래에 오버레이용 띠를 늘 둔다(오버레이 없을 때 빈 공간). 숫자 키패드에 `/`가 없어 터치로 분수 빈칸을 못 채운다(단원 카드가 정함). covary의 `cells` 키는 `"<○ 값>.y"`다.
 - **T174 병합(2026-11-20):** E16 `rule-shooter`(격자·레이저·✓/✕·빗나간 보석 패널·`look:'table'`), `laser-miss` 오버레이, swap-check 격자 판. `gems`가 없으면 샌드박스 기본 보석을 쓴다. Observation `hits`·`allHit`은 마지막으로 시험한 식 기준이고, `rule`이 없으면 `matchesHidden = allHit`이다. Predicate `allHit`·`hitCountAtLeast`·`shotsAtMost`, `ruleFormDiffers`는 이 모드에서 `allHit` 기준. 모드 select 너비 변화로 기존 E16 스냅샷 6장 갱신. 범위 E2E 179 통과(첫 실행에서 크롬북 "발사 스크롤" 1건이 부하로 한 번 실패, 단독·재실행 통과).
 
+- **T175 병합(2026-11-20):** E15 `calc-pattern`(symmetric-sum-square·repunit-square). 식의 k번째 수가 k번째 블록 열 바로 아래에 놓이고, 쌓기 칸은 2n+1열 × n+1행이다. Observation의 수 목록(`exprAddends`·`exprFactors`·`exprLeft`·`exprRight`)은 문자열이라 콘텐츠에서 큰 수는 글자열로 쓴다. `addends`는 두 수 이상 더하는 변 우선. `pattern`이 없으면 symmetric. calc용 이벤트는 없다. 오버레이 `step-table`(symmetric만)·`column-link`. 범위 E2E 243 통과.
+
 ## 상시
 | 카드 | 내용 |
 | --- | --- |
