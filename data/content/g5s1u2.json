@@ -1670,6 +1670,645 @@
           }
         }
       ]
+    },
+    {
+      "id": "g5s1u2.A2",
+      "title": "맞물려 도는 톱니바퀴",
+      "tasks": [
+        {
+          "id": "g5s1u2.A2.T1",
+          "prompt": "빨간 톱니가 처음 다시 맞닿을 때까지 몇 칸 돌려야 할까요? 돌려 보고 답을 써요.",
+          "engine": "E15",
+          "mode": "gears",
+          "cpa": "C",
+          "config": {
+            "mode": "gears",
+            "teethA": 4,
+            "teethB": 6,
+            "maxSteps": 48
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "metAtLeast",
+                "args": {
+                  "n": 1
+                }
+              },
+              {
+                "kind": "equals",
+                "path": "response.p.value",
+                "value": "12"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.p.value",
+                "value": "24"
+              },
+              "level": 1,
+              "say": "24보다 먼저 두 톱니가 만나는 곳은 없을까?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.p.value",
+                "value": "24"
+              },
+              "level": 2,
+              "show": {
+                "engine": "E15",
+                "overlay": "meet-trail"
+              },
+              "say": "바퀴를 돌리며 두 빨간 표시 톱니가 맞닿는 곳을 처음부터 다시 따라가 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.p.value",
+                "value": "24"
+              },
+              "level": 3,
+              "backtrack": "g5s1u2.multiple-as-skip"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "gears"
+              },
+              "level": 1,
+              "say": "바퀴를 한 칸씩 돌리면서 두 빨간 표시 톱니가 다시 맞닿는 때를 찾아봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "gears"
+              },
+              "level": 2,
+              "say": "돌릴 때마다 아래 수직선에서 점이 어디로 가는지 함께 살펴봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "gears"
+              },
+              "level": 3,
+              "backtrack": "g5s1u2.multiple-as-skip"
+            }
+          ],
+          "concepts": [
+            "g5s1u2.common-multiple-lcm"
+          ],
+          "submit": "button",
+          "views": [
+            {
+              "slot": "gears",
+              "engine": "E15",
+              "mode": "gears",
+              "cpa": "C",
+              "config": {
+                "mode": "gears",
+                "teethA": 4,
+                "teethB": 6,
+                "maxSteps": 48
+              }
+            },
+            {
+              "slot": "line",
+              "engine": "E03",
+              "mode": "skip-count",
+              "cpa": "C",
+              "config": {
+                "mode": "skip-count",
+                "min": 0,
+                "max": 48,
+                "steps": [
+                  4,
+                  6
+                ]
+              }
+            }
+          ],
+          "links": [
+            {
+              "from": "gears",
+              "event": "value-changed",
+              "to": "line"
+            }
+          ],
+          "diagnose": [
+            {
+              "code": "MC-LCM-AS-PRODUCT",
+              "args": {
+                "a": "4",
+                "b": "6"
+              },
+              "path": "response.p.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "p",
+                "label": "처음 다시 맞닿을 때까지 돌린 칸",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g5s1u2.A2.T2",
+          "prompt": "4씩 뛰어 센 수이면서 6씩 뛰어 센 수이기도 한 수를 수직선 두 줄에서 찾아 모두 골라요.",
+          "engine": "E03",
+          "mode": "skip-count",
+          "cpa": "P",
+          "config": {
+            "mode": "skip-count",
+            "min": 0,
+            "max": 48,
+            "steps": [
+              4,
+              6
+            ]
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.cm.selected",
+            "value": [
+              "n12",
+              "n24",
+              "n36",
+              "n48"
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "skip-count"
+              },
+              "level": 1,
+              "say": "4씩 뛴 줄과 6씩 뛴 줄에 모두 표시된 수는 어떤 수일까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "skip-count"
+              },
+              "level": 2,
+              "say": "두 줄에 각각 뛰어 세어 표시하고, 같은 자리에 닿은 수를 찾아봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "skip-count"
+              },
+              "level": 3,
+              "backtrack": "g5s1u2.multiple-as-skip"
+            }
+          ],
+          "concepts": [
+            "g5s1u2.common-multiple-lcm"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "cm",
+                "label": "두 줄에 모두 있는 수",
+                "multiple": true,
+                "options": [
+                  {
+                    "id": "n8",
+                    "label": "8"
+                  },
+                  {
+                    "id": "n12",
+                    "label": "12"
+                  },
+                  {
+                    "id": "n16",
+                    "label": "16"
+                  },
+                  {
+                    "id": "n18",
+                    "label": "18"
+                  },
+                  {
+                    "id": "n24",
+                    "label": "24"
+                  },
+                  {
+                    "id": "n30",
+                    "label": "30"
+                  },
+                  {
+                    "id": "n36",
+                    "label": "36"
+                  },
+                  {
+                    "id": "n42",
+                    "label": "42"
+                  },
+                  {
+                    "id": "n48",
+                    "label": "48"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g5s1u2.A2.T3",
+          "prompt": "톱니가 6개, 9개인 바퀴예요. 몇 칸을 돌리면 빨간 톱니가 처음 다시 맞닿을지 먼저 예측하고, 돌려서 확인한 뒤 답을 써요.",
+          "engine": "E15",
+          "mode": "gears",
+          "cpa": "C",
+          "config": {
+            "mode": "gears",
+            "teethA": 6,
+            "teethB": 9,
+            "maxSteps": 54,
+            "predict": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "predictionLocked"
+              },
+              {
+                "kind": "predicate",
+                "name": "metAtLeast",
+                "args": {
+                  "n": 1
+                }
+              },
+              {
+                "kind": "equals",
+                "path": "response.p.value",
+                "value": "18"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "hasMisconception",
+                    "args": {
+                      "code": "MC-LCM-AS-PRODUCT"
+                    }
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.p.value",
+                    "value": "54"
+                  }
+                ]
+              },
+              "level": 1,
+              "say": "54보다 먼저 두 톱니가 만나는 곳은 없을까?"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "hasMisconception",
+                    "args": {
+                      "code": "MC-LCM-AS-PRODUCT"
+                    }
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.p.value",
+                    "value": "54"
+                  }
+                ]
+              },
+              "level": 2,
+              "show": {
+                "engine": "E15",
+                "overlay": "meet-trail"
+              },
+              "say": "두 바퀴를 돌려 보며 빨간 톱니가 맞닿는 곳이 더 앞에 있는지 살펴봐요."
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "hasMisconception",
+                    "args": {
+                      "code": "MC-LCM-AS-PRODUCT"
+                    }
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.p.value",
+                    "value": "54"
+                  }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g5s1u2.multiple-as-skip"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "gears"
+              },
+              "level": 1,
+              "say": "예측을 정한 뒤 바퀴를 한 칸씩 돌려 두 빨간 표시 톱니가 맞닿는 때를 찾아봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "gears"
+              },
+              "level": 2,
+              "say": "돌린 칸이 늘 때 수직선 두 줄에서 점이 어디에 닿는지 함께 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "gears"
+              },
+              "level": 3,
+              "backtrack": "g5s1u2.multiple-as-skip"
+            }
+          ],
+          "concepts": [
+            "g5s1u2.common-multiple-lcm"
+          ],
+          "submit": "button",
+          "views": [
+            {
+              "slot": "gears",
+              "engine": "E15",
+              "mode": "gears",
+              "cpa": "C",
+              "config": {
+                "mode": "gears",
+                "teethA": 6,
+                "teethB": 9,
+                "maxSteps": 54,
+                "predict": true
+              }
+            },
+            {
+              "slot": "line",
+              "engine": "E03",
+              "mode": "skip-count",
+              "cpa": "C",
+              "config": {
+                "mode": "skip-count",
+                "min": 0,
+                "max": 54,
+                "steps": [
+                  6,
+                  9
+                ]
+              }
+            }
+          ],
+          "links": [
+            {
+              "from": "gears",
+              "event": "value-changed",
+              "to": "line"
+            }
+          ],
+          "diagnose": [
+            {
+              "code": "MC-LCM-AS-PRODUCT",
+              "args": {
+                "a": "6",
+                "b": "9"
+              },
+              "path": "response.p.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "p",
+                "label": "처음 다시 맞닿을 때까지 돌린 칸",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g5s1u2.A2.T4",
+          "prompt": "4개, 6개 톱니바퀴를 돌려 맞닿은 칸 수들을 살펴보고, 공배수와 최소공배수의 관계로 알맞은 설명을 골라요.",
+          "engine": "E15",
+          "mode": "gears",
+          "cpa": "A",
+          "config": {
+            "mode": "gears",
+            "teethA": 4,
+            "teethB": 6,
+            "maxSteps": 48
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.rel.selected",
+            "value": [
+              "ga"
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "gears"
+              },
+              "level": 1,
+              "say": "처음 맞닿은 칸 수와 그다음에 맞닿은 칸 수를 견주어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "gears"
+              },
+              "level": 2,
+              "say": "맞닿은 칸 수들이 처음 맞닿은 칸 수의 몇 배인지 살펴봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "gears"
+              },
+              "level": 3,
+              "backtrack": "g5s1u2.multiple-as-skip"
+            }
+          ],
+          "concepts": [
+            "g5s1u2.factor-multiple-relation"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "rel",
+                "label": "알맞은 설명",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "ga",
+                    "label": "공배수는 모두 최소공배수의 배수예요."
+                  },
+                  {
+                    "id": "na",
+                    "label": "공배수는 모두 두 수를 곱한 수예요."
+                  },
+                  {
+                    "id": "da",
+                    "label": "최소공배수는 두 수 중 큰 수와 같아요."
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g5s1u2.A2.T5",
+          "prompt": "8과 12의 최소공배수를 구해요.",
+          "engine": "E03",
+          "mode": "skip-count",
+          "cpa": "A",
+          "config": {
+            "mode": "skip-count",
+            "min": 0,
+            "max": 48,
+            "steps": [
+              8,
+              12
+            ]
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.p.value",
+            "value": "24"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.p.value",
+                "value": "96"
+              },
+              "level": 1,
+              "say": "96보다 먼저 두 수의 배수가 만나는 곳은 없을까?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.p.value",
+                "value": "96"
+              },
+              "level": 2,
+              "say": "8씩 뛴 줄과 12씩 뛴 줄에서 처음 같은 자리를 찾아봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.p.value",
+                "value": "96"
+              },
+              "level": 3,
+              "backtrack": "g5s1u2.multiple-as-skip"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "skip-count"
+              },
+              "level": 1,
+              "say": "8씩 뛰어 센 수와 12씩 뛰어 센 수 중에서 처음 같아지는 수를 찾아봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "skip-count"
+              },
+              "level": 2,
+              "say": "두 줄을 뛰어 세어 표시하고 같은 자리를 찾아봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "skip-count"
+              },
+              "level": 3,
+              "backtrack": "g5s1u2.multiple-as-skip"
+            }
+          ],
+          "concepts": [
+            "g5s1u2.common-multiple-lcm"
+          ],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-LCM-AS-PRODUCT",
+              "args": {
+                "a": "8",
+                "b": "12"
+              },
+              "path": "response.p.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "p",
+                "label": "최소공배수",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }
