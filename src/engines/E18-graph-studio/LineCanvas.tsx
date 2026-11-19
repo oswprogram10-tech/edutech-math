@@ -13,6 +13,7 @@ import { pointerToLogical, useDrag, useRenderedSize } from '../../core/engine-sd
 import type { TargetSize } from '../../core/engine-sdk';
 import { Rational } from '../../core/math';
 import { textSize } from './layout';
+import { WavyAxisBreak } from './wavy-axis';
 import {
   LINE_HEIGHT,
   LINE_WIDTH,
@@ -73,14 +74,6 @@ function trimmed(
     x2: line.x2 - ux * by,
     y2: line.y2 - uy * by,
   };
-}
-
-function zigzag(x: number, y: number): string {
-  const half = 7;
-  const points = [0, 1, 2, 3, 4].map(
-    (step) => `${x - 14 + step * half},${y + (step % 2 === 0 ? 0 : -6)}`,
-  );
-  return points.join(' ');
 }
 
 export function LineCanvas({ state, dispatch, readOnly, targetSize, tooltipsOn }: LineCanvasProps) {
@@ -339,28 +332,14 @@ export function LineCanvas({ state, dispatch, readOnly, targetSize, tooltipsOn }
         </text>
       ) : null}
       {g.wavy ? (
-        <>
-          <line
-            x1={plot.x}
-            x2={plot.x}
-            y1={bottom}
-            y2={bottom - g.unit * 0.35}
-            stroke={INK}
-            strokeWidth={3}
-          />
-          <line
-            x1={plot.x}
-            x2={plot.x}
-            y1={bottom - g.unit * 0.65}
-            y2={plot.y}
-            stroke={INK}
-            strokeWidth={3}
-          />
-          <g data-testid="line-wavy" data-wavy="true" fill="none" stroke={INK} strokeWidth={3}>
-            <polyline points={zigzag(plot.x, bottom - g.unit * 0.35)} />
-            <polyline points={zigzag(plot.x, bottom - g.unit * 0.65)} />
-          </g>
-        </>
+        <WavyAxisBreak
+          x={plot.x}
+          top={plot.y}
+          bottom={bottom}
+          unit={g.unit}
+          ink={INK}
+          testId="line-wavy"
+        />
       ) : (
         <line x1={plot.x} x2={plot.x} y1={plot.y} y2={bottom} stroke={INK} strokeWidth={3} />
       )}

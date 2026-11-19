@@ -7,13 +7,16 @@
  * - T156: `pictograph`(그림 놓기·묶기·펼치기·범례)와 `class-vote`(투표 쌓기)를 더했다.
  */
 import {
+  CHECKLIST_ITEMS,
   DATA_MAX,
+  HEADLINE_MAX,
   DEFAULT_LEGEND_BIG,
   DEFAULT_LEGEND_OPTIONS,
   DEFAULT_SCALE_OPTIONS,
   DEFAULT_VOTE_AXIS_MAX,
 } from './types';
 import { Rational } from '../../core/math';
+import { canToggleGroupOn, normalizeDistortion, toLargeCount } from './distortion';
 import { autoSegments, normalizeLine, normalizePair, snapValue, valueOf } from './line';
 import type {
   BandCircleSettings,
@@ -23,6 +26,7 @@ import type {
   ClassVoteState,
   CompareSettings,
   DatasetOption,
+  DistortionState,
   GraphAction,
   GraphConfig,
   GraphMode,
@@ -79,7 +83,8 @@ export function inferMode(config: GraphConfig | undefined): GraphMode {
     mode === 'pictograph' ||
     mode === 'class-vote' ||
     mode === 'line-graph' ||
-    mode === 'band-circle'
+    mode === 'band-circle' ||
+    mode === 'distortion'
     ? mode
     : 'table-to-graph';
 }
@@ -214,7 +219,10 @@ function normalizeBandCircle(
 export function normalizeSettings(config: GraphConfig | undefined, mode: GraphMode): GraphSettings {
   const record = recordOf(config);
 
-  const rawData = mode === 'band-circle' ? pairsToRecord(record['data']) : record['data'];
+  const rawData =
+    mode === 'band-circle' || mode === 'distortion'
+      ? pairsToRecord(record['data'])
+      : record['data'];
   const dataRecord =
     rawData !== null && typeof rawData === 'object' && !Array.isArray(rawData)
       ? (rawData as Readonly<Record<string, unknown>>)
@@ -224,7 +232,10 @@ export function normalizeSettings(config: GraphConfig | undefined, mode: GraphMo
     : [];
 
   const datasets =
-    mode === 'class-vote' || mode === 'line-graph' || mode === 'band-circle'
+    mode === 'class-vote' ||
+    mode === 'line-graph' ||
+    mode === 'band-circle' ||
+    mode === 'distortion'
       ? []
       : normalizeDatasets(record['datasets'], record);
   const line = mode === 'line-graph' ? normalizeLine(record) : null;
@@ -242,7 +253,12 @@ export function normalizeSettings(config: GraphConfig | undefined, mode: GraphMo
     if (categories.length === 0) categories = uniqueStrings(record['categories']);
   } else if (dataRecord) {
     categories = Object.keys(dataRecord);
-    data = Object.fromEntries(categories.map((cat) => [cat, toCount(dataRecord[cat])]));
+    data = Object.fromEntries(
+      categories.map((cat) => [
+        cat,
+        mode === 'distortion' ? toLargeCount(dataRecord[cat]) : toCount(dataRecord[cat]),
+      ]),
+    );
   } else {
     categories = uniqueStrings(record['categories']);
     if (categories.length === 0) categories = uniqueStrings(rawItems);
@@ -272,6 +288,10 @@ export function normalizeSettings(config: GraphConfig | undefined, mode: GraphMo
   if (mode === 'band-circle') {
     graph = 'given';
     if (table !== 'hidden') table = 'given';
+  }
+  if (mode === 'distortion') {
+    graph = 'given';
+    table = 'hidden';
   }
 
   const graphType: GraphType =
@@ -351,6 +371,7 @@ export function normalizeSettings(config: GraphConfig | undefined, mode: GraphMo
     source: '',
     line,
     bandCircle: mode === 'band-circle' ? normalizeBandCircle(record, categories, data) : null,
+    distortion: mode === 'distortion' ? normalizeDistortion(record, data, categories) : null,
   };
 }
 
@@ -432,6 +453,21 @@ export function createInitialState(config: GraphConfig | undefined): GraphState 
     };
   }
   if (mode === 'class-vote') return { ...base, mode, votes: [] };
+  if (mode === 'distortion' && settings.distortion !== null) {
+    const distortion = settings.distortion;
+    return {
+      ...base,
+      mode,
+      yStart: distortion.yStart,
+      yStep: distortion.yStep,
+      wavy: distortion.wavy,
+      groups: [],
+      headline: [],
+      exampleMarks: Object.fromEntries(distortion.examples.map((example) => [example.id, []])),
+      exampleIndex: 0,
+      history: { yStartChanged: false, yStepChanged: false, grouped: false },
+    };
+  }
   if (mode === 'band-circle' && settings.bandCircle !== null) {
     const band = settings.bandCircle;
     const percents: Record<string, number | null> = {};
@@ -590,6 +626,90 @@ function reduceBand(state: BandCircleState, action: BandAction): BandCircleState
       if (!Number.isFinite(action.value)) return state;
       const curl = clampInt(Math.round(action.value), 0, 100);
       return curl === state.curl ? state : { ...state, curl };
+    }
+  }
+}
+
+type DistortionAction = Extract<
+  GraphAction,
+  {
+    readonly type:
+      | 'set-y-start'
+      | 'set-y-step'
+      | 'toggle-wavy'
+      | 'toggle-group'
+      | 'add-headline'
+      | 'clear-headline'
+      | 'toggle-example-mark'
+      | 'show-example';
+  }
+>;
+
+function reduceDistortion(state: DistortionState, action: DistortionAction): DistortionState {
+  const distortion = state.settings.distortion;
+  if (distortion === null) return state;
+  switch (action.type) {
+    case 'set-y-start': {
+      if (!distortion.yStartOptions.includes(action.value) || action.value === state.yStart) {
+        return state;
+      }
+      return {
+        ...state,
+        yStart: action.value,
+        history: { ...state.history, yStartChanged: true },
+      };
+    }
+    case 'set-y-step': {
+      if (!distortion.yStepOptions.includes(action.value) || action.value === state.yStep) {
+        return state;
+      }
+      return { ...state, yStep: action.value, history: { ...state.history, yStepChanged: true } };
+    }
+    case 'toggle-wavy':
+      return { ...state, wavy: !state.wavy };
+    case 'toggle-group': {
+      if (state.groups.includes(action.label)) {
+        return { ...state, groups: state.groups.filter((label) => label !== action.label) };
+      }
+      if (!canToggleGroupOn(distortion.groupOptions, state.groups, action.label)) return state;
+      return {
+        ...state,
+        groups: [...state.groups, action.label],
+        history: { ...state.history, grouped: true },
+      };
+    }
+    case 'add-headline': {
+      if (!distortion.headlineCards.includes(action.card)) return state;
+      if (state.headline.length >= HEADLINE_MAX) return state;
+      return { ...state, headline: [...state.headline, action.card] };
+    }
+    case 'clear-headline':
+      return state.headline.length === 0 ? state : { ...state, headline: [] };
+    case 'toggle-example-mark': {
+      const item = CHECKLIST_ITEMS.find((candidate) => candidate === action.item);
+      if (
+        item === undefined ||
+        !distortion.checklist.includes(item) ||
+        !distortion.examples.some((example) => example.id === action.example)
+      ) {
+        return state;
+      }
+      const current = state.exampleMarks[action.example] ?? [];
+      const next = current.includes(item)
+        ? current.filter((candidate) => candidate !== item)
+        : CHECKLIST_ITEMS.filter((candidate) => candidate === item || current.includes(candidate));
+      return { ...state, exampleMarks: { ...state.exampleMarks, [action.example]: next } };
+    }
+    case 'show-example': {
+      if (
+        !Number.isInteger(action.index) ||
+        action.index < 0 ||
+        action.index > distortion.examples.length ||
+        action.index === state.exampleIndex
+      ) {
+        return state;
+      }
+      return { ...state, exampleIndex: action.index };
     }
   }
 }
@@ -777,6 +897,16 @@ export function reduce(state: GraphState, action: GraphAction): GraphState {
     case 'set-curl':
       return state.mode === 'band-circle' ? reduceBand(state, action) : state;
 
+    case 'set-y-start':
+    case 'set-y-step':
+    case 'toggle-wavy':
+    case 'toggle-group':
+    case 'add-headline':
+    case 'clear-headline':
+    case 'toggle-example-mark':
+    case 'show-example':
+      return state.mode === 'distortion' ? reduceDistortion(state, action) : state;
+
     case 'pick-dataset': {
       const option = settings.datasets.find((item) => item.id === action.id);
       if (!option || state.datasetId === option.id) return state;
@@ -813,6 +943,17 @@ export function reduce(state: GraphState, action: GraphAction): GraphState {
       return state.mode === 'line-graph' ? reduceLine(state, action) : state;
 
     case 'reset-graph': {
+      if (state.mode === 'distortion') {
+        const distortion = state.settings.distortion;
+        if (distortion === null) return state;
+        return {
+          ...state,
+          yStart: distortion.yStart,
+          yStep: distortion.yStep,
+          wavy: distortion.wavy,
+          groups: [],
+        };
+      }
       if (state.mode === 'band-circle') {
         const band = state.settings.bandCircle;
         if (band === null) return state;

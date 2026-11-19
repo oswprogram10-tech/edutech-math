@@ -6,6 +6,7 @@
 import { useMemo } from 'react';
 import type { EngineViewProps } from '../../core/engine-sdk';
 import { BandCircleView } from './BandCircleView';
+import { DistortionView } from './DistortionView';
 import { GraphCanvas } from './GraphCanvas';
 import { ScrollBoard } from './ScrollBoard';
 import { PictoIconSvg } from './icons';
@@ -34,6 +35,7 @@ export function GraphView(props: GraphViewProps) {
   }
   if (state.mode === 'line-graph') return <LineView {...props} state={state} />;
   if (state.mode === 'band-circle') return <BandCircleView {...props} state={state} />;
+  if (state.mode === 'distortion') return <DistortionView {...props} state={state} />;
   return <StandardView {...props} />;
 }
 

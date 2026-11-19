@@ -43,6 +43,7 @@ describe('E18 정의', () => {
       'class-vote',
       'line-graph',
       'band-circle',
+      'distortion',
     ]);
     expect(definition.layout).toBe('fit');
     expect(Object.keys(definition.overlays ?? {}).sort()).toEqual([
@@ -58,6 +59,7 @@ describe('E18 정의', () => {
       'tally-check',
       'total-bars',
       'unfold-axis',
+      'zero-axis',
     ]);
   });
 });
@@ -521,6 +523,10 @@ describe('E18 이벤트', () => {
       'percent-changed',
       'band-changed',
       'curl-changed',
+      'axis-changed',
+      'group-changed',
+      'headline-changed',
+      'mark-changed',
     ]);
   });
 

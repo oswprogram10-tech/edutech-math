@@ -25,6 +25,10 @@ export const EVENT_NAMES = [
   'percent-changed',
   'band-changed',
   'curl-changed',
+  'axis-changed',
+  'group-changed',
+  'headline-changed',
+  'mark-changed',
 ] as const;
 
 export function emit(prev: GraphState, next: GraphState, action: GraphAction): EngineEvent[] {
@@ -104,6 +108,28 @@ export function emit(prev: GraphState, next: GraphState, action: GraphAction): E
     }
     if (prev.curl !== next.curl) {
       events.push({ name: 'curl-changed', payload: { value: next.curl } });
+    }
+  }
+
+  if (prev.mode === 'distortion' && next.mode === 'distortion') {
+    if (prev.yStart !== next.yStart || prev.yStep !== next.yStep || prev.wavy !== next.wavy) {
+      events.push({
+        name: 'axis-changed',
+        payload: { yStart: next.yStart, yStep: next.yStep, wavy: next.wavy },
+      });
+    }
+    if (prev.groups.join('|') !== next.groups.join('|')) {
+      events.push({ name: 'group-changed', payload: { groups: [...next.groups] } });
+    }
+    if (prev.headline.join('|') !== next.headline.join('|')) {
+      events.push({ name: 'headline-changed', payload: { length: next.headline.length } });
+    }
+    if (action.type === 'toggle-example-mark') {
+      const before = (prev.exampleMarks[action.example] ?? []).join('|');
+      const after = (next.exampleMarks[action.example] ?? []).join('|');
+      if (before !== after) {
+        events.push({ name: 'mark-changed', payload: { example: action.example } });
+      }
     }
   }
 
@@ -295,6 +321,39 @@ export const predicates: Readonly<Record<string, EnginePredicate>> = {
       default:
         return false;
     }
+  },
+
+  /** 세로축 시작값이 `value`보다 크다. */
+  yStartAbove: (observation, args) => {
+    const value = recordOf(args)['value'];
+    const current = observation['yStart'];
+    return typeof value === 'number' && typeof current === 'number' && current > value;
+  },
+
+  yStartIs: (observation, args) => {
+    const value = recordOf(args)['value'];
+    return typeof value === 'number' && observation['yStart'] === value;
+  },
+
+  /** 눈에 보이는 막대 높이의 비(가장 긴 ÷ 가장 짧은)가 `value` 이상이다. 비를 못 구하면 false. */
+  visualRatioAtLeast: (observation, args) => {
+    const wanted = rationalOf(recordOf(args)['value']);
+    const current = rationalOf(observation['visualRatio']);
+    return wanted !== null && current !== null && current.compareTo(wanted) >= 0;
+  },
+
+  /** 눈에 보이는 막대 높이의 비가 `value` 이하다. 비를 못 구하면 false. */
+  visualRatioAtMost: (observation, args) => {
+    const wanted = rationalOf(recordOf(args)['value']);
+    const current = rationalOf(observation['visualRatio']);
+    return wanted !== null && current !== null && current.compareTo(wanted) <= 0;
+  },
+
+  /** 예시 그래프에서 고른 "문제 있음" 항목이 실제 문제와 같다. `example`이 없으면 모든 예시가 그렇다. */
+  marksMatch: (observation, args) => {
+    const example = recordOf(args)['example'];
+    if (typeof example === 'string') return recordOf(observation['marksMatch'])[example] === true;
+    return observation['allMarksMatch'] === true;
   },
 
   hasMisconception: (observation, args) => {
