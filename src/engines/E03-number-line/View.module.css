@@ -73,6 +73,16 @@
   outline: none;
 }
 
+.scrollBox {
+  overflow-x: auto;
+  border-radius: 16px;
+}
+
+.scrollBox:focus-visible {
+  outline: 3px solid #101828;
+  outline-offset: 2px;
+}
+
 .canvas:focus-visible {
   box-shadow: 0 0 0 4px #101828 inset;
 }

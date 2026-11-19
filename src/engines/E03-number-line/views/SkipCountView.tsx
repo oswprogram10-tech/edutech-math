@@ -19,6 +19,8 @@ import styles from '../View.module.css';
 
 const LOGICAL = { width: LOGICAL_WIDTH, height: LOGICAL_HEIGHT };
 const TAP_SLOP = 6;
+/** 판이 좁아도 수직선 SVG가 이 배율보다 작아지지 않는다. 더 좁으면 상자 안에서 가로로 민다. */
+const MIN_SCALE = 0.7;
 const MIN_STEP_LABEL_WIDTH = 28;
 const ROW_COLORS = ['#0f7b6c', '#8a3bd8', '#b35c00', '#2f6fde'];
 const ROW_DASHES = ['', '10 6', '3 5', '14 5 3 5'];
@@ -291,250 +293,264 @@ export function SkipCountView({
         ) : null}
       </div>
 
-      <svg
-        ref={svgRef}
-        className={styles.canvas}
-        viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
-        role="group"
-        aria-label={numberLineStrings.canvasLabel}
-        data-testid="number-line-canvas"
-        data-mode="skip-count"
-        data-tick={formattedUnit}
-        data-row-count={rowCount}
-        data-view-min={state.viewMin}
-        data-view-max={state.viewMax}
-        tabIndex={readOnly ? -1 : 0}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={(event) => finish(event, false)}
-        onPointerCancel={(event) => finish(event, true)}
-        onKeyDown={onKeyDown}
-        onFocus={() => setFocused(true)}
-        onBlur={(event) => {
-          const next = event.relatedTarget;
-          if (!(next instanceof Node) || !event.currentTarget.contains(next)) setFocused(false);
-        }}
+      <div
+        className={styles.scrollBox}
+        data-testid="skip-scroll"
+        tabIndex={0}
+        role="region"
+        aria-label={numberLineStrings.skip.scrollLabel}
       >
-        <defs>
-          <marker
-            id="e03-skip-arrow"
-            viewBox="0 0 10 10"
-            refX="8"
-            refY="5"
-            markerWidth="7"
-            markerHeight="7"
-            orient="auto-start-reverse"
-          >
-            <path d="M 0 0 L 10 5 L 0 10 z" className={styles.arrowHead} />
-          </marker>
-        </defs>
-        <rect width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} rx={16} className={styles.background} />
-        <rect
-          width={LOGICAL_WIDTH}
-          height={LOGICAL_HEIGHT}
-          rx={16}
-          fill="none"
-          className={styles.edge}
-          pointerEvents="none"
-        />
-
-        {tickRows.map((tickRow, index) => {
-          const ticks = visibleTicks(tickRow, min, viewMin, viewMax);
-          return (
-            <g key={`line-${index}`} data-row={index} data-active={index === activeRow}>
-              <line
-                x1={LINE_LEFT}
-                y1={tickRow.y}
-                x2={LINE_RIGHT}
-                y2={tickRow.y}
-                className={styles.line}
-                pointerEvents="none"
-              />
-              {ticks.map((tick) => {
-                const major = tick.value.div(Rational.of(5)).isInteger();
-                return (
-                  <g
-                    key={`tick-${index}-${tick.index}`}
-                    pointerEvents="none"
-                    data-tick-index={tick.index}
-                    data-tick-value={tick.value.toJSON()}
-                  >
-                    <line
-                      x1={tick.x}
-                      y1={tickRow.y - (major ? 11 : 6)}
-                      x2={tick.x}
-                      y2={tickRow.y + (major ? 11 : 6)}
-                      className={major ? styles.majorTick : styles.tick}
-                    />
-                    {index === 0 && tick.index % 5 === 0 ? (
-                      <text x={tick.x} y={tickRow.y + 32} className={styles.majorTickLabel}>
-                        {formatValue(tick.value, 'integer')}
-                      </text>
-                    ) : null}
-                  </g>
-                );
-              })}
-            </g>
-          );
-        })}
-
-        {linked && linked.compareTo(min) >= 0 && linked.compareTo(max) <= 0 ? (
-          <g
-            pointerEvents="none"
-            opacity={0.75}
-            data-testid="linked-marker"
-            data-value={state.linkedValue}
-          >
-            <line
-              x1={xOf(linked)}
-              y1={firstY - 64}
-              x2={xOf(linked)}
-              y2={lastY + 22}
-              className={styles.linkedBody}
-              style={{ fill: 'none' }}
-            />
-            {ys.map((y, index) => (
-              <rect
-                key={`linked-${index}`}
-                x={xOf(linked) - 9}
-                y={y - 9}
-                width={18}
-                height={18}
-                transform={`rotate(45 ${xOf(linked)} ${y})`}
-                className={styles.linkedBody}
-              />
-            ))}
-            <text x={xOf(linked)} y={firstY - 70} className={styles.linkedLabel}>
-              {numberLineStrings.linkedPoint} {formatValue(linked, 'integer')}
-            </text>
-          </g>
-        ) : null}
-
-        {start ? (
-          <g pointerEvents="none" data-testid="skip-start">
-            <path d={`M ${xOf(start)} ${firstY - 14} l 8 14 l -8 14 l -8 -14 z`} fill="#1d2330" />
-            <text x={xOf(start)} y={firstY - 22} className={styles.rowLabel} textAnchor="middle">
-              {formatValue(start, 'integer')}
-            </text>
-          </g>
-        ) : null}
-
-        {rows.map((skipRow, rowIndex) => {
-          const y = ys[rowIndex] ?? 300;
-          const dash = ROW_DASHES[rowIndex % ROW_DASHES.length] ?? '';
-          const color = ROW_COLORS[rowIndex % ROW_COLORS.length] ?? '#0f7b6c';
-          const points = [skip?.start ?? state.cursor, ...skipRow.hops]
-            .map((value) => parseValue(value))
-            .filter((value): value is Rational => value !== null);
-          const stepValue = parseValue(skipRow.step ?? undefined);
-          const arcs: { from: Rational; to: Rational; index: number }[] = [];
-          for (let index = 1; index < points.length; index += 1) {
-            const from = points[index - 1];
-            const to = points[index];
-            if (from && to) arcs.push({ from, to, index });
-          }
-          return (
-            <g key={`hops-${rowIndex}`} pointerEvents="none" data-hop-row={rowIndex}>
-              {arcs.map((arc) => {
-                const x1 = xOf(arc.from);
-                const x2 = xOf(arc.to);
-                const lift = 48 + rowIndex * 6;
-                const top = y - lift;
-                const mid = (x1 + x2) / 2;
-                const showStep = stepValue !== null && Math.abs(x2 - x1) >= MIN_STEP_LABEL_WIDTH;
-                return (
-                  <g key={`arc-${rowIndex}-${arc.index}`}>
-                    <path
-                      d={`M ${x1} ${y - 16} Q ${mid} ${top} ${x2} ${y - 16}`}
-                      fill="none"
-                      stroke={color}
-                      strokeWidth={rowIndex === activeRow ? 3.5 : 2.5}
-                      strokeDasharray={dash}
-                      markerEnd="url(#e03-skip-arrow)"
-                    />
-                    {showStep && stepValue ? (
-                      <text
-                        x={mid}
-                        y={top + 16}
-                        textAnchor="middle"
-                        fill={color}
-                        className={styles.jumpLabel}
-                        data-testid="skip-hop-step-label"
-                      >
-                        {formatValue(stepValue, 'integer')}
-                      </text>
-                    ) : null}
-                  </g>
-                );
-              })}
-              {rowIndex === activeRow
-                ? skipRow.hops.map((hopValue, hopIndex) => {
-                    const parsed = parseValue(hopValue);
-                    if (!parsed) return null;
-                    return (
-                      <circle
-                        key={`landing-${rowIndex}-${hopIndex}`}
-                        cx={xOf(parsed)}
-                        cy={y}
-                        r={pointRadius * 0.7}
-                        fill={color}
-                        stroke="#ffffff"
-                        strokeWidth={2}
-                      />
-                    );
-                  })
-                : null}
-            </g>
-          );
-        })}
-
-        {state.points.map((point) => {
-          const parsed = parseValue(point.value);
-          if (!parsed) return null;
-          return (
-            <g
-              key={point.id}
-              pointerEvents="none"
-              data-point-id={point.id}
-              data-value={point.value}
+        <svg
+          ref={svgRef}
+          className={styles.canvas}
+          style={{ minWidth: LOGICAL_WIDTH * MIN_SCALE }}
+          viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
+          role="group"
+          aria-label={numberLineStrings.canvasLabel}
+          data-testid="number-line-canvas"
+          data-mode="skip-count"
+          data-tick={formattedUnit}
+          data-row-count={rowCount}
+          data-view-min={state.viewMin}
+          data-view-max={state.viewMax}
+          tabIndex={readOnly ? -1 : 0}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={(event) => finish(event, false)}
+          onPointerCancel={(event) => finish(event, true)}
+          onKeyDown={onKeyDown}
+          onFocus={() => setFocused(true)}
+          onBlur={(event) => {
+            const next = event.relatedTarget;
+            if (!(next instanceof Node) || !event.currentTarget.contains(next)) setFocused(false);
+          }}
+        >
+          <defs>
+            <marker
+              id="e03-skip-arrow"
+              viewBox="0 0 10 10"
+              refX="8"
+              refY="5"
+              markerWidth="7"
+              markerHeight="7"
+              orient="auto-start-reverse"
             >
-              <circle
-                cx={xOf(parsed)}
-                cy={ys[0] ?? 300}
-                r={pointRadius}
-                className={styles.pointBody}
+              <path d="M 0 0 L 10 5 L 0 10 z" className={styles.arrowHead} />
+            </marker>
+          </defs>
+          <rect
+            width={LOGICAL_WIDTH}
+            height={LOGICAL_HEIGHT}
+            rx={16}
+            className={styles.background}
+          />
+          <rect
+            width={LOGICAL_WIDTH}
+            height={LOGICAL_HEIGHT}
+            rx={16}
+            fill="none"
+            className={styles.edge}
+            pointerEvents="none"
+          />
+
+          {tickRows.map((tickRow, index) => {
+            const ticks = visibleTicks(tickRow, min, viewMin, viewMax);
+            return (
+              <g key={`line-${index}`} data-row={index} data-active={index === activeRow}>
+                <line
+                  x1={LINE_LEFT}
+                  y1={tickRow.y}
+                  x2={LINE_RIGHT}
+                  y2={tickRow.y}
+                  className={styles.line}
+                  pointerEvents="none"
+                />
+                {ticks.map((tick) => {
+                  const major = tick.value.div(Rational.of(5)).isInteger();
+                  return (
+                    <g
+                      key={`tick-${index}-${tick.index}`}
+                      pointerEvents="none"
+                      data-tick-index={tick.index}
+                      data-tick-value={tick.value.toJSON()}
+                    >
+                      <line
+                        x1={tick.x}
+                        y1={tickRow.y - (major ? 11 : 6)}
+                        x2={tick.x}
+                        y2={tickRow.y + (major ? 11 : 6)}
+                        className={major ? styles.majorTick : styles.tick}
+                      />
+                      {index === 0 && tick.index % 5 === 0 ? (
+                        <text x={tick.x} y={tickRow.y + 32} className={styles.majorTickLabel}>
+                          {formatValue(tick.value, 'integer')}
+                        </text>
+                      ) : null}
+                    </g>
+                  );
+                })}
+              </g>
+            );
+          })}
+
+          {linked && linked.compareTo(min) >= 0 && linked.compareTo(max) <= 0 ? (
+            <g
+              pointerEvents="none"
+              opacity={0.75}
+              data-testid="linked-marker"
+              data-value={state.linkedValue}
+            >
+              <line
+                x1={xOf(linked)}
+                y1={firstY - 64}
+                x2={xOf(linked)}
+                y2={lastY + 22}
+                className={styles.linkedBody}
+                style={{ fill: 'none' }}
               />
-              <text
-                x={xOf(parsed)}
-                y={(ys[0] ?? 300) - pointRadius - 10}
-                className={styles.pointLabel}
-              >
-                {formatValue(parsed, 'integer')}
+              {ys.map((y, index) => (
+                <rect
+                  key={`linked-${index}`}
+                  x={xOf(linked) - 9}
+                  y={y - 9}
+                  width={18}
+                  height={18}
+                  transform={`rotate(45 ${xOf(linked)} ${y})`}
+                  className={styles.linkedBody}
+                />
+              ))}
+              <text x={xOf(linked)} y={firstY - 70} className={styles.linkedLabel}>
+                {numberLineStrings.linkedPoint} {formatValue(linked, 'integer')}
               </text>
             </g>
-          );
-        })}
+          ) : null}
 
-        {focused && !readOnly ? (
-          <g pointerEvents="none" data-testid="skip-cursor">
-            <line
-              x1={xOf(cursor)}
-              y1={activeY - 26}
-              x2={xOf(cursor)}
-              y2={activeY + 26}
-              className={styles.cursor}
-            />
-            <text
-              x={xOf(cursor)}
-              y={activeY + 54}
-              className={styles.cursorLabel}
-              textAnchor="middle"
-            >
-              {formatValue(cursor, 'integer')}
-            </text>
-          </g>
-        ) : null}
-      </svg>
+          {start ? (
+            <g pointerEvents="none" data-testid="skip-start">
+              <path d={`M ${xOf(start)} ${firstY - 14} l 8 14 l -8 14 l -8 -14 z`} fill="#1d2330" />
+              <text x={xOf(start)} y={firstY - 22} className={styles.rowLabel} textAnchor="middle">
+                {formatValue(start, 'integer')}
+              </text>
+            </g>
+          ) : null}
+
+          {rows.map((skipRow, rowIndex) => {
+            const y = ys[rowIndex] ?? 300;
+            const dash = ROW_DASHES[rowIndex % ROW_DASHES.length] ?? '';
+            const color = ROW_COLORS[rowIndex % ROW_COLORS.length] ?? '#0f7b6c';
+            const points = [skip?.start ?? state.cursor, ...skipRow.hops]
+              .map((value) => parseValue(value))
+              .filter((value): value is Rational => value !== null);
+            const stepValue = parseValue(skipRow.step ?? undefined);
+            const arcs: { from: Rational; to: Rational; index: number }[] = [];
+            for (let index = 1; index < points.length; index += 1) {
+              const from = points[index - 1];
+              const to = points[index];
+              if (from && to) arcs.push({ from, to, index });
+            }
+            return (
+              <g key={`hops-${rowIndex}`} pointerEvents="none" data-hop-row={rowIndex}>
+                {arcs.map((arc) => {
+                  const x1 = xOf(arc.from);
+                  const x2 = xOf(arc.to);
+                  const lift = 48 + rowIndex * 6;
+                  const top = y - lift;
+                  const mid = (x1 + x2) / 2;
+                  const showStep = stepValue !== null && Math.abs(x2 - x1) >= MIN_STEP_LABEL_WIDTH;
+                  return (
+                    <g key={`arc-${rowIndex}-${arc.index}`}>
+                      <path
+                        d={`M ${x1} ${y - 16} Q ${mid} ${top} ${x2} ${y - 16}`}
+                        fill="none"
+                        stroke={color}
+                        strokeWidth={rowIndex === activeRow ? 3.5 : 2.5}
+                        strokeDasharray={dash}
+                        markerEnd="url(#e03-skip-arrow)"
+                      />
+                      {showStep && stepValue ? (
+                        <text
+                          x={mid}
+                          y={top + 16}
+                          textAnchor="middle"
+                          fill={color}
+                          className={styles.jumpLabel}
+                          data-testid="skip-hop-step-label"
+                        >
+                          {formatValue(stepValue, 'integer')}
+                        </text>
+                      ) : null}
+                    </g>
+                  );
+                })}
+                {rowIndex === activeRow
+                  ? skipRow.hops.map((hopValue, hopIndex) => {
+                      const parsed = parseValue(hopValue);
+                      if (!parsed) return null;
+                      return (
+                        <circle
+                          key={`landing-${rowIndex}-${hopIndex}`}
+                          cx={xOf(parsed)}
+                          cy={y}
+                          r={pointRadius * 0.7}
+                          fill={color}
+                          stroke="#ffffff"
+                          strokeWidth={2}
+                        />
+                      );
+                    })
+                  : null}
+              </g>
+            );
+          })}
+
+          {state.points.map((point) => {
+            const parsed = parseValue(point.value);
+            if (!parsed) return null;
+            return (
+              <g
+                key={point.id}
+                pointerEvents="none"
+                data-point-id={point.id}
+                data-value={point.value}
+              >
+                <circle
+                  cx={xOf(parsed)}
+                  cy={ys[0] ?? 300}
+                  r={pointRadius}
+                  className={styles.pointBody}
+                />
+                <text
+                  x={xOf(parsed)}
+                  y={(ys[0] ?? 300) - pointRadius - 10}
+                  className={styles.pointLabel}
+                >
+                  {formatValue(parsed, 'integer')}
+                </text>
+              </g>
+            );
+          })}
+
+          {focused && !readOnly ? (
+            <g pointerEvents="none" data-testid="skip-cursor">
+              <line
+                x1={xOf(cursor)}
+                y1={activeY - 26}
+                x2={xOf(cursor)}
+                y2={activeY + 26}
+                className={styles.cursor}
+              />
+              <text
+                x={xOf(cursor)}
+                y={activeY + 54}
+                className={styles.cursorLabel}
+                textAnchor="middle"
+              >
+                {formatValue(cursor, 'integer')}
+              </text>
+            </g>
+          ) : null}
+        </svg>
+      </div>
 
       <p className={styles.instructions}>{numberLineStrings.instructions['skip-count']}</p>
     </div>
