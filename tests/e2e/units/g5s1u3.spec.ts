@@ -322,7 +322,7 @@ test('g5s1u3.A1.T3 — □ = □ + 4: RECURSIVE-ONLY ① → ② long-chain 정�
   await submit(page);
   await expectFailedWithHint(page, '의자가 10개일 때 다리 수를 바로 알 수 있는 방법은?', 1);
   await submit(page);
-  await expectFailedWithHint(page, '계속 더해 가는 모습', 2);
+  await expectFailedWithHint(page, '계속 더해 가면', 2);
   const layer = await expectOverlayAligned(page, 'long-chain', 'relation-canvas');
   await expect(layer.locator('[data-testid="long-chain-step"]')).toHaveCount(3);
   await expectNoHiddenRule(page, ['○×4']);
