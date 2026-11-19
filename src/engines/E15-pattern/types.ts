@@ -81,7 +81,24 @@ export interface GrowthConfig {
   look?: GrowthLook;
 }
 
-export type PatternConfig = SequenceConfig | ChartConfig | CalcPatternConfig | GrowthConfig;
+/** calc-pattern 표 변형(덧셈표·곱셈표 돋보기 탐정). `table` 키가 있으면 표 변형이다. */
+export interface CalcTableConfig {
+  mode: 'calc-pattern';
+  table: 'addition' | 'multiplication';
+  /** 몸통 [행, 열](기본 [6, 6]), 각 2~9. */
+  size?: [number, number];
+  /** 머리 첫 수(기본 1), 0~9. 머리는 start, start+1, …. */
+  start?: number;
+  /** 가린 몸통 칸 [행, 열](0부터). 'most'(기본) = 첫 몸통 행·첫 몸통 열 말고 모두. */
+  hidden?: 'most' | [number, number][];
+  /** 돋보기 횟수 0~5(기본 0 = 돋보기 없음). */
+  magnifierUses?: number;
+  /** 규칙 화살표 그리기(기본 false). */
+  drawArrows?: boolean;
+}
+
+export type PatternConfig =
+  SequenceConfig | ChartConfig | CalcPatternConfig | CalcTableConfig | GrowthConfig;
 
 /** 정규화한 sequence 설정(상태 안에 둔다. reduce가 config를 받지 않기 때문이다). */
 export interface SequenceSettings {
@@ -148,6 +165,8 @@ export interface CalcSettings {
 
 export interface CalcState {
   mode: 'calc-pattern';
+  /** 피라미드에는 없다(없으면 피라미드). 표 변형 상태와 구분하는 자리만 비워 둔다. */
+  variant?: undefined;
   settings: CalcSettings;
   /** 학생이 쌓은 열 높이. 길이 `2 × workStep + 1`, 처음엔 모두 0. */
   heights: number[];
@@ -157,6 +176,51 @@ export interface CalcState {
   focus: 'build' | 'expr';
   /** 열 ↔ 식의 수 강조. 판정에는 쓰지 않는다. */
   link: { step: number; col: number } | null;
+}
+
+export type TableKind = 'addition' | 'multiplication';
+export type TableTool = 'write' | 'magnifier' | 'arrow';
+export type TableDir = 'right' | 'down' | 'down-right' | 'down-left';
+
+/** 정규화한 표 변형 설정. `error`가 있으면 설정 오류 판을 그린다. */
+export interface CalcTableSettings {
+  table: TableKind;
+  rows: number;
+  cols: number;
+  start: number;
+  /** 가린 몸통 칸 키(`"r.c"`), 행·열 순서로 정렬. */
+  hidden: string[];
+  magnifierUses: number;
+  drawArrows: boolean;
+  error: string | null;
+}
+
+export interface TableArrow {
+  from: string;
+  dir: TableDir;
+  /** 증가량(숫자 글자, 최대 3자리). */
+  amount: string;
+}
+
+export interface TableDraftArrow {
+  from: string;
+  dir: TableDir | null;
+  amount: string;
+}
+
+export interface CalcTableState {
+  mode: 'calc-pattern';
+  variant: 'table';
+  settings: CalcTableSettings;
+  /** 학생이 쓴 수. 키는 가린 칸 `"r.c"`. */
+  entries: Record<string, string>;
+  /** 돋보기로 연 칸 키. */
+  revealed: string[];
+  /** 고른 칸. */
+  active: string | null;
+  tool: TableTool;
+  arrows: TableArrow[];
+  draftArrow: TableDraftArrow | null;
 }
 
 /** 정규화한 growth 설정. */
@@ -177,7 +241,7 @@ export interface GrowthState {
   active: string | null;
 }
 
-export type PatternState = SequenceState | ChartState | CalcState | GrowthState;
+export type PatternState = SequenceState | ChartState | CalcState | CalcTableState | GrowthState;
 
 export type SequenceAction =
   | { type: 'place'; slot: number; token: string }
@@ -219,7 +283,23 @@ export type GrowthAction =
   | { type: 'clear' }
   | { type: 'move'; dir: GrowthDir };
 
-export type PatternAction = SequenceAction | ChartAction | CalcAction | GrowthAction;
+export type CalcTableAction =
+  | { type: 'set-tool'; tool: TableTool }
+  | { type: 'activate'; cell: string }
+  | { type: 'type'; key: string }
+  | { type: 'backspace' }
+  | { type: 'clear' }
+  | { type: 'move'; dir: GrowthDir }
+  | { type: 'peek'; cell: string }
+  | { type: 'arrow-start'; cell: string }
+  | { type: 'arrow-dir'; dir: TableDir }
+  | { type: 'arrow-type'; key: string }
+  | { type: 'arrow-backspace' }
+  | { type: 'arrow-commit' }
+  | { type: 'arrow-remove'; index: number };
+
+export type PatternAction =
+  SequenceAction | ChartAction | CalcAction | CalcTableAction | GrowthAction;
 
 export function chartRangeOf(settings: ChartSettings): ChartRange {
   return { from: settings.from, count: settings.count };

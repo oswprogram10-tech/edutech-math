@@ -2,6 +2,7 @@
 import type { EngineDefinition } from '../../core/engine-sdk';
 import { EVENT_NAMES, emit, predicates } from './events';
 import { observe } from './observe';
+import { CellDiffOverlay } from './overlays/cell-diff';
 import { ColumnLinkOverlay } from './overlays/column-link';
 import { CoreBoxesOverlay } from './overlays/core-boxes';
 import { GrowthSplitOverlay } from './overlays/growth-split';
@@ -33,6 +34,7 @@ const definition: EngineDefinition<PatternConfig, PatternState, PatternAction> =
     'step-table': StepTableOverlay,
     'column-link': ColumnLinkOverlay,
     'growth-split': GrowthSplitOverlay,
+    'cell-diff': CellDiffOverlay,
   },
 };
 

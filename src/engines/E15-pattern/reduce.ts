@@ -3,6 +3,7 @@
  * 바뀌는 것이 없으면 같은 상태 객체를 그대로 돌려준다.
  */
 import { EXPR_KEYS, EXPR_MAX_LENGTH } from './calc';
+import { createTableState, isTableConfig, reduceTable } from './calc-table';
 import { drawnCells, inRange } from './chart';
 import { MAX_DIGITS, blankKeys, moveBlank } from './growth';
 import { calcSettings, chartSettings, growthSettings, sequenceSettings } from './settings';
@@ -10,6 +11,7 @@ import { chartRangeOf } from './types';
 import type {
   CalcAction,
   CalcState,
+  CalcTableAction,
   ChartAction,
   ChartState,
   GrowthAction,
@@ -27,6 +29,7 @@ export function createInitialState(config: PatternConfig): PatternState {
     return { mode: 'growth', settings: growthSettings(config), cells: {}, active: null };
   }
   if (mode === 'calc-pattern') {
+    if (isTableConfig(config)) return createTableState(config);
     const settings = calcSettings(config);
     return {
       mode: 'calc-pattern',
@@ -308,7 +311,10 @@ const SEQUENCE_TYPES: readonly string[] = [
 
 export function reduce(state: PatternState, action: PatternAction): PatternState {
   if (state.mode === 'growth') return reduceGrowth(state, action as GrowthAction);
-  if (state.mode === 'calc-pattern') return reduceCalc(state, action as CalcAction);
+  if (state.mode === 'calc-pattern') {
+    if (state.variant === 'table') return reduceTable(state, action as CalcTableAction);
+    return reduceCalc(state, action as CalcAction);
+  }
   const isSequenceAction = SEQUENCE_TYPES.includes(action.type);
   if (state.mode === 'sequence') {
     return isSequenceAction ? reduceSequence(state, action as SequenceAction) : state;

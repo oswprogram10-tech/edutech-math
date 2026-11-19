@@ -627,3 +627,62 @@
   min-width: 64px;
   min-height: 64px;
 }
+
+/* ───────── calc-pattern 표 변형 ───────── */
+
+.boardArea[data-table='true'] {
+  min-height: 200px;
+}
+
+@media (orientation: portrait) {
+  .wrap > .boardArea[data-table='true'],
+  .stageRow > .boardArea[data-table='true'] {
+    min-height: min(var(--table-min-h), 50dvh);
+  }
+}
+
+/* 판과 조작 묶음이 위아래로 쌓이는 좁은 화면: 조작 묶음(도구·패드)을 줄이지 않는다.
+   표가 크면(9×9) 조작 묶음이 0으로 눌려 보이지 않으므로, 모자란 높이는 바깥 판의 스크롤로 받는다. */
+@container (max-width: 819px) {
+  .sideStack[data-table='true'] {
+    flex: 0 0 auto;
+    overflow: visible;
+  }
+}
+
+.tableCell {
+  cursor: pointer;
+  outline: none;
+}
+
+.tableCell[aria-disabled='true'] {
+  cursor: default;
+}
+
+/* 초점은 굵은 주황 테두리로 보인다(활성 칸의 어두운 안쪽 테두리와 겹쳐도 구분된다). */
+.tableCell:focus-visible > rect:first-child {
+  stroke: #e8872e;
+  stroke-width: 5;
+}
+
+.tableArrowPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.tableAmount {
+  margin: 0;
+  color: #1d2330;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.tableAmount strong {
+  display: inline-block;
+  min-width: 3ch;
+  padding: 0 0.4rem;
+  border-bottom: 3px solid #1d2330;
+  font-size: 1.3rem;
+  font-weight: 800;
+}
