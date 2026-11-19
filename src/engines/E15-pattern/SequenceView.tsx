@@ -436,11 +436,12 @@ export function SequenceView({ state, dispatch, targetSize, readOnly = false }: 
               {layout.restored.map((box, i) => {
                 const token = restored[i] ?? null;
                 const same = token !== null && token === settings.given[i];
+                const mismatch = (slots[i] ?? null) !== null && !same;
                 return (
                   <g
                     key={`restored-${i}`}
                     data-testid={`pattern-restored-${i}`}
-                    data-mismatch={token !== null && !same ? 'true' : undefined}
+                    data-mismatch={mismatch ? 'true' : undefined}
                   >
                     {cellRect(box, 'restored', false, false, true)}
                     {token !== null && !soundOnly ? (
@@ -465,7 +466,7 @@ export function SequenceView({ state, dispatch, targetSize, readOnly = false }: 
                         ?
                       </text>
                     ) : null}
-                    {token !== null && !same ? (
+                    {mismatch ? (
                       <g
                         stroke="#1d2330"
                         strokeWidth={6}

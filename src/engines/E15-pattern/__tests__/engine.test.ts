@@ -260,7 +260,15 @@ describe('sequence observe·predicates', () => {
     );
     expect(o['restoredMatches']).toBe(false);
     expect(o['misconceptions']).toEqual(['MC-PATTERN-TRANSLATE']);
-    expect(o['restored']).toEqual(['apple', 'apple', 'apple', 'apple', 'apple', 'apple']);
+    expect(o['restored']).toEqual([null, null, null, null, null, null]);
+  });
+
+  it('translate: 1·2·2·1·3·2는 5번째가 되돌려지지 않는다', () => {
+    const o = observe(
+      apply(translate, [...fill(['1', '2', '2', '1', '3', '2']), { type: 'send' }]),
+    );
+    expect(o['restored']).toEqual(['apple', 'banana', 'banana', 'apple', null, 'banana']);
+    expect(o['restoredMatches']).toBe(false);
   });
 
   it('translate: 빈칸이 남아도 충돌은 감지한다', () => {

@@ -128,15 +128,29 @@ export function translatePairs(
 }
 
 /**
- * '보내기' 뒤 되돌린 무늬: 받는 토큰마다 그 토큰이 처음 나온 자리의 보내는 토큰으로 바꾼다.
- * 빈칸은 null.
+ * '열쇠': 보내는 토큰마다 학생이 처음 붙인 받는 토큰(첫 반복의 대응).
+ */
+export function keyOf(source: readonly string[], target: readonly Slot[]): Map<string, string> {
+  const key = new Map<string, string>();
+  source.forEach((from, index) => {
+    const to = target[index] ?? null;
+    if (to !== null && !key.has(from)) key.set(from, to);
+  });
+  return key;
+}
+
+/**
+ * '보내기' 뒤 되돌린 무늬: 각 받는 토큰을 열쇠의 거꾸로로 바꾼다.
+ * 빈칸, 열쇠에 없는 받는 토큰, 두 보내는 토큰이 같은 받는 토큰을 열쇠로 가진 경우는 null이다
+ * (채운 칸이 null이면 화면이 ✕를 그린다).
  */
 export function restoredFrom(source: readonly string[], target: readonly Slot[]): Slot[] {
+  const key = keyOf(source, target);
   return source.map((_, index) => {
     const token = target[index] ?? null;
     if (token === null) return null;
-    const first = target.indexOf(token);
-    return source[first] ?? null;
+    const senders = [...key.entries()].filter(([, to]) => to === token).map(([from]) => from);
+    return senders.length === 1 ? (senders[0] ?? null) : null;
   });
 }
 

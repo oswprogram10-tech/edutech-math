@@ -158,7 +158,7 @@ describe('E15 sequence 화면', () => {
         '[data-testid^="pattern-restored-"]:not([data-testid^="pattern-restored-x"])',
       ),
     ).toHaveLength(2);
-    // 사과 칸과 바나나 칸이 모두 1이라 둘째 되돌린 칸이 달라진다.
+    // 사과 칸과 바나나 칸이 모두 1이라 열쇠가 겹쳐 둘째 되돌린 칸도 ✕다.
     expect(
       after.container
         .querySelector('[data-testid="pattern-restored-1"]')

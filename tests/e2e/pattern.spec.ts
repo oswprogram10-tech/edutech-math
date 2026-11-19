@@ -192,11 +192,17 @@ test('translate: 1·2·2·1·3·2는 TRANSLATE 오개념, 모두 1이면 되돌�
     page,
     (o) => o.consistent === false && (o.misconceptions ?? []).includes('MC-PATTERN-TRANSLATE'),
   );
+  // 열쇠(사과→1, 바나나→2)에 없는 3을 쓴 5번째 칸만 ✕
+  await page.getByRole('button', { name: '보내기' }).click();
+  await pollObservation(page, (o) => o.sent === true && o.restoredMatches === false);
+  await expect(page.locator('[data-testid^="pattern-restored-x-"]')).toHaveCount(1);
+  await expect(page.getByTestId('pattern-restored-x-4')).toBeVisible();
+
   await page.getByRole('button', { name: '모두 지우기' }).click();
   for (let i = 0; i < 6; i += 1) await palette(page, '1').click();
   await page.getByRole('button', { name: '보내기' }).click();
   await pollObservation(page, (o) => o.sent === true && o.restoredMatches === false);
-  await expect(page.locator('[data-testid^="pattern-restored-x-"]')).toHaveCount(4);
+  await expect(page.locator('[data-testid^="pattern-restored-x-"]')).toHaveCount(6);
 });
 
 test('sound-only: 주어진 칸 DOM에 토큰이 없고 ▶로 소리를 낼 수 있다', async ({ page }) => {
@@ -389,13 +395,33 @@ test('저학년 64 설정: 빈칸·팔레트·숫자 패드 단추가 64px 이�
   await expectMin(page.locator('[data-cell="45"]'), 48, '배열표 칸(64 설정)');
 });
 
+test('배열표 칸은 크롬북 stage=fit에서 48px(64 설정 64px) 이상이고 맨 아래 줄까지 닿는다', async ({
+  page,
+}, testInfo) => {
+  await open(page, 'hundred-chart', { hidden: [46], paint: true }, 'stage=fit');
+  await expectMin(page.locator('[data-cell="45"]'), 48, '배열표 칸(48)');
+  await page.locator('[data-cell="100"]').click();
+  await pollObservation(page, (o) => (o.painted ?? []).includes(100));
+  await page.locator('[data-hidden="0"]').click();
+  await expect(
+    page.getByTestId('chart-pad').getByRole('button', { name: '5', exact: true }),
+  ).toBeInViewport();
+  await page.getByRole('button', { name: '터치 48px' }).click();
+  await expectMin(page.locator('[data-cell="45"]'), 64, '배열표 칸(64)');
+  await page.locator('[data-cell="91"]').click();
+  await pollObservation(page, (o) => (o.painted ?? []).includes(91));
+  await expect(
+    page.getByTestId('chart-pad').getByRole('button', { name: '5', exact: true }),
+  ).toBeInViewport();
+  console.log('T170', testInfo.project.name, 'scroll-check');
+});
+
 test('48 설정에서 빈칸·팔레트 48px 이상, 10x10 칸 한 변을 잰다', async ({ page }) => {
   await open(page, 'sequence', EXTEND, 'stage=fit');
   await expectMin(page.getByTestId('pattern-slot-0'), 48, '빈칸(48)');
   await expectMin(palette(page, '세모'), 48, '팔레트(48)');
   await open(page, 'hundred-chart', {}, 'stage=fit');
-  // 판이 낮아 칸이 48px보다 작아질 수 있다(메모 참고). 터치 대상이 너무 작지 않은지만 본다.
-  await expectMin(page.locator('[data-cell="45"]'), 40, '배열표 칸 10x10(48)');
+  await expectMin(page.locator('[data-cell="45"]'), 48, '배열표 칸 10x10(48)');
   await capture(page, 'T170-chart-full');
 });
 

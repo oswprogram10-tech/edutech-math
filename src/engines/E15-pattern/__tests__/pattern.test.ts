@@ -124,12 +124,16 @@ describe('translatePairs', () => {
 
 describe('restoredFrom', () => {
   const source = ['a', 'b', 'b', 'a'];
-  it('받는 토큰이 처음 나온 자리의 보내는 토큰으로 바꾼다', () => {
+  it('열쇠(첫 반복의 대응)의 거꾸로로 바꾼다', () => {
     expect(restoredFrom(source, ['1', '2', '2', '1'])).toEqual(['a', 'b', 'b', 'a']);
     expect(restoredMatches(source, ['1', '2', '2', '1'])).toBe(true);
   });
-  it('두 보내는 토큰이 같은 받는 토큰이면 되돌린 무늬가 달라진다', () => {
-    expect(restoredFrom(source, ['1', '1', '1', '1'])).toEqual(['a', 'a', 'a', 'a']);
+  it('열쇠에 없는 받는 토큰은 되돌릴 수 없다(null)', () => {
+    expect(restoredFrom(source, ['1', '2', '2', '3'])).toEqual(['a', 'b', 'b', null]);
+    expect(restoredMatches(source, ['1', '2', '2', '3'])).toBe(false);
+  });
+  it('두 보내는 토큰이 같은 받는 토큰을 열쇠로 가지면 둘 다 되돌릴 수 없다', () => {
+    expect(restoredFrom(source, ['1', '1', '1', '1'])).toEqual([null, null, null, null]);
     expect(restoredMatches(source, ['1', '1', '1', '1'])).toBe(false);
   });
   it('빈칸이 있으면 null이고 일치하지 않는다', () => {

@@ -19,9 +19,6 @@ type ChartViewProps = Omit<EngineViewProps<PatternConfig, ChartState, PatternAct
   readonly state: ChartState;
 };
 
-/** 칸이 판에 맞춘 크기가 targetSize의 이 비율보다 작아지면 판 안에서 세로 스크롤한다. */
-const SCROLL_BELOW = 0.85;
-
 const DIGITS: readonly string[] = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
 
 export function ChartView({ state, dispatch, targetSize, readOnly = false }: ChartViewProps) {
@@ -47,7 +44,7 @@ export function ChartView({ state, dispatch, targetSize, readOnly = false }: Cha
   if (board.width > 0 && board.height > 0) {
     const fit = Math.min(board.width / layout.width, board.height / layout.height);
     const cellPx = fit * CHART_CELL;
-    if (cellPx >= targetSize * SCROLL_BELOW) {
+    if (cellPx >= targetSize) {
       sizeStyle = { width: `${layout.width * fit}px`, height: `${layout.height * fit}px` };
     } else {
       const scale = targetSize / CHART_CELL;
@@ -219,13 +216,13 @@ export function ChartView({ state, dispatch, targetSize, readOnly = false }: Cha
                   >
                     {inner}
                     <path
-                      d={`M${box.x + 30} ${box.y + 8} C${box.x + 50} ${box.y + 12} ${box.x + 52} ${box.y + 34} ${box.x + 30} ${box.y + 54} C${box.x + 8} ${box.y + 34} ${box.x + 10} ${box.y + 12} ${box.x + 30} ${box.y + 8} Z`}
+                      d={`M${box.x + 8} ${box.y + 52} C${box.x + 2} ${box.y + 24} ${box.x + 28} ${box.y + 6} ${box.x + 53} ${box.y + 8} C${box.x + 56} ${box.y + 34} ${box.x + 36} ${box.y + 58} ${box.x + 8} ${box.y + 52} Z`}
                       fill="#7ccf8f"
                       stroke="#2e7d46"
                       strokeWidth={2}
                     />
                     <path
-                      d={`M${box.x + 30} ${box.y + 14} L${box.x + 30} ${box.y + 50}`}
+                      d={`M${box.x + 8} ${box.y + 52} L${box.x + 46} ${box.y + 14} M${box.x + 24} ${box.y + 36} L${box.x + 22} ${box.y + 22} M${box.x + 34} ${box.y + 26} L${box.x + 44} ${box.y + 30}`}
                       stroke="#2e7d46"
                       strokeWidth={2}
                       fill="none"
