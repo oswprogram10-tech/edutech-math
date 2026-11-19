@@ -1,7 +1,7 @@
 /** E15 규칙·패턴의 설정·상태·Action 타입. 모드별 판별 유니온이다. */
 import type { ChartRange, ChartView } from './chart';
 
-export type PatternMode = 'sequence' | 'hundred-chart' | 'calc-pattern';
+export type PatternMode = 'sequence' | 'hundred-chart' | 'calc-pattern' | 'growth';
 
 export type SequenceVariant = 'extend' | 'translate';
 export type Look = 'color' | 'plain' | 'symbol';
@@ -55,7 +55,33 @@ export interface CalcPatternConfig {
   look?: CalcLook;
 }
 
-export type PatternConfig = SequenceConfig | ChartConfig | CalcPatternConfig;
+export type GrowthShape = 'L' | 'stairs' | 'tower2';
+export type GrowthLook = 'cubes' | 'flat' | 'none';
+
+export interface GrowthConfig {
+  mode: 'growth';
+  /** 쌓기나무 모양(기본 'L'). */
+  shape?: GrowthShape;
+  /** 그림으로 보여 줄 단계(기본 3), 1~5. */
+  stepsShown?: number;
+  /** 늘어난 쌓기나무 강조(기본 true). */
+  highlightIncrement?: boolean;
+  /** 표 설정. false면 표 없음. */
+  table?:
+    | {
+        /** 표 마지막 단계(기본 stepsShown + 2), stepsShown~8. */
+        upTo?: number;
+        /** 보여 준 단계의 개수 칸(기본 'given'). */
+        counts?: 'given' | 'blank';
+        /** 늘어난 수 줄(기본 'blank'). */
+        increments?: 'blank' | 'off';
+      }
+    | false;
+  /** CPA: 입체 그림(C) / 색칸 그림(P) / 그림 없음(A, 표만). */
+  look?: GrowthLook;
+}
+
+export type PatternConfig = SequenceConfig | ChartConfig | CalcPatternConfig | GrowthConfig;
 
 /** 정규화한 sequence 설정(상태 안에 둔다. reduce가 config를 받지 않기 때문이다). */
 export interface SequenceSettings {
@@ -133,7 +159,25 @@ export interface CalcState {
   link: { step: number; col: number } | null;
 }
 
-export type PatternState = SequenceState | ChartState | CalcState;
+/** 정규화한 growth 설정. */
+export interface GrowthSettings {
+  shape: GrowthShape;
+  stepsShown: number;
+  highlightIncrement: boolean;
+  /** 표가 없으면 null. */
+  table: { upTo: number; counts: 'given' | 'blank'; increments: 'blank' | 'off' } | null;
+  look: GrowthLook;
+}
+
+export interface GrowthState {
+  mode: 'growth';
+  settings: GrowthSettings;
+  /** 키는 `"<단계>.count"`·`"<단계>.inc"`. 값은 숫자 글자(최대 3자리). */
+  cells: Record<string, string>;
+  active: string | null;
+}
+
+export type PatternState = SequenceState | ChartState | CalcState | GrowthState;
 
 export type SequenceAction =
   | { type: 'place'; slot: number; token: string }
@@ -166,7 +210,16 @@ export type CalcAction =
   | { type: 'link'; step: number; col: number }
   | { type: 'link'; step: null; col?: null };
 
-export type PatternAction = SequenceAction | ChartAction | CalcAction;
+export type GrowthDir = 'left' | 'right' | 'up' | 'down';
+
+export type GrowthAction =
+  | { type: 'activate'; cell: string }
+  | { type: 'type'; key: string }
+  | { type: 'backspace' }
+  | { type: 'clear' }
+  | { type: 'move'; dir: GrowthDir };
+
+export type PatternAction = SequenceAction | ChartAction | CalcAction | GrowthAction;
 
 export function chartRangeOf(settings: ChartSettings): ChartRange {
   return { from: settings.from, count: settings.count };

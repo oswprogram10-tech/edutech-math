@@ -18,6 +18,9 @@ import type {
   CalcPatternName,
   CalcSettings,
   ChartSettings,
+  GrowthLook,
+  GrowthSettings,
+  GrowthShape,
   Look,
   PatternConfig,
   SequenceSettings,
@@ -239,5 +242,39 @@ export function calcSettings(config: PatternConfig | undefined): CalcSettings {
     linkHighlight: symmetric && look !== 'none' && record['linkHighlight'] !== false,
     look,
     error,
+  };
+}
+
+const GROWTH_SHAPES: readonly GrowthShape[] = ['L', 'stairs', 'tower2'];
+const GROWTH_LOOKS: readonly GrowthLook[] = ['cubes', 'flat', 'none'];
+
+/**
+ * growth 설정 정규화. 잘못된 값은 throw하지 않고 기본값으로 돌리고, 범위 밖 정수는 범위로 맞춘다.
+ * 표 마지막 단계(upTo)는 stepsShown~8이다.
+ */
+export function growthSettings(config: PatternConfig | undefined): GrowthSettings {
+  const record = recordOf(config);
+  const shape = GROWTH_SHAPES.includes(record['shape'] as GrowthShape)
+    ? (record['shape'] as GrowthShape)
+    : 'L';
+  const stepsShown = intIn(record['stepsShown'], 1, 5, 3);
+  const look = GROWTH_LOOKS.includes(record['look'] as GrowthLook)
+    ? (record['look'] as GrowthLook)
+    : 'cubes';
+  let table: GrowthSettings['table'] = null;
+  if (record['table'] !== false) {
+    const t = recordOf(record['table']);
+    table = {
+      upTo: intIn(t['upTo'], stepsShown, 8, Math.min(8, stepsShown + 2)),
+      counts: t['counts'] === 'blank' ? 'blank' : 'given',
+      increments: t['increments'] === 'off' ? 'off' : 'blank',
+    };
+  }
+  return {
+    shape,
+    stepsShown,
+    highlightIncrement: record['highlightIncrement'] !== false,
+    table,
+    look,
   };
 }

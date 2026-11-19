@@ -41,7 +41,7 @@ async function pollObservation(
 
 async function open(
   page: Page,
-  mode: 'sequence' | 'hundred-chart' | 'calc-pattern',
+  mode: 'sequence' | 'hundred-chart' | 'calc-pattern' | 'growth',
   config: unknown,
   query = '',
 ) {
@@ -638,6 +638,157 @@ test('calc-pattern: 보기 판 블록은 화면에서 24px 이상이다(많은 �
   await expect(page.getByTestId('calc-board')).toHaveAttribute('data-scroll', 'true');
 });
 
+// ───────── growth (T178) ─────────
+
+const GROWTH = { stepsShown: 3 };
+/** 1·2·3단계 그림과 표 3단계까지: 늘어난 수 빈칸은 2단계·3단계 둘(과제 1 "2, 2"). */
+const GROWTH_INC = { stepsShown: 3, table: { upTo: 3 } };
+
+function growthEntries(o: ObservationRecord): Record<string, string> {
+  return o.entries as unknown as Record<string, string>;
+}
+
+function growthPad(page: Page, name: string): Locator {
+  return page.getByTestId('growth-pad').getByRole('button', { name, exact: true });
+}
+
+function growthCell(page: Page, key: string): Locator {
+  return page.locator(`[data-testid="growth-table"] [data-cell="${key}"]`);
+}
+
+test('growth: 늘어난 수 빈칸에 2, 2를 패드로 쓰면 모든 빈칸이 맞다', async ({ page }) => {
+  await open(page, 'growth', GROWTH_INC, 'stage=fit');
+  await growthCell(page, '2.inc').click();
+  await growthPad(page, '2').click();
+  await pollObservation(page, (o) => growthEntries(o)['2.inc'] === '2');
+  await expect(page.getByTestId('growth-table')).not.toContainText(/[✓✕]/);
+  await pollObservation(page, (o) => o.blanksCorrect === false);
+  await growthCell(page, '3.inc').click();
+  await growthPad(page, '2').click();
+  await pollObservation(
+    page,
+    (o) => o.blanksCorrect === true && (o.misconceptions ?? []).length === 0,
+  );
+  await capture(page, 'T178-growth-inc');
+  // 정답을 알려 주는 값은 Observation에 없다.
+  const observation = await readObservation(page);
+  expect(Object.keys(observation).sort()).toEqual(
+    [
+      'blanks',
+      'blanksCorrect',
+      'entries',
+      'misconceptions',
+      'mode',
+      'shape',
+      'stepsShown',
+      'upTo',
+    ].sort(),
+  );
+});
+
+test('growth: 4단계 개수 칸에 늘어난 수 2를 쓰면 GROWTH-TOTAL, 7로 고치면 풀린다', async ({
+  page,
+}) => {
+  await open(page, 'growth', GROWTH, 'stage=fit');
+  await growthCell(page, '4.count').click();
+  await growthPad(page, '2').click();
+  await pollObservation(page, (o) => (o.misconceptions ?? []).includes('MC-PATTERN-GROWTH-TOTAL'));
+  await growthPad(page, '지우기').click();
+  await growthPad(page, '7').click();
+  await pollObservation(
+    page,
+    (o) => (o.misconceptions ?? []).length === 0 && growthEntries(o)['4.count'] === '7',
+  );
+});
+
+test('growth: 키보드만으로 칸을 옮기고 숫자를 쓰고 지운다', async ({ page }) => {
+  await open(page, 'growth', GROWTH_INC, 'stage=fit');
+  await growthCell(page, '2.inc').focus();
+  await page.keyboard.press('2');
+  await page.keyboard.press('ArrowRight');
+  await expect(growthCell(page, '3.inc')).toBeFocused();
+  await page.keyboard.press('2');
+  await page.keyboard.press('1');
+  await pollObservation(page, (o) => {
+    const entries = growthEntries(o);
+    return entries['2.inc'] === '2' && entries['3.inc'] === '21';
+  });
+  await page.keyboard.press('Backspace');
+  await page.keyboard.press('ArrowLeft');
+  await expect(growthCell(page, '2.inc')).toBeFocused();
+  await page.keyboard.press('Delete');
+  await pollObservation(page, (o) => {
+    const entries = growthEntries(o);
+    return entries['2.inc'] === undefined && entries['3.inc'] === '2';
+  });
+});
+
+test('growth: 늘어난 쌓기나무는 data-new이고 굵은 윤곽·점 무늬가 있다(색만 아님)', async ({
+  page,
+}) => {
+  await open(page, 'growth', GROWTH, 'stage=fit');
+  const canvas = page.getByTestId('growth-canvas');
+  await expect(canvas.locator('g[data-stage="3"][data-new="true"]')).toHaveCount(2);
+  await expect(canvas.locator('g[data-stage="1"][data-new="true"]')).toHaveCount(0);
+  const widths = await page.evaluate(() => {
+    const stroke = (selector: string) =>
+      Number(document.querySelector(`${selector} polygon`)?.getAttribute('stroke-width') ?? '0');
+    return {
+      fresh: stroke('g[data-stage="3"][data-new="true"]'),
+      plain: stroke('g[data-stage="3"][data-new="false"]'),
+    };
+  });
+  expect(widths.fresh).toBeGreaterThan(widths.plain);
+  await expect(canvas).not.toContainText('모두');
+});
+
+test('growth: 오버레이 growth-split이 본 캔버스와 1px 안에 겹치고 보여 준 단계까지만 쓴다', async ({
+  page,
+}) => {
+  await open(page, 'growth', GROWTH, 'overlay=growth-split');
+  await toggleOverlay(page);
+  await expectAligned(page, 'growth-split', 'growth-canvas');
+  await expect(page.locator('[data-testid="growth-split-panel"]')).toHaveCount(3);
+  await expect(page.locator('[data-overlay="growth-split"]')).toContainText('모두 5개');
+  await expect(page.locator('[data-overlay="growth-split"]')).not.toContainText('모두 7개');
+  await capture(page, 'T178-overlay-growth-split');
+});
+
+test('growth: 쌓기나무 24px 이상, 표 칸·패드 단추 targetSize 이상, 맨 아래 단추까지 닿는다', async ({
+  page,
+}) => {
+  await open(page, 'growth', { stepsShown: 5, shape: 'stairs', table: { upTo: 8 } }, 'stage=fit');
+  await expectMin(
+    page.locator('[data-testid="growth-canvas"] g[data-stage="5"][data-new="true"]').first(),
+    24,
+    '쌓기나무',
+  );
+  await expectMin(growthCell(page, '6.count'), 48, '표 칸(48)');
+  await expectMin(growthPad(page, '5'), 48, '패드(48)');
+  await page.getByRole('button', { name: '터치 48px' }).click();
+  await expectMin(growthCell(page, '6.count'), 64, '표 칸(64)');
+  await expectMin(growthPad(page, '5'), 64, '패드(64)');
+  const last = growthPad(page, '모두 지우기');
+  await last.scrollIntoViewIfNeeded();
+  await expect(last).toBeInViewport();
+  await growthCell(page, '8.inc').scrollIntoViewIfNeeded();
+  await growthCell(page, '8.inc').click();
+  await growthPad(page, '4').click();
+  await pollObservation(page, (o) => growthEntries(o)['8.inc'] === '4');
+});
+
+test('growth: look none은 표만 있고 flat은 색칸 그림이다', async ({ page }) => {
+  await open(page, 'growth', { look: 'none' }, 'stage=fit');
+  await expect(page.getByTestId('growth-canvas')).toHaveCount(0);
+  await expect(page.getByTestId('growth-table')).toBeVisible();
+  await growthCell(page, '2.inc').click();
+  await growthPad(page, '2').click();
+  await pollObservation(page, (o) => growthEntries(o)['2.inc'] === '2');
+  await open(page, 'growth', { look: 'flat' }, 'stage=fit');
+  await expect(page.locator('[data-testid="growth-canvas"] polygon')).toHaveCount(0);
+  await expect(page.locator('[data-testid="growth-canvas"] g[data-stage]')).toHaveCount(9);
+});
+
 /** 화면 기준 이미지: 첫 화면 세 장(extend·translate·chart full). 크롬북·아이패드만 찍는다. */
 async function stageShot(page: Page, name: string): Promise<void> {
   await page.evaluate(async () => {
@@ -674,5 +825,15 @@ test.describe('첫 화면 기준 이미지', () => {
   test('calc-pattern repunit', async ({ page }) => {
     await open(page, 'calc-pattern', REPUNIT, 'stage=fit');
     await stageShot(page, 'pattern-calc-repunit');
+  });
+
+  test('growth cubes L', async ({ page }) => {
+    await open(page, 'growth', GROWTH, 'stage=fit');
+    await stageShot(page, 'pattern-growth-cubes');
+  });
+
+  test('growth flat stairs', async ({ page }) => {
+    await open(page, 'growth', { shape: 'stairs', look: 'flat' }, 'stage=fit');
+    await stageShot(page, 'pattern-growth-flat');
   });
 });

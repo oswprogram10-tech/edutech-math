@@ -13,6 +13,7 @@ import {
   trimHeights,
 } from './calc';
 import { entryValue, rowColCells } from './chart';
+import { allBlanksCorrect, blankKeys, growthMisconceptions } from './growth';
 import {
   continuation,
   coreOf,
@@ -21,7 +22,7 @@ import {
   restoredMatches,
   translatePairs,
 } from './pattern';
-import type { CalcState, ChartState, PatternState, SequenceState } from './types';
+import type { CalcState, ChartState, GrowthState, PatternState, SequenceState } from './types';
 import { chartRangeOf } from './types';
 
 function sequenceObservation(state: SequenceState): Observation {
@@ -132,7 +133,27 @@ function calcObservation(state: CalcState): Observation {
   };
 }
 
+/**
+ * growth Observation. 단계별 정답 개수·늘어난 수는 넣지 않는다(판정은 predicate가 growth.ts로 계산).
+ * `blanksCorrect`는 맞고 틀림만 알린다.
+ */
+function growthObservation(state: GrowthState): Observation {
+  const { settings } = state;
+  const blanks = blankKeys(settings);
+  return {
+    mode: 'growth',
+    shape: settings.shape,
+    stepsShown: settings.stepsShown,
+    upTo: settings.table === null ? settings.stepsShown : settings.table.upTo,
+    entries: { ...state.cells },
+    blanks,
+    blanksCorrect: allBlanksCorrect(settings.shape, blanks, state.cells),
+    misconceptions: growthMisconceptions(settings, state.cells),
+  };
+}
+
 export function observe(state: PatternState): Observation {
+  if (state.mode === 'growth') return growthObservation(state);
   if (state.mode === 'calc-pattern') return calcObservation(state);
   return state.mode === 'sequence' ? sequenceObservation(state) : chartObservation(state);
 }

@@ -2,11 +2,13 @@
  * E15 오버레이 공용 도우미. 정답 토큰·정답 수를 그리지 않는다.
  * 학생이 놓은 것과 과제가 준 자료(given·표의 이웃 칸 수)만 쓴다.
  */
-import type { CalcState, SequenceState, ChartState, PatternState } from '../types';
+import type { CalcState, GrowthState, SequenceState, ChartState, PatternState } from '../types';
 
 export const PATTERN_CANVAS = 'svg[data-testid="pattern-canvas"]';
 export const CHART_CANVAS = 'svg[data-testid="chart-canvas"]';
 export const CALC_CANVAS = 'svg[data-testid="calc-canvas"]';
+
+export const GROWTH_CANVAS = 'svg[data-testid="growth-canvas"]';
 
 export function argsOf(args: unknown): Readonly<Record<string, unknown>> {
   if (args === null || typeof args !== 'object' || Array.isArray(args)) return {};
@@ -23,4 +25,8 @@ export function chartOf(state: PatternState): ChartState | null {
 
 export function calcOf(state: PatternState): CalcState | null {
   return state.mode === 'calc-pattern' ? state : null;
+}
+
+export function growthOf(state: PatternState): GrowthState | null {
+  return state.mode === 'growth' ? state : null;
 }

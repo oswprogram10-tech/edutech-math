@@ -4,13 +4,16 @@
  */
 import { EXPR_KEYS, EXPR_MAX_LENGTH } from './calc';
 import { drawnCells, inRange } from './chart';
-import { calcSettings, chartSettings, sequenceSettings } from './settings';
+import { MAX_DIGITS, blankKeys, moveBlank } from './growth';
+import { calcSettings, chartSettings, growthSettings, sequenceSettings } from './settings';
 import { chartRangeOf } from './types';
 import type {
   CalcAction,
   CalcState,
   ChartAction,
   ChartState,
+  GrowthAction,
+  GrowthState,
   PatternAction,
   PatternConfig,
   PatternState,
@@ -20,6 +23,9 @@ import type {
 
 export function createInitialState(config: PatternConfig): PatternState {
   const mode = (config as { mode?: unknown } | undefined)?.mode;
+  if (mode === 'growth') {
+    return { mode: 'growth', settings: growthSettings(config), cells: {}, active: null };
+  }
   if (mode === 'calc-pattern') {
     const settings = calcSettings(config);
     return {
@@ -250,6 +256,47 @@ function reduceCalc(state: CalcState, action: CalcAction): CalcState {
   }
 }
 
+function reduceGrowth(state: GrowthState, action: GrowthAction): GrowthState {
+  const blanks = blankKeys(state.settings);
+  switch (action.type) {
+    case 'activate': {
+      if (typeof action.cell !== 'string' || !blanks.includes(action.cell)) return state;
+      return state.active === action.cell ? state : { ...state, active: action.cell };
+    }
+    case 'type': {
+      if (state.active === null || typeof action.key !== 'string') return state;
+      if (!/^[0-9]$/.test(action.key)) return state;
+      const current = state.cells[state.active] ?? '';
+      if (current.length >= MAX_DIGITS) return state;
+      // "0" 뒤에 숫자를 쓰면 앞의 0을 바꾼다("02" 같은 글자를 만들지 않는다).
+      const next = current === '0' ? action.key : current + action.key;
+      return { ...state, cells: { ...state.cells, [state.active]: next } };
+    }
+    case 'backspace': {
+      if (state.active === null) return state;
+      const current = state.cells[state.active];
+      if (current === undefined) return state;
+      const cells =
+        current.length <= 1
+          ? withoutKey(state.cells, state.active)
+          : { ...state.cells, [state.active]: current.slice(0, -1) };
+      return { ...state, cells };
+    }
+    case 'clear': {
+      if (state.active === null || state.cells[state.active] === undefined) return state;
+      return { ...state, cells: withoutKey(state.cells, state.active) };
+    }
+    case 'move': {
+      const dir = action.dir;
+      if (dir !== 'left' && dir !== 'right' && dir !== 'up' && dir !== 'down') return state;
+      const next = moveBlank(blanks, state.active, dir);
+      return next === state.active ? state : { ...state, active: next };
+    }
+    default:
+      return state;
+  }
+}
+
 const SEQUENCE_TYPES: readonly string[] = [
   'place',
   'clear-slot',
@@ -260,6 +307,7 @@ const SEQUENCE_TYPES: readonly string[] = [
 ];
 
 export function reduce(state: PatternState, action: PatternAction): PatternState {
+  if (state.mode === 'growth') return reduceGrowth(state, action as GrowthAction);
   if (state.mode === 'calc-pattern') return reduceCalc(state, action as CalcAction);
   const isSequenceAction = SEQUENCE_TYPES.includes(action.type);
   if (state.mode === 'sequence') {
