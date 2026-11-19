@@ -19,7 +19,9 @@ import { createInitialState, reduce } from '../reduce';
 import type { CalcPatternConfig, CalcState, PatternAction, PatternState } from '../types';
 
 function calc(state: PatternState): CalcState {
-  if (state.mode !== 'calc-pattern') throw new Error('calc-pattern 상태가 아니다');
+  if (state.mode !== 'calc-pattern' || state.variant === 'table') {
+    throw new Error('calc-pattern 피라미드 상태가 아니다');
+  }
   return state;
 }
 

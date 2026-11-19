@@ -5,6 +5,8 @@
  * `cell-entered`, `cell-selected`, `cell-painted`.
  */
 import type { EngineEvent, EnginePredicate, JsonValue, Observation } from '../../core/engine-sdk';
+import type { TableGrid } from './calc-table';
+import { entriesAllCorrect, entryNumber } from './calc-table';
 import { allBlanksCorrect, cellIsCorrect, incrementsAllCorrect } from './growth';
 import { coreOf, sameCycle } from './pattern';
 import type { GrowthShape, PatternAction, PatternState } from './types';
@@ -142,6 +144,32 @@ function growthJudgeInput(observation: Observation): GrowthJudgeInput | null {
   return { shape, cells, blanks, upTo };
 }
 
+interface TableJudgeInput extends TableGrid {
+  readonly hidden: string[];
+  readonly revealed: string[];
+  readonly entries: Record<string, string>;
+}
+
+/** 표 변형 predicate 입력. Observation의 설정 값과 학생 자료만 읽는다(정답 값은 계산해서 쓴다). */
+function tableJudgeInput(observation: Observation): TableJudgeInput | null {
+  if (observation['variant'] !== 'table') return null;
+  const table = observation['table'];
+  if (table !== 'addition' && table !== 'multiplication') return null;
+  const size = observation['size'];
+  const start = observation['start'];
+  const hidden = stringList(observation['hidden']);
+  const revealed = stringList(observation['revealed']);
+  if (!Array.isArray(size) || size.length !== 2 || typeof start !== 'number') return null;
+  const [rows, cols] = size;
+  if (typeof rows !== 'number' || typeof cols !== 'number') return null;
+  if (hidden === null || revealed === null) return null;
+  const entries: Record<string, string> = {};
+  for (const [key, value] of Object.entries(recordOf(observation['entries']))) {
+    if (typeof value === 'string') entries[key] = value;
+  }
+  return { table, rows, cols, start, hidden, revealed, entries };
+}
+
 export const predicates: Readonly<Record<string, EnginePredicate>> = {
   blanksAre: (observation, args) => {
     const tokens = stringList(recordOf(args)['tokens']);
@@ -276,6 +304,49 @@ export const predicates: Readonly<Record<string, EnginePredicate>> = {
   blanksCorrect: (observation) => {
     const input = growthJudgeInput(observation);
     return input !== null && allBlanksCorrect(input.shape, input.blanks, input.cells);
+  },
+
+  tableEntriesCorrect: (observation, args) => {
+    const input = tableJudgeInput(observation);
+    if (input === null) return false;
+    const cellsArg = recordOf(args)['cells'];
+    let cells: string[] | undefined;
+    if (cellsArg !== undefined) {
+      const list = stringList(cellsArg);
+      if (list === null) return false;
+      cells = list;
+    }
+    return entriesAllCorrect(input, input.entries, input.revealed, cells);
+  },
+
+  tableEntryIs: (observation, args) => {
+    const record = recordOf(args);
+    const cell = record['cell'];
+    const value = intArg(record, 'value');
+    const input = tableJudgeInput(observation);
+    if (input === null || typeof cell !== 'string' || value === null) return false;
+    return entryNumber(input.entries[cell]) === value;
+  },
+
+  arrowFound: (observation, args) => {
+    const record = recordOf(args);
+    const dir = record['dir'];
+    if (typeof dir !== 'string') return false;
+    const amount = record['amount'] === undefined ? null : intText(record['amount']);
+    if (record['amount'] !== undefined && amount === null) return false;
+    const arrows = observation['arrows'];
+    if (!Array.isArray(arrows)) return false;
+    return arrows.some((item) => {
+      const arrow = recordOf(item as JsonValue);
+      if (arrow['dir'] !== dir || arrow['amountCorrect'] !== true) return false;
+      return amount === null || intText(arrow['amount']) === amount;
+    });
+  },
+
+  peeksAtMost: (observation, args) => {
+    const n = intArg(recordOf(args), 'n');
+    const revealed = stringList(observation['revealed']);
+    return n !== null && revealed !== null && revealed.length <= n;
   },
 
   hasMisconception: (observation, args) => {

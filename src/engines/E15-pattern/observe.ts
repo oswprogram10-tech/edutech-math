@@ -12,6 +12,7 @@ import {
   totalOf,
   trimHeights,
 } from './calc';
+import { amountIsCorrect, magnifierLeft, rowColCells as tableRowColCells } from './calc-table';
 import { entryValue, rowColCells } from './chart';
 import { allBlanksCorrect, blankKeys, growthMisconceptions } from './growth';
 import {
@@ -22,7 +23,14 @@ import {
   restoredMatches,
   translatePairs,
 } from './pattern';
-import type { CalcState, ChartState, GrowthState, PatternState, SequenceState } from './types';
+import type {
+  CalcState,
+  CalcTableState,
+  ChartState,
+  GrowthState,
+  PatternState,
+  SequenceState,
+} from './types';
 import { chartRangeOf } from './types';
 
 function sequenceObservation(state: SequenceState): Observation {
@@ -134,6 +142,37 @@ function calcObservation(state: CalcState): Observation {
 }
 
 /**
+ * 표 변형 Observation. 가린 칸의 정답 값은 넣지 않는다.
+ * `amountCorrect`는 학생이 그린 화살표의 증가량이 맞는지만 알린다(정답 수는 아니다).
+ * `start`는 판정(predicate)이 값을 다시 계산할 때 쓴다.
+ */
+function calcTableObservation(state: CalcTableState): Observation {
+  const { settings } = state;
+  const misconceptions =
+    settings.error === null && tableRowColCells(settings, state.entries, state.revealed).length > 0
+      ? ['MC-CHART-ROW-COL']
+      : [];
+  return {
+    mode: 'calc-pattern',
+    variant: 'table',
+    table: settings.table,
+    size: [settings.rows, settings.cols],
+    start: settings.start,
+    hidden: [...settings.hidden],
+    revealed: [...state.revealed],
+    magnifierLeft: magnifierLeft(state),
+    entries: { ...state.entries },
+    arrows: state.arrows.map((arrow) => ({
+      from: arrow.from,
+      dir: arrow.dir,
+      amount: arrow.amount,
+      amountCorrect: amountIsCorrect(settings, arrow),
+    })),
+    misconceptions,
+  };
+}
+
+/**
  * growth Observation. 단계별 정답 개수·늘어난 수는 넣지 않는다(판정은 predicate가 growth.ts로 계산).
  * `blanksCorrect`는 맞고 틀림만 알린다.
  */
@@ -154,6 +193,8 @@ function growthObservation(state: GrowthState): Observation {
 
 export function observe(state: PatternState): Observation {
   if (state.mode === 'growth') return growthObservation(state);
-  if (state.mode === 'calc-pattern') return calcObservation(state);
+  if (state.mode === 'calc-pattern') {
+    return state.variant === 'table' ? calcTableObservation(state) : calcObservation(state);
+  }
   return state.mode === 'sequence' ? sequenceObservation(state) : chartObservation(state);
 }

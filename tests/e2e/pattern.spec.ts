@@ -789,6 +789,213 @@ test('growth: look none은 표만 있고 flat은 색칸 그림이다', async ({ 
   await expect(page.locator('[data-testid="growth-canvas"] g[data-stage]')).toHaveCount(9);
 });
 
+// ───────── calc-pattern 표 변형 (T179) ─────────
+
+const TABLE_ADD = {
+  table: 'addition',
+  hidden: [
+    [1, 1],
+    [2, 2],
+    [3, 3],
+    [4, 4],
+  ],
+  magnifierUses: 3,
+  drawArrows: true,
+};
+const TABLE_MUL = { table: 'multiplication', hidden: [[4, 3]], drawArrows: true };
+
+function tableEntries(o: ObservationRecord): Record<string, string> {
+  return o.entries as unknown as Record<string, string>;
+}
+
+function tableCell(page: Page, key: string): Locator {
+  return page.locator(`[data-testid="calc-table-canvas"] [data-cell="${key}"]`);
+}
+
+function tablePad(page: Page, name: string): Locator {
+  return page.getByTestId('table-pad').getByRole('button', { name, exact: true });
+}
+
+test('calc-table: 덧셈표 가린 칸 3개에 4·6·8을 쓰면 모두 쓰이고 ✓/✕는 없다', async ({ page }) => {
+  await open(
+    page,
+    'calc-pattern',
+    { ...TABLE_ADD, hidden: TABLE_ADD.hidden.slice(0, 3) },
+    'stage=fit',
+  );
+  const values: [string, string][] = [
+    ['1.1', '4'],
+    ['2.2', '6'],
+    ['3.3', '8'],
+  ];
+  for (const [cell, value] of values) {
+    await tableCell(page, cell).click();
+    await tablePad(page, value).click();
+  }
+  await pollObservation(page, (o) => {
+    const entries = tableEntries(o);
+    return entries['1.1'] === '4' && entries['2.2'] === '6' && entries['3.3'] === '8';
+  });
+  await expect(page.getByTestId('calc-table-canvas')).not.toContainText(/[✓✕]/);
+  await capture(page, 'T179-calc-table-add');
+  // 정답을 알려 주는 값은 Observation에 없다.
+  const observation = await readObservation(page);
+  expect(Object.keys(observation).sort()).toEqual(
+    [
+      'arrows',
+      'entries',
+      'hidden',
+      'magnifierLeft',
+      'misconceptions',
+      'mode',
+      'revealed',
+      'size',
+      'start',
+      'table',
+      'variant',
+    ].sort(),
+  );
+});
+
+test('calc-table: 가린 칸 값은 DOM에 없고 돋보기로 3번 열면 더 못 연다', async ({ page }) => {
+  await open(page, 'calc-pattern', TABLE_ADD, 'stage=fit');
+  const canvas = page.getByTestId('calc-table-canvas');
+  await expect(tableCell(page, '1.1')).toHaveAttribute('data-state', 'hidden');
+  await expect(page.locator('[data-cell-text="1.1"]')).toHaveText('?');
+  await page.getByRole('button', { name: '돋보기 (남은 3번)' }).click();
+  await tableCell(page, '1.1').click();
+  await tableCell(page, '2.2').click();
+  await tableCell(page, '3.3').click();
+  await pollObservation(
+    page,
+    (o) => (o.revealed as string[]).length === 3 && o.magnifierLeft === 0,
+  );
+  await expect(page.locator('[data-cell-text="1.1"]')).toContainText('4');
+  await expect(page.locator('[data-peeked-icon]')).toHaveCount(3);
+  await expect(page.getByRole('button', { name: '돋보기 (남은 0번)' })).toBeVisible();
+  await tableCell(page, '4.4').click();
+  await expect(page.locator('[data-cell-text="4.4"]')).toHaveText('?');
+  await expect(canvas.locator('[data-state="peeked"]')).toHaveCount(3);
+  expect(((await readObservation(page)).revealed as string[]).length).toBe(3);
+});
+
+test('calc-table: 오른쪽 아래 방향 +2 화살표를 놓으면 규칙을 찾은 것이다', async ({ page }) => {
+  await open(page, 'calc-pattern', TABLE_ADD, 'stage=fit');
+  await page.getByRole('button', { name: '화살표', exact: true }).click();
+  await tableCell(page, '1.1').click();
+  await page.getByRole('button', { name: '↘ 오른쪽 아래' }).click();
+  await tablePad(page, '2').click();
+  await page.getByTestId('table-arrow-commit').click();
+  await pollObservation(page, (o) => {
+    const arrows = o.arrows as { dir: string; amount: string; amountCorrect: boolean }[];
+    return (
+      arrows.length === 1 &&
+      arrows[0]?.dir === 'down-right' &&
+      arrows[0]?.amount === '2' &&
+      arrows[0]?.amountCorrect === true
+    );
+  });
+  await expect(page.locator('[data-arrow="1.1"]')).toContainText('+2');
+  await expect(page.getByTestId('table-arrow-list')).not.toContainText(/[✓✕]/);
+  await capture(page, 'T179-calc-table-arrow');
+  await page.getByTestId('table-arrow-list').getByRole('button').first().click();
+  await pollObservation(page, (o) => (o.arrows as unknown[]).length === 0);
+});
+
+test('calc-table: 곱셈표 5단 칸에 19를 쓰면 ROW-COL이고 cell-diff가 본 캔버스와 1px 안에 겹친다', async ({
+  page,
+}) => {
+  await open(page, 'calc-pattern', TABLE_MUL, 'overlay=cell-diff');
+  await tableCell(page, '4.3').click();
+  await tablePad(page, '1').click();
+  await tablePad(page, '9').click();
+  await pollObservation(page, (o) => (o.misconceptions ?? []).includes('MC-CHART-ROW-COL'));
+  await toggleOverlay(page);
+  await expectAligned(page, 'cell-diff', 'calc-table-canvas');
+  await expect(page.getByTestId('cell-diff-row-label')).toHaveText('→ +5');
+  await expect(page.getByTestId('cell-diff-col-label')).toHaveText('↓ +4');
+  // 가린 칸의 값(20)과 학생이 쓴 수는 오버레이에 없다.
+  await expect(page.locator('[data-overlay="cell-diff"]')).not.toContainText('20');
+  await expect(page.locator('[data-overlay="cell-diff"]')).not.toContainText('19');
+  await capture(page, 'T179-overlay-cell-diff');
+  // 20으로 고치면 오개념이 풀린다.
+  await toggleOverlay(page);
+  await tablePad(page, '지우기').click();
+  await tablePad(page, '지우기').click();
+  await tablePad(page, '2').click();
+  await tablePad(page, '0').click();
+  await pollObservation(
+    page,
+    (o) => (o.misconceptions ?? []).length === 0 && tableEntries(o)['4.3'] === '20',
+  );
+});
+
+test('calc-table: 키보드만으로 쓰기·돋보기·화살표를 한다', async ({ page }) => {
+  await open(page, 'calc-pattern', TABLE_ADD, 'stage=fit');
+  await tableCell(page, '1.1').focus();
+  await page.keyboard.press('4');
+  await page.keyboard.press('ArrowDown');
+  // 1.1 아래 가린 칸은 2.1이 아니라(가리지 않음) 없다. 같은 칸에는 가린 칸이 없어 그대로다.
+  await expect(tableCell(page, '1.1')).toBeFocused();
+  await page.keyboard.press('ArrowRight');
+  // 같은 줄에 다른 가린 칸이 없어 그대로다.
+  await expect(tableCell(page, '1.1')).toBeFocused();
+  await tableCell(page, '2.2').focus();
+  await page.keyboard.press('6');
+  await pollObservation(page, (o) => {
+    const entries = tableEntries(o);
+    return entries['1.1'] === '4' && entries['2.2'] === '6';
+  });
+  // M: 돋보기 도구, 방향키로 칸을 옮기고 Enter로 연다(쓰기 도구에서 옮긴 칸은 가린 칸뿐이다).
+  await page.keyboard.press('m');
+  await expect(page.getByRole('button', { name: /^돋보기/ })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await tableCell(page, '3.3').focus();
+  await page.keyboard.press('Enter');
+  await pollObservation(page, (o) => JSON.stringify(o.revealed) === JSON.stringify(['3.3']));
+  // A: 화살표 도구. 1.1에서 Enter로 시작, 3(오른쪽 아래), 2, Enter.
+  await page.keyboard.press('a');
+  await tableCell(page, '1.1').focus();
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('3');
+  await page.keyboard.press('2');
+  await page.keyboard.press('Enter');
+  await pollObservation(page, (o) => {
+    const arrows = o.arrows as { dir: string; amountCorrect: boolean }[];
+    return arrows.length === 1 && arrows[0]?.dir === 'down-right' && arrows[0]?.amountCorrect;
+  });
+});
+
+test('calc-table: 칸·패드·도구 단추 targetSize 이상, 9×9 표도 맨 아래 칸·단추까지 닿는다', async ({
+  page,
+}) => {
+  await open(
+    page,
+    'calc-pattern',
+    { table: 'multiplication', size: [9, 9], magnifierUses: 5, drawArrows: true },
+    'stage=fit',
+  );
+  await expectMin(tableCell(page, '4.4'), 48, '표 칸(48)');
+  await expectMin(tablePad(page, '5'), 48, '패드(48)');
+  await expectMin(page.getByTestId('table-tool-magnifier'), 48, '도구(48)');
+  await page.getByRole('button', { name: '터치 48px' }).click();
+  await expectMin(tableCell(page, '4.4'), 64, '표 칸(64)');
+  await expectMin(tablePad(page, '5'), 64, '패드(64)');
+  await expectMin(page.getByTestId('table-tool-magnifier'), 64, '도구(64)');
+  const last = tableCell(page, '8.8');
+  await last.scrollIntoViewIfNeeded();
+  await expect(last).toBeInViewport();
+  await last.click();
+  await tablePad(page, '4').scrollIntoViewIfNeeded();
+  await tablePad(page, '4').click();
+  await pollObservation(page, (o) => tableEntries(o)['8.8'] === '4');
+  const pad = tablePad(page, '모두 지우기');
+  await pad.scrollIntoViewIfNeeded();
+  await expect(pad).toBeInViewport();
+});
+
 /** 화면 기준 이미지: 첫 화면 세 장(extend·translate·chart full). 크롬북·아이패드만 찍는다. */
 async function stageShot(page: Page, name: string): Promise<void> {
   await page.evaluate(async () => {
@@ -830,6 +1037,30 @@ test.describe('첫 화면 기준 이미지', () => {
   test('growth cubes L', async ({ page }) => {
     await open(page, 'growth', GROWTH, 'stage=fit');
     await stageShot(page, 'pattern-growth-cubes');
+  });
+
+  test('calc-table addition', async ({ page }) => {
+    await open(page, 'calc-pattern', { table: 'addition', magnifierUses: 3 }, 'stage=fit');
+    await stageShot(page, 'pattern-calc-table-add');
+  });
+
+  test('calc-table multiplication arrows', async ({ page }) => {
+    await open(
+      page,
+      'calc-pattern',
+      { table: 'multiplication', size: [6, 6], magnifierUses: 2, drawArrows: true },
+      'stage=fit',
+    );
+    await page.getByRole('button', { name: '화살표', exact: true }).click();
+    await tableCell(page, '1.1').click();
+    await page.getByRole('button', { name: '↘ 오른쪽 아래' }).click();
+    await tablePad(page, '5').click();
+    await page.getByTestId('table-arrow-commit').click();
+    // 패드를 누르려고 조작 묶음이 스크롤됐으므로 맨 위로 되돌려 도구 막대가 보이게 찍는다.
+    await page.evaluate(() => {
+      document.querySelectorAll('[class*="sideStack"]').forEach((el) => (el.scrollTop = 0));
+    });
+    await stageShot(page, 'pattern-calc-table-mul');
   });
 
   test('growth flat stairs', async ({ page }) => {
