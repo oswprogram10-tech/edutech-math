@@ -23,5 +23,17 @@ export { evaluate, solveForBox } from './evaluate';
 export { equivalent } from './equivalent';
 export { operationOrder } from './operation-order';
 export type { OperationStep } from './operation-order';
+export {
+  parseRelation,
+  evaluateTerm,
+  checkPairs,
+  relationHolds,
+  relationInfo,
+  sameOnDomain,
+  solveBox,
+  swappedHolds,
+  formatRelation,
+} from './relation';
+export type { Relation, RelTerm, RelationInfo } from './relation';
 export { toDisplay, rationalToDisplay } from './display';
 export type { DisplayNode, RationalDisplayForm } from './display';

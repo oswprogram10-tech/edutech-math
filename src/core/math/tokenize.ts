@@ -45,7 +45,19 @@ export interface BoxToken {
   readonly end: number;
 }
 
-export type Token = NumberToken | OperatorToken | ParenToken | BoxToken;
+export interface CircleToken {
+  readonly type: 'circle';
+  readonly start: number;
+  readonly end: number;
+}
+
+export interface EqualsToken {
+  readonly type: 'equals';
+  readonly start: number;
+  readonly end: number;
+}
+
+export type Token = NumberToken | OperatorToken | ParenToken | BoxToken | CircleToken | EqualsToken;
 
 function isDigit(char: string): boolean {
   return char >= '0' && char <= '9';
@@ -124,6 +136,18 @@ export function tokenize(source: string): Token[] {
 
     if (char === '□') {
       tokens.push({ type: 'box', start: index, end: index + 1 });
+      index += 1;
+      continue;
+    }
+
+    if (char === '○') {
+      tokens.push({ type: 'circle', start: index, end: index + 1 });
+      index += 1;
+      continue;
+    }
+
+    if (char === '=') {
+      tokens.push({ type: 'equals', start: index, end: index + 1 });
       index += 1;
       continue;
     }
