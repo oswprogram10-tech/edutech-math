@@ -433,6 +433,17 @@ test('g1s2u5.A2.T3·T4 — 틀리게 칠하거나 채우면 일반 ①이다', a
   await expectPassed(page, true);
 });
 
+/** 줄 이름 글자가 화면에서 몇 px인지(논리 글자 크기 × 화면 배율) 잰다. */
+async function labelFontPx(canvas: Locator): Promise<number> {
+  return canvas.evaluate((svg) => {
+    const root = svg as unknown as SVGSVGElement;
+    const label = root.querySelector('[data-testid="pattern-track"] text');
+    if (!label) return 0;
+    const scale = root.getBoundingClientRect().width / root.viewBox.baseVal.width;
+    return Number(label.getAttribute('font-size')) * scale;
+  });
+}
+
 // ---------------------------------------------------------------- 크기·오프라인
 
 async function expectMin(locator: Locator, min: number, label: string): Promise<void> {
@@ -455,6 +466,23 @@ test('저학년 64px 터치 타깃: 빈칸·팔레트·배열표 칸이 64px 이
   await expectMin(main(page).getByTestId('pattern-slot-0'), 64, 'A2.T2 빈칸');
   await passA2T2(page);
   await expectMin(main(page).locator('[data-cell="10"]'), 64, 'A2.T3 배열표 칸');
+});
+
+test('g1s2u5.A2.T1 translate 판: 빈칸이 64px 이상이고 줄 이름 글자가 14px 이상이다', async ({
+  page,
+}) => {
+  await openActivity(page, 'A2');
+  await expectMin(main(page).getByTestId('pattern-slot-0'), 64, 'A2.T1 빈칸');
+  await expectMin(main(page).getByTestId('pattern-slot-8'), 64, 'A2.T1 마지막 빈칸');
+  const px = await labelFontPx(main(page).getByTestId('pattern-canvas'));
+  console.log('T171 A2.T1 줄 이름 글자', Math.round(px * 10) / 10);
+  expect(px).toBeGreaterThanOrEqual(14);
+  // 보낸 뒤 셋째 줄이 생겨도 같다.
+  await place(page, ['1', '2', '2', '1', '2', '2', '1', '2', '2']);
+  await main(page).getByRole('button', { name: '보내기' }).click();
+  await expect(main(page).getByTestId('pattern-restored-8')).toBeAttached();
+  await expectMin(main(page).getByTestId('pattern-restored-0'), 64, 'A2.T1 되돌린 칸');
+  expect(await labelFontPx(main(page).getByTestId('pattern-canvas'))).toBeGreaterThanOrEqual(14);
 });
 
 test('오프라인에서도 g1s2u5.A1 활동이 열린다', async ({ page, context }) => {

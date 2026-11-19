@@ -93,6 +93,14 @@
   -webkit-user-select: none;
 }
 
+/* 판 안 스크롤(칸을 targetSize로 둘 때)에서는 인라인 크기를 그대로 쓴다. */
+.trackSvg[data-scroll='true'] {
+  flex: none;
+  max-height: none;
+  max-width: none;
+  height: auto;
+}
+
 .trackSvg:focus-visible,
 .chartSvg:focus-visible,
 .button:focus-visible,

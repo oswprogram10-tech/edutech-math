@@ -8,9 +8,10 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent } from 'react';
+import { useRenderedSize } from '../../core/engine-sdk';
 import type { EngineViewProps } from '../../core/engine-sdk';
 import { audioSupported, noteOfToken, playNote, unlockAudio } from './audio';
-import { trackLayout } from './layout';
+import { CELL, LABEL_FONT, trackLayout } from './layout';
 import type { Box } from './layout';
 import { restoredFrom } from './pattern';
 import { patternStrings as S } from './strings.ko';
@@ -75,6 +76,23 @@ function SoundCard({
 export function SequenceView({ state, dispatch, targetSize, readOnly = false }: SequenceViewProps) {
   const { settings, slots, cursor, sent } = state;
   const layout = useMemo(() => trackLayout(settings, sent), [settings, sent]);
+  const boardRef = useRef<HTMLDivElement>(null);
+  const board = useRenderedSize(boardRef);
+  // 판에 맞춘 칸이 targetSize보다 작아지면 칸을 targetSize로 두고 판 안에서 세로로 스크롤한다.
+  let sizeStyle: { width: string; height: string } | undefined;
+  if (board.width > 0 && board.height > 0) {
+    const fit = Math.min(
+      Math.min(board.width, layout.width) / layout.width,
+      board.height / layout.height,
+    );
+    if (fit * CELL < targetSize) {
+      const scale = targetSize / CELL;
+      sizeStyle = {
+        width: `${layout.width * scale}px`,
+        height: `${layout.height * scale}px`,
+      };
+    }
+  }
   const soundOnly = settings.givenDisplay === 'sound-only';
   const translate = settings.variant === 'translate';
   const order = useMemo(
@@ -301,11 +319,12 @@ export function SequenceView({ state, dispatch, targetSize, readOnly = false }: 
   return (
     <div className={styles.wrap} data-target-size={targetSize} data-mode="sequence">
       <div className={styles.stageRow}>
-        <div className={styles.boardArea}>
+        <div ref={boardRef} className={styles.boardArea} data-scroll={sizeStyle ? 'true' : 'false'}>
           <svg
             data-testid="pattern-canvas"
             className={styles.trackSvg}
-            style={{ aspectRatio: `${layout.width} / ${layout.height}` }}
+            data-scroll={sizeStyle ? 'true' : 'false'}
+            style={sizeStyle ?? { aspectRatio: `${layout.width} / ${layout.height}` }}
             viewBox={`0 0 ${layout.width} ${layout.height}`}
             role="application"
             aria-label={S.sequence.trackLabel}
@@ -319,7 +338,7 @@ export function SequenceView({ state, dispatch, targetSize, readOnly = false }: 
                   key={`${label.kind}-${label.y}`}
                   x={label.x}
                   y={label.y}
-                  fontSize={20}
+                  fontSize={LABEL_FONT}
                   fontWeight={700}
                   fill="#3d485c"
                   dominantBaseline="central"

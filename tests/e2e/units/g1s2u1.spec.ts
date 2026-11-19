@@ -457,7 +457,8 @@ test('g1s2u1.A2 백 수 배열표 숨바꼭질 — 5과제 흐름, ROW-COL ①�
   await expectFailedWithHint(page, '바로 위 칸과 몇 차이일까?', 1);
   await submit(page);
   await expectFailedWithHint(page, '막대가 몇 개 더 늘까요?', 2);
-  // 알려진 한계(T171 메모): select 모드는 가린 칸이 없어 ten-step이 아무것도 그리지 않는다(src 수정 필요).
+  const step4 = await expectTenStep(page);
+  await expect(step4.locator('[data-testid="ten-step-rod"]')).toHaveCount(6);
   await chartMain(page).locator('[data-cell="78"]').click();
   await submit(page);
   await expectPassed(page);
@@ -530,13 +531,13 @@ test('g1s2u1.A2 — 저학년 64px 터치 타깃과 판 안 스크롤에서 맨 
   await openA2(page);
   const button = chartPad(page).getByRole('button', { name: '5', exact: true });
   await activateHidden(page, 0);
-  const padBox = await button.boundingBox();
-  console.log(
-    'T171 A2.T1 숫자 패드',
-    Math.round(padBox?.width ?? 0),
-    Math.round(padBox?.height ?? 0),
-  );
-  expect(Math.min(padBox?.width ?? 0, padBox?.height ?? 0)).toBeGreaterThanOrEqual(63.5);
+  // 첫 배치 직후에는 크기가 잠깐 다를 수 있어 안정될 때까지 기다린다.
+  await expect
+    .poll(async () => {
+      const box = await button.boundingBox();
+      return Math.min(box?.width ?? 0, box?.height ?? 0);
+    })
+    .toBeGreaterThanOrEqual(63.5);
   await enterWithPad(page, 0, '43');
   await submit(page);
   await expectPassed(page);
@@ -548,9 +549,12 @@ test('g1s2u1.A2 — 저학년 64px 터치 타깃과 판 안 스크롤에서 맨 
   await expectPassed(page);
 
   // T4: 전체 배열표. 칸 한 변과 맨 아래 줄(91·100)이 판 안 스크롤로 닿는다.
-  const cell = await chartMain(page).locator('[data-cell="45"]').boundingBox();
-  console.log('T171 A2.T4 배열표 칸', Math.round(cell?.width ?? 0), Math.round(cell?.height ?? 0));
-  expect(Math.min(cell?.width ?? 0, cell?.height ?? 0)).toBeGreaterThanOrEqual(63.5);
+  await expect
+    .poll(async () => {
+      const box = await chartMain(page).locator('[data-cell="45"]').boundingBox();
+      return Math.min(box?.width ?? 0, box?.height ?? 0);
+    })
+    .toBeGreaterThanOrEqual(63.5);
   for (const bottom of [91, 100]) {
     const target = chartMain(page).locator(`[data-cell="${bottom}"]`);
     await target.scrollIntoViewIfNeeded();

@@ -323,6 +323,17 @@ describe('E15 오버레이', () => {
     expect(container.textContent).not.toMatch(/46|56/);
   });
 
+  it('ten-step: 가린 칸이 아닌 args.cell(78)에서 위 칸 68의 막대를 그린다', () => {
+    const config: PatternConfig = { mode: 'hundred-chart', view: 'full', select: true };
+    const { container } = render(
+      <TenStepOverlay config={config} state={createInitialState(config)} args={{ cell: 78 }} />,
+    );
+    // 위 칸 68 = 막대 6개 + 낱개 8개, 아래 칸 수는 쓰지 않는다.
+    expect(container.querySelectorAll('[data-testid="ten-step-rod"]')).toHaveLength(6);
+    expect(container.querySelectorAll('[data-testid="ten-step-dot"]')).toHaveLength(8);
+    expect(container.textContent).not.toMatch(/78|88/);
+  });
+
   it('ten-step: 오개념이 없고 args도 없으면 그리지 않는다', () => {
     const config: PatternConfig = { mode: 'hundred-chart', hidden: 'cross', center: 46 };
     const { container } = render(
