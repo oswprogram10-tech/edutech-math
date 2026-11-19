@@ -241,6 +241,8 @@ T173은 소넷 구현 → 검수 1회(판 전체 화면 기준 스냅샷 6장, �
 
 - **T179 병합(2026-11-20):** E15 `calc-pattern` 표 변형(`table` 키가 있으면 `variant:'table'`). 가린 칸 값은 DOM·Observation에 없다. `cell-diff`는 보이는 몸통 칸(안 가린 칸·돋보기로 연 칸)만 쓰고, 보이는 짝이 없으면 그 방향을 그리지 않는다. `tableEntriesCorrect`는 판정할 칸이 없으면 false. 키보드 W·M·A 도구 전환. 세로 화면 큰 표에서 `.sideStack[data-table]`이 줄지 않게 했다. 범위 E2E 240 통과.
 
+- **T180 병합(2026-11-20):** g2s2u6 콘텐츠(A1 growth·E12 cubes 4과제, A2 calc-pattern 표 4과제). A1.T2는 views 두 개(right E12가 판정 슬롯), E12 좌표는 x 오른쪽·y 뒤·z 위. A2.T3 가린 칸 [[4,3],[4,5],[4,7]]. E2E에서 E12는 isometric 렌더러 저장값을 심어 쓴다. g2s2u6 E2E 30 통과.
+
 ## 상시
 | 카드 | 내용 |
 | --- | --- |
