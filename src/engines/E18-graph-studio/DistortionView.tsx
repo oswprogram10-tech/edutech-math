@@ -195,7 +195,9 @@ export function DistortionView({
               onChange={() => dispatch({ type: 'toggle-example-mark', example: example.id, item })}
             />
             <span className={styles.checkText}>{S.distortion.items[item]}</span>
-            <span className={styles.checkTag}>{S.distortion.problem}</span>
+            {marked.includes(item) ? (
+              <span className={styles.checkTag}>{S.distortion.problem}</span>
+            ) : null}
           </label>
         ))}
       </fieldset>

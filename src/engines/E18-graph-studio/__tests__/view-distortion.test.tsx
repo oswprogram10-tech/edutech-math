@@ -142,8 +142,12 @@ describe('distortion 화면', () => {
     fireEvent.click(box);
     expect(observation()['marksMatch']).toEqual({ a: true, b: false });
     expect((box as HTMLInputElement).checked).toBe(true);
-    // 표시 말고는 DOM이 맞음·틀림으로 달라지지 않는다.
-    expect(container.innerHTML.replace(/checked=""/g, '')).toBe(before.replace(/checked=""/g, ''));
+    // 체크한 항목에만 학생 자신의 "문제 있음" 표가 붙고, 그 밖에는 DOM이 맞음·틀림으로 달라지지 않는다.
+    expect(before).not.toContain('>문제 있음<');
+    expect(container.innerHTML.match(/>문제 있음</g)).toHaveLength(1);
+    const strip = (html: string) =>
+      html.replace(/checked=""/g, '').replace(/<span class="[^"]*">문제 있음<\/span>/g, '');
+    expect(strip(container.innerHTML)).toBe(strip(before));
     expect(checklist.getAllByRole('checkbox')).toHaveLength(4);
   });
 
