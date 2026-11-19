@@ -265,6 +265,8 @@ T173은 소넷 구현 → 검수 1회(판 전체 화면 기준 스냅샷 6장, �
 
 - **T186 병합(2026-11-20):** g5s1u1 콘텐츠(A1 order-tree 4과제 + lines 1과제, A2 식 고르기 2과제 + debug 1과제 + lines 1과제). LEFT-TO-RIGHT ③은 g4s1u3에 '곱셈 묶음' 개념이 없어 `g4s1u3.mul-3x2`를 썼다. debug 과제는 E08 `keypad` 설정으로 산술 키만 둔다. 발견: E08 `lines`에서 수 뒤에 누른 기호가 수 앞에 들어간다(E2E는 → 키로 우회) → T191. g5s1u1 E2E 17 통과.
 
+- **T187 병합(2026-11-20):** 새 엔진 E06 양팔저울 `equation`(look scale·bars·symbols, □ 넣어 보기, 양쪽/한쪽 더하기·빼기, 예측 잠금). 엔진은 □의 정답을 모르고 학생 값으로만 기운다. 접시 상태는 `{const, hasBox}`로 합쳐져 20 + 15는 막대 하나(35)로 그려진다. `predictionLocked`는 예측을 했는가(gears와 같은 뜻). 오버레이 `big-tilt`·`match-bars`, 최소 배율 0.6 + 판 안 스크롤. 범위 E2E 147 통과. `compare`·`proportion`은 g1s1u4·g6s2u4 때 카드로 만든다.
+
 ## 상시
 | 카드 | 내용 |
 | --- | --- |
