@@ -2,10 +2,14 @@
 import type { EngineViewProps } from '../../core/engine-sdk';
 import { CalcView } from './CalcView';
 import { ChartView } from './ChartView';
+import { GrowthView } from './GrowthView';
 import { SequenceView } from './SequenceView';
 import type { PatternAction, PatternConfig, PatternState } from './types';
 
 export function PatternView(props: EngineViewProps<PatternConfig, PatternState, PatternAction>) {
+  if (props.state.mode === 'growth') {
+    return <GrowthView {...props} state={props.state} />;
+  }
   if (props.state.mode === 'calc-pattern') {
     return <CalcView {...props} state={props.state} />;
   }

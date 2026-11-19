@@ -1,9 +1,10 @@
-/** E15 규칙·패턴 엔진 정의. 모드 셋(`sequence`, `hundred-chart`, `calc-pattern`). */
+/** E15 규칙·패턴 엔진 정의. 모드 넷(`sequence`, `hundred-chart`, `calc-pattern`, `growth`). */
 import type { EngineDefinition } from '../../core/engine-sdk';
 import { EVENT_NAMES, emit, predicates } from './events';
 import { observe } from './observe';
 import { ColumnLinkOverlay } from './overlays/column-link';
 import { CoreBoxesOverlay } from './overlays/core-boxes';
+import { GrowthSplitOverlay } from './overlays/growth-split';
 import { MappingCardOverlay } from './overlays/mapping-card';
 import { ReplayBreakOverlay } from './overlays/replay-break';
 import { StepTableOverlay } from './overlays/step-table';
@@ -16,7 +17,7 @@ import { PatternView } from './View';
 const definition: EngineDefinition<PatternConfig, PatternState, PatternAction> = {
   id: 'E15',
   name: patternStrings.name,
-  modes: ['sequence', 'hundred-chart', 'calc-pattern'],
+  modes: ['sequence', 'hundred-chart', 'calc-pattern', 'growth'],
   createInitialState,
   reduce,
   View: PatternView,
@@ -31,6 +32,7 @@ const definition: EngineDefinition<PatternConfig, PatternState, PatternAction> =
     'ten-step': TenStepOverlay,
     'step-table': StepTableOverlay,
     'column-link': ColumnLinkOverlay,
+    'growth-split': GrowthSplitOverlay,
   },
 };
 

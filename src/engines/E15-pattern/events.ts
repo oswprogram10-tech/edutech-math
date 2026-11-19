@@ -5,8 +5,9 @@
  * `cell-entered`, `cell-selected`, `cell-painted`.
  */
 import type { EngineEvent, EnginePredicate, JsonValue, Observation } from '../../core/engine-sdk';
+import { allBlanksCorrect, cellIsCorrect, incrementsAllCorrect } from './growth';
 import { coreOf, sameCycle } from './pattern';
-import type { PatternAction, PatternState } from './types';
+import type { GrowthShape, PatternAction, PatternState } from './types';
 
 export const EVENT_NAMES = [
   'token-placed',
@@ -117,6 +118,30 @@ function studentSlots(observation: Observation): string[] | null {
   return raw as string[];
 }
 
+interface GrowthJudgeInput {
+  readonly shape: GrowthShape;
+  readonly cells: Record<string, string>;
+  readonly blanks: string[];
+  readonly upTo: number;
+}
+
+/**
+ * growth predicate가 정답을 계산할 때 쓸 입력. Observation의 shape·빈칸 키·입력만 읽는다.
+ * 정답(개수·늘어난 수)은 growth.ts에서 predicate 안에서만 만든다.
+ */
+function growthJudgeInput(observation: Observation): GrowthJudgeInput | null {
+  const shape = observation['shape'];
+  if (shape !== 'L' && shape !== 'stairs' && shape !== 'tower2') return null;
+  const blanks = stringList(observation['blanks']);
+  const upTo = observation['upTo'];
+  if (blanks === null || typeof upTo !== 'number') return null;
+  const cells: Record<string, string> = {};
+  for (const [key, value] of Object.entries(recordOf(observation['entries']))) {
+    if (typeof value === 'string') cells[key] = value;
+  }
+  return { shape, cells, blanks, upTo };
+}
+
 export const predicates: Readonly<Record<string, EnginePredicate>> = {
   blanksAre: (observation, args) => {
     const tokens = stringList(recordOf(args)['tokens']);
@@ -222,6 +247,35 @@ export const predicates: Readonly<Record<string, EnginePredicate>> = {
   exprValueIs: (observation, args) => {
     const n = intText(recordOf(args)['n']);
     return n !== null && observation['exprHolds'] === true && observation['exprLeft'] === n;
+  },
+
+  growthEntryIs: (observation, args) => {
+    const record = recordOf(args);
+    const cell = record['cell'];
+    const value = intArg(record, 'value');
+    if (typeof cell !== 'string' || value === null) return false;
+    const text = recordOf(observation['entries'])[cell];
+    return typeof text === 'string' && /^[0-9]{1,3}$/.test(text) && Number(text) === value;
+  },
+
+  incrementsCorrect: (observation) => {
+    const input = growthJudgeInput(observation);
+    return input !== null && incrementsAllCorrect(input.shape, input.blanks, input.cells);
+  },
+
+  countCorrect: (observation, args) => {
+    const stage = intArg(recordOf(args), 'stage');
+    const input = growthJudgeInput(observation);
+    if (stage === null || input === null || stage < 1 || stage > input.upTo) return false;
+    const key = `${stage}.count`;
+    // 주어진 칸(빈칸이 아닌 칸)은 늘 맞다.
+    if (!input.blanks.includes(key)) return true;
+    return cellIsCorrect(input.shape, input.cells, key);
+  },
+
+  blanksCorrect: (observation) => {
+    const input = growthJudgeInput(observation);
+    return input !== null && allBlanksCorrect(input.shape, input.blanks, input.cells);
   },
 
   hasMisconception: (observation, args) => {
