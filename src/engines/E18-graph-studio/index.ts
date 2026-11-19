@@ -1,4 +1,4 @@
-/** E18 그래프 스튜디오 엔진 정의. 모드: table-to-graph, scale(T155), pictograph, class-vote(T156), line-graph(T163), band-circle(T166). */
+/** E18 그래프 스튜디오 엔진 정의. 모드: table-to-graph, scale(T155), pictograph, class-vote(T156), line-graph(T163), band-circle(T166), distortion(T167). */
 import type { EngineDefinition } from '../../core/engine-sdk';
 import { EVENT_NAMES, emit, predicates } from './events';
 import { observe } from './observe';
@@ -18,11 +18,20 @@ import { ScaleCountOverlay } from './overlays/scale-count';
 import { TableLinkOverlay } from './overlays/table-link';
 import { TallyCheckOverlay } from './overlays/tally-check';
 import { UnfoldAxisOverlay } from './overlays/unfold-axis';
+import { ZeroAxisOverlay } from './overlays/zero-axis';
 
 const definition: EngineDefinition<GraphConfig, GraphState, GraphAction> = {
   id: 'E18',
   name: graphStrings.name,
-  modes: ['table-to-graph', 'scale', 'pictograph', 'class-vote', 'line-graph', 'band-circle'],
+  modes: [
+    'table-to-graph',
+    'scale',
+    'pictograph',
+    'class-vote',
+    'line-graph',
+    'band-circle',
+    'distortion',
+  ],
   layout: 'fit',
   createInitialState,
   reduce,
@@ -44,6 +53,7 @@ const definition: EngineDefinition<GraphConfig, GraphState, GraphAction> = {
     'interp-guide': InterpGuideOverlay,
     'band-frame': BandFrameOverlay,
     'total-bars': TotalBarsOverlay,
+    'zero-axis': ZeroAxisOverlay,
   },
 };
 

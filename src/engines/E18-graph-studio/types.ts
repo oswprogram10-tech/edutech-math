@@ -12,7 +12,18 @@ export const LOGICAL_HEIGHT = 700;
 export const DATA_MAX = 100;
 
 export type GraphMode =
-  'table-to-graph' | 'scale' | 'pictograph' | 'class-vote' | 'line-graph' | 'band-circle';
+  | 'table-to-graph'
+  | 'scale'
+  | 'pictograph'
+  | 'class-vote'
+  | 'line-graph'
+  | 'band-circle'
+  | 'distortion';
+
+/** distortion 모드만 쓰는 자료·눈금 상한(도서 대출 수 같은 자료). */
+export const DISTORTION_MAX = 1000;
+/** 제목 카드로 쌓을 수 있는 최대 장 수. */
+export const HEADLINE_MAX = 6;
 
 export type TableSource = 'given' | 'student' | 'hidden';
 export type GraphSource = 'given' | 'student' | 'none';
@@ -88,6 +99,16 @@ interface GraphConfigBase {
   readonly compare?: { readonly title?: unknown; readonly data?: unknown };
   /** compare가 있을 때 주 원그래프 위의 이름. 없으면 `title`. */
   readonly circleTitle?: string;
+  /** T167: 그래프 왜곡(distortion). `yStep`은 처음 눈금 간격으로도 쓴다. */
+  readonly controls?: readonly unknown[];
+  readonly yStart?: unknown;
+  readonly yStartOptions?: readonly unknown[];
+  readonly yStepOptions?: readonly unknown[];
+  readonly wavyLine?: boolean;
+  readonly groupOptions?: readonly unknown[];
+  readonly headlineCards?: readonly unknown[];
+  readonly examples?: readonly unknown[];
+  readonly checklist?: readonly unknown[];
 }
 
 export interface TableToGraphConfig extends GraphConfigBase {
@@ -114,13 +135,18 @@ export interface BandCircleConfig extends GraphConfigBase {
   readonly mode?: 'band-circle';
 }
 
+export interface DistortionConfig extends GraphConfigBase {
+  readonly mode?: 'distortion';
+}
+
 export type GraphConfig =
   | TableToGraphConfig
   | ScaleConfig
   | PictographConfig
   | ClassVoteConfig
   | LineGraphConfig
-  | BandCircleConfig;
+  | BandCircleConfig
+  | DistortionConfig;
 
 export type PercentEntry = 'student' | 'given' | 'hidden';
 export type BandSource = 'auto' | 'student' | 'given';
@@ -171,6 +197,51 @@ export interface BandCircleSettings {
   readonly compare: CompareSettings | null;
   readonly total: number;
   readonly truePercents: Readonly<Record<string, string>>;
+}
+
+export type DistortionControl = 'yStart' | 'yStep' | 'wavyLine' | 'groupItems';
+export type ChecklistItem = 'y-zero' | 'even-step' | 'sum-100' | 'fair-grouping';
+export const CHECKLIST_ITEMS: readonly ChecklistItem[] = [
+  'y-zero',
+  'even-step',
+  'sum-100',
+  'fair-grouping',
+];
+
+/** 막대 여럿을 한 막대(합)로 묶는 조작 하나. */
+export interface DistortionGroup {
+  readonly label: string;
+  readonly members: readonly string[];
+}
+
+/**
+ * 예시 그래프. `flaws`는 정답이므로 화면·DOM 속성·aria 어디에도 내보내지 않는다.
+ * `ticks`가 있으면 첫 눈금이 축 시작이고 눈금을 같은 간격으로 그린다.
+ */
+export interface DistortionExample {
+  readonly id: string;
+  readonly title: string;
+  readonly kind: 'bar' | 'circle';
+  readonly categories: readonly string[];
+  readonly data: Readonly<Record<string, number>>;
+  readonly yStart: number;
+  readonly ticks: readonly number[] | null;
+  readonly grouped: string;
+  readonly flaws: readonly ChecklistItem[];
+}
+
+/** 그래프 왜곡(distortion) 설정(정규화). 값은 모두 0~1000 정수다. */
+export interface DistortionSettings {
+  readonly controls: readonly DistortionControl[];
+  readonly yStartOptions: readonly number[];
+  readonly yStepOptions: readonly number[];
+  readonly yStart: number;
+  readonly yStep: number;
+  readonly wavy: boolean;
+  readonly groupOptions: readonly DistortionGroup[];
+  readonly headlineCards: readonly string[];
+  readonly examples: readonly DistortionExample[];
+  readonly checklist: readonly ChecklistItem[];
 }
 
 /** 정규화한 자료 묶음. 빠진 글은 설정 맨 위 키로 채운다. */
@@ -224,6 +295,8 @@ export interface GraphSettings {
   readonly line: LineSettings | null;
   /** band-circle 모드의 설정. 다른 모드는 null. */
   readonly bandCircle: BandCircleSettings | null;
+  /** distortion 모드의 설정. 다른 모드는 null. */
+  readonly distortion: DistortionSettings | null;
 }
 
 interface GraphStateBase {
@@ -294,13 +367,36 @@ export interface BandCircleState extends GraphStateBase {
   readonly curl: number;
 }
 
+export interface DistortionHistory {
+  readonly yStartChanged: boolean;
+  readonly yStepChanged: boolean;
+  readonly grouped: boolean;
+}
+
+export interface DistortionState extends GraphStateBase {
+  readonly mode: 'distortion';
+  readonly yStart: number;
+  readonly yStep: number;
+  readonly wavy: boolean;
+  /** 켠 묶음의 label(켠 순서). */
+  readonly groups: readonly string[];
+  /** 제목 카드를 누른 순서. */
+  readonly headline: readonly string[];
+  /** 예시 id → 학생이 "문제 있음"으로 고른 체크리스트 항목(체크리스트 순서). */
+  readonly exampleMarks: Readonly<Record<string, readonly ChecklistItem[]>>;
+  /** 0은 "내 그래프", i(≥1)는 i번째 예시. */
+  readonly exampleIndex: number;
+  readonly history: DistortionHistory;
+}
+
 export type GraphState =
   | TableToGraphState
   | ScaleState
   | PictographState
   | ClassVoteState
   | LineGraphState
-  | BandCircleState;
+  | BandCircleState
+  | DistortionState;
 
 export type GraphAction =
   | { readonly type: 'set-table'; readonly cat: string; readonly value: number | null }
@@ -329,7 +425,15 @@ export type GraphAction =
   | { readonly type: 'finish-predict' }
   | { readonly type: 'set-percent'; readonly cat: string; readonly value: number | null }
   | { readonly type: 'set-band'; readonly cat: string; readonly cells: number }
-  | { readonly type: 'set-curl'; readonly value: number };
+  | { readonly type: 'set-curl'; readonly value: number }
+  | { readonly type: 'set-y-start'; readonly value: number }
+  | { readonly type: 'set-y-step'; readonly value: number }
+  | { readonly type: 'toggle-wavy' }
+  | { readonly type: 'toggle-group'; readonly label: string }
+  | { readonly type: 'add-headline'; readonly card: string }
+  | { readonly type: 'clear-headline' }
+  | { readonly type: 'toggle-example-mark'; readonly example: string; readonly item: string }
+  | { readonly type: 'show-example'; readonly index: number };
 
 export const DEFAULT_SCALE_OPTIONS: readonly number[] = [1, 2, 5, 10];
 

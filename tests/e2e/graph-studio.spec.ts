@@ -52,7 +52,13 @@ interface OpenOptions {
   readonly overlay?: string;
   readonly overlayArgs?: unknown;
   readonly mode?:
-    'table-to-graph' | 'scale' | 'pictograph' | 'class-vote' | 'line-graph' | 'band-circle';
+    | 'table-to-graph'
+    | 'scale'
+    | 'pictograph'
+    | 'class-vote'
+    | 'line-graph'
+    | 'band-circle'
+    | 'distortion';
 }
 
 async function openEngine(page: Page, config: unknown, options: OpenOptions = {}) {
@@ -2595,5 +2601,314 @@ test.describe('T166: band-circle 띠·원그래프', () => {
     await openEngine(page, compareConfig, { mode: 'band-circle' });
     await waitCurl(page, 100);
     await stageShot(page, 'circle-compare');
+  });
+});
+
+test.describe('T167: distortion 그래프 왜곡', () => {
+  const config = {
+    mode: 'distortion',
+    title: '도서 대출 수',
+    valueAxisTitle: '대출 수',
+    valueLabel: '권',
+    data: [
+      ['1반', 52],
+      ['2반', 48],
+    ],
+    controls: ['yStart', 'yStep', 'wavyLine', 'groupItems'],
+    yStartOptions: [0, 45],
+    yStepOptions: [1, 5, 10],
+    groupOptions: [{ label: '1·2반', members: ['1반', '2반'] }],
+    headlineCards: ['1반이 압도적!', '큰 차이 없어요', '독서왕은 1반', '2반도 열심히'],
+    examples: [
+      {
+        id: 'a',
+        title: '독서 대회 결과',
+        kind: 'bar',
+        data: { 가: 52, 나: 48 },
+        yStart: 45,
+        flaws: ['y-zero'],
+      },
+      {
+        id: 'b',
+        title: '좋아하는 간식',
+        kind: 'circle',
+        data: { 떡볶이: 50, 과자: 30, 과일: 20, 빵: 15 },
+        flaws: ['sum-100'],
+      },
+      {
+        id: 'c',
+        title: '학년별 책 수',
+        kind: 'bar',
+        data: { 가: 10, 나: 20, 다: 30 },
+        ticks: [0, 10, 30, 60],
+        grouped: '나와 다를 묶었어요',
+        flaws: ['even-step', 'fair-grouping'],
+      },
+    ],
+  };
+
+  function bars(page: Page): Locator {
+    return page.locator('[data-testid="graph-canvas"] [data-testid="distortion-bar"]');
+  }
+
+  async function barHeights(page: Page): Promise<number[]> {
+    return bars(page).evaluateAll((nodes) =>
+      nodes.map((node) => node.getBoundingClientRect().height),
+    );
+  }
+
+  async function open(page: Page, extra: Record<string, unknown> = {}, overlay?: string) {
+    await openEngine(page, { ...config, ...extra }, { mode: 'distortion', overlay });
+    await expect(bars(page)).toHaveCount(2);
+  }
+
+  test('세로축 시작값을 바꾸면 막대 높이의 비가 바뀐다', async ({ page }) => {
+    await open(page);
+    await expect
+      .poll(async () => {
+        const [a, b] = await barHeights(page);
+        return Math.abs((a ?? 0) / (b ?? 1) - 52 / 48) < 0.03;
+      })
+      .toBe(true);
+    await page.getByRole('radio', { name: '45부터' }).click();
+    await expect
+      .poll(async () => {
+        const [a, b] = await barHeights(page);
+        return Math.abs((a ?? 0) / (b ?? 1) - 7 / 3) < 0.06;
+      })
+      .toBe(true);
+    await pollObservation(
+      page,
+      (o) => o['yStart'] === 45 && o['visualRatio'] === '7/3' && o['valueRatio'] === '13/12',
+    );
+    // 눈금 간격은 막대 높이의 비를 바꾸지 않지만 막대가 그림판을 쓰는 정도는 바꾼다.
+    const before = await barHeights(page);
+    await page.getByRole('radio', { name: '1권' }).click();
+    await expect.poll(async () => ((await barHeights(page))[0] ?? 0) > (before[0] ?? 0)).toBe(true);
+    await pollObservation(page, (o) => o['yStep'] === 1 && o['visualRatio'] === '7/3');
+  });
+
+  test('물결선 토글: 시작값이 0보다 클 때만 그려지고 0 눈금이 나온다', async ({ page }) => {
+    await open(page);
+    const wavy = page.getByTestId('distortion-wavy');
+    await page.getByRole('switch', { name: '세로축 물결선' }).click();
+    await expect(wavy).toHaveCount(0);
+    await page.getByRole('radio', { name: '45부터' }).click();
+    await expect(wavy).toHaveCount(1);
+    await expect(page.getByTestId('distortion-zero')).toHaveText('0');
+    await pollObservation(page, (o) => o['wavyShown'] === true);
+    await page.getByRole('switch', { name: '세로축 물결선' }).click();
+    await expect(wavy).toHaveCount(0);
+    await expect(page.getByTestId('distortion-zero')).toHaveCount(0);
+  });
+
+  test('항목 묶기: 두 막대가 한 막대로 합쳐진다', async ({ page }) => {
+    await open(page);
+    await page.getByRole('switch', { name: '1·2반 묶기' }).click();
+    await expect(bars(page)).toHaveCount(1);
+    await pollObservation(
+      page,
+      (o) => JSON.stringify(o['barValues']) === JSON.stringify({ '1·2반': 100 }),
+    );
+    await page.getByRole('switch', { name: '1·2반 묶기' }).click();
+    await expect(bars(page)).toHaveCount(2);
+  });
+
+  test('기사 제목 카드: 누른 순서로 쌓이고 6장 한도, 지우기', async ({ page }) => {
+    await open(page);
+    await page.getByRole('button', { name: '큰 차이 없어요' }).click();
+    await page.getByRole('button', { name: '1반이 압도적!' }).click();
+    await expect(page.getByTestId('headline-text')).toHaveText('큰 차이 없어요 1반이 압도적!');
+    for (let i = 0; i < 4; i += 1) await page.getByRole('button', { name: '2반도 열심히' }).click();
+    await pollObservation(page, (o) => (o['headline'] as string[]).length === 6);
+    await expect(page.getByRole('button', { name: '2반도 열심히' })).toBeDisabled();
+    await page.getByTestId('headline-clear').click();
+    await expect(page.getByTestId('headline-text')).toContainText('카드를 눌러');
+  });
+
+  test('예시 탭: 체크리스트에 체크하면 marksMatch가 바뀌고 DOM에 flaws가 없다', async ({
+    page,
+  }) => {
+    await open(page);
+    await expect(page.getByRole('tablist')).toBeVisible();
+    await page.getByRole('tab', { name: '예시 1' }).click();
+    const list = page.getByTestId('distortion-checklist');
+    await expect(list.getByRole('checkbox')).toHaveCount(4);
+    await list.getByRole('checkbox', { name: '세로축이 0에서 시작하나? 문제 있음' }).check();
+    await pollObservation(
+      page,
+      (o) => JSON.stringify(o['marksMatch']) === '{"a":true,"b":false,"c":false}',
+    );
+    await list.getByRole('checkbox', { name: '눈금 간격이 일정한가? 문제 있음' }).check();
+    await pollObservation(page, (o) => (o['marksMatch'] as Record<string, boolean>)['a'] === false);
+    await list.getByRole('checkbox', { name: '눈금 간격이 일정한가? 문제 있음' }).uncheck();
+    // 키보드로 다음 탭(원그래프 예시)으로 가서 스페이스로 체크한다.
+    await page.getByRole('tab', { name: '예시 1' }).focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(page.getByRole('tab', { name: '예시 2' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    await expect(page.getByTestId('distortion-slice')).toHaveCount(4);
+    const box = page
+      .getByTestId('distortion-checklist')
+      .getByRole('checkbox', { name: '원그래프 합이 100%인가? 문제 있음' });
+    await box.focus();
+    await page.keyboard.press('Space');
+    await pollObservation(
+      page,
+      (o) =>
+        o['allMarksMatch'] === false && (o['marksMatch'] as Record<string, boolean>)['b'] === true,
+    );
+    // 정답(flaws)은 어느 탭에서도 DOM에 없다. 정오를 알리는 속성도 없다.
+    for (const name of ['내 그래프', '예시 1', '예시 2', '예시 3']) {
+      await page.getByRole('tab', { name }).click();
+      const html = await page.content();
+      expect(html).not.toContain('flaws');
+      expect(html).not.toMatch(/data-(flaw|correct|wrong|answer)/i);
+    }
+  });
+
+  test('간격이 같지 않은 눈금 예시와 묶음 설명', async ({ page }) => {
+    await open(page);
+    await page.getByRole('tab', { name: '예시 3' }).click();
+    await expect(page.getByTestId('distortion-grouped')).toHaveText('나와 다를 묶었어요');
+    await expect(page.getByTestId('distortion-tick')).toHaveCount(4);
+    expect(await page.getByTestId('distortion-tick').allTextContents()).toEqual([
+      '0',
+      '10',
+      '30',
+      '60',
+    ]);
+    // 눈금은 같은 간격으로 그려지므로 값 10·20·30의 높이는 1 : 1.5 : 2 (눈금 한 칸 = 값 10, 20, 30).
+    await expect
+      .poll(async () => {
+        const [first, second, third] = await barHeights(page);
+        return (
+          Math.abs((second ?? 0) / (first ?? 1) - 1.5) < 0.05 &&
+          Math.abs((third ?? 0) / (first ?? 1) - 2) < 0.05
+        );
+      })
+      .toBe(true);
+  });
+
+  test('막대 위에 값 글자가 없다', async ({ page }) => {
+    await open(page);
+    const texts = await page.locator('[data-testid="graph-canvas"] text').allTextContents();
+    expect(texts).not.toContain('52');
+    expect(texts).not.toContain('48');
+  });
+
+  test('조작 단추와 탭, 체크 줄의 누르는 영역이 48px 이상이다', async ({ page }) => {
+    await open(page);
+    const targets = [
+      page.getByRole('radio', { name: '45부터' }),
+      page.getByRole('radio', { name: '10권' }),
+      page.getByRole('switch', { name: '세로축 물결선' }),
+      page.getByRole('button', { name: '큰 차이 없어요' }),
+      page.getByRole('tab', { name: '예시 1' }),
+    ];
+    for (const target of targets) {
+      const size = await target.boundingBox();
+      expect(size?.height ?? 0).toBeGreaterThanOrEqual(47.5);
+      expect(size?.width ?? 0).toBeGreaterThanOrEqual(47.5);
+    }
+    await page.getByRole('tab', { name: '예시 1' }).click();
+    for (const label of await page.getByTestId('distortion-checklist').locator('label').all()) {
+      expect((await label.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(47.5);
+    }
+  });
+
+  test('키보드로 조작한다(포커스 후 Enter·Space)', async ({ page }) => {
+    await open(page);
+    await page.getByRole('radio', { name: '45부터' }).focus();
+    await page.keyboard.press('Enter');
+    await pollObservation(page, (o) => o['yStart'] === 45);
+    await page.getByRole('switch', { name: '세로축 물결선' }).focus();
+    await page.keyboard.press('Space');
+    await expect(page.getByTestId('distortion-wavy')).toHaveCount(1);
+  });
+
+  test('그래프·조작 줄·제목 줄이 한 화면에 들어간다(스크롤 없음)', async ({ page }) => {
+    await open(page);
+    await page.getByRole('radio', { name: '45부터' }).click();
+    const measure = await page.evaluate(() => {
+      const canvas = document.querySelector('[data-testid="graph-canvas"]');
+      const wrap = canvas?.closest('[data-mode="distortion"]') as HTMLElement | null;
+      const headline = document.querySelector('[data-testid="distortion-headline"]');
+      const graph = canvas?.getBoundingClientRect();
+      return {
+        scrollHeight: wrap?.scrollHeight ?? 0,
+        clientHeight: wrap?.clientHeight ?? 0,
+        graphWidth: Math.round(graph?.width ?? 0),
+        graphHeight: Math.round(graph?.height ?? 0),
+        headlineBottom: Math.round(headline?.getBoundingClientRect().bottom ?? 0),
+        wrapBottom: Math.round(wrap?.getBoundingClientRect().bottom ?? 0),
+      };
+    });
+    console.log(`[T167 ${test.info().project.name}] ${JSON.stringify(measure)}`);
+    expect(measure.scrollHeight).toBeLessThanOrEqual(measure.clientHeight + 1);
+    expect(measure.headlineBottom).toBeLessThanOrEqual(measure.wrapBottom + 1);
+    expect(measure.graphHeight).toBeGreaterThanOrEqual(260);
+  });
+
+  test('오버레이 zero-axis: 0부터 그린 막대와 굵은 0 표시가 그래프와 맞는다', async ({ page }) => {
+    await open(page, {}, 'zero-axis');
+    await page.getByRole('radio', { name: '45부터' }).click();
+    await showOverlay(page);
+    const overlay = await expectOverlayAligned(page, 'zero-axis');
+    const zeroBars = overlay.getByTestId('zero-axis-bar');
+    await expect(zeroBars).toHaveCount(2);
+    await expect(overlay.locator('text')).toHaveCount(0);
+    // 0부터 그린 막대의 높이 비는 값의 비(52:48)다. 애니메이션이 끝날 때까지 기다린다.
+    await expect
+      .poll(async () => {
+        const first = await zeroBars.nth(0).boundingBox();
+        const second = await zeroBars.nth(1).boundingBox();
+        return first && second ? Math.abs(first.height / second.height - 52 / 48) < 0.03 : false;
+      })
+      .toBe(true);
+    // 굵은 0 표시는 본 그래프의 맨 아래 선과 1px 안에서 같은 높이에 있다.
+    const mark = await overlay.getByTestId('zero-axis-line').boundingBox();
+    const base = await page.locator('[data-testid="distortion-baseline"]').boundingBox();
+    if (!mark || !base) throw new Error('0 표시를 찾지 못했습니다.');
+    const baseY = base.y + base.height / 2;
+    expect(Math.abs(mark.y + mark.height / 2 - baseY)).toBeLessThanOrEqual(1);
+    // 0부터 그린 막대의 아래 끝도 같은 선이고, 현재 막대 옆(오른쪽)에 있다.
+    const first = await zeroBars.nth(0).boundingBox();
+    const current = await bars(page).nth(0).boundingBox();
+    if (!first || !current) throw new Error('막대를 찾지 못했습니다.');
+    expect(Math.abs(first.y + first.height - baseY)).toBeLessThanOrEqual(1.5);
+    expect(first.x).toBeGreaterThanOrEqual(current.x + current.width - 1);
+  });
+
+  test('오버레이 zero-axis: 원그래프 예시에서는 그리지 않는다', async ({ page }) => {
+    await open(page, {}, 'zero-axis');
+    await page.getByRole('tab', { name: '예시 2' }).click();
+    await showOverlay(page);
+    await expect(
+      page.locator('[data-overlay="zero-axis"] [data-testid="zero-axis-bar"]'),
+    ).toHaveCount(0);
+  });
+
+  test('기준 스크린샷: 내 그래프(45 시작, 물결선)와 예시 탭', async ({ page }) => {
+    test.skip(
+      !test.info().project.name.toLowerCase().includes('chromebook'),
+      '크롬북에서만 기준 이미지를 비교한다.',
+    );
+    await open(page);
+    await page.getByRole('radio', { name: '45부터' }).click();
+    await page.getByRole('radio', { name: '1권' }).click();
+    await page.getByRole('switch', { name: '세로축 물결선' }).click();
+    await page.getByRole('button', { name: '1반이 압도적!' }).click();
+    await expect(page.getByTestId('distortion-wavy')).toHaveCount(1);
+    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+    await page.mouse.move(0, 0);
+    await stageShot(page, 'distortion-own');
+    await page.getByRole('tab', { name: '예시 1' }).click();
+    await page.getByTestId('distortion-checklist').getByRole('checkbox').first().check();
+    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+    await page.mouse.move(0, 0);
+    await stageShot(page, 'distortion-example');
   });
 });

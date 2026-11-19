@@ -5,9 +5,16 @@
  */
 import type { JsonValue, Observation } from '../../core/engine-sdk';
 import { Rational } from '../../core/math';
+import { barsOf, valueRatioOf, visualRatioOf, wavyShownOf } from './distortion';
 import { adjacentPairs, isInOrder, valueOf } from './line';
 import { roundPercent, rowValueOf } from './reduce';
-import type { BandCircleState, GraphState, LineGraphState, PictographState } from './types';
+import type {
+  BandCircleState,
+  DistortionState,
+  GraphState,
+  LineGraphState,
+  PictographState,
+} from './types';
 import { isClassVote, voteCounts, voteViewState } from './vote';
 
 /** 그래프가 지금 나타내는 값(칸 × scale, given이면 data 값). */
@@ -239,7 +246,56 @@ function observeBand(state: BandCircleState): Observation {
   };
 }
 
+/** 학생이 "문제 있음"으로 고른 항목이 예시의 실제 문제와 같은 집합인가(정답 여부는 이 불리언으로만 나간다). */
+function marksMatchOf(state: DistortionState): Record<string, boolean> {
+  const examples = state.settings.distortion?.examples ?? [];
+  return Object.fromEntries(
+    examples.map((example) => {
+      const marked = state.exampleMarks[example.id] ?? [];
+      return [
+        example.id,
+        marked.length === example.flaws.length &&
+          example.flaws.every((flaw) => marked.includes(flaw)),
+      ];
+    }),
+  );
+}
+
+/** distortion 모드의 Observation. 비는 `Rational.toJSON()` 문자열이다. */
+function observeDistortion(state: DistortionState): Observation {
+  const bars = barsOf(state);
+  const values = bars.map((bar) => bar.value);
+  const wavyShown = wavyShownOf(state);
+  const visual = visualRatioOf(values, state.yStart, state.yStep, wavyShown);
+  const real = valueRatioOf(values);
+  const barValues: Record<string, number> = {};
+  for (const bar of bars) barValues[bar.cat] = bar.value;
+  const marksMatch = marksMatchOf(state);
+  const marks: Record<string, JsonValue> = {};
+  for (const [id, items] of Object.entries(state.exampleMarks)) marks[id] = [...items];
+  const matches = Object.values(marksMatch);
+  return {
+    mode: 'distortion',
+    yStart: state.yStart,
+    yStep: state.yStep,
+    wavyShown,
+    groupsOn: [...state.groups],
+    barCategories: bars.map((bar) => bar.cat),
+    barValues,
+    visualRatio: visual === null ? null : visual.toJSON(),
+    valueRatio: real === null ? null : real.toJSON(),
+    history: { ...state.history },
+    headline: [...state.headline],
+    exampleIndex: state.exampleIndex,
+    marks,
+    marksMatch,
+    allMarksMatch: matches.length > 0 && matches.every(Boolean),
+    misconceptions: [],
+  };
+}
+
 export function observe(state: GraphState): Observation {
+  if (state.mode === 'distortion') return observeDistortion(state);
   if (state.mode === 'band-circle') return observeBand(state);
   if (state.mode === 'line-graph') return observeLine(state);
   if (isClassVote(state)) {
