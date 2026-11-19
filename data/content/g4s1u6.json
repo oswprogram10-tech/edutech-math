@@ -1,0 +1,888 @@
+{
+  "unit": "g4s1u6",
+  "title": "규칙 찾기",
+  "activities": [
+    {
+      "id": "g4s1u6.A1",
+      "title": "입출력 블랙박스 추리",
+      "tasks": [
+        {
+          "id": "g4s1u6.A1.T1",
+          "prompt": "상자에 수(○)를 넣으면 다른 수(□)가 나와요. 여러 수를 넣어 보고, 상자 속 규칙을 식으로 써서 시험해 봐요.",
+          "engine": "E16",
+          "mode": "black-box",
+          "cpa": "P",
+          "config": {
+            "mode": "black-box",
+            "rule": "□ = ○ + 7",
+            "inputRange": [
+              0,
+              20
+            ],
+            "domain": [
+              0,
+              20
+            ]
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "matchesHidden"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PATTERN-ONE-PAIR"
+                }
+              },
+              "level": 1,
+              "say": "표의 다른 줄에도 이 규칙이 맞을까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PATTERN-ONE-PAIR"
+                }
+              },
+              "level": 2,
+              "say": "내 식이 맞지 않는 줄에 빨간 테두리를 쳤어요. 그 줄의 ○와 □를 식에 넣어 볼까요?",
+              "show": {
+                "engine": "E16",
+                "overlay": "fail-cols"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PATTERN-ONE-PAIR"
+                }
+              },
+              "level": 3,
+              "backtrack": "g4s1u6.io-rule"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "black-box"
+              },
+              "level": 1,
+              "say": "작은 수부터 차례로 넣어 보고, 표에서 ○와 □를 견주어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "black-box"
+              },
+              "level": 2,
+              "say": "넣는 수를 0, 1, 2처럼 하나씩 바꿔 가며 표를 늘려 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "black-box"
+              },
+              "level": 3,
+              "backtrack": "g4s1u6.number-pattern"
+            }
+          ],
+          "concepts": [
+            "g4s1u6.io-rule"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g4s1u6.A1.T2",
+          "prompt": "이번 상자의 규칙도 찾아봐요. 상자에 수(○)를 넣으면 다른 수(□)가 나와요. 여러 수를 넣어 보고, 상자 속 규칙을 식으로 써서 시험해 봐요.",
+          "engine": "E16",
+          "mode": "black-box",
+          "cpa": "P",
+          "config": {
+            "mode": "black-box",
+            "rule": "□ = ○ × 3",
+            "inputRange": [
+              0,
+              20
+            ],
+            "domain": [
+              0,
+              20
+            ]
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "matchesHidden"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PATTERN-ONE-PAIR"
+                }
+              },
+              "level": 1,
+              "say": "표의 다른 줄에도 이 규칙이 맞을까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PATTERN-ONE-PAIR"
+                }
+              },
+              "level": 2,
+              "say": "내 식이 맞지 않는 줄에 빨간 테두리를 쳤어요. 그 줄의 ○와 □를 식에 넣어 볼까요?",
+              "show": {
+                "engine": "E16",
+                "overlay": "fail-cols"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PATTERN-ONE-PAIR"
+                }
+              },
+              "level": 3,
+              "backtrack": "g4s1u6.io-rule"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-FUNC-ADD-ONLY"
+                }
+              },
+              "level": 1,
+              "say": "입력이 1씩 커질 때 출력은 얼마씩 커져?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-FUNC-ADD-ONLY"
+                }
+              },
+              "level": 2,
+              "say": "표에서 입력이 1씩 커질 때 출력이 얼마씩 변하는지 화살표로 나타냈어요. 늘 같은 수만큼 커지나요?",
+              "show": {
+                "engine": "E16",
+                "overlay": "diff-arrows"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-FUNC-ADD-ONLY"
+                }
+              },
+              "level": 3,
+              "backtrack": "g4s1u6.number-pattern"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "black-box"
+              },
+              "level": 1,
+              "say": "작은 수부터 차례로 넣어 보고, 표에서 ○와 □를 견주어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "black-box"
+              },
+              "level": 2,
+              "say": "넣는 수가 1씩 커질 때 나오는 수가 어떻게 달라지는지 표에서 살펴봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "black-box"
+              },
+              "level": 3,
+              "backtrack": "g4s1u6.number-pattern"
+            }
+          ],
+          "concepts": [
+            "g4s1u6.io-rule"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g4s1u6.A1.T3",
+          "prompt": "이번 상자는 조금 더 어려워요. 상자에 수(○)를 넣으면 다른 수(□)가 나와요. 여러 수를 넣어 보고, 상자 속 규칙을 식으로 써서 시험해 봐요.",
+          "engine": "E16",
+          "mode": "black-box",
+          "cpa": "P",
+          "config": {
+            "mode": "black-box",
+            "rule": "□ = ○ × 2 + 1",
+            "inputRange": [
+              0,
+              20
+            ],
+            "domain": [
+              0,
+              20
+            ]
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "matchesHidden"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PATTERN-ONE-PAIR"
+                }
+              },
+              "level": 1,
+              "say": "표의 다른 줄에도 이 규칙이 맞을까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PATTERN-ONE-PAIR"
+                }
+              },
+              "level": 2,
+              "say": "내 식이 맞지 않는 줄에 빨간 테두리를 쳤어요. 그 줄의 ○와 □를 식에 넣어 볼까요?",
+              "show": {
+                "engine": "E16",
+                "overlay": "fail-cols"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PATTERN-ONE-PAIR"
+                }
+              },
+              "level": 3,
+              "backtrack": "g4s1u6.io-rule"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-FUNC-ADD-ONLY"
+                }
+              },
+              "level": 1,
+              "say": "입력이 1씩 커질 때 출력은 얼마씩 커져?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-FUNC-ADD-ONLY"
+                }
+              },
+              "level": 2,
+              "say": "표에서 입력이 1씩 커질 때 출력이 얼마씩 변하는지 화살표로 나타냈어요. 늘 같은 수만큼 커지나요?",
+              "show": {
+                "engine": "E16",
+                "overlay": "diff-arrows"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-FUNC-ADD-ONLY"
+                }
+              },
+              "level": 3,
+              "backtrack": "g4s1u6.number-pattern"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "black-box"
+              },
+              "level": 1,
+              "say": "작은 수부터 차례로 넣어 보고, 표에서 ○와 □를 견주어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "black-box"
+              },
+              "level": 2,
+              "say": "0과 1을 넣었을 때 나온 수를 견주어 보고, 다른 수로 한 번 더 확인해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "black-box"
+              },
+              "level": 3,
+              "backtrack": "g4s1u6.number-pattern"
+            }
+          ],
+          "concepts": [
+            "g4s1u6.io-rule"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g4s1u6.A1.T4",
+          "prompt": "이 상자에서 25가 나오려면 무엇을 넣어야 할까요? 세 번까지 넣어 볼 수 있어요.",
+          "engine": "E16",
+          "mode": "black-box",
+          "cpa": "A",
+          "config": {
+            "mode": "black-box",
+            "rule": "□ = ○ × 2 + 1",
+            "inputRange": [
+              0,
+              20
+            ],
+            "domain": [
+              0,
+              20
+            ],
+            "ruleInput": false,
+            "maxTrials": 3
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.p.value",
+            "value": "12"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "black-box"
+              },
+              "level": 1,
+              "say": "넣은 수와 나온 수 사이의 관계를 거꾸로 따라가 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "black-box"
+              },
+              "level": 2,
+              "say": "표에 쌓인 쌍을 보고, 나와야 하는 수가 지금 나온 수들보다 큰지 작은지 견주어 넣는 수를 어림해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "black-box"
+              },
+              "level": 3,
+              "backtrack": "g4s1u6.number-pattern"
+            }
+          ],
+          "concepts": [
+            "g4s1u6.io-rule"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "p",
+                "label": "넣을 수",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "g4s1u6.A2",
+      "title": "블록 피라미드와 계산식",
+      "tasks": [
+        {
+          "id": "g4s1u6.A2.T1",
+          "prompt": "1단계부터 3단계까지 블록을 쌓은 모양이에요. 같은 규칙으로 4단계 블록을 쌓아 보세요.",
+          "engine": "E15",
+          "mode": "calc-pattern",
+          "cpa": "C",
+          "config": {
+            "mode": "calc-pattern",
+            "pattern": "symmetric-sum-square",
+            "stepsShown": 3,
+            "workStep": 4,
+            "build": true,
+            "expression": false,
+            "look": "blocks"
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "builtIsPyramid"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PATTERN-RECURSIVE-ONLY"
+                }
+              },
+              "level": 1,
+              "say": "10단계까지 다 쌓지 않고 알 수 있을까? 단계 수와 블록 수 사이에 무슨 관계가 있지?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PATTERN-RECURSIVE-ONLY"
+                }
+              },
+              "level": 2,
+              "say": "보여 준 단계의 번호와 블록 수를 표로 나란히 놓았어요. 두 줄 사이에 어떤 관계가 있나요?",
+              "show": {
+                "engine": "E15",
+                "overlay": "step-table"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PATTERN-RECURSIVE-ONLY"
+                }
+              },
+              "level": 3,
+              "backtrack": "g4s1u6.shape-calc-link"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "calc-pattern"
+              },
+              "level": 1,
+              "say": "앞 단계들의 가운데 줄은 어떻게 변했나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "calc-pattern"
+              },
+              "level": 2,
+              "say": "1, 2, 3단계 모양을 나란히 놓고 가운데 줄의 높이와 줄 수를 세어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "calc-pattern"
+              },
+              "level": 3,
+              "backtrack": "g4s1u6.number-pattern"
+            }
+          ],
+          "concepts": [
+            "g4s1u6.shape-calc-link"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g4s1u6.A2.T2",
+          "prompt": "4단계 블록 그림을 식으로 나타내 보세요. 왼쪽에는 블록 줄마다의 수를 더하고, 오른쪽에는 곱셈으로 써요.",
+          "engine": "E15",
+          "mode": "calc-pattern",
+          "cpa": "P",
+          "config": {
+            "mode": "calc-pattern",
+            "pattern": "symmetric-sum-square",
+            "stepsShown": 3,
+            "workStep": 4,
+            "build": false,
+            "expression": true,
+            "look": "picture"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "exprAddendsAre",
+                "args": {
+                  "terms": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    3,
+                    2,
+                    1
+                  ]
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "exprFactorsAre",
+                "args": {
+                  "a": 4,
+                  "b": 4
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "exprHolds"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PATTERN-RECURSIVE-ONLY"
+                }
+              },
+              "level": 1,
+              "say": "10단계까지 다 쌓지 않고 알 수 있을까? 단계 수와 블록 수 사이에 무슨 관계가 있지?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PATTERN-RECURSIVE-ONLY"
+                }
+              },
+              "level": 2,
+              "say": "보여 준 단계의 번호와 블록 수를 표로 나란히 놓았어요. 두 줄 사이에 어떤 관계가 있나요?",
+              "show": {
+                "engine": "E15",
+                "overlay": "step-table"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PATTERN-RECURSIVE-ONLY"
+                }
+              },
+              "level": 3,
+              "backtrack": "g4s1u6.shape-calc-link"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "calc-pattern"
+              },
+              "level": 1,
+              "say": "앞 단계 식처럼 왼쪽은 블록 줄마다의 수, 오른쪽은 곱셈으로 써 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "calc-pattern"
+              },
+              "level": 2,
+              "say": "블록 줄을 왼쪽부터 차례로 읽으면서 줄마다 몇 개인지 식에 써 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "calc-pattern"
+              },
+              "level": 3,
+              "backtrack": "g4s1u6.number-pattern"
+            }
+          ],
+          "concepts": [
+            "g4s1u6.shape-calc-link"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g4s1u6.A2.T3",
+          "prompt": "1단계부터 4단계까지 블록 그림이에요. 5단계에는 블록이 모두 몇 개 필요할까요?",
+          "engine": "E15",
+          "mode": "calc-pattern",
+          "cpa": "P",
+          "config": {
+            "mode": "calc-pattern",
+            "pattern": "symmetric-sum-square",
+            "stepsShown": 4,
+            "build": false,
+            "expression": false,
+            "look": "picture"
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.p.value",
+            "value": "25"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.p.value",
+                "value": "23"
+              },
+              "level": 1,
+              "say": "10단계까지 다 쌓지 않고 알 수 있을까? 단계 수와 블록 수 사이에 무슨 관계가 있지?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.p.value",
+                "value": "23"
+              },
+              "level": 2,
+              "say": "보여 준 단계의 번호와 블록 수를 표로 나란히 놓았어요. 두 줄 사이에 어떤 관계가 있나요?",
+              "show": {
+                "engine": "E15",
+                "overlay": "step-table"
+              }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.p.value",
+                "value": "23"
+              },
+              "level": 3,
+              "backtrack": "g4s1u6.shape-calc-link"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "calc-pattern"
+              },
+              "level": 1,
+              "say": "단계 번호와 블록 수 사이의 관계를 찾아봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "calc-pattern"
+              },
+              "level": 2,
+              "say": "1, 2, 3, 4단계의 블록 수를 단계 번호와 나란히 놓고 살펴봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "calc-pattern"
+              },
+              "level": 3,
+              "backtrack": "g2s2u6.growth-pattern"
+            }
+          ],
+          "concepts": [
+            "g4s1u6.number-pattern"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "p",
+                "label": "블록 수",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g4s1u6.A2.T4",
+          "prompt": "곱셈식이 규칙대로 이어져요. 1111 × 1111은 얼마일까요?",
+          "engine": "E15",
+          "mode": "calc-pattern",
+          "cpa": "A",
+          "config": {
+            "mode": "calc-pattern",
+            "pattern": "repunit-square",
+            "stepsShown": 3,
+            "expression": false
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.p.value",
+            "value": "1234321"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "calc-pattern"
+              },
+              "level": 1,
+              "say": "곱하는 수의 1의 개수와 답의 가운데 숫자를 견주어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "calc-pattern"
+              },
+              "level": 2,
+              "say": "보여 준 식들의 답을 나란히 놓고 숫자가 어떻게 이어지는지 살펴봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "calc-pattern"
+              },
+              "level": 3,
+              "backtrack": "g2s2u6.growth-pattern"
+            }
+          ],
+          "concepts": [
+            "g4s1u6.number-pattern"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "p",
+                "label": "답",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g4s1u6.A2.T5",
+          "prompt": "보여 준 1, 2, 3단계의 식을 살펴보고, 단계 수와 전체 블록 수 사이의 규칙을 바르게 말한 문장을 골라요. 가: 단계 수를 두 번 곱하면 전체 블록 수가 돼요. 나: 단계마다 블록이 2개씩 늘어나요. 다: 단계 수에 2를 더하면 전체 블록 수가 돼요.",
+          "engine": "E15",
+          "mode": "calc-pattern",
+          "cpa": "A",
+          "config": {
+            "mode": "calc-pattern",
+            "pattern": "symmetric-sum-square",
+            "stepsShown": 3,
+            "build": false,
+            "expression": false,
+            "look": "none"
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.rule.selected",
+            "value": [
+              "ga"
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "calc-pattern"
+              },
+              "level": 1,
+              "say": "1·2·3단계 식의 오른쪽을 살펴봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "calc-pattern"
+              },
+              "level": 2,
+              "say": "단계 번호와 식 오른쪽에 있는 수를 나란히 놓고 살펴봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "calc-pattern"
+              },
+              "level": 3,
+              "backtrack": "g4s1u6.number-pattern"
+            }
+          ],
+          "concepts": [
+            "g4s1u6.shape-calc-link"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "rule",
+                "label": "규칙 문장",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "ga",
+                    "label": "가"
+                  },
+                  {
+                    "id": "na",
+                    "label": "나"
+                  },
+                  {
+                    "id": "da",
+                    "label": "다"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
