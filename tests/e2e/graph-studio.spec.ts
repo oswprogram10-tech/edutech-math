@@ -2604,6 +2604,82 @@ test.describe('T166: band-circle 띠·원그래프', () => {
   });
 });
 
+/** T169: distortion 형제 상자 겹침, 0 눈금·범주 이름이 다른 요소에 덮였는지(elementFromPoint)를 잰다. */
+async function measureDistortionLayout(page: Page) {
+  return page.evaluate(() => {
+    const canvas = document.querySelector('[data-testid="graph-canvas"]') as SVGSVGElement | null;
+    const wrap = canvas?.closest('[data-mode="distortion"]') as HTMLElement | null;
+    if (!canvas || !wrap) throw new Error('distortion 화면을 찾지 못했습니다.');
+    const boxes: [string, Element | null][] = [
+      ['controls', wrap.querySelector('[data-testid="distortion-controls"]')],
+      ['graph', canvas],
+      ['headline', wrap.querySelector('[data-testid="distortion-headline"]')],
+    ];
+    const rects = boxes
+      .filter((entry): entry is [string, Element] => entry[1] !== null)
+      .map(([name, node]) => ({ name, rect: node.getBoundingClientRect() }));
+    const overlaps: string[] = [];
+    for (let i = 0; i < rects.length; i += 1) {
+      for (let j = i + 1; j < rects.length; j += 1) {
+        const a = rects[i];
+        const b = rects[j];
+        if (!a || !b) continue;
+        const w = Math.min(a.rect.right, b.rect.right) - Math.max(a.rect.left, b.rect.left);
+        const h = Math.min(a.rect.bottom, b.rect.bottom) - Math.max(a.rect.top, b.rect.top);
+        if (w > 1 && h > 1) overlaps.push(`${a.name}/${b.name}`);
+      }
+    }
+    // 글자 중앙에서 맨 위 요소가 그 글자(SVG 안)인지 확인한다. 보이는 칸 밖이면 스크롤해서 확인한다.
+    const wrapRect = wrap.getBoundingClientRect();
+    const hidden: string[] = [];
+    const texts = Array.from(canvas.querySelectorAll('text')).filter((node) => {
+      const label = node.textContent?.trim() ?? '';
+      return label === '0' || label === '1반' || label === '2반';
+    });
+    for (const node of texts) {
+      node.scrollIntoView({ block: 'nearest' });
+      const r = node.getBoundingClientRect();
+      const x = r.left + r.width / 2;
+      const y = r.top + r.height / 2;
+      const top = document.elementFromPoint(x, y);
+      const inside =
+        r.width > 0 &&
+        r.top >= wrapRect.top - 1 &&
+        r.bottom <= wrapRect.bottom + 1 &&
+        top !== null &&
+        canvas.contains(top);
+      if (!inside) hidden.push(node.textContent ?? '');
+    }
+    const buttons = Array.from(wrap.querySelectorAll('button')).map(
+      (node) => node.getBoundingClientRect().height,
+    );
+    const g = canvas.getBoundingClientRect();
+    const boxesOut = [
+      ['wrap', wrap],
+      ['distBody', canvas.closest('[class*="distBody"]')],
+      ['distBoard', canvas.closest('[class*="distBoard"]')],
+      ['boardArea', canvas.closest('[class*="boardArea"]')],
+      ...boxes,
+    ]
+      .filter((entry): entry is [string, Element] => entry[1] !== null)
+      .map(([name, node]) => {
+        const r = node.getBoundingClientRect();
+        return `${name} y${Math.round(r.top)}-${Math.round(r.bottom)} h${Math.round(r.height)}`;
+      });
+    return {
+      boxes: boxesOut,
+      overlaps,
+      hidden,
+      texts: texts.length,
+      graphHeight: Math.round(g.height),
+      graphWidth: Math.round(g.width),
+      minButton: Math.floor(Math.min(...buttons)),
+      scrollHeight: wrap.scrollHeight,
+      clientHeight: wrap.clientHeight,
+    };
+  });
+}
+
 test.describe('T167: distortion 그래프 왜곡', () => {
   const config = {
     mode: 'distortion',
@@ -2850,6 +2926,25 @@ test.describe('T167: distortion 그래프 왜곡', () => {
     expect(measure.scrollHeight).toBeLessThanOrEqual(measure.clientHeight + 1);
     expect(measure.headlineBottom).toBeLessThanOrEqual(measure.wrapBottom + 1);
     expect(measure.graphHeight).toBeGreaterThanOrEqual(260);
+  });
+
+  test('T169: 그래프가 조작 줄·기사 제목 줄에 덮이지 않는다(세 화면과 두 칸 폭 660×420)', async ({
+    page,
+  }, testInfo) => {
+    const size = [660, 420] as const;
+    const narrow = testInfo.project.name === 'chromebook';
+    for (const stage of narrow ? [null, size] : [null]) {
+      if (stage) await page.setViewportSize({ width: stage[0], height: stage[1] });
+      await openEngine(page, config, { stageFit: stage !== null, mode: 'distortion' });
+      await expect(bars(page)).toHaveCount(2);
+      await page.waitForTimeout(200);
+      const measure = await measureDistortionLayout(page);
+      console.log(`[T169 ${testInfo.project.name} ${stage ? 'two-col' : 'default'}]`, measure);
+      expect(measure.overlaps).toEqual([]);
+      expect(measure.graphHeight).toBeGreaterThanOrEqual(200);
+      expect(measure.minButton).toBeGreaterThanOrEqual(48);
+      expect(measure.hidden).toEqual([]);
+    }
   });
 
   test('오버레이 zero-axis: 0부터 그린 막대와 굵은 0 표시가 그래프와 맞는다', async ({ page }) => {

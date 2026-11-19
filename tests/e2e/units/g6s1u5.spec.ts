@@ -325,6 +325,50 @@ async function expectBarHeight(page: Page, label: string, vp: string): Promise<v
   expect(box?.height ?? 0).toBeGreaterThanOrEqual(200);
 }
 
+/**
+ * T169: 그래프 SVG가 아래 형제 상자(기사 제목 줄 등)와 겹치지 않고, 세로축 0 눈금과 가로축 범주 이름이
+ * 다른 요소에 덮이지 않았는지 elementFromPoint로 확인한다(.wrap이 스크롤하면 그 글자를 보이게 굴린다).
+ */
+async function expectDistortionNotCovered(page: Page, vp: string): Promise<void> {
+  const result = await canvas(page).evaluate((svg) => {
+    const wrap = svg.closest('[data-mode="distortion"]') as HTMLElement | null;
+    if (!wrap) throw new Error('distortion 화면을 찾지 못했습니다.');
+    const graph = svg.getBoundingClientRect();
+    const overlaps: string[] = [];
+    for (const id of ['distortion-controls', 'distortion-headline']) {
+      const node = wrap.querySelector(`[data-testid="${id}"]`);
+      if (!node) continue;
+      const r = node.getBoundingClientRect();
+      const w = Math.min(graph.right, r.right) - Math.max(graph.left, r.left);
+      const h = Math.min(graph.bottom, r.bottom) - Math.max(graph.top, r.top);
+      if (w > 1 && h > 1) overlaps.push(id);
+    }
+    const wrapRect = wrap.getBoundingClientRect();
+    const hidden: string[] = [];
+    let found = 0;
+    for (const node of Array.from(svg.querySelectorAll('text'))) {
+      const label = node.textContent?.trim() ?? '';
+      if (label !== '0' && label !== '1반' && label !== '2반') continue;
+      found += 1;
+      node.scrollIntoView({ block: 'nearest' });
+      const r = node.getBoundingClientRect();
+      const top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      const visible =
+        r.top >= wrapRect.top - 1 &&
+        r.bottom <= wrapRect.bottom + 1 &&
+        top !== null &&
+        svg.contains(top);
+      if (!visible) hidden.push(label);
+    }
+    wrap.scrollTo(0, 0);
+    return { overlaps, hidden, found };
+  });
+  console.log(`[T169 ${vp}] A2.T1 ${JSON.stringify(result)}`);
+  expect(result.overlaps).toEqual([]);
+  expect(result.found).toBe(3);
+  expect(result.hidden).toEqual([]);
+}
+
 async function pickStart(page: Page, value: number): Promise<void> {
   await page.getByRole('radio', { name: `${value}부터`, exact: true }).click();
   await expect(page.getByRole('radio', { name: `${value}부터`, exact: true })).toHaveAttribute(
@@ -629,6 +673,7 @@ test('g6s1u5.A2 — 4과제 흐름과 오개념 ①②·오버레이 정렬', as
     page.getByRole('radiogroup', { name: '세로축 시작' }),
   ]);
   await expectBarHeight(page, 'A2.T1', vp);
+  await expectDistortionNotCovered(page, vp);
   await expectNoConclusionText(page);
   await screenshot(page, 'g6s1u5-a2.png');
   await expect
