@@ -149,6 +149,8 @@ test('키보드만으로 1·2·5를 넣고 b=o*3을 시험한다', async ({ page
   await expect(page.getByTestId('rule-input')).toHaveText('□=○×3');
   await page.keyboard.press('Enter');
   await pollObservation(page, (o) => o.holdsAll === true && o.matchesHidden === true);
+  // 시험한 뒤에는 formatRelation 모양으로 보인다.
+  await expect(page.getByTestId('rule-input')).toHaveText('□ = ○ × 3');
   await page.keyboard.press('Backspace');
   await expect(page.getByTestId('rule-input')).toHaveText('□=○×');
 });
@@ -381,4 +383,78 @@ test('black-box 넣기 단추와 입력 칸이 48px 이상이다', async ({ page
   await open(page, 'black-box', HIDDEN_X3, 'stage=fit');
   await expectMin(pad(page, '넣기'), 48, '넣기');
   await expectMin(page.getByTestId('input-draft'), 48, '입력 칸');
+});
+
+/** 화면 기준 이미지: 샌드박스 `?stage=fit` 판 전체(페이지 화면). 크롬북·아이패드만 찍는다. */
+async function expectPageSnapshot(page: Page, name: string): Promise<void> {
+  test.skip(test.info().project.name === 'board', '기준 이미지는 크롬북·아이패드만 둔다.');
+  await page.waitForTimeout(900); // 출구 숫자가 나타나는 짧은 애니메이션이 끝나도록
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await expect(page).toHaveScreenshot(name, { fullPage: true, animations: 'disabled' });
+}
+
+test('화면 기준: black-box 3쌍을 넣은 뒤(식 시험 전)', async ({ page }) => {
+  await threePairs(page);
+  await expectPageSnapshot(page, 'function-machine-black-box.png');
+});
+
+test('화면 기준: covary 첫 화면', async ({ page }) => {
+  await open(page, 'covary', CHAIRS, 'stage=fit');
+  await expectPageSnapshot(page, 'function-machine-covary.png');
+});
+
+test('화면 기준: table 첫 화면', async ({ page }) => {
+  await open(
+    page,
+    'table',
+    {
+      ...HIDDEN_X3,
+      rows: [
+        { x: '1', y: '3' },
+        { x: '2', y: null },
+        { x: null, y: '12' },
+      ],
+    },
+    'stage=fit',
+  );
+  await expectPageSnapshot(page, 'function-machine-table.png');
+});
+
+test('키패드 맨 아래 단추가 스크롤로 닿아 눌린다(세 모드)', async ({ page }) => {
+  // black-box 수 키패드: 맨 아래 단추는 "지우기"
+  await open(page, 'black-box', HIDDEN_X3, 'stage=fit');
+  await pad(page, '7').click();
+  await expect(page.getByTestId('input-draft')).toContainText('7');
+  await pad(page, '지우기').click();
+  await expect(page.getByTestId('input-draft')).not.toContainText('7');
+  // black-box 식 키패드: 맨 아래 단추는 "규칙 시험하기"
+  await page.getByTestId('rule-input').click();
+  await pad(page, '○').click();
+  const test = pad(page, '규칙 시험하기');
+  await test.scrollIntoViewIfNeeded();
+  await expect(test).toBeInViewport();
+  await test.click();
+  await pollObservation(page, (o) => o.testedText === '○');
+
+  // table 수 키패드: 맨 아래 단추는 "다 썼어요"
+  await open(page, 'table', HIDDEN_X3, 'stage=fit');
+  const done = pad(page, '다 썼어요');
+  await done.scrollIntoViewIfNeeded();
+  await expect(done).toBeInViewport();
+  await done.click();
+  await expect(page.getByTestId('rule-input')).toHaveAttribute('data-active', 'true');
+  const test2 = pad(page, '규칙 시험하기');
+  await test2.scrollIntoViewIfNeeded();
+  await expect(test2).toBeInViewport();
+  await pad(page, '=').click();
+  await test2.click();
+  await pollObservation(page, (o) => o.testedText === '=');
+
+  // covary
+  await open(page, 'covary', CHAIRS, 'stage=fit');
+  const done2 = pad(page, '다 썼어요');
+  await done2.scrollIntoViewIfNeeded();
+  await expect(done2).toBeInViewport();
+  await done2.click();
+  await expect(page.getByTestId('rule-input')).toHaveAttribute('data-active', 'true');
 });

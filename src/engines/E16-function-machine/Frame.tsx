@@ -5,7 +5,9 @@
  */
 import type { KeyboardEvent as ReactKeyboardEvent, ReactNode, RefObject } from 'react';
 import type { TargetSize } from '../../core/engine-sdk';
+import { formatRelation } from '../../core/math';
 import { ExprPad, NumberPad } from './Keypad';
+import { tryParse } from './relation-check';
 import { ruleKey } from './reduce';
 import { functionStrings as S } from './strings.ko';
 import type { FunctionAction, FunctionState } from './types';
@@ -27,26 +29,46 @@ export interface FrameProps {
   readonly status?: string;
 }
 
-/** 입력 칸 글자. 오류 자리는 밑줄로 보인다. */
+const OPERATORS = new Set([...'+−×÷=']);
+
+/** 글자 하나. 연산자·등호는 앞뒤를 띄워 보인다(글자 자체는 그대로, 간격은 CSS). */
+function RuleChar({ char }: { readonly char: string }) {
+  return OPERATORS.has(char) ? <span className={styles.op}>{char}</span> : <>{char}</>;
+}
+
+/**
+ * 입력 칸 글자. 시험한 뒤(읽힌 식, 입력이 그대로)에는 formatRelation 결과("□ = ○ + 2")를 보이고,
+ * 입력 중에는 연산자 앞뒤를 띄워 보인다. 읽지 못한 자리는 밑줄로 보인다.
+ */
 function RuleText({ state }: { readonly state: FunctionState }) {
   const text = state.ruleText;
   const tested = state.tested;
-  const at =
-    tested !== null && !tested.ok && tested.text === text && tested.errorAt !== null
-      ? tested.errorAt
-      : null;
+  const same = tested !== null && tested.text === text;
+  if (same && tested.ok) {
+    const parsed = tryParse(text);
+    if (parsed.ok) return <>{formatRelation(parsed.rel)}</>;
+  }
+  const at = same && !tested.ok && tested.errorAt !== null ? tested.errorAt : null;
   if (text === '' && at === null) {
     return <span className={styles.placeholder}>{S.rule.placeholder}</span>;
   }
-  if (at === null) return <>{text}</>;
   const chars = [...text];
   return (
     <>
-      {chars.slice(0, at).join('')}
-      <u data-testid="rule-error-mark" className={styles.errorMark}>
-        {chars[at] ?? ' '}
-      </u>
-      {chars.slice(at + 1).join('')}
+      {chars.map((char, index) =>
+        index === at ? (
+          <u key={index} data-testid="rule-error-mark" className={styles.errorMark}>
+            <RuleChar char={char} />
+          </u>
+        ) : (
+          <RuleChar key={index} char={char} />
+        ),
+      )}
+      {at !== null && at >= chars.length ? (
+        <u data-testid="rule-error-mark" className={styles.errorMark}>
+          {' '}
+        </u>
+      ) : null}
     </>
   );
 }
