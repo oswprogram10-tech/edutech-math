@@ -2381,8 +2381,11 @@ test.describe('T166: band-circle 띠·원그래프', () => {
     await page.mouse.down();
     const target = await bandPoint(page, BAND_X + 573, 140);
     await page.mouse.move(target.x, target.y, { steps: 6 });
+    // 끄는 값은 다음 프레임에 그려지므로 범위에 들어올 때까지 기다린다.
+    await expect
+      .poll(async () => Number(await page.getByTestId('graph-canvas').getAttribute('data-curl')))
+      .toBeGreaterThan(35);
     const shown = Number(await page.getByTestId('graph-canvas').getAttribute('data-curl'));
-    expect(shown).toBeGreaterThan(35);
     expect(shown).toBeLessThan(45);
     const order = await page
       .locator('[data-testid="band-slice"]')
