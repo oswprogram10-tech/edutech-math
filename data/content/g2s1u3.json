@@ -621,6 +621,537 @@
           "submit": "button"
         }
       ]
+    },
+    {
+      "id": "g2s1u3.A2",
+      "title": "양팔저울 □ 탐정",
+      "tasks": [
+        {
+          "id": "g2s1u3.A2.T1",
+          "prompt": "□에 수를 넣어 보며 저울이 수평이 되는 수를 찾아요.",
+          "engine": "E06",
+          "mode": "equation",
+          "cpa": "C",
+          "config": {
+            "mode": "equation",
+            "left": [
+              {
+                "num": 25
+              },
+              {
+                "box": true
+              }
+            ],
+            "right": [
+              {
+                "num": 43
+              }
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "balanced"
+              },
+              {
+                "kind": "predicate",
+                "name": "boxValueIs",
+                "args": {
+                  "value": "18"
+                }
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-EQUAL-ANSWER"
+                }
+              },
+              "level": 1,
+              "say": "양쪽이 같아야 해. 두 접시가 수평이 되려면 □는 몇이어야 할까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-EQUAL-ANSWER"
+                }
+              },
+              "level": 2,
+              "show": {
+                "engine": "E06",
+                "overlay": "big-tilt"
+              },
+              "say": "넣은 수로 저울을 크게 기울여 봤어요. 두 쪽이 같은가요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-EQUAL-ANSWER"
+                }
+              },
+              "level": 3,
+              "backtrack": "g1s1u3.compose-decompose"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "equation"
+              },
+              "level": 1,
+              "say": "□에 수를 넣어 보고 저울이 어느 쪽으로 기우는지 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "equation"
+              },
+              "level": 2,
+              "show": {
+                "engine": "E06",
+                "overlay": "match-bars"
+              },
+              "say": "같은 길이만큼 짝을 지어 봤어요. 남은 부분은 얼마일까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "equation"
+              },
+              "level": 3,
+              "backtrack": "g1s2u6.add-sub-relation"
+            }
+          ],
+          "concepts": [
+            "g2s1u3.unknown-box"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g2s1u3.A2.T2",
+          "prompt": "□ − 16 = 29예요. 양쪽에 같은 수를 더하거나 빼서 □만 남겨 봐요.",
+          "engine": "E06",
+          "mode": "equation",
+          "cpa": "C",
+          "config": {
+            "mode": "equation",
+            "left": [
+              {
+                "box": true
+              },
+              {
+                "num": 16,
+                "neg": true
+              }
+            ],
+            "right": [
+              {
+                "num": 29
+              }
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "boxIsolated"
+              },
+              {
+                "kind": "predicate",
+                "name": "boxValueIs",
+                "args": {
+                  "value": "45"
+                }
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-EQUAL-ANSWER"
+                }
+              },
+              "level": 1,
+              "say": "양쪽이 같아야 해. 두 접시가 수평이 되려면 □는 몇이어야 할까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-EQUAL-ANSWER"
+                }
+              },
+              "level": 2,
+              "show": {
+                "engine": "E06",
+                "overlay": "big-tilt"
+              },
+              "say": "넣은 수로 저울을 크게 기울여 봤어요. 두 쪽이 같은가요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-EQUAL-ANSWER"
+                }
+              },
+              "level": 3,
+              "backtrack": "g1s1u3.compose-decompose"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "equation"
+              },
+              "level": 1,
+              "say": "□에 수를 넣어 보고 저울이 어느 쪽으로 기우는지 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "equation"
+              },
+              "level": 2,
+              "say": "같은 길이만큼 짝을 지어 보면 남은 부분은 얼마일까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "equation"
+              },
+              "level": 3,
+              "backtrack": "g1s2u6.add-sub-relation"
+            }
+          ],
+          "concepts": [
+            "g2s1u3.unknown-box"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g2s1u3.A2.T3",
+          "prompt": "60 = □ + 37이에요. 저울이 수평이 되는 □를 찾아요.",
+          "engine": "E06",
+          "mode": "equation",
+          "cpa": "C",
+          "config": {
+            "mode": "equation",
+            "left": [
+              {
+                "num": 60
+              }
+            ],
+            "right": [
+              {
+                "box": true
+              },
+              {
+                "num": 37
+              }
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "balanced"
+              },
+              {
+                "kind": "predicate",
+                "name": "boxValueIs",
+                "args": {
+                  "value": "23"
+                }
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-EQUAL-ANSWER"
+                }
+              },
+              "level": 1,
+              "say": "양쪽이 같아야 해. 오른쪽은 몇이 되지?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-EQUAL-ANSWER"
+                }
+              },
+              "level": 2,
+              "show": {
+                "engine": "E06",
+                "overlay": "big-tilt"
+              },
+              "say": "넣은 수로 저울을 크게 기울여 봤어요. 두 쪽이 같은가요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-EQUAL-ANSWER"
+                }
+              },
+              "level": 3,
+              "backtrack": "g1s1u3.compose-decompose"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "equation"
+              },
+              "level": 1,
+              "say": "□에 수를 넣어 보고 저울이 어느 쪽으로 기우는지 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "equation"
+              },
+              "level": 2,
+              "show": {
+                "engine": "E06",
+                "overlay": "match-bars"
+              },
+              "say": "같은 길이만큼 짝을 지어 봤어요. 남은 부분은 얼마일까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "equation"
+              },
+              "level": 3,
+              "backtrack": "g1s2u6.add-sub-relation"
+            }
+          ],
+          "concepts": [
+            "g2s1u3.unknown-box"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g2s1u3.A2.T4",
+          "prompt": "양쪽에서 같은 수를 빼도 저울은 수평일까요? 먼저 예측하고 실험해 봐요.",
+          "engine": "E06",
+          "mode": "equation",
+          "cpa": "C",
+          "config": {
+            "mode": "equation",
+            "left": [
+              {
+                "num": 20
+              },
+              {
+                "num": 15
+              }
+            ],
+            "right": [
+              {
+                "num": 35
+              }
+            ],
+            "predict": true,
+            "allowOneSide": true,
+            "allowTryValue": false
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "predictionIs",
+                "args": {
+                  "value": "yes"
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "bothSidesOpsAtLeast",
+                "args": {
+                  "n": 1
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "balanced"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "equation"
+              },
+              "level": 1,
+              "say": "한쪽에서만 빼면 저울이 어떻게 될까요? 양쪽에서 똑같이 빼 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "equation"
+              },
+              "level": 2,
+              "say": "양쪽에서 똑같이 빼고 나면 남은 막대는 어떻게 보이나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "equation"
+              },
+              "level": 3,
+              "backtrack": "g1s2u6.add-sub-relation"
+            }
+          ],
+          "concepts": [
+            "g2s1u3.unknown-box"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g2s1u3.A2.T5",
+          "prompt": "□ + 28 = 52에서 □를 구해요.",
+          "engine": "E06",
+          "mode": "equation",
+          "cpa": "A",
+          "config": {
+            "mode": "equation",
+            "look": "symbols",
+            "left": [
+              {
+                "box": true
+              },
+              {
+                "num": 28
+              }
+            ],
+            "right": [
+              {
+                "num": 52
+              }
+            ],
+            "allowBothSides": false
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "balanced"
+              },
+              {
+                "kind": "predicate",
+                "name": "boxValueIs",
+                "args": {
+                  "value": "24"
+                }
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-EQUAL-ANSWER"
+                }
+              },
+              "level": 1,
+              "say": "양쪽이 같아야 해. 두 접시가 수평이 되려면 □는 몇이어야 할까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-EQUAL-ANSWER"
+                }
+              },
+              "level": 2,
+              "say": "방금 넣은 수로 왼쪽과 오른쪽을 각각 계산해 봐요. 두 쪽이 같은가요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-EQUAL-ANSWER"
+                }
+              },
+              "level": 3,
+              "backtrack": "g1s1u3.compose-decompose"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "equation"
+              },
+              "level": 1,
+              "say": "□에 수를 넣어 보고 저울이 어느 쪽으로 기우는지 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "equation"
+              },
+              "level": 2,
+              "say": "같은 길이만큼 짝을 지어 보면 남은 부분은 얼마일까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "equation"
+              },
+              "level": 3,
+              "backtrack": "g1s2u6.add-sub-relation"
+            }
+          ],
+          "concepts": [
+            "g2s1u3.unknown-box"
+          ],
+          "submit": "button"
+        }
+      ]
     }
   ]
 }
