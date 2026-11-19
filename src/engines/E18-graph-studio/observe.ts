@@ -4,9 +4,10 @@
  * 값은 모두 정수(number)다. 학생 그래프의 값은 칸 수 × scale로 계산한다.
  */
 import type { JsonValue, Observation } from '../../core/engine-sdk';
+import { Rational } from '../../core/math';
 import { adjacentPairs, isInOrder, valueOf } from './line';
-import { rowValueOf } from './reduce';
-import type { GraphState, LineGraphState, PictographState } from './types';
+import { roundPercent, rowValueOf } from './reduce';
+import type { BandCircleState, GraphState, LineGraphState, PictographState } from './types';
 import { isClassVote, voteCounts, voteViewState } from './vote';
 
 /** 그래프가 지금 나타내는 값(칸 × scale, given이면 data 값). */
@@ -147,7 +148,99 @@ function observeLine(state: LineGraphState): Observation {
   };
 }
 
+/**
+ * 지금 띠가 가진 칸 수(범주별). `band: 'auto'`는 학생이 쓴 백분율(없으면 0),
+ * `'given'`은 참 백분율(가까운 정수), `'student'`는 학생이 정한 칸 수(없으면 0)다.
+ */
+export function bandCellsOf(state: BandCircleState): Record<string, number> {
+  const band = state.settings.bandCircle;
+  const cells: Record<string, number> = {};
+  for (const cat of state.settings.categories) {
+    if (band?.band === 'given') {
+      cells[cat] = roundPercent(Rational.parse(band.truePercents[cat] ?? '0'));
+    } else if (band?.band === 'student') {
+      cells[cat] = state.bandCells[cat] ?? 0;
+    } else {
+      cells[cat] = state.percents[cat] ?? 0;
+    }
+  }
+  return cells;
+}
+
+/** band-circle 모드의 Observation. 참 백분율은 `Rational.toJSON()` 문자열이다. */
+function observeBand(state: BandCircleState): Observation {
+  const { settings } = state;
+  const band = settings.bandCircle;
+  const categories = settings.categories;
+  const data = settings.data ?? {};
+  const truePercents: Record<string, string> = {};
+  const percents: Record<string, number | null> = {};
+  for (const cat of categories) {
+    truePercents[cat] = band?.truePercents[cat] ?? '0';
+    percents[cat] = state.percents[cat] ?? null;
+  }
+  const percentsComplete =
+    categories.length > 0 && categories.every((cat) => percents[cat] !== null);
+  const percentSum = percentsComplete
+    ? categories.reduce((sum, cat) => sum + (percents[cat] ?? 0), 0)
+    : null;
+  const percentsMatchData =
+    percentsComplete &&
+    categories.every((cat) =>
+      Rational.of(percents[cat] ?? 0).equals(Rational.parse(truePercents[cat] as string)),
+    );
+
+  const cells = bandCellsOf(state);
+  const bandCellSum = categories.reduce((sum, cat) => sum + (cells[cat] ?? 0), 0);
+  const bandMatchesData =
+    categories.length > 0 &&
+    categories.every((cat) =>
+      Rational.of(cells[cat] ?? 0).equals(Rational.parse(truePercents[cat] as string)),
+    );
+
+  const misconceptions = new Set<string>();
+  if (
+    band?.band === 'student' &&
+    categories.length > 0 &&
+    categories.every(
+      (cat) => state.bandCells[cat] !== null && state.bandCells[cat] !== undefined,
+    ) &&
+    bandCellSum !== 100
+  ) {
+    misconceptions.add('MC-GRAPH-PERCENT-AS-COUNT');
+  }
+  if (
+    percentsComplete &&
+    percentSum !== 100 &&
+    categories.every((cat) => percents[cat] === (data[cat] ?? 0))
+  ) {
+    misconceptions.add('MC-GRAPH-PERCENT-AS-COUNT');
+  }
+
+  const table: Record<string, number | null> = {};
+  for (const cat of categories) table[cat] = settings.data?.[cat] ?? null;
+
+  return {
+    mode: 'band-circle',
+    categories: [...categories],
+    table,
+    tableTotal: band?.total ?? 0,
+    truePercents,
+    percents,
+    percentsComplete,
+    percentsMatchData,
+    percentSum,
+    bandCells: cells,
+    bandCellSum,
+    bandMatchesData,
+    curl: state.curl,
+    circleShown: state.curl === 100,
+    misconceptions: [...misconceptions].sort(),
+  };
+}
+
 export function observe(state: GraphState): Observation {
+  if (state.mode === 'band-circle') return observeBand(state);
   if (state.mode === 'line-graph') return observeLine(state);
   if (isClassVote(state)) {
     const counts = voteCounts(state);

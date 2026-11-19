@@ -51,7 +51,8 @@ interface OpenOptions {
   readonly stageFit?: boolean;
   readonly overlay?: string;
   readonly overlayArgs?: unknown;
-  readonly mode?: 'table-to-graph' | 'scale' | 'pictograph' | 'class-vote' | 'line-graph';
+  readonly mode?:
+    'table-to-graph' | 'scale' | 'pictograph' | 'class-vote' | 'line-graph' | 'band-circle';
 }
 
 async function openEngine(page: Page, config: unknown, options: OpenOptions = {}) {
@@ -2222,5 +2223,377 @@ test.describe('T163: line-graph 기준 스크린샷', () => {
     if (test.info().project.name.toLowerCase().includes('chromebook')) {
       await stageShot(page, 'line-graph-wavy');
     }
+  });
+});
+
+test.describe('T166: band-circle 띠·원그래프', () => {
+  const BAND_H = 760;
+  const FRUIT_DATA = [
+    ['사과', 9],
+    ['포도', 6],
+    ['딸기', 3],
+    ['기타', 2],
+  ];
+  const config = {
+    mode: 'band-circle',
+    title: '좋아하는 과일',
+    data: FRUIT_DATA,
+    requirePercentEntry: true,
+    morph: 'drag',
+  };
+  const compareConfig = {
+    ...config,
+    band: 'given',
+    percentEntry: 'given',
+    startAs: 'circle',
+    compare: { title: '2반', data: { 사과: 20, 포도: 10, 딸기: 10, 기타: 10 } },
+  };
+  // 논리 좌표: 띠는 x 50~950(한 칸 9), 가운데 선 y 140, 손잡이 y 228.
+  const BAND_X = 50;
+  const CELL = 9;
+  const HANDLE_Y = 228;
+
+  function handle(page: Page, cat: string): Locator {
+    return page.locator(`[data-testid="band-handle"][data-cat="${cat}"]`);
+  }
+
+  async function center(locator: Locator) {
+    const box = await locator.boundingBox();
+    if (!box) throw new Error('요소 크기를 알 수 없습니다.');
+    return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  }
+
+  async function bandPoint(page: Page, x: number, y: number) {
+    const box = await page.getByTestId('graph-canvas').boundingBox();
+    if (!box) throw new Error('캔버스 크기를 알 수 없습니다.');
+    return logicalToScreen(box, x, y, LOGICAL_W, BAND_H);
+  }
+
+  async function dragTo(page: Page, from: { x: number; y: number }, to: { x: number; y: number }) {
+    await page.mouse.move(from.x, from.y);
+    await page.mouse.down();
+    await page.mouse.move((from.x + to.x) / 2, (from.y + to.y) / 2, { steps: 4 });
+    await page.mouse.move(to.x, to.y, { steps: 4 });
+    await page.mouse.up();
+  }
+
+  async function pressTimes(page: Page, cat: string, key: string, times: number) {
+    await handle(page, cat).focus();
+    for (let i = 0; i < times; i += 1) await page.keyboard.press(key);
+  }
+
+  async function waitCurl(page: Page, curl: number) {
+    await expect(page.getByTestId('graph-canvas')).toHaveAttribute('data-curl', String(curl));
+  }
+
+  test('백분율 칸에 쓰면 띠(auto)가 그 칸 수로 채워지고, 다 쓰면 합이 100이다', async ({
+    page,
+  }) => {
+    await openEngine(page, config, { mode: 'band-circle' });
+    const inputs = page.getByTestId('band-percent-input');
+    await expect(inputs).toHaveCount(4);
+    await inputs.nth(0).fill('45');
+    await inputs.nth(1).fill('30');
+    const slices = page.locator('[data-testid="band-slice"]');
+    await expect(slices).toHaveCount(2);
+    await expect(slices.nth(0)).toHaveAttribute('data-cells', '45');
+    await expect(slices.nth(1)).toHaveAttribute('data-cells', '30');
+    await pollObservation(page, (o) => o['percentSum'] === null && o['bandCellSum'] === 75);
+    await inputs.nth(2).fill('15');
+    await inputs.nth(3).fill('10');
+    await pollObservation(
+      page,
+      (o) =>
+        o['percentSum'] === 100 &&
+        o['percentsMatchData'] === true &&
+        o['bandMatchesData'] === true &&
+        (o.misconceptions ?? []).length === 0,
+    );
+  });
+
+  test('손잡이를 끌면 칸 수가 바뀌고 뒤 조각이 밀린다. 키보드 ←/→/PageUp도 된다', async ({
+    page,
+  }) => {
+    await openEngine(page, { ...config, band: 'student' }, { mode: 'band-circle' });
+    const apple = handle(page, '사과');
+    await expect(apple).toHaveAttribute('role', 'slider');
+    const hit = apple.getByTestId('band-handle-hit');
+    const from = await center(hit);
+    await dragTo(page, from, await bandPoint(page, BAND_X + 45 * CELL, HANDLE_Y));
+    await pollObservation(page, (o) => (o['bandCells'] as Record<string, number>)['사과'] === 45);
+    await expect(apple).toHaveAttribute('aria-valuenow', '45');
+    // 포도 손잡이는 사과 끝(45칸)에서 시작해 30칸 더 간다.
+    const grape = handle(page, '포도').getByTestId('band-handle-hit');
+    await dragTo(page, await center(grape), await bandPoint(page, BAND_X + 75 * CELL, HANDLE_Y));
+    await pollObservation(page, (o) => (o['bandCells'] as Record<string, number>)['포도'] === 30);
+    // 사과를 줄이면 포도 조각이 앞으로 당겨진다(칸 수는 그대로).
+    await press(apple, 'ArrowLeft');
+    await expect(apple).toHaveAttribute('aria-valuenow', '44');
+    await press(apple, 'ArrowRight');
+    await press(apple, 'ArrowRight');
+    await expect(apple).toHaveAttribute('aria-valuenow', '46');
+    await press(apple, 'PageUp');
+    await expect(apple).toHaveAttribute('aria-valuenow', '56');
+    await press(apple, 'PageDown');
+    await press(apple, 'Delete');
+    await expect(apple).toHaveAttribute('aria-valuenow', '0');
+    await pollObservation(
+      page,
+      (o) => (o['bandCells'] as Record<string, number>)['포도'] === 30 && o['bandCellSum'] === 30,
+    );
+  });
+
+  test('끌어 말기와 단추 말기로 원그래프가 되고, 펴면 다시 띠다', async ({ page }) => {
+    await openEngine(page, { ...config, band: 'given' }, { mode: 'band-circle' });
+    await waitCurl(page, 0);
+    const canvas = page.getByTestId('graph-canvas');
+    // 조금만 끌면 놓았을 때 띠로 붙는다.
+    const start = await center(page.getByTestId('band-morph-hit'));
+    await dragTo(page, start, await bandPoint(page, BAND_X + 700, 140));
+    await waitCurl(page, 0);
+    await pollObservation(page, (o) => o['circleShown'] === false && o['curl'] === 0);
+    // 끌어 돌려 말면(왼쪽 끝 가까이로) 원그래프로 붙는다.
+    await dragTo(
+      page,
+      await center(page.getByTestId('band-morph-hit')),
+      await bandPoint(page, BAND_X + 130, 140),
+    );
+    await waitCurl(page, 100);
+    await pollObservation(page, (o) => o['circleShown'] === true && o['curl'] === 100);
+    await expect(canvas.locator('[data-testid="band-slice"]')).toHaveCount(4);
+    const toggle = page.getByTestId('band-morph-toggle');
+    await expect(toggle).toHaveText('띠그래프로 펴기');
+    await toggle.click();
+    await waitCurl(page, 0);
+    await pollObservation(page, (o) => o['circleShown'] === false);
+    await expect(toggle).toHaveText('원그래프로 말기');
+    // 키보드로 누르는 단추로도 만다.
+    await press(toggle, 'Enter');
+    await waitCurl(page, 100);
+    await pollObservation(page, (o) => o['circleShown'] === true);
+  });
+
+  test('모핑 중간(curl 40)에도 조각이 순서대로 이어져 있다', async ({ page }) => {
+    await openEngine(page, { ...config, band: 'given' }, { mode: 'band-circle' });
+    const start = await center(page.getByTestId('band-morph-hit'));
+    // 현 길이 약 573(curl 40)가 되도록 끈 채 멈춘다.
+    await page.mouse.move(start.x, start.y);
+    await page.mouse.down();
+    const target = await bandPoint(page, BAND_X + 573, 140);
+    await page.mouse.move(target.x, target.y, { steps: 6 });
+    // 끄는 값은 다음 프레임에 그려지므로 범위에 들어올 때까지 기다린다.
+    await expect
+      .poll(async () => Number(await page.getByTestId('graph-canvas').getAttribute('data-curl')))
+      .toBeGreaterThan(35);
+    const shown = Number(await page.getByTestId('graph-canvas').getAttribute('data-curl'));
+    expect(shown).toBeLessThan(45);
+    const order = await page
+      .locator('[data-testid="band-slice"]')
+      .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-cat')));
+    expect(order).toEqual(['사과', '포도', '딸기', '기타']);
+    await page.mouse.up();
+  });
+
+  test('합이 100을 넘는 띠는 틀 밖으로 삐져나온다', async ({ page }) => {
+    await openEngine(page, { ...config, band: 'student' }, { mode: 'band-circle' });
+    await pressTimes(page, '사과', 'PageUp', 9);
+    await pressTimes(page, '포도', 'PageUp', 3);
+    await expect(page.getByTestId('graph-canvas')).toHaveAttribute('data-cell-sum', '120');
+    const frameBox = await page.getByTestId('band-frame-line').boundingBox();
+    const overflow = page.getByTestId('band-overflow');
+    await expect(overflow).toBeVisible();
+    const overBox = await overflow.boundingBox();
+    if (!frameBox || !overBox) throw new Error('띠를 찾지 못했습니다.');
+    // 두 상자 모두 테두리 두께를 포함하므로 8px 안에서 틀 오른쪽 끝에서 시작한다.
+    expect(overBox.x).toBeGreaterThanOrEqual(frameBox.x + frameBox.width - 8);
+    expect(overBox.width).toBeGreaterThan(0);
+    // 칸이 모자라거나 넘쳐도 정오 표시는 없다.
+    await pressTimes(page, '딸기', 'PageUp', 1);
+    await pressTimes(page, '기타', 'PageUp', 1);
+    await pollObservation(
+      page,
+      (o) =>
+        (o.misconceptions ?? []).includes('MC-GRAPH-PERCENT-AS-COUNT') && o['bandCellSum'] === 140,
+    );
+    await expect(page.getByText(/정답|오답|틀렸|맞았/)).toHaveCount(0);
+  });
+
+  test('손잡이를 누르는 영역은 48px 이상이고 띠 한 칸은 6px 이상이다', async ({ page }) => {
+    await openEngine(page, { ...config, band: 'student' }, { mode: 'band-circle' });
+    const hits = [
+      page.locator('[data-testid="band-handle"] [data-testid="band-handle-hit"]').first(),
+      page.getByTestId('band-morph-hit'),
+    ];
+    for (const hit of hits) {
+      const box = await hit.boundingBox();
+      if (!box) throw new Error('손잡이를 찾지 못했습니다.');
+      console.log(
+        `[T166 ${test.info().project.name}] 손잡이 누르는 영역 ${box.width.toFixed(1)}x${box.height.toFixed(1)}`,
+      );
+      expect(box.width).toBeGreaterThanOrEqual(47.5);
+      expect(box.height).toBeGreaterThanOrEqual(47.5);
+    }
+    const frame = await page.getByTestId('band-frame-line').boundingBox();
+    if (!frame) throw new Error('띠를 찾지 못했습니다.');
+    const cell = frame.width / 100;
+    console.log(`[T166 ${test.info().project.name}] 띠 한 칸 ${cell.toFixed(2)}px`);
+    expect(cell).toBeGreaterThanOrEqual(6);
+  });
+
+  test('원그래프 지름이 크다(아이패드 300px 이상)', async ({ page }) => {
+    await openEngine(page, compareConfig, { mode: 'band-circle' });
+    await waitCurl(page, 100);
+    const circle = await page.getByTestId('band-frame-line').boundingBox();
+    if (!circle) throw new Error('원그래프를 찾지 못했습니다.');
+    const diameter = Math.min(circle.width, circle.height);
+    console.log(`[T166 ${test.info().project.name}] 원그래프 지름 ${diameter.toFixed(1)}px`);
+    const compare = await page
+      .getByTestId('compare-circle')
+      .locator('path[fill="none"]')
+      .boundingBox();
+    expect(compare?.width ?? 0).toBeCloseTo(circle.width, 0);
+    if (test.info().project.name === 'ipad') expect(diameter).toBeGreaterThanOrEqual(300);
+  });
+
+  test('원그래프에서 10칸 눈금은 원둘레 바깥의 짧은 선이고 반지름 선은 조각 경계뿐이다', async ({
+    page,
+  }) => {
+    await openEngine(
+      page,
+      { ...config, band: 'given', startAs: 'circle' },
+      { mode: 'band-circle' },
+    );
+    await waitCurl(page, 100);
+    const ticks = await page
+      .locator('[data-testid="band-tick"]')
+      .evaluateAll((nodes) =>
+        nodes.map((node) =>
+          ['x1', 'y1', 'x2', 'y2'].map((name) => Number(node.getAttribute(name))),
+        ),
+      );
+    expect(ticks).toHaveLength(11);
+    for (const [x1, y1, x2, y2] of ticks as [number, number, number, number][]) {
+      // 주 원: 중심 (500, 460), 반지름 225. 눈금은 둘레에서 바깥으로 반지름의 8%(18)만 뻗는다.
+      expect(Math.hypot((x1 ?? 0) - 500, (y1 ?? 0) - 460)).toBeCloseTo(225, 0);
+      expect(Math.hypot((x2 ?? 0) - 500, (y2 ?? 0) - 460)).toBeCloseTo(243, 0);
+    }
+  });
+
+  test('compare가 있으면 주 원 위에도 이름이 있고(circleTitle, 없으면 title) 전체 제목은 가운데에 있다', async ({
+    page,
+  }) => {
+    await openEngine(page, compareConfig, { mode: 'band-circle' });
+    await waitCurl(page, 100);
+    await expect(page.getByTestId('band-circle-title')).toHaveText('좋아하는 과일');
+    await expect(page.getByTestId('band-title')).toHaveAttribute('text-anchor', 'middle');
+    await openEngine(page, { ...compareConfig, circleTitle: '1반' }, { mode: 'band-circle' });
+    await waitCurl(page, 100);
+    await expect(page.getByTestId('band-circle-title')).toHaveText('1반');
+  });
+
+  test('좁은 판(660x420)에서는 두 원이 위아래로 쌓인다', async ({ page }) => {
+    await page.setViewportSize({ width: 660, height: 420 });
+    await openEngine(page, compareConfig, { stageFit: true, mode: 'band-circle' });
+    await waitCurl(page, 100);
+    await expect(page.getByTestId('graph-canvas')).toHaveAttribute('data-stacked', 'true');
+    const first = await page.getByTestId('band-slice').first().boundingBox();
+    const second = await page.getByTestId('compare-slice').first().boundingBox();
+    if (!first || !second) throw new Error('두 원을 찾지 못했습니다.');
+    expect(second.y).toBeGreaterThan(first.y + first.height);
+  });
+
+  test('오버레이 band-frame: 틀을 강조하고 넘친 칸을 빗금·✕로 보이며 SVG와 맞는다', async ({
+    page,
+  }) => {
+    await openEngine(
+      page,
+      { ...config, band: 'student' },
+      { mode: 'band-circle', overlay: 'band-frame' },
+    );
+    await pressTimes(page, '사과', 'PageUp', 9);
+    await pressTimes(page, '포도', 'PageUp', 3);
+    await showOverlay(page);
+    const overlay = await expectOverlayAligned(page, 'band-frame');
+    await expect(overlay.getByTestId('band-frame-line')).toHaveCount(1);
+    await expect(overlay.getByTestId('band-frame-over')).toHaveCount(1);
+    await expect(overlay.getByTestId('band-frame-cross')).toHaveCount(1);
+    await expect(overlay.getByTestId('band-frame-missing')).toHaveCount(0);
+    await expect(overlay.locator('text')).toHaveCount(0);
+    // 틀 선은 본 그래프의 틀 선과 1px 안에서 같다.
+    const mine = await overlay.getByTestId('band-frame-line').boundingBox();
+    const theirs = await page
+      .locator('[data-testid="graph-canvas"] [data-testid="band-frame-line"]')
+      .boundingBox();
+    if (!mine || !theirs) throw new Error('틀 선을 찾지 못했습니다.');
+    expect(Math.abs(mine.x + mine.width / 2 - (theirs.x + theirs.width / 2))).toBeLessThanOrEqual(
+      1,
+    );
+    expect(Math.abs(mine.y + mine.height / 2 - (theirs.y + theirs.height / 2))).toBeLessThanOrEqual(
+      1,
+    );
+  });
+
+  test('오버레이 band-frame: 칸이 모자라면 점선 빈칸이 있고 넘침 표시는 없다', async ({ page }) => {
+    await openEngine(
+      page,
+      { ...config, band: 'student' },
+      { mode: 'band-circle', overlay: 'band-frame' },
+    );
+    await pressTimes(page, '사과', 'PageUp', 2);
+    await showOverlay(page);
+    const overlay = await expectOverlayAligned(page, 'band-frame');
+    await expect(overlay.getByTestId('band-frame-missing')).toHaveCount(1);
+    await expect(overlay.getByTestId('band-frame-over')).toHaveCount(0);
+    await expect(overlay.getByTestId('band-frame-cross')).toHaveCount(0);
+  });
+
+  test('오버레이 total-bars: 두 원 아래 전체 수에 비례하는 막대, 숫자는 없다', async ({ page }) => {
+    await openEngine(page, compareConfig, { mode: 'band-circle', overlay: 'total-bars' });
+    await waitCurl(page, 100);
+    await showOverlay(page);
+    const overlay = await expectOverlayAligned(page, 'total-bars');
+    const bars = overlay.getByTestId('total-bar');
+    await expect(bars).toHaveCount(2);
+    const main = await bars.nth(0).boundingBox();
+    const other = await bars.nth(1).boundingBox();
+    if (!main || !other) throw new Error('막대를 찾지 못했습니다.');
+    // 전체 20 : 50 = 2 : 5
+    expect(main.width / other.width).toBeCloseTo(0.4, 1);
+    await expect(overlay.locator('text')).toHaveCount(0);
+    // 막대는 각 원 아래에 있다.
+    const circle = await page.getByTestId('band-frame-line').boundingBox();
+    if (!circle) throw new Error('원을 찾지 못했습니다.');
+    expect(main.y).toBeGreaterThan(circle.y + circle.height);
+  });
+
+  test('오버레이 total-bars: 원그래프가 아니면 그리지 않는다', async ({ page }) => {
+    await openEngine(
+      page,
+      { ...compareConfig, startAs: 'band' },
+      { mode: 'band-circle', overlay: 'total-bars' },
+    );
+    await showOverlay(page);
+    await expect(page.locator('[data-overlay="total-bars"] [data-testid="total-bar"]')).toHaveCount(
+      0,
+    );
+  });
+
+  test('기준 스크린샷: 학생 띠(반쯤)와 원그래프(compare)', async ({ page }) => {
+    test.skip(
+      !test.info().project.name.toLowerCase().includes('chromebook'),
+      '크롬북에서만 기준 이미지를 비교한다.',
+    );
+    await openEngine(page, { ...config, band: 'student' }, { mode: 'band-circle' });
+    await page.getByTestId('band-percent-input').nth(0).fill('45');
+    await page.getByTestId('band-percent-input').nth(1).fill('30');
+    await pressTimes(page, '사과', 'PageUp', 4);
+    await pressTimes(page, '사과', 'ArrowRight', 5);
+    await pressTimes(page, '포도', 'PageUp', 3);
+    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+    await page.mouse.move(0, 0);
+    await stageShot(page, 'band-student');
+    await openEngine(page, compareConfig, { mode: 'band-circle' });
+    await waitCurl(page, 100);
+    await stageShot(page, 'circle-compare');
   });
 });

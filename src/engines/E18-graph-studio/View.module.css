@@ -557,3 +557,77 @@
 .lineTableBox .table {
   font-size: 0.95rem;
 }
+
+/* T166 띠·원그래프(band-circle): 그래프 아래에 표를 둔다. 판이 내용 높이면 그래프 영역이 가로 폭의 비율
+   (논리 1000:760)만큼 높이를 갖는다(화면 높이 상한 안에서). 표까지 합쳐 판보다 길면 판 전체가 세로로 스크롤한다
+   (그림그래프와 같은 방식). 그래프 영역은 줄어들지 않아 원이 작아지지 않는다. */
+.wrap[data-mode='band-circle'] {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.wrap[data-mode='band-circle'] > .views {
+  flex: 0 0 auto;
+}
+
+.views[data-band='true'] {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.views[data-band='true'] > .boardArea {
+  --band-board-height: min(76cqw, max(calc(100dvh - 240px), 520px));
+  flex: 0 0 auto;
+  height: var(--band-board-height);
+  min-height: 200px;
+}
+
+/* 두 원을 위아래로 쌓은 그림은 폭에 맞춘 높이 그대로 두고 판이 스크롤한다. */
+.views[data-band='true'] > .boardArea[data-scroll='true'] {
+  height: auto;
+  overflow: visible;
+}
+
+.views[data-band='true'] > .tableBox {
+  align-self: flex-start;
+  max-width: 100%;
+  max-height: none;
+}
+
+.swatch {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-right: 0.45rem;
+  vertical-align: -2px;
+  border: 2px solid #1d2330;
+  border-radius: 4px;
+}
+
+.percentInput {
+  width: 4.2rem;
+  min-height: 48px;
+  padding: 0 0.3rem;
+  border: 2px solid #8b96ab;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #1d2330;
+  font: inherit;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.wrap[data-target-size='64'] .percentInput {
+  min-height: 64px;
+}
+
+.percentInput:focus-visible {
+  outline: 3px solid #e8872e;
+  outline-offset: 3px;
+}
+
+.percentInput:disabled {
+  border-color: #aab4c6;
+  color: #7a8497;
+}
