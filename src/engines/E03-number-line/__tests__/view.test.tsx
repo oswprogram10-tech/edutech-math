@@ -89,6 +89,18 @@ describe('T048 skip-count 화면', () => {
     expect(renderView(narrowConfig, narrow).queryByTestId('skip-hop-step-label')).toBeNull();
   });
 
+  it('연동 값이 범위 안이면 linked-marker 하나를 그리고 범위 밖이면 그리지 않는다', () => {
+    const config: NumberLineConfig = { mode: 'skip-count', min: 0, max: 30, step: 5 };
+    const base = createInitialState(config);
+    const inside = renderView(config, reduce(base, { type: 'set-linked', value: '12' }));
+    const markers = inside.container.querySelectorAll('[data-testid="linked-marker"]');
+    expect(markers).toHaveLength(1);
+    expect(markers[0]?.getAttribute('data-value')).toBe('12');
+    cleanup();
+    const outside = renderView(config, reduce(base, { type: 'set-linked', value: '40' }));
+    expect(outside.container.querySelector('[data-testid="linked-marker"]')).toBeNull();
+  });
+
   it('되돌리기 단추 이름은 "한 번 되돌리기"다', () => {
     const config: NumberLineConfig = { mode: 'skip-count', min: 0, max: 30, step: 5 };
     const view = renderView(config, createInitialState(config));

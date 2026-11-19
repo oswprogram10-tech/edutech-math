@@ -71,6 +71,8 @@ export function SkipCountView({
   const ys = rowYs(rowCount);
   const activeRow = Math.min(Math.max(row, 0), rowCount - 1);
   const firstY = ys[0] ?? 300;
+  const lastY = ys[ys.length - 1] ?? firstY;
+  const linked = parseValue(state.linkedValue ?? undefined);
   const tickRows: TickRow[] = ys.map((y, index) => ({
     index,
     step: unit,
@@ -375,6 +377,38 @@ export function SkipCountView({
             </g>
           );
         })}
+
+        {linked && linked.compareTo(min) >= 0 && linked.compareTo(max) <= 0 ? (
+          <g
+            pointerEvents="none"
+            opacity={0.75}
+            data-testid="linked-marker"
+            data-value={state.linkedValue}
+          >
+            <line
+              x1={xOf(linked)}
+              y1={firstY - 64}
+              x2={xOf(linked)}
+              y2={lastY + 22}
+              className={styles.linkedBody}
+              style={{ fill: 'none' }}
+            />
+            {ys.map((y, index) => (
+              <rect
+                key={`linked-${index}`}
+                x={xOf(linked) - 9}
+                y={y - 9}
+                width={18}
+                height={18}
+                transform={`rotate(45 ${xOf(linked)} ${y})`}
+                className={styles.linkedBody}
+              />
+            ))}
+            <text x={xOf(linked)} y={firstY - 70} className={styles.linkedLabel}>
+              {numberLineStrings.linkedPoint} {formatValue(linked, 'integer')}
+            </text>
+          </g>
+        ) : null}
 
         {start ? (
           <g pointerEvents="none" data-testid="skip-start">
