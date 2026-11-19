@@ -223,6 +223,8 @@ T170은 소넷 구현 → 검수 1회(translate 되돌리기를 첫 대응 '열�
 T171은 소넷 구현 → 검수 1회(엔진 수정 허용: `ten-step`이 가린 칸이 아닌 `args.cell`도 받게, translate 칸을 늘 targetSize 이상으로 하고 줄 이름 글자 14px 이상)를 거쳐 main에 병합했다(2026-11-19). g1s2u1.A2.T4(칸 고르기)의 오답 69는 코어 diagnose가 숫자 경로를 읽지 못해 `selectedIs 69` 상태 규칙으로 ①·②를 건다(오개념 코드는 기록되지 않음). g1s2u5·g1s2u1의 `status`는 운영자가 직접 해 본 뒤 `done`으로 바꾼다.
 T172는 소넷 구현 → 검수(수정 없음)를 거쳐 main에 병합했다(2026-11-20). 기존 `Ast`·`parse`는 그대로이고 관계식은 `relation.ts`의 따로 된 AST다. 4 ÷ □ = ○처럼 □가 나누는 수에 있으면 NONLINEAR다. 이 카드부터 core라도 추가만 하고 기존 동작을 바꾸지 않으면 그 코드를 쓰는 화면의 spec만 돌린다(T172: step-solver·runner·response·g5s1u5 44개 통과). 전체 E2E는 기존 공용 동작을 바꾼 카드와 웨이브 끝에만 돌린다.
 T173은 소넷 구현 → 검수 1회(판 전체 화면 기준 스냅샷 6장, 키패드 맨 아래 단추가 스크롤로 닿는지 E2E, 식 입력 칸 띄어 쓰기 표시)를 거쳐 main에 병합했다(2026-11-20). 대응표 칸은 오버레이 정렬 때문에 논리 80×64로 고정하고, 표 아래에 오버레이용 띠를 늘 둔다(오버레이 없을 때 빈 공간). 숫자 키패드에 `/`가 없어 터치로 분수 빈칸을 못 채운다(단원 카드가 정함). covary의 `cells` 키는 `"<○ 값>.y"`다.
+- **T174 병합(2026-11-20):** E16 `rule-shooter`(격자·레이저·✓/✕·빗나간 보석 패널·`look:'table'`), `laser-miss` 오버레이, swap-check 격자 판. `gems`가 없으면 샌드박스 기본 보석을 쓴다. Observation `hits`·`allHit`은 마지막으로 시험한 식 기준이고, `rule`이 없으면 `matchesHidden = allHit`이다. Predicate `allHit`·`hitCountAtLeast`·`shotsAtMost`, `ruleFormDiffers`는 이 모드에서 `allHit` 기준. 모드 select 너비 변화로 기존 E16 스냅샷 6장 갱신. 범위 E2E 179 통과(첫 실행에서 크롬북 "발사 스크롤" 1건이 부하로 한 번 실패, 단독·재실행 통과).
+
 ## 상시
 | 카드 | 내용 |
 | --- | --- |
