@@ -39,7 +39,12 @@ async function pollObservation(
   await expect.poll(async () => check(await readObservation(page))).toBe(true);
 }
 
-async function open(page: Page, mode: 'sequence' | 'hundred-chart', config: unknown, query = '') {
+async function open(
+  page: Page,
+  mode: 'sequence' | 'hundred-chart' | 'calc-pattern',
+  config: unknown,
+  query = '',
+) {
   const params = new URLSearchParams({ config: JSON.stringify(config) });
   if (query) for (const [key, value] of new URLSearchParams(query)) params.set(key, value);
   await page.goto(`/?${params.toString()}#/sandbox/E15`);
@@ -444,6 +449,195 @@ test('48 설정에서 빈칸·팔레트 48px 이상, 10x10 칸 한 변을 잰다
   await capture(page, 'T170-chart-full');
 });
 
+// ───────── calc-pattern (T175) ─────────
+
+const CALC = { pattern: 'symmetric-sum-square', stepsShown: 3, workStep: 4 };
+const REPUNIT = { pattern: 'repunit-square', stepsShown: 4, workStep: 5 };
+const PYRAMID4 = [1, 2, 3, 4, 3, 2, 1];
+
+function buildCell(page: Page, col: number, h: number): Locator {
+  return page.locator(`[data-testid="calc-build"] rect[data-col="${col}"][data-h="${h}"]`);
+}
+
+function calcPad(page: Page, name: string): Locator {
+  return page.getByTestId('calc-pad').getByRole('button', { name, exact: true });
+}
+
+async function tapExpr(page: Page, text: string): Promise<void> {
+  for (const key of text) await calcPad(page, key).click();
+}
+
+test('calc-pattern: 4단계 블록을 포인터로 쌓으면 builtIsPyramid이고 블록 16개', async ({
+  page,
+}) => {
+  await open(page, 'calc-pattern', CALC, 'stage=fit');
+  // 1열부터 쌓아도(앞 열을 비워 두어도) 앞뒤 빈 열은 보지 않는다.
+  for (const [index, h] of PYRAMID4.entries()) await buildCell(page, index + 1, h).click();
+  await pollObservation(
+    page,
+    (o) => o.builtIsPyramid === true && o.builtTotal === 16 && o.workStep === 4,
+  );
+  await expect(page.getByTestId('calc-built-count')).toHaveText('블록 16개');
+  // 맞고 틀림을 그리지 않는다.
+  await expect(page.getByTestId('calc-build')).not.toContainText(/[✓✕]/);
+  await page.getByRole('button', { name: '블록 모두 치우기' }).click();
+  await pollObservation(page, (o) => o.builtTotal === 0 && o.builtIsPyramid === false);
+});
+
+test('calc-pattern: 한 열만 덧붙이면 RECURSIVE-ONLY, 식 9+7=16도 같은 오개념', async ({ page }) => {
+  await open(page, 'calc-pattern', CALC);
+  for (const [index, h] of [1, 2, 3, 2, 1, 4].entries()) await buildCell(page, index, h).click();
+  await pollObservation(page, (o) =>
+    (o.misconceptions ?? []).includes('MC-PATTERN-RECURSIVE-ONLY'),
+  );
+  await page.getByRole('button', { name: '블록 모두 치우기' }).click();
+  await pollObservation(page, (o) => (o.misconceptions ?? []).length === 0);
+  await tapExpr(page, '9+7=16');
+  await pollObservation(page, (o) =>
+    (o.misconceptions ?? []).includes('MC-PATTERN-RECURSIVE-ONLY'),
+  );
+});
+
+test('calc-pattern: 식 1+2+3+4+3+2+1=4×4를 키패드로 쓰면 exprHolds와 exprAddends', async ({
+  page,
+}) => {
+  await open(page, 'calc-pattern', CALC);
+  await tapExpr(page, '1+2+3+4+3+2+1=4×4');
+  await pollObservation(
+    page,
+    (o) =>
+      o.exprHolds === true &&
+      JSON.stringify(o.exprAddends) === JSON.stringify(['1', '2', '3', '4', '3', '2', '1']) &&
+      JSON.stringify(o.exprFactors) === JSON.stringify(['4', '4']),
+  );
+  await expect(page.getByTestId('calc-expr')).toContainText('1 + 2 + 3 + 4 + 3 + 2 + 1 = 4 × 4');
+  await expect(page.getByTestId('calc-expr')).not.toContainText(/[✓✕]/);
+  await calcPad(page, '지우기').click();
+  await calcPad(page, '6').click();
+  await pollObservation(page, (o) => o.exprHolds === false && o.exprValid === true);
+  await calcPad(page, '모두 지우기').click();
+  await pollObservation(page, (o) => o.exprText === '');
+});
+
+test('calc-pattern: 읽을 수 없는 식에는 밑줄 표시가 생긴다', async ({ page }) => {
+  await open(page, 'calc-pattern', CALC);
+  await tapExpr(page, '1+');
+  await expect(page.getByTestId('calc-expr-error')).toBeVisible();
+  await pollObservation(page, (o) => o.exprValid === false);
+});
+
+test('calc-pattern: 키보드만으로 4단계를 쌓고 식을 쓴다', async ({ page }) => {
+  await open(page, 'calc-pattern', CALC);
+  await page.getByTestId('calc-build').focus();
+  for (const [index, h] of PYRAMID4.entries()) {
+    await page.keyboard.press(String(h));
+    if (index < PYRAMID4.length - 1) await page.keyboard.press('ArrowRight');
+  }
+  await pollObservation(page, (o) => o.builtIsPyramid === true && o.builtTotal === 16);
+  // 방향키와 Enter로도 쌓는다: 마지막 열(높이 1)에서 한 칸 위를 눌러 높이를 바꿨다가 되돌린다.
+  await page.keyboard.press('ArrowUp');
+  await page.keyboard.press('Enter');
+  await pollObservation(page, (o) => o.builtIsPyramid === false);
+  await page.keyboard.press('Enter');
+  await pollObservation(page, (o) => o.builtIsPyramid === true);
+
+  await page.getByTestId('calc-expr-input').focus();
+  await page.keyboard.type('1+2+3+4+3+2+1=4*4');
+  await pollObservation(page, (o) => o.exprHolds === true && o.exprText === '1+2+3+4+3+2+1=4×4');
+  await page.keyboard.press('Backspace');
+  await pollObservation(page, (o) => o.exprText === '1+2+3+4+3+2+1=4×');
+  await page.keyboard.press('Delete');
+  await pollObservation(page, (o) => o.exprText === '');
+});
+
+test('calc-pattern: 열을 누르면 식의 수가, 식의 수를 누르면 열이 강조된다(색만 아님)', async ({
+  page,
+}) => {
+  await open(page, 'calc-pattern', CALC, 'stage=fit');
+  const col = page.locator('g[data-step="3"][data-col="2"]');
+  const term = page.locator('g[data-step="3"][data-term="2"]');
+  await col.click();
+  await expect(term).toHaveAttribute('data-linked', 'true');
+  await expect(term.locator('[data-testid="calc-term-mark"]')).toBeVisible();
+  await expect(term.locator('text')).toHaveAttribute('font-weight', '900');
+  await expect(col.locator('[data-testid="calc-col-mark"]')).toBeVisible();
+
+  await page.locator('g[data-step="3"][data-term="4"]').click();
+  await expect(
+    page.locator('g[data-step="3"][data-col="4"] [data-testid="calc-col-mark"]'),
+  ).toBeVisible();
+  await expect(col.locator('[data-testid="calc-col-mark"]')).toHaveCount(0);
+
+  // 키보드: 포커스 후 Enter
+  await page.locator('g[data-step="2"][data-col="1"]').focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('g[data-step="2"][data-term="1"]')).toHaveAttribute(
+    'data-linked',
+    'true',
+  );
+  // 강조는 판정(Observation)에 영향이 없다.
+  await pollObservation(page, (o) => o.builtTotal === 0 && o.exprText === '');
+});
+
+test('calc-pattern: repunit 화면과 식 입력', async ({ page }) => {
+  await open(page, 'calc-pattern', REPUNIT, 'stage=fit');
+  await expect(page.getByTestId('calc-build')).toHaveCount(0);
+  await expect(page.locator('g[data-step="4"][data-term="2"]')).toHaveText('1234321');
+  await tapExpr(page, '11111×11111=123454321');
+  await pollObservation(
+    page,
+    (o) => o.exprHolds === true && o.exprLeft === '123454321' && o.pattern === 'repunit-square',
+  );
+  await capture(page, 'T175-calc-repunit');
+});
+
+test('calc-pattern: 오버레이 step-table이 본 캔버스와 1px 안에 겹치고 보여 준 단계까지만 쓴다', async ({
+  page,
+}) => {
+  await open(page, 'calc-pattern', CALC, 'overlay=step-table');
+  await toggleOverlay(page);
+  await expectAligned(page, 'step-table', 'calc-canvas');
+  await expect(page.locator('[data-testid="step-table-col"]')).toHaveCount(3);
+  await expect(page.locator('[data-overlay="step-table"]')).not.toContainText('16');
+  await capture(page, 'T175-overlay-step-table');
+});
+
+test('calc-pattern: 오버레이 column-link가 본 캔버스와 1px 안에 겹친다', async ({ page }) => {
+  await open(page, 'calc-pattern', CALC, 'overlay=column-link');
+  await toggleOverlay(page);
+  await expectAligned(page, 'column-link', 'calc-canvas');
+  await expect(page.locator('[data-testid="column-link-item"]')).toHaveCount(5);
+  await capture(page, 'T175-overlay-column-link');
+});
+
+test('calc-pattern: 쌓기 칸·키패드 단추가 targetSize 이상이고 맨 아래 단추가 스크롤로 닿는다', async ({
+  page,
+}) => {
+  await open(page, 'calc-pattern', CALC, 'stage=fit');
+  await expectMin(buildCell(page, 0, 1), 48, '쌓기 칸(48)');
+  await expectMin(calcPad(page, '5'), 48, '키패드(48)');
+  await page.getByRole('button', { name: '터치 48px' }).click();
+  await expectMin(buildCell(page, 0, 1), 64, '쌓기 칸(64)');
+  await expectMin(calcPad(page, '5'), 64, '키패드(64)');
+  const last = calcPad(page, '모두 지우기');
+  await last.scrollIntoViewIfNeeded();
+  await expect(last).toBeInViewport();
+  await calcPad(page, '7').scrollIntoViewIfNeeded();
+  await calcPad(page, '7').click();
+  await last.scrollIntoViewIfNeeded();
+  await last.click();
+  await pollObservation(page, (o) => o.exprText === '');
+});
+
+test('calc-pattern: 보기 판 블록은 화면에서 24px 이상이다(많은 단계는 스크롤)', async ({
+  page,
+}) => {
+  await open(page, 'calc-pattern', { ...CALC, stepsShown: 8, workStep: 9 }, 'stage=fit');
+  const rect = page.locator('g[data-step="8"][data-col="7"] rect').first();
+  await expectMin(rect, 24, '보기 판 블록');
+  await expect(page.getByTestId('calc-board')).toHaveAttribute('data-scroll', 'true');
+});
+
 /** 화면 기준 이미지: 첫 화면 세 장(extend·translate·chart full). 크롬북·아이패드만 찍는다. */
 async function stageShot(page: Page, name: string): Promise<void> {
   await page.evaluate(async () => {
@@ -470,5 +664,15 @@ test.describe('첫 화면 기준 이미지', () => {
   test('chart full', async ({ page }) => {
     await open(page, 'hundred-chart', { hidden: [23, 46, 78] }, 'stage=fit');
     await stageShot(page, 'pattern-chart-full');
+  });
+
+  test('calc-pattern symmetric', async ({ page }) => {
+    await open(page, 'calc-pattern', CALC, 'stage=fit');
+    await stageShot(page, 'pattern-calc-symmetric');
+  });
+
+  test('calc-pattern repunit', async ({ page }) => {
+    await open(page, 'calc-pattern', REPUNIT, 'stage=fit');
+    await stageShot(page, 'pattern-calc-repunit');
   });
 });

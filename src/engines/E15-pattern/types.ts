@@ -1,7 +1,7 @@
 /** E15 규칙·패턴의 설정·상태·Action 타입. 모드별 판별 유니온이다. */
 import type { ChartRange, ChartView } from './chart';
 
-export type PatternMode = 'sequence' | 'hundred-chart';
+export type PatternMode = 'sequence' | 'hundred-chart' | 'calc-pattern';
 
 export type SequenceVariant = 'extend' | 'translate';
 export type Look = 'color' | 'plain' | 'symbol';
@@ -35,7 +35,27 @@ export interface ChartConfig {
   revealOnAnswer?: boolean;
 }
 
-export type PatternConfig = SequenceConfig | ChartConfig;
+export type CalcPatternName = 'symmetric-sum-square' | 'repunit-square';
+export type CalcLook = 'blocks' | 'picture' | 'none';
+
+export interface CalcPatternConfig {
+  mode: 'calc-pattern';
+  pattern: CalcPatternName;
+  /** 보여 줄 단계 수(기본 3), 1~8. */
+  stepsShown?: number;
+  /** 학생이 쌓고 식을 쓸 단계(기본 stepsShown + 1), 1~9. */
+  workStep?: number;
+  /** 블록 쌓기 칸(기본: symmetric은 true, repunit은 false). repunit에서 true면 무시한다. */
+  build?: boolean;
+  /** 식 쓰기 칸(기본 true). */
+  expression?: boolean;
+  /** 열 ↔ 식의 수 강조(기본 true, symmetric만). */
+  linkHighlight?: boolean;
+  /** CPA: 쌓기(C) / 그림만(P, 쌓기 꺼짐) / 식만(A, 블록 그림 없음). */
+  look?: CalcLook;
+}
+
+export type PatternConfig = SequenceConfig | ChartConfig | CalcPatternConfig;
 
 /** 정규화한 sequence 설정(상태 안에 둔다. reduce가 config를 받지 않기 때문이다). */
 export interface SequenceSettings {
@@ -87,7 +107,33 @@ export interface ChartState {
   active: number | null;
 }
 
-export type PatternState = SequenceState | ChartState;
+/** 정규화한 calc-pattern 설정. `error`가 있으면 설정 오류 판을 그린다. */
+export interface CalcSettings {
+  pattern: CalcPatternName;
+  stepsShown: number;
+  workStep: number;
+  /** 쌓기 칸을 실제로 그리는지(pattern·look·build를 합친 값). */
+  build: boolean;
+  expression: boolean;
+  linkHighlight: boolean;
+  look: CalcLook;
+  error: string | null;
+}
+
+export interface CalcState {
+  mode: 'calc-pattern';
+  settings: CalcSettings;
+  /** 학생이 쌓은 열 높이. 길이 `2 × workStep + 1`, 처음엔 모두 0. */
+  heights: number[];
+  /** 키보드 커서. h는 1부터(아래 칸이 1). */
+  cursor: { col: number; h: number };
+  exprText: string;
+  focus: 'build' | 'expr';
+  /** 열 ↔ 식의 수 강조. 판정에는 쓰지 않는다. */
+  link: { step: number; col: number } | null;
+}
+
+export type PatternState = SequenceState | ChartState | CalcState;
 
 export type SequenceAction =
   | { type: 'place'; slot: number; token: string }
@@ -107,7 +153,20 @@ export type ChartAction =
   | { type: 'select-cell'; cell: number }
   | { type: 'toggle-paint'; cell: number };
 
-export type PatternAction = SequenceAction | ChartAction;
+export type CalcAction =
+  | { type: 'tap-cell'; col: number; h: number }
+  | { type: 'clear-build' }
+  | { type: 'move-cursor'; dx: number; dy: number }
+  | { type: 'toggle-at-cursor' }
+  | { type: 'type'; key: string }
+  | { type: 'backspace' }
+  | { type: 'clear-expr' }
+  | { type: 'set-focus'; focus: 'build' | 'expr' }
+  /** `step: null`이면 강조를 거둔다. */
+  | { type: 'link'; step: number; col: number }
+  | { type: 'link'; step: null; col?: null };
+
+export type PatternAction = SequenceAction | ChartAction | CalcAction;
 
 export function chartRangeOf(settings: ChartSettings): ChartRange {
   return { from: settings.from, count: settings.count };
