@@ -1,0 +1,388 @@
+.wrap {
+  --target: 48px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-width: 0;
+  height: 100%;
+  container-type: inline-size;
+}
+
+.wrap[data-target-size='64'] {
+  --target: 64px;
+}
+
+.instructions {
+  margin: 0;
+  color: var(--muted, #5b6577);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.status {
+  min-height: 1.3em;
+  margin: 0;
+  color: #8a4b00;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.status:empty {
+  display: none;
+}
+
+.count {
+  margin: 0;
+  color: #3d485c;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.readout {
+  flex: 0 0 auto;
+  margin: 0;
+  color: #1d2330;
+  font-size: 1.3rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+/* 실행기의 `[class*='canvas']` 규칙에 걸리지 않도록 이름을 `boardArea`로 둔다. */
+.boardArea {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 0.4rem;
+  min-width: 0;
+  min-height: 200px;
+  overflow: hidden;
+}
+
+/* table 모드의 판은 표 전체(윗띠~아랫띠)가 들어갈 만큼 낮아지지 않는다. */
+.boardArea[data-tall='true'] {
+  min-height: 296px;
+  align-items: center;
+}
+
+.boardArea[data-scroll='true'] {
+  overflow: auto;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+.figureSvg {
+  display: block;
+  flex: 1 1 0;
+  min-height: 0;
+  width: 100%;
+  border-radius: 16px;
+  background: #fbfaf6;
+  border: 1px solid #d7deea;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.tableScroll {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.tableSvg {
+  display: block;
+  flex: none;
+  border-radius: 12px;
+  background: #fbfaf6;
+  border: 1px solid #d7deea;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.boardArea .tableScroll {
+  flex: none;
+}
+
+.tableSvg g[role='button']:focus-visible {
+  outline: 3px solid #e8872e;
+  outline-offset: 2px;
+}
+
+.inputRow {
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: var(--target);
+  min-width: 140px;
+  padding: 0 0.8rem;
+  border: 2px solid #8b96ab;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #1d2330;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.3;
+  cursor: text;
+  overflow-wrap: anywhere;
+}
+
+.inputRow .field {
+  flex: 1 1 160px;
+}
+
+.ruleBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.field[data-active='true'] {
+  border-color: #e8872e;
+  box-shadow: 0 0 0 2px #e8872e;
+}
+
+.field:focus-visible,
+.button:focus-visible,
+.padButton:focus-visible,
+.sliderKnob:focus-visible {
+  outline: 3px solid #e8872e;
+  outline-offset: 3px;
+}
+
+.fieldLabel {
+  color: #5b6577;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.fieldValue {
+  min-width: 2ch;
+}
+
+.placeholder {
+  color: #7a8497;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.errorMark {
+  text-decoration: underline wavy #c0392b;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 3px;
+}
+
+.button {
+  min-height: var(--target);
+  min-width: var(--target);
+  padding: 0 1rem;
+  border: 2px solid #2f6fde;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #1d2330;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.button:disabled {
+  border-color: #aab4c6;
+  color: #7a8497;
+  cursor: not-allowed;
+}
+
+.pad {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--target), 1fr));
+  gap: 0.4rem;
+  max-width: 460px;
+}
+
+.padButton {
+  min-width: var(--target);
+  min-height: var(--target);
+  padding: 0 0.4rem;
+  border: 2px solid #2f6fde;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #1d2330;
+  font: inherit;
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.padWide {
+  grid-column: span 2;
+  font-size: 1rem;
+}
+
+.padPrimary {
+  background: #dbe7ff;
+  border-color: #1d4fa8;
+}
+
+.padButton:disabled {
+  border-color: #c7cfdd;
+  color: #7a8497;
+  background: #f4f6fa;
+  cursor: not-allowed;
+}
+
+.sliderTrack {
+  position: relative;
+  flex: 0 0 auto;
+  height: calc(var(--target) + 8px);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: pointer;
+}
+
+.sliderRail {
+  position: absolute;
+  left: calc(var(--target) / 2);
+  right: calc(var(--target) / 2);
+  top: 50%;
+  height: 10px;
+  margin-top: -5px;
+  border-radius: 5px;
+  background: #c7d3ee;
+}
+
+.sliderKnob {
+  position: absolute;
+  top: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--target);
+  height: var(--target);
+  border: 3px solid #1d4fa8;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #1d2330;
+  font-size: 1.15rem;
+  font-weight: 800;
+  cursor: grab;
+}
+
+.errorBoard {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  border: 2px dashed #aab4c6;
+  border-radius: 16px;
+  color: #5b6577;
+  text-align: center;
+}
+
+.errorBoard p {
+  margin: 0.2rem 0;
+}
+
+.srOnly {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .outPop {
+    animation: functionOutPop 0.7s ease-out both;
+  }
+}
+
+@keyframes functionOutPop {
+  0% {
+    opacity: 0;
+  }
+  60% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* 판과 그 아래 조작 묶음. 세로로 긴 판에서는 래퍼가 없는 것처럼 쌓이고,
+   가로로 넓은 판(크롬북·전자칠판)에서는 왼쪽 판 · 오른쪽 조작 묶음 두 칸이 된다. */
+.stageRow {
+  display: contents;
+}
+
+@media (orientation: portrait) {
+  .wrap > .boardArea,
+  .stageRow > .boardArea {
+    flex: 1 1000 min(46dvh, 440px);
+  }
+}
+
+.sideStack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  flex: 0 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+}
+
+.sideStack > * {
+  flex: 0 0 auto;
+  max-height: none;
+  overflow: visible;
+}
+
+.sideStack > .tableScroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+@media (orientation: landscape) {
+  @container (min-width: 820px) {
+    .stageRow {
+      display: flex;
+      flex: 1 1 0;
+      gap: 1rem;
+      align-items: stretch;
+      min-height: 200px;
+      overflow: hidden;
+    }
+
+    .stageRow > .boardArea {
+      flex: 1 1 0;
+      min-height: 0;
+    }
+
+    .stageRow > .boardArea[data-tall='true'] {
+      min-height: 296px;
+    }
+
+    .sideStack {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      flex: 0 1 min(42%, 460px);
+      min-width: 300px;
+      min-height: 0;
+      overflow: auto;
+    }
+  }
+}
