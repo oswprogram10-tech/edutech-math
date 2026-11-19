@@ -18,6 +18,7 @@ import type {
   CalcPatternName,
   CalcSettings,
   ChartSettings,
+  GearsSettings,
   GrowthLook,
   GrowthSettings,
   GrowthShape,
@@ -276,5 +277,22 @@ export function growthSettings(config: PatternConfig | undefined): GrowthSetting
     highlightIncrement: record['highlightIncrement'] !== false,
     table,
     look,
+  };
+}
+
+export const GEARS_TEETH_MIN = 3;
+export const GEARS_TEETH_MAX = 12;
+export const GEARS_STEPS_MIN = 12;
+export const GEARS_STEPS_MAX = 120;
+
+/** gears 설정 정규화. 잘못된 값은 throw하지 않고 기본값으로 돌리고, 범위 밖 정수는 범위로 맞춘다. */
+export function gearsSettings(config: PatternConfig | undefined): GearsSettings {
+  const record = recordOf(config);
+  return {
+    teethA: intIn(record['teethA'], GEARS_TEETH_MIN, GEARS_TEETH_MAX, 4),
+    teethB: intIn(record['teethB'], GEARS_TEETH_MIN, GEARS_TEETH_MAX, 6),
+    maxSteps: intIn(record['maxSteps'], GEARS_STEPS_MIN, GEARS_STEPS_MAX, 60),
+    predict: record['predict'] === true,
+    showLaps: record['showLaps'] !== false,
   };
 }

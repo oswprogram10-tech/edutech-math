@@ -1,7 +1,7 @@
 /** E15 규칙·패턴의 설정·상태·Action 타입. 모드별 판별 유니온이다. */
 import type { ChartRange, ChartView } from './chart';
 
-export type PatternMode = 'sequence' | 'hundred-chart' | 'calc-pattern' | 'growth';
+export type PatternMode = 'sequence' | 'hundred-chart' | 'calc-pattern' | 'growth' | 'gears';
 
 export type SequenceVariant = 'extend' | 'translate';
 export type Look = 'color' | 'plain' | 'symbol';
@@ -97,8 +97,23 @@ export interface CalcTableConfig {
   drawArrows?: boolean;
 }
 
+/** 맞물려 도는 톱니바퀴(g5s1u2.A2). 두 바퀴의 표시 톱니가 다시 만나는 때를 살핀다. */
+export interface GearsConfig {
+  mode: 'gears';
+  /** 왼쪽 바퀴 톱니 수. 3~12, 기본 4. */
+  teethA?: number;
+  /** 오른쪽 바퀴 톱니 수. 3~12, 기본 6. */
+  teethB?: number;
+  /** 돌릴 수 있는 최대 칸. 12~120, 기본 60. */
+  maxSteps?: number;
+  /** true면 돌리기 전에 예측을 정해야 한다. */
+  predict?: boolean;
+  /** 바퀴 수 표시(기본 true). */
+  showLaps?: boolean;
+}
+
 export type PatternConfig =
-  SequenceConfig | ChartConfig | CalcPatternConfig | CalcTableConfig | GrowthConfig;
+  SequenceConfig | ChartConfig | CalcPatternConfig | CalcTableConfig | GrowthConfig | GearsConfig;
 
 /** 정규화한 sequence 설정(상태 안에 둔다. reduce가 config를 받지 않기 때문이다). */
 export interface SequenceSettings {
@@ -241,7 +256,31 @@ export interface GrowthState {
   active: string | null;
 }
 
-export type PatternState = SequenceState | ChartState | CalcState | CalcTableState | GrowthState;
+export interface GearsSettings {
+  teethA: number;
+  teethB: number;
+  maxSteps: number;
+  predict: boolean;
+  showLaps: boolean;
+}
+
+export interface GearsState {
+  mode: 'gears';
+  settings: GearsSettings;
+  /** 돌린 톱니 칸 수(0 이상 정수). */
+  steps: number;
+  /** 지금까지 가 본 가장 먼 칸. */
+  maxReached: number;
+  /** 지나간 맞닿은 칸 수(오름차순, 0 제외). 되돌려도 지우지 않는다. */
+  meetings: number[];
+  /** 쓰고 있는 예측(숫자 글자, 최대 3자리). */
+  predictionDraft: string;
+  /** 정한 예측. 정하면 바꿀 수 없다. */
+  prediction: string | null;
+}
+
+export type PatternState =
+  SequenceState | ChartState | CalcState | CalcTableState | GrowthState | GearsState;
 
 export type SequenceAction =
   | { type: 'place'; slot: number; token: string }
@@ -298,8 +337,16 @@ export type CalcTableAction =
   | { type: 'arrow-commit' }
   | { type: 'arrow-remove'; index: number };
 
+export type GearsAction =
+  | { type: 'turn'; by: 1 | -1 }
+  | { type: 'turn-to'; steps: number }
+  | { type: 'reset' }
+  | { type: 'predict-type'; key: string }
+  | { type: 'predict-backspace' }
+  | { type: 'predict-lock' };
+
 export type PatternAction =
-  SequenceAction | ChartAction | CalcAction | CalcTableAction | GrowthAction;
+  SequenceAction | ChartAction | CalcAction | CalcTableAction | GrowthAction | GearsAction;
 
 export function chartRangeOf(settings: ChartSettings): ChartRange {
   return { from: settings.from, count: settings.count };

@@ -5,6 +5,7 @@
 import type {
   CalcState,
   CalcTableState,
+  GearsState,
   GrowthState,
   SequenceState,
   ChartState,
@@ -18,6 +19,8 @@ export const CALC_CANVAS = 'svg[data-testid="calc-canvas"]';
 export const TABLE_CANVAS = 'svg[data-testid="calc-table-canvas"]';
 
 export const GROWTH_CANVAS = 'svg[data-testid="growth-canvas"]';
+
+export const GEARS_CANVAS = 'svg[data-testid="gears-canvas"]';
 
 export function argsOf(args: unknown): Readonly<Record<string, unknown>> {
   if (args === null || typeof args !== 'object' || Array.isArray(args)) return {};
@@ -42,4 +45,8 @@ export function calcTableOf(state: PatternState): CalcTableState | null {
 
 export function growthOf(state: PatternState): GrowthState | null {
   return state.mode === 'growth' ? state : null;
+}
+
+export function gearsOf(state: PatternState): GearsState | null {
+  return state.mode === 'gears' ? state : null;
 }

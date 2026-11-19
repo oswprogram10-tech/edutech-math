@@ -2,7 +2,7 @@
  * E15의 공개 이벤트·판정. 둘 다 순수 함수다.
  *
  * 이벤트: `token-placed`, `slot-cleared`, `pattern-played`, `code-sent`,
- * `cell-entered`, `cell-selected`, `cell-painted`.
+ * `cell-entered`, `cell-selected`, `cell-painted`, `value-changed`·`gears-met`(gears).
  */
 import type { EngineEvent, EnginePredicate, JsonValue, Observation } from '../../core/engine-sdk';
 import type { TableGrid } from './calc-table';
@@ -19,6 +19,8 @@ export const EVENT_NAMES = [
   'cell-entered',
   'cell-selected',
   'cell-painted',
+  'value-changed',
+  'gears-met',
 ] as const;
 
 export function emit(prev: PatternState, next: PatternState, action: PatternAction): EngineEvent[] {
@@ -26,6 +28,18 @@ export function emit(prev: PatternState, next: PatternState, action: PatternActi
   if (action.type === 'play') return [{ name: 'pattern-played', payload: {} }];
   if (prev === next) return [];
   const events: EngineEvent[] = [];
+
+  if (prev.mode === 'gears' && next.mode === 'gears') {
+    // 돌린 칸 수는 실행기 links로 E03 수직선에 이어진다.
+    if (next.steps !== prev.steps) {
+      events.push({ name: 'value-changed', payload: { value: String(next.steps) } });
+    }
+    for (const step of next.meetings) {
+      if (!prev.meetings.includes(step))
+        events.push({ name: 'gears-met', payload: { steps: step } });
+    }
+    return events;
+  }
 
   if (prev.mode === 'sequence' && next.mode === 'sequence') {
     if (action.type === 'place') {
@@ -348,6 +362,25 @@ export const predicates: Readonly<Record<string, EnginePredicate>> = {
     const revealed = stringList(observation['revealed']);
     return n !== null && revealed !== null && revealed.length <= n;
   },
+
+  metAtLeast: (observation, args) => {
+    const n = intArg(recordOf(args), 'n');
+    const meetings = observation['meetings'];
+    return n !== null && Array.isArray(meetings) && meetings.length >= n;
+  },
+
+  reachedSteps: (observation, args) => {
+    const n = intArg(recordOf(args), 'n');
+    const reached = observation['maxReached'];
+    return n !== null && typeof reached === 'number' && reached >= n;
+  },
+
+  predictionIs: (observation, args) => {
+    const value = intArg(recordOf(args), 'value');
+    return value !== null && observation['prediction'] === value;
+  },
+
+  predictionLocked: (observation) => typeof observation['prediction'] === 'number',
 
   hasMisconception: (observation, args) => {
     const code = recordOf(args)['code'];
