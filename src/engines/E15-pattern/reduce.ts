@@ -5,6 +5,7 @@
 import { EXPR_KEYS, EXPR_MAX_LENGTH } from './calc';
 import { createTableState, isTableConfig, reduceTable } from './calc-table';
 import { drawnCells, inRange } from './chart';
+import { createGearsState, reduceGears } from './gears';
 import { MAX_DIGITS, blankKeys, moveBlank } from './growth';
 import { calcSettings, chartSettings, growthSettings, sequenceSettings } from './settings';
 import { chartRangeOf } from './types';
@@ -14,6 +15,7 @@ import type {
   CalcTableAction,
   ChartAction,
   ChartState,
+  GearsAction,
   GrowthAction,
   GrowthState,
   PatternAction,
@@ -25,6 +27,7 @@ import type {
 
 export function createInitialState(config: PatternConfig): PatternState {
   const mode = (config as { mode?: unknown } | undefined)?.mode;
+  if (mode === 'gears') return createGearsState(config);
   if (mode === 'growth') {
     return { mode: 'growth', settings: growthSettings(config), cells: {}, active: null };
   }
@@ -310,6 +313,7 @@ const SEQUENCE_TYPES: readonly string[] = [
 ];
 
 export function reduce(state: PatternState, action: PatternAction): PatternState {
+  if (state.mode === 'gears') return reduceGears(state, action as GearsAction);
   if (state.mode === 'growth') return reduceGrowth(state, action as GrowthAction);
   if (state.mode === 'calc-pattern') {
     if (state.variant === 'table') return reduceTable(state, action as CalcTableAction);

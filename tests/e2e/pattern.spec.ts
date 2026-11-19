@@ -41,7 +41,7 @@ async function pollObservation(
 
 async function open(
   page: Page,
-  mode: 'sequence' | 'hundred-chart' | 'calc-pattern' | 'growth',
+  mode: 'sequence' | 'hundred-chart' | 'calc-pattern' | 'growth' | 'gears',
   config: unknown,
   query = '',
 ) {
@@ -996,6 +996,153 @@ test('calc-table: 칸·패드·도구 단추 targetSize 이상, 9×9 표도 맨 
   await expect(pad).toBeInViewport();
 });
 
+// ───────── gears (T181) ─────────
+
+const GEARS_BASE = { teethA: 4, teethB: 6 };
+
+function gearsButton(page: Page, name: string): Locator {
+  return page.getByRole('button', { name, exact: true });
+}
+
+function gearsPad(page: Page, name: string): Locator {
+  return page.getByTestId('gears-pad').getByRole('button', { name, exact: true });
+}
+
+async function turnGears(page: Page, times: number): Promise<void> {
+  const forward = gearsButton(page, '한 칸 돌리기');
+  for (let i = 0; i < times; i += 1) await forward.click();
+}
+
+test('gears: 한 칸씩 12번 돌리면 맞닿음 표시가 나오고 metAtLeast 1이다', async ({ page }) => {
+  await open(page, 'gears', GEARS_BASE, 'stage=fit');
+  await expect(page.getByTestId('gears-canvas')).toBeVisible();
+  // 시작 화면에는 최소공배수가 없고 맞닿음 표시도 없다.
+  await expect(page.getByTestId('gears-board')).not.toContainText(/12|24/);
+  await expect(page.getByTestId('gears-meet-star')).toHaveCount(0);
+  await turnGears(page, 11);
+  await pollObservation(page, (o) => o.steps === 11 && o.aligned === false);
+  await expect(page.getByTestId('gears-meet-star')).toHaveCount(0);
+  await turnGears(page, 1);
+  await pollObservation(
+    page,
+    (o) => o.steps === 12 && o.aligned === true && JSON.stringify(o.meetings) === '[12]',
+  );
+  await expect(page.getByTestId('gears-meet-star')).toBeVisible();
+  await expect(page.getByTestId('gears-meet-text')).toHaveText('다시 만났어요!');
+  await expect(page.getByTestId('gears-live')).toContainText('12칸');
+  await expect(page.getByTestId('gears-steps')).toHaveText('돌린 칸: 12');
+  await expect(page.getByTestId('gears-laps-a')).toHaveText('왼쪽 바퀴: 3바퀴와 0칸');
+  // 돌아가는 애니메이션(0.2초 이하)이 끝난 뒤에 찍는다.
+  await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished)));
+  await capture(page, 'T181-gears-met');
+  // 되돌려도 맞닿은 기록은 남는다.
+  await gearsButton(page, '한 칸 되돌리기').click();
+  await pollObservation(page, (o) => o.steps === 11 && JSON.stringify(o.meetings) === '[12]');
+  await expect(page.getByTestId('gears-meet-star')).toHaveCount(0);
+});
+
+test('gears: 키보드만으로 →·←를 눌러 12칸을 돌리고 되돌린다', async ({ page }) => {
+  await open(page, 'gears', GEARS_BASE, 'stage=fit');
+  await page.getByTestId('gears-canvas').focus();
+  for (let i = 0; i < 12; i += 1) await page.keyboard.press('ArrowRight');
+  await pollObservation(page, (o) => o.steps === 12 && JSON.stringify(o.meetings) === '[12]');
+  await expect(page.getByTestId('gears-meet-star')).toBeVisible();
+  await page.keyboard.press('ArrowLeft');
+  await pollObservation(page, (o) => o.steps === 11);
+});
+
+test('gears: 왼쪽 바퀴를 시계 방향으로 끌면 칸이 늘고, 시계 반대로 끌면 줄어든다', async ({
+  page,
+}) => {
+  await open(page, 'gears', GEARS_BASE, 'stage=fit');
+  const body = await page.locator('[data-testid="gears-rotor-a"] circle').first().boundingBox();
+  if (!body) throw new Error('왼쪽 바퀴를 찾지 못했습니다.');
+  const cx = body.x + body.width / 2;
+  const cy = body.y + body.height / 2;
+  const radius = body.width / 2 / 2;
+  const at = (degrees: number) => ({
+    x: cx + radius * Math.cos((degrees * Math.PI) / 180),
+    y: cy + radius * Math.sin((degrees * Math.PI) / 180),
+  });
+  // 4칸 바퀴: 한 칸은 90도. 시계 방향(화면에서 각도가 커지는 쪽)으로 190도 끌면 2칸이다.
+  const start = at(-60);
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  for (let deg = -60; deg <= 130; deg += 10) {
+    const point = at(deg);
+    await page.mouse.move(point.x, point.y);
+  }
+  await page.mouse.up();
+  await pollObservation(page, (o) => o.steps === 2);
+  // 거꾸로 90도 끌면 한 칸 줄어든다.
+  const back = at(130);
+  await page.mouse.move(back.x, back.y);
+  await page.mouse.down();
+  for (let deg = 130; deg >= 40; deg -= 10) {
+    const point = at(deg);
+    await page.mouse.move(point.x, point.y);
+  }
+  await page.mouse.up();
+  await pollObservation(page, (o) => o.steps === 1);
+});
+
+test('gears: 예측 모드는 정하기 전에 돌릴 수 없고, 24를 정하면 PRODUCT 오개념이다', async ({
+  page,
+}) => {
+  await open(page, 'gears', { ...GEARS_BASE, predict: true }, 'overlay=meet-trail');
+  await expect(gearsButton(page, '한 칸 돌리기')).toBeDisabled();
+  await expect(page.getByTestId('gears-lock-reason')).toBeVisible();
+  await gearsPad(page, '2').click();
+  await gearsPad(page, '4').click();
+  await gearsPad(page, '예측 정하기').click();
+  await pollObservation(
+    page,
+    (o) => o.prediction === 24 && (o.misconceptions ?? []).includes('MC-LCM-AS-PRODUCT'),
+  );
+  await expect(page.getByTestId('gears-prediction-text')).toHaveText('내 예측: 24');
+  await expect(gearsButton(page, '한 칸 돌리기')).toBeEnabled();
+  await toggleOverlay(page);
+  await expectAligned(page, 'meet-trail', 'gears-canvas');
+  // 0~24 눈금에서 왼쪽 7개, 오른쪽 5개, 겹침 2곳
+  await expect(page.locator('[data-testid="meet-trail-a"]')).toHaveCount(7);
+  await expect(page.locator('[data-testid="meet-trail-b"]')).toHaveCount(5);
+  await expect(page.locator('[data-testid="meet-trail-meet"]')).toHaveCount(2);
+  await capture(page, 'T181-overlay-meet-trail');
+});
+
+test('gears: 키보드로 예측을 쓰고 Enter로 정한 뒤 돌린다', async ({ page }) => {
+  await open(page, 'gears', { ...GEARS_BASE, predict: true }, 'stage=fit');
+  await gearsPad(page, '1').focus();
+  await page.keyboard.press('1');
+  await page.keyboard.press('2');
+  await page.keyboard.press('Backspace');
+  await page.keyboard.press('2');
+  await page.keyboard.press('Enter');
+  await pollObservation(page, (o) => o.prediction === 12);
+  await page.getByTestId('gears-canvas').focus();
+  await page.keyboard.press('ArrowRight');
+  await pollObservation(page, (o) => o.steps === 1);
+});
+
+test('gears: 단추가 targetSize 이상이고 큰 바퀴(12·12)도 톱니 한 칸이 32px 이상이다', async ({
+  page,
+}) => {
+  await open(page, 'gears', { teethA: 12, teethB: 12 }, 'stage=fit');
+  await expectMin(gearsButton(page, '한 칸 돌리기'), 48, '돌리기(48)');
+  await expectMin(gearsButton(page, '한 칸 되돌리기'), 48, '되돌리기(48)');
+  await page.getByRole('button', { name: '터치 48px' }).click();
+  await expectMin(gearsButton(page, '한 칸 돌리기'), 64, '돌리기(64)');
+  // 톱니 한 칸(논리 60)이 화면에서 32px 이상이다(줄이지 않고 판 안에서 스크롤한다).
+  const canvas = await page.getByTestId('gears-canvas').boundingBox();
+  if (!canvas) throw new Error('판을 찾지 못했습니다.');
+  const logicalWidth = await page.evaluate(() => {
+    const svg = document.querySelector('[data-testid="gears-canvas"]');
+    return Number(svg?.getAttribute('viewBox')?.split(' ')[2] ?? '0');
+  });
+  console.log('T181 gears 12·12 판', Math.round(canvas.width), Math.round(canvas.height));
+  expect((canvas.width / logicalWidth) * 60).toBeGreaterThanOrEqual(32 - 0.5);
+});
+
 /** 화면 기준 이미지: 첫 화면 세 장(extend·translate·chart full). 크롬북·아이패드만 찍는다. */
 async function stageShot(page: Page, name: string): Promise<void> {
   await page.evaluate(async () => {
@@ -1066,5 +1213,15 @@ test.describe('첫 화면 기준 이미지', () => {
   test('growth flat stairs', async ({ page }) => {
     await open(page, 'growth', { shape: 'stairs', look: 'flat' }, 'stage=fit');
     await stageShot(page, 'pattern-growth-flat');
+  });
+
+  test('gears 처음 화면', async ({ page }) => {
+    await open(page, 'gears', GEARS_BASE, 'stage=fit');
+    await stageShot(page, 'pattern-gears');
+  });
+
+  test('gears 예측 모드', async ({ page }) => {
+    await open(page, 'gears', { ...GEARS_BASE, predict: true }, 'stage=fit');
+    await stageShot(page, 'pattern-gears-predict');
   });
 });

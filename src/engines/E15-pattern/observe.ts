@@ -14,6 +14,7 @@ import {
 } from './calc';
 import { amountIsCorrect, magnifierLeft, rowColCells as tableRowColCells } from './calc-table';
 import { entryValue, rowColCells } from './chart';
+import { gearsMisconceptions, isMeeting } from './gears';
 import { allBlanksCorrect, blankKeys, growthMisconceptions } from './growth';
 import {
   continuation,
@@ -27,6 +28,7 @@ import type {
   CalcState,
   CalcTableState,
   ChartState,
+  GearsState,
   GrowthState,
   PatternState,
   SequenceState,
@@ -191,7 +193,27 @@ function growthObservation(state: GrowthState): Observation {
   };
 }
 
+/**
+ * gears Observation. 최소공배수 값은 넣지 않는다.
+ * `meetings`는 학생이 지나간 칸의 기록이다. 예측은 정한 뒤에만 숫자로 싣는다.
+ */
+function gearsObservation(state: GearsState): Observation {
+  const { settings } = state;
+  return {
+    mode: 'gears',
+    teethA: settings.teethA,
+    teethB: settings.teethB,
+    steps: state.steps,
+    maxReached: state.maxReached,
+    meetings: [...state.meetings],
+    aligned: isMeeting(settings, state.steps),
+    prediction: state.prediction === null ? null : Number(state.prediction),
+    misconceptions: gearsMisconceptions(state),
+  };
+}
+
 export function observe(state: PatternState): Observation {
+  if (state.mode === 'gears') return gearsObservation(state);
   if (state.mode === 'growth') return growthObservation(state);
   if (state.mode === 'calc-pattern') {
     return state.variant === 'table' ? calcTableObservation(state) : calcObservation(state);

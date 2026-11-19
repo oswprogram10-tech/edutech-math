@@ -686,3 +686,68 @@
   font-size: 1.3rem;
   font-weight: 800;
 }
+
+/* ───────── gears ───────── */
+
+.boardArea[data-gears='true'] {
+  min-height: 200px;
+}
+
+@media (orientation: portrait) {
+  .wrap > .boardArea[data-gears='true'],
+  .stageRow > .boardArea[data-gears='true'] {
+    min-height: min(var(--gears-min-h), 60dvh);
+  }
+}
+
+.boardArea[data-gears='true'][data-scroll='true'] {
+  overflow: auto;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+.gearsSvg:focus-visible {
+  outline: 3px solid #e8872e;
+  outline-offset: 3px;
+}
+
+.gearRotor {
+  transition: transform 0.18s ease-out;
+}
+
+.gearRotor[data-dragging='true'] {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gearRotor {
+    transition: none;
+  }
+}
+
+.gearsRecord {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-top: 0.4rem;
+}
+
+.gearsSteps {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #1d2330;
+}
+
+.gearsLap {
+  margin: 0;
+  font-size: 0.98rem;
+  color: #3d485c;
+}
+
+.gearsDraft {
+  margin: 0 0 0.4rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1d2330;
+}
