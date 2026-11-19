@@ -51,6 +51,7 @@ export const numberLineStrings = {
   },
 
   skip: {
+    scrollLabel: '수직선, 옆으로 밀어 볼 수 있어요',
     stepGroup: '몇씩 뛸까요',
     stepChoice: (step: string) => `${step}씩`,
     hop: '한 번 뛰기',

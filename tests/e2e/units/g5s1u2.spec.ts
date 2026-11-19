@@ -486,3 +486,29 @@ test('A2 두 화면 판과 응답 판이 겹치지 않고 모두 닿는다', asy
   await expectContentPanelsReachable(page);
   await expectInsideScroller(slot(page, 'response'));
 });
+
+test('A2 T1 수직선은 좁은 판에서도 0.7배 이상으로 읽히고 옆으로 밀어 끝 눈금(48)을 본다', async ({
+  page,
+}) => {
+  await openA2(page);
+  const canvas = slot(page, 'line').getByTestId('number-line-canvas');
+  const box = await canvas.boundingBox();
+  if (!box) throw new Error('수직선을 찾지 못했습니다.');
+  expect(box.width).toBeGreaterThanOrEqual(1000 * 0.7 - 1);
+
+  // 눈금 글자 하나의 화면 높이.
+  const label = canvas.locator('[data-row="0"] [data-tick-value="0"] text');
+  const labelBox = await label.boundingBox();
+  if (!labelBox) throw new Error('눈금 글자를 찾지 못했습니다.');
+  expect(labelBox.height).toBeGreaterThanOrEqual(12);
+
+  // 스크롤 상자 안에서 끝 눈금(48)까지 밀어 본다.
+  const scroller = slot(page, 'line').getByTestId('skip-scroll');
+  await expect(scroller).toHaveAttribute('aria-label', '수직선, 옆으로 밀어 볼 수 있어요');
+  await scroller.evaluate((node) => {
+    node.scrollLeft = node.scrollWidth;
+  });
+  const end = canvas.locator('[data-row="0"] [data-tick-value="48"] line');
+  await expect(end).toHaveCount(1);
+  await expect(end).toBeInViewport();
+});
