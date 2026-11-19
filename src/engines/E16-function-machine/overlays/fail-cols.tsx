@@ -9,10 +9,11 @@ import { columnHolds } from '../relation-check';
 import { functionStrings as S } from '../strings.ko';
 import { colX, row0Top } from '../table-layout';
 import type { FunctionConfig, FunctionState } from '../types';
-import { RELATION_CANVAS, overlayData } from './helpers';
+import { RELATION_CANVAS, onGrid, overlayData } from './helpers';
 
 export function FailColsOverlay({ state }: OverlayProps<FunctionConfig, FunctionState>) {
   const patternId = useId();
+  if (onGrid(state)) return null;
   const { columns, layout, rel } = overlayData(state);
   if (rel === null) return null;
   const holds = columnHolds(rel, columns);

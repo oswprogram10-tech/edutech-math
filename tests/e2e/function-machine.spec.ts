@@ -279,8 +279,8 @@ async function expectAligned(page: Page, overlay: string): Promise<void> {
 }
 
 /** 표가 보이도록 조작 묶음을 스크롤한 뒤 판(stage) 전체를 찍는다. */
-async function captureStage(page: Page, name: string): Promise<void> {
-  await page.getByTestId('relation-canvas').scrollIntoViewIfNeeded();
+async function captureStage(page: Page, name: string, canvasId = 'relation-canvas'): Promise<void> {
+  await page.getByTestId(canvasId).scrollIntoViewIfNeeded();
   await page
     .locator('main > div[class*="stage"]')
     .first()
@@ -457,4 +457,191 @@ test('키패드 맨 아래 단추가 스크롤로 닿아 눌린다(세 모드)',
   await expect(done2).toBeInViewport();
   await done2.click();
   await expect(page.getByTestId('rule-input')).toHaveAttribute('data-active', 'true');
+});
+
+// ─────────────────────────────────────────────────────────────
+// T174 rule-shooter: 관계식 레이저로 보석 맞히기
+// ─────────────────────────────────────────────────────────────
+
+const SHOOTER = {
+  gems: [
+    [1, 3],
+    [2, 6],
+    [4, 12],
+  ],
+  rule: '□ = ○ × 3',
+};
+
+/** 식 키패드로 식을 쓰고 "발사"를 누른다(발사 모드는 처음부터 식 키패드가 열려 있다). */
+async function shootByPad(page: Page, text: string, fire = true): Promise<void> {
+  await pad(page, '모두 지우기').click();
+  for (const ch of text) {
+    if (ch === ' ') continue;
+    await pad(page, ch).click();
+  }
+  if (fire) await pad(page, '발사').click();
+}
+
+async function openShooter(page: Page, config: unknown = SHOOTER, query = 'stage=fit') {
+  await open(page, 'rule-shooter', config, query);
+  await expect(page.locator('[data-gem]')).toHaveCount(3);
+}
+
+test('rule-shooter: □ = ○ + 2는 ✓ 1개·✕ 2개·패널 2줄·ONE-PAIR, 이어서 □ = ○ × 3은 allHit', async ({
+  page,
+}) => {
+  await openShooter(page);
+  await expect(page.locator('[data-badge]')).toHaveCount(0);
+  await expect(page.getByTestId('miss-panel')).toHaveCount(0);
+
+  await shootByPad(page, '□ = ○ + 2');
+  await pollObservation(
+    page,
+    (o) =>
+      (o.misconceptions ?? []).includes('MC-PATTERN-ONE-PAIR') &&
+      o.hitCount === 1 &&
+      o.allHit === false,
+  );
+  await expect(page.locator('[data-badge="hit"]')).toHaveCount(1);
+  await expect(page.locator('[data-badge="miss"]')).toHaveCount(2);
+  await expect(page.locator('[data-testid="miss-panel"] [data-miss]')).toHaveCount(2);
+  await expect(page.locator('[data-testid="miss-panel"] [data-miss] span').first()).toHaveText(
+    '이 보석의 ○는 2인데, 내 식에 넣으면 □는 4이에요.',
+  );
+  // 숨은 규칙(× 3)이 판 화면에 없다.
+  const html = await page.getByTestId('function-board').innerHTML();
+  expect(html).not.toContain('× 3');
+  await capture(page, 'T174-shooter-miss');
+
+  await shootByPad(page, '□ = ○ × 3');
+  await pollObservation(page, (o) => o.allHit === true && o.shotCount === 2);
+  await expect(page.locator('[data-badge="hit"]')).toHaveCount(3);
+  await expect(page.getByTestId('miss-panel')).toHaveCount(0);
+  // 식을 고치면 표시가 사라진다.
+  await pad(page, '지우기').click();
+  await expect(page.locator('[data-badge]')).toHaveCount(0);
+});
+
+test('rule-shooter 키보드만: b=o+2 Enter, 이어서 b=o*3 Enter', async ({ page }) => {
+  await openShooter(page);
+  await page.getByTestId('rule-input').focus();
+  await page.keyboard.type('b=o+2');
+  await page.keyboard.press('Enter');
+  await pollObservation(page, (o) => o.hitCount === 1 && o.allHit === false);
+  await expect(page.locator('[data-badge="miss"]')).toHaveCount(2);
+  for (let i = 0; i < 5; i += 1) await page.keyboard.press('Backspace');
+  await page.keyboard.type('b=o*3');
+  await page.keyboard.press('Enter');
+  await pollObservation(page, (o) => o.allHit === true);
+  await expect(page.locator('[data-badge="hit"]')).toHaveCount(3);
+});
+
+test('rule-shooter 레이저 점은 원과 십자다', async ({ page }) => {
+  await openShooter(page);
+  await shootByPad(page, '□ = ○ × 3');
+  await pollObservation(page, (o) => o.allHit === true);
+  // 격자 ○ 0..7, □ 0..15 안: □ = ○ × 3은 ○ = 0..5
+  await expect(page.locator('[data-laser]')).toHaveCount(6);
+  await expect(page.locator('[data-laser="1"] circle')).toHaveCount(1);
+  await expect(page.locator('[data-laser="1"] path')).toHaveCount(1);
+});
+
+test('rule-shooter look: table은 격자 없이 보석 표와 ✓/✕만 그린다', async ({ page }) => {
+  await open(page, 'rule-shooter', { ...SHOOTER, look: 'table' }, 'stage=fit');
+  await expect(page.getByTestId('shooter-canvas')).toHaveCount(0);
+  await expect(page.getByTestId('relation-canvas')).toBeVisible();
+  await expect(page.locator('[data-col]')).toHaveCount(3);
+  await shootByPad(page, '□ = ○ + 2');
+  await pollObservation(page, (o) => o.hitCount === 1);
+  await expect(page.locator('[data-mark="ok"]')).toHaveCount(1);
+  await expect(page.locator('[data-mark="bad"]')).toHaveCount(2);
+  await expect(page.locator('[data-laser]')).toHaveCount(0);
+  await capture(page, 'T174-shooter-table');
+});
+
+test('오버레이 laser-miss: shooter-canvas와 1px 안, 빗나간 보석 둘에 점선', async ({ page }) => {
+  await openShooter(page, SHOOTER, 'stage=fit&overlay=laser-miss');
+  await shootByPad(page, '□ = ○ + 2');
+  await pollObservation(page, (o) => o.hitCount === 1);
+  await toggleOverlay(page);
+  const canvas = page.getByTestId('shooter-canvas');
+  const layer = page.locator('[data-overlay="laser-miss"]');
+  await expect(layer).toBeVisible();
+  await expect
+    .poll(async () => {
+      const a = await canvas.boundingBox();
+      const b = await layer.locator('svg').first().boundingBox();
+      if (!a || !b) return Number.POSITIVE_INFINITY;
+      return Math.max(
+        Math.abs(a.x - b.x),
+        Math.abs(a.y - b.y),
+        Math.abs(a.width - b.width),
+        Math.abs(a.height - b.height),
+      );
+    })
+    .toBeLessThanOrEqual(1);
+  await expect(page.locator('[data-testid="laser-miss-gap"]')).toHaveCount(2);
+  await expect(page.locator('[data-testid="laser-miss-hit"]')).toHaveCount(1);
+  await expect(page.locator('[data-testid="laser-miss-text"]').first()).toHaveText(
+    '보석 □ = 6, 내 식 □ = 4',
+  );
+  await captureStage(page, 'T174-overlay-laser-miss', 'shooter-canvas');
+});
+
+test('오버레이 swap-check: 격자에서는 shooter-canvas 위에 그린다', async ({ page }) => {
+  await openShooter(page, SHOOTER, 'stage=fit&overlay=swap-check');
+  await shootByPad(page, '○ = □ × 3');
+  await pollObservation(page, (o) => (o.misconceptions ?? []).includes('MC-CORR-SWAP-VARS'));
+  await toggleOverlay(page);
+  const layer = page.locator('[data-overlay="swap-check"]');
+  await expect(layer).toBeVisible();
+  await expect
+    .poll(async () => {
+      const a = await page.getByTestId('shooter-canvas').boundingBox();
+      const b = await layer.locator('svg').first().boundingBox();
+      if (!a || !b) return Number.POSITIVE_INFINITY;
+      return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y), Math.abs(a.width - b.width));
+    })
+    .toBeLessThanOrEqual(1);
+  await expect(page.locator('[data-testid="swap-check-mine"]')).toHaveText(
+    '○ = 1일 때 내 식의 □ = 1/3',
+  );
+});
+
+test('rule-shooter 터치 타깃: 보석 24px 이상, 발사·키패드 단추 48px 이상(64 설정은 64)', async ({
+  page,
+}) => {
+  await openShooter(page);
+  const gem = await page.locator('[data-gem="0"] polygon').boundingBox();
+  if (!gem) throw new Error('보석을 찾지 못했습니다.');
+  expect(Math.min(gem.width, gem.height)).toBeGreaterThanOrEqual(24);
+  await expectMin(pad(page, '발사'), 48, '발사');
+  await expectMin(pad(page, '○'), 48, '식 키패드 ○');
+  await page.getByRole('button', { name: '터치 48px' }).click();
+  await expectMin(pad(page, '발사'), 64, '발사(64)');
+  await expectMin(pad(page, '5'), 64, '키패드 5(64)');
+});
+
+test('화면 기준: rule-shooter □ = ○ + 2를 발사한 뒤', async ({ page }) => {
+  await openShooter(page);
+  await shootByPad(page, '□ = ○ + 2');
+  await pollObservation(page, (o) => o.hitCount === 1);
+  // 발사 단추를 누르며 조작 묶음이 아래로 스크롤됐으므로 맨 위(빗나간 보석 패널)로 되돌려 찍는다.
+  await page
+    .locator('[class*="sideStack"]')
+    .first()
+    .evaluate((element) => {
+      element.scrollTop = 0;
+    });
+  await expectPageSnapshot(page, 'function-machine-rule-shooter.png');
+});
+
+test('rule-shooter: 키패드 맨 아래 단추(발사)가 스크롤로 닿아 눌린다', async ({ page }) => {
+  await openShooter(page);
+  await pad(page, '○').click();
+  const fire = pad(page, '발사');
+  await fire.scrollIntoViewIfNeeded();
+  await expect(fire).toBeInViewport();
+  await fire.click();
+  await pollObservation(page, (o) => o.testedText === '○');
 });

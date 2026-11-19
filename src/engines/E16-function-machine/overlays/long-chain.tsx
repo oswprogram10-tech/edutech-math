@@ -8,7 +8,7 @@ import type { OverlayProps } from '../../../core/engine-sdk';
 import { functionStrings as S } from '../strings.ko';
 import { footTop } from '../table-layout';
 import type { FunctionConfig, FunctionState } from '../types';
-import { RELATION_CANVAS, argsOf, neighborPairs, overlayData, signed } from './helpers';
+import { RELATION_CANVAS, onGrid, argsOf, neighborPairs, overlayData, signed } from './helpers';
 
 const SHOWN = 3;
 const CHIP_W = 64;
@@ -16,6 +16,7 @@ const CHIP_H = 30;
 const GAP = 22;
 
 export function LongChainOverlay({ state, args }: OverlayProps<FunctionConfig, FunctionState>) {
+  if (onGrid(state)) return null;
   const { columns, layout } = overlayData(state);
   const pair = neighborPairs(columns)[0];
   if (pair === undefined) return null;

@@ -46,7 +46,7 @@ const ENGINES: readonly EngineCase[] = [
   },
   { label: 'E12', heading: '3D 입체', modes: ['cubes'] },
   { label: 'E15', heading: '규칙·패턴', modes: ['sequence'] },
-  { label: 'E16', heading: '대응 관계', modes: ['black-box', 'table', 'covary'] },
+  { label: 'E16', heading: '대응 관계', modes: ['black-box', 'table', 'covary', 'rule-shooter'] },
   {
     label: 'E17',
     heading: '분류기',

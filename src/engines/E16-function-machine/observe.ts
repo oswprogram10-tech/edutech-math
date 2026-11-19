@@ -3,7 +3,8 @@
  * View는 이 값을 읽지 않는다. 숨은 규칙·빈칸 정답 문자열 자체는 넣지 않는다.
  */
 import type { JsonValue, Observation } from '../../core/engine-sdk';
-import { blankStatus, columnsOf, judge } from './relation-check';
+import { blankStatus, columnsOf, judge, tryParse } from './relation-check';
+import { gemHits, gemsOf, hitIndexes } from './shooter';
 import type { FunctionState } from './types';
 
 export function observe(state: FunctionState): Observation {
@@ -33,6 +34,23 @@ export function observe(state: FunctionState): Observation {
       ...common,
       trials: state.trials.map(([x, y]) => [x, y]),
       trialCount: state.trials.length,
+    };
+  }
+  if (state.mode === 'rule-shooter') {
+    // 지금 시험한 식이 읽히면 그 식으로 맞힌 보석. 읽히지 않으면 없다.
+    const parsed = state.tested === null ? null : tryParse(state.tested.text);
+    const gems = gemsOf(state.settings);
+    const hits = parsed !== null && parsed.ok ? hitIndexes(gemHits(parsed.rel, gems)) : [];
+    const allHit = j.ruleValid && gems.length >= 2 && hits.length === gems.length;
+    return {
+      ...common,
+      // 숨은 rule이 없으면 "보석을 모두 맞힘"이 곧 판정이다.
+      matchesHidden: state.settings.rule === '' ? allHit : j.matchesHidden,
+      gems: state.settings.gems.map(([x, y]) => [x, y]),
+      hits,
+      hitCount: hits.length,
+      allHit,
+      shotCount: state.shots.length,
     };
   }
   const blanks = blankStatus(state);

@@ -61,10 +61,11 @@ describe('엔진 정의', () => {
   it('ID·이름·모드', () => {
     expect(definition.id).toBe('E16');
     expect(definition.name).toBe('대응 관계');
-    expect(definition.modes).toEqual(['black-box', 'table', 'covary']);
+    expect(definition.modes).toEqual(['black-box', 'table', 'covary', 'rule-shooter']);
     expect(Object.keys(definition.overlays ?? {}).sort()).toEqual([
       'diff-arrows',
       'fail-cols',
+      'laser-miss',
       'long-chain',
       'swap-check',
     ]);
@@ -349,7 +350,13 @@ describe('events', () => {
   });
 
   it('emit이 내는 이름은 모두 events 목록에 있다', () => {
-    expect(definition.events).toEqual(['trial-added', 'rule-tested', 'cell-entered', 'x-changed']);
+    expect(definition.events).toEqual([
+      'trial-added',
+      'rule-tested',
+      'cell-entered',
+      'x-changed',
+      'laser-fired',
+    ]);
   });
 });
 

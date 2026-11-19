@@ -4,6 +4,7 @@
  */
 import { Rational, formatRelation } from '../../core/math';
 import { columnsOf, hiddenOf, safeSolve, tryParse } from './relation-check';
+import { gemHits, gemsOf, hitIndexes } from './shooter';
 import { settingsFor } from './settings';
 import type {
   BlackBoxState,
@@ -11,6 +12,7 @@ import type {
   FunctionAction,
   FunctionConfig,
   FunctionState,
+  ShooterState,
   Target,
   TableState,
 } from './types';
@@ -30,6 +32,9 @@ export function createInitialState(config: FunctionConfig): FunctionState {
     target: 'input' as Target,
     notice: null,
   };
+  if (mode === 'rule-shooter') {
+    return { ...base, target: 'rule', mode, settings, shots: [] };
+  }
   if (mode === 'table') {
     return { ...base, mode, settings, cells: {}, active: null };
   }
@@ -59,7 +64,7 @@ function editInput(
   state: FunctionState,
   edit: (current: string, max: number) => string,
 ): FunctionState {
-  if (state.settings.error !== null) return state;
+  if (state.settings.error !== null || state.mode === 'rule-shooter') return state;
   if (state.mode === 'black-box') {
     const draft = edit(state.draft, MAX_DRAFT_LENGTH);
     if (draft === state.draft && state.notice === null) return state;
@@ -126,6 +131,18 @@ function testRule(state: FunctionState): FunctionState {
   return { ...state, tested: { text, ok: true, errorAt: null }, ruleHistory };
 }
 
+/** 발사: 식을 시험하고, 읽힌 식이면 맞힌 보석을 발사 기록에 더한다. */
+function fire(state: ShooterState): ShooterState {
+  const next = testRule(state);
+  if (next === state || next.mode !== 'rule-shooter') return state;
+  const tested = next.tested;
+  if (tested === null || !tested.ok) return next;
+  const parsed = tryParse(tested.text);
+  if (!parsed.ok) return next;
+  const hits = hitIndexes(gemHits(parsed.rel, gemsOf(next.settings)));
+  return { ...next, shots: [...next.shots, { text: tested.text, hits }].slice(-HISTORY_LIMIT) };
+}
+
 function activate(state: TableState | CovaryState, cell: string): FunctionState {
   const blank = columnsOf(state).some((column) => column.x.key === cell || column.y.key === cell);
   if (!blank) return state;
@@ -146,6 +163,14 @@ function setX(state: CovaryState, raw: string): CovaryState {
 }
 
 export function reduce(state: FunctionState, action: FunctionAction): FunctionState {
+  // 발사 모드에는 수 입력 칸이 없다.
+  if (
+    state.mode === 'rule-shooter' &&
+    (action.type === 'type' || action.type === 'backspace' || action.type === 'clear') &&
+    action.target === 'input'
+  ) {
+    return state;
+  }
   switch (action.type) {
     case 'type': {
       if (action.target === 'input') {
@@ -200,13 +225,18 @@ export function reduce(state: FunctionState, action: FunctionAction): FunctionSt
     case 'insert-input':
       return state.mode === 'black-box' ? insertInput(state) : state;
     case 'test-rule':
-      return testRule(state);
+    case 'fire':
+      if (state.mode === 'rule-shooter') return fire(state);
+      return action.type === 'fire' ? state : testRule(state);
     case 'focus': {
+      if (state.mode === 'rule-shooter' && action.target === 'input') return state;
       if (action.target === 'rule' && !state.settings.ruleInput) return state;
       return withTarget(state, action.target);
     }
     case 'activate':
-      return state.mode === 'black-box' || typeof action.cell !== 'string'
+      return state.mode === 'black-box' ||
+        state.mode === 'rule-shooter' ||
+        typeof action.cell !== 'string'
         ? state
         : activate(state, action.cell);
     case 'set-x':

@@ -307,9 +307,60 @@
   overflow: hidden;
 }
 
+.shooterSvg {
+  display: block;
+  flex: none;
+  border-radius: 12px;
+  background: #fbfaf6;
+  border: 1px solid #d7deea;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.gemIcon {
+  flex: none;
+}
+
+.missPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.missRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.5rem;
+  border: 2px solid #c0392b;
+  border-radius: 10px;
+  background: #fff6f5;
+  color: #1d2330;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
 @media (prefers-reduced-motion: no-preference) {
+  .laser {
+    animation: functionLaserDrop 0.2s ease-out both;
+  }
+
   .outPop {
     animation: functionOutPop 0.7s ease-out both;
+  }
+}
+
+@keyframes functionLaserDrop {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
   }
 }
 

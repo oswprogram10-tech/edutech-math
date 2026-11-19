@@ -7,9 +7,10 @@ import { CanvasAlignedOverlay } from '../../../core/engine-sdk';
 import type { OverlayProps } from '../../../core/engine-sdk';
 import { pairsOf, safeSolve } from '../relation-check';
 import { functionStrings as S } from '../strings.ko';
+import { gemsOf, pointX, pointY, shooterLayout } from '../shooter';
 import { colX, footTop, row0Top } from '../table-layout';
 import type { FunctionConfig, FunctionState } from '../types';
-import { RELATION_CANVAS, overlayData } from './helpers';
+import { RELATION_CANVAS, SHOOTER_CANVAS, onGrid, overlayData } from './helpers';
 
 export function SwapCheckOverlay({ state }: OverlayProps<FunctionConfig, FunctionState>) {
   const { columns, layout, rel } = overlayData(state);
@@ -20,6 +21,64 @@ export function SwapCheckOverlay({ state }: OverlayProps<FunctionConfig, Functio
   const pair = pairsOf([column])[0];
   if (pair === undefined) return null;
   const mine = safeSolve(rel, pair[0]);
+  if (onGrid(state) && state.mode === 'rule-shooter') {
+    // 격자에서는 본 캔버스가 shooter-canvas다. 첫 보석에 같은 설명을 단다.
+    const grid = shooterLayout(state.settings.grid);
+    const gem = gemsOf(state.settings)[index];
+    if (gem === undefined) return null;
+    const gx = pointX(grid, gem.x);
+    const gy = pointY(grid, gem.y);
+    const left = grid.left + 6;
+    return (
+      <CanvasAlignedOverlay
+        testId="swap-check"
+        canvasSelector={SHOOTER_CANVAS}
+        logicalWidth={grid.width}
+        logicalHeight={grid.height}
+      >
+        <rect
+          x={gx - 22}
+          y={gy - 22}
+          width={44}
+          height={44}
+          fill="none"
+          stroke="#2f6fde"
+          strokeWidth={5}
+          rx={6}
+          data-testid="swap-check-col"
+        />
+        <rect
+          x={left - 4}
+          y={grid.top + 2}
+          width={Math.min(grid.plotW - 4, 330)}
+          height={50}
+          rx={6}
+          fill="#fbfaf6"
+          opacity={0.92}
+        />
+        <text
+          x={left}
+          y={grid.top + 18}
+          fontSize={14}
+          fontWeight={800}
+          fill="#1d4fa8"
+          data-testid="swap-check-mine"
+        >
+          {S.overlay.swapLine(pair[0].toString(), mine === null ? '?' : mine.toString())}
+        </text>
+        <text
+          x={left}
+          y={grid.top + 40}
+          fontSize={14}
+          fontWeight={700}
+          fill="#3d485c"
+          data-testid="swap-check-actual"
+        >
+          {S.overlay.swapActualGem(pair[1].toString())}
+        </text>
+      </CanvasAlignedOverlay>
+    );
+  }
   const top = footTop(layout) + 4;
   const chairs = state.mode === 'covary' && state.settings.scene === 'chairs-legs';
   const iconX = layout.width - 92;

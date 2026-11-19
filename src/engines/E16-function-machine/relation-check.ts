@@ -113,6 +113,14 @@ export function columnsOf(state: FunctionState): Column[] {
       y: cellOf(row.y, `${index}.y`, state.cells),
     }));
   }
+  if (state.mode === 'rule-shooter') {
+    // 보석 하나 = 한 열. 과제 자료(보석)이므로 정답 노출이 아니다.
+    return state.settings.gems.map(([x, y], index) => ({
+      id: String(index),
+      x: { value: x, blank: false, key: null },
+      y: { value: y, blank: false, key: null },
+    }));
+  }
   const rel = hiddenOf(state.settings.rule);
   return state.visited.map((x) => {
     const blank = state.settings.blankRows.includes(Number(x));
@@ -192,7 +200,9 @@ export interface BlankStatus {
 }
 
 export function blankStatus(state: FunctionState): BlankStatus {
-  if (state.mode === 'black-box') return { total: 0, filled: 0, correct: 0 };
+  if (state.mode === 'black-box' || state.mode === 'rule-shooter') {
+    return { total: 0, filled: 0, correct: 0 };
+  }
   const columns = columnsOf(state);
   let total = 0;
   let filled = 0;

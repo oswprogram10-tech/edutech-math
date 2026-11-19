@@ -8,10 +8,11 @@ import { CanvasAlignedOverlay } from '../../../core/engine-sdk';
 import type { OverlayProps } from '../../../core/engine-sdk';
 import { arrowTop, colX, row0Top } from '../table-layout';
 import type { FunctionConfig, FunctionState } from '../types';
-import { RELATION_CANVAS, neighborPairs, overlayData, signed } from './helpers';
+import { RELATION_CANVAS, onGrid, neighborPairs, overlayData, signed } from './helpers';
 
 export function DiffArrowsOverlay({ state }: OverlayProps<FunctionConfig, FunctionState>) {
   const markerId = useId();
+  if (onGrid(state)) return null;
   const { columns, layout } = overlayData(state);
   const pairs = neighborPairs(columns);
   if (pairs.length === 0) return null;
