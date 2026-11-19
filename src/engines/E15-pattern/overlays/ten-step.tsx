@@ -3,7 +3,8 @@
  *
  * 오개념이 난 가린 칸의 바로 위 칸 수를 10 막대와 낱개 점으로 칸 옆에 그리고,
  * 그 아래에 "10 막대 1개 더"를 화살표로 그린다. 아래 칸 수 자체는 쓰지 않는다.
- * `args: {cell}`이 없으면 Observation과 같은 규칙으로 첫 오개념 칸을 쓴다.
+ * `args: {cell}`이 범위 안의 정수면 가린 칸이 아니어도(칸 고르기 과제) 그 칸을 쓴다.
+ * 없으면 Observation과 같은 규칙으로 첫 오개념 칸을 쓴다.
  * 위 칸이 범위 밖이거나 그 칸도 가려져 있으면 아무것도 그리지 않는다.
  */
 import { CanvasAlignedOverlay } from '../../../core/engine-sdk';
@@ -64,7 +65,7 @@ export function TenStepOverlay({ state, args }: OverlayProps<PatternConfig, Patt
   const range = chartRangeOf(chart.settings);
   const requested = argsOf(args)['cell'];
   const cell =
-    typeof requested === 'number' && Number.isInteger(requested) && chart.hidden.includes(requested)
+    typeof requested === 'number' && Number.isInteger(requested) && inRange(range, requested)
       ? requested
       : rowColCells(range, chart.hidden, chart.entries)[0];
   if (cell === undefined) return null;

@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 import { PREVIEW_URL } from '../../../playwright.config';
@@ -297,4 +298,278 @@ test('오프라인에서도 g1s2u1.A1 활동이 열린다', async ({ page, conte
   await page.reload();
   await expect(page.getByRole('heading', { name: '십 모형으로 99와 100' })).toBeVisible();
   await expect(page.getByRole('button', { name: '확인하기' })).toBeVisible();
+});
+
+// ---------------------------------------------------------------- T171 A2 백 수 배열표 숨바꼭질
+
+interface ChartTask {
+  readonly id: string;
+  readonly prompt: string;
+  readonly config: Record<string, unknown>;
+  readonly hints: readonly { readonly say?: string }[];
+}
+const chartContent = JSON.parse(
+  readFileSync(new URL('../../../data/content/g1s2u1.json', import.meta.url), 'utf-8'),
+) as { activities: { id: string; tasks: ChartTask[] }[] };
+
+test('g1s2u1.A2 콘텐츠 설정이 명세를 따른다(5과제, 학년·정답 노출 없음)', () => {
+  expect(chartContent.activities.map((a) => a.id)).toEqual(['g1s2u1.A1', 'g1s2u1.A2', 'g1s2u1.A3']);
+  const tasks = chartContent.activities[1]?.tasks ?? [];
+  expect(tasks.map((t) => t.id)).toEqual([
+    'g1s2u1.A2.T1',
+    'g1s2u1.A2.T2',
+    'g1s2u1.A2.T3',
+    'g1s2u1.A2.T4',
+    'g1s2u1.A2.T5',
+  ]);
+  for (const task of tasks) expect(task.config['mode']).toBe('hundred-chart');
+  expect(tasks[0]?.config['view']).toBe('row');
+  expect(tasks[1]?.config['view']).toBe('column');
+  expect(tasks[2]?.config['view']).toBe('cross-only');
+  expect(tasks[3]?.config['select']).toBe(true);
+  for (const task of tasks) {
+    for (const text of [task.prompt, ...task.hints.map((hint) => hint.say ?? '')]) {
+      expect(text).not.toMatch(/[1-6]학년/);
+      // 가린 칸의 값(43·46·78)과 정답 수를 쓰지 않는다. 발문에 주어진 68은 허용한다.
+      expect(text).not.toMatch(/\b(43|46|78)\b/);
+    }
+  }
+});
+
+function chartMain(page: Page): Locator {
+  return slot(page, 'main');
+}
+
+function chartCanvas(page: Page): Locator {
+  return chartMain(page).getByTestId('chart-canvas');
+}
+
+function chartPad(page: Page): Locator {
+  return chartMain(page).getByTestId('chart-pad');
+}
+
+async function openA2(page: Page): Promise<void> {
+  await openActivity(page, 'g1s2u1.A2', '백 수 배열표 숨바꼭질');
+}
+
+/** 가린 칸 번호(위에서 몇 번째)를 눌러 입력 칸으로 삼는다. */
+async function activateHidden(page: Page, index: number): Promise<void> {
+  await chartMain(page).locator(`[data-hidden="${index}"]`).click();
+}
+
+async function eraseWithPad(page: Page, times = 3): Promise<void> {
+  for (let i = 0; i < times; i += 1) {
+    await chartPad(page).getByRole('button', { name: '지우기', exact: true }).click();
+  }
+}
+
+async function typeWithPad(page: Page, digits: string): Promise<void> {
+  for (const digit of digits) {
+    await chartPad(page).getByRole('button', { name: digit, exact: true }).click();
+  }
+}
+
+/** 가린 칸 `index`의 입력을 지우고 `digits`를 숫자 패드로 쓴다. */
+async function enterWithPad(page: Page, index: number, digits: string): Promise<void> {
+  await activateHidden(page, index);
+  await eraseWithPad(page);
+  await typeWithPad(page, digits);
+}
+
+/** 키보드 숫자로 쓴다. 입력 칸을 누른 뒤 키로 지우고 쓴다. */
+async function enterWithKeyboard(page: Page, index: number, digits: string): Promise<void> {
+  await activateHidden(page, index);
+  await chartCanvas(page).focus();
+  for (let i = 0; i < 3; i += 1) await page.keyboard.press('Backspace');
+  for (const digit of digits) await page.keyboard.press(digit);
+}
+
+/** 보이는 칸의 숫자를 모은다. 가린 칸은 번호가 DOM에 없으므로 빠진 번호가 가린 칸이다. */
+async function hiddenCells(page: Page): Promise<number[]> {
+  const shown = await chartMain(page)
+    .locator('[data-cell]')
+    .evaluateAll((nodes) => nodes.map((node) => Number(node.getAttribute('data-cell'))));
+  const seen = new Set(shown);
+  const missing: number[] = [];
+  for (let cell = 1; cell <= 100; cell += 1) if (!seen.has(cell)) missing.push(cell);
+  return missing;
+}
+
+async function expectTenStep(page: Page): Promise<Locator> {
+  const layer = chartMain(page).locator('[data-overlay="ten-step"]');
+  await expectOverlayOverCanvas(chartMain(page), 'ten-step', 'chart-canvas');
+  return layer;
+}
+
+test('g1s2u1.A2 백 수 배열표 숨바꼭질 — 5과제 흐름, ROW-COL ①②, 숫자 패드·키보드', async ({
+  page,
+}) => {
+  test.slow();
+  await openA2(page);
+  await expect(chartCanvas(page)).toBeVisible();
+  await screenshot(page, 'g1s2u1-a2.png');
+  const bodyText = (await page.locator('body').textContent()) ?? '';
+  expect(bodyText).not.toMatch(/[1-6]학년/);
+
+  // T1: 가로줄. 가린 칸(43)은 DOM에 번호가 없다. 숫자 패드로 45(일반 ①) → 43 통과
+  await expect(chartMain(page).locator('[data-cell="43"]')).toHaveCount(0);
+  expect(await chartCanvas(page).locator('text').allTextContents()).not.toContain('43');
+  await expect(chartMain(page).locator('[data-hidden="0"]')).toHaveAttribute(
+    'aria-label',
+    '가려진 칸',
+  );
+  await enterWithPad(page, 0, '45');
+  await submit(page);
+  await expectFailedWithHint(page, '오른쪽으로 한 칸 가면 얼마씩 커지나요?');
+  await enterWithPad(page, 0, '43');
+  await submit(page);
+  await expectPassed(page);
+
+  // T2: 세로줄. 34(바로 위 33에 1을 더함) → ROW-COL ① → ② ten-step(막대 3개) → 키보드로 43 통과
+  await expect(chartMain(page).locator('[data-cell="43"]')).toHaveCount(0);
+  await enterWithKeyboard(page, 0, '34');
+  await submit(page);
+  await expectFailedWithHint(page, '바로 위 칸과 몇 차이일까?', 1);
+  await submit(page);
+  await expectFailedWithHint(page, '막대가 몇 개 더 늘까요?', 2);
+  const step = await expectTenStep(page);
+  await expect(step.locator('[data-testid="ten-step-rod"]')).toHaveCount(3);
+  await enterWithKeyboard(page, 0, '43');
+  await submit(page);
+  await expectPassed(page);
+
+  // T3: 십자 퀴즈. 37 → ROW-COL ① → ② → 46 통과
+  await expect(chartMain(page).locator('[data-cell="46"]')).toHaveCount(0);
+  await expect(chartMain(page).locator('[data-cell="36"]')).toHaveCount(1);
+  await enterWithPad(page, 0, '37');
+  await submit(page);
+  await expectFailedWithHint(page, '바로 위 칸과 몇 차이일까?', 1);
+  await submit(page);
+  await expectFailedWithHint(page, '막대가 몇 개 더 늘까요?', 2);
+  await expectTenStep(page);
+  await enterWithPad(page, 0, '46');
+  await submit(page);
+  await expectPassed(page);
+
+  // T4: 69(68의 오른쪽 칸) → 상태 규칙 ① → ② 말 → 78 통과
+  await chartMain(page).locator('[data-cell="69"]').click();
+  await submit(page);
+  await expectFailedWithHint(page, '바로 위 칸과 몇 차이일까?', 1);
+  await submit(page);
+  await expectFailedWithHint(page, '막대가 몇 개 더 늘까요?', 2);
+  const step4 = await expectTenStep(page);
+  await expect(step4.locator('[data-testid="ten-step-rod"]')).toHaveCount(6);
+  await chartMain(page).locator('[data-cell="78"]').click();
+  await submit(page);
+  await expectPassed(page);
+
+  // T5: 가린 칸 3개. 빠진 번호를 읽어 풀기 전에 위 칸+1을 써서 ROW-COL ①② 확인
+  const hidden = await hiddenCells(page);
+  expect(hidden).toHaveLength(3);
+  const first = hidden[0] as number;
+  await enterWithPad(page, 0, String(first - 9));
+  await submit(page);
+  await expectFailedWithHint(page, '바로 위 칸과 몇 차이일까?', 1);
+  await submit(page);
+  await expectFailedWithHint(page, '막대가 몇 개 더 늘까요?', 2);
+  await expectTenStep(page);
+  for (const [index, cell] of hidden.entries()) await enterWithPad(page, index, String(cell));
+  await submit(page);
+  await expectPassed(page, true);
+});
+
+test('g1s2u1.A2.T2~T5 — ROW-COL이 아닌 오답은 일반 ①이다', async ({ page }) => {
+  test.slow();
+  await openA2(page);
+  await enterWithPad(page, 0, '43');
+  await submit(page);
+  await expectPassed(page);
+
+  // T2: 44
+  await enterWithPad(page, 0, '44');
+  await submit(page);
+  await expectFailedWithHint(page, '위아래로 이웃한 칸의 수는 얼마만큼 차이 날까?', 1);
+  await submit(page);
+  await expectFailedWithHint(page, '한 칸마다 얼마씩 달라지나요?', 2);
+  await enterWithPad(page, 0, '43');
+  await submit(page);
+  await expectPassed(page);
+
+  // T3: 40
+  await enterWithPad(page, 0, '40');
+  await submit(page);
+  await expectFailedWithHint(page, '수가 어떻게 달라질까?', 1);
+  await enterWithPad(page, 0, '46');
+  await submit(page);
+  await expectPassed(page);
+
+  // T4: 79(일반 ①). 69와 달리 상태 규칙의 ①이 아니다.
+  await chartMain(page).locator('[data-cell="79"]').click();
+  await submit(page);
+  await expectFailedWithHint(page, '10 큰 수는 배열표에서 어느 쪽으로 한 칸 가야 할까?', 1);
+  await expect(page.getByTestId('hint-text')).not.toContainText('바로 위 칸과 몇 차이일까?');
+  await submit(page);
+  await expectFailedWithHint(page, '오른쪽 칸과 아래 칸을 견줘 봐요.', 2);
+  await chartMain(page).locator('[data-cell="78"]').click();
+  await submit(page);
+  await expectPassed(page);
+
+  // T5: 위 칸+1이 아닌 오답(칸 번호+1)
+  const hidden = await hiddenCells(page);
+  await enterWithPad(page, 0, String((hidden[0] as number) + 1));
+  await submit(page);
+  await expectFailedWithHint(page, '옆 칸과 위아래 칸은 각각 얼마만큼 차이 날까?', 1);
+  for (const [index, cell] of hidden.entries()) await enterWithPad(page, index, String(cell));
+  await submit(page);
+  await expectPassed(page, true);
+});
+
+test('g1s2u1.A2 — 저학년 64px 터치 타깃과 판 안 스크롤에서 맨 아래 줄이 닿는다', async ({
+  page,
+}) => {
+  test.slow();
+  await openA2(page);
+  const button = chartPad(page).getByRole('button', { name: '5', exact: true });
+  await activateHidden(page, 0);
+  // 첫 배치 직후에는 크기가 잠깐 다를 수 있어 안정될 때까지 기다린다.
+  await expect
+    .poll(async () => {
+      const box = await button.boundingBox();
+      return Math.min(box?.width ?? 0, box?.height ?? 0);
+    })
+    .toBeGreaterThanOrEqual(63.5);
+  await enterWithPad(page, 0, '43');
+  await submit(page);
+  await expectPassed(page);
+  await enterWithPad(page, 0, '43');
+  await submit(page);
+  await expectPassed(page);
+  await enterWithPad(page, 0, '46');
+  await submit(page);
+  await expectPassed(page);
+
+  // T4: 전체 배열표. 칸 한 변과 맨 아래 줄(91·100)이 판 안 스크롤로 닿는다.
+  await expect
+    .poll(async () => {
+      const box = await chartMain(page).locator('[data-cell="45"]').boundingBox();
+      return Math.min(box?.width ?? 0, box?.height ?? 0);
+    })
+    .toBeGreaterThanOrEqual(63.5);
+  for (const bottom of [91, 100]) {
+    const target = chartMain(page).locator(`[data-cell="${bottom}"]`);
+    await target.scrollIntoViewIfNeeded();
+    await expect(target).toBeInViewport({ ratio: 0.99 });
+    await target.click();
+    await expect(target).toHaveAttribute('data-selected', 'true');
+  }
+  await chartMain(page).locator('[data-cell="78"]').click();
+  await submit(page);
+  await expectPassed(page);
+
+  // T5: 같은 판. 맨 아래 줄 칸이 닿고, 숫자 패드도 화면 안에 있다.
+  const bottomCell = chartMain(page).locator('[data-cell="100"]');
+  await bottomCell.scrollIntoViewIfNeeded();
+  await expect(bottomCell).toBeInViewport({ ratio: 0.99 });
+  await activateHidden(page, 0);
+  await expect(chartPad(page).getByRole('button', { name: '5', exact: true })).toBeInViewport();
 });

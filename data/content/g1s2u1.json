@@ -275,6 +275,449 @@
       ]
     },
     {
+      "id": "g1s2u1.A2",
+      "title": "백 수 배열표 숨바꼭질",
+      "tasks": [
+        {
+          "id": "g1s2u1.A2.T1",
+          "prompt": "가로줄에서 나뭇잎에 가려진 칸의 수를 알아맞혀 써 보세요.",
+          "engine": "E15",
+          "mode": "hundred-chart",
+          "cpa": "P",
+          "config": {
+            "mode": "hundred-chart",
+            "range": [1, 100],
+            "view": "row",
+            "focus": 43,
+            "hidden": [43]
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "entriesCorrect"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-CHART-ROW-COL"
+                }
+              },
+              "level": 1,
+              "say": "바로 위 칸과 몇 차이일까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-CHART-ROW-COL"
+                }
+              },
+              "level": 2,
+              "say": "10 막대로 바로 위 칸의 수를 나타냈어요. 아래로 한 칸 가면 막대가 몇 개 더 늘까요?",
+              "show": {
+                "engine": "E15",
+                "overlay": "ten-step"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-CHART-ROW-COL"
+                }
+              },
+              "level": 3,
+              "backtrack": "g1s2u1.tens-to-99"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "hundred-chart"
+              },
+              "level": 1,
+              "say": "오른쪽으로 한 칸 가면 얼마씩 커지나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "hundred-chart"
+              },
+              "level": 2,
+              "say": "가린 칸 양옆의 칸을 짚어 봐요. 한 칸마다 얼마씩 달라지나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "hundred-chart"
+              },
+              "level": 3,
+              "backtrack": "g1s2u1.chart-structure"
+            }
+          ],
+          "concepts": ["g1s2u1.chart-structure"],
+          "submit": "button"
+        },
+        {
+          "id": "g1s2u1.A2.T2",
+          "prompt": "세로줄에서 나뭇잎에 가려진 칸의 수를 알아맞혀 써 보세요.",
+          "engine": "E15",
+          "mode": "hundred-chart",
+          "cpa": "P",
+          "config": {
+            "mode": "hundred-chart",
+            "range": [1, 100],
+            "view": "column",
+            "focus": 43,
+            "hidden": [43]
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "entriesCorrect"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-CHART-ROW-COL"
+                }
+              },
+              "level": 1,
+              "say": "바로 위 칸과 몇 차이일까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-CHART-ROW-COL"
+                }
+              },
+              "level": 2,
+              "say": "10 막대로 바로 위 칸의 수를 나타냈어요. 아래로 한 칸 가면 막대가 몇 개 더 늘까요?",
+              "show": {
+                "engine": "E15",
+                "overlay": "ten-step"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-CHART-ROW-COL"
+                }
+              },
+              "level": 3,
+              "backtrack": "g1s2u1.tens-to-99"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "hundred-chart"
+              },
+              "level": 1,
+              "say": "위아래로 이웃한 칸의 수는 얼마만큼 차이 날까?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "hundred-chart"
+              },
+              "level": 2,
+              "say": "가린 칸 위아래의 칸을 짚어 봐요. 한 칸마다 얼마씩 달라지나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "hundred-chart"
+              },
+              "level": 3,
+              "backtrack": "g1s2u1.chart-structure"
+            }
+          ],
+          "concepts": ["g1s2u1.chart-structure"],
+          "submit": "button"
+        },
+        {
+          "id": "g1s2u1.A2.T3",
+          "prompt": "십자 모양만 보여요. 가운데 나뭇잎에 가려진 수를 알아맞혀 써 보세요.",
+          "engine": "E15",
+          "mode": "hundred-chart",
+          "cpa": "A",
+          "config": {
+            "mode": "hundred-chart",
+            "range": [1, 100],
+            "hidden": "cross",
+            "center": 46,
+            "view": "cross-only"
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "entriesCorrect"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-CHART-ROW-COL"
+                }
+              },
+              "level": 1,
+              "say": "바로 위 칸과 몇 차이일까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-CHART-ROW-COL"
+                }
+              },
+              "level": 2,
+              "say": "10 막대로 바로 위 칸의 수를 나타냈어요. 아래로 한 칸 가면 막대가 몇 개 더 늘까요?",
+              "show": {
+                "engine": "E15",
+                "overlay": "ten-step"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-CHART-ROW-COL"
+                }
+              },
+              "level": 3,
+              "backtrack": "g1s2u1.tens-to-99"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "hundred-chart"
+              },
+              "level": 1,
+              "say": "가운데 칸에서 위·아래·왼쪽·오른쪽으로 한 칸씩 가면 수가 어떻게 달라질까?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "hundred-chart"
+              },
+              "level": 2,
+              "say": "가운데 칸의 위·아래 칸과 왼쪽·오른쪽 칸을 짚어 봐요. 달라진 만큼이 서로 같은가요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "hundred-chart"
+              },
+              "level": 3,
+              "backtrack": "g1s2u1.chart-structure"
+            }
+          ],
+          "concepts": ["g1s2u1.chart-structure"],
+          "submit": "button"
+        },
+        {
+          "id": "g1s2u1.A2.T4",
+          "prompt": "68보다 10 큰 수 칸을 눌러요.",
+          "engine": "E15",
+          "mode": "hundred-chart",
+          "cpa": "P",
+          "config": {
+            "mode": "hundred-chart",
+            "range": [1, 100],
+            "view": "full",
+            "select": true
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "selectedIs",
+            "args": {
+              "value": 78
+            }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "selectedIs",
+                "args": {
+                  "value": 69
+                }
+              },
+              "level": 1,
+              "say": "바로 위 칸과 몇 차이일까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "selectedIs",
+                "args": {
+                  "value": 69
+                }
+              },
+              "level": 2,
+              "say": "10 막대로 바로 위 칸의 수를 나타냈어요. 아래로 한 칸 가면 막대가 몇 개 더 늘까요?",
+              "show": {
+                "engine": "E15",
+                "overlay": "ten-step",
+                "args": {
+                  "cell": 78
+                }
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "selectedIs",
+                "args": {
+                  "value": 69
+                }
+              },
+              "level": 3,
+              "backtrack": "g1s2u1.tens-to-99"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "hundred-chart"
+              },
+              "level": 1,
+              "say": "10 큰 수는 배열표에서 어느 쪽으로 한 칸 가야 할까?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "hundred-chart"
+              },
+              "level": 2,
+              "say": "68 칸의 오른쪽 칸과 아래 칸을 견줘 봐요. 각각 얼마만큼 커졌나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "hundred-chart"
+              },
+              "level": 3,
+              "backtrack": "g1s2u1.chart-structure"
+            }
+          ],
+          "concepts": ["g1s2u1.chart-structure"],
+          "submit": "button"
+        },
+        {
+          "id": "g1s2u1.A2.T5",
+          "prompt": "나뭇잎에 가려진 칸 3개의 수를 알아맞혀 써 보세요.",
+          "engine": "E15",
+          "mode": "hundred-chart",
+          "cpa": "P",
+          "config": {
+            "mode": "hundred-chart",
+            "range": [1, 100],
+            "view": "full",
+            "hidden": {
+              "random": 3,
+              "within": [11, 90]
+            }
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "entriesCorrect"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-CHART-ROW-COL"
+                }
+              },
+              "level": 1,
+              "say": "바로 위 칸과 몇 차이일까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-CHART-ROW-COL"
+                }
+              },
+              "level": 2,
+              "say": "10 막대로 바로 위 칸의 수를 나타냈어요. 아래로 한 칸 가면 막대가 몇 개 더 늘까요?",
+              "show": {
+                "engine": "E15",
+                "overlay": "ten-step"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-CHART-ROW-COL"
+                }
+              },
+              "level": 3,
+              "backtrack": "g1s2u1.tens-to-99"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "hundred-chart"
+              },
+              "level": 1,
+              "say": "가린 칸의 옆 칸과 위아래 칸은 각각 얼마만큼 차이 날까?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "hundred-chart"
+              },
+              "level": 2,
+              "say": "가린 칸 둘레의 칸을 짚어 봐요. 가로로 한 칸, 세로로 한 칸 갈 때 달라진 만큼이 같은가요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "hundred-chart"
+              },
+              "level": 3,
+              "backtrack": "g1s2u1.chart-structure"
+            }
+          ],
+          "concepts": ["g1s2u1.chart-structure"],
+          "submit": "button"
+        }
+      ]
+    },
+    {
       "id": "g1s2u1.A3",
       "title": "둘씩 짝짓기 행진",
       "tasks": [

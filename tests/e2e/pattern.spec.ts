@@ -416,6 +416,25 @@ test('배열표 칸은 크롬북 stage=fit에서 48px(64 설정 64px) 이상이�
   console.log('T170', testInfo.project.name, 'scroll-check');
 });
 
+test('translate: 48 설정에서 빈칸이 48px 이상이고 줄 이름 글자가 14px 이상이다', async ({
+  page,
+}) => {
+  await open(page, 'sequence', TRANSLATE, 'stage=fit');
+  await expectMin(page.getByTestId('pattern-slot-0'), 48, 'translate 빈칸');
+  await expectMin(page.getByTestId('pattern-slot-5'), 48, 'translate 마지막 빈칸');
+  const px = await page.getByTestId('pattern-canvas').evaluate((svg) => {
+    const root = svg as unknown as SVGSVGElement;
+    const label = root.querySelector('[data-testid="pattern-track"] text');
+    if (!label) return 0;
+    return (
+      Number(label.getAttribute('font-size')) *
+      (root.getBoundingClientRect().width / root.viewBox.baseVal.width)
+    );
+  });
+  console.log('T170 translate 줄 이름 글자', Math.round(px * 10) / 10);
+  expect(px).toBeGreaterThanOrEqual(14);
+});
+
 test('48 설정에서 빈칸·팔레트 48px 이상, 10x10 칸 한 변을 잰다', async ({ page }) => {
   await open(page, 'sequence', EXTEND, 'stage=fit');
   await expectMin(page.getByTestId('pattern-slot-0'), 48, '빈칸(48)');

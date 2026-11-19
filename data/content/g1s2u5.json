@@ -1,0 +1,664 @@
+{
+  "unit": "g1s2u5",
+  "title": "규칙 찾기",
+  "activities": [
+    {
+      "id": "g1s2u5.A1",
+      "title": "모양-소리-춤 무늬",
+      "tasks": [
+        {
+          "id": "g1s2u5.A1.T1",
+          "prompt": "무늬를 눌러 보면 소리가 나고 친구가 몸짓을 해요. 규칙에 따라 빈칸 3개를 채워 보세요.",
+          "engine": "E15",
+          "mode": "sequence",
+          "cpa": "C",
+          "config": {
+            "mode": "sequence",
+            "items": ["circle", "triangle", "square"],
+            "given": ["circle", "triangle", "circle", "triangle", "circle"],
+            "blanks": 3,
+            "look": "color",
+            "mapping": {
+              "sound": "pentatonic",
+              "motion": true
+            }
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "continuesGiven"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PATTERN-LAST-ONLY"
+                }
+              },
+              "level": 1,
+              "say": "처음부터 다시 소리 내어 읽어 볼까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PATTERN-LAST-ONLY"
+                }
+              },
+              "level": 2,
+              "say": "처음부터 들어 봐요. 리듬이 바뀌는 곳이 어디인지 찾아봐요.",
+              "show": {
+                "engine": "E15",
+                "overlay": "replay-break"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PATTERN-LAST-ONLY"
+                }
+              },
+              "level": 3,
+              "backtrack": "g1s2u5.repeat-core"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PATTERN-CORE"
+                }
+              },
+              "level": 1,
+              "say": "어디까지가 한 번이고, 어디서 다시 시작할까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PATTERN-CORE"
+                }
+              },
+              "level": 2,
+              "say": "반복되는 부분을 점선 상자로 묶어 봤어요. 상자마다 같은 자리에 같은 모양이 있나요?",
+              "show": {
+                "engine": "E15",
+                "overlay": "core-boxes"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PATTERN-CORE"
+                }
+              },
+              "level": 3,
+              "backtrack": "g1s2u5.repeat-core"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sequence"
+              },
+              "level": 1,
+              "say": "처음부터 하나씩 짚으며 되풀이되는 부분이 어디인지 찾아볼까?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sequence"
+              },
+              "level": 2,
+              "say": "▶ 들어 보기를 눌러 처음부터 들어 봐요. 같은 소리가 다시 나오는 곳은 어디인가요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sequence"
+              },
+              "level": 3,
+              "backtrack": "g1s2u5.extend-pattern"
+            }
+          ],
+          "concepts": ["g1s2u5.extend-pattern"],
+          "submit": "button"
+        },
+        {
+          "id": "g1s2u5.A1.T2",
+          "prompt": "규칙에 따라 빈칸 3개를 채워 보세요.",
+          "engine": "E15",
+          "mode": "sequence",
+          "cpa": "C",
+          "config": {
+            "mode": "sequence",
+            "items": ["circle", "triangle", "square"],
+            "given": ["circle", "circle", "triangle", "circle", "circle", "triangle"],
+            "blanks": 3,
+            "look": "color",
+            "mapping": {
+              "sound": "pentatonic",
+              "motion": true
+            }
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "continuesGiven"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PATTERN-LAST-ONLY"
+                }
+              },
+              "level": 1,
+              "say": "처음부터 다시 소리 내어 읽어 볼까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PATTERN-LAST-ONLY"
+                }
+              },
+              "level": 2,
+              "say": "처음부터 들어 봐요. 리듬이 바뀌는 곳이 어디인지 찾아봐요.",
+              "show": {
+                "engine": "E15",
+                "overlay": "replay-break"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PATTERN-LAST-ONLY"
+                }
+              },
+              "level": 3,
+              "backtrack": "g1s2u5.repeat-core"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PATTERN-CORE"
+                }
+              },
+              "level": 1,
+              "say": "어디까지가 한 번이고, 어디서 다시 시작할까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PATTERN-CORE"
+                }
+              },
+              "level": 2,
+              "say": "반복되는 부분을 점선 상자로 묶어 봤어요. 상자마다 같은 자리에 같은 모양이 있나요?",
+              "show": {
+                "engine": "E15",
+                "overlay": "core-boxes"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PATTERN-CORE"
+                }
+              },
+              "level": 3,
+              "backtrack": "g1s2u5.repeat-core"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sequence"
+              },
+              "level": 1,
+              "say": "처음부터 하나씩 짚으며 되풀이되는 부분이 어디인지 찾아볼까?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sequence"
+              },
+              "level": 2,
+              "say": "▶ 들어 보기를 눌러 처음부터 들어 봐요. 같은 소리가 다시 나오는 곳은 어디인가요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sequence"
+              },
+              "level": 3,
+              "backtrack": "g1s2u5.extend-pattern"
+            }
+          ],
+          "concepts": ["g1s2u5.extend-pattern"],
+          "submit": "button"
+        },
+        {
+          "id": "g1s2u5.A1.T3",
+          "prompt": "소리를 듣고, 같은 규칙으로 모양을 놓아요. 모양 카드를 누르면 그 소리가 나요.",
+          "engine": "E15",
+          "mode": "sequence",
+          "cpa": "C",
+          "config": {
+            "mode": "sequence",
+            "items": ["circle", "triangle", "square"],
+            "given": ["circle", "circle", "square", "circle", "circle", "square"],
+            "givenDisplay": "sound-only",
+            "blanks": 6,
+            "look": "color",
+            "mapping": {
+              "sound": "pentatonic",
+              "motion": false
+            }
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "coreIs",
+            "args": {
+              "core": ["circle", "circle", "square"]
+            }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sequence"
+              },
+              "level": 1,
+              "say": "▶ 들어보기를 다시 눌러 몇 번째 소리마다 되풀이되는지 들어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sequence"
+              },
+              "level": 2,
+              "say": "소리를 하나씩 세어 봐요. 같은 소리가 다시 나오는 곳에서 손뼉을 쳐 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sequence"
+              },
+              "level": 3,
+              "backtrack": "g1s2u5.translate-pattern"
+            }
+          ],
+          "concepts": ["g1s2u5.translate-pattern"],
+          "submit": "button"
+        },
+        {
+          "id": "g1s2u5.A1.T4",
+          "prompt": "내 규칙을 만들어 빈칸 8개를 채워 보세요. 되풀이되는 부분이 두 번 이상 나와야 해요.",
+          "engine": "E15",
+          "mode": "sequence",
+          "cpa": "P",
+          "config": {
+            "mode": "sequence",
+            "items": ["circle", "triangle", "square"],
+            "given": [],
+            "blanks": 8,
+            "look": "plain",
+            "mapping": {
+              "sound": "pentatonic",
+              "motion": false
+            }
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "hasRepeat",
+            "args": {
+              "minCoreLength": 2,
+              "minRepeats": 2
+            }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sequence"
+              },
+              "level": 1,
+              "say": "두 가지 이상의 모양이 같은 순서로 되풀이되게 놓아 볼까?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sequence"
+              },
+              "level": 2,
+              "say": "▶ 들어 보기를 눌러 들어 봐요. 같은 소리가 같은 순서로 다시 나오나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sequence"
+              },
+              "level": 3,
+              "backtrack": "g1s2u5.repeat-core"
+            }
+          ],
+          "concepts": ["g1s2u5.repeat-core"],
+          "submit": "button"
+        }
+      ]
+    },
+    {
+      "id": "g1s2u5.A2",
+      "title": "규칙 암호 전송기",
+      "tasks": [
+        {
+          "id": "g1s2u5.A2.T1",
+          "prompt": "그림 무늬를 숫자 암호로 바꿔 보내요. 같은 그림은 늘 같은 숫자로 바꿔야 해요. 다 만들면 보내기를 눌러 되돌린 무늬를 확인해 봐요.",
+          "engine": "E15",
+          "mode": "sequence",
+          "cpa": "P",
+          "config": {
+            "mode": "sequence",
+            "variant": "translate",
+            "source": ["apple", "banana", "banana"],
+            "repeat": 3,
+            "targetAlphabet": ["1", "2", "3"],
+            "look": "color"
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "translateConsistent"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PATTERN-TRANSLATE"
+                }
+              },
+              "level": 1,
+              "say": "사과는 항상 어떤 숫자였지?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PATTERN-TRANSLATE"
+                }
+              },
+              "level": 2,
+              "say": "내가 놓은 짝을 카드로 모았어요. 같은 그림이 늘 같은 짝이었나요?",
+              "show": {
+                "engine": "E15",
+                "overlay": "mapping-card"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PATTERN-TRANSLATE"
+                }
+              },
+              "level": 3,
+              "backtrack": "g1s2u5.translate-pattern"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sequence"
+              },
+              "level": 1,
+              "say": "그림마다 숫자를 하나씩 정해서 위에서부터 차례로 바꿔 볼까?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sequence"
+              },
+              "level": 2,
+              "say": "보내기를 눌러 되돌린 무늬가 처음 무늬와 같은지 살펴봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sequence"
+              },
+              "level": 3,
+              "backtrack": "g1s2u5.translate-pattern"
+            }
+          ],
+          "concepts": ["g1s2u5.translate-pattern"],
+          "submit": "button"
+        },
+        {
+          "id": "g1s2u5.A2.T2",
+          "prompt": "숫자 암호를 모양으로 바꿔요. 같은 숫자는 늘 같은 모양으로 바꿔요.",
+          "engine": "E15",
+          "mode": "sequence",
+          "cpa": "P",
+          "config": {
+            "mode": "sequence",
+            "variant": "translate",
+            "source": ["3", "1"],
+            "repeat": 2,
+            "targetAlphabet": ["circle", "triangle", "square"],
+            "look": "color"
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "translateConsistent"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PATTERN-TRANSLATE"
+                }
+              },
+              "level": 1,
+              "say": "같은 수는 늘 같은 모양으로 바꿨나요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PATTERN-TRANSLATE"
+                }
+              },
+              "level": 2,
+              "say": "내가 놓은 짝을 카드로 모았어요. 같은 그림이 늘 같은 짝이었나요?",
+              "show": {
+                "engine": "E15",
+                "overlay": "mapping-card"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PATTERN-TRANSLATE"
+                }
+              },
+              "level": 3,
+              "backtrack": "g1s2u5.translate-pattern"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sequence"
+              },
+              "level": 1,
+              "say": "숫자마다 모양을 하나씩 정해서 위에서부터 차례로 바꿔 볼까?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sequence"
+              },
+              "level": 2,
+              "say": "보내기를 눌러 되돌린 암호가 처음 암호와 같은지 살펴봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sequence"
+              },
+              "level": 3,
+              "backtrack": "g1s2u5.translate-pattern"
+            }
+          ],
+          "concepts": ["g1s2u5.translate-pattern"],
+          "submit": "button"
+        },
+        {
+          "id": "g1s2u5.A2.T3",
+          "prompt": "수 배열표에 2, 4, 6이 칠해져 있어요. 같은 규칙으로 30까지 칠해 보세요.",
+          "engine": "E15",
+          "mode": "hundred-chart",
+          "cpa": "A",
+          "config": {
+            "mode": "hundred-chart",
+            "range": [1, 30],
+            "paint": true,
+            "prepainted": [2, 4, 6]
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "paintedMultiples",
+            "args": {
+              "of": 2,
+              "upTo": 30
+            }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "hundred-chart"
+              },
+              "level": 1,
+              "say": "칠해진 칸은 몇 칸씩 건너뛰고 있나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "hundred-chart"
+              },
+              "level": 2,
+              "say": "칠해진 칸 사이를 손가락으로 짚어 봐요. 늘 같은 간격인가요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "hundred-chart"
+              },
+              "level": 3,
+              "backtrack": "g1s2u5.number-pattern"
+            }
+          ],
+          "concepts": ["g1s2u5.number-pattern"],
+          "submit": "button"
+        },
+        {
+          "id": "g1s2u5.A2.T4",
+          "prompt": "수의 규칙을 찾아 빈칸 2개를 채워 보세요.",
+          "engine": "E15",
+          "mode": "sequence",
+          "cpa": "A",
+          "config": {
+            "mode": "sequence",
+            "items": ["16", "20", "25", "30"],
+            "given": ["5", "10", "15"],
+            "blanks": 2,
+            "look": "plain"
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "blanksAre",
+            "args": {
+              "tokens": ["20", "25"]
+            }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sequence"
+              },
+              "level": 1,
+              "say": "5에서 10, 10에서 15로 얼마씩 커졌나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sequence"
+              },
+              "level": 2,
+              "say": "앞의 수에서 다음 수로 갈 때마다 늘어난 만큼을 세어 봐요. 늘 같은가요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sequence"
+              },
+              "level": 3,
+              "backtrack": "g1s2u5.number-pattern"
+            }
+          ],
+          "concepts": ["g1s2u5.number-pattern"],
+          "submit": "button"
+        }
+      ]
+    }
+  ]
+}

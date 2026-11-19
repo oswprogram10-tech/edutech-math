@@ -16,11 +16,13 @@ const TRANSLATE_PER_ROW = 6;
 /** 칸 아래 ▲ 표시를 위한 여백. */
 const MARK = 26;
 const ROW_GAP = 44;
-const CHUNK_GAP = 34;
-const LABEL_X = 14;
+const CHUNK_GAP = 24;
+const LABEL_X = 10;
+/** 줄 이름 글자 크기(논리). 칸이 targetSize 이상으로 그려지므로 화면에서 14px 이상이 된다. */
+export const LABEL_FONT = 30;
 /** translate 위쪽에 비워 두는 띠. 힌트 mapping-card가 여기에 짝 카드를 그린다. */
 const TRANSLATE_BAND = 64;
-const TRANSLATE_LEFT = 176;
+const TRANSLATE_LEFT = 200;
 
 export interface Box {
   readonly x: number;
@@ -86,8 +88,8 @@ export function trackLayout(settings: SequenceSettings, sent: boolean): TrackLay
 function translateLayout(settings: SequenceSettings, sent: boolean): TrackLayout {
   const total = settings.given.length;
   const chunks = Math.ceil(total / TRANSLATE_PER_ROW);
-  // '보내기' 뒤 셋째 줄 자리를 미리 잡아 두어 viewBox가 보내기 전후에 같다.
-  const rowsPerChunk = 3;
+  // 셋째 줄(되돌린 무늬) 자리는 '보내기' 뒤에만 잡아 묶음 사이에 빈 공간이 남지 않게 한다.
+  const rowsPerChunk = sent ? 3 : 2;
   const blockHeight = rowsPerChunk * CELL + (rowsPerChunk - 1) * ROW_GAP + MARK;
   const content = chunks * blockHeight + (chunks - 1) * CHUNK_GAP;
   const height = Math.max(TRACK_MIN_HEIGHT, content + TRANSLATE_BAND + 40);
