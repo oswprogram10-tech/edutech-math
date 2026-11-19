@@ -231,6 +231,60 @@ describe('E08 키 입력과 줄 편집', () => {
     expect(state.lines[1]?.tokens).toEqual([{ kind: 'decimal', value: '2.5' }]);
   });
 
+  it('수를 쓴 뒤 누른 기호·괄호는 수 뒤에 들어간다', () => {
+    const text = (state: StepSolverState): string => {
+      const tokens = state.lines[1]?.tokens ?? [];
+      return tokens
+        .map((token) =>
+          token.kind === 'op'
+            ? ({ add: '+', sub: '-', mul: '*', div: '/' } as Record<string, string>)[token.op]
+            : token.kind === 'lparen'
+              ? '('
+              : token.kind === 'rparen'
+                ? ')'
+                : token.kind === 'integer'
+                  ? token.value
+                  : '?',
+        )
+        .join(' ');
+    };
+    const press = (state: StepSolverState, keys: string): StepSolverState => {
+      let next = state;
+      for (const key of keys) {
+        if (/\d/.test(key)) next = apply(next, { type: 'enter-digit', digit: key });
+        else if (key === '(')
+          next = apply(next, { type: 'insert-token', token: { kind: 'lparen' } });
+        else if (key === ')')
+          next = apply(next, { type: 'insert-token', token: { kind: 'rparen' } });
+        else {
+          const op = { '+': 'add', '-': 'sub', '*': 'mul', '/': 'div' }[key];
+          if (op === 'add' || op === 'sub' || op === 'mul' || op === 'div') {
+            next = apply(next, { type: 'insert-token', token: { kind: 'op', op } });
+          }
+        }
+      }
+      return next;
+    };
+    expect(text(press(createInitialState({ mode: 'lines', start: '1 + 1' }), '60/6'))).toBe(
+      '60 / 6',
+    );
+    expect(text(press(createInitialState({ mode: 'lines', start: '1 + 1' }), '(12-8)*2'))).toBe(
+      '( 12 - 8 ) * 2',
+    );
+    // 빈 줄에 ÷를 눌러도 그대로 들어간다.
+    expect(text(press(createInitialState({ mode: 'lines', start: '1 + 1' }), '/'))).toBe('/');
+  });
+
+  it('분수 틀 뒤에 누른 +는 분수 뒤에 들어간다', () => {
+    let state = typeFraction(lineState(), 'line-1', '1', '2');
+    state = apply(state, { type: 'insert-token', token: { kind: 'op', op: 'add' } });
+    expect(state.lines[1]?.tokens).toEqual([
+      { kind: 'fraction', num: '1', den: '2' },
+      { kind: 'op', op: 'add' },
+    ]);
+    expect(state.cursor?.token).toBe(2);
+  });
+
   it('모든 Action 뒤 상태가 JSON 직렬화 가능하다', () => {
     let state = createInitialState({
       mode: 'fraction-steps',

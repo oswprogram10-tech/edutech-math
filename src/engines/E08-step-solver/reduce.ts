@@ -249,7 +249,25 @@ function insertToken(state: StepSolverState, token: Token): StepSolverState {
   const line = cursorLine(state);
   if (!line) return state;
   const cursor = state.cursor ?? cursorFor(line, line.tokens.length, 'value');
-  const at = Math.max(0, Math.min(cursor.token, line.tokens.length));
+  let at = Math.max(0, Math.min(cursor.token, line.tokens.length));
+  const isNumberToken =
+    token.kind === 'integer' ||
+    token.kind === 'decimal' ||
+    token.kind === 'fraction' ||
+    token.kind === 'mixed';
+  // 수를 쓰는 동안 커서는 그 수 토큰에 머문다. 기호·괄호는 그 수 뒤에 넣는다.
+  if (!isNumberToken) {
+    const under = line.tokens[at];
+    if (
+      under !== undefined &&
+      (under.kind === 'integer' ||
+        under.kind === 'decimal' ||
+        under.kind === 'fraction' ||
+        under.kind === 'mixed')
+    ) {
+      at += 1;
+    }
+  }
   const tokens = [...line.tokens.slice(0, at), token, ...line.tokens.slice(at)];
 
   if (token.kind === 'fraction' || token.kind === 'mixed') {

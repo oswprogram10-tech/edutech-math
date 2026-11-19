@@ -104,11 +104,9 @@ async function expectNoLeak(page: Page, forbidden: readonly string[]): Promise<v
 }
 
 /**
- * E08 키패드 단추로 한 줄을 쓴다(줄 번호는 0부터). 키: 숫자, + - * / ( ).
- * 수를 쓰는 동안 커서가 그 수 위에 있어, 기호·괄호 앞에서는 그 수 칸에 초점을 두고 → 로
- * 커서를 수 뒤로 옮긴다.
+ * E08 키패드 단추로 한 줄을 쓴다(커서가 있는 줄). 키: 숫자, + - * / ( ).
  */
-async function typeLine(page: Page, line: number, expression: string): Promise<void> {
+async function typeLine(page: Page, expression: string): Promise<void> {
   const names: Record<string, string> = {
     '+': 'add',
     '-': 'sub',
@@ -117,16 +115,7 @@ async function typeLine(page: Page, line: number, expression: string): Promise<v
     '(': 'lparen',
     ')': 'rparen',
   };
-  let tokens = 0;
-  let previous = '';
   for (const char of expression) {
-    const digit = /\d/.test(char);
-    if (/\d/.test(previous) && !digit) {
-      await page.getByTestId(`token-${line}-${tokens - 1}-value`).focus();
-      await page.keyboard.press('ArrowRight');
-    }
-    if (!digit || !/\d/.test(previous)) tokens += 1;
-    previous = char;
     await page.getByTestId(`key-${names[char] ?? char}`).click();
   }
 }
@@ -188,13 +177,13 @@ test('A1 연산 순서 터치 트리 — 오개념 힌트를 보고 다섯 과�
   // T5 — 두 줄만 쓰면 줄 수가 모자라 힌트 ①이 뜬다. 줄을 이어 써서 끝낸다.
   await expectNoLeak(page, ['30']);
   await expect(page.getByTestId('order-tree-canvas')).toHaveCount(0);
-  await typeLine(page, 1, '60/6*3');
+  await typeLine(page, '60/6*3');
   await submit(page);
   await expectFailedWithHint(page, '줄을 바꿀 때마다 값이 그대로여야 해요', ['30']);
   await page.getByTestId('key-add-line').click();
-  await typeLine(page, 2, '10*3');
+  await typeLine(page, '10*3');
   await page.getByTestId('key-add-line').click();
-  await typeLine(page, 3, '30');
+  await typeLine(page, '30');
   await submit(page);
   await expectPassed(page, true);
 });
@@ -236,16 +225,16 @@ test('A2 괄호를 옮기면 이야기가 바뀐다 — 대표 오답 뒤 고쳐
   await expectPassed(page);
 
   // T4 — 틀린 줄을 쓴 뒤 힌트 ①을 보고 비우고, 약속대로 한 줄씩 다시 쓴다.
-  await typeLine(page, 1, '48*10');
+  await typeLine(page, '48*10');
   await submit(page);
   await expectFailedWithHint(page, '줄을 바꿀 때마다 값이 그대로여야 해요', ['30']);
   // 학생 줄이 하나뿐이라 ×는 줄을 지우지 않고 비운다.
   await page.getByTestId('remove-1').click();
-  await typeLine(page, 1, '50-2*10');
+  await typeLine(page, '50-2*10');
   await page.getByTestId('key-add-line').click();
-  await typeLine(page, 2, '50-20');
+  await typeLine(page, '50-20');
   await page.getByTestId('key-add-line').click();
-  await typeLine(page, 3, '30');
+  await typeLine(page, '30');
   await submit(page);
   await expectPassed(page, true);
 });
