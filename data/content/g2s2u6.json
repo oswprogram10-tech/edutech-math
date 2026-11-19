@@ -1,0 +1,677 @@
+{
+  "unit": "g2s2u6",
+  "title": "규칙 찾기",
+  "activities": [
+    {
+      "id": "g2s2u6.A1",
+      "title": "쌓기나무 성장 패턴",
+      "tasks": [
+        {
+          "id": "g2s2u6.A1.T1",
+          "prompt": "쌓기나무가 단계마다 늘어나요. 표의 빈칸에 새로 늘어난 쌓기나무의 수를 써요.",
+          "engine": "E15",
+          "mode": "growth",
+          "cpa": "C",
+          "config": {
+            "mode": "growth",
+            "shape": "L",
+            "stepsShown": 3,
+            "look": "cubes",
+            "table": {
+              "upTo": 3,
+              "counts": "given",
+              "increments": "blank"
+            }
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "incrementsCorrect"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "growth"
+              },
+              "level": 1,
+              "say": "1단계에서 2단계로 갈 때 새로 생긴 쌓기나무를 세어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "growth"
+              },
+              "level": 2,
+              "say": "다른 단계로 갈 때도 새로 생긴 쌓기나무만 따로 세어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "growth"
+              },
+              "level": 3,
+              "backtrack": "g1s2u5.extend-pattern"
+            }
+          ],
+          "concepts": [
+            "g2s2u6.growth-pattern"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g2s2u6.A1.T2",
+          "prompt": "왼쪽은 1, 2, 3단계 모양이에요. 오른쪽에 4단계 모양을 쌓아요.",
+          "engine": "E12",
+          "mode": "cubes",
+          "cpa": "C",
+          "config": {
+            "mode": "cubes",
+            "maxCubes": 12,
+            "grid": [
+              5,
+              3
+            ],
+            "maxHeight": 5
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "sameShape",
+            "args": {
+              "cubes": [
+                [
+                  0,
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  0,
+                  0
+                ],
+                [
+                  2,
+                  0,
+                  0
+                ],
+                [
+                  3,
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  0,
+                  1
+                ],
+                [
+                  0,
+                  0,
+                  2
+                ],
+                [
+                  0,
+                  0,
+                  3
+                ]
+              ],
+              "rotate": true
+            }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "cubes"
+              },
+              "level": 1,
+              "say": "3단계 모양에서 어디에 몇 개를 더 놓았는지 살펴봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "cubes"
+              },
+              "level": 2,
+              "say": "1단계, 2단계, 3단계에서 새로 놓은 자리를 차례로 따라가 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "cubes"
+              },
+              "level": 3,
+              "backtrack": "g1s2u5.extend-pattern"
+            }
+          ],
+          "concepts": [
+            "g2s2u6.growth-pattern"
+          ],
+          "submit": "button",
+          "views": [
+            {
+              "slot": "right",
+              "engine": "E12",
+              "mode": "cubes",
+              "cpa": "C",
+              "config": {
+                "mode": "cubes",
+                "maxCubes": 12,
+                "grid": [
+                  5,
+                  3
+                ],
+                "maxHeight": 5
+              }
+            },
+            {
+              "slot": "left",
+              "engine": "E15",
+              "mode": "growth",
+              "cpa": "C",
+              "config": {
+                "mode": "growth",
+                "shape": "L",
+                "stepsShown": 3,
+                "look": "cubes",
+                "table": false
+              }
+            }
+          ]
+        },
+        {
+          "id": "g2s2u6.A1.T3",
+          "prompt": "쌓지 않고 5단계에 쌓기나무가 모두 몇 개인지 알아봐요. 표의 빈칸에 써요.",
+          "engine": "E15",
+          "mode": "growth",
+          "cpa": "P",
+          "config": {
+            "mode": "growth",
+            "shape": "L",
+            "stepsShown": 3,
+            "look": "flat",
+            "table": {
+              "upTo": 5,
+              "counts": "given",
+              "increments": "off"
+            }
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "countCorrect",
+            "args": {
+              "stage": 5
+            }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PATTERN-GROWTH-TOTAL"
+                }
+              },
+              "level": 1,
+              "say": "새로 놓은 것만 셀까, 전체를 셀까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PATTERN-GROWTH-TOTAL"
+                }
+              },
+              "level": 2,
+              "say": "앞 단계에서 이어진 쌓기나무는 회색으로 덮었어요. 새로 놓은 것과 모두 몇 개인지를 견주어 봐요.",
+              "show": {
+                "engine": "E15",
+                "overlay": "growth-split"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PATTERN-GROWTH-TOTAL"
+                }
+              },
+              "level": 3,
+              "backtrack": "g2s2u6.growth-pattern"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "growth"
+              },
+              "level": 1,
+              "say": "한 단계 갈 때마다 몇 개씩 늘었는지 표에서 찾아봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "growth"
+              },
+              "level": 2,
+              "say": "1단계, 2단계, 3단계의 개수를 나란히 놓고 달라진 만큼을 견주어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "growth"
+              },
+              "level": 3,
+              "backtrack": "g1s2u5.extend-pattern"
+            }
+          ],
+          "concepts": [
+            "g2s2u6.growth-pattern"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g2s2u6.A1.T4",
+          "prompt": "단계가 올라갈 때 쌓기나무가 어떻게 늘어나는지 알맞은 말을 골라요. 가: 단계마다 2개씩 늘어나요. 나: 단계마다 1개씩 늘어나요. 다: 단계마다 2배가 돼요.",
+          "engine": "E15",
+          "mode": "growth",
+          "cpa": "P",
+          "config": {
+            "mode": "growth",
+            "shape": "L",
+            "stepsShown": 3,
+            "look": "flat",
+            "table": false
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.rule.selected",
+            "value": [
+              "ga"
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "growth"
+              },
+              "level": 1,
+              "say": "1단계, 2단계, 3단계 모양을 차례로 견주어 봐요. 한 단계 갈 때마다 어떻게 달라지나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "growth"
+              },
+              "level": 2,
+              "say": "그림에서 색이 다른 쌓기나무가 단계마다 몇 개인지 세어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "growth"
+              },
+              "level": 3,
+              "backtrack": "g2s2u6.growth-pattern"
+            }
+          ],
+          "concepts": [
+            "g2s2u6.describe-rule"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "rule",
+                "label": "규칙 문장",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "ga",
+                    "label": "가"
+                  },
+                  {
+                    "id": "na",
+                    "label": "나"
+                  },
+                  {
+                    "id": "da",
+                    "label": "다"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "g2s2u6.A2",
+      "title": "덧셈표·곱셈표 돋보기 탐정",
+      "tasks": [
+        {
+          "id": "g2s2u6.A2.T1",
+          "prompt": "덧셈표에 가려진 칸이 있어요. 규칙을 찾아 가려진 칸 3개에 수를 써요.",
+          "engine": "E15",
+          "mode": "calc-pattern",
+          "cpa": "P",
+          "config": {
+            "mode": "calc-pattern",
+            "table": "addition",
+            "size": [
+              6,
+              6
+            ],
+            "hidden": [
+              [
+                2,
+                3
+              ],
+              [
+                4,
+                1
+              ],
+              [
+                5,
+                5
+              ]
+            ]
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "tableEntriesCorrect"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "calc-pattern"
+              },
+              "level": 1,
+              "say": "오른쪽으로 한 칸, 아래로 한 칸 갈 때 수가 어떻게 변해요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "calc-pattern"
+              },
+              "level": 2,
+              "say": "가려진 칸 옆과 아래에 보이는 칸의 수를 차례로 따라가 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "calc-pattern"
+              },
+              "level": 3,
+              "backtrack": "g2s2u2.table-step"
+            }
+          ],
+          "concepts": [
+            "g2s2u6.table-patterns"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g2s2u6.A2.T2",
+          "prompt": "덧셈표가 대부분 가려져 있어요. 돋보기로 칸을 열어 보고, ↘ 방향의 규칙을 화살표로 그려요.",
+          "engine": "E15",
+          "mode": "calc-pattern",
+          "cpa": "P",
+          "config": {
+            "mode": "calc-pattern",
+            "table": "addition",
+            "size": [
+              6,
+              6
+            ],
+            "hidden": "most",
+            "magnifierUses": 3,
+            "drawArrows": true
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "arrowFound",
+            "args": {
+              "dir": "down-right",
+              "amount": 2
+            }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "calc-pattern"
+              },
+              "level": 1,
+              "say": "↘ 방향으로 한 칸 갈 때 얼마가 커지는지 돋보기로 확인해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "calc-pattern"
+              },
+              "level": 2,
+              "say": "↘ 방향으로 이어진 두 칸을 열어 수를 견주어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "calc-pattern"
+              },
+              "level": 3,
+              "backtrack": "g2s2u2.table-step"
+            }
+          ],
+          "concepts": [
+            "g2s2u6.table-patterns"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g2s2u6.A2.T3",
+          "prompt": "곱셈표의 5단 줄에 가려진 칸 3개가 있어요. 규칙을 찾아 수를 써요.",
+          "engine": "E15",
+          "mode": "calc-pattern",
+          "cpa": "A",
+          "config": {
+            "mode": "calc-pattern",
+            "table": "multiplication",
+            "size": [
+              9,
+              9
+            ],
+            "hidden": [
+              [
+                4,
+                3
+              ],
+              [
+                4,
+                5
+              ],
+              [
+                4,
+                7
+              ]
+            ]
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "tableEntriesCorrect"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-CHART-ROW-COL"
+                }
+              },
+              "level": 1,
+              "say": "옆 칸과 아래 칸은 얼마씩 차이 나요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-CHART-ROW-COL"
+                }
+              },
+              "level": 2,
+              "say": "옆으로 갈 때와 아래로 갈 때의 차이를 표 위에 그렸어요. 두 차이를 견주어 봐요.",
+              "show": {
+                "engine": "E15",
+                "overlay": "cell-diff"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-CHART-ROW-COL"
+                }
+              },
+              "level": 3,
+              "backtrack": "g1s2u1.chart-structure"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "calc-pattern"
+              },
+              "level": 1,
+              "say": "5단 줄에서 오른쪽으로 한 칸 가면 얼마씩 커져요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "calc-pattern"
+              },
+              "level": 2,
+              "say": "5단 줄에서 보이는 두 칸의 수를 견주고, 가려진 칸까지 이어 가 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "calc-pattern"
+              },
+              "level": 3,
+              "backtrack": "g2s2u2.table-step"
+            }
+          ],
+          "concepts": [
+            "g2s2u6.table-patterns"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g2s2u6.A2.T4",
+          "prompt": "덧셈표에서 같은 수가 놓인 칸들은 어떤 방향으로 이어질까요? 알맞은 방향을 골라요. 가: → 나: ↙ 다: ↓",
+          "engine": "E15",
+          "mode": "calc-pattern",
+          "cpa": "A",
+          "config": {
+            "mode": "calc-pattern",
+            "table": "addition",
+            "size": [
+              6,
+              6
+            ],
+            "hidden": []
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.dir.selected",
+            "value": [
+              "na"
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "calc-pattern"
+              },
+              "level": 1,
+              "say": "수가 같은 칸을 두세 개 찾아서 어느 쪽으로 이어지는지 살펴봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "calc-pattern"
+              },
+              "level": 2,
+              "say": "같은 수가 놓인 칸에 표시를 하며 이어 보면 어떤 모양이 되나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "calc-pattern"
+              },
+              "level": 3,
+              "backtrack": "g2s2u2.table-step"
+            }
+          ],
+          "concepts": [
+            "g2s2u6.table-patterns"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "dir",
+                "label": "이어지는 방향",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "ga",
+                    "label": "가"
+                  },
+                  {
+                    "id": "na",
+                    "label": "나"
+                  },
+                  {
+                    "id": "da",
+                    "label": "다"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
