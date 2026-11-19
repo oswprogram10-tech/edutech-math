@@ -229,6 +229,8 @@ T173은 소넷 구현 → 검수 1회(판 전체 화면 기준 스냅샷 6장, �
 
 - **T175 병합(2026-11-20):** E15 `calc-pattern`(symmetric-sum-square·repunit-square). 식의 k번째 수가 k번째 블록 열 바로 아래에 놓이고, 쌓기 칸은 2n+1열 × n+1행이다. Observation의 수 목록(`exprAddends`·`exprFactors`·`exprLeft`·`exprRight`)은 문자열이라 콘텐츠에서 큰 수는 글자열로 쓴다. `addends`는 두 수 이상 더하는 변 우선. `pattern`이 없으면 symmetric. calc용 이벤트는 없다. 오버레이 `step-table`(symmetric만)·`column-link`. 범위 E2E 243 통과.
 
+- **T176 병합(2026-11-20):** g5s1u3 콘텐츠(A1 covary·table 4과제, A2 rule-shooter·black-box 4과제). covary `cellIs`의 col은 ○ 값 문자열, table은 열 번호. 오개념은 `hasMisconception` 규칙만. 병합 때 힌트 ② 두 문구에서 "식이 읽히면 … 그려 줘요" 같은 화면 조건 설명을 뺐다. g5s1u3 E2E 30 통과. 이 카드부터 Opus 재검사를 줄였다(메모리 e2e-scope-per-card).
+
 ## 상시
 | 카드 | 내용 |
 | --- | --- |
