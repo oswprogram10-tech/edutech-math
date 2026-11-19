@@ -49,6 +49,13 @@ function boxValueOf(state: BalanceState, reading: BalanceReading): string | null
 export function equalAnswerTried(state: BalanceState): boolean {
   if (state.initialSum === null) return false;
   const sum = Rational.parse(state.initialSum);
+  // 합이 처음 식의 해이기도 하면(□ − 16 = 29에 45) 오개념이 아니다.
+  const solvesInitial = readBalance({
+    ...state,
+    ...state.initial,
+    tryValue: sum.toString(),
+  }).balanced;
+  if (solvesInitial) return false;
   return state.tries.some((value) => Rational.parse(value).equals(sum));
 }
 

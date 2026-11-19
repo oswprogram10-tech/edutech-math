@@ -301,6 +301,15 @@ describe('observe: □ 없는 20 + 15 = 35', () => {
     expect(obs(one)['oneSideOps']).toBe(1);
   });
 
+  it('합이 곧 해이면(□ − 16 = 29에 45) MC-EQUAL-ANSWER를 기록하지 않는다', () => {
+    const config: BalanceConfig = {
+      left: [{ box: true }, { num: 16, neg: true }],
+      right: [{ num: 29 }],
+    };
+    const state = play(config, [tryValue('45'), tryValue('40')]);
+    expect(obs(state)['misconceptions']).toEqual([]);
+  });
+
   it('수가 하나뿐이면 MC-EQUAL-ANSWER를 감지하지 않는다', () => {
     const state = play({ left: [{ box: true }], right: [{ num: 7 }] }, [tryValue('7')]);
     expect(obs(state)['misconceptions']).toEqual([]);
