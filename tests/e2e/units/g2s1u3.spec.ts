@@ -4,7 +4,7 @@ import { PREVIEW_URL } from '../../../playwright.config';
 
 /**
  * T058 g2s1u3 「덧셈과 뺄셈」 단원 E2E.
- * A1만 만든다(A2 양팔저울은 W5). 과제마다 대표 오답 → 힌트 ① → 정답 순서로 끝까지 해 본다.
+ * A1(블록과 세로셈)과 A2(양팔저울 □ 탐정, T188)를 만든다. 과제마다 대표 오답 → 힌트 ① → 정답 순서로 끝까지 해 본다.
  * 아이패드(WebKit)·크롬북·전자칠판 세 뷰포트에서 같은 흐름을 확인한다.
  */
 
@@ -361,6 +361,136 @@ test('E07 판은 판 안 스크롤 없이 페이지 스크롤로 확인하기와
     };
   });
   console.log('g2s1u3 E07 layout', { project: testInfo.project.name, ...metrics });
+});
+
+/** A2 E06: 이름으로 단추를 찾는다(exact). 판은 main 슬롯 하나다. */
+function balancePad(page: Page, name: string): Locator {
+  return slot(page, 'main').getByRole('button', { name, exact: true });
+}
+
+async function balanceWrite(page: Page, digits: string): Promise<void> {
+  for (const digit of digits) await balancePad(page, digit).click();
+}
+
+/** □에 넣을 수 칸을 비우고 수를 쓴 뒤 [넣어 보기]. */
+async function balanceTry(page: Page, digits: string): Promise<void> {
+  await slot(page, 'main').getByTestId('try-field').click();
+  for (let i = 0; i < 4; i += 1) await balancePad(page, '지우기').click();
+  await balanceWrite(page, digits);
+  await balancePad(page, '넣어 보기').click();
+}
+
+/** 더하거나 뺄 수 칸에 수를 쓰고 단추(예: '양쪽에서 빼기')를 누른다. */
+async function balanceBoth(page: Page, digits: string, button: string): Promise<void> {
+  await slot(page, 'main').getByTestId('amount-field').click();
+  for (let i = 0; i < 4; i += 1) await balancePad(page, '지우기').click();
+  await balanceWrite(page, digits);
+  await balancePad(page, button).click();
+}
+
+async function expectNoAnswerOnScreen(page: Page, answer: string): Promise<void> {
+  const text = await page.locator('body').innerText();
+  expect(text, `시작 화면에 ${answer}이(가) 보이면 안 됩니다.`).not.toContain(answer);
+  expect(text).not.toMatch(/\d\s*학년/);
+}
+
+test('A2 양팔저울 □ 탐정 — 다섯 과제를 통과한다', async ({ page }) => {
+  await openActivity(page, 'g2s1u3.A2', '양팔저울 □ 탐정');
+  const canvas = slot(page, 'main').getByTestId('balance-canvas');
+
+  // T1 — 17을 넣으면 기울어지고 일반 힌트 ①. 18에서 수평이 되어 통과한다.
+  await expectNoAnswerOnScreen(page, '18');
+  await balanceTry(page, '17');
+  await expect(canvas).toHaveAttribute('data-tilt', 'right');
+  await submit(page);
+  await expectFailedWithHint(page, '저울이 어느 쪽으로 기우는지');
+  await balanceTry(page, '18');
+  await expect(canvas).toHaveAttribute('data-tilt', 'level');
+  await submit(page);
+  await expectPassed(page);
+
+  // T2 — 양쪽에서 16을 더해 □만 남긴다.
+  await expectNoAnswerOnScreen(page, '45');
+  await balanceBoth(page, '16', '양쪽에 더하기');
+  await submit(page);
+  await expectPassed(page);
+
+  // T3 — 97(두 수의 합)을 넣어 MC-EQUAL-ANSWER ①·②를 만난 뒤 맞는 수를 넣는다.
+  await expectNoAnswerOnScreen(page, '23');
+  await balanceTry(page, '97');
+  await submit(page);
+  await expectFailedWithHint(page, '오른쪽은 몇이 되지?');
+  await submit(page);
+  await expectHintLevel(page, '2');
+  await expect(page.getByTestId('hint-text')).toContainText('크게 기울여');
+  await expectOverlayAligned(slot(page, 'main'), 'big-tilt', 'balance-canvas');
+  await balanceTry(page, '23');
+  await submit(page);
+  await expectPassed(page);
+
+  // T4 — 예측을 하기 전에는 조작이 막혀 있다. "예"를 고르고 양쪽에서 5를 뺀다.
+  await expect(balancePad(page, '양쪽에서 빼기')).toBeDisabled();
+  await balancePad(page, '예').click();
+  await balanceBoth(page, '5', '양쪽에서 빼기');
+  await expect(canvas).toHaveAttribute('data-tilt', 'level');
+  await submit(page);
+  await expectPassed(page);
+
+  // T5 — A 단계: 식만 있다.
+  await expectNoAnswerOnScreen(page, '24');
+  await expect(canvas).toHaveAttribute('data-look', 'symbols');
+  await screenshot(page, 'g2s1u3-a2-t5.png');
+  await balanceTry(page, '24');
+  await submit(page);
+  await expectPassed(page, true);
+});
+
+test('A2 T1 첫 화면 — 기준 이미지, 학년 표시 없음, 키보드만으로 통과', async ({ page }) => {
+  await openActivity(page, 'g2s1u3.A2', '양팔저울 □ 탐정');
+  await expectNoAnswerOnScreen(page, '18');
+  await screenshot(page, 'g2s1u3-a2-t1.png');
+
+  // 키보드만으로: 수 칸에 쓰고 Enter(17 → 기움, 18 → 수평) 뒤 확인하기에 Tab으로 닿는다.
+  const canvas = slot(page, 'main').getByTestId('balance-canvas');
+  await slot(page, 'main').getByTestId('try-field').focus();
+  await page.keyboard.type('17');
+  await page.keyboard.press('Enter');
+  await expect(canvas).toHaveAttribute('data-tilt', 'right');
+  await page.keyboard.press('Backspace');
+  await page.keyboard.press('Backspace');
+  await page.keyboard.type('18');
+  await page.keyboard.press('Enter');
+  await expect(canvas).toHaveAttribute('data-tilt', 'level');
+  const button = page.getByRole('button', { name: '확인하기' });
+  let reached = false;
+  for (let i = 0; i < 40; i += 1) {
+    await page.keyboard.press('Tab');
+    if (await button.evaluate((element) => element === document.activeElement)) {
+      reached = true;
+      break;
+    }
+  }
+  expect(reached, 'Tab으로 [확인하기]에 닿아야 합니다.').toBe(true);
+  await page.keyboard.press('Enter');
+  await expect(page.getByText('좋아요, 통과했어요!')).toBeVisible();
+});
+
+test('A2 터치 타깃: 저학년 모드(64px)에서 단추와 수 칸이 64px 이상', async ({ page }) => {
+  await openActivity(page, 'g2s1u3.A2', '양팔저울 □ 탐정');
+  const targets: Locator[] = [
+    balancePad(page, '넣어 보기'),
+    balancePad(page, '양쪽에 더하기'),
+    balancePad(page, '양쪽에서 빼기'),
+    balancePad(page, '처음으로'),
+    balancePad(page, '5'),
+    slot(page, 'main').getByTestId('try-field'),
+  ];
+  for (const target of targets) {
+    await target.scrollIntoViewIfNeeded();
+    const box = await target.boundingBox();
+    if (!box) throw new Error('터치 타깃 상자를 알 수 없습니다.');
+    expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(63.5);
+  }
 });
 
 test('오프라인에서도 g2s1u3.A1 활동이 열린다', async ({ page, context }) => {
