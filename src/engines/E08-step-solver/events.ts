@@ -7,7 +7,8 @@
 import { Rational } from '../../core/math';
 import type { EngineEvent, EnginePredicate, JsonValue, Observation } from '../../core/engine-sdk';
 import { analyzeState } from './analyze';
-import type { StepSolverAction, StepSolverState } from './types';
+import { emitOrderTree } from './order-tree';
+import type { AnyStepSolverState, StepSolverAction } from './types';
 
 function recordOf(value: JsonValue | undefined): Readonly<Record<string, JsonValue>> | null {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) return null;
@@ -33,11 +34,16 @@ function rationalOf(value: JsonValue | undefined): Rational | null {
 }
 
 export function emit(
-  prev: StepSolverState,
-  next: StepSolverState,
+  prev: AnyStepSolverState,
+  next: AnyStepSolverState,
   action: StepSolverAction,
 ): EngineEvent[] {
   if (prev === next) return [];
+  if (prev.mode === 'order-tree' || next.mode === 'order-tree') {
+    return prev.mode === 'order-tree' && next.mode === 'order-tree'
+      ? emitOrderTree(prev, next, action)
+      : [];
+  }
   const before = analyzeState(prev);
   const after = analyzeState(next);
   const events: EngineEvent[] = [];
@@ -122,6 +128,8 @@ export const hasMisconception: EnginePredicate = (
   const list = observation['misconceptions'];
   if (!Array.isArray(list)) return false;
   return list.some((entry) => {
+    // order-tree는 코드 문자열 목록, 나머지는 { line, code } 목록이다.
+    if (entry === code) return true;
     if (entry === null || typeof entry !== 'object' || Array.isArray(entry)) return false;
     return entry['code'] === code;
   });
@@ -153,6 +161,53 @@ export const differentExpressions: EnginePredicate = (
   return expressions.size >= wanted;
 };
 
+function orderOf(value: JsonValue | undefined): number[] | null {
+  if (!Array.isArray(value)) return null;
+  const order: number[] = [];
+  for (const entry of value) {
+    if (typeof entry !== 'number' || !Number.isInteger(entry)) return null;
+    order.push(entry);
+  }
+  return order;
+}
+
+/** order-tree. args `{ opIndex }`. 첫 번째로 계산한 연산이 그 번호인가. */
+export const firstReductionIs: EnginePredicate = (
+  observation: Observation,
+  args: JsonValue | undefined,
+): boolean => {
+  const wanted = numberOf(recordOf(args)?.['opIndex']);
+  const order = orderOf(observation['reductionOrder']);
+  if (wanted === null || order === null) return false;
+  return order[0] === wanted;
+};
+
+/** order-tree. args `{ order }`. 계산한 순서가 정확히 그 번호 목록인가. */
+export const reductionOrderIs: EnginePredicate = (
+  observation: Observation,
+  args: JsonValue | undefined,
+): boolean => {
+  const wanted = orderOf(recordOf(args)?.['order']);
+  const order = orderOf(observation['reductionOrder']);
+  if (wanted === null || order === null) return false;
+  return wanted.length === order.length && wanted.every((value, index) => value === order[index]);
+};
+
+/** order-tree. 끝까지 계산했는가. */
+export const done: EnginePredicate = (observation: Observation): boolean =>
+  observation['done'] === true;
+
+/** order-tree. args `{ n }`. 틀린 누름이 n번 이하인가. */
+export const wrongTapsAtMost: EnginePredicate = (
+  observation: Observation,
+  args: JsonValue | undefined,
+): boolean => {
+  const wanted = numberOf(recordOf(args)?.['n']);
+  const count = numberOf(observation['wrongTapCount']);
+  if (wanted === null || count === null) return false;
+  return count <= wanted;
+};
+
 export const predicates: Readonly<Record<string, EnginePredicate>> = {
   allLinesEquivalent,
   finalValueIs,
@@ -161,4 +216,8 @@ export const predicates: Readonly<Record<string, EnginePredicate>> = {
   selectedLineIs,
   hasMisconception,
   differentExpressions,
+  firstReductionIs,
+  reductionOrderIs,
+  done,
+  wrongTapsAtMost,
 };

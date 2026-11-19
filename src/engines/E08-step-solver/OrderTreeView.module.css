@@ -1,0 +1,198 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+  max-height: 100%;
+  color: #1d2330;
+}
+
+.root:focus-visible {
+  outline: 3px solid #e8872e;
+  outline-offset: 4px;
+  border-radius: 12px;
+}
+
+.instructions {
+  flex: 0 0 auto;
+  margin: 0;
+  color: #4b5668;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.exprScroll {
+  flex: 0 0 auto;
+  overflow-x: auto;
+  border: 2px solid #d7deea;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.expr {
+  display: block;
+}
+
+.op {
+  cursor: pointer;
+  outline: none;
+}
+
+.opRect {
+  fill: #eef4ff;
+  stroke: #2f6fde;
+  stroke-width: 3;
+}
+
+.op:hover .opRect {
+  fill: #dce9ff;
+}
+
+.op:focus-visible .opRect {
+  stroke: #e8872e;
+  stroke-width: 6;
+}
+
+.opText {
+  fill: #1d2330;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.numText,
+.parenText {
+  fill: #1d2330;
+  pointer-events: none;
+}
+
+.readOnly .op {
+  cursor: default;
+}
+
+.shake {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: orderShake 0.4s;
+}
+
+@keyframes orderShake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-8px);
+  }
+  40% {
+    transform: translateX(8px);
+  }
+  60% {
+    transform: translateX(-6px);
+  }
+  80% {
+    transform: translateX(6px);
+  }
+}
+
+@keyframes orderFlash {
+  0%,
+  100% {
+    stroke-width: 3;
+  }
+  50% {
+    stroke: #c94b4b;
+    stroke-width: 8;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shake {
+    animation: none;
+  }
+
+  .shake .opRect {
+    animation: orderFlash 0.4s;
+  }
+}
+
+.wrongMessage {
+  flex: 0 0 auto;
+  margin: 0;
+  min-height: 1.5em;
+  color: #8a3a12;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.buttons {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.button {
+  min-width: var(--target, 48px);
+  min-height: var(--target, 48px);
+  padding: 0 1rem;
+  border: 2px solid #2f6fde;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #1d2330;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.button:disabled {
+  border-color: #d7deea;
+  color: #8a94a6;
+  cursor: default;
+}
+
+.button:focus-visible {
+  outline: 3px solid #e8872e;
+  outline-offset: 2px;
+}
+
+.treeScroll {
+  flex: 0 1 auto;
+  min-height: 96px;
+  max-height: 440px;
+  overflow: auto;
+  border: 2px solid #d7deea;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.tree {
+  display: block;
+}
+
+.treeText {
+  fill: #1d2330;
+}
+
+.treeResult {
+  fill: #b25a0a;
+  font-weight: 700;
+}
+
+.treeBranch {
+  fill: none;
+  stroke: #4b5668;
+  stroke-width: 2.5;
+}
+
+.keyboardHint {
+  flex: 0 0 auto;
+  margin: 0;
+  color: #4b5668;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+/* two-ways 오버레이는 식 줄 svg 아래 빈 자리에 두 줄을 그린다. */
+:global([data-overlay='two-ways']) svg {
+  overflow: visible;
+}

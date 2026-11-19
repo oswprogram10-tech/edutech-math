@@ -8,6 +8,7 @@ export const stepSolverStrings = {
     lines: '한 줄씩 식을 쓰고, 줄 옆 표시로 앞 줄과 값이 같은지 살펴보세요.',
     'fraction-steps': '분수 계산을 여러 줄로 쓰고, 줄마다 단계 이름표를 붙여 보세요.',
     debug: '친구의 풀이에서 틀린 줄을 고르고, 그 줄 아래에 고친 줄을 써 보세요.',
+    'order-tree': '지금 계산할 수 있는 연산 기호를 눌러 보세요. 계산한 부분은 값으로 바뀌어요.',
   } satisfies Record<StepMode, string>,
   configError: (message: string) => `단계 풀이 설정을 확인해 주세요: ${message}`,
   lineName: (line: number) => `${line + 1}번째 줄`,
@@ -87,4 +88,19 @@ export const stepSolverStrings = {
   overlayBarCheck: '두 줄을 막대로 비교',
   emptyField: '빈칸',
   keyboardHint: '키보드 숫자와 + − × ÷, 괄호로도 쓸 수 있어요. Tab으로 분수 칸을 옮겨요.',
+  orderTree: {
+    exprLabel: '계산할 식',
+    treeLabel: '계산 순서 트리',
+    opAria: (symbol: string) => `연산 ${symbol}`,
+    wrongTap: '여기를 먼저 계산할 수 있을까요? 다시 살펴봐요.',
+    undo: '한 단계 되돌리기',
+    reset: '처음부터',
+    keyboardHint:
+      '← → 로 연산 기호를 고르고 Enter나 Space로 눌러요. Backspace는 한 단계 되돌리기예요.',
+    twoWaysPressed: '누른 곳부터 계산하면',
+    twoWaysRule: '약속대로 계산하면',
+    twoWaysQuestion: '어느 쪽이 약속일까요?',
+    twoWaysUnknown: '계산할 수 없어요',
+    defaultExpr: '7 + 3 × (12 − 8) ÷ 2',
+  },
 } as const;

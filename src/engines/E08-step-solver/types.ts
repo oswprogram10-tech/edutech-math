@@ -5,7 +5,10 @@
  * `Rational`로만 하고, 상태에는 문자열만 넣는다. 화면 좌표·터치 크기만 number다.
  */
 
-export type StepMode = 'lines' | 'fraction-steps' | 'debug';
+export type StepMode = 'lines' | 'fraction-steps' | 'debug' | 'order-tree';
+
+/** 줄 편집 기반 세 모드. order-tree는 상태 모양이 달라 따로 둔다. */
+export type LinesMode = Exclude<StepMode, 'order-tree'>;
 
 /** 자연수·소수·분수 틀·대분수 틀. 모든 숫자는 문자열 한 글자 이상이다. */
 export type NumberToken =
@@ -51,7 +54,7 @@ export interface DebugSampleConfig {
 }
 
 export interface StepSolverConfig {
-  readonly mode?: StepMode;
+  readonly mode?: LinesMode;
   /** 첫 줄. `problem`과 같은 뜻이다. */
   readonly start?: string;
   readonly problem?: string;
@@ -66,8 +69,18 @@ export interface StepSolverConfig {
   readonly sample?: number;
 }
 
+/** order-tree 설정. 식은 자연수와 + − × ÷, 괄호만 쓴다(□·분수·소수·비는 설정 오류). */
+export interface OrderTreeConfig {
+  readonly mode: 'order-tree';
+  readonly expr?: string;
+  /** 트리 그림을 보일지(기본 true). */
+  readonly showTree?: boolean;
+}
+
+export type AnyStepSolverConfig = StepSolverConfig | OrderTreeConfig;
+
 export interface StepSolverState {
-  readonly mode: StepMode;
+  readonly mode: LinesMode;
   /** lines·fraction-steps의 학생 줄. debug에서는 고친 줄 하나만 둔다. */
   readonly lines: readonly StepLine[];
   /** debug에서 읽기 전용으로 보여 주는 친구 풀이. 다른 모드에서는 빈 배열. */
@@ -82,7 +95,41 @@ export interface StepSolverState {
   readonly allowFreeOrder: boolean;
 }
 
-export type StepSolverAction =
+/** order-tree에서 한 번 계산한 기록. 값은 Rational 문자열이다. */
+export interface OrderTreeReduction {
+  readonly opIndex: number;
+  readonly op: string;
+  readonly left: string;
+  readonly right: string;
+  readonly result: string;
+}
+
+export interface OrderTreeWrongTap {
+  readonly opIndex: number;
+  readonly code: string | null;
+}
+
+/**
+ * order-tree 상태. 현재 식(AST)은 Rational(BigInt)을 담아 JSON이 되지 않으므로,
+ * 처음 식과 계산 기록으로 다시 만든다.
+ */
+export interface OrderTreeState {
+  readonly mode: 'order-tree';
+  readonly settings: { readonly expr: string; readonly showTree: boolean };
+  readonly reductions: readonly OrderTreeReduction[];
+  readonly wrongTaps: readonly OrderTreeWrongTap[];
+  readonly shake: { readonly opIndex: number; readonly seq: number } | null;
+}
+
+/** 모드와 상관없이 E08이 다루는 모든 상태. */
+export type AnyStepSolverState = StepSolverState | OrderTreeState;
+
+export type OrderTreeAction =
+  | { readonly type: 'tap'; readonly opIndex: number }
+  | { readonly type: 'undo' }
+  | { readonly type: 'reset' };
+
+export type LinesAction =
   | {
       readonly type: 'select-token';
       readonly lineId: string;
@@ -104,5 +151,7 @@ export type StepSolverAction =
       readonly label: string | null;
     };
 
+export type StepSolverAction = LinesAction | OrderTreeAction;
+
 /** students see this order in the sandbox mode picker. */
-export const STEP_MODES: readonly StepMode[] = ['lines', 'fraction-steps', 'debug'];
+export const STEP_MODES: readonly StepMode[] = ['lines', 'fraction-steps', 'debug', 'order-tree'];
