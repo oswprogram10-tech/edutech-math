@@ -6,14 +6,20 @@
  * `core/math`로 한다. 여기서는 문자열을 수로 바꾸지 않는다.
  */
 import { stepSolverStrings } from './strings.ko';
+import { createOrderTreeState, reduceOrderTree } from './order-tree';
 import { fieldsOf, firstField, lastField, tokensFromText } from './expression';
 import type {
   NumberToken,
   OperatorKind,
   StepLine,
-  StepMode,
+  LinesAction,
+  LinesMode,
+  OrderTreeConfig,
+  OrderTreeState,
   StepSolverAction,
   StepSolverConfig,
+  AnyStepSolverConfig,
+  AnyStepSolverState,
   StepSolverState,
   Token,
   TokenCursor,
@@ -38,11 +44,20 @@ function emptyLine(id: string): StepLine {
   return { id, tokens: [], label: null, fixed: false };
 }
 
-function modeOf(config: StepSolverConfig): StepMode {
+function modeOf(config: StepSolverConfig): LinesMode {
   return config.mode ?? 'lines';
 }
 
-export function createInitialState(config: StepSolverConfig): StepSolverState {
+/** 줄 편집 모드 설정이면 StepSolverState, order-tree면 OrderTreeState를 돌려준다. */
+export function createInitialState(config: StepSolverConfig): StepSolverState;
+export function createInitialState(config: OrderTreeConfig): OrderTreeState;
+export function createInitialState(config: AnyStepSolverConfig): AnyStepSolverState;
+export function createInitialState(config: AnyStepSolverConfig): AnyStepSolverState {
+  if (config.mode === 'order-tree') return createOrderTreeState(config);
+  return createLinesState(config);
+}
+
+function createLinesState(config: StepSolverConfig): StepSolverState {
   const mode = modeOf(config);
   const checkEachLine = config.checkEachLine ?? true;
   const diagnose = config.diagnose ?? true;
@@ -527,7 +542,16 @@ function selectToken(
 }
 
 /** 모든 조작의 유일한 입구. 같은 Action 목록은 같은 상태를 재생한다. */
-export function reduce(state: StepSolverState, action: StepSolverAction): StepSolverState {
+export function reduce(state: StepSolverState, action: StepSolverAction): StepSolverState;
+export function reduce(state: OrderTreeState, action: StepSolverAction): OrderTreeState;
+export function reduce(state: AnyStepSolverState, action: StepSolverAction): AnyStepSolverState;
+export function reduce(state: AnyStepSolverState, action: StepSolverAction): AnyStepSolverState {
+  if (state.mode === 'order-tree') return reduceOrderTree(state, action);
+  if (action.type === 'tap' || action.type === 'undo' || action.type === 'reset') return state;
+  return reduceLines(state, action);
+}
+
+function reduceLines(state: StepSolverState, action: LinesAction): StepSolverState {
   switch (action.type) {
     case 'select-token':
       return selectToken(state, action.lineId, action.token, action.field);
@@ -555,6 +579,6 @@ export function reduce(state: StepSolverState, action: StepSolverAction): StepSo
 }
 
 /** 키패드 연산 키를 Action으로 바꾼다. */
-export function operatorAction(op: OperatorKind): StepSolverAction {
+export function operatorAction(op: OperatorKind): LinesAction {
   return { type: 'insert-token', token: { kind: 'op', op } };
 }

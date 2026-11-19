@@ -21,10 +21,13 @@ import type {
   StepLine,
   StepSolverAction,
   StepSolverConfig,
+  AnyStepSolverConfig,
+  AnyStepSolverState,
   StepSolverState,
   Token,
   TokenField,
 } from './types';
+import { OrderTreeView } from './OrderTreeView';
 import styles from './View.module.css';
 
 type KeySpec =
@@ -589,7 +592,17 @@ function activeLineOf(state: StepSolverState): StepLine | null {
   return state.lines.find((line) => !line.fixed) ?? null;
 }
 
-export function StepSolverView({
+/** order-tree는 상태 모양이 달라 따로 그린다. 훅 순서가 섞이지 않게 모드로 갈라 둔다. */
+export function StepSolverView(
+  props: EngineViewProps<AnyStepSolverConfig, AnyStepSolverState, StepSolverAction>,
+) {
+  const { config, state } = props;
+  if (state.mode === 'order-tree') return <OrderTreeView {...props} state={state} />;
+  const linesConfig: StepSolverConfig = config.mode === 'order-tree' ? {} : config;
+  return <LinesSolverView {...props} config={linesConfig} state={state} />;
+}
+
+function LinesSolverView({
   config,
   state,
   dispatch,

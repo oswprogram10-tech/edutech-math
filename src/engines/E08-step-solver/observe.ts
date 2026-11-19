@@ -6,8 +6,9 @@
  */
 import type { JsonValue, Observation } from '../../core/engine-sdk';
 import { analyzeState } from './analyze';
+import { observeOrderTree } from './order-tree';
 import type { StateAnalysis } from './analyze';
-import type { StepSolverConfig, StepSolverState } from './types';
+import type { AnyStepSolverConfig, AnyStepSolverState } from './types';
 
 function linesPayload(analysis: StateAnalysis): JsonValue {
   return analysis.lines.map((line) => ({
@@ -19,8 +20,9 @@ function linesPayload(analysis: StateAnalysis): JsonValue {
   }));
 }
 
-export function observe(state: StepSolverState, config?: StepSolverConfig): Observation {
+export function observe(state: AnyStepSolverState, config?: AnyStepSolverConfig): Observation {
   void config;
+  if (state.mode === 'order-tree') return observeOrderTree(state);
   const analysis = analyzeState(state);
   const base: Record<string, JsonValue> = {
     mode: state.mode,

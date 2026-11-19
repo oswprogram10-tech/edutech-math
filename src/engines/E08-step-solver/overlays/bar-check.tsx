@@ -5,7 +5,7 @@
 import type { OverlayProps } from '../../../core/engine-sdk';
 import { analyzeState, barRatio } from '../analyze';
 import { stepSolverStrings as S } from '../strings.ko';
-import type { StepSolverConfig, StepSolverState } from '../types';
+import type { AnyStepSolverConfig, AnyStepSolverState } from '../types';
 
 function argsLine(args: unknown): number | null {
   if (args === null || typeof args !== 'object' || Array.isArray(args)) return null;
@@ -13,7 +13,11 @@ function argsLine(args: unknown): number | null {
   return typeof value === 'number' && Number.isInteger(value) ? value : null;
 }
 
-export function BarCheckOverlay({ state, args }: OverlayProps<StepSolverConfig, StepSolverState>) {
+export function BarCheckOverlay({
+  state,
+  args,
+}: OverlayProps<AnyStepSolverConfig, AnyStepSolverState>) {
+  if (state.mode === 'order-tree') return null;
   const analysis = analyzeState(state);
   const line = argsLine(args) ?? analysis.firstBrokenLine;
   if (line === null || line <= 0 || line >= analysis.lines.length) return null;
