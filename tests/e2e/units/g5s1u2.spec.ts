@@ -383,6 +383,7 @@ test('A2 맞물려 도는 톱니바퀴 — 대표 오답 뒤 고쳐서 다섯 �
   await turnGears(page, 12);
   await expect(slot(page, 'gears').getByTestId('gears-meet-star')).toBeVisible();
   await expect(slot(page, 'gears').getByTestId('gears-steps')).toHaveText('돌린 칸: 12');
+  await expect(page.locator('[data-testid="linked-marker"][data-value="12"]')).toBeVisible();
   await typeNumber(page, 'p', ['2', '4']);
   await submit(page);
   await expectFailedWithHint(page, '24보다 먼저 두 톱니가 만나는 곳은 없을까?');
