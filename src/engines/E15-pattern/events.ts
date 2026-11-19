@@ -96,6 +96,16 @@ function intArg(args: Readonly<Record<string, JsonValue>>, key: string): number 
   return typeof value === 'number' && Number.isInteger(value) ? value : null;
 }
 
+/**
+ * 정수 인자를 비교용 글자로 바꾼다. number는 안전한 정수만(12345678987654321 같은 큰 수는
+ * 숫자로 쓰면 JSON에서 뭉개지므로 글자열로 받는다), 글자열은 숫자만 받는다.
+ */
+function intText(value: unknown): string | null {
+  if (typeof value === 'number') return Number.isSafeInteger(value) ? String(value) : null;
+  if (typeof value === 'string' && /^-?\d+$/.test(value)) return BigInt(value).toString();
+  return null;
+}
+
 function obsStrings(observation: Observation, key: string): string[] {
   return stringList(observation[key]) ?? [];
 }
@@ -182,6 +192,36 @@ export const predicates: Readonly<Record<string, EnginePredicate>> = {
     for (let cell = from; cell <= upTo; cell += of) want.add(cell);
     const have = new Set(painted as number[]);
     return want.size === have.size && [...want].every((cell) => have.has(cell));
+  },
+
+  builtIsPyramid: (observation) => observation['builtIsPyramid'] === true,
+
+  builtTotalIs: (observation, args) => {
+    const n = intArg(recordOf(args), 'n');
+    return n !== null && observation['builtTotal'] === n;
+  },
+
+  exprHolds: (observation) => observation['exprHolds'] === true,
+
+  exprAddendsAre: (observation, args) => {
+    const terms = recordOf(args)['terms'];
+    const have = stringList(observation['exprAddends']);
+    if (!Array.isArray(terms) || have === null || terms.length !== have.length) return false;
+    return terms.every((term, index) => intText(term) === have[index]);
+  },
+
+  exprFactorsAre: (observation, args) => {
+    const record = recordOf(args);
+    const a = intText(record['a']);
+    const b = intText(record['b']);
+    const have = stringList(observation['exprFactors']);
+    if (a === null || b === null || have === null || have.length !== 2) return false;
+    return (have[0] === a && have[1] === b) || (have[0] === b && have[1] === a);
+  },
+
+  exprValueIs: (observation, args) => {
+    const n = intText(recordOf(args)['n']);
+    return n !== null && observation['exprHolds'] === true && observation['exprLeft'] === n;
   },
 
   hasMisconception: (observation, args) => {

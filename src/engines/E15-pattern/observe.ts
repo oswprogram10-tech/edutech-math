@@ -3,6 +3,15 @@
  * View는 이 값을 읽지 않는다.
  */
 import type { JsonValue, Observation } from '../../core/engine-sdk';
+import {
+  MC_RECURSIVE_ONLY,
+  isPyramid,
+  isRecursiveBuild,
+  isRecursiveExpression,
+  readExpression,
+  totalOf,
+  trimHeights,
+} from './calc';
 import { entryValue, rowColCells } from './chart';
 import {
   continuation,
@@ -12,7 +21,7 @@ import {
   restoredMatches,
   translatePairs,
 } from './pattern';
-import type { ChartState, PatternState, SequenceState } from './types';
+import type { CalcState, ChartState, PatternState, SequenceState } from './types';
 import { chartRangeOf } from './types';
 
 function sequenceObservation(state: SequenceState): Observation {
@@ -92,6 +101,38 @@ function chartObservation(state: ChartState): Observation {
   };
 }
 
+function calcObservation(state: CalcState): Observation {
+  const { settings } = state;
+  const heights = trimHeights(state.heights);
+  const reading = readExpression(state.exprText);
+  const misconceptions: string[] = [];
+  if (settings.error === null) {
+    if (
+      isRecursiveBuild(state.heights, settings.workStep) ||
+      isRecursiveExpression(reading, settings.pattern, settings.workStep)
+    ) {
+      misconceptions.push(MC_RECURSIVE_ONLY);
+    }
+  }
+  return {
+    mode: 'calc-pattern',
+    pattern: settings.pattern,
+    workStep: settings.workStep,
+    heights,
+    builtTotal: totalOf(heights),
+    builtIsPyramid: isPyramid(state.heights, settings.workStep),
+    exprText: state.exprText,
+    exprValid: reading.valid,
+    exprHolds: reading.holds,
+    exprLeft: reading.left,
+    exprRight: reading.right,
+    exprAddends: reading.addends,
+    exprFactors: reading.factors,
+    misconceptions,
+  };
+}
+
 export function observe(state: PatternState): Observation {
+  if (state.mode === 'calc-pattern') return calcObservation(state);
   return state.mode === 'sequence' ? sequenceObservation(state) : chartObservation(state);
 }

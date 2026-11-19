@@ -12,7 +12,16 @@ import {
   rowsOf,
 } from './chart';
 import type { ChartRange, ChartView } from './chart';
-import type { ChartSettings, Look, PatternConfig, SequenceSettings } from './types';
+import { REPUNIT, SYMMETRIC } from './calc';
+import type {
+  CalcLook,
+  CalcPatternName,
+  CalcSettings,
+  ChartSettings,
+  Look,
+  PatternConfig,
+  SequenceSettings,
+} from './types';
 
 export function recordOf(value: unknown): Record<string, unknown> {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) return {};
@@ -174,5 +183,61 @@ export function chartSettings(config: PatternConfig | undefined): ResolvedChart 
       prepainted,
       seed,
     },
+  };
+}
+
+const CALC_LOOKS: readonly CalcLook[] = ['blocks', 'picture', 'none'];
+
+/** 설정 정수. 값이 없으면 기본값, 있는데 정수가 아니거나 범위 밖이면 `null`. */
+function strictInt(value: unknown, min: number, max: number): number | null {
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < min || value > max) {
+    return null;
+  }
+  return value;
+}
+
+/**
+ * calc-pattern 설정 정규화. 모르는 pattern이거나 단계 수가 범위 밖이면 `error`를 켠다
+ * (throw하지 않는다. 화면은 설정 오류 판을 그린다). `pattern`이 없으면 symmetric이다.
+ */
+export function calcSettings(config: PatternConfig | undefined): CalcSettings {
+  const record = recordOf(config);
+  let error: string | null = null;
+  const patternRaw = record['pattern'];
+  let pattern: CalcPatternName = SYMMETRIC;
+  if (patternRaw === REPUNIT || patternRaw === SYMMETRIC) {
+    pattern = patternRaw as CalcPatternName;
+  } else if (patternRaw !== undefined) {
+    error = 'pattern';
+  }
+
+  let stepsShown = 3;
+  if (record['stepsShown'] !== undefined) {
+    const value = strictInt(record['stepsShown'], 1, 8);
+    if (value === null) error = error ?? 'stepsShown';
+    else stepsShown = value;
+  }
+  let workStep = stepsShown + 1;
+  if (record['workStep'] !== undefined) {
+    const value = strictInt(record['workStep'], 1, 9);
+    if (value === null) error = error ?? 'workStep';
+    else workStep = value;
+  }
+  if (error !== null) devWarn(`calc-pattern 설정을 읽을 수 없습니다(${error}).`);
+
+  const look: CalcLook = CALC_LOOKS.includes(record['look'] as CalcLook)
+    ? (record['look'] as CalcLook)
+    : 'blocks';
+  const symmetric = pattern === SYMMETRIC;
+  return {
+    pattern,
+    stepsShown,
+    workStep,
+    // 쌓기는 symmetric에서 look이 blocks이고 build가 꺼지지 않았을 때만 있다.
+    build: symmetric && look === 'blocks' && record['build'] !== false,
+    expression: record['expression'] !== false,
+    linkHighlight: symmetric && look !== 'none' && record['linkHighlight'] !== false,
+    look,
+    error,
   };
 }
