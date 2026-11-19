@@ -137,6 +137,8 @@ describe('parse 오류', () => {
     expect(codeOf(() => parse(''))).toBe('PARSE');
     expect(codeOf(() => parse('   '))).toBe('PARSE');
     expect(codeOf(() => parse('%'))).toBe('PARSE');
+    expect(codeOf(() => parse('○+1'))).toBe('PARSE');
+    expect(codeOf(() => parse('□=3'))).toBe('PARSE');
   });
 
   it('위치를 알려 준다', () => {
