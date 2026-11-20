@@ -4,11 +4,13 @@
  */
 import type { JsonValue, Observation } from '../../core/engine-sdk';
 import { Rational } from '../../core/math';
+import { readBar } from './bar';
 import { MC_RATE_DISTANCE_ONLY, MC_RATIO_ADDITIVE } from './strings.ko';
 import { PERCENT_CELLS, SAME_PREDICTION } from './types';
 import type {
   Amounts,
   MixState,
+  BarState,
   PercentState,
   RacerState,
   RateState,
@@ -258,6 +260,31 @@ function observePercent(state: PercentState): Observation {
   };
 }
 
+function observeBar(state: BarState): Observation {
+  const reading = readBar(state);
+  const marked = (kind: 'total' | 'ratio') =>
+    Object.entries(state.marks)
+      .filter(([, mark]) => mark === kind)
+      .map(([index]) => Number(index))
+      .sort((a, b) => a - b);
+  return {
+    mode: 'bar-model',
+    marks: { total: marked('total'), ratio: marked('ratio') },
+    highlightCorrect: reading.highlightCorrect,
+    unit: state.unit,
+    unitCorrect: reading.unitCorrect,
+    partValues: [...state.partValues],
+    partsCorrect: reading.partsCorrect,
+    totalValue: state.totalValue,
+    totalCorrect: reading.totalCorrect,
+    expr: state.expr,
+    exprValue: reading.exprValue === null ? null : reading.exprValue.toString(),
+    exprMatchesPart: reading.exprMatchesPart,
+    partsSumMatches: reading.partsSumMatches,
+    misconceptions: reading.misconceptions,
+  };
+}
+
 export function observe(state: RatioState, config: RatioConfig): Observation {
   void config;
   switch (state.mode) {
@@ -269,5 +296,7 @@ export function observe(state: RatioState, config: RatioConfig): Observation {
       return observeRate(state);
     case 'percent':
       return observePercent(state);
+    case 'bar-model':
+      return observeBar(state);
   }
 }

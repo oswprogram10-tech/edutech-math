@@ -58,7 +58,11 @@ const ENGINES: readonly EngineCase[] = [
     heading: '평균·가능성 실험실',
     modes: ['leveling', 'seesaw', 'outlier', 'words', 'spinner', 'simulate'],
   },
-  { label: 'E20', heading: '비·비율 실험실', modes: ['mix', 'resize', 'rate', 'percent'] },
+  {
+    label: 'E20',
+    heading: '비·비율 실험실',
+    modes: ['mix', 'resize', 'rate', 'percent', 'bar-model'],
+  },
 ];
 
 async function openMode(page: Page, engine: string, heading: string, mode: string): Promise<void> {

@@ -8,6 +8,7 @@ import { ActionButton } from './ActionButton';
 import { shortcutsOf } from './shortcuts';
 import type { Shortcut } from './shortcuts';
 import { E20_STRINGS as S } from './strings.ko';
+import { BarControls } from './BarControls';
 import { PercentControls } from './PercentControls';
 import { RateControls } from './RateControls';
 import type { RatioAction, RatioState } from './types';
@@ -23,6 +24,7 @@ export interface ControlsProps {
 
 export function Controls({ state, ui, readOnly }: ControlsProps) {
   if (state.mode === 'rate') return <RateControls state={state} ui={ui} readOnly={readOnly} />;
+  if (state.mode === 'bar-model') return <BarControls state={state} ui={ui} readOnly={readOnly} />;
   if (state.mode === 'percent')
     return <PercentControls state={state} ui={ui} readOnly={readOnly} />;
   const shortcuts = shortcutsOf(state);

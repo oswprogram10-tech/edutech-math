@@ -1,6 +1,7 @@
 /** E20 조작 칸의 지역 상태(안내 글)와 키보드 처리. 거절된 조작은 이유를 글로 알린다. */
 import { useState } from 'react';
 import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
+import { cleanExpr, cleanInteger } from './bar';
 import { racersComplete } from './observe';
 import { reduce } from './reduce';
 import { shortcutsOf } from './shortcuts';
@@ -34,6 +35,22 @@ function rejection(state: RatioState, action: RatioAction): string {
     }
     if (action.type === 'run') {
       return racersComplete(state.racers) ? text.needPrediction : text.needValues;
+    }
+    return '';
+  }
+  if (state.mode === 'bar-model') {
+    const text = S.bar.rejected;
+    if (action.type === 'set-expr') {
+      if (state.settings.look !== 'symbols') return text.locked;
+      return cleanExpr(action.value) === undefined ? text.notExpr : '';
+    }
+    if (action.type === 'set-unit' || action.type === 'set-part' || action.type === 'set-total') {
+      if (cleanInteger(action.value) === undefined) return text.notNumber;
+      const locked =
+        (action.type === 'set-unit' && state.settings.look === 'symbols') ||
+        (action.type === 'set-part' && state.settings.known?.part === action.index) ||
+        (action.type === 'set-total' && state.settings.total !== null);
+      return locked ? text.locked : '';
     }
     return '';
   }

@@ -10,9 +10,18 @@ interface ButtonProps {
   readonly ui: RatioUi;
   readonly readOnly: boolean;
   readonly primary?: boolean;
+  readonly pressed?: boolean;
 }
 
-export function ActionButton({ id, label, shortcuts, ui, readOnly, primary }: ButtonProps) {
+export function ActionButton({
+  id,
+  label,
+  shortcuts,
+  ui,
+  readOnly,
+  primary,
+  pressed,
+}: ButtonProps) {
   const shortcut = shortcuts.find((s) => s.id === id);
   if (!shortcut) return null;
   return (
@@ -21,6 +30,7 @@ export function ActionButton({ id, label, shortcuts, ui, readOnly, primary }: Bu
       className={primary ? `${styles.button} ${styles.primary}` : styles.button}
       aria-label={label}
       aria-keyshortcuts={shortcut.code.replace('Digit', '')}
+      aria-pressed={pressed}
       data-action={id}
       disabled={readOnly}
       onClick={() => ui.send(shortcut.action)}

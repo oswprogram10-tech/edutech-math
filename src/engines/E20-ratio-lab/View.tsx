@@ -6,6 +6,8 @@ import { useRef } from 'react';
 import type { CSSProperties } from 'react';
 import { useRenderedSize } from '../../core/engine-sdk';
 import type { EngineViewProps } from '../../core/engine-sdk';
+import { BarBoard } from './BarBoard';
+import { BarSentence } from './BarSentence';
 import { Controls } from './Controls';
 import { MixBoard } from './MixBoard';
 import { PercentBoard } from './PercentBoard';
@@ -13,7 +15,7 @@ import { RateBoard } from './RateBoard';
 import { ResizeBoard } from './ResizeBoard';
 import { E20_STRINGS as S } from './strings.ko';
 import type { RatioAction, RatioConfig, RatioState } from './types';
-import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from './types';
+import { BAR_LOGICAL_HEIGHT, LOGICAL_HEIGHT, LOGICAL_WIDTH } from './types';
 import { useRatioUi } from './useRatioUi';
 import styles from './View.module.css';
 
@@ -42,15 +44,16 @@ export function RatioView({
     );
   }
 
+  const logicalHeight = state.mode === 'bar-model' ? BAR_LOGICAL_HEIGHT : LOGICAL_HEIGHT;
   let svgStyle: CSSProperties | undefined;
   let scroll = false;
   if (board.width > 0 && board.height > 0) {
-    const fit = Math.min(board.width / LOGICAL_WIDTH, board.height / LOGICAL_HEIGHT, MAX_FIT);
+    const fit = Math.min(board.width / LOGICAL_WIDTH, board.height / logicalHeight, MAX_FIT);
     const scale = Math.max(fit, MIN_SCALE);
     scroll = fit < MIN_SCALE - 0.005;
     svgStyle = {
       width: `${LOGICAL_WIDTH * scale}px`,
-      height: `${LOGICAL_HEIGHT * scale}px`,
+      height: `${logicalHeight * scale}px`,
     };
   }
 
@@ -62,6 +65,9 @@ export function RatioView({
       data-look={state.mode === 'percent' ? state.settings.layout : state.settings.look}
       onKeyDown={ui.onKeyDown}
     >
+      {state.mode === 'bar-model' ? (
+        <BarSentence state={state} ui={ui} readOnly={readOnly} />
+      ) : null}
       <div className={styles.stageRow}>
         <div
           ref={boardRef}
@@ -77,6 +83,9 @@ export function RatioView({
           ) : null}
           {state.mode === 'rate' ? (
             <RateBoard state={state} svgStyle={svgStyle} className={styles.boardSvg} />
+          ) : null}
+          {state.mode === 'bar-model' ? (
+            <BarBoard state={state} svgStyle={svgStyle} className={styles.boardSvg} />
           ) : null}
           {state.mode === 'percent' ? (
             <PercentBoard

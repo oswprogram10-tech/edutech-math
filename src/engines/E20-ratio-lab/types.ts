@@ -1,5 +1,5 @@
 /**
- * E20 비·비율 실험실 `mix`·`resize`·`rate`·`percent` 모드의 설정·상태·Action 타입.
+ * E20 비·비율 실험실 `mix`·`resize`·`rate`·`percent`·`bar-model` 모드의 설정·상태·Action 타입.
  * 양(컵의 블록·사진의 칸)은 0 이상의 정수 개수로 저장한다. 비의 값·동치는 core Rational로 계산한다.
  * 설정에 목표 값(예: 시럽 2)은 없다. 판정은 콘텐츠 goal이 Observation으로 한다.
  */
@@ -93,7 +93,29 @@ export interface PercentConfig {
   showCount?: boolean;
 }
 
-export type RatioConfig = MixConfig | ResizeConfig | RateConfig | PercentConfig;
+export type BarLook = 'bars' | 'symbols';
+export type BarMark = 'total' | 'ratio';
+export type BarTool = BarMark | 'erase';
+
+export interface BarModelConfig {
+  mode: 'bar-model';
+  /** 문장. 띄어쓰기 단위로 토큰을 나누고, 수는 붙은 조사·단위와 따로 나눈다("35개를" → "35", "개를"). */
+  problem?: string;
+  /** 형광펜 목표 토큰 글자. null·생략이면 형광펜 단계가 없다. 장면을 모두 생략한 기본 장면은 있다. */
+  highlight?: { total?: string; ratio?: string[] } | null;
+  /** 2~3개. */
+  parts?: string[];
+  /** parts와 같은 길이, 1~12 정수. */
+  ratio?: number[];
+  /** 전체(알려진 경우). total·known 중 정확히 하나. */
+  total?: number | null;
+  /** 거꾸로 문제: 한 사람 몫이 알려짐. */
+  known?: { part: number; value: number } | null;
+  /** 기본 'bars' (P 막대 / A 막대 숨김 + 식 칸). */
+  look?: BarLook;
+}
+
+export type RatioConfig = MixConfig | ResizeConfig | RateConfig | PercentConfig | BarModelConfig;
 
 export interface MixSettings {
   readonly look: MixLook;
@@ -195,7 +217,35 @@ export interface PercentState {
   readonly initialCells: readonly number[];
 }
 
-export type RatioState = MixState | ResizeState | RateState | PercentState;
+export interface BarSettings {
+  readonly look: BarLook;
+  readonly problem: string;
+  /** 문장 토큰(번호가 mark의 index). */
+  readonly tokens: readonly string[];
+  /** 띄어쓰기 덩어리별 토큰 수(줄바꿈 묶음용). */
+  readonly chunkSizes: readonly number[];
+  readonly highlight: { readonly total: string | null; readonly ratio: readonly string[] } | null;
+  readonly parts: readonly string[];
+  readonly ratio: readonly number[];
+  readonly total: number | null;
+  readonly known: { readonly part: number; readonly value: number } | null;
+}
+
+export interface BarState {
+  readonly mode: 'bar-model';
+  readonly error: string | null;
+  readonly settings: BarSettings;
+  /** 칠한 토큰 번호 → 전체/비. */
+  readonly marks: Readonly<Record<number, BarMark>>;
+  readonly tool: BarTool;
+  /** 학생이 쓴 정수(글자). 비었으면 null. */
+  readonly unit: string | null;
+  readonly partValues: readonly (string | null)[];
+  readonly totalValue: string | null;
+  readonly expr: string | null;
+}
+
+export type RatioState = MixState | ResizeState | RateState | PercentState | BarState;
 
 export type RatioAction =
   | { readonly type: 'add'; readonly ingredient: Ingredient; readonly n: number }
@@ -215,10 +265,18 @@ export type RatioAction =
   | { readonly type: 'toggle'; readonly index: number }
   | { readonly type: 'fill-to'; readonly count: number }
   | { readonly type: 'clear' }
+  | { readonly type: 'mark'; readonly index: number }
+  | { readonly type: 'set-tool'; readonly tool: BarTool }
+  | { readonly type: 'set-unit'; readonly value: string }
+  | { readonly type: 'set-part'; readonly index: number; readonly value: string }
+  | { readonly type: 'set-total'; readonly value: string }
+  | { readonly type: 'set-expr'; readonly value: string }
   | { readonly type: 'reset' };
 
 export const LOGICAL_WIDTH = 1000;
 export const LOGICAL_HEIGHT = 600;
+/** bar-model 판의 논리 높이(문장 줄이 위에 있어 판을 낮게 둔다. 최소 배율 0.6이면 300px). */
+export const BAR_LOGICAL_HEIGHT = 500;
 export const CANVAS_SELECTOR = 'svg[data-testid="ratio-canvas"]';
 
 export const DEFAULT_REFERENCE: Amounts = { milk: 4, syrup: 1 };
@@ -232,3 +290,7 @@ export const DEFAULT_MAX_DISTANCE = 400;
 export const DEFAULT_MAX_TIME = 120;
 export const PERCENT_CELLS = 100;
 export const SAME_PREDICTION = 'same';
+export const BAR_MAX_TERM = 12;
+export const BAR_MAX_DIGITS = 6;
+export const BAR_MAX_EXPR = 40;
+export const BAR_MAX_TOKENS = 60;

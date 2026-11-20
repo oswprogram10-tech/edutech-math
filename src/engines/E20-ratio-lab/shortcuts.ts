@@ -40,6 +40,14 @@ export function shortcutsOf(state: RatioState): readonly Shortcut[] {
     );
     return list;
   }
+  if (state.mode === 'bar-model') {
+    return [
+      { id: 'tool-total', code: 'KeyT', label: 'T', action: { type: 'set-tool', tool: 'total' } },
+      { id: 'tool-ratio', code: 'KeyB', label: 'B', action: { type: 'set-tool', tool: 'ratio' } },
+      { id: 'tool-erase', code: 'KeyE', label: 'E', action: { type: 'set-tool', tool: 'erase' } },
+      { id: 'reset', code: 'KeyR', label: 'R', action: { type: 'reset' } },
+    ];
+  }
   if (state.mode === 'percent') {
     return [
       { id: 'clear', code: 'KeyC', label: 'C', action: { type: 'clear' } },
