@@ -57,7 +57,7 @@ const ENGINES: readonly EngineCase[] = [
   {
     label: 'E17',
     heading: '분류기',
-    modes: ['venn', 'secret-rule', 'hierarchy'],
+    modes: ['venn', 'secret-rule', 'hierarchy', 'sort', 'predict'],
   },
   {
     label: 'E19',
@@ -75,7 +75,9 @@ async function openMode(page: Page, engine: string, heading: string, mode: strin
   await page.goto(`/?stage=fit#/sandbox/${engine}`);
   await expect(page.getByRole('heading', { name: heading })).toBeVisible();
   await page.getByLabel('모드').selectOption(mode);
-  await expect(page.locator('[data-testid="observation"]')).toContainText(`"mode":"${mode}"`);
+  // 샌드박스의 E17 predict는 secret-rule의 변형이라 관찰 결과의 mode는 secret-rule이다.
+  const observed = engine === 'E17' && mode === 'predict' ? 'secret-rule' : mode;
+  await expect(page.locator('[data-testid="observation"]')).toContainText(`"mode":"${observed}"`);
 }
 
 for (const engine of ENGINES) {

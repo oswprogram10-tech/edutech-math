@@ -11,11 +11,16 @@ import { CardPropertiesOverlay } from './overlays/card-properties';
 import { ConditionChecklistOverlay } from './overlays/condition-checklist';
 import { IsoChecklistOverlay } from './overlays/iso-checklist';
 import { UprightCardOverlay } from './overlays/upright-card';
+import { BinAttributesOverlay } from './sort/overlays/bin-attributes';
+import { GrayShapesOverlay } from './sort/overlays/gray-shapes';
+import { RotateMatchOverlay } from './sort/overlays/rotate-match';
+import { TouchDotsOverlay } from './sort/overlays/touch-dots';
+import { TwoFriendsOverlay } from './sort/overlays/two-friends';
 
 const definition: EngineDefinition<SorterConfig, SorterState, SorterAction> = {
   id: 'E17',
   name: sorterStrings.name,
-  modes: ['venn', 'secret-rule', 'hierarchy'],
+  modes: ['venn', 'secret-rule', 'hierarchy', 'sort', 'predict'],
   createInitialState,
   reduce,
   View: SorterView,
@@ -29,6 +34,11 @@ const definition: EngineDefinition<SorterConfig, SorterState, SorterAction> = {
     'iso-checklist': IsoChecklistOverlay,
     'card-properties': CardPropertiesOverlay,
     'condition-checklist': ConditionChecklistOverlay,
+    'bin-attributes': BinAttributesOverlay,
+    'two-friends': TwoFriendsOverlay,
+    'touch-dots': TouchDotsOverlay,
+    'gray-shapes': GrayShapesOverlay,
+    'rotate-match': RotateMatchOverlay,
   },
 };
 

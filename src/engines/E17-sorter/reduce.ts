@@ -9,6 +9,10 @@
 import { cardById, deckCards, deckIds } from './deck';
 import { answerQuestion, quadProps, signature } from './properties';
 import { secretFor } from './random';
+import { createPredictState, reducePredict } from './secret-rule-predict/reduce';
+import type { PredictAction } from './secret-rule-predict/types';
+import { createSortState, reduceSort } from './sort/reduce';
+import type { SortAction } from './sort/types';
 import type {
   AngleCondition,
   CardId,
@@ -52,10 +56,13 @@ export function inferMode(config: SorterConfig | undefined): SorterMode {
   if (
     record['mode'] === 'venn' ||
     record['mode'] === 'secret-rule' ||
-    record['mode'] === 'hierarchy'
+    record['mode'] === 'hierarchy' ||
+    record['mode'] === 'sort'
   ) {
     return record['mode'];
   }
+  // 샌드박스 모드 상자의 'predict'는 secret-rule의 predict 변형이다.
+  if (record['mode'] === 'predict') return 'secret-rule';
   if (
     record['variant'] !== undefined ||
     record['questionBank'] !== undefined ||
@@ -181,8 +188,15 @@ function emptySwap(): SwapState {
   return { secret: null, candidates: [], log: [], pending: null, done: false };
 }
 
+export function isPredictConfig(config: SorterConfig | undefined): boolean {
+  const record = recordOf(config) ?? {};
+  return record['mode'] === 'predict' || record['variant'] === 'predict';
+}
+
 export function createInitialState(config: SorterConfig): SorterState {
   const mode = inferMode(config);
+  if (mode === 'sort') return createSortState(config);
+  if (mode === 'secret-rule' && isPredictConfig(config)) return createPredictState(config);
   if (mode === 'secret-rule') {
     const settings = secretSettings(config);
     const ids = deckIds(settings.deck);
@@ -342,6 +356,7 @@ function reduceSecret(state: SecretRuleState, action: SorterAction): SecretRuleS
       return { ...state, eliminated: state.eliminated.filter((card) => card !== action.card) };
     }
     case 'guess': {
+      if (!('card' in action)) return state;
       if (state.role !== 'guesser' || state.solved) return state;
       if (!deckIds(state.deck).includes(action.card)) return state;
       if (state.eliminated.includes(action.card)) return state;
@@ -442,6 +457,8 @@ function reduceHierarchy(state: HierarchyState, action: SorterAction): Hierarchy
 }
 
 export function reduce(state: SorterState, action: SorterAction): SorterState {
+  if (state.mode === 'sort') return reduceSort(state, action as SortAction);
+  if (state.mode === 'predict') return reducePredict(state, action as PredictAction);
   if (state.mode === 'venn') return reduceVenn(state, action);
   if (state.mode === 'secret-rule') return reduceSecret(state, action);
   return reduceHierarchy(state, action);
