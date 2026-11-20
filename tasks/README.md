@@ -375,6 +375,8 @@ W6에서 E13 측정 실험실과 E14 시계·시간을 새로 만들고, E17 `so
 
 - **T220 병합(2026-11-21):** g5s2u1 수의 범위와 어림하기(A1 range 5과제, A2 rounding 4과제)와 E2E. MC-RANGE-BOUNDARY-INCLUSION은 `lower`·`upper` equals 조합과 여러 개 고르기 trap 조합으로 건다. 병합 때 Opus가 고친 것: A2.T3 ② 문구에서 정답 후보(4500·4600)를 빼고, E03 rounding 눈금의 `data-tick-index`(A2.T1·T2에서 정답 25·24와 같은 값)를 지웠다(E03 단위 163, number-line·g5s2u1 E2E 67 통과). range 수직선은 실행기 크롬북·아이패드 첫 화면 안.
 
+- **T221 병합(2026-11-21):** `docs/03-engines.md` 모드 줄을 실제 `modes`와 맞추고(E17 `predict` 추가, E12 `cross-section`·E20 `proportion-grid` 미구현 표시, E13 변형 줄), 부록 확장 요청 표에 상태 칸(카드 번호/미구현/확인 필요)을 더했다. `docs/00-handoff.md` 진행 상황 맨 앞에 W4~W6 요약 11줄.
+
 ## 상시
 | 카드 | 내용 |
 | --- | --- |
