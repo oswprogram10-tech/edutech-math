@@ -3,6 +3,470 @@
   "title": "여러 가지 모양",
   "activities": [
     {
+      "id": "g1s1u2.A1",
+      "title": "모양 상자에 넣기",
+      "tasks": [
+        {
+          "id": "g1s1u2.A1.T1",
+          "prompt": "같은 모양끼리 상자에 넣고, 상자마다 알맞은 그림을 골라요.",
+          "engine": "E17",
+          "mode": "sort",
+          "cpa": "C",
+          "config": {
+            "mode": "sort",
+            "deck": "classroom-objects-12",
+            "cards": [
+              "o-eraser",
+              "o-milk",
+              "o-glue",
+              "o-roll",
+              "o-ball",
+              "o-bead"
+            ],
+            "bins": 3,
+            "binLabels": "student-choice-icon"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "allPlaced"
+              },
+              {
+                "kind": "predicate",
+                "name": "pureBy",
+                "args": {
+                  "attribute": "shapeFamily"
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "labelsMatchBy",
+                "args": {
+                  "attribute": "shapeFamily"
+                }
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-SHAPE-BY-COLOR-SIZE"
+                }
+              },
+              "level": 1,
+              "say": "색 말고 생김새를 봐요. 평평한 곳이 있어?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-SHAPE-BY-COLOR-SIZE"
+                }
+              },
+              "level": 2,
+              "say": "상자 안 물건을 회색으로 바꿔 생김새만 보이게 했어요.",
+              "show": {
+                "engine": "E17",
+                "overlay": "gray-shapes"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-SHAPE-BY-COLOR-SIZE"
+                }
+              },
+              "level": 3,
+              "backtrack": "g1s1u2.shape-families"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sort"
+              },
+              "level": 1,
+              "say": "색 말고 생김새를 봐요. 평평한 곳이 있나요, 둥근 곳이 있나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sort"
+              },
+              "level": 2,
+              "say": "같은 모양끼리 모았는지, 상자 그림이 모양과 맞는지 살펴봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sort"
+              },
+              "level": 3,
+              "backtrack": "g1s1u2.shape-families"
+            }
+          ],
+          "concepts": [
+            "g1s1u2.shape-families"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g1s1u2.A1.T2",
+          "prompt": "크기가 달라도 모양이 같으면 같은 상자예요. 나눠 보세요.",
+          "engine": "E17",
+          "mode": "sort",
+          "cpa": "C",
+          "config": {
+            "mode": "sort",
+            "deck": "classroom-objects-12",
+            "cards": [
+              "o-tissue",
+              "o-dice",
+              "o-eraser",
+              "o-glue",
+              "o-can-up",
+              "o-roll",
+              "o-ball",
+              "o-marble",
+              "o-orange"
+            ],
+            "bins": 3,
+            "binLabels": "student-choice-icon"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "allPlaced"
+              },
+              {
+                "kind": "predicate",
+                "name": "pureBy",
+                "args": {
+                  "attribute": "shapeFamily"
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "labelsMatchBy",
+                "args": {
+                  "attribute": "shapeFamily"
+                }
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-SHAPE-BY-COLOR-SIZE"
+                }
+              },
+              "level": 1,
+              "say": "색 말고 생김새를 봐요. 평평한 곳이 있어?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-SHAPE-BY-COLOR-SIZE"
+                }
+              },
+              "level": 2,
+              "say": "상자 안 물건을 회색으로 바꿔 생김새만 보이게 했어요.",
+              "show": {
+                "engine": "E17",
+                "overlay": "gray-shapes"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-SHAPE-BY-COLOR-SIZE"
+                }
+              },
+              "level": 3,
+              "backtrack": "g1s1u2.shape-families"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sort"
+              },
+              "level": 1,
+              "say": "색 말고 생김새를 봐요. 평평한 곳이 있나요, 둥근 곳이 있나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sort"
+              },
+              "level": 2,
+              "say": "크기는 달라도 평평한 곳과 둥근 곳이 같은지 살펴봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sort"
+              },
+              "level": 3,
+              "backtrack": "g1s1u2.shape-families"
+            }
+          ],
+          "concepts": [
+            "g1s1u2.ignore-irrelevant"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g1s1u2.A1.T3",
+          "prompt": "누워 있는 것도 잘 보고 같은 모양끼리 나눠요.",
+          "engine": "E17",
+          "mode": "sort",
+          "cpa": "C",
+          "config": {
+            "mode": "sort",
+            "deck": "classroom-objects-12",
+            "cards": [
+              "o-can-up",
+              "o-can-side",
+              "o-glue",
+              "o-milk",
+              "o-dice",
+              "o-ball",
+              "o-marble"
+            ],
+            "bins": 3,
+            "binLabels": "student-choice-icon"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "allPlaced"
+              },
+              {
+                "kind": "predicate",
+                "name": "pureBy",
+                "args": {
+                  "attribute": "shapeFamily"
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "sameBin",
+                "args": {
+                  "a": "o-can-up",
+                  "b": "o-can-side"
+                }
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-SHAPE-ORIENTATION"
+                }
+              },
+              "level": 1,
+              "say": "돌려 보면 어떻게 될까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-SHAPE-ORIENTATION"
+                }
+              },
+              "level": 2,
+              "say": "누워 있는 캔을 돌려 세운 캔 위에 겹쳐 봤어요. 같은 모양인가요?",
+              "show": {
+                "engine": "E17",
+                "overlay": "rotate-match"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-SHAPE-ORIENTATION"
+                }
+              },
+              "level": 3,
+              "backtrack": "g1s1u2.ignore-irrelevant"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-SHAPE-BY-COLOR-SIZE"
+                }
+              },
+              "level": 1,
+              "say": "색 말고 생김새를 봐요. 평평한 곳이 있어?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-SHAPE-BY-COLOR-SIZE"
+                }
+              },
+              "level": 2,
+              "say": "상자 안 물건을 회색으로 바꿔 생김새만 보이게 했어요.",
+              "show": {
+                "engine": "E17",
+                "overlay": "gray-shapes"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-SHAPE-BY-COLOR-SIZE"
+                }
+              },
+              "level": 3,
+              "backtrack": "g1s1u2.shape-families"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sort"
+              },
+              "level": 1,
+              "say": "누워 있어도 같은 물건일까요? 돌려 놓은 모습을 떠올려 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sort"
+              },
+              "level": 2,
+              "say": "둥근 곳과 평평한 곳이 어디에 있는지 살펴봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sort"
+              },
+              "level": 3,
+              "backtrack": "g1s1u2.ignore-irrelevant"
+            }
+          ],
+          "concepts": [
+            "g1s1u2.ignore-irrelevant"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g1s1u2.A1.T4",
+          "prompt": "이 상자에 맞지 않는 것 하나를 꺼내요.",
+          "engine": "E17",
+          "mode": "sort",
+          "cpa": "P",
+          "config": {
+            "mode": "sort",
+            "deck": "classroom-objects-12",
+            "cards": [
+              "o-glue",
+              "o-roll",
+              "o-can-up",
+              "o-milk"
+            ],
+            "bins": 1,
+            "binLabels": "none",
+            "render": "gray",
+            "prefill": {
+              "bin1": [
+                "o-glue",
+                "o-roll",
+                "o-can-up",
+                "o-milk"
+              ]
+            }
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "removedOnly",
+            "args": {
+              "cards": [
+                "o-milk"
+              ]
+            }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sort"
+              },
+              "level": 1,
+              "say": "다른 것들과 생김새가 다른 것을 찾아봐요. 굴러가는 것과 안 굴러가는 것은?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sort"
+              },
+              "level": 2,
+              "say": "상자 안 물건을 회색 그림으로 겹쳐 봤어요. 생김새만 보고 견주어 봐요.",
+              "show": {
+                "engine": "E17",
+                "overlay": "gray-shapes"
+              }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sort"
+              },
+              "level": 3,
+              "backtrack": "g1s1u2.shape-families"
+            }
+          ],
+          "concepts": [
+            "g1s1u2.shape-families"
+          ],
+          "submit": "button"
+        }
+      ]
+    },
+    {
       "id": "g1s1u2.A2",
       "title": "굴리고 쌓아 보기",
       "tasks": [

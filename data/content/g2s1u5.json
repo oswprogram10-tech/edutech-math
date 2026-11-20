@@ -1,0 +1,829 @@
+{
+  "unit": "g2s1u5",
+  "title": "분류하기",
+  "activities": [
+    {
+      "id": "g2s1u5.A1",
+      "title": "다중 속성 컨베이어 분류 상자",
+      "tasks": [
+        {
+          "id": "g2s1u5.A1.T1",
+          "prompt": "단추를 색으로 나누고, 상자마다 몇 개인지 세어 적어요.",
+          "engine": "E17",
+          "mode": "sort",
+          "cpa": "C",
+          "config": {
+            "mode": "sort",
+            "deck": "buttons-12",
+            "criterionChoice": [
+              "color",
+              "shape",
+              "holes",
+              "pretty"
+            ],
+            "conveyor": true,
+            "countTable": "student"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "criterionIs",
+                "args": {
+                  "c": "color"
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "allPlaced"
+              },
+              {
+                "kind": "predicate",
+                "name": "noMismatch"
+              },
+              {
+                "kind": "predicate",
+                "name": "countsCorrect"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "criterion",
+                "value": "pretty"
+              },
+              "level": 1,
+              "say": "친구가 해도 똑같이 나뉠까?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "criterion",
+                "value": "pretty"
+              },
+              "level": 2,
+              "say": "두 친구가 같은 단추를 나눈 모습이에요. 서로 같은가요?",
+              "show": {
+                "engine": "E17",
+                "overlay": "two-friends"
+              }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "criterion",
+                "value": "pretty"
+              },
+              "level": 3,
+              "backtrack": "g2s1u5.clear-criterion"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-SORT-INCONSISTENT"
+                }
+              },
+              "level": 1,
+              "say": "이 상자에 들어간 것들의 같은 점이 뭐야?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-SORT-INCONSISTENT"
+                }
+              },
+              "level": 2,
+              "say": "상자마다 단추의 성질을 늘어놓았어요. 다른 것을 찾아봐요.",
+              "show": {
+                "engine": "E17",
+                "overlay": "bin-attributes"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-SORT-INCONSISTENT"
+                }
+              },
+              "level": 3,
+              "backtrack": "g2s1u5.clear-criterion"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-COUNT-ONE-TO-ONE"
+                }
+              },
+              "level": 1,
+              "say": "하나씩 짚어 세어 볼까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-COUNT-ONE-TO-ONE"
+                }
+              },
+              "level": 2,
+              "say": "상자 안 단추를 하나씩 짚었어요. 빠뜨리거나 두 번 센 것은 없나요?",
+              "show": {
+                "engine": "E17",
+                "overlay": "touch-dots"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-COUNT-ONE-TO-ONE"
+                }
+              },
+              "level": 3,
+              "backtrack": "g1s1u1.one-to-one"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sort"
+              },
+              "level": 1,
+              "say": "기준을 색으로 골랐나요? 상자 이름과 단추 색을 견주어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sort"
+              },
+              "level": 2,
+              "say": "상자 하나씩 단추를 짚으며 세어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sort"
+              },
+              "level": 3,
+              "backtrack": "g2s1u5.sort-by-attribute"
+            }
+          ],
+          "concepts": [
+            "g2s1u5.sort-by-attribute"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g2s1u5.A1.T2",
+          "prompt": "같은 단추를 이번에는 구멍 수로 다시 나눠요.",
+          "engine": "E17",
+          "mode": "sort",
+          "cpa": "C",
+          "config": {
+            "mode": "sort",
+            "deck": "buttons-12",
+            "criterionChoice": [
+              "color",
+              "shape",
+              "holes",
+              "pretty"
+            ],
+            "conveyor": false
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "criterionIs",
+                "args": {
+                  "c": "holes"
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "allPlaced"
+              },
+              {
+                "kind": "predicate",
+                "name": "noMismatch"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "criterion",
+                "value": "pretty"
+              },
+              "level": 1,
+              "say": "친구가 해도 똑같이 나뉠까?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "criterion",
+                "value": "pretty"
+              },
+              "level": 2,
+              "say": "두 친구가 같은 단추를 나눈 모습이에요. 서로 같은가요?",
+              "show": {
+                "engine": "E17",
+                "overlay": "two-friends"
+              }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "criterion",
+                "value": "pretty"
+              },
+              "level": 3,
+              "backtrack": "g2s1u5.clear-criterion"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-SORT-INCONSISTENT"
+                }
+              },
+              "level": 1,
+              "say": "이 상자에 들어간 것들의 같은 점이 뭐야?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-SORT-INCONSISTENT"
+                }
+              },
+              "level": 2,
+              "say": "상자마다 단추의 성질을 늘어놓았어요. 다른 것을 찾아봐요.",
+              "show": {
+                "engine": "E17",
+                "overlay": "bin-attributes"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-SORT-INCONSISTENT"
+                }
+              },
+              "level": 3,
+              "backtrack": "g2s1u5.clear-criterion"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sort"
+              },
+              "level": 1,
+              "say": "[기준 바꾸기]를 누르면 단추가 모두 돌아와요. 구멍 수를 기준으로 골라 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sort"
+              },
+              "level": 2,
+              "say": "단추의 구멍을 하나씩 살펴보고 같은 것끼리 모아 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sort"
+              },
+              "level": 3,
+              "backtrack": "g2s1u5.sort-by-attribute"
+            }
+          ],
+          "concepts": [
+            "g2s1u5.sort-by-attribute"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g2s1u5.A1.T3",
+          "prompt": "단추를 나눌 기준을 하나 골라 나눠요. 친구가 해도 똑같이 나뉘는 기준이어야 해요.",
+          "engine": "E17",
+          "mode": "sort",
+          "cpa": "P",
+          "config": {
+            "mode": "sort",
+            "deck": "buttons-12",
+            "criterionChoice": [
+              "color",
+              "shape",
+              "holes",
+              "pretty"
+            ],
+            "conveyor": false
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "predicate",
+                    "name": "criterionIs",
+                    "args": {
+                      "c": "color"
+                    }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "criterionIs",
+                    "args": {
+                      "c": "shape"
+                    }
+                  },
+                  {
+                    "kind": "predicate",
+                    "name": "criterionIs",
+                    "args": {
+                      "c": "holes"
+                    }
+                  }
+                ]
+              },
+              {
+                "kind": "predicate",
+                "name": "allPlaced"
+              },
+              {
+                "kind": "predicate",
+                "name": "noMismatch"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "criterion",
+                "value": "pretty"
+              },
+              "level": 1,
+              "say": "친구가 해도 똑같이 나뉠까?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "criterion",
+                "value": "pretty"
+              },
+              "level": 2,
+              "say": "두 친구가 같은 단추를 나눈 모습이에요. 서로 같은가요?",
+              "show": {
+                "engine": "E17",
+                "overlay": "two-friends"
+              }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "criterion",
+                "value": "pretty"
+              },
+              "level": 3,
+              "backtrack": "g2s1u5.clear-criterion"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-SORT-INCONSISTENT"
+                }
+              },
+              "level": 1,
+              "say": "이 상자에 들어간 것들의 같은 점이 뭐야?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-SORT-INCONSISTENT"
+                }
+              },
+              "level": 2,
+              "say": "상자마다 단추의 성질을 늘어놓았어요. 다른 것을 찾아봐요.",
+              "show": {
+                "engine": "E17",
+                "overlay": "bin-attributes"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-SORT-INCONSISTENT"
+                }
+              },
+              "level": 3,
+              "backtrack": "g2s1u5.clear-criterion"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sort"
+              },
+              "level": 1,
+              "say": "기준을 고르고 모든 단추를 넣었나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sort"
+              },
+              "level": 2,
+              "say": "내가 나눈 것을 친구가 다시 나눠도 똑같을지 생각해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sort"
+              },
+              "level": 3,
+              "backtrack": "g2s1u5.clear-criterion"
+            }
+          ],
+          "concepts": [
+            "g2s1u5.clear-criterion"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g2s1u5.A1.T4",
+          "prompt": "단추를 모양으로 나눈 뒤 개수표를 보고, 가장 많은 모양을 골라요. 가: 동그라미 나: 네모 다: 세모",
+          "engine": "E17",
+          "mode": "sort",
+          "cpa": "P",
+          "config": {
+            "mode": "sort",
+            "deck": "buttons-12",
+            "criterionChoice": [
+              "shape"
+            ],
+            "conveyor": false,
+            "countTable": "auto"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "allPlaced"
+              },
+              {
+                "kind": "predicate",
+                "name": "noMismatch"
+              },
+              {
+                "kind": "equals",
+                "path": "response.pick.selected.0",
+                "value": "na"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-SORT-INCONSISTENT"
+                }
+              },
+              "level": 1,
+              "say": "이 상자에 들어간 것들의 같은 점이 뭐야?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-SORT-INCONSISTENT"
+                }
+              },
+              "level": 2,
+              "say": "상자마다 단추의 성질을 늘어놓았어요. 다른 것을 찾아봐요.",
+              "show": {
+                "engine": "E17",
+                "overlay": "bin-attributes"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-SORT-INCONSISTENT"
+                }
+              },
+              "level": 3,
+              "backtrack": "g2s1u5.clear-criterion"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.pick.selected.0",
+                    "value": "ga"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.pick.selected.0",
+                    "value": "da"
+                  }
+                ]
+              },
+              "level": 1,
+              "say": "개수표의 수를 서로 견주어 봐요."
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.pick.selected.0",
+                    "value": "ga"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.pick.selected.0",
+                    "value": "da"
+                  }
+                ]
+              },
+              "level": 2,
+              "say": "가장 큰 수가 적힌 상자를 찾아요."
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.pick.selected.0",
+                    "value": "ga"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.pick.selected.0",
+                    "value": "da"
+                  }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g2s1u5.count-sorted"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sort"
+              },
+              "level": 1,
+              "say": "단추를 모두 상자에 넣으면 개수표가 나와요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sort"
+              },
+              "level": 2,
+              "say": "상자마다 적힌 수를 서로 견주어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "sort"
+              },
+              "level": 3,
+              "backtrack": "g2s1u5.count-sorted"
+            }
+          ],
+          "concepts": [
+            "g2s1u5.count-sorted"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "pick",
+                "label": "골라요.",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "ga",
+                    "label": "가: 동그라미"
+                  },
+                  {
+                    "id": "na",
+                    "label": "나: 네모"
+                  },
+                  {
+                    "id": "da",
+                    "label": "다: 세모"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "g2s1u5.A2",
+      "title": "비밀 분류 기준 추리기",
+      "tasks": [
+        {
+          "id": "g2s1u5.A2.T1",
+          "prompt": "컴퓨터가 비밀 기준으로 단추를 나눴어요. 새 단추가 어느 상자로 갈지 세 번 맞히고, 비밀 기준을 골라요.",
+          "engine": "E17",
+          "mode": "secret-rule",
+          "cpa": "P",
+          "config": {
+            "mode": "secret-rule",
+            "variant": "predict",
+            "deck": "buttons-12",
+            "rule": {
+              "attribute": "color",
+              "value": "red"
+            },
+            "guessOptions": [
+              {
+                "attribute": "color",
+                "value": "red"
+              },
+              {
+                "attribute": "color",
+                "value": "blue"
+              },
+              {
+                "attribute": "holes",
+                "value": 4
+              },
+              {
+                "attribute": "shape",
+                "value": "circle"
+              }
+            ],
+            "shownExamples": 4,
+            "predictionsToGuess": 3,
+            "seed": 1
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "guessedRight"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "secret-rule"
+              },
+              "level": 1,
+              "say": "예 상자에 든 단추들의 같은 점을 찾아봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "secret-rule"
+              },
+              "level": 2,
+              "say": "아니요 상자 단추에는 없고 예 상자 단추에만 있는 것은 무엇일까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "secret-rule"
+              },
+              "level": 3,
+              "backtrack": "g2s1u5.sort-by-attribute"
+            }
+          ],
+          "concepts": [
+            "g2s1u5.sort-by-attribute"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g2s1u5.A2.T2",
+          "prompt": "이번에도 비밀 기준을 찾아요.",
+          "engine": "E17",
+          "mode": "secret-rule",
+          "cpa": "P",
+          "config": {
+            "mode": "secret-rule",
+            "variant": "predict",
+            "deck": "buttons-12",
+            "rule": {
+              "attribute": "holes",
+              "value": 4
+            },
+            "guessOptions": [
+              {
+                "attribute": "holes",
+                "value": 4
+              },
+              {
+                "attribute": "color",
+                "value": "red"
+              },
+              {
+                "attribute": "shape",
+                "value": "square"
+              },
+              {
+                "attribute": "shape",
+                "value": "triangle"
+              }
+            ],
+            "shownExamples": 4,
+            "predictionsToGuess": 3,
+            "seed": 2
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "guessedRight"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "secret-rule"
+              },
+              "level": 1,
+              "say": "예 상자에 든 단추들의 같은 점을 찾아봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "secret-rule"
+              },
+              "level": 2,
+              "say": "아니요 상자 단추에는 없고 예 상자 단추에만 있는 것은 무엇일까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "secret-rule"
+              },
+              "level": 3,
+              "backtrack": "g2s1u5.sort-by-attribute"
+            }
+          ],
+          "concepts": [
+            "g2s1u5.sort-by-attribute"
+          ],
+          "submit": "button"
+        }
+      ]
+    }
+  ]
+}

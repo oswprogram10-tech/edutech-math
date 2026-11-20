@@ -2,11 +2,12 @@ import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 import { PREVIEW_URL } from '../../../playwright.config';
+import { expectControlsAboveFold } from '../controls-fold';
 import { expectContentPanelsReachable, expectNoPanelInnerScroll } from '../panel-layout';
 
 /**
  * T151 g1s1u2 「여러 가지 모양」 A2 「굴리고 쌓아 보기」 4과제 단원 E2E.
- * (A1은 W6이라 이 카드에 없다.)
+ * (A1 「모양 상자에 넣기」는 T218에서 아래쪽에 묶음으로 더했다.)
  * - 과제 4개 정답 통과, 상태 규칙·MC-SHAPE-ORIENTATION ①②, 일반 ① 대표 오답
  * - `turn-same` 오버레이가 그려지고 장면에 정렬 1px
  * - 첫 화면(크롬북 두 칸 배치 장면 높이), 64px 타깃, 키보드, 오프라인, 스냅샷
@@ -30,9 +31,9 @@ const content = JSON.parse(
   readFileSync(new URL('../../../data/content/g1s1u2.json', import.meta.url), 'utf-8'),
 ) as UnitContent;
 
-test('콘텐츠 설정이 명세를 따른다(A2만, 과제 4개)', () => {
-  expect(content.activities.map((a) => a.id)).toEqual(['g1s1u2.A2']);
-  const tasks = content.activities[0]?.tasks ?? [];
+test('콘텐츠 설정이 명세를 따른다(A1·A2, 과제 4개씩)', () => {
+  expect(content.activities.map((a) => a.id)).toEqual(['g1s1u2.A1', 'g1s1u2.A2']);
+  const tasks = content.activities[1]?.tasks ?? [];
   expect(tasks.map((t) => t.id)).toEqual([
     'g1s1u2.A2.T1',
     'g1s1u2.A2.T2',
@@ -473,6 +474,217 @@ test('g1s1u2.A2.T4 — 단서와 그림자만 보이고 정답 모양 이름은 
   await choose(page, 'shape', '둥근기둥 모양');
   await submit(page);
   await expectPassed(page, true);
+});
+
+// ---------------------------------------------------------------- A1 모양 상자에 넣기 (T218)
+
+const FAMILY_BINS_T1: Readonly<Record<string, string>> = {
+  'o-eraser': '1',
+  'o-milk': '1',
+  'o-glue': '2',
+  'o-roll': '2',
+  'o-ball': '3',
+  'o-bead': '3',
+};
+const FAMILY_BINS_T2: Readonly<Record<string, string>> = {
+  'o-tissue': '1',
+  'o-dice': '1',
+  'o-eraser': '1',
+  'o-glue': '2',
+  'o-can-up': '2',
+  'o-roll': '2',
+  'o-ball': '3',
+  'o-marble': '3',
+  'o-orange': '3',
+};
+const FAMILY_BINS_T3: Readonly<Record<string, string>> = {
+  'o-milk': '1',
+  'o-dice': '1',
+  'o-can-up': '2',
+  'o-can-side': '2',
+  'o-glue': '2',
+  'o-ball': '3',
+  'o-marble': '3',
+};
+/** 크기로 묶은 대표 오답(T1: 작은 것·중간 것·큰 것). 색은 모두 빨강이다. */
+const SIZE_BINS_T1: Readonly<Record<string, string>> = {
+  'o-eraser': '1',
+  'o-glue': '1',
+  'o-bead': '1',
+  'o-milk': '2',
+  'o-roll': '2',
+  'o-ball': '3',
+};
+
+async function openA1(page: Page): Promise<void> {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/');
+  await page.getByRole('button', { name: '1번', exact: true }).click();
+  await page.getByRole('button', { name: '건너뛰기' }).click();
+  await expect(page).toHaveURL(/#\/map$/);
+  await page.goto('/#/activity/g1s1u2.A1');
+  await expect(page.getByRole('heading', { name: '모양 상자에 넣기' })).toBeVisible();
+  await expect(page.getByRole('button', { name: '확인하기' })).toBeVisible();
+  await expect(main(page).getByTestId('sorter-canvas')).toBeVisible();
+}
+
+async function keyPlace(page: Page, card: string, key: string): Promise<void> {
+  const target = main(page).locator(`[data-card="${card}"]`);
+  await target.focus();
+  await expect(target).toBeFocused();
+  await page.keyboard.press(key);
+}
+
+async function placeCards(page: Page, bins: Readonly<Record<string, string>>): Promise<void> {
+  for (const [card, key] of Object.entries(bins)) await keyPlace(page, card, key);
+}
+
+async function nameBins(page: Page): Promise<void> {
+  const group = (index: number) =>
+    main(page).getByRole('group', { name: `상자 ${index} 이름 붙이기` });
+  await group(1).getByRole('button', { name: '상자 모양', exact: true }).click();
+  await group(2).getByRole('button', { name: '둥근기둥 모양', exact: true }).click();
+  await group(3).getByRole('button', { name: '공 모양', exact: true }).click();
+}
+
+async function settleSortCanvas(page: Page): Promise<void> {
+  const canvas = main(page).getByTestId('sorter-canvas');
+  await canvas.scrollIntoViewIfNeeded();
+  let previous = '';
+  await expect
+    .poll(async () => {
+      const now = JSON.stringify(await canvas.boundingBox());
+      const same = now === previous;
+      previous = now;
+      return same;
+    })
+    .toBe(true);
+}
+
+async function sortScreenshot(page: Page, name: string): Promise<void> {
+  await settleSortCanvas(page);
+  await page.evaluate(() => {
+    window.scrollTo(0, 0);
+    (document.activeElement as HTMLElement | SVGElement | null)?.blur();
+  });
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+  });
+  await expect(page).toHaveScreenshot(name, {
+    maxDiffPixelRatio: 0.02,
+    animations: 'disabled',
+    fullPage: true,
+  });
+}
+
+async function expectSortOverlayAligned(page: Page, overlayName: string): Promise<Locator> {
+  const overlay = main(page).locator(`[data-overlay="${overlayName}"]`);
+  await expect(overlay).toBeVisible();
+  await expect
+    .poll(async () => {
+      const overlayBox = await overlay.locator('svg').first().boundingBox();
+      const canvasBox = await main(page).getByTestId('sorter-canvas').boundingBox();
+      if (!overlayBox || !canvasBox) return Number.POSITIVE_INFINITY;
+      return Math.max(
+        Math.abs(overlayBox.x - canvasBox.x),
+        Math.abs(overlayBox.y - canvasBox.y),
+        Math.abs(overlayBox.width - canvasBox.width),
+        Math.abs(overlayBox.height - canvasBox.height),
+      );
+    })
+    .toBeLessThanOrEqual(1);
+  return overlay;
+}
+
+test('g1s1u2.A1 — 모양 상자 4과제 흐름·MC-SHAPE-BY-COLOR-SIZE·MC-SHAPE-ORIENTATION·오버레이 정렬', async ({
+  page,
+}) => {
+  test.slow();
+  await openA1(page);
+
+  // T1: 첫 화면·스냅샷, 크기로 묶기 → MC-SHAPE-BY-COLOR-SIZE ①② + gray-shapes(1px)
+  await settleSortCanvas(page);
+  await expectControlsAboveFold(page, 'g1s1u2.A1.T1', 0, 'sorter-controls');
+  await sortScreenshot(page, 'g1s1u2-a1t1.png');
+  await expectNoConclusionText(page);
+  await placeCards(page, SIZE_BINS_T1);
+  await submit(page);
+  await expectFailedWithHint(page, '평평한 곳이 있어?', 1);
+  await submit(page);
+  await expectFailedWithHint(page, '회색으로 바꿔', 2);
+  const gray = await expectSortOverlayAligned(page, 'gray-shapes');
+  await expect(gray.locator('[data-gray]').first()).toBeVisible();
+  await placeCards(page, FAMILY_BINS_T1);
+  await nameBins(page);
+  await submit(page);
+  await expectPassed(page);
+
+  // T2: 이름 그림을 붙이지 않으면 일반 ①, 붙이면 통과
+  await settleSortCanvas(page);
+  await expectControlsAboveFold(page, 'g1s1u2.A1.T2', 0, 'sorter-controls');
+  await placeCards(page, FAMILY_BINS_T2);
+  await submit(page);
+  await expectFailedWithHint(page, '평평한 곳이 있나요, 둥근 곳이 있나요?', 1);
+  await nameBins(page);
+  await submit(page);
+  await expectPassed(page);
+
+  // T3: 캔을 다른 상자에 → MC-SHAPE-ORIENTATION ①② + rotate-match(1px) → 같은 상자로 통과
+  await settleSortCanvas(page);
+  await expectControlsAboveFold(page, 'g1s1u2.A1.T3', 0, 'sorter-controls');
+  await keyPlace(page, 'o-can-up', '2');
+  await keyPlace(page, 'o-can-side', '1');
+  await submit(page);
+  await expectFailedWithHint(page, '돌려 보면 어떻게 될까?', 1);
+  await submit(page);
+  await expectFailedWithHint(page, '돌려 세운 캔 위에 겹쳐', 2);
+  const rotate = await expectSortOverlayAligned(page, 'rotate-match');
+  await expect(rotate.locator('[data-rotate-match]')).toHaveCount(1);
+  await placeCards(page, FAMILY_BINS_T3);
+  await submit(page);
+  await expectPassed(page);
+
+  // T4: 회색 모형 상자. 첫 화면·스냅샷, 엉뚱한 것을 꺼내면 일반 ①②(gray-shapes), 우유갑을 꺼내면 통과
+  await settleSortCanvas(page);
+  await expect(main(page).getByTestId('sorter-controls')).toHaveCount(0);
+  await sortScreenshot(page, 'g1s1u2-a1t4.png');
+  await keyPlace(page, 'o-glue', '0');
+  await submit(page);
+  await expectFailedWithHint(page, '굴러가는 것과 안 굴러가는 것은?', 1);
+  await submit(page);
+  await expectFailedWithHint(page, '회색 그림으로 겹쳐', 2);
+  await expectSortOverlayAligned(page, 'gray-shapes');
+  await keyPlace(page, 'o-glue', '1');
+  await keyPlace(page, 'o-milk', '0');
+  await submit(page);
+  await expectPassed(page, true);
+});
+
+test('g1s1u2.A1 — 이름 아이콘 단추는 64px 이상이고 카드가 판 안에 있다', async ({ page }) => {
+  await openA1(page);
+  const buttons = main(page).getByTestId('sorter-controls').getByRole('button');
+  const total = await buttons.count();
+  expect(total).toBeGreaterThanOrEqual(9);
+  for (let index = 0; index < total; index += 1) {
+    const box = await buttons.nth(index).boundingBox();
+    expect(box?.width ?? 0, `단추 ${index} 너비`).toBeGreaterThanOrEqual(63.5);
+    expect(box?.height ?? 0, `단추 ${index} 높이`).toBeGreaterThanOrEqual(63.5);
+  }
+  // 카드가 판 상자 안에 있다.
+  const canvasBox = await main(page).getByTestId('sorter-canvas').boundingBox();
+  expect(canvasBox).not.toBeNull();
+  if (!canvasBox) return;
+  const cards = main(page).locator('[data-card]');
+  const count = await cards.count();
+  expect(count).toBe(6);
+  for (let index = 0; index < count; index += 1) {
+    const box = await cards.nth(index).boundingBox();
+    expect(box).not.toBeNull();
+    if (!box) continue;
+    expect(box.x).toBeGreaterThanOrEqual(canvasBox.x - 1);
+    expect(box.x + box.width).toBeLessThanOrEqual(canvasBox.x + canvasBox.width + 1);
+  }
+  await expectNoConclusionText(page);
 });
 
 // ---------------------------------------------------------------- 오프라인
