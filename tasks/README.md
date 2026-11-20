@@ -340,6 +340,8 @@ W6에서 E13 측정 실험실과 E14 시계·시간을 새로 만들고, E17 `so
 
 - **T222 병합(2026-11-20):** E14 clock 판 논리 높이를 펼치지 않으면 1000×510, 펼치면 1000×600(`layout.ts` `boardSize`)으로, 판 칸 min-height는 0.6 × 논리 높이. g2s2u4.A1.T2 첫 화면에 시계 전체가 보이고 `expectFitCanvasVisible`를 되살렸다. 스크롤이 내려가 있던 원인은 E14가 아니라 E2E의 64px 확인(`scrollIntoViewIfNeeded`)이었다(검사 뒤 스크롤 0으로 되돌림). 크롬북에서는 펼치기·처음으로 단추 줄이 반쯤 잘려 바깥 상자를 조금 스크롤해야 한다(T199와 같은 0.6 하한). 기준 이미지 7장 다시 찍음(시계 크기·위치만).
 
+- **T205 병합(2026-11-20):** E13 측정 실험실 `compare-direct`(length 펴기·출발선 자석, area 겹치기, capacity 같은 수조 붓기)와 `length`(단위 조각 이어 붙이기, 틈·겹침 글+무늬, 뼘 시연 `demoSpans`, 1cm 블록 10개 자 만들기·숫자 카드). 오버레이 endpoint-lines·half-straighten·same-tank·gap-marks·span-compare. 자석은 화면 도우미(`snapPlacement`)가 끌어 놓을 때만 쓰고 Action에는 최종 위치만. 자 눈금 칸은 터치 크기 때문에 블록 경계에서 88px 간격 칸으로 펼쳐 그린다. `noGapOverlap`은 조각 1개 이상일 때만 참, `larger`·`more`가 같으면 빈 문자열. 남은 점: 아이패드에서 조작 단추 줄이 바깥 스크롤 아래, `demoSpans.objectName`이 책상 외면 일반 사각형. 범위 E2E 221 통과.
+
 ## 상시
 | 카드 | 내용 |
 | --- | --- |
