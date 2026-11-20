@@ -1,0 +1,1132 @@
+{
+  "unit": "g5s2u6",
+  "title": "평균과 가능성",
+  "activities": [
+    {
+      "id": "g5s2u6.A1",
+      "title": "블록 기둥 평탄화와 평균 시소",
+      "tasks": [
+        {
+          "id": "g5s2u6.A1.T1",
+          "prompt": "높은 기둥의 블록을 낮은 기둥으로 옮겨 모두 같은 높이로 만들어요.",
+          "engine": "E19",
+          "mode": "leveling",
+          "cpa": "C",
+          "config": {
+            "mode": "leveling",
+            "data": [
+              7,
+              4,
+              9,
+              3,
+              7
+            ],
+            "label": "줄넘기(번)"
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "leveled"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "leveling"
+              },
+              "level": 1,
+              "say": "기둥을 모두 같은 높이로 만들려면 높은 기둥의 블록이 어디로 가야 할까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "leveling"
+              },
+              "level": 2,
+              "say": "가장 높은 기둥과 가장 낮은 기둥부터 맞춰 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "leveling"
+              },
+              "level": 3,
+              "backtrack": "g4s1u5"
+            }
+          ],
+          "concepts": [
+            "g5s2u6.mean-as-leveling"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g5s2u6.A1.T2",
+          "prompt": "시소가 수평이 되는 받침점을 찾아요.",
+          "engine": "E19",
+          "mode": "seesaw",
+          "cpa": "P",
+          "config": {
+            "mode": "seesaw",
+            "data": [
+              7,
+              4,
+              9,
+              3,
+              7
+            ],
+            "label": "줄넘기(번)"
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "balanced"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "seesaw"
+              },
+              "level": 1,
+              "say": "받침점을 왼쪽과 오른쪽으로 옮기면 시소가 어느 쪽으로 기우는지 살펴봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "seesaw"
+              },
+              "level": 2,
+              "say": "받침점에서 왼쪽 점들과 오른쪽 점들이 얼마나 떨어져 있는지 견줘 봐요.",
+              "show": {
+                "engine": "E19",
+                "overlay": "arms"
+              }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "seesaw"
+              },
+              "level": 3,
+              "backtrack": "g5s2u6.mean-as-leveling"
+            }
+          ],
+          "concepts": [
+            "g5s2u6.mean-as-balance"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g5s2u6.A1.T3",
+          "prompt": "모둠 5명의 턱걸이 기록: 4, 12, 5, 6, 8. 평균을 구해요.",
+          "engine": "E19",
+          "mode": "leveling",
+          "cpa": "A",
+          "config": {
+            "mode": "leveling",
+            "data": [
+              4,
+              12,
+              5,
+              6,
+              8
+            ],
+            "label": "턱걸이(번)"
+          },
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "m",
+                "label": "평균(번)",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.m.value",
+            "value": "7"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.m.value",
+                    "value": "6"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.m.value",
+                    "value": "8"
+                  }
+                ]
+              },
+              "level": 1,
+              "say": "블록을 고르게 했을 때 높이와 같을까?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.m.value",
+                "value": "6"
+              },
+              "level": 2,
+              "say": "그 높이로 기둥을 맞추면 블록이 남는지 모자라는지 봐요.",
+              "show": {
+                "engine": "E19",
+                "overlay": "level-try",
+                "args": {
+                  "value": 6
+                }
+              }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.m.value",
+                "value": "8"
+              },
+              "level": 2,
+              "say": "그 높이로 기둥을 맞추면 블록이 남는지 모자라는지 봐요.",
+              "show": {
+                "engine": "E19",
+                "overlay": "level-try",
+                "args": {
+                  "value": 8
+                }
+              }
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.m.value",
+                    "value": "6"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.m.value",
+                    "value": "8"
+                  }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g5s2u6.mean-as-leveling"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.m.value",
+                "value": "35"
+              },
+              "level": 1,
+              "say": "평균은 한 사람당 기록이었지?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.m.value",
+                "value": "35"
+              },
+              "level": 2,
+              "say": "모든 기록을 쌓은 기둥 하나와 다섯 기둥으로 나눈 모습을 견줘 봐요.",
+              "show": {
+                "engine": "E19",
+                "overlay": "sum-tower"
+              }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.m.value",
+                "value": "35"
+              },
+              "level": 3,
+              "backtrack": "g5s2u6.mean-compute"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "leveling"
+              },
+              "level": 1,
+              "say": "모두에게 똑같이 나누면 한 사람당 얼마씩일까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "leveling"
+              },
+              "level": 2,
+              "say": "기둥을 옮겨 같은 높이로 만들어 보며 확인해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "leveling"
+              },
+              "level": 3,
+              "backtrack": "g5s2u6.mean-as-leveling"
+            }
+          ],
+          "concepts": [
+            "g5s2u6.mean-compute"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g5s2u6.A1.T4",
+          "prompt": "다섯째 기록이 7에서 30으로 바뀌면 평균은 얼마가 될까요? 먼저 예측하고 점을 끌어 봐요.",
+          "engine": "E19",
+          "mode": "outlier",
+          "cpa": "C",
+          "config": {
+            "mode": "outlier",
+            "data": [
+              7,
+              4,
+              9,
+              3,
+              7
+            ],
+            "label": "줄넘기(번)",
+            "dragIndex": 4,
+            "predict": true,
+            "max": 32
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "predictionLocked"
+              },
+              {
+                "kind": "predicate",
+                "name": "valueAt",
+                "args": {
+                  "index": 4,
+                  "value": 30
+                }
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "outlier"
+              },
+              "level": 1,
+              "say": "기록 하나가 아주 커지면 평균이 어떻게 될지 먼저 생각해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "outlier"
+              },
+              "level": 2,
+              "say": "점을 끌 때 평균선이 어떻게 따라오는지 눈여겨봐요.",
+              "show": {
+                "engine": "E19",
+                "overlay": "mean-pull"
+              }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "outlier"
+              },
+              "level": 3,
+              "backtrack": "g5s2u6.mean-as-balance"
+            }
+          ],
+          "concepts": [
+            "g5s2u6.outlier-effect"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g5s2u6.A1.T5",
+          "prompt": "두 모둠의 기록이에요. 가 모둠: 6, 6, 5, 7, 6 / 나 모둠: 1, 11, 2, 10, 6. 평균이 같을 때 기록이 더 고른 모둠을 골라요.",
+          "engine": "E19",
+          "mode": "seesaw",
+          "cpa": "P",
+          "config": {
+            "mode": "seesaw",
+            "data": [
+              1,
+              11,
+              2,
+              10,
+              6
+            ],
+            "label": "나 모둠(번)"
+          },
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "even",
+                "label": "더 고른 모둠",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "ga",
+                    "label": "가 모둠"
+                  },
+                  {
+                    "id": "na",
+                    "label": "나 모둠"
+                  }
+                ]
+              }
+            ]
+          },
+          "showEngine": false,
+          "goal": {
+            "kind": "equals",
+            "path": "response.even.selected",
+            "value": [
+              "ga"
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "seesaw"
+              },
+              "level": 1,
+              "say": "두 모둠의 평균은 같아요. 기록이 평균에서 얼마나 멀리 흩어져 있는지 살펴봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "seesaw"
+              },
+              "level": 2,
+              "say": "각 기록과 평균 사이가 얼마나 떨어져 있는지 두 모둠을 견줘 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "seesaw"
+              },
+              "level": 3,
+              "backtrack": "g5s2u6.mean-as-balance"
+            }
+          ],
+          "concepts": [
+            "g5s2u6.mean-as-balance"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g5s2u6.A1.T6",
+          "prompt": "3일 동안 읽은 쪽수 12, 15, 9의 평균을 구해요.",
+          "engine": "E19",
+          "mode": "leveling",
+          "cpa": "A",
+          "config": {
+            "mode": "leveling",
+            "data": [
+              12,
+              15,
+              9
+            ],
+            "label": "읽은 쪽수"
+          },
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "m",
+                "label": "평균(쪽)",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.m.value",
+            "value": "12"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.m.value",
+                "value": "36"
+              },
+              "level": 1,
+              "say": "평균은 하루에 읽은 쪽수처럼 한 날당 값이었지?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.m.value",
+                "value": "36"
+              },
+              "level": 2,
+              "say": "모든 쪽수를 쌓은 기둥 하나와 세 기둥으로 나눈 모습을 견줘 봐요.",
+              "show": {
+                "engine": "E19",
+                "overlay": "sum-tower"
+              }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.m.value",
+                "value": "36"
+              },
+              "level": 3,
+              "backtrack": "g5s2u6.mean-compute"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "leveling"
+              },
+              "level": 1,
+              "say": "하루에 똑같이 읽는다면 하루에 몇 쪽씩일까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "leveling"
+              },
+              "level": 2,
+              "say": "블록을 옮겨 세 기둥을 같은 높이로 맞춰 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "leveling"
+              },
+              "level": 3,
+              "backtrack": "g5s2u6.mean-as-leveling"
+            }
+          ],
+          "concepts": [
+            "g5s2u6.mean-compute"
+          ],
+          "submit": "button"
+        }
+      ]
+    },
+    {
+      "id": "g5s2u6.A2",
+      "title": "가상 데이터 확률 공장",
+      "tasks": [
+        {
+          "id": "g5s2u6.A2.T1",
+          "prompt": "상황 카드를 알맞은 말 칸에 놓아요.",
+          "engine": "E19",
+          "mode": "words",
+          "cpa": "C",
+          "config": {
+            "mode": "words",
+            "cards": [
+              {
+                "id": "die7",
+                "text": "주사위를 던져 눈이 7 나오기"
+              },
+              {
+                "id": "coin",
+                "text": "동전을 던져 그림 면 나오기"
+              },
+              {
+                "id": "sun",
+                "text": "내일 아침 해가 뜨기"
+              }
+            ],
+            "slots": "five",
+            "slotLabels": "words"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "placementIs",
+                "args": {
+                  "card": "die7",
+                  "value": "0"
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "placementIs",
+                "args": {
+                  "card": "coin",
+                  "value": "1/2"
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "placementIs",
+                "args": {
+                  "card": "sun",
+                  "value": "1"
+                }
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "words"
+              },
+              "level": 1,
+              "say": "각 상황이 일어날 가능성이 얼마나 되는지 말로 생각해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "words"
+              },
+              "level": 2,
+              "say": "카드를 하나씩 '꼭 일어난다', '절대 일어나지 않는다', '일어날 수도 있고 아닐 수도 있다'로 먼저 나눠 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "words"
+              },
+              "level": 3,
+              "backtrack": "g5s2u6.mean-compute"
+            }
+          ],
+          "concepts": [
+            "g5s2u6.likelihood"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g5s2u6.A2.T2",
+          "prompt": "빨강이 나올 가능성이 '반반'인 회전판을 만들어요.",
+          "engine": "E19",
+          "mode": "spinner",
+          "cpa": "C",
+          "config": {
+            "mode": "spinner",
+            "device": {
+              "type": "spinner",
+              "sectors": [
+                {
+                  "color": "red",
+                  "size": 1
+                },
+                {
+                  "color": "blue",
+                  "size": 2
+                }
+              ]
+            }
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "probabilityIs",
+            "args": {
+              "outcome": "red",
+              "value": "1/2"
+            }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "spinner"
+              },
+              "level": 1,
+              "say": "전체 칸 가운데 빨강 칸이 차지하는 몫을 생각해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "spinner"
+              },
+              "level": 2,
+              "say": "전체 칸이 몇 칸이고 그 가운데 빨강이 몇 칸인지 세어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "spinner"
+              },
+              "level": 3,
+              "backtrack": "g5s2u6.mean-compute"
+            }
+          ],
+          "concepts": [
+            "g5s2u6.likelihood"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g5s2u6.A2.T3",
+          "prompt": "세 칸을 모두 돌린 뒤, 알맞은 문장을 골라요. 가: 많이 돌릴수록 빨강이 나온 비율이 1/2에 가까워져요. 나: 10번만 돌려 봐도 빨강이 잘 나오는지 알 수 있어요. 다: 많이 돌릴수록 빨강이 더 많이 나와요.",
+          "engine": "E19",
+          "mode": "simulate",
+          "cpa": "P",
+          "config": {
+            "mode": "simulate",
+            "device": {
+              "type": "spinner",
+              "sectors": [
+                {
+                  "color": "red",
+                  "size": 1
+                },
+                {
+                  "color": "blue",
+                  "size": 1
+                }
+              ]
+            },
+            "editable": false
+          },
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "cmp",
+                "label": "알맞은 문장",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "ga",
+                    "label": "가"
+                  },
+                  {
+                    "id": "na",
+                    "label": "나"
+                  },
+                  {
+                    "id": "da",
+                    "label": "다"
+                  }
+                ]
+              }
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "allBatchesRun"
+              },
+              {
+                "kind": "equals",
+                "path": "response.cmp.selected",
+                "value": [
+                  "ga"
+                ]
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.cmp.selected",
+                "value": [
+                  "na"
+                ]
+              },
+              "level": 1,
+              "say": "더 많이 돌려 보면 어떻게 될까?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.cmp.selected",
+                "value": [
+                  "na"
+                ]
+              },
+              "level": 2,
+              "say": "돌린 횟수가 적을 때 막대가 얼마나 들쭉날쭉한지 나란히 봐요.",
+              "show": {
+                "engine": "E19",
+                "overlay": "small-batches"
+              }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.cmp.selected",
+                "value": [
+                  "na"
+                ]
+              },
+              "level": 3,
+              "backtrack": "g5s2u6.likelihood"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "simulate"
+              },
+              "level": 1,
+              "say": "세 칸을 모두 돌려 보고, 횟수가 달라질 때 막대가 어떻게 달라지는지 살펴봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "simulate"
+              },
+              "level": 2,
+              "say": "돌린 횟수가 다른 막대들을 견줘 봐요.",
+              "show": {
+                "engine": "E19",
+                "overlay": "small-batches"
+              }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "simulate"
+              },
+              "level": 3,
+              "backtrack": "g5s2u6.mean-compute"
+            }
+          ],
+          "concepts": [
+            "g5s2u6.likelihood"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g5s2u6.A2.T4",
+          "prompt": "빨강 구슬을 꺼낼 가능성이 0인 주머니를 만들어요.",
+          "engine": "E19",
+          "mode": "spinner",
+          "cpa": "C",
+          "config": {
+            "mode": "spinner",
+            "device": {
+              "type": "bag",
+              "marbles": [
+                {
+                  "color": "red",
+                  "count": 2
+                },
+                {
+                  "color": "blue",
+                  "count": 2
+                }
+              ]
+            }
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "probabilityIs",
+            "args": {
+              "outcome": "red",
+              "value": "0"
+            }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "spinner"
+              },
+              "level": 1,
+              "say": "주머니에서 빨강 구슬이 나올 수 있는 경우를 생각해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "spinner"
+              },
+              "level": 2,
+              "say": "전체 구슬 가운데 빨강이 몇 개인지 세어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "spinner"
+              },
+              "level": 3,
+              "backtrack": "g5s2u6.mean-compute"
+            }
+          ],
+          "concepts": [
+            "g5s2u6.likelihood"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g5s2u6.A2.T5",
+          "prompt": "빨강 구슬을 꺼낼 가능성이 1인 주머니를 만들어요.",
+          "engine": "E19",
+          "mode": "spinner",
+          "cpa": "C",
+          "config": {
+            "mode": "spinner",
+            "device": {
+              "type": "bag",
+              "marbles": [
+                {
+                  "color": "red",
+                  "count": 2
+                },
+                {
+                  "color": "blue",
+                  "count": 2
+                }
+              ]
+            }
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "probabilityIs",
+            "args": {
+              "outcome": "red",
+              "value": "1"
+            }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "spinner"
+              },
+              "level": 1,
+              "say": "꺼낸 구슬이 반드시 빨강이 되려면 주머니 속은 어떤 모습일까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "spinner"
+              },
+              "level": 2,
+              "say": "전체 구슬 가운데 빨강이 몇 개인지 세어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "spinner"
+              },
+              "level": 3,
+              "backtrack": "g5s2u6.mean-compute"
+            }
+          ],
+          "concepts": [
+            "g5s2u6.likelihood"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g5s2u6.A2.T6",
+          "prompt": "이 회전판에서 빨강이 5번 이어서 나왔어요. 다음에 빨강이 나올 가능성은 어떨까요? 가: 반반이다 나: 빨강이 나오지 않을 것 같다 다: 빨강이 나올 것 같다",
+          "engine": "E19",
+          "mode": "simulate",
+          "cpa": "P",
+          "config": {
+            "mode": "simulate",
+            "device": {
+              "type": "spinner",
+              "sectors": [
+                {
+                  "color": "red",
+                  "size": 1
+                },
+                {
+                  "color": "blue",
+                  "size": 1
+                }
+              ]
+            },
+            "editable": false,
+            "showExpected": false
+          },
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "next",
+                "label": "다음 결과",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "ga",
+                    "label": "가"
+                  },
+                  {
+                    "id": "na",
+                    "label": "나"
+                  },
+                  {
+                    "id": "da",
+                    "label": "다"
+                  }
+                ]
+              }
+            ]
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.next.selected",
+            "value": [
+              "ga"
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.next.selected",
+                    "value": [
+                      "na"
+                    ]
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.next.selected",
+                    "value": [
+                      "da"
+                    ]
+                  }
+                ]
+              },
+              "level": 1,
+              "say": "회전판이 앞의 결과를 기억할까?"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.next.selected",
+                    "value": [
+                      "na"
+                    ]
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.next.selected",
+                    "value": [
+                      "da"
+                    ]
+                  }
+                ]
+              },
+              "level": 2,
+              "say": "빨강이 이어서 나온 바로 다음 결과만 모아 보고 전체와 견줘 봐요.",
+              "show": {
+                "engine": "E19",
+                "overlay": "after-streak"
+              }
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.next.selected",
+                    "value": [
+                      "na"
+                    ]
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.next.selected",
+                    "value": [
+                      "da"
+                    ]
+                  }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g5s2u6.likelihood"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "simulate"
+              },
+              "level": 1,
+              "say": "회전판은 돌릴 때마다 칸이 어떻게 나뉘어 있는지에 따라 정해져요. 한 번 돌릴 때를 생각해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "simulate"
+              },
+              "level": 2,
+              "say": "회전판을 돌려 보며 빨강이 나오는 정도를 살펴봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "simulate"
+              },
+              "level": 3,
+              "backtrack": "g5s2u6.mean-compute"
+            }
+          ],
+          "concepts": [
+            "g5s2u6.likelihood"
+          ],
+          "submit": "button"
+        }
+      ]
+    }
+  ]
+}
