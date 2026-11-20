@@ -342,6 +342,8 @@ W6에서 E13 측정 실험실과 E14 시계·시간을 새로 만들고, E17 `so
 
 - **T205 병합(2026-11-20):** E13 측정 실험실 `compare-direct`(length 펴기·출발선 자석, area 겹치기, capacity 같은 수조 붓기)와 `length`(단위 조각 이어 붙이기, 틈·겹침 글+무늬, 뼘 시연 `demoSpans`, 1cm 블록 10개 자 만들기·숫자 카드). 오버레이 endpoint-lines·half-straighten·same-tank·gap-marks·span-compare. 자석은 화면 도우미(`snapPlacement`)가 끌어 놓을 때만 쓰고 Action에는 최종 위치만. 자 눈금 칸은 터치 크기 때문에 블록 경계에서 88px 간격 칸으로 펼쳐 그린다. `noGapOverlap`은 조각 1개 이상일 때만 참, `larger`·`more`가 같으면 빈 문자열. 남은 점: 아이패드에서 조작 단추 줄이 바깥 스크롤 아래, `demoSpans.objectName`이 책상 외면 일반 사각형. 범위 E2E 221 통과.
 
+- **T206 병합(2026-11-20)**: E06 `compare` 모드(`src/engines/E06-balance/compare/`, 오버레이 `size-vs-weight`). weighings는 서로 다른 조합만 센다. 기존 오버레이(match-bars·big-tilt)에는 compare 가드만 더했고 big-tilt는 compare에서 그리지 않는다. 기존 기준 이미지 변경 없음, 새 4장. 시범 운영 메모: 아이패드에서 [처음으로] 줄이 판 아래 반쯤 잘림(스크롤로 닿음), 샌드박스 모드 이름 `compare`는 영어 그대로.
+
 ## 상시
 | 카드 | 내용 |
 | --- | --- |
