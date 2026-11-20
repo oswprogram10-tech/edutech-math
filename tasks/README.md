@@ -371,6 +371,8 @@ W6에서 E13 측정 실험실과 E14 시계·시간을 새로 만들고, E17 `so
 
 - **T218 병합(2026-11-21):** g2s1u5 분류하기(A1 sort 4과제, A2 predict 2과제)와 g1s1u2.A1 모양 상자(4과제, A2 앞)와 E2E. 명세 A2 과제 3(비밀 기준 만들기)은 후순위로. 시범 운영 메모: g2s1u5.A1.T4 크롬북 조작 칸 34px 아래, g1s1u2 사물 그림이 크롬북 실행기에서 폭 13~23px로 작음(끌기 확인 필요), A2.T1(seed 1)은 시작 예시에 빨간 단추가 둘이라 쉬움.
 
+- **T219 병합(2026-11-21):** E03 `range`(경계점 속 찬/빈·방향·두 경계·게이트, 판 1000×560, `boundary-rider`)와 `rounding` `scenario`(bus-seats·candy-bags·height 장면, 마지막 묶음만 그림, `left-behind`), E03 `hasMisconception`. 판정 경로: `rounding.0.method`, `consequence`, range `lower`·`upper`. 검수 때 탑승자 키 글을 화면 12px 이상·겹침 없게(한 줄 5명) 고쳤다. 시범 운영 메모: 크롬북 샌드박스에서 range 수직선이 첫 화면 아래(조작 칸은 위).
+
 ## 상시
 | 카드 | 내용 |
 | --- | --- |
