@@ -293,6 +293,8 @@ T173은 소넷 구현 → 검수 1회(판 전체 화면 기준 스냅샷 6장, �
 
 - **T195 병합(2026-11-20):** g5s2u6 콘텐츠(A1 leveling·seesaw·outlier 6과제, A2 words·spinner·simulate 6과제). A2.T6(GAMBLER 예측)은 `showExpected:false`. A1.T6은 평균이 중앙값과 같아 MIDDLE 규칙 없음. 남은 점: 아이패드 세로에서 simulate + 응답 칸 과제의 [10회 돌리기]가 스크롤 아래(T199 원칙), concepts.json에서 likelihood의 선수가 mean-compute라 가능성 과제 일반 ③이 어색하다(개념 그래프 손볼 때 볼 것). g5s2u6 E2E 24 통과.
 
+- **T196 병합(2026-11-20):** E06 `proportion`(외항·내항 격자 넓이 저울, cards·pairSelect·슬라이더, look scale·grid·symbols, 오버레이 big-tilt·cross-brackets·area-diff). 코드는 `proportion/` 폴더에 따로 두고 equation 파일은 그대로다. `equation`·`cards`가 둘 다 없으면 샌드박스 기본 식. 슬라이더 상한 45. 슬라이더는 놓을 때만 `try`를 보낸다. ADDITIVE는 '차 보존' 값이 비례식도 되면 기록하지 않는다. equation 기준 이미지 8장 다시 찍음(도구 줄만). 남은 점: 격자 그림이 판에 비해 작다(3×20이면 폭 약 20px). 범위 E2E 249 통과.
+
 ## 상시
 | 카드 | 내용 |
 | --- | --- |
