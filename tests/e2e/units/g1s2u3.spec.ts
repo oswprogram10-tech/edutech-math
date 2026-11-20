@@ -241,7 +241,7 @@ async function clockPoint(
   const rad = (deg * Math.PI) / 180;
   return {
     x: box.x + ((CLOCK_CENTER.x + radius * Math.sin(rad)) / 1000) * box.width,
-    y: box.y + ((CLOCK_CENTER.y - radius * Math.cos(rad)) / 600) * box.height,
+    y: box.y + ((CLOCK_CENTER.y - radius * Math.cos(rad)) / 1000) * box.width,
   };
 }
 

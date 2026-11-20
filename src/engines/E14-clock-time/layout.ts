@@ -3,7 +3,7 @@
  * 화면 좌표·각도만 number다(수학 값 `minutes`는 정수).
  */
 import { E14_STRINGS as S } from './strings.ko';
-import { MINUTES_PER_HALF_DAY } from './types';
+import { LOGICAL_HEIGHT, LOGICAL_WIDTH, MINUTES_PER_HALF_DAY } from './types';
 
 export const CLOCK = {
   cx: 275,
@@ -29,6 +29,14 @@ export const STRIP = {
 
 /** 시계 오른쪽 빈 자리: 톱니 이름표·디지털 표시. */
 export const SIDE = { x: 545, captionY: 340, digitalY: 140 } as const;
+
+/** 펼치지 않은 clock 판의 논리 높이: 시계 원과 숫자·이름표 여백까지만 담는다. */
+export const CLOCK_ONLY_HEIGHT = 510;
+
+/** clock 판의 논리 크기. 펼쳤을 때만 띠 자리를 더한다(상태 → 레이아웃, 순수). */
+export function boardSize(unrolled: boolean): { readonly width: number; readonly height: number } {
+  return { width: LOGICAL_WIDTH, height: unrolled ? LOGICAL_HEIGHT : CLOCK_ONLY_HEIGHT };
+}
 
 export interface Pt {
   readonly x: number;

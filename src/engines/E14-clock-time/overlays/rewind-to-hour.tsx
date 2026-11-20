@@ -5,8 +5,8 @@
  */
 import { CanvasAlignedOverlay } from '../../../core/engine-sdk';
 import type { OverlayProps } from '../../../core/engine-sdk';
-import { CLOCK, handAngles, numeralPoint, polar } from '../layout';
-import { CANVAS_SELECTOR, LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../types';
+import { CLOCK, boardSize, handAngles, numeralPoint, polar } from '../layout';
+import { CANVAS_SELECTOR } from '../types';
 import type { ClockConfig, ClockState } from '../types';
 
 const ORANGE = '#e8872e';
@@ -35,8 +35,8 @@ export function RewindToHourOverlay({ state }: OverlayProps<ClockConfig, ClockSt
     <CanvasAlignedOverlay
       testId="overlay-rewind-to-hour"
       canvasSelector={CANVAS_SELECTOR}
-      logicalWidth={LOGICAL_WIDTH}
-      logicalHeight={LOGICAL_HEIGHT}
+      logicalWidth={boardSize(state.unrolled).width}
+      logicalHeight={boardSize(state.unrolled).height}
     >
       <path
         data-part="rewind-arc"

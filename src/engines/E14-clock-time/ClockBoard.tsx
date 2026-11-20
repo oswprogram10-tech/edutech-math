@@ -12,6 +12,7 @@ import {
   CLOCK,
   SIDE,
   STRIP,
+  boardSize,
   angleDelta,
   dragMinutes,
   gearAngles,
@@ -28,14 +29,12 @@ import {
 import type { DragHand } from './layout';
 import { formatTime, snapMinutes } from './settings';
 import { E14_STRINGS as S } from './strings.ko';
-import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from './types';
 import type { ClockState } from './types';
 import type { ClockUi } from './useClockUi';
 import styles from './View.module.css';
 
 const INK = '#1d2330';
 const BLUE = '#2f6fde';
-const LOGICAL = { width: LOGICAL_WIDTH, height: LOGICAL_HEIGHT };
 
 interface Props {
   readonly state: ClockState;
@@ -75,7 +74,7 @@ function useHandDrag(hand: DragHand, options: HandDragOptions) {
   const { svgRef, dragRef, state, ui, locked, setPreview } = options;
   return useDrag({
     disabled: locked,
-    getPoint: (event) => pointerToLogical(event, svgRef.current, LOGICAL),
+    getPoint: (event) => pointerToLogical(event, svgRef.current, boardSize(state.unrolled)),
     onStart: (info) => {
       dragRef.current = { start: state.minutes, last: null, accumulated: 0 };
       setPreview(track(dragRef.current, hand, info));
@@ -109,13 +108,14 @@ export function ClockBoard({ state, ui, readOnly, svgStyle, className }: Props) 
   const showLong = !state.hideMinuteHand;
   const showMarker = state.unrolled && !state.readOnly && showLong;
   const minuteOfHour = ((shown % 60) + 60) % 60;
+  const logical = boardSize(state.unrolled);
 
   return (
     <svg
       ref={svgRef}
       className={className}
       style={{ ...svgStyle, touchAction: 'none' }}
-      viewBox={`0 0 ${LOGICAL_WIDTH} ${LOGICAL_HEIGHT}`}
+      viewBox={`0 0 ${logical.width} ${logical.height}`}
       preserveAspectRatio="xMidYMid meet"
       data-testid="clock-canvas"
       data-unrolled={state.unrolled ? 'true' : 'false'}

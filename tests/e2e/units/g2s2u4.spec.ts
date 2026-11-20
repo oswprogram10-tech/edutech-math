@@ -189,10 +189,13 @@ test('A1 원→직선 펼치기 시계 — 대표 오답 뒤 고쳐서 다섯 �
     await controls.nth(i).scrollIntoViewIfNeeded();
     await expectMin(controls.nth(i), 64, `조작 단추 ${i}`);
   }
+  // 위 확인에서 단추를 보이려고 판 안을 내렸다. 첫 화면 검사는 처음 위치(맨 위)에서 본다.
+  await page.getByTestId('clock-board').evaluate((element) => {
+    for (let node = element.parentElement; node; node = node.parentElement) node.scrollTop = 0;
+  });
 
   // T2 — 정답(시·분)이 화면 글·aria·data-에 없고 학년 표시도 없다.
-  // (이 첫 화면은 expectFitCanvasVisible를 걸지 않는다: 아이패드·크롬북에서 시계 판이 칸보다 커서
-  // 위가 잘린다. E14 판 크기 문제로 T204 메모에 요청을 남겼다. 고치면 이 검사를 넣고 기준 이미지를 다시 찍는다.)
+  await expectFitCanvasVisible(page);
   await screenshot(page, 'g2s2u4-a1-t2.png');
   const leaked = await main.evaluate((root) => {
     const found: string[] = [];
