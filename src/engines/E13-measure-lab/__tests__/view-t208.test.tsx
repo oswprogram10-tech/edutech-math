@@ -269,7 +269,7 @@ describe('length mergeRule 화면', () => {
 
 describe('meter-100 오버레이', () => {
   it('1m 줄자를 100칸으로 펼치고 10칸마다 굵은 선·숫자 10~100과 "1m" 이름표를 단다', () => {
-    const { container } = render(<Meter100 canvasSelector="svg" />);
+    const { container } = render(<Meter100 canvasSelector="svg" logicalHeight={322} />);
     expect(container.querySelectorAll('[data-part="tick-10"]')).toHaveLength(9);
     expect(container.querySelectorAll('[data-part="tick-1"]')).toHaveLength(90);
     const numbers = [...container.querySelectorAll('[data-part="tick-number"]')].map(

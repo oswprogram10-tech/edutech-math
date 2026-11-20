@@ -4,6 +4,7 @@
  */
 import { useRef } from 'react';
 import { Frame } from '../Frame';
+import { boardHeight } from './layout';
 import { LengthBoard } from './LengthBoard';
 import { LengthControls } from './LengthControls';
 import type { LengthAction, MeasureState } from './types';
@@ -24,6 +25,7 @@ export function LengthView({ state, dispatch, targetSize, readOnly = false }: Le
       mode="length"
       error={state.error}
       targetSize={targetSize}
+      logicalHeight={boardHeight(state)}
       onKeyDown={(event) => {
         if (readOnly || event.key !== 'Backspace') return;
         event.preventDefault();

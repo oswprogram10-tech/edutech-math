@@ -2,6 +2,9 @@
  * E13 compare-direct 판 좌표(논리 1000×600)와 곡선 계산. 본 판과 힌트 ② 오버레이가 같은 식을 써서
  * 1px 안에 겹친다. 화면 좌표·곡선 길이만 number다(수학 값은 Rational 문자열).
  */
+import type { Attribute } from './types';
+
+/** 논리 너비와 최대 논리 높이(포인터 좌표 한계). 판이 그리는 높이는 `boardHeight()`다. */
 export const BOARD = { width: 1000, height: 600 } as const;
 
 /** length 판: 한 칸 60px, 출발선 x=BASE_X, 한 줄(행) 60px. */
@@ -132,4 +135,23 @@ export function lengthX(cells: number): number {
 
 export function lengthY(row: number): number {
   return row * LENGTH_CELL;
+}
+
+/** 판 아래 여백(논리 px). */
+const BOTTOM_PAD = 30;
+
+/**
+ * compare-direct 판의 논리 높이(T223). 끌어 놓을 수 있는 범위(길이는 9줄, 넓이는 12줄)가 판 안에
+ * 모두 들어가야 해서 길이·넓이는 최대 높이를 쓴다. 들이는 물건을 옮기지 않으므로 수조 아래 끝
+ * (붓기가 있으면 이름표까지) + 여백이다(힌트 same-tank 오버레이가 수조를 그려서 수조 자리는 늘 포함).
+ */
+export function boardHeight(state: {
+  readonly attribute: Attribute;
+  readonly pour: boolean;
+}): number {
+  if (state.attribute === 'capacity') {
+    const bottom = state.pour ? TANK.bottom + 28 : TANK.bottom;
+    return Math.min(BOARD.height, bottom + BOTTOM_PAD);
+  }
+  return BOARD.height;
 }

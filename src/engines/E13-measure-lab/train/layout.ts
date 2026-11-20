@@ -5,6 +5,7 @@
  */
 import type { TrainState } from './types';
 
+/** 논리 너비와 포인터 좌표 한계(높이 600). 판이 그리는 높이는 `boardHeight()`다. */
 export const BOARD = { width: 1000, height: 600 } as const;
 export const LEFT = 150;
 /** 위쪽 100px은 1m 줄자 오버레이(meter-100) 자리다. */
@@ -50,6 +51,20 @@ export function geoOf(state: Pick<TrainState, 'm' | 'rods' | 'blocks'>): TrainGe
     block,
     blockPerRow: Math.floor(820 / (block + 4)),
   };
+}
+
+/** 판 아래 여백(논리 px). */
+const BOTTOM_PAD = 30;
+
+/**
+ * unit-train 판의 논리 높이(T223): 1cm 블록 줄(블록이 없어도 한 줄 자리) 아래 끝 + 여백.
+ * 블록을 풀 때마다 판이 늘었다 줄지 않게 처음부터 한 줄을 비워 둔다. 600을 넘지 않는다.
+ */
+export function boardHeight(state: Pick<TrainState, 'm' | 'rods' | 'blocks'>): number {
+  const geo = geoOf(state);
+  const blockRows = Math.max(1, Math.ceil(state.blocks / geo.blockPerRow));
+  const bottom = geo.blockTop + blockRows * (geo.block + 4);
+  return Math.min(BOARD.height, bottom + BOTTOM_PAD);
 }
 
 /** m 칸 i번(0부터)의 왼쪽 위. */

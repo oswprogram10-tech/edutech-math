@@ -6,12 +6,14 @@ import type { ComponentType } from 'react';
 import type { OverlayProps } from '../../../core/engine-sdk';
 import type { CompareConfig, CompareState } from '../compare/types';
 import type { EstimateConfig, EstimateState } from '../estimate/types';
+import { boardHeight as lengthBoardHeight } from '../length/layout';
 import { Meter100 } from '../length/overlays/meter-100';
 import type { LengthConfig, MeasureState } from '../length/types';
 import { LENGTH_CANVAS_SELECTOR } from '../length/types';
 import { isTrain } from '../modes';
 import type { E13Config, E13State } from '../modes';
 import type { TrainConfig, TrainState } from '../train/types';
+import { boardHeight as trainBoardHeight } from '../train/layout';
 import { TRAIN_CANVAS_SELECTOR } from '../train/types';
 
 export function forCompare(
@@ -57,6 +59,12 @@ export function forTrain(
 /** meter-100은 length(합체 규칙)·unit-train 두 판에서 쓴다. 판마다 맞출 본 판 svg가 다르다. */
 export function Meter100Overlay({ state }: OverlayProps<E13Config, E13State>) {
   if (state.mode !== 'length' || state.error !== null) return null;
-  const selector = isTrain(state) ? TRAIN_CANVAS_SELECTOR : LENGTH_CANVAS_SELECTOR;
-  return <Meter100 canvasSelector={selector} />;
+  if (isTrain(state)) {
+    return (
+      <Meter100 canvasSelector={TRAIN_CANVAS_SELECTOR} logicalHeight={trainBoardHeight(state)} />
+    );
+  }
+  return (
+    <Meter100 canvasSelector={LENGTH_CANVAS_SELECTOR} logicalHeight={lengthBoardHeight(state)} />
+  );
 }

@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 import { PREVIEW_URL } from '../../../playwright.config';
+import { expectControlsAboveFold } from '../controls-fold';
 import { expectNoPanelInnerScroll } from '../panel-layout';
 
 /**
@@ -480,6 +481,51 @@ test('크롬북·전자칠판 첫 화면에 엔진·응답 칸·확인하기가 
     await expect(slot(page, 'main')).toBeInViewport({ ratio: 1 });
     await expect(responseSlot(page)).toBeInViewport({ ratio: 1 });
     await expect(page.getByRole('button', { name: '확인하기' })).toBeInViewport({ ratio: 1 });
+  }
+});
+
+test('A1·A2 모든 과제에서 조작 칸 첫 단추 줄이 첫 화면에 보인다(T223)', async ({ page }) => {
+  await openActivity(page, A1);
+  await settleCanvas(page, 'length-canvas');
+  await expectControlsAboveFold(page, 'g2s1u4.A1.T1');
+  await passA1T1(page);
+
+  await settleCanvas(page, 'length-canvas');
+  await expectControlsAboveFold(page, 'g2s1u4.A1.T2');
+  await passA1T2(page);
+
+  await settleCanvas(page, 'length-canvas');
+  await expectControlsAboveFold(page, 'g2s1u4.A1.T3');
+  await pressTimes(page, '1cm 블록 놓기', 12);
+  await typeNumber(page, ['1', '2']);
+  await submit(page);
+  await expectPassed(page);
+
+  await settleCanvas(page, 'length-canvas');
+  await expectControlsAboveFold(page, 'g2s1u4.A1.T4');
+
+  await openActivity(page, A2);
+  const plain = [['5'], ['7'], ['7']] as const;
+  for (const [index, keys] of plain.entries()) {
+    await settleCanvas(page, 'estimate-canvas');
+    await expectControlsAboveFold(page, `g2s1u4.A2.T${index + 1}`);
+    await typeNumber(page, keys);
+    await submit(page);
+    await expectPassed(page);
+  }
+  const estimated = [
+    { estimate: [8], keys: ['9'] },
+    { estimate: [1], keys: ['1', '3'] },
+    { estimate: [5], keys: ['6'] },
+  ] as const;
+  for (const [index, item] of estimated.entries()) {
+    await settleCanvas(page, 'estimate-canvas');
+    // 어림을 넣기 전(키패드가 있는 처음 화면)에 본다.
+    await expectControlsAboveFold(page, `g2s1u4.A2.T${index + 4}`);
+    await setEstimate(page, item.estimate);
+    await typeNumber(page, item.keys);
+    await submit(page);
+    await expectPassed(page, index === 2);
   }
 });
 

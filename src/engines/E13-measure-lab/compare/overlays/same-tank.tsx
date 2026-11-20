@@ -5,7 +5,7 @@
 import { CanvasAlignedOverlay } from '../../../../core/engine-sdk';
 import type { OverlayProps } from '../../../../core/engine-sdk';
 import { E13_STRINGS as S } from '../../strings.ko';
-import { BOARD, CUP_BASE_Y, CUP_CENTERS, TANK } from '../geometry';
+import { BOARD, CUP_BASE_Y, boardHeight, CUP_CENTERS, TANK } from '../geometry';
 import { COMPARE_CANVAS_SELECTOR } from '../types';
 import type { CompareConfig, CompareState } from '../types';
 
@@ -20,7 +20,7 @@ export function SameTankOverlay({ state }: OverlayProps<CompareConfig, CompareSt
       testId="overlay-same-tank"
       canvasSelector={COMPARE_CANVAS_SELECTOR}
       logicalWidth={BOARD.width}
-      logicalHeight={BOARD.height}
+      logicalHeight={boardHeight(state)}
     >
       {state.items.map((item, index) => {
         const cx = CUP_CENTERS[index] ?? 250;

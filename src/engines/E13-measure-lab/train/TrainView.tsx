@@ -7,6 +7,7 @@ import { Btn } from '../Btn';
 import { Frame } from '../Frame';
 import { E13_STRINGS as S } from '../strings.ko';
 import styles from '../View.module.css';
+import { boardHeight } from './layout';
 import { TrainBoard } from './TrainBoard';
 import type { TrainAction, TrainState } from './types';
 import { useTrainUi } from './useTrainUi';
@@ -26,6 +27,7 @@ export function TrainView({ state, dispatch, targetSize, readOnly = false }: Tra
       mode="length"
       error={state.error}
       targetSize={targetSize}
+      logicalHeight={boardHeight(state)}
       renderBoard={(svgStyle, className) => (
         <TrainBoard svgRef={svgRef} state={state} svgStyle={svgStyle} className={className} />
       )}

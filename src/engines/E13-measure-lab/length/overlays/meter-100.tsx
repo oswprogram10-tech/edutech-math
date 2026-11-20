@@ -8,21 +8,23 @@ import { E13_STRINGS as S } from '../../strings.ko';
 
 const INK = '#1d2330';
 const ORANGE = '#e8872e';
-const LOGICAL = { width: 1000, height: 600 } as const;
+const LOGICAL_WIDTH = 1000;
 const BAR = { left: 60, width: 880, top: 34, height: 28 } as const;
 const CELL = BAR.width / 100;
 
 export interface Meter100Props {
   readonly canvasSelector: string;
+  /** 본 판의 논리 높이(length는 length 판, unit-train은 기차 판의 `boardHeight`). */
+  readonly logicalHeight: number;
 }
 
-export function Meter100({ canvasSelector }: Meter100Props) {
+export function Meter100({ canvasSelector, logicalHeight }: Meter100Props) {
   return (
     <CanvasAlignedOverlay
       testId="overlay-meter-100"
       canvasSelector={canvasSelector}
-      logicalWidth={LOGICAL.width}
-      logicalHeight={LOGICAL.height}
+      logicalWidth={LOGICAL_WIDTH}
+      logicalHeight={logicalHeight}
     >
       <rect
         data-part="meter-bar"

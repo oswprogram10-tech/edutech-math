@@ -6,7 +6,7 @@ import { CanvasAlignedOverlay } from '../../../../core/engine-sdk';
 import type { OverlayProps } from '../../../../core/engine-sdk';
 import { num } from '../../rat';
 import { E13_STRINGS as S } from '../../strings.ko';
-import { BASE_X, BOARD, LENGTH_CELL, lengthX } from '../geometry';
+import { BASE_X, BOARD, boardHeight, LENGTH_CELL, lengthX } from '../geometry';
 import { COMPARE_CANVAS_SELECTOR } from '../types';
 import type { CompareConfig, CompareState } from '../types';
 
@@ -24,14 +24,14 @@ export function EndpointLinesOverlay({ state }: OverlayProps<CompareConfig, Comp
       testId="overlay-endpoint-lines"
       canvasSelector={COMPARE_CANVAS_SELECTOR}
       logicalWidth={BOARD.width}
-      logicalHeight={BOARD.height}
+      logicalHeight={boardHeight(state)}
     >
       <line
         data-part="reference-line"
         x1={refPx}
         y1={40}
         x2={refPx}
-        y2={BOARD.height - 20}
+        y2={boardHeight(state) - 20}
         stroke={ORANGE}
         strokeWidth={4}
         strokeDasharray="10 8"

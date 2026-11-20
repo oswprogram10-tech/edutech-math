@@ -1,5 +1,6 @@
 /** E13 compare-direct 화면. 판은 남는 칸에 맞춰 줄고 최소 배율 0.6 아래로는 줄이지 않고 스크롤한다. */
 import { Frame } from '../Frame';
+import { boardHeight } from './geometry';
 import { CompareBoard } from './CompareBoard';
 import { CompareControls } from './CompareControls';
 import type { CompareAction, CompareState } from './types';
@@ -19,6 +20,7 @@ export function CompareView({ state, dispatch, targetSize, readOnly = false }: C
       mode="compare-direct"
       error={state.error}
       targetSize={targetSize}
+      logicalHeight={boardHeight(state)}
       renderBoard={(svgStyle, className) => (
         <CompareBoard
           state={state}

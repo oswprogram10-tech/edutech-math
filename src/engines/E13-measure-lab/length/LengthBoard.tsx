@@ -17,6 +17,7 @@ import {
   BAND_WIDTH,
   BOARD,
   DEMO,
+  boardHeight,
   OBJECT_H,
   SLOT_H,
   RULER_STEP,
@@ -651,7 +652,7 @@ export function LengthBoard({ svgRef, state, ui, locked, svgStyle, className }: 
       ref={svgRef}
       className={className}
       style={{ ...svgStyle, touchAction: 'none' }}
-      viewBox={`0 0 ${BOARD.width} ${BOARD.height}`}
+      viewBox={`0 0 ${BOARD.width} ${boardHeight(state)}`}
       preserveAspectRatio="xMidYMid meet"
       data-testid="length-canvas"
       role="group"

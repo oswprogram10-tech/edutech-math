@@ -5,7 +5,7 @@
 import { CanvasAlignedOverlay } from '../../../../core/engine-sdk';
 import type { OverlayProps } from '../../../../core/engine-sdk';
 import { E13_STRINGS as S } from '../../strings.ko';
-import { BOARD, geoOf, groupAt } from '../layout';
+import { BOARD, boardHeight, geoOf, groupAt } from '../layout';
 import { cmOf } from '../settings';
 import { TRAIN_CANVAS_SELECTOR } from '../types';
 import type { TrainConfig, TrainState } from '../types';
@@ -22,7 +22,7 @@ export function MeterOutlineOverlay({ state }: OverlayProps<TrainConfig, TrainSt
       testId="overlay-meter-outline"
       canvasSelector={TRAIN_CANVAS_SELECTOR}
       logicalWidth={BOARD.width}
-      logicalHeight={BOARD.height}
+      logicalHeight={boardHeight(state)}
     >
       <rect
         data-part="outline"

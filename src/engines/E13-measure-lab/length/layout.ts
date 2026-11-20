@@ -6,6 +6,7 @@ import { num } from '../rat';
 import type { MeasureState } from './types';
 import { BAND_EXTRA_CM } from './types';
 
+/** 논리 너비와 포인터 좌표 한계(높이 600). 판이 그리는 높이는 `boardHeight()`다. */
 export const BOARD = { width: 1000, height: 600 } as const;
 export const BAND_LEFT = 60;
 export const BAND_WIDTH = 880;
@@ -43,6 +44,26 @@ export function geoOf(state: Pick<MeasureState, 'objectCm' | 'demo' | 'mergeRule
     slotTop,
     slotBottom: slotTop + SLOT_H,
   };
+}
+
+/** 판 아래 여백(논리 px). */
+const BOTTOM_PAD = 30;
+/**
+ * 판이 너무 납작해지지 않게 하는 바닥. 두 칸 샌드박스(판 너비 약 730px)에서 짧은 변이 280px 이상이어야
+ * 해서(fit-canvas) estimate 판(384)과 같은 높이 대를 쓴다.
+ */
+const MIN_HEIGHT = 390;
+
+/**
+ * length 판의 논리 높이(T223): 실제로 그리는 맨 아래(눈금 칸이 있으면 눈금 칸, 없으면 띠) + 여백.
+ * 뼘 시연·합체 규칙의 위쪽 자리는 `geoOf`가 이미 반영한다. 390 이상 600 이하.
+ */
+export function boardHeight(
+  state: Pick<MeasureState, 'objectCm' | 'demo' | 'mergeRule' | 'buildRuler'>,
+): number {
+  const geo = geoOf(state);
+  const bottom = state.buildRuler ? geo.slotBottom : geo.bandBottom;
+  return Math.min(BOARD.height, Math.max(MIN_HEIGHT, bottom + BOTTOM_PAD));
 }
 
 export function xOfCm(geo: Geo, cm: number): number {

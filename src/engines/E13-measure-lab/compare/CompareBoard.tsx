@@ -13,6 +13,7 @@ import {
   AREA_CELL,
   BASE_X,
   BOARD,
+  boardHeight,
   CUP_BASE_Y,
   CUP_CENTERS,
   LENGTH_CELL,
@@ -495,7 +496,7 @@ export function CompareBoard({ state, ui, locked, svgStyle, className }: Props) 
       ref={svgRef}
       className={className}
       style={{ ...svgStyle, touchAction: 'none' }}
-      viewBox={`0 0 ${BOARD.width} ${BOARD.height}`}
+      viewBox={`0 0 ${BOARD.width} ${boardHeight(state)}`}
       preserveAspectRatio="xMidYMid meet"
       data-testid="compare-canvas"
       data-attribute={state.attribute}
@@ -510,7 +511,7 @@ export function CompareBoard({ state, ui, locked, svgStyle, className }: Props) 
                 x1={BASE_X}
                 y1={40}
                 x2={BASE_X}
-                y2={BOARD.height - 20}
+                y2={boardHeight(state) - 20}
                 stroke={ORANGE}
                 strokeWidth={6}
               />
