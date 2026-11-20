@@ -8,11 +8,13 @@
  * `core/math/geometry`의 y 배율 도우미로 하고, 화면 좌표만 number다.
  */
 import type { JsonValue } from '../../core/engine-sdk';
+import type { PredictAction, PredictConfig, PredictState } from './secret-rule-predict/types';
+import type { SortAction, SortConfig, SortState } from './sort/types';
 
 export const LOGICAL_WIDTH = 1000;
 export const LOGICAL_HEIGHT = 1000;
 
-export type SorterMode = 'venn' | 'secret-rule' | 'hierarchy';
+export type SorterMode = 'venn' | 'secret-rule' | 'hierarchy' | 'sort';
 
 export type DeckName = 'triangles-12' | 'quadrilaterals-16';
 
@@ -84,7 +86,8 @@ export interface HierarchyConfig {
   readonly dragTest?: unknown;
 }
 
-export type SorterConfig = VennConfig | SecretRuleConfig | HierarchyConfig;
+export type SorterConfig =
+  VennConfig | SecretRuleConfig | HierarchyConfig | SortConfig | PredictConfig;
 
 // ── 정규화된 설정 ─────────────────────────────────────────────
 
@@ -168,7 +171,7 @@ export interface HierarchyState {
   readonly blanks: Readonly<Partial<Record<QuadNode, QuadName | null>>>;
 }
 
-export type SorterState = VennState | SecretRuleState | HierarchyState;
+export type SorterState = VennState | SecretRuleState | HierarchyState | SortState | PredictState;
 
 // ── Action ────────────────────────────────────────────────────
 
@@ -186,7 +189,9 @@ export type SorterAction =
   | { readonly type: 'swap-answer'; readonly answer: boolean }
   | { readonly type: 'swap-reset' }
   | { readonly type: 'toggle'; readonly toggle: ConstraintToggle }
-  | { readonly type: 'fill-blank'; readonly node: QuadNode; readonly name: QuadName | null };
+  | { readonly type: 'fill-blank'; readonly node: QuadNode; readonly name: QuadName | null }
+  | SortAction
+  | PredictAction;
 
 export type SorterObservationValue = JsonValue;
 

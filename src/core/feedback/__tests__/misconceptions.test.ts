@@ -93,6 +93,7 @@ const W5_UNITS = new Set([
 ]);
 
 const W6_UNITS = new Set([
+  'g1s1u2',
   'g1s1u4',
   'g2s1u4',
   'g2s1u5',
@@ -150,8 +151,8 @@ describe('W1·W2·W3·W5·W6 오개념 레지스트리', () => {
     expect(W2_UNITS.size).toBe(26);
     expect(W3_UNITS.size).toBe(12);
     expect(W5_UNITS.size).toBe(13);
-    expect(W6_UNITS.size).toBe(8);
-    expect(documented.size).toBe(176);
+    expect(W6_UNITS.size).toBe(9);
+    expect(documented.size).toBe(177);
     expect([...MISCONCEPTIONS.map((item) => item.code)].sort()).toEqual([...documented].sort());
   });
 
@@ -170,14 +171,14 @@ describe('W1·W2·W3·W5·W6 오개념 레지스트리', () => {
     expect(new Set(MISCONCEPTIONS.map((item) => item.code)).size).toBe(MISCONCEPTIONS.length);
   });
 
-  it('W6 코드 18개는 수 7개·고르기 7개·관찰 4개 구성이고 W1~W5와 겹치지 않는다', () => {
+  it('W6 코드 19개는 수 7개·고르기 7개·관찰 5개 구성이고 W1~W5와 겹치지 않는다', () => {
     const prior = new Set([...W1_UNITS, ...W2_UNITS, ...W3_UNITS, ...W5_UNITS]);
     const priorCodes = documentedCodes(prior);
     const w6Only = [...documentedCodes(W6_UNITS)].filter((code) => !priorCodes.has(code));
     expect(w6Only.sort()).toEqual(W6_MISCONCEPTIONS.map((item) => item.code).sort());
-    expect(w6Only).toHaveLength(18);
+    expect(w6Only).toHaveLength(19);
     expect(W6_MISCONCEPTIONS.filter((item) => item.detect === 'diagnose')).toHaveLength(14);
-    expect(W6_MISCONCEPTIONS.filter((item) => item.detect === 'observation')).toHaveLength(4);
+    expect(W6_MISCONCEPTIONS.filter((item) => item.detect === 'observation')).toHaveLength(5);
     // 이미 있는 코드는 W6 단원을 units에 담는다.
     expect(misconceptionOf('MC-CLOCK-HOUR-BETWEEN')?.units).toContain('g2s2u4');
     expect(misconceptionOf('MC-COUNT-ONE-TO-ONE')?.units).toContain('g2s1u5');

@@ -115,6 +115,13 @@ export const W6_MISCONCEPTIONS: readonly Misconception[] = [
     detect: 'observation',
   },
   {
+    code: 'MC-SHAPE-BY-COLOR-SIZE',
+    label: '색·크기로 모양을 묶음',
+    units: ['g1s1u2'],
+    backtrack: 'g1s1u2.shape-families',
+    detect: 'observation',
+  },
+  {
     code: 'MC-SORT-SUBJECTIVE',
     label: '주관적 기준으로 분류',
     units: ['g2s1u5'],

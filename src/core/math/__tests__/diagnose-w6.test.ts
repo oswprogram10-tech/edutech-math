@@ -32,12 +32,13 @@ const OBSERVATION_CODES = [
   'MC-MEASURE-GAP',
   'MC-LENGTH-NO-PROMOTE',
   'MC-SORT-INCONSISTENT',
+  'MC-SHAPE-BY-COLOR-SIZE',
   'MC-RANGE-BOUNDARY-INCLUSION',
 ];
 
 describe('W6 감지 함수 등록', () => {
-  it('레지스트리는 18개이고 diagnose 14개·observation 4개다', () => {
-    expect(W6_MISCONCEPTIONS).toHaveLength(18);
+  it('레지스트리는 19개이고 diagnose 14개·observation 5개다', () => {
+    expect(W6_MISCONCEPTIONS).toHaveLength(19);
     expect(W6_MISCONCEPTIONS.filter((item) => item.detect === 'diagnose')).toHaveLength(14);
     const observed = W6_MISCONCEPTIONS.filter((item) => item.detect === 'observation');
     expect(observed.map((item) => item.code).sort()).toEqual([...OBSERVATION_CODES].sort());

@@ -6,6 +6,10 @@
  */
 import type { EngineEvent, EnginePredicate, JsonValue, Observation } from '../../core/engine-sdk';
 import { blanksCorrect, hierarchyProps, quadNode } from './properties';
+import { PREDICT_EVENT_NAMES, predictEmit, predictPredicates } from './secret-rule-predict/events';
+import type { PredictAction } from './secret-rule-predict/types';
+import { SORT_EVENT_NAMES, sortEmit, sortPredicates } from './sort/events';
+import type { SortAction } from './sort/types';
 import type { ConstraintToggle, SorterAction, SorterState } from './types';
 
 export const EVENT_NAMES = [
@@ -15,6 +19,8 @@ export const EVENT_NAMES = [
   'swap-answered',
   'shape-changed',
   'tree-complete',
+  ...SORT_EVENT_NAMES,
+  ...PREDICT_EVENT_NAMES,
 ] as const;
 
 function recordOf(value: JsonValue | undefined): Readonly<Record<string, JsonValue>> {
@@ -55,6 +61,12 @@ function nodeOf(state: SorterState): string | null {
 
 export function emit(prev: SorterState, next: SorterState, action: SorterAction): EngineEvent[] {
   if (prev === next) return [];
+  if (prev.mode === 'sort' && next.mode === 'sort') {
+    return sortEmit(prev, next, action as SortAction);
+  }
+  if (prev.mode === 'predict' && next.mode === 'predict') {
+    return predictEmit(prev, next, action as PredictAction);
+  }
   const events: EngineEvent[] = [];
 
   if (prev.mode === 'venn' && next.mode === 'venn' && action.type === 'place') {
@@ -98,6 +110,8 @@ export function emit(prev: SorterState, next: SorterState, action: SorterAction)
 }
 
 export const predicates: Readonly<Record<string, EnginePredicate>> = {
+  ...sortPredicates,
+  ...predictPredicates,
   allCardsCorrect: (observation) =>
     observation['allCorrect'] === true && observation['allPlaced'] === true,
 

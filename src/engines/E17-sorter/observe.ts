@@ -5,6 +5,8 @@
  * - 비밀 카드 id도 넣지 않는다(판정은 `solved`로 충분).
  */
 import type { Observation } from '../../core/engine-sdk';
+import { predictObservation } from './secret-rule-predict/observe';
+import { sortObservation } from './sort/observe';
 import { deckCards } from './deck';
 import {
   blanksCorrect,
@@ -183,6 +185,8 @@ function hierarchyObservation(state: HierarchyState): Observation {
 }
 
 export function observe(state: SorterState): Observation {
+  if (state.mode === 'sort') return sortObservation(state);
+  if (state.mode === 'predict') return predictObservation(state);
   if (state.mode === 'venn') return vennObservation(state);
   if (state.mode === 'secret-rule') return secretObservation(state);
   return hierarchyObservation(state);
