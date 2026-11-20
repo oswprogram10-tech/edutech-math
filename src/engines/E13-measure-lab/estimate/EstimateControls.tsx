@@ -24,52 +24,56 @@ export function EstimateControls({ state, ui, readOnly }: EstimateControlsProps)
     : state.draggable
       ? S.estimate.instructions
       : S.estimate.instructionsFixed;
+  const keypad = state.estimateFirst ? (
+    <div className={styles.group}>
+      <div className={styles.keyHead}>
+        <p className={styles.caption} data-testid="estimate-draft">
+          {state.estimateLocked && state.estimate !== null
+            ? S.estimate.lockedLabel(state.estimate)
+            : S.estimate.draftLabel(ui.draft)}
+        </p>
+        <Btn
+          label={S.estimate.erase}
+          action="erase"
+          disabled={readOnly || state.estimateLocked}
+          onClick={ui.eraseDigit}
+        />
+        <Btn
+          label={S.estimate.submit}
+          action="submit"
+          primary
+          disabled={readOnly || state.estimateLocked}
+          onClick={ui.submit}
+        />
+      </div>
+      <div
+        className={styles.keyGrid}
+        role="group"
+        aria-label={S.estimate.keypadCaption}
+        data-part="keypad"
+      >
+        {Array.from({ length: 10 }, (_, digit) => (
+          <Btn
+            key={digit}
+            label={S.estimate.keyButton(digit)}
+            action={`key:${digit}`}
+            disabled={readOnly || state.estimateLocked}
+            onClick={() => ui.addDigit(digit)}
+          />
+        ))}
+      </div>
+    </div>
+  ) : null;
+  // 어림을 넣기 전에는 키패드가 조작 칸 맨 위에 와서 첫 화면에 보인다(T223).
+  const keypadFirst = state.estimateFirst && !state.estimateLocked;
   return (
     <div className={styles.sideStack} data-testid="measure-controls">
+      {keypadFirst ? keypad : null}
       <p className={styles.instructions}>{instructions}</p>
       <p className={styles.status} role="status" data-testid="measure-message">
         {ui.message ?? ''}
       </p>
-      {state.estimateFirst ? (
-        <div className={styles.group}>
-          <p className={styles.caption} data-testid="estimate-draft">
-            {state.estimateLocked && state.estimate !== null
-              ? S.estimate.lockedLabel(state.estimate)
-              : S.estimate.draftLabel(ui.draft)}
-          </p>
-          <div
-            className={styles.tray}
-            role="group"
-            aria-label={S.estimate.keypadCaption}
-            data-part="keypad"
-          >
-            {Array.from({ length: 10 }, (_, digit) => (
-              <Btn
-                key={digit}
-                label={S.estimate.keyButton(digit)}
-                action={`key:${digit}`}
-                disabled={readOnly || state.estimateLocked}
-                onClick={() => ui.addDigit(digit)}
-              />
-            ))}
-          </div>
-          <div className={styles.row}>
-            <Btn
-              label={S.estimate.erase}
-              action="erase"
-              disabled={readOnly || state.estimateLocked}
-              onClick={ui.eraseDigit}
-            />
-            <Btn
-              label={S.estimate.submit}
-              action="submit"
-              primary
-              disabled={readOnly || state.estimateLocked}
-              onClick={ui.submit}
-            />
-          </div>
-        </div>
-      ) : null}
+      {keypadFirst ? null : keypad}
       <div className={styles.row} role="group" aria-label={S.controlsLabel}>
         <Btn
           label={S.estimate.reset}

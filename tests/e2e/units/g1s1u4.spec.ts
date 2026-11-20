@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 import { PREVIEW_URL } from '../../../playwright.config';
+import { expectControlsAboveFold } from '../controls-fold';
 import { expectNoPanelInnerScroll } from '../panel-layout';
 
 /**
@@ -450,6 +451,45 @@ test('크롬북·전자칠판 첫 화면에 엔진·응답 칸·확인하기가 
     await expect(responseSlot(page)).toBeInViewport({ ratio: 1 });
     await expect(page.getByRole('button', { name: '확인하기' })).toBeInViewport({ ratio: 1 });
   }
+});
+
+/**
+ * compare-direct는 끌어 놓는 범위(길이 9줄·넓이 12줄)가 판 안에 모두 들어가야 해서 판이 600 높이를 쓴다
+ * (모드 동작을 바꾸지 않는다). 그래서 크롬북 두 칸 화면에서 조작 칸 첫 단추 줄이 31~32px 모자란다(T223 메모).
+ */
+const COMPARE_CHROMEBOOK_SHORTFALL = 34;
+
+test('A1 모든 과제에서 조작 칸 첫 단추 줄이 첫 화면에 보인다(T223)', async ({ page }) => {
+  await openActivity(page, 'g1s1u4.A1', '밧줄 펴기·겹치기·옮겨 담기');
+
+  // T1 — 밧줄 펴기 단추.
+  await settleCanvas(page, 'compare-canvas');
+  await expectControlsAboveFold(page, 'g1s1u4.A1.T1', COMPARE_CHROMEBOOK_SHORTFALL);
+  await straightenRope(page);
+  await choose(page, '구불구불한 밧줄');
+  await submit(page);
+  await expectPassed(page);
+
+  // T2 — 연필 세 자루(옮기기 단추).
+  await settleCanvas(page, 'compare-canvas');
+  await expectControlsAboveFold(page, 'g1s1u4.A1.T2', COMPARE_CHROMEBOOK_SHORTFALL);
+  await alignPencil(page, '연필 나', 3);
+  await alignPencil(page, '연필 다', 2);
+  await moveOrder(page, '연필 다', '아래로', 2); // 가·나·다
+  await submit(page);
+  await expectPassed(page);
+
+  // T3 — 손수건·책 겹치기.
+  await settleCanvas(page, 'compare-canvas');
+  await expectControlsAboveFold(page, 'g1s1u4.A1.T3', COMPARE_CHROMEBOOK_SHORTFALL);
+  await overlapHanky(page);
+  await choose(page, '손수건');
+  await submit(page);
+  await expectPassed(page);
+
+  // T4 — 컵 옮겨 담기.
+  await settleCanvas(page, 'compare-canvas');
+  await expectControlsAboveFold(page, 'g1s1u4.A1.T4', COMPARE_CHROMEBOOK_SHORTFALL);
 });
 
 test('오프라인에서도 g1s1u4.A1 활동이 열린다', async ({ page, context }) => {

@@ -4,6 +4,7 @@
  */
 import { useRef } from 'react';
 import { Frame } from '../Frame';
+import { boardHeight } from './layout';
 import { EstimateBoard } from './EstimateBoard';
 import { EstimateControls } from './EstimateControls';
 import type { EstimateAction, EstimateState } from './types';
@@ -24,6 +25,7 @@ export function EstimateView({ state, dispatch, targetSize, readOnly = false }: 
       mode="estimate"
       error={state.error}
       targetSize={targetSize}
+      logicalHeight={boardHeight()}
       renderBoard={(svgStyle, className) => (
         <EstimateBoard
           svgRef={svgRef}

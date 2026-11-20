@@ -7,6 +7,7 @@ import type { CSSProperties, RefObject } from 'react';
 import { E13_STRINGS as S } from '../strings.ko';
 import {
   BOARD,
+  boardHeight,
   LEFT,
   M_TOP,
   SUBTRAHEND,
@@ -43,7 +44,7 @@ export function TrainBoard({ svgRef, state, svgStyle, className }: Props) {
       ref={svgRef}
       className={className}
       style={{ ...svgStyle, touchAction: 'none' }}
-      viewBox={`0 0 ${BOARD.width} ${BOARD.height}`}
+      viewBox={`0 0 ${BOARD.width} ${boardHeight(state)}`}
       preserveAspectRatio="xMidYMid meet"
       data-testid="train-canvas"
       role="group"

@@ -7,7 +7,7 @@ import type { OverlayProps } from '../../../../core/engine-sdk';
 import { num } from '../../rat';
 import { E13_STRINGS as S } from '../../strings.ko';
 import { unitOf } from '../../units';
-import { BOARD, DEMO } from '../layout';
+import { BOARD, DEMO, boardHeight } from '../layout';
 import { LENGTH_CANVAS_SELECTOR } from '../types';
 import type { LengthConfig, MeasureState } from '../types';
 
@@ -24,7 +24,7 @@ export function SpanCompareOverlay({ state }: OverlayProps<LengthConfig, Measure
       testId="overlay-span-compare"
       canvasSelector={LENGTH_CANVAS_SELECTOR}
       logicalWidth={BOARD.width}
-      logicalHeight={BOARD.height}
+      logicalHeight={boardHeight(state)}
     >
       <rect
         data-part="backdrop"

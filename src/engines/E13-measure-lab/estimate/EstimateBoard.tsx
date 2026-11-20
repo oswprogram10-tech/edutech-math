@@ -12,6 +12,7 @@ import { num } from '../rat';
 import { E13_STRINGS as S } from '../strings.ko';
 import {
   BOARD,
+  boardHeight,
   ESTIMATE_BAR,
   OBJECT_H,
   OBJECT_LEFT,
@@ -193,7 +194,7 @@ export function EstimateBoard({ svgRef, state, ui, locked, svgStyle, className }
       ref={svgRef}
       className={className}
       style={{ ...svgStyle, touchAction: 'none' }}
-      viewBox={`0 0 ${BOARD.width} ${BOARD.height}`}
+      viewBox={`0 0 ${BOARD.width} ${boardHeight()}`}
       preserveAspectRatio="xMidYMid meet"
       data-testid="estimate-canvas"
       role="group"

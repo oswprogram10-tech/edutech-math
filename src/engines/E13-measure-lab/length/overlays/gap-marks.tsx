@@ -6,7 +6,7 @@ import { CanvasAlignedOverlay } from '../../../../core/engine-sdk';
 import type { OverlayProps } from '../../../../core/engine-sdk';
 import { toNumber } from '../../rat';
 import { E13_STRINGS as S } from '../../strings.ko';
-import { BAND_H, BOARD, geoOf, xOfCm } from '../layout';
+import { BAND_H, BOARD, boardHeight, geoOf, xOfCm } from '../layout';
 import { analyze } from '../settings';
 import { LENGTH_CANVAS_SELECTOR } from '../types';
 import type { LengthConfig, MeasureState } from '../types';
@@ -26,7 +26,7 @@ export function GapMarksOverlay({ state }: OverlayProps<LengthConfig, MeasureSta
       testId="overlay-gap-marks"
       canvasSelector={LENGTH_CANVAS_SELECTOR}
       logicalWidth={BOARD.width}
-      logicalHeight={BOARD.height}
+      logicalHeight={boardHeight(state)}
     >
       <defs>
         <pattern id="e13-ov-gap-hatch" width={12} height={12} patternUnits="userSpaceOnUse">

@@ -6,7 +6,7 @@
 import { CanvasAlignedOverlay } from '../../../../core/engine-sdk';
 import type { OverlayProps } from '../../../../core/engine-sdk';
 import { Rational } from '../../../../core/math';
-import { CELLS, BOARD, OBJECT_LEFT, PPC, r2 } from '../layout';
+import { CELLS, BOARD, boardHeight, OBJECT_LEFT, PPC, r2 } from '../layout';
 import { objectLength, rulerHidden } from '../settings';
 import { ESTIMATE_CANVAS_SELECTOR } from '../types';
 import type { EstimateConfig, EstimateState } from '../types';
@@ -26,7 +26,7 @@ export function CountCellsOverlay({ state }: OverlayProps<EstimateConfig, Estima
       testId="overlay-count-cells"
       canvasSelector={ESTIMATE_CANVAS_SELECTOR}
       logicalWidth={BOARD.width}
-      logicalHeight={BOARD.height}
+      logicalHeight={boardHeight()}
     >
       <defs>
         <pattern id="e13-ov-cell-hatch" width={10} height={10} patternUnits="userSpaceOnUse">

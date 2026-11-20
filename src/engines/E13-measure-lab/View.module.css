@@ -21,7 +21,8 @@
   display: contents;
 }
 
-/* 판: 남는 칸에 맞춰 줄고, 최소 배율 0.6(논리 1000×600 → 600×360)보다 작아지지 않는다.
+/* 판: 남는 칸에 맞춰 줄고, 최소 배율 0.6(논리 1000×높이 → 600×0.6높이)보다 작아지지 않는다.
+   논리 높이는 모드·설정마다 다르다(`boardHeight`). 최소 높이는 Frame이 인라인으로 정한다(T223).
    가로가 모자라면 이 칸 안에서 가로로만 스크롤하고, 세로가 모자라면 바깥 상자(.wrap)가 스크롤한다. */
 .boardArea {
   display: flex;
@@ -29,7 +30,7 @@
   align-items: center;
   justify-content: center;
   min-width: 0;
-  min-height: 360px;
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -45,7 +46,10 @@
   flex: none;
   width: 100%;
   height: 100%;
-  border: 1px solid #d7deea;
+  /* 테두리는 outline으로 안쪽에 그린다. border는 viewBox가 놓이는 칸을 줄여서, 납작한 판에서는
+     오버레이(상자 전체에 맞춤)와 본 판이 1~2px 어긋난다(T223). */
+  outline: 1px solid #d7deea;
+  outline-offset: -1px;
   border-radius: 16px;
   user-select: none;
   -webkit-user-select: none;
@@ -277,4 +281,29 @@
   .roll {
     animation: none;
   }
+}
+
+/* T223: 어림 키패드. [지우기]·[어림 넣기]를 "어림: □cm" 칸 옆 줄에 두고 숫자는 5개씩 두 줄로 둬서 낮게 한다. */
+.keyHead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.keyHead .caption {
+  flex: 1 1 auto;
+  margin: 0;
+}
+
+.keyGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(max(var(--target), calc((100% - 2rem) / 5)), 1fr));
+  gap: 0.5rem;
+}
+
+.keyGrid > button {
+  min-width: 0;
+  padding: 0 0.25rem;
+  white-space: nowrap;
 }

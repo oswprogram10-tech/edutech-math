@@ -20,10 +20,6 @@ function instructions(state: CompareState): string {
 export function CompareControls({ state, ui, readOnly }: CompareControlsProps) {
   return (
     <div className={styles.sideStack} data-testid="measure-controls">
-      <p className={styles.instructions}>{instructions(state)}</p>
-      <p className={styles.status} role="status" data-testid="measure-message">
-        {ui.message ?? ''}
-      </p>
       <div className={styles.row} role="group" aria-label={S.controlsLabel}>
         {state.attribute === 'length' && state.straighten
           ? state.items
@@ -56,6 +52,11 @@ export function CompareControls({ state, ui, readOnly }: CompareControlsProps) {
           onClick={() => ui.send({ type: 'reset' })}
         />
       </div>
+      {/* 단추 줄을 맨 위에 둬서 첫 화면에 보이게 하고, 안내 글은 그 아래에 둔다(T223). */}
+      <p className={styles.instructions}>{instructions(state)}</p>
+      <p className={styles.status} role="status" data-testid="measure-message">
+        {ui.message ?? ''}
+      </p>
     </div>
   );
 }

@@ -5,7 +5,7 @@
 import { CanvasAlignedOverlay } from '../../../../core/engine-sdk';
 import type { OverlayProps } from '../../../../core/engine-sdk';
 import { num } from '../../rat';
-import { BASE_X, BOARD, LENGTH_CELL, halfStraightPoints, pathOf } from '../geometry';
+import { BASE_X, BOARD, boardHeight, LENGTH_CELL, halfStraightPoints, pathOf } from '../geometry';
 import { COMPARE_CANVAS_SELECTOR } from '../types';
 import type { CompareConfig, CompareState } from '../types';
 
@@ -30,7 +30,7 @@ export function HalfStraightenOverlay({ state, args }: OverlayProps<CompareConfi
       testId="overlay-half-straighten"
       canvasSelector={COMPARE_CANVAS_SELECTOR}
       logicalWidth={BOARD.width}
-      logicalHeight={BOARD.height}
+      logicalHeight={boardHeight(state)}
     >
       <g data-part="half-preview" data-id={item.id}>
         <path
