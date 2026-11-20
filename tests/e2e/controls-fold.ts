@@ -6,7 +6,7 @@ import type { Page } from '@playwright/test';
  * 창과 스크롤 상자(overflow가 auto·scroll·hidden인 조상)의 아래 끝 중 가장 위에 있는 선을 기준으로,
  * 첫 단추의 아래 끝이 그 선을 넘은 px를 돌려준다(0 이하면 보인다).
  */
-export async function controlsFoldOverflow(page: Page): Promise<number> {
+export async function controlsFoldOverflow(page: Page, buttonName?: string): Promise<number> {
   await page.evaluate(() => {
     window.scrollTo(0, 0);
     document.querySelectorAll('main').forEach((main) => {
@@ -14,7 +14,10 @@ export async function controlsFoldOverflow(page: Page): Promise<number> {
     });
   });
   const controls = page.getByTestId('runner-slot-main').getByTestId('measure-controls');
-  const first = controls.getByRole('button').first();
+  const first =
+    buttonName === undefined
+      ? controls.getByRole('button').first()
+      : controls.getByRole('button', { name: buttonName, exact: true });
   await first.waitFor({ state: 'visible' });
   return first.evaluate((button) => {
     let line = window.innerHeight;
@@ -50,4 +53,12 @@ export async function expectControlsAboveFold(
     await controlsFoldOverflow(page),
     `${label}: 조작 칸 첫 단추 줄이 첫 화면 아래로 넘친 px`,
   ).toBeLessThanOrEqual(allowed);
+}
+
+/** 어림 먼저 과제: [어림 넣기] 단추도 첫 화면 안에 있어야 한다(T223 검수). */
+export async function expectEstimateSubmitAboveFold(page: Page, label: string): Promise<void> {
+  expect(
+    await controlsFoldOverflow(page, '어림 넣기'),
+    `${label}: [어림 넣기] 아래 끝이 첫 화면 아래로 넘친 px`,
+  ).toBeLessThanOrEqual(0);
 }

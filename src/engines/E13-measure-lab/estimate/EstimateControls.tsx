@@ -26,28 +26,12 @@ export function EstimateControls({ state, ui, readOnly }: EstimateControlsProps)
       : S.estimate.instructionsFixed;
   const keypad = state.estimateFirst ? (
     <div className={styles.group}>
-      <p className={styles.caption} data-testid="estimate-draft">
-        {state.estimateLocked && state.estimate !== null
-          ? S.estimate.lockedLabel(state.estimate)
-          : S.estimate.draftLabel(ui.draft)}
-      </p>
-      <div
-        className={styles.tray}
-        role="group"
-        aria-label={S.estimate.keypadCaption}
-        data-part="keypad"
-      >
-        {Array.from({ length: 10 }, (_, digit) => (
-          <Btn
-            key={digit}
-            label={S.estimate.keyButton(digit)}
-            action={`key:${digit}`}
-            disabled={readOnly || state.estimateLocked}
-            onClick={() => ui.addDigit(digit)}
-          />
-        ))}
-      </div>
-      <div className={styles.row}>
+      <div className={styles.keyHead}>
+        <p className={styles.caption} data-testid="estimate-draft">
+          {state.estimateLocked && state.estimate !== null
+            ? S.estimate.lockedLabel(state.estimate)
+            : S.estimate.draftLabel(ui.draft)}
+        </p>
         <Btn
           label={S.estimate.erase}
           action="erase"
@@ -61,6 +45,22 @@ export function EstimateControls({ state, ui, readOnly }: EstimateControlsProps)
           disabled={readOnly || state.estimateLocked}
           onClick={ui.submit}
         />
+      </div>
+      <div
+        className={styles.keyGrid}
+        role="group"
+        aria-label={S.estimate.keypadCaption}
+        data-part="keypad"
+      >
+        {Array.from({ length: 10 }, (_, digit) => (
+          <Btn
+            key={digit}
+            label={S.estimate.keyButton(digit)}
+            action={`key:${digit}`}
+            disabled={readOnly || state.estimateLocked}
+            onClick={() => ui.addDigit(digit)}
+          />
+        ))}
       </div>
     </div>
   ) : null;

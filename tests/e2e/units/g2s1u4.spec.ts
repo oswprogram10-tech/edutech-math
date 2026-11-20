@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 import { PREVIEW_URL } from '../../../playwright.config';
-import { expectControlsAboveFold } from '../controls-fold';
+import { expectControlsAboveFold, expectEstimateSubmitAboveFold } from '../controls-fold';
 import { expectNoPanelInnerScroll } from '../panel-layout';
 
 /**
@@ -522,6 +522,7 @@ test('A1·A2 모든 과제에서 조작 칸 첫 단추 줄이 첫 화면에 보�
     await settleCanvas(page, 'estimate-canvas');
     // 어림을 넣기 전(키패드가 있는 처음 화면)에 본다.
     await expectControlsAboveFold(page, `g2s1u4.A2.T${index + 4}`);
+    await expectEstimateSubmitAboveFold(page, `g2s1u4.A2.T${index + 4}`);
     await setEstimate(page, item.estimate);
     await typeNumber(page, item.keys);
     await submit(page);

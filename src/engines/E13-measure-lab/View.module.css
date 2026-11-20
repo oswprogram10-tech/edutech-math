@@ -282,3 +282,28 @@
     animation: none;
   }
 }
+
+/* T223: 어림 키패드. [지우기]·[어림 넣기]를 "어림: □cm" 칸 옆 줄에 두고 숫자는 5개씩 두 줄로 둬서 낮게 한다. */
+.keyHead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.keyHead .caption {
+  flex: 1 1 auto;
+  margin: 0;
+}
+
+.keyGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(max(var(--target), calc((100% - 2rem) / 5)), 1fr));
+  gap: 0.5rem;
+}
+
+.keyGrid > button {
+  min-width: 0;
+  padding: 0 0.25rem;
+  white-space: nowrap;
+}
