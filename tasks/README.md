@@ -344,6 +344,8 @@ W6에서 E13 측정 실험실과 E14 시계·시간을 새로 만들고, E17 `so
 
 - **T206 병합(2026-11-20)**: E06 `compare` 모드(`src/engines/E06-balance/compare/`, 오버레이 `size-vs-weight`). weighings는 서로 다른 조합만 센다. 기존 오버레이(match-bars·big-tilt)에는 compare 가드만 더했고 big-tilt는 compare에서 그리지 않는다. 기존 기준 이미지 변경 없음, 새 4장. 시범 운영 메모: 아이패드에서 [처음으로] 줄이 판 아래 반쯤 잘림(스크롤로 닿음), 샌드박스 모드 이름 `compare`는 영어 그대로.
 
+- **T207 병합(2026-11-20):** g1s1u4 비교하기 콘텐츠(A1 E13 compare-direct 4과제, A2 E06 compare 4과제)와 E2E. MC-MEASURE-ENDPOINT는 순서 응답이라 `when`(순서 na·ga·da + `allAligned` false)으로 걸었고, CURVE·SIZE-IS-WEIGHT는 trapChoice다. 병합 때 A2.T3 발문을 "두 번 이상"으로 고쳤다(판정 `weighingsAtLeast 2`). 시범 운영 메모: 실행기 [확인하기]는 저학년에서도 48px, 아이패드에서 조작 단추 줄이 반쯤 잘림(T205·T206과 같음).
+
 ## 상시
 | 카드 | 내용 |
 | --- | --- |
