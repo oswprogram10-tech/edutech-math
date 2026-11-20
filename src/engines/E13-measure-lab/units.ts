@@ -17,8 +17,14 @@ export const UNITS: readonly UnitDef[] = [
   { id: 'eraser-5cm', cm: '5', fill: '#e6d9f7', stroke: '#6b3fb0' },
 ];
 
+/** `mergeRule`(T208)에 쓰는 단위. 10cm 막대 열 개가 이어지면 1m 줄자 하나로 합쳐진다. */
+export const MERGE_UNITS: readonly UnitDef[] = [
+  { id: 'cm-10-rod', cm: '10', fill: '#d4f0d0', stroke: '#2a7a2a' },
+  { id: 'm-tape', cm: '100', fill: '#ffe9a8', stroke: '#9a6b00' },
+];
+
 export function unitOf(id: string): UnitDef | undefined {
-  return UNITS.find((unit) => unit.id === id);
+  return UNITS.find((unit) => unit.id === id) ?? MERGE_UNITS.find((unit) => unit.id === id);
 }
 
 /** 단위 길이(cm). 모르는 단위면 null. */

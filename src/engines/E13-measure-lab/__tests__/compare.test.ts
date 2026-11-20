@@ -381,14 +381,17 @@ describe('predicates·JSON 왕복·엔진 정의', () => {
     }
   });
 
-  it('엔진 정의: id E13, 모드 둘, 오버레이 다섯, emit은 상태가 바뀔 때만', () => {
+  it('엔진 정의: id E13, 모드 셋(T208), 오버레이 여덟(T208), emit은 상태가 바뀔 때만', () => {
     expect(definition.id).toBe('E13');
-    expect(definition.modes).toEqual(['compare-direct', 'length']);
+    expect(definition.modes).toEqual(['compare-direct', 'length', 'estimate']);
     expect(definition.layout).toBe('fit');
     expect(Object.keys(definition.overlays ?? {}).sort()).toEqual([
+      'count-cells',
       'endpoint-lines',
       'gap-marks',
       'half-straighten',
+      'meter-100',
+      'meter-outline',
       'same-tank',
       'span-compare',
     ]);
@@ -401,5 +404,6 @@ describe('predicates·JSON 왕복·엔진 정의', () => {
     // 이벤트에 비교 결과가 없다
     expect(JSON.stringify(events)).not.toMatch(/longest|order|more|larger/);
     expect(definition.events).toContain('measure-changed');
+    expect(definition.events).toContain('merged');
   });
 });

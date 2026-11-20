@@ -3,6 +3,7 @@
  * 물건의 길이는 `reachesEnd`·`exact`로만 드러난다(화면·DOM에는 두지 않는다).
  */
 import type { Observation } from '../../../core/engine-sdk';
+import { meterCount, restLength } from './merge';
 import { analyze, sortedPieces } from './settings';
 import type { MeasureState } from './types';
 
@@ -34,5 +35,9 @@ export function observeLength(state: MeasureState): Observation {
     labels: { ...state.labels },
     labelsCorrect,
     misconceptions: sorted.length >= 2 && (gaps > 0 || overlaps > 0) ? ['MC-MEASURE-GAP'] : [],
+    // T208: 합체 규칙이 있을 때만 더한다(없으면 T205 Observation 그대로).
+    ...(state.mergeRule
+      ? { merges: state.merges, meters: meterCount(state), restCm: restLength(state).toString() }
+      : {}),
   };
 }

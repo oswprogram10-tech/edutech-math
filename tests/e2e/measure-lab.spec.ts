@@ -2,11 +2,13 @@ import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 
 /**
- * E13 측정 실험실(compare-direct·length) 샌드박스 E2E. 아이패드(WebKit)·크롬북·전자칠판 뷰포트.
+ * E13 측정 실험실(compare-direct·length·estimate) 샌드박스 E2E. 아이패드(WebKit)·크롬북·전자칠판 뷰포트.
  *
  * - compare-direct: 펴기 단추·끌어 펴기, 출발선 자석, 넓이 겹치기, 들이 붓기
  * - length: 클립 4개 자석 이어 붙이기 → exact, 일부러 만든 틈 표시, 키보드로 1cm 블록 10개 → 자 만들기 → 숫자 놓기
- * - 힌트 ② 오버레이 다섯이 본 판과 1px 안에 겹침
+ * - estimate(T208): 어림 먼저 → 자 끌어 영점 맞추기(자석·키보드), length mergeRule: 10cm 막대 10개 → 합체,
+ *   length unit-train: 키보드로 승격·풀기·빼기
+ * - 힌트 ② 오버레이 여덟이 본 판과 1px 안에 겹침
  * - 첫 화면 기준 이미지(모드별 크롬북·아이패드), 64px 모드의 단추 크기
  *
  * 판 좌표는 논리 1000×600이지만 판 높이를 가정하지 않고 상자 너비로만 배율을 구한다(T222 메모).
@@ -39,7 +41,7 @@ async function settleCanvas(page: Page, testId: string): Promise<void> {
     .toBe(true);
 }
 
-type ModeName = 'compare-direct' | 'length';
+type ModeName = 'compare-direct' | 'length' | 'estimate';
 
 async function open(
   page: Page,
@@ -54,7 +56,15 @@ async function open(
   await expect(page.getByRole('heading', { name: '측정 실험실' })).toBeVisible();
   if (mode !== 'compare-direct') await page.getByLabel('모드').selectOption(mode);
   await pollObservation(page, (o) => o['mode'] === mode && o['error'] === undefined);
-  const canvasId = mode === 'length' ? 'length-canvas' : 'compare-canvas';
+  // length 모드의 unit-train 변형(variant)은 따로 기차 판을 그린다.
+  const canvasId =
+    mode === 'estimate'
+      ? 'estimate-canvas'
+      : mode === 'length'
+        ? config['variant'] === undefined
+          ? 'length-canvas'
+          : 'train-canvas'
+        : 'compare-canvas';
   await settleCanvas(page, canvasId);
   return canvasId;
 }
@@ -238,9 +248,10 @@ async function dragUnit(
   name: string,
   centerCm: number,
   bandY = BAND_CENTER_Y,
+  ppc = PPC_PENCIL,
 ): Promise<void> {
   const from = await centerOf(button(page, name));
-  const to = await toScreen(page, 'length-canvas', cmX(centerCm), bandY);
+  const to = await toScreen(page, 'length-canvas', cmX(centerCm, ppc), bandY);
   await dragBetween(page, from, to);
 }
 
@@ -670,4 +681,330 @@ test('터치 타깃 64: 자를 만든 뒤 숫자 카드 단추도 64px 이상', 
     await card.scrollIntoViewIfNeeded();
     await expectMin(card, 64, `카드 ${value}`);
   }
+});
+
+// ══ T208: estimate · mergeRule · unit-train ═══════════════════════════
+
+/** 판 좌표(논리 1000 기준)에서 from → to로 끈다. 배율은 상자 너비로만 구한다. */
+async function dragOnBoard(
+  page: Page,
+  id: string,
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+): Promise<void> {
+  await canvasOf(page, id).scrollIntoViewIfNeeded();
+  const start = await toScreen(page, id, from.x, from.y);
+  const end = await toScreen(page, id, to.x, to.y);
+  await dragBetween(page, start, end);
+}
+
+/** estimate 자 위(논리 좌표): 눈금 3에서 시작하는 자는 왼쪽 끝 110, 몸통 y 262~354. */
+const RULER_GRAB = { x: 485, y: 308 };
+const PPC_ESTIMATE = 30;
+
+const ESTIMATE_PLAIN = {
+  object: { name: 'crayon', lengthCm: '6.7' },
+  ruler: { offsetCm: 3, draggable: true },
+};
+
+test('estimate: 어림을 먼저 넣기 전에는 자가 없고, 넣은 뒤 자를 끌어 영점을 맞춘다', async ({
+  page,
+}) => {
+  const id = await open(page, 'estimate');
+  const canvas = canvasOf(page, id);
+  await expect(canvas.locator('[data-part="ruler"]')).toHaveCount(0);
+  await expect(canvas).toContainText('먼저 어림해 보세요');
+  expect(await readObservation(page)).toMatchObject({ estimateLocked: false, estimate: null });
+  await button(page, '숫자 7').click();
+  await expect(page.getByTestId('estimate-draft')).toHaveText('어림: 7cm');
+  await button(page, '어림 넣기').click();
+  await pollObservation(page, (o) => o['estimateLocked'] === true && o['estimate'] === 7);
+  await expect(canvas.locator('[data-part="estimate-bar"]')).toHaveCount(1);
+  await expect(canvas.locator('[data-part="ruler"]')).toHaveCount(1);
+  expect(await readObservation(page)).toMatchObject({ zeroAligned: false, rulerOffset: '3' });
+  // 어림은 한 번만: 키패드가 꺼진다.
+  await expect(button(page, '숫자 5')).toBeDisabled();
+  // 자를 오른쪽으로 3cm 끌면 물건 왼쪽 끝이 영점에 놓인다.
+  await dragOnBoard(page, id, RULER_GRAB, {
+    x: RULER_GRAB.x + 3 * PPC_ESTIMATE,
+    y: RULER_GRAB.y,
+  });
+  await pollObservation(page, (o) => o['zeroAligned'] === true);
+  expect(await readObservation(page)).toMatchObject({
+    rulerOffset: '0',
+    endTick: '67/10',
+    nearestCm: 7,
+    rulerMoved: true,
+  });
+});
+
+test('estimate: 자 끌기는 0.5cm 격자에 붙고 영점 1cm 안이면 0에 붙는다', async ({ page }) => {
+  const id = await open(page, 'estimate', { ...ESTIMATE_PLAIN, estimateFirst: false });
+  // 0.6cm 오른쪽: 눈금 2.4 → 0.5 격자 2.5
+  await dragOnBoard(page, id, RULER_GRAB, { x: RULER_GRAB.x + 18, y: RULER_GRAB.y });
+  await pollObservation(page, (o) => o['rulerOffset'] === '5/2');
+  // 1.8cm 더 오른쪽: 눈금 0.7 → 영점 1cm 안이라 0
+  await dragOnBoard(page, id, RULER_GRAB, { x: RULER_GRAB.x + 54, y: RULER_GRAB.y });
+  await pollObservation(page, (o) => o['zeroAligned'] === true);
+  // 자 제자리로: 자만 눈금 3으로 돌아온다.
+  await button(page, '자 제자리로').click();
+  await pollObservation(page, (o) => o['rulerOffset'] === '3' && o['rulerMoved'] === false);
+});
+
+test('estimate: 키보드 ←→로 자를 0.5cm씩 옮긴다(영점 너머는 막힌다)', async ({ page }) => {
+  const id = await open(page, 'estimate', { ...ESTIMATE_PLAIN, estimateFirst: false });
+  const ruler = page.getByRole('button', { name: '자. ←→로 옮겨요' });
+  await ruler.focus();
+  for (let i = 0; i < 6; i += 1) await page.keyboard.press('ArrowRight');
+  await pollObservation(page, (o) => o['zeroAligned'] === true);
+  await page.keyboard.press('ArrowRight');
+  await expect(page.getByTestId('measure-message')).toContainText('옮길 수 없어요');
+  await page.keyboard.press('ArrowLeft');
+  await pollObservation(page, (o) => o['rulerOffset'] === '1/2');
+  // 정답(길이)은 화면 글에 없다.
+  await expect(canvasOf(page, id)).not.toContainText('6.7');
+});
+
+test('estimate: draggable이 false이면 자를 끌어도 움직이지 않는다', async ({ page }) => {
+  const id = await open(page, 'estimate', {
+    object: { name: 'crayon', lengthCm: '6.7' },
+    ruler: { offsetCm: 3, draggable: false },
+  });
+  await dragOnBoard(page, id, RULER_GRAB, { x: RULER_GRAB.x + 90, y: RULER_GRAB.y });
+  expect(await readObservation(page)).toMatchObject({ rulerOffset: '3', rulerMoved: false });
+});
+
+// ── mergeRule ────────────────────────────────────────────
+
+const MERGE_CONFIG = {
+  mergeRule: { from: 'cm-10-rod', count: 10, to: 'm-tape' },
+  object: { name: 'blackboard', lengthCm: 320 },
+  units: ['cm-10-rod'],
+};
+/** 칠판 320cm: 배율 880/335, 위 120px을 1m 줄자 자리로 비워 띠 위쪽이 200, 가운데 226. */
+const PPC_BOARD = 880 / (320 + 15);
+const MERGE_BAND_Y = 226;
+
+test('mergeRule: 10cm 막대 10개를 끌어 이으면 1m 줄자 하나로 합체한다', async ({ page }) => {
+  const id = await open(page, 'length', MERGE_CONFIG);
+  expect((await readObservation(page))['merges']).toBe(0);
+  // 조각 가운데를 목표(5, 15, …)에서 2cm씩 어긋나게 놓아도 10cm 격자에 붙는다.
+  for (let i = 0; i < 10; i += 1) {
+    await dragUnit(page, '10cm 막대 놓기', 5 + 10 * i + 2, MERGE_BAND_Y, PPC_BOARD);
+    await pollObservation(page, (o) => o['count'] === i + 1 || o['merges'] === 1);
+    if (i < 9) expect((await readObservation(page))['merges']).toBe(0);
+  }
+  await pollObservation(page, (o) => o['merges'] === 1 && o['meters'] === 1 && o['count'] === 1);
+  const canvas = canvasOf(page, id);
+  await expect(canvas.locator('[data-part="piece"][data-unit="m-tape"]')).toHaveCount(1);
+  await expect(canvas.locator('[data-part="piece"][data-unit="cm-10-rod"]')).toHaveCount(0);
+  await expect(canvas.locator('[data-part="piece"] [data-part="unit-ticks"]')).toHaveCount(1);
+  // 칠판 길이(320)는 화면 글에 없다.
+  await expect(canvas).not.toContainText('320');
+});
+
+test('mergeRule: 키보드로 막대를 이어 붙이면 3m 20cm에서 exact, 합체는 세 번', async ({ page }) => {
+  await open(page, 'length', MERGE_CONFIG);
+  await button(page, '10cm 막대 놓기').focus();
+  for (let i = 0; i < 32; i += 1) await page.keyboard.press('Enter');
+  await pollObservation(page, (o) => o['merges'] === 3 && o['count'] === 5);
+  expect(await readObservation(page)).toMatchObject({
+    meters: 3,
+    restCm: '20',
+    exact: true,
+    gaps: 0,
+    overlaps: 0,
+  });
+});
+
+test('mergeRule: 틈이 있으면 합체하지 않고, 방향키로 틈을 메우면 합체한다', async ({ page }) => {
+  const id = await open(page, 'length', MERGE_CONFIG);
+  const rod = button(page, '10cm 막대 놓기');
+  await rod.focus();
+  for (let i = 0; i < 9; i += 1) await page.keyboard.press('Enter');
+  await pollObservation(page, (o) => o['count'] === 9);
+  // 열 번째 막대를 한 칸(10cm) 띄워 놓는다.
+  await dragUnit(page, '10cm 막대 놓기', 105, MERGE_BAND_Y, PPC_BOARD);
+  await pollObservation(page, (o) => o['count'] === 10 && o['gaps'] === 1);
+  expect((await readObservation(page))['merges']).toBe(0);
+  await canvasOf(page, id).getByRole('button', { name: '10번째 조각, 10cm 막대' }).focus();
+  await page.keyboard.press('ArrowLeft'); // 10cm 격자로 한 칸
+  await pollObservation(page, (o) => o['merges'] === 1 && o['count'] === 1);
+});
+
+// ── unit-train ───────────────────────────────────────────
+
+const TRAIN_ADD = { variant: 'unit-train', op: 'add', a: '1m 70cm', b: '2m 50cm' };
+const TRAIN_SUB = { variant: 'unit-train', op: 'sub', a: '5m 20cm', b: '2m 60cm' };
+
+test('unit-train 덧셈: 키보드로 [승격]·[풀기]를 누른다(3m 120cm → 4m 20cm → 3m 120cm)', async ({
+  page,
+}) => {
+  const id = await open(page, 'length', TRAIN_ADD);
+  expect(await readObservation(page)).toMatchObject({
+    variant: 'unit-train',
+    m: 3,
+    cm: 120,
+    normalized: false,
+    misconceptions: ['MC-LENGTH-NO-PROMOTE'],
+  });
+  const canvas = canvasOf(page, id);
+  await expect(canvas.locator('[data-part="m-cell"]')).toHaveCount(3);
+  await expect(canvas.locator('[data-part="rod"]')).toHaveCount(12);
+  await button(page, '승격').focus();
+  await page.keyboard.press('Enter');
+  await pollObservation(page, (o) => o['m'] === 4 && o['cm'] === 20 && o['normalized'] === true);
+  expect(await readObservation(page)).toMatchObject({ promotes: 1, misconceptions: [] });
+  await expect(canvas.locator('[data-part="m-cell"]')).toHaveCount(4);
+  await expect(canvas.locator('[data-part="rod"]')).toHaveCount(2);
+  // 막대가 10개 모자라 한 번 더 승격하면 거절된다.
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('measure-message')).toContainText('10개');
+  await button(page, '풀기').focus();
+  await page.keyboard.press('Space');
+  await pollObservation(page, (o) => o['m'] === 3 && o['cm'] === 120);
+  expect((await readObservation(page))['unpacks']).toBe(1);
+});
+
+test('unit-train 뺄셈: 칸이 모자라면 거절 → [풀기] → [빼기]로 2m 60cm', async ({ page }) => {
+  const id = await open(page, 'length', TRAIN_SUB);
+  await expect(canvasOf(page, id).locator('[data-part="subtrahend"]')).toContainText(
+    '뺄 길이 2m 60cm',
+  );
+  await button(page, '빼기').focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('measure-message')).toHaveText('칸이 모자라요.');
+  expect((await readObservation(page))['tookAway']).toBe(false);
+  await button(page, '풀기').focus();
+  await page.keyboard.press('Enter');
+  await pollObservation(page, (o) => o['m'] === 4 && o['cm'] === 120);
+  await button(page, '빼기').focus();
+  await page.keyboard.press('Enter');
+  await pollObservation(page, (o) => o['tookAway'] === true);
+  expect(await readObservation(page)).toMatchObject({ m: 2, cm: 60, totalCm: 260, unpacks: 1 });
+  await button(page, '처음으로').click();
+  await pollObservation(page, (o) => o['m'] === 5 && o['cm'] === 20 && o['tookAway'] === false);
+});
+
+test('unit-train: 단추가 모두 48px 이상이다', async ({ page }) => {
+  await open(page, 'length', TRAIN_SUB);
+  const buttons = page.getByTestId('measure-controls').getByRole('button');
+  expect(await buttons.count()).toBe(5);
+  for (let i = 0; i < 5; i += 1) {
+    await buttons.nth(i).scrollIntoViewIfNeeded();
+    await expectMin(buttons.nth(i), 48, `단추 ${i}`);
+  }
+});
+
+// ── T208 오버레이 정렬 ───────────────────────────────────
+
+test('힌트 ② count-cells: 물건이 시작한 눈금부터 1cm 칸을 칠하고, 자의 눈금과 같은 자리다', async ({
+  page,
+}) => {
+  await open(
+    page,
+    'estimate',
+    { ...ESTIMATE_PLAIN, estimateFirst: false },
+    'stage=fit&overlay=count-cells',
+  );
+  await toggleOverlay(page);
+  const layer = await expectAligned(page, 'estimate-canvas', 'count-cells');
+  const cells = layer.locator('[data-part="cell"]');
+  await expect(cells).toHaveCount(6);
+  await expect(layer.locator('[data-part="cell-part"]')).toHaveCount(1);
+  expect(((await layer.textContent()) ?? '').trim()).toBe('');
+  // 첫 칸의 왼쪽 끝은 물건의 왼쪽 끝과 같고, 둘째 칸의 왼쪽 끝은 자의 눈금 4와 같은 x다.
+  const board = canvasOf(page, 'estimate-canvas');
+  const object = await board.locator('[data-part="object"] rect').first().boundingBox();
+  const first = await cells.nth(0).boundingBox();
+  const second = await cells.nth(1).boundingBox();
+  const tick4 = await board.locator('[data-part="ruler-tick"] line').nth(4).boundingBox();
+  const tick5 = await board.locator('[data-part="ruler-tick"] line').nth(5).boundingBox();
+  if (!object || !first || !second || !tick4 || !tick5) throw new Error('상자를 찾지 못했습니다.');
+  expect(Math.abs(object.x - first.x)).toBeLessThanOrEqual(1.5);
+  expect(Math.abs(second.x - (tick4.x + tick4.width / 2))).toBeLessThanOrEqual(2);
+  // 칸 너비는 자의 1cm 눈금 간격과 같다.
+  expect(Math.abs(second.width - (tick5.x - tick4.x))).toBeLessThanOrEqual(2.5);
+});
+
+test('힌트 ② meter-100: 1m 줄자를 100칸으로 펼친 그림이 띠의 폭과 같은 자리에 놓인다', async ({
+  page,
+}) => {
+  await open(page, 'length', MERGE_CONFIG, 'stage=fit&overlay=meter-100');
+  await toggleOverlay(page);
+  const layer = await expectAligned(page, 'length-canvas', 'meter-100');
+  await expect(layer.locator('[data-part="tick-10"]')).toHaveCount(9);
+  await expect(layer.locator('[data-part="tick-number"]')).toHaveCount(10);
+  await expect(layer.locator('[data-part="label"]')).toHaveText('1m');
+  const bar = await layer.locator('[data-part="meter-bar"]').boundingBox();
+  const band = await canvasOf(page, 'length-canvas').locator('[data-part="band"]').boundingBox();
+  if (!bar || !band) throw new Error('상자를 찾지 못했습니다.');
+  expect(Math.abs(bar.x - band.x)).toBeLessThanOrEqual(2);
+  expect(Math.abs(bar.x + bar.width - (band.x + band.width))).toBeLessThanOrEqual(2);
+  // 판 위쪽에 있어 띠 위로 겹치지 않는다.
+  expect(bar.y + bar.height).toBeLessThan(band.y);
+});
+
+test('힌트 ② meter-100: unit-train 판에서도 같은 위쪽 자리에 겹친다', async ({ page }) => {
+  await open(page, 'length', TRAIN_ADD, 'stage=fit&overlay=meter-100');
+  await toggleOverlay(page);
+  await expectAligned(page, 'train-canvas', 'meter-100');
+});
+
+test('힌트 ② meter-outline: 처음 10cm 막대 10개 둘레에 1m 칸 크기의 점선 상자와 "1m"', async ({
+  page,
+}) => {
+  await open(page, 'length', TRAIN_ADD, 'stage=fit&overlay=meter-outline');
+  await toggleOverlay(page);
+  const layer = await expectAligned(page, 'train-canvas', 'meter-outline');
+  await expect(layer.locator('[data-part="label"]')).toHaveText('1m');
+  const outline = await layer.locator('[data-part="outline"]').boundingBox();
+  const train = canvasOf(page, 'train-canvas');
+  const group = await train.locator('[data-part="rod-group"]').first().boundingBox();
+  const meter = await train.locator('[data-part="m-cell"]').first().boundingBox();
+  if (!outline || !group || !meter) throw new Error('상자를 찾지 못했습니다.');
+  // 상자 중심이 막대 열 개 묶음의 중심과 같고, 1m 칸과 같은 크기(여유 몇 px)다.
+  expect(Math.abs(outline.x + outline.width / 2 - (group.x + group.width / 2))).toBeLessThanOrEqual(
+    1.5,
+  );
+  expect(
+    Math.abs(outline.y + outline.height / 2 - (group.y + group.height / 2)),
+  ).toBeLessThanOrEqual(1.5);
+  expect(Math.abs(outline.width - meter.width)).toBeLessThanOrEqual(0.2 * meter.width);
+  // 승격하면 상자가 사라진다.
+  await button(page, '승격').click();
+  await pollObservation(page, (o) => o['normalized'] === true);
+  await expect(page.locator('[data-overlay="meter-outline"] svg')).toHaveCount(0);
+});
+
+// ── T208 기준 이미지 ─────────────────────────────────────
+
+test('화면 기준: estimate 첫 화면(어림 먼저)', async ({ page }) => {
+  await open(page, 'estimate');
+  await page.getByRole('heading', { name: '측정 실험실' }).focus();
+  await expectPageSnapshot(page, 'measure-estimate.png');
+});
+
+test('화면 기준: estimate 어림을 넣은 뒤(자와 내 어림 막대)', async ({ page }) => {
+  await open(page, 'estimate');
+  await button(page, '숫자 9').click();
+  await button(page, '어림 넣기').click();
+  await pollObservation(page, (o) => o['estimateLocked'] === true);
+  await page.getByRole('heading', { name: '측정 실험실' }).focus();
+  await expectPageSnapshot(page, 'measure-estimate-ruler.png');
+});
+
+test('화면 기준: length 합체 규칙(1m 줄자 하나와 막대 셋)', async ({ page }) => {
+  await open(page, 'length', MERGE_CONFIG);
+  await button(page, '10cm 막대 놓기').focus();
+  for (let i = 0; i < 13; i += 1) await page.keyboard.press('Enter');
+  await pollObservation(page, (o) => o['merges'] === 1 && o['count'] === 4);
+  await page.getByRole('heading', { name: '측정 실험실' }).focus();
+  await expectPageSnapshot(page, 'measure-merge.png');
+});
+
+test('화면 기준: length unit-train 첫 화면(1m 70cm + 2m 50cm)', async ({ page }) => {
+  await open(page, 'length', TRAIN_ADD);
+  await page.getByRole('heading', { name: '측정 실험실' }).focus();
+  await expectPageSnapshot(page, 'measure-train.png');
 });
