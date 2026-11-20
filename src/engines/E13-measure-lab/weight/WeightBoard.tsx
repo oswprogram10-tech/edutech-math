@@ -464,9 +464,9 @@ export function WeightBoard({ svgRef, state, ui, locked, svgStyle, className }: 
         data-part="shelf"
         role="img"
         aria-label={S.weight.shelf}
-        x={40}
+        x={geo.shelfX0}
         y={geo.shelfTop}
-        width={920}
+        width={geo.shelfX1 - geo.shelfX0}
         height={geo.height - geo.shelfTop - 10}
         rx={14}
         fill="#efe6d4"

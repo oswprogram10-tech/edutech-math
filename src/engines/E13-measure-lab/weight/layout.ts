@@ -40,6 +40,9 @@ export interface WeightGeo {
   readonly height: number;
   /** 선반 윗면 y. */
   readonly shelfTop: number;
+  /** 선반 가로 범위. 용수철 칸이 있으면 그 칸 왼쪽까지만이다(걸린 물건이 선반에 겹치지 않게). */
+  readonly shelfX0: number;
+  readonly shelfX1: number;
   readonly balance: BalanceGeo | null;
   readonly spring: SpringGeo | null;
 }
@@ -113,14 +116,21 @@ export function geoOf(
           itemScale: 0.7,
         }
       : {
-          x: 440,
+          x: 800,
           top: SPRING_TOP,
           zeroY: SPRING_ZERO,
           len: springLength(state.springMaxG),
-          rulerX: 500,
+          rulerX: 860,
           itemScale: 0.7,
         };
-  return { height, shelfTop, balance, spring: springGeo };
+  return {
+    height,
+    shelfTop,
+    shelfX0: 40,
+    shelfX1: springGeo === null ? 960 : 690,
+    balance,
+    spring: springGeo,
+  };
 }
 
 /** 이 설정에서 판이 쓰는 논리 높이(600 이하). */
@@ -188,9 +198,6 @@ export interface Placement {
   readonly scale: number;
 }
 
-const SHELF_X0 = 90;
-const SHELF_X1 = 910;
-
 /** 물건 하나의 지금 자리(접시 물건은 접시 기울기를, 걸린 물건은 늘어난 길이를 따른다). */
 export function placementOf(state: WeightState, id: string): Placement {
   const geo = geoOf(state);
@@ -224,9 +231,10 @@ export function placementOf(state: WeightState, id: string): Placement {
   }
   const index = state.objects.findIndex((candidate) => candidate.id === id);
   const count = state.objects.length;
-  const step = count > 1 ? Math.min(180, (SHELF_X1 - SHELF_X0) / (count - 1)) : 0;
+  const mid = (geo.shelfX0 + geo.shelfX1) / 2;
+  const step = count > 1 ? Math.min(180, (geo.shelfX1 - geo.shelfX0 - 120) / (count - 1)) : 0;
   return {
-    x: 500 + (index - (count - 1) / 2) * step,
+    x: mid + (index - (count - 1) / 2) * step,
     y: geo.shelfTop + SHELF_H - 22,
     scale: 1,
   };

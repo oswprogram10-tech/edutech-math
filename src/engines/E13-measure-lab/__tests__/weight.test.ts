@@ -389,6 +389,16 @@ describe('reset·JSON·판 높이', () => {
     }
   });
 
+  it('용수철저울이 있으면 선반이 용수철 칸 왼쪽에서 끝나 걸린 물건과 겹치지 않는다', () => {
+    for (const tools of [['spring-scale'], ['pan-balance', 'spring-scale']] as const) {
+      const geo = geoOf({ tools, springMaxG: '500' });
+      const spring = geo.spring;
+      if (spring === null) throw new Error('spring geo');
+      expect(geo.shelfX1).toBeLessThanOrEqual(spring.x - 50);
+    }
+    expect(geoOf({ tools: ['pan-balance'] }).shelfX1).toBe(960);
+  });
+
   it('기울기 각도: 같으면 0, 다르면 4~12도', () => {
     const level = play(make(), place('ball', 'left'));
     expect(tiltDegrees(level)).toBeGreaterThanOrEqual(4);
