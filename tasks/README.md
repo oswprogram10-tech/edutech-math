@@ -373,6 +373,8 @@ W6에서 E13 측정 실험실과 E14 시계·시간을 새로 만들고, E17 `so
 
 - **T219 병합(2026-11-21):** E03 `range`(경계점 속 찬/빈·방향·두 경계·게이트, 판 1000×560, `boundary-rider`)와 `rounding` `scenario`(bus-seats·candy-bags·height 장면, 마지막 묶음만 그림, `left-behind`), E03 `hasMisconception`. 판정 경로: `rounding.0.method`, `consequence`, range `lower`·`upper`. 검수 때 탑승자 키 글을 화면 12px 이상·겹침 없게(한 줄 5명) 고쳤다. 시범 운영 메모: 크롬북 샌드박스에서 range 수직선이 첫 화면 아래(조작 칸은 위).
 
+- **T220 병합(2026-11-21):** g5s2u1 수의 범위와 어림하기(A1 range 5과제, A2 rounding 4과제)와 E2E. MC-RANGE-BOUNDARY-INCLUSION은 `lower`·`upper` equals 조합과 여러 개 고르기 trap 조합으로 건다. 병합 때 Opus가 고친 것: A2.T3 ② 문구에서 정답 후보(4500·4600)를 빼고, E03 rounding 눈금의 `data-tick-index`(A2.T1·T2에서 정답 25·24와 같은 값)를 지웠다(E03 단위 163, number-line·g5s2u1 E2E 67 통과). range 수직선은 실행기 크롬북·아이패드 첫 화면 안.
+
 ## 상시
 | 카드 | 내용 |
 | --- | --- |

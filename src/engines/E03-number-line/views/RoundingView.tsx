@@ -324,7 +324,6 @@ export function RoundingView({
             <g
               key={`tick-${tick.index}`}
               pointerEvents="none"
-              data-tick-index={tick.index}
               data-tick-value={tick.value.toJSON()}
             >
               <line

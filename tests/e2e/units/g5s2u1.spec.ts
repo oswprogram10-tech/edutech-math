@@ -206,7 +206,6 @@ async function exposedOutsideResponse(page: Page, source: string): Promise<strin
     const walk = (node: Element) => {
       if (response && (node === response || response.contains(node))) return;
       for (const attr of Array.from(node.attributes)) {
-        if (attr.name === 'data-tick-index') continue;
         if (
           attr.name === 'aria-label' ||
           attr.name === 'title' ||
