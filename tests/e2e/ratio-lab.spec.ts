@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 
 /**
- * E20 비·비율 실험실(mix·resize·rate·percent) 샌드박스 E2E. 아이패드(WebKit)·크롬북·전자칠판 뷰포트에서 모두 돈다.
+ * E20 비·비율 실험실(mix·resize·rate·percent·bar-model) 샌드박스 E2E. 아이패드(WebKit)·크롬북·전자칠판 뷰포트에서 모두 돈다.
  *
  * - mix: ×2는 같은 띠 위치, 우유만 더하면 달라짐 / resize: +2 찌그러짐, ×2 유지, 담기
  * - 키보드만으로 각 모드 한 번, 힌트 ② 오버레이 넷이 본 캔버스와 1px 안에 겹침
@@ -30,6 +30,18 @@ interface Observation {
   readonly shaded?: number;
   readonly cells?: number[];
   readonly fraction?: string;
+  readonly marks?: { total: number[]; ratio: number[] };
+  readonly highlightCorrect?: boolean | null;
+  readonly unit?: string | null;
+  readonly unitCorrect?: boolean | null;
+  readonly partValues?: (string | null)[];
+  readonly partsCorrect?: boolean[];
+  readonly totalValue?: string | null;
+  readonly totalCorrect?: boolean | null;
+  readonly expr?: string | null;
+  readonly exprValue?: string | null;
+  readonly exprMatchesPart?: number | null;
+  readonly partsSumMatches?: boolean | null;
 }
 
 async function readObservation(page: Page): Promise<Observation> {
@@ -43,7 +55,7 @@ async function pollObservation(page: Page, check: (o: Observation) => boolean): 
 
 async function open(
   page: Page,
-  mode: 'mix' | 'resize' | 'rate' | 'percent',
+  mode: 'mix' | 'resize' | 'rate' | 'percent' | 'bar-model',
   config: Record<string, unknown> = {},
   query = 'stage=fit',
 ): Promise<void> {
@@ -324,7 +336,7 @@ test('넓은 판은 줄여서 맞추고, 좁은 판은 최소 배율 0.6에서 �
   page,
 }) => {
   test.skip(test.info().project.name !== 'chromebook', '크롬북 뷰포트에서만 판 크기를 바꿔 본다.');
-  for (const mode of ['mix', 'resize', 'rate', 'percent'] as const) {
+  for (const mode of ['mix', 'resize', 'rate', 'percent', 'bar-model'] as const) {
     await open(page, mode);
     const wide = await canvas(page).boundingBox();
     if (!wide) throw new Error('캔버스를 찾지 못했습니다.');
@@ -337,7 +349,8 @@ test('넓은 판은 줄여서 맞추고, 좁은 판은 최소 배율 0.6에서 �
     if (!narrow) throw new Error('캔버스를 찾지 못했습니다.');
     expect(narrow.width).toBeGreaterThanOrEqual(599);
     expect(narrow.width).toBeLessThanOrEqual(601);
-    expect(narrow.height).toBeGreaterThanOrEqual(359);
+    // bar-model 판은 논리 높이가 500이라 최소 높이가 0.6 × 500 = 300px이다.
+    expect(narrow.height).toBeGreaterThanOrEqual(mode === 'bar-model' ? 299 : 359);
     const scrolls = await page
       .getByTestId('ratio-board')
       .evaluate((element) => element.scrollWidth > element.clientWidth);
@@ -348,6 +361,7 @@ test('넓은 판은 줄여서 맞추고, 좁은 판은 최소 배율 0.6에서 �
       resize: '가로 늘리기',
       rate: '경주 시작',
       percent: '모두 지우기',
+      'bar-model': '전체 칠하기',
     }[mode];
     await expect(button(page, first)).toBeVisible();
     const outside = await button(page, first).evaluate(
@@ -366,7 +380,7 @@ async function expectMin(locator: Locator, min: number, label: string): Promise<
 
 for (const size of [48, 64] as const) {
   test(`터치 타깃 ${size}: 모든 단추가 ${size}px 이상`, async ({ page }) => {
-    for (const mode of ['mix', 'resize', 'rate', 'percent'] as const) {
+    for (const mode of ['mix', 'resize', 'rate', 'percent', 'bar-model'] as const) {
       await open(page, mode);
       // 설정은 저장되므로 아직 48px일 때만 눌러 64px로 바꾼다.
       const toggle = page.getByRole('button', { name: '터치 48px' });
@@ -653,4 +667,223 @@ test('힌트 ② tens-brackets: 다 찬 10칸마다 괄호와 10, 남은 칸은 
   await page.getByTestId('percent-cells').focus();
   await page.keyboard.press('KeyC');
   await expect(layer.locator('[data-part="ten-bracket"]')).toHaveCount(0);
+});
+
+// ───────────── bar-model (T197) ─────────────
+
+/** 문장 토큰 단추(번호로 찾는다. 꼬리표가 붙어도 번호는 그대로다). */
+function tokenButton(page: Page, index: number): Locator {
+  return page.locator(`[data-token-index="${index}"]`);
+}
+
+/** 기본 장면의 토큰 번호: 사탕0 35(1) 개를2 형과3 동생이4 3(5) :(6) 4(7) 로8 … */
+const TOKEN = { total: 1, three: 5, four: 7 } as const;
+
+async function highlightByClick(page: Page): Promise<void> {
+  await button(page, '전체 칠하기').click();
+  await tokenButton(page, TOKEN.total).click();
+  await button(page, '비 칠하기').click();
+  await tokenButton(page, TOKEN.three).click();
+  await tokenButton(page, TOKEN.four).click();
+}
+
+async function expectMinHeight(locator: Locator, min: number, label: string): Promise<void> {
+  await locator.scrollIntoViewIfNeeded();
+  const box = await locator.boundingBox();
+  if (!box) throw new Error(`${label}: 상자를 찾지 못했습니다.`);
+  expect(box.height, label).toBeGreaterThanOrEqual(min - 0.5);
+}
+
+test('bar-model: 형광펜 → 막대 열림 → 값 넣기', async ({ page }) => {
+  await open(page, 'bar-model');
+  await expect(canvas(page)).toHaveAttribute('data-open', 'false');
+  await pollObservation(page, (o) => o.highlightCorrect === false);
+  await tokenButton(page, TOKEN.total).click();
+  await expect(tokenButton(page, TOKEN.total)).toHaveAttribute('data-mark', 'total');
+  await expect(tokenButton(page, TOKEN.total)).toContainText('전체');
+  // 아직 비를 칠하지 않아 막대는 흐리다.
+  await expect(canvas(page)).toHaveAttribute('data-open', 'false');
+  await button(page, '비 칠하기').click();
+  await tokenButton(page, TOKEN.three).click();
+  await tokenButton(page, TOKEN.four).click();
+  await expect(tokenButton(page, TOKEN.three)).toContainText('비');
+  await expect(canvas(page)).toHaveAttribute('data-open', 'true');
+  await pollObservation(
+    page,
+    (o) => o.highlightCorrect === true && o.marks?.total[0] === 1 && o.marks.ratio.length === 2,
+  );
+
+  await page.getByLabel('한 칸 크기').fill('5');
+  await expect(canvas(page).locator('[data-part="unit-text"]')).toHaveCount(7);
+  await page.getByLabel('형 몫').fill('15');
+  await page.getByLabel('동생 몫').fill('20');
+  await pollObservation(
+    page,
+    (o) =>
+      o.unitCorrect === true &&
+      o.partsCorrect?.every(Boolean) === true &&
+      o.partsSumMatches === true &&
+      (o.misconceptions ?? []).length === 0,
+  );
+  // 키패드로도 쓴다.
+  await page.getByLabel('한 칸 크기').focus();
+  await button(page, '한 글자 지우기').click();
+  await button(page, '1').click();
+  await button(page, '1').click();
+  await pollObservation(
+    page,
+    (o) =>
+      o.unit === '11' && (o.misconceptions ?? []).includes('MC-PROPORTION-DIVIDE-BY-RATIO-TERM'),
+  );
+  await click(page, '처음으로');
+  await pollObservation(page, (o) => o.unit === null && o.marks?.total.length === 0);
+});
+
+test('bar-model: 정답(한 칸 크기·몫)이 시작 화면 어디에도 없다', async ({ page }) => {
+  await open(page, 'bar-model');
+  const board = (await page.getByTestId('ratio-board').innerHTML()).replace(/<[^>]*>/g, ' ');
+  const sentence = (await page.getByTestId('bar-sentence').textContent()) ?? '';
+  const fields = await page
+    .getByTestId('ratio-controls')
+    .locator('input')
+    .evaluateAll((list) => list.map((el) => (el as HTMLInputElement).value).join(' '));
+  for (const text of [board, sentence, fields]) {
+    expect(text).not.toMatch(/(^|[^0-9])(5|15|20)([^0-9]|$)/);
+  }
+});
+
+test('bar-model 키보드만으로: Enter로 칠하고 T·B·E 도구, Tab으로 칸을 오가며 쓴다', async ({
+  page,
+}) => {
+  await open(page, 'bar-model');
+  await tokenButton(page, TOKEN.total).focus();
+  await page.keyboard.press('Enter'); // 도구 기본은 전체
+  await page.keyboard.press('KeyB');
+  await expect(button(page, '비 칠하기')).toHaveAttribute('aria-pressed', 'true');
+  await tokenButton(page, TOKEN.three).focus();
+  await page.keyboard.press('Enter');
+  await tokenButton(page, TOKEN.four).focus();
+  await page.keyboard.press('Space');
+  await pollObservation(page, (o) => o.highlightCorrect === true);
+  await page.keyboard.press('KeyE');
+  await page.keyboard.press('Enter');
+  await pollObservation(page, (o) => o.highlightCorrect === false);
+  await page.keyboard.press('KeyB');
+  await page.keyboard.press('Enter');
+  await pollObservation(page, (o) => o.highlightCorrect === true);
+
+  await page.getByLabel('한 칸 크기').focus();
+  for (const value of ['5', '15', '20']) {
+    await page.keyboard.type(value);
+    await page.keyboard.press('Tab');
+  }
+  await pollObservation(
+    page,
+    (o) => o.unitCorrect === true && o.partsCorrect?.every(Boolean) === true,
+  );
+  // 입력 칸 안에서 친 글자는 단축키로 쓰이지 않았다.
+  expect((await readObservation(page)).marks?.ratio).toHaveLength(2);
+  await page.getByLabel('동생 몫').blur();
+  await tokenButton(page, TOKEN.total).focus();
+  await page.keyboard.press('KeyR');
+  await pollObservation(page, (o) => o.unit === null);
+});
+
+test('bar-model: 거꾸로 문제(형 24, 3 : 5)는 전체 칸이 있고 알려 준 몫은 고정', async ({
+  page,
+}) => {
+  await open(page, 'bar-model', {
+    problem: '형과 동생이 3 : 5로 나누었더니 형이 24개입니다. 전체는 몇 개일까요?',
+    parts: ['형', '동생'],
+    ratio: [3, 5],
+    known: { part: 0, value: 24 },
+  });
+  await expect(canvas(page)).toHaveAttribute('data-open', 'true');
+  await expect(page.locator('[data-field="part-0"]')).toContainText('24');
+  await page.getByLabel('한 칸 크기').fill('8');
+  await page.getByLabel('동생 몫').fill('40');
+  await page.getByLabel('전체', { exact: true }).fill('64');
+  await pollObservation(
+    page,
+    (o) =>
+      o.unitCorrect === true &&
+      o.totalCorrect === true &&
+      o.partsCorrect?.every(Boolean) === true &&
+      o.partsSumMatches === true,
+  );
+});
+
+test('bar-model symbols: 막대를 숨기고 식 칸에 35 × 3/7', async ({ page }) => {
+  await open(page, 'bar-model', { look: 'symbols' });
+  await expect(canvas(page)).toHaveAttribute('data-look', 'symbols');
+  await expect(canvas(page).locator('[data-part="cell"]')).toHaveCount(0);
+  await expect(page.getByLabel('한 칸 크기')).toHaveCount(0);
+  await highlightByClick(page);
+  await page.getByLabel('식', { exact: true }).fill('35 * 3/7');
+  await expect(page.getByLabel('식', { exact: true })).toHaveValue('35 × 3/7');
+  await pollObservation(page, (o) => o.exprValue === '15' && o.exprMatchesPart === 0);
+  await page.getByLabel('식', { exact: true }).fill('35 ÷ 3');
+  await pollObservation(
+    page,
+    (o) =>
+      o.exprMatchesPart === null &&
+      (o.misconceptions ?? []).includes('MC-PROPORTION-DIVIDE-BY-RATIO-TERM'),
+  );
+  await page.getByLabel('식', { exact: true }).fill('35 × 4/7');
+  await pollObservation(page, (o) => o.exprMatchesPart === 1);
+  await page.getByLabel('형 몫').fill('15');
+  await pollObservation(page, (o) => o.partsCorrect?.[0] === true);
+});
+
+test('bar-model: 터치 타깃 — 문장 토큰·형광펜 단추가 48px 높이 이상', async ({ page }) => {
+  await open(page, 'bar-model');
+  const tokens = page.locator('[data-token-index]');
+  expect(await tokens.count()).toBeGreaterThan(8);
+  for (let i = 0; i < (await tokens.count()); i += 1) {
+    await expectMinHeight(tokens.nth(i), 48, `토큰 ${i}`);
+  }
+  for (const name of ['전체 칠하기', '비 칠하기', '지우기']) {
+    await expectMinHeight(button(page, name), 48, name);
+  }
+});
+
+for (const look of ['bars', 'symbols'] as const) {
+  test(`화면 기준: bar-model ${look} 첫 화면`, async ({ page }) => {
+    await open(page, 'bar-model', { look });
+    await highlightByClick(page);
+    if (look === 'bars') await page.getByLabel('한 칸 크기').fill('5');
+    await page.getByLabel('형 몫').fill('15');
+    if (look === 'symbols') await page.getByLabel('식', { exact: true }).fill('35 × 4/7');
+    await expect(canvas(page)).toHaveAttribute('data-look', look);
+    await expectPageSnapshot(page, `ratio-bar-model-${look}.png`);
+  });
+}
+
+test('힌트 ② unit-count: 모든 칸에 1부터 번호, 전체 괄호 위에 모두 7칸', async ({ page }) => {
+  await open(page, 'bar-model', {}, 'stage=fit&overlay=unit-count');
+  await toggleOverlay(page);
+  const layer = await expectAligned(page, 'unit-count');
+  await expect(layer.locator('[data-part="cell-number"]')).toHaveCount(7);
+  await expect(layer.locator('[data-part="cell-number"]').last()).toHaveText('7');
+  await expect(layer.locator('[data-part="all-cells"]')).toHaveText('모두 7칸');
+  // 값(한 칸 크기·몫)은 쓰지 않는다.
+  expect(await layer.textContent()).not.toMatch(/(^|[^0-9])(5|15|20)([^0-9]|$)/);
+});
+
+test('힌트 ② share-bracket: 한 사람 줄을 묶고 a칸 = 한 칸 × a, 값 글은 없다', async ({ page }) => {
+  await open(page, 'bar-model', {}, 'stage=fit&overlay=share-bracket');
+  await toggleOverlay(page);
+  const layer = await expectAligned(page, 'share-bracket');
+  await expect(layer.locator('[data-part="share-bracket"]')).toHaveAttribute('data-row', '0');
+  await expect(layer.locator('[data-part="share-label"]')).toHaveText('3칸 = 한 칸 × 3');
+  await page.getByLabel('형 몫').fill('15');
+  // 형 몫을 썼으니 아직 안 쓴 동생 줄로 옮긴다.
+  await expect(layer.locator('[data-part="share-bracket"]')).toHaveAttribute('data-row', '1');
+  await expect(layer.locator('[data-part="share-label"]')).toHaveText('4칸 = 한 칸 × 4');
+});
+
+test('bar-model symbols: 오버레이는 그리지 않는다', async ({ page }) => {
+  await open(page, 'bar-model', { look: 'symbols' }, 'stage=fit&overlay=unit-count');
+  await toggleOverlay(page);
+  await expect(page.locator('[data-overlay="unit-count"] svg')).toHaveCount(0);
 });

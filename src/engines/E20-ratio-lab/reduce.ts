@@ -2,11 +2,13 @@
  * E20 상태 전이. 순수 함수이고 상태는 JSON 직렬화가 가능하다.
  * 거절된 Action(범위 밖·최대 초과·모드 불일치)은 상태 그대로(같은 객체)를 돌려준다.
  */
+import { cleanExpr, cleanInteger } from './bar';
 import { isDistanceOnly, racersComplete } from './observe';
 import { isInt, normalizeConfig, prefixCells } from './settings';
 import { MAX_SAVED, PERCENT_CELLS, SAME_PREDICTION } from './types';
 import type {
   Amounts,
+  BarState,
   MixState,
   PercentState,
   RacerState,
@@ -172,6 +174,71 @@ function reducePercent(state: PercentState, action: RatioAction): PercentState {
   }
 }
 
+function reduceBar(state: BarState, action: RatioAction): BarState {
+  const { settings } = state;
+  switch (action.type) {
+    case 'mark': {
+      if (!isInt(action.index, 0, settings.tokens.length - 1)) return state;
+      const current = state.marks[action.index];
+      if (state.tool === 'erase' || current === state.tool) {
+        if (current === undefined) return state;
+        const kept = Object.entries(state.marks).filter(([key]) => Number(key) !== action.index);
+        return { ...state, marks: Object.fromEntries(kept) };
+      }
+      return { ...state, marks: { ...state.marks, [action.index]: state.tool } };
+    }
+    case 'set-tool':
+      if (action.tool !== 'total' && action.tool !== 'ratio' && action.tool !== 'erase') {
+        return state;
+      }
+      return state.tool === action.tool ? state : { ...state, tool: action.tool };
+    case 'set-unit': {
+      const value = cleanInteger(action.value);
+      if (settings.look === 'symbols' || value === undefined || value === state.unit) return state;
+      return { ...state, unit: value };
+    }
+    case 'set-part': {
+      const value = cleanInteger(action.value);
+      if (!isInt(action.index, 0, settings.parts.length - 1)) return state;
+      if (settings.known?.part === action.index) return state;
+      if (value === undefined || value === state.partValues[action.index]) return state;
+      return {
+        ...state,
+        partValues: state.partValues.map((v, i) => (i === action.index ? value : v)),
+      };
+    }
+    case 'set-total': {
+      const value = cleanInteger(action.value);
+      if (settings.total !== null || value === undefined || value === state.totalValue) {
+        return state;
+      }
+      return { ...state, totalValue: value };
+    }
+    case 'set-expr': {
+      const value = cleanExpr(action.value);
+      if (settings.look !== 'symbols' || value === undefined) return state;
+      return value === state.expr ? state : { ...state, expr: value };
+    }
+    case 'reset': {
+      // 칠한 형광펜과 쓴 값을 모두 처음으로 돌린다(도구는 그대로).
+      const partValues = settings.parts.map((_, i) =>
+        settings.known !== null && settings.known.part === i ? String(settings.known.value) : null,
+      );
+      const same =
+        state.unit === null &&
+        state.totalValue === null &&
+        state.expr === null &&
+        Object.keys(state.marks).length === 0 &&
+        partValues.every((v, i) => v === state.partValues[i]);
+      return same
+        ? state
+        : { ...state, marks: {}, unit: null, totalValue: null, expr: null, partValues };
+    }
+    default:
+      return state;
+  }
+}
+
 export function reduce(state: RatioState, action: RatioAction): RatioState {
   if (state.error !== null) return state;
   switch (state.mode) {
@@ -183,5 +250,7 @@ export function reduce(state: RatioState, action: RatioAction): RatioState {
       return reduceRate(state, action);
     case 'percent':
       return reducePercent(state, action);
+    case 'bar-model':
+      return reduceBar(state, action);
   }
 }

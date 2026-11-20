@@ -1,6 +1,7 @@
 /** E20의 공개 이벤트·판정(순수 함수). 연동은 이번 카드에서 쓰지 않는다. */
 import type { EngineEvent, EnginePredicate, JsonValue, Observation } from '../../core/engine-sdk';
 import { Rational } from '../../core/math';
+import { readBar } from './bar';
 import { readMix, readResize } from './observe';
 import type { RatioAction, RatioState } from './types';
 
@@ -26,6 +27,10 @@ export function emit(prev: RatioState, next: RatioState, action: RatioAction): E
       return [{ name: 'ratio-changed', payload: { ran: next.runs > 0 } }];
     case 'percent':
       return [{ name: 'ratio-changed', payload: { shaded: next.cells.length } }];
+    case 'bar-model':
+      return [
+        { name: 'ratio-changed', payload: { highlightCorrect: readBar(next).highlightCorrect } },
+      ];
   }
 }
 
@@ -168,6 +173,24 @@ export const predicates: Readonly<Record<string, EnginePredicate>> = {
       actual !== null &&
       wanted.equals(actual)
     );
+  },
+  highlightCorrect: (observation) => observation['highlightCorrect'] === true,
+  unitCorrect: (observation) => observation['unitCorrect'] === true,
+  /** args `{ index }`: 이 사람(parts 번호)의 몫이 맞는가. */
+  partCorrect: (observation, args) => {
+    const index = integer(record(args)?.['index']);
+    const list = observation['partsCorrect'];
+    return index !== null && Array.isArray(list) && list[index] === true;
+  },
+  allPartsCorrect: (observation) => {
+    const list = observation['partsCorrect'];
+    return Array.isArray(list) && list.length > 0 && list.every((v) => v === true);
+  },
+  totalCorrect: (observation) => observation['totalCorrect'] === true,
+  /** args `{ index }`: 식 칸의 값이 이 사람(parts 번호)의 몫과 같은가. */
+  exprMatchesPart: (observation, args) => {
+    const index = integer(record(args)?.['index']);
+    return index !== null && observation['exprMatchesPart'] === index;
   },
   hasMisconception: (observation, args) => {
     const code = record(args)?.['code'];

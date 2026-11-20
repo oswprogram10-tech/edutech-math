@@ -1,7 +1,9 @@
-/** E20 비·비율 실험실 엔진 정의. 이번 카드는 `mix`·`resize`·`rate`·`percent` 모드가 있다. */
+/** E20 비·비율 실험실 엔진 정의. `mix`·`resize`·`rate`·`percent`·`bar-model` 모드가 있다. */
 import type { EngineDefinition } from '../../core/engine-sdk';
 import { EVENT_NAMES, emit, predicates } from './events';
 import { observe } from './observe';
+import { ShareBracketOverlay } from './overlays/share-bracket';
+import { UnitCountOverlay } from './overlays/unit-count';
 import { FootprintsOverlay } from './overlays/footprints';
 import { GrowthArrowsOverlay } from './overlays/growth-arrows';
 import { RatioGridOverlay } from './overlays/ratio-grid';
@@ -17,7 +19,7 @@ import { RatioView } from './View';
 const definition: EngineDefinition<RatioConfig, RatioState, RatioAction> = {
   id: 'E20',
   name: E20_STRINGS.name,
-  modes: ['mix', 'resize', 'rate', 'percent'],
+  modes: ['mix', 'resize', 'rate', 'percent', 'bar-model'],
   layout: 'fit',
   createInitialState,
   reduce,
@@ -34,6 +36,8 @@ const definition: EngineDefinition<RatioConfig, RatioState, RatioAction> = {
     footprints: FootprintsOverlay,
     'same-time': SameTimeOverlay,
     'tens-brackets': TensBracketsOverlay,
+    'unit-count': UnitCountOverlay,
+    'share-bracket': ShareBracketOverlay,
   },
 };
 

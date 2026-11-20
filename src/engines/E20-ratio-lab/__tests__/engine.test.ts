@@ -49,17 +49,19 @@ function cupOf(milk: number, syrup: number, extra: MixConfig = {}): MixState {
 }
 
 describe('정의', () => {
-  it('id·모드·레이아웃·오버레이 일곱', () => {
+  it('id·모드·레이아웃·오버레이 아홉', () => {
     expect(definition.id).toBe('E20');
-    expect(definition.modes).toEqual(['mix', 'resize', 'rate', 'percent']);
+    expect(definition.modes).toEqual(['mix', 'resize', 'rate', 'percent', 'bar-model']);
     expect(definition.layout).toBe('fit');
     expect(Object.keys(definition.overlays ?? {}).sort()).toEqual([
       'footprints',
       'growth-arrows',
       'ratio-grid',
       'same-time',
+      'share-bracket',
       'side-by-side',
       'tens-brackets',
+      'unit-count',
       'unit-groups',
     ]);
   });

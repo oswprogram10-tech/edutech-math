@@ -2,6 +2,7 @@
 
 export const MC_RATIO_ADDITIVE = 'MC-RATIO-ADDITIVE';
 export const MC_RATE_DISTANCE_ONLY = 'MC-RATE-DISTANCE-ONLY';
+export const MC_PROPORTION_DIVIDE_BY_RATIO_TERM = 'MC-PROPORTION-DIVIDE-BY-RATIO-TERM';
 
 export const E20_STRINGS = {
   name: '비·비율 실험실',
@@ -120,5 +121,41 @@ export const E20_STRINGS = {
     buttons: { clear: '모두 지우기', reset: '처음으로' },
     rejected: { locked: '이 판은 칠할 수 없어요.' },
     overlay: { ten: '10' },
+  },
+  bar: {
+    instructions: '문장에서 전체와 비를 칠해 찾은 뒤, 막대에 한 칸 크기와 각자 몫을 써 보세요.',
+    instructionsSymbols:
+      '문장에서 전체와 비를 칠해 찾은 뒤, 식 칸에 식을 쓰고 각자 몫을 써 보세요.',
+    sentenceLabel: '문장',
+    toolsLabel: '형광펜',
+    tokenMarkTotal: '전체',
+    tokenMarkRatio: '비',
+    tokenLabel: (text: string, tag: string | null) => (tag === null ? text : `${text}, ${tag}`),
+    tools: { total: '전체 칠하기', ratio: '비 칠하기', erase: '지우기' },
+    dimNotice: '문장에서 전체와 비를 먼저 찾아요',
+    boardLabel: '막대 모델',
+    symbolsLabel: '막대를 숨긴 식 모델',
+    totalWord: '전체',
+    unknown: '?',
+    fields: {
+      unit: '한 칸 크기',
+      share: (name: string) => `${name} 몫`,
+      total: '전체',
+      expr: '식',
+    },
+    fixedHint: '알려 준 값',
+    keypadLabel: '숫자 키패드',
+    backspace: '한 글자 지우기',
+    clearField: '칸 비우기',
+    reset: '처음으로',
+    rejected: {
+      notNumber: '숫자만 넣어 주세요.',
+      notExpr: '숫자와 × ÷ + − ( ) / 만 쓸 수 있어요.',
+      locked: '이 칸은 바꿀 수 없어요.',
+    },
+    overlay: {
+      allCells: (n: number) => `모두 ${n}칸`,
+      shareCells: (a: number) => `${a}칸 = 한 칸 × ${a}`,
+    },
   },
 } as const;

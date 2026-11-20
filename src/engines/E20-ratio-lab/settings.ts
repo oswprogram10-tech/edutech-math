@@ -1,4 +1,5 @@
 /** E20 설정 검사·정리. 잘못된 설정은 error 문구와 함께 안전한 기본 상태로 돌려준다. */
+import { normalizeBar } from './bar';
 import { defaultStripMax } from './observe';
 import { E20_STRINGS as S } from './strings.ko';
 import {
@@ -306,6 +307,8 @@ export function normalizeConfig(config: RatioConfig): RatioState {
       return normalizeRate(raw);
     case 'percent':
       return normalizePercent(raw);
+    case 'bar-model':
+      return normalizeBar(raw);
     default:
       return normalizeMix(raw);
   }
