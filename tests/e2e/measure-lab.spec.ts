@@ -1299,7 +1299,15 @@ const OBJECTS = [
   { id: 'book', kind: 'book', g: 450 },
 ];
 const PAN_ONLY = { tools: ['pan-balance'], objects: OBJECTS, unitObjects: { clip: 50 } };
-const SPRING_ONLY = { tools: ['spring-scale'], objects: OBJECTS, springMaxG: 1000 };
+const SPRING_ONLY = {
+  tools: ['spring-scale'],
+  objects: [
+    { id: 'beachball', kind: 'beachball', g: 200, visualSize: 'large' },
+    { id: 'iron-ball', kind: 'iron-ball', g: 480, visualSize: 'small' },
+    { id: 'book', kind: 'book', g: 450 },
+  ],
+  springMaxG: 500,
+};
 
 /** 윗접시저울만 있는 판에서 두 접시 가운데의 논리 좌표(1000 기준, 접시 윗면 근처). */
 const PAN_LEFT_AT = { x: 200, y: 280 };
@@ -1495,7 +1503,7 @@ test('weight 용수철저울: 걸면 바늘이 g에 맞는 눈금을 가리킨�
   );
   // 눈금 숫자는 100g마다만 있고 물건 쪽에는 g 숫자가 없다.
   expect(await canvas.locator('[data-part="spring-ticks"] text').allTextContents()).toEqual([
-    ...Array.from({ length: 11 }, (_, i) => String(i * 100)),
+    ...Array.from({ length: 6 }, (_, i) => String(i * 100)),
     'g',
   ]);
   const itemText = await canvas
@@ -1505,7 +1513,7 @@ test('weight 용수철저울: 걸면 바늘이 g에 맞는 눈금을 가리킨�
   // 더 무거운 물건을 걸면 바늘이 더 내려간다.
   await button(page, '쇠구슬').click();
   await button(page, '용수철저울에 걸기').click();
-  await pollObservation(page, (o) => o['springG'] === '700');
+  await pollObservation(page, (o) => o['springG'] === '480');
   await page.waitForTimeout(600);
   const lower = await canvas.locator('[data-part="pointer"] line').boundingBox();
   if (!lower) throw new Error('바늘을 찾지 못했습니다.');
@@ -1695,7 +1703,16 @@ test('화면 기준: capacity puzzle(비커 가에 물을 채워 비커 나에 �
 });
 
 test('화면 기준: weight 두 저울(비치볼·쇠구슬을 접시에, 책을 용수철저울에)', async ({ page }) => {
-  await open(page, 'weight');
+  await open(page, 'weight', {
+    tools: ['pan-balance', 'spring-scale'],
+    objects: [
+      { id: 'beachball', kind: 'beachball', g: 200, visualSize: 'large' },
+      { id: 'iron-ball', kind: 'iron-ball', g: 480, visualSize: 'small' },
+      { id: 'book', kind: 'book', g: 450 },
+    ],
+    springMaxG: 500,
+    unitObjects: { clip: 50 },
+  });
   for (const [name, where] of [
     ['비치볼', '왼쪽 접시에 놓기'],
     ['쇠구슬', '오른쪽 접시에 놓기'],

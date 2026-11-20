@@ -58,7 +58,23 @@ function has(state: Pick<WeightState, 'tools'>, tool: 'pan-balance' | 'spring-sc
 }
 
 /** 설정(저울 종류)에 따른 판 배치. */
-export function geoOf(state: Pick<WeightState, 'tools'>): WeightGeo {
+/** 10g 간격 목표(논리 px)와 용수철 눈금 위쪽 자리. 눈금 길이 = 10g 칸 수 × 간격(판 아래 끝 안에서 가능한 최대). */
+export const TEN_GAP = 8;
+const SPRING_TOP = 44;
+const SPRING_ZERO = 76;
+const HOOK_DROP = 16;
+const HUNG_MAX = 96 * 0.7;
+
+/** 용수철 눈금 길이(논리 px): springMaxG의 10g 칸 수 × 8, 판(높이 600) 안에 걸린 큰 물건이 들어오는 만큼까지. */
+export function springLength(maxG: string | undefined): number {
+  const tens = Math.max(1, Number(maxG ?? '1000') / 10);
+  const room = 600 - 8 - SPRING_ZERO - HOOK_DROP - HUNG_MAX;
+  return Math.min(tens * TEN_GAP, room);
+}
+
+export function geoOf(
+  state: Pick<WeightState, 'tools'> & { readonly springMaxG?: string },
+): WeightGeo {
   const pan = has(state, 'pan-balance');
   const spring = has(state, 'spring-scale');
   // 둘 다 있거나 용수철저울이면 눈금 자리가 필요해 600, 윗접시저울만이면 560이다.
@@ -88,8 +104,22 @@ export function geoOf(state: Pick<WeightState, 'tools'>): WeightGeo {
   const springGeo: SpringGeo | null = !spring
     ? null
     : pan
-      ? { x: 770, top: 56, zeroY: 96, len: 300, rulerX: 820, itemScale: 0.7 }
-      : { x: 440, top: 56, zeroY: 96, len: 300, rulerX: 500, itemScale: 0.7 };
+      ? {
+          x: 770,
+          top: SPRING_TOP,
+          zeroY: SPRING_ZERO,
+          len: springLength(state.springMaxG),
+          rulerX: 820,
+          itemScale: 0.7,
+        }
+      : {
+          x: 440,
+          top: SPRING_TOP,
+          zeroY: SPRING_ZERO,
+          len: springLength(state.springMaxG),
+          rulerX: 500,
+          itemScale: 0.7,
+        };
   return { height, shelfTop, balance, spring: springGeo };
 }
 
@@ -188,7 +218,7 @@ export function placementOf(state: WeightState, id: string): Placement {
     );
     return {
       x: geo.spring.x,
-      y: hook + 16 + size * geo.spring.itemScale,
+      y: hook + HOOK_DROP + size * geo.spring.itemScale,
       scale: geo.spring.itemScale,
     };
   }

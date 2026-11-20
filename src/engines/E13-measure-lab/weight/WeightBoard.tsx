@@ -336,7 +336,7 @@ function SpringArt({ spring, state }: { readonly spring: SpringGeo; readonly sta
       </g>
       <text
         x={spring.x}
-        y={spring.top - 16}
+        y={spring.top - 14}
         textAnchor="middle"
         fontSize={22}
         fontWeight={800}

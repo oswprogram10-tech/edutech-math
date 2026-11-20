@@ -373,15 +373,19 @@ describe('reset·JSON·판 높이', () => {
     expect(boardHeight({ tools: ['pan-balance', 'spring-scale'] })).toBe(600);
   });
 
-  it('용수철 눈금 길이가 판 안에 있고, 걸린 물건이 선반 위에 있다', () => {
-    for (const tools of [['spring-scale'], ['pan-balance', 'spring-scale']] as const) {
-      const geo = geoOf({ tools });
-      const spring = geo.spring;
-      if (spring === null) throw new Error('spring geo');
-      // 눈금 끝에 큰 물건(96 × 배율)이 걸려도 선반 윗면을 넘지 않는다.
-      expect(spring.zeroY + spring.len + 16 + 96 * spring.itemScale).toBeLessThanOrEqual(
-        geo.shelfTop,
-      );
+  it('용수철 눈금: springMaxG 500이면 10g 간격 ≥ 8 논리 px, 1000은 판 안 최대(간격이 8보다 작다)', () => {
+    const both = ['pan-balance', 'spring-scale'] as const;
+    for (const tools of [['spring-scale'], both] as const) {
+      const g500 = geoOf({ tools, springMaxG: '500' }).spring;
+      const g1000 = geoOf({ tools, springMaxG: '1000' }).spring;
+      if (g500 === null || g1000 === null) throw new Error('spring geo');
+      expect(g500.len / 50).toBeGreaterThanOrEqual(8);
+      expect(g500.len).toBe(400);
+      expect(g1000.len / 100).toBeLessThan(8);
+      // 눈금 끝에 큰 물건(96 × 배율)이 걸려도 판(600) 안에 있다.
+      for (const g of [g500, g1000]) {
+        expect(g.zeroY + g.len + 16 + 96 * g.itemScale).toBeLessThanOrEqual(600);
+      }
     }
   });
 
