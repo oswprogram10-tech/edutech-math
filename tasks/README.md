@@ -291,6 +291,8 @@ T173은 소넷 구현 → 검수 1회(판 전체 화면 기준 스냅샷 6장, �
 
 - **T194 병합(2026-11-20):** E19 `words`·`spinner`·`simulate`. 시행은 Action의 seed로 엔진 안 mulberry32가 정한다(Web Worker 없음, 10,000회 50ms 안). simulate [n회 돌리기] 단추는 48px 때문에 조작 칸(HTML)에 둔다. 칸 이름은 '아닐 것 같다'·'일 것 같다'. after-streak는 빨강 5번 이상 이어진 다음을 센다. 모드 상자 너비로 평균 모드 기준 이미지 8장을 다시 찍었다(도구 줄만). 남은 점: iPad WebKit E2E에서 SVG 글자 locator 클릭이 막혀 좌표 클릭으로 바꿨다(실기 iPad 확인 필요), 사용하지 않는 색도 막대 자리가 보인다. 범위 E2E 226 통과.
 
+- **T195 병합(2026-11-20):** g5s2u6 콘텐츠(A1 leveling·seesaw·outlier 6과제, A2 words·spinner·simulate 6과제). A2.T6(GAMBLER 예측)은 `showExpected:false`. A1.T6은 평균이 중앙값과 같아 MIDDLE 규칙 없음. 남은 점: 아이패드 세로에서 simulate + 응답 칸 과제의 [10회 돌리기]가 스크롤 아래(T199 원칙), concepts.json에서 likelihood의 선수가 mean-compute라 가능성 과제 일반 ③이 어색하다(개념 그래프 손볼 때 볼 것). g5s2u6 E2E 24 통과.
+
 ## 상시
 | 카드 | 내용 |
 | --- | --- |
