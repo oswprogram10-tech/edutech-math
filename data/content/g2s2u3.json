@@ -1,0 +1,908 @@
+{
+  "unit": "g2s2u3",
+  "title": "길이 재기",
+  "activities": [
+    {
+      "id": "g2s2u3.A1",
+      "title": "100cm → 1m 줄자 합체",
+      "tasks": [
+        {
+          "id": "g2s2u3.A1.T1",
+          "prompt": "10cm 막대를 틈 없이 이어서 끈 길이만큼 만들어요.",
+          "engine": "E13",
+          "mode": "length",
+          "cpa": "C",
+          "config": {
+            "mode": "length",
+            "object": {
+              "name": "끈",
+              "lengthCm": "100"
+            },
+            "units": [
+              "cm-10-rod"
+            ],
+            "mergeRule": {
+              "from": "cm-10-rod",
+              "count": 10,
+              "to": "m-tape"
+            }
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "merged"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 1,
+              "say": "막대를 몇 개 이으면 끈 길이와 같아질까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 2,
+              "say": "막대를 끈의 왼쪽 끝부터 틈 없이 하나씩 이어 붙여 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 3,
+              "backtrack": "g2s2u3.meter-unit"
+            }
+          ],
+          "concepts": [
+            "g2s2u3.meter-unit"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g2s2u3.A1.T2",
+          "prompt": "1m 줄자와 10cm 막대로 칠판 길이를 재요. 몇 m 몇 cm이고, 몇 cm일까요?",
+          "engine": "E13",
+          "mode": "length",
+          "cpa": "C",
+          "config": {
+            "mode": "length",
+            "object": {
+              "name": "blackboard",
+              "lengthCm": "320"
+            },
+            "units": [
+              "m-tape",
+              "cm-10-rod"
+            ],
+            "mergeRule": {
+              "from": "cm-10-rod",
+              "count": 10,
+              "to": "m-tape"
+            }
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "exact"
+              },
+              {
+                "kind": "equals",
+                "path": "response.m.value",
+                "value": "3"
+              },
+              {
+                "kind": "equals",
+                "path": "response.cm.value",
+                "value": "20"
+              },
+              {
+                "kind": "equals",
+                "path": "response.total.value",
+                "value": "320"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "misconception": "MC-LENGTH-UNIT-MIX"
+              },
+              "level": 1,
+              "say": "1m는 몇 cm였지?"
+            },
+            {
+              "when": {
+                "misconception": "MC-LENGTH-UNIT-MIX"
+              },
+              "level": 2,
+              "say": "1m 줄자를 100칸으로 펼쳐 봤어요. 한 칸이 몇 cm인지 봐요.",
+              "show": {
+                "engine": "E13",
+                "overlay": "meter-100"
+              }
+            },
+            {
+              "when": {
+                "misconception": "MC-LENGTH-UNIT-MIX"
+              },
+              "level": 3,
+              "backtrack": "g2s2u3.meter-unit"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 1,
+              "say": "1m 줄자는 10cm 막대 몇 개와 같을까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 2,
+              "say": "칠판의 왼쪽 끝부터 틈 없이 이어 붙인 뒤, 1m 줄자가 몇 개이고 남은 막대가 몇 개인지 세어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 3,
+              "backtrack": "g2s2u3.meter-unit"
+            }
+          ],
+          "concepts": [
+            "g2s2u3.m-cm-convert"
+          ],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-LENGTH-UNIT-MIX",
+              "args": {
+                "trap": [
+                  "302",
+                  "3020"
+                ],
+                "expected": "320"
+              },
+              "path": "response.total.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "m",
+                "label": "m",
+                "forms": [
+                  "integer"
+                ]
+              },
+              {
+                "kind": "number",
+                "id": "cm",
+                "label": "cm",
+                "forms": [
+                  "integer"
+                ]
+              },
+              {
+                "kind": "number",
+                "id": "total",
+                "label": "cm",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g2s2u3.A1.T3",
+          "prompt": "135cm는 몇 m 몇 cm일까요?",
+          "engine": "E13",
+          "mode": "length",
+          "cpa": "P",
+          "config": {
+            "mode": "length",
+            "object": {
+              "name": "끈",
+              "lengthCm": "135"
+            },
+            "units": [
+              "cm-10-rod",
+              "m-tape"
+            ],
+            "mergeRule": {
+              "from": "cm-10-rod",
+              "count": 10,
+              "to": "m-tape"
+            }
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "equals",
+                "path": "response.m.value",
+                "value": "1"
+              },
+              {
+                "kind": "equals",
+                "path": "response.cm.value",
+                "value": "35"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "misconception": "MC-LENGTH-UNIT-MIX"
+              },
+              "level": 1,
+              "say": "1m는 몇 cm였지?"
+            },
+            {
+              "when": {
+                "misconception": "MC-LENGTH-UNIT-MIX"
+              },
+              "level": 2,
+              "say": "1m를 100칸으로 펼치면 한 칸이 1cm예요."
+            },
+            {
+              "when": {
+                "misconception": "MC-LENGTH-UNIT-MIX"
+              },
+              "level": 3,
+              "backtrack": "g2s2u3.meter-unit"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 1,
+              "say": "100cm는 몇 m였지?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 2,
+              "say": "135cm에서 100cm를 1m로 바꾸고, 남는 cm가 얼마인지 세어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 3,
+              "backtrack": "g2s2u3.meter-unit"
+            }
+          ],
+          "concepts": [
+            "g2s2u3.m-cm-convert"
+          ],
+          "submit": "button",
+          "showEngine": false,
+          "diagnose": [
+            {
+              "code": "MC-LENGTH-UNIT-MIX",
+              "args": {
+                "trap": "13",
+                "expected": "1"
+              },
+              "path": "response.m.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "m",
+                "label": "m",
+                "forms": [
+                  "integer"
+                ]
+              },
+              {
+                "kind": "number",
+                "id": "cm",
+                "label": "cm",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g2s2u3.A1.T4",
+          "prompt": "2m 5cm는 몇 cm일까요?",
+          "engine": "E13",
+          "mode": "length",
+          "cpa": "A",
+          "config": {
+            "mode": "length",
+            "object": {
+              "name": "끈",
+              "lengthCm": "205"
+            },
+            "units": [
+              "cm-10-rod",
+              "m-tape"
+            ],
+            "mergeRule": {
+              "from": "cm-10-rod",
+              "count": 10,
+              "to": "m-tape"
+            }
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.total.value",
+            "value": "205"
+          },
+          "hints": [
+            {
+              "when": {
+                "misconception": "MC-LENGTH-UNIT-MIX"
+              },
+              "level": 1,
+              "say": "1m는 몇 cm였지?"
+            },
+            {
+              "when": {
+                "misconception": "MC-LENGTH-UNIT-MIX"
+              },
+              "level": 2,
+              "say": "1m를 100칸으로 펼치면 한 칸이 1cm예요."
+            },
+            {
+              "when": {
+                "misconception": "MC-LENGTH-UNIT-MIX"
+              },
+              "level": 3,
+              "backtrack": "g2s2u3.meter-unit"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 1,
+              "say": "2m는 몇 cm일까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 2,
+              "say": "2m를 cm로 바꾼 뒤, 남은 5cm를 더해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 3,
+              "backtrack": "g2s2u3.meter-unit"
+            }
+          ],
+          "concepts": [
+            "g2s2u3.m-cm-convert"
+          ],
+          "submit": "button",
+          "showEngine": false,
+          "diagnose": [
+            {
+              "code": "MC-LENGTH-UNIT-MIX",
+              "args": {
+                "trap": [
+                  "25",
+                  "2005"
+                ],
+                "expected": "205"
+              },
+              "path": "response.total.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "total",
+                "label": "cm",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "g2s2u3.A2",
+      "title": "길이 블록 기차 단위 승격기",
+      "tasks": [
+        {
+          "id": "g2s2u3.A2.T1",
+          "prompt": "두 길이를 더하면 몇 m 몇 cm일까요?",
+          "engine": "E13",
+          "mode": "length",
+          "cpa": "P",
+          "config": {
+            "mode": "length",
+            "variant": "unit-train",
+            "op": "add",
+            "a": "1m 30cm",
+            "b": "2m 40cm"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "trainIs",
+                "args": {
+                  "m": 3,
+                  "cm": 70
+                }
+              },
+              {
+                "kind": "equals",
+                "path": "response.m.value",
+                "value": "3"
+              },
+              {
+                "kind": "equals",
+                "path": "response.cm.value",
+                "value": "70"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 1,
+              "say": "m 칸과 cm 칸을 따로 세어 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 2,
+              "say": "m 칸은 m끼리, cm 칸은 cm끼리 세어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 3,
+              "backtrack": "g2s2u3.length-add-sub"
+            }
+          ],
+          "concepts": [
+            "g2s2u3.length-add-sub"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "m",
+                "label": "m",
+                "forms": [
+                  "integer"
+                ]
+              },
+              {
+                "kind": "number",
+                "id": "cm",
+                "label": "cm",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g2s2u3.A2.T2",
+          "prompt": "두 길이를 더해요. cm 칸이 넘치면 바꿔 봐요.",
+          "engine": "E13",
+          "mode": "length",
+          "cpa": "P",
+          "config": {
+            "mode": "length",
+            "variant": "unit-train",
+            "op": "add",
+            "a": "1m 70cm",
+            "b": "2m 50cm"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "promotedAtLeast",
+                "args": {
+                  "n": 1
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "trainIs",
+                "args": {
+                  "m": 4,
+                  "cm": 20
+                }
+              },
+              {
+                "kind": "equals",
+                "path": "response.m.value",
+                "value": "4"
+              },
+              {
+                "kind": "equals",
+                "path": "response.cm.value",
+                "value": "20"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "misconceptions",
+                "value": [
+                  "MC-LENGTH-NO-PROMOTE"
+                ]
+              },
+              "level": 1,
+              "say": "cm 칸에 100cm가 넘으면?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "misconceptions",
+                "value": [
+                  "MC-LENGTH-NO-PROMOTE"
+                ]
+              },
+              "level": 2,
+              "say": "cm 칸에 1m 칸 크기의 점선 상자를 그렸어요. 그만큼 모이면 어떻게 할까요?",
+              "show": {
+                "engine": "E13",
+                "overlay": "meter-outline"
+              }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "misconceptions",
+                "value": [
+                  "MC-LENGTH-NO-PROMOTE"
+                ]
+              },
+              "level": 3,
+              "backtrack": "g2s2u3.m-cm-convert"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 1,
+              "say": "10cm 막대가 10개 모이면 어떻게 할 수 있을까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 2,
+              "say": "10cm 막대 10개는 1m 칸 하나로 바꿀 수 있어요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 3,
+              "backtrack": "g2s2u3.m-cm-convert"
+            }
+          ],
+          "concepts": [
+            "g2s2u3.length-add-sub"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "m",
+                "label": "m",
+                "forms": [
+                  "integer"
+                ]
+              },
+              {
+                "kind": "number",
+                "id": "cm",
+                "label": "cm",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g2s2u3.A2.T3",
+          "prompt": "5m 20cm에서 2m 60cm를 빼요.",
+          "engine": "E13",
+          "mode": "length",
+          "cpa": "P",
+          "config": {
+            "mode": "length",
+            "variant": "unit-train",
+            "op": "sub",
+            "a": "5m 20cm",
+            "b": "2m 60cm"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "unpackedAtLeast",
+                "args": {
+                  "n": 1
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "tookAway"
+              },
+              {
+                "kind": "predicate",
+                "name": "trainIs",
+                "args": {
+                  "m": 2,
+                  "cm": 60
+                }
+              },
+              {
+                "kind": "equals",
+                "path": "response.m.value",
+                "value": "2"
+              },
+              {
+                "kind": "equals",
+                "path": "response.cm.value",
+                "value": "60"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 1,
+              "say": "cm 칸이 모자라면 1m 칸 하나를 풀어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 2,
+              "say": "1m 칸 하나는 10cm 막대 열 개로 풀 수 있어요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 3,
+              "backtrack": "g2s2u3.m-cm-convert"
+            }
+          ],
+          "concepts": [
+            "g2s2u3.length-add-sub"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "m",
+                "label": "m",
+                "forms": [
+                  "integer"
+                ]
+              },
+              {
+                "kind": "number",
+                "id": "cm",
+                "label": "cm",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g2s2u3.A2.T4",
+          "prompt": "3m 45cm + 1m 80cm는 몇 m 몇 cm일까요?",
+          "engine": "E13",
+          "mode": "length",
+          "cpa": "A",
+          "config": {
+            "mode": "length",
+            "variant": "unit-train",
+            "op": "add",
+            "a": "3m 45cm",
+            "b": "1m 80cm"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "equals",
+                "path": "response.m.value",
+                "value": "5"
+              },
+              {
+                "kind": "equals",
+                "path": "response.cm.value",
+                "value": "25"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.cm.value",
+                "value": "125"
+              },
+              "level": 1,
+              "say": "cm 칸에 100cm가 넘으면?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.cm.value",
+                "value": "125"
+              },
+              "level": 2,
+              "say": "100cm는 1m와 같아요. cm 칸에 100cm가 넘게 남았는지 다시 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.cm.value",
+                "value": "125"
+              },
+              "level": 3,
+              "backtrack": "g2s2u3.m-cm-convert"
+            },
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.m.value",
+                    "value": "4"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.cm.value",
+                    "value": "25"
+                  }
+                ]
+              },
+              "level": 1,
+              "say": "넘친 100cm를 어디로 보냈나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 1,
+              "say": "m는 m끼리, cm는 cm끼리 더했나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 2,
+              "say": "cm끼리 더한 수가 100cm를 넘으면 1m로 바꿔 m 칸으로 보내 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 3,
+              "backtrack": "g2s2u3.m-cm-convert"
+            }
+          ],
+          "concepts": [
+            "g2s2u3.length-add-sub"
+          ],
+          "submit": "button",
+          "showEngine": false,
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "m",
+                "label": "m",
+                "forms": [
+                  "integer"
+                ]
+              },
+              {
+                "kind": "number",
+                "id": "cm",
+                "label": "cm",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
