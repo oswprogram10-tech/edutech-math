@@ -82,3 +82,25 @@ export const trapChoice: DiagnoseDetector = (input) => {
   if (typeof expected === 'string' && input.value === expected) return false;
   return traps.includes(input.value);
 };
+
+/**
+ * 수 함정: 오답 값을 콘텐츠 작성자가 계산해 args `trap`(문자열 또는 배열)으로
+ * 넘긴다. v가 trap 중 하나와 같고 expected와 다르면 감지한다.
+ */
+export const trapValue: DiagnoseDetector = (input) => {
+  const traps = trapsOf(input);
+  const student = studentValue(input);
+  if (traps === null || student === null) return false;
+  const expected = rationalOf(input.args, 'expected');
+  if (expected !== null && student.equals(expected)) return false;
+  for (const trap of traps) {
+    let parsed: Rational;
+    try {
+      parsed = Rational.parse(trap);
+    } catch {
+      return false;
+    }
+    if (student.equals(parsed)) return true;
+  }
+  return false;
+};
