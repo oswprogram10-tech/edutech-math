@@ -282,6 +282,8 @@ T173은 소넷 구현 → 검수 1회(판 전체 화면 기준 스냅샷 6장, �
 
 - **T190 병합(2026-11-20):** E20 `rate`(트랙 두 줄, 3초 재생은 화면 상태, 결과 글·1초당 거리 없음, table look은 표 + 작은 트랙)·`percent`(grid·strip, 끌어 칠하기·방향키·Space). `racers` 생략 때만 predictFirst 기본 true, id 없는 racer는 `racer-1`·`racer-2`. MC-RATE-DISTANCE-ONLY는 예측 순간 기록. 샌드박스 모드 상자가 넓어져 mix·resize 기준 이미지 10장을 운영자 승인으로 다시 찍었다. strip 칸 폭이 작아(논리 9px) 한 칸 누르기보다 끌기·키보드가 주 입력이다. 범위 E2E 192 통과.
 
+- **T193 병합(2026-11-20):** 새 엔진 E19 평균·가능성 실험실 `leveling`·`seesaw`·`outlier`(오버레이 level-try·sum-tower·arms·mean-pull). `data`를 주면 outlier `dragIndex` 필수, `predict` 기본 false. outlier `reset`은 잠근 예측을 남긴다. 평균은 Observation에만 있고 outlier 예측 잠금 뒤에만 평균선이 보인다. 이벤트 `chance-changed`. 남은 점: 예측과 평균이 가까우면 글이 겹친다, level-try 빈 칸에 기둥 숫자가 겹친다. fit-canvas ENGINES 줄 병합 충돌을 손으로 풀었다. 범위 E2E 171 통과(fit-canvas E09 board 1건 부하 실패, 단독 통과).
+
 ## 상시
 | 카드 | 내용 |
 | --- | --- |
