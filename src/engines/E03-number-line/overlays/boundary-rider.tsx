@@ -16,6 +16,7 @@ import { GATE_GROUND_Y, GATE_X, RANGE_LOGICAL_HEIGHT } from '../views/range-stor
 
 const S = numberLineStrings.range;
 const BIG = 1.7;
+const BIG_LABEL = 26;
 
 export function BoundaryRiderOverlay({ state }: OverlayProps<NumberLineConfig, NumberLineState>) {
   const range = state.range;
@@ -72,6 +73,7 @@ export function BoundaryRiderOverlay({ state }: OverlayProps<NumberLineConfig, N
             y={GATE_GROUND_Y}
             height={figure.height}
             scale={BIG}
+            labelSize={BIG_LABEL}
             mark={figure.passes ? 'passed' : 'blocked'}
           />
         </g>

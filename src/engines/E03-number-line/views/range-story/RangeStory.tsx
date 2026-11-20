@@ -6,7 +6,7 @@
 import { numberLineStrings } from '../../strings.ko';
 import styles from '../../View.module.css';
 import { RiderFigure, GateFigure } from './Figures';
-import { BLOCKED_GROUND_Y, BLOCKED_X, GATE_GROUND_Y, GATE_X, PASSED_X, QUEUE_X } from './geometry';
+import { blockedSlot, GATE_GROUND_Y, ROW_GAP, GATE_X, passedSlot, queueSlot } from './geometry';
 
 const S = numberLineStrings.range;
 
@@ -32,15 +32,15 @@ function slotsOf(props: RangeStoryProps): Slot[] {
   let blockedOrder = 0;
   return riders.map((height, index) => {
     if (!gateOpened || index > shown) {
-      return { x: QUEUE_X(index), y: GATE_GROUND_Y, mark: null };
+      return { ...queueSlot(index), mark: null };
     }
     if (index === shown) return { x: GATE_X, y: GATE_GROUND_Y, mark: null };
     if (passes(height)) {
-      const slot: Slot = { x: PASSED_X(passedOrder), y: GATE_GROUND_Y, mark: 'passed' };
+      const slot: Slot = { ...passedSlot(passedOrder), mark: 'passed' };
       passedOrder += 1;
       return slot;
     }
-    const slot: Slot = { x: BLOCKED_X(blockedOrder), y: BLOCKED_GROUND_Y, mark: 'blocked' };
+    const slot: Slot = { ...blockedSlot(blockedOrder), mark: 'blocked' };
     blockedOrder += 1;
     return slot;
   });
@@ -54,14 +54,23 @@ export function RangeStory(props: RangeStoryProps) {
   const done = gateOpened && shown >= riders.length;
   return (
     <g data-testid="range-story" data-gate-done={done} data-story={story}>
-      <line
-        x1={60}
-        y1={GATE_GROUND_Y}
-        x2={940}
-        y2={GATE_GROUND_Y}
-        stroke="#c9d1e0"
-        strokeWidth={3}
-      />
+      {[
+        [50, 380, 0],
+        [50, 380, 1],
+        [570, 890, 0],
+        [570, 890, 1],
+        [570, 890, 2],
+      ].map(([from, to, row]) => (
+        <line
+          key={`ground-${from}-${row}`}
+          x1={from}
+          y1={GATE_GROUND_Y + (row ?? 0) * ROW_GAP}
+          x2={to}
+          y2={GATE_GROUND_Y + (row ?? 0) * ROW_GAP}
+          stroke="#c9d1e0"
+          strokeWidth={3}
+        />
+      ))}
       <GateFigure closed={closed} label={story === 'train' ? S.storyTrain : S.storyRollercoaster} />
       {riders.map((height, index) => {
         const slot = slots[index];

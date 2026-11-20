@@ -13,69 +13,60 @@ export interface RiderFigureProps {
   readonly x: number;
   readonly y: number;
   readonly height: number;
+  /** 몸 그림의 배율. 키 글은 배율과 상관없이 `labelSize`로 정한다. */
   readonly scale?: number;
+  readonly labelSize?: number;
   readonly mark?: RiderMark;
   readonly testId?: string;
-  readonly className?: string;
 }
+
+/** 키 글의 논리 크기. 아이패드(판 너비 약 740px)에서도 화면 12px 이상이 되게 17로 둔다. */
+export const RIDER_LABEL_SIZE = 17;
+/** 캐릭터 몸 그림의 기본 배율. */
+export const RIDER_BODY_SCALE = 0.8;
 
 /** 발 끝이 (x, y)에 닿는 캐릭터. 키 글은 발 아래. */
 export function RiderFigure({
   x,
   y,
   height,
-  scale = 1,
+  scale = RIDER_BODY_SCALE,
+  labelSize = RIDER_LABEL_SIZE,
   mark = null,
   testId,
-  className,
 }: RiderFigureProps) {
+  const stroke = { stroke: '#1d2330', strokeLinecap: 'round' as const };
   return (
     <g
-      transform={`translate(${x} ${y}) scale(${scale})`}
+      transform={`translate(${x} ${y})`}
       data-testid={testId}
       data-rider={height}
       data-mark={mark ?? ''}
-      className={className}
     >
-      <circle cx={0} cy={-62} r={9} fill="#f3c9a0" stroke="#1d2330" strokeWidth={2.5} />
-      <line
-        x1={0}
-        y1={-52}
-        x2={0}
-        y2={-24}
-        stroke="#1d2330"
-        strokeWidth={5}
-        strokeLinecap="round"
-      />
-      <line
-        x1={-12}
-        y1={-42}
-        x2={12}
-        y2={-42}
-        stroke="#1d2330"
-        strokeWidth={4}
-        strokeLinecap="round"
-      />
-      <line x1={0} y1={-24} x2={-9} y2={0} stroke="#1d2330" strokeWidth={4} strokeLinecap="round" />
-      <line x1={0} y1={-24} x2={9} y2={0} stroke="#1d2330" strokeWidth={4} strokeLinecap="round" />
+      <g transform={`scale(${scale})`}>
+        <circle cx={0} cy={-62} r={9} fill="#f3c9a0" stroke="#1d2330" strokeWidth={2.5} />
+        <line x1={0} y1={-52} x2={0} y2={-24} strokeWidth={5} {...stroke} />
+        <line x1={-12} y1={-42} x2={12} y2={-42} strokeWidth={4} {...stroke} />
+        <line x1={0} y1={-24} x2={-9} y2={0} strokeWidth={4} {...stroke} />
+        <line x1={0} y1={-24} x2={9} y2={0} strokeWidth={4} {...stroke} />
+      </g>
       <text
         x={0}
-        y={16}
+        y={labelSize + 3}
         textAnchor="middle"
-        fontSize={14}
+        fontSize={labelSize}
         fontWeight={700}
         fill="#1d2330"
-        aria-label={S.rider(String(height))}
+        data-rider-label={height}
       >
-        {height}
-        <tspan fontSize={10}>cm</tspan>
+        {S.rider(String(height))}
       </text>
       {mark ? (
         <text
           x={0}
-          y={-76}
+          y={-76 * scale - 4}
           textAnchor="middle"
-          fontSize={18}
+          fontSize={Math.round(20 * Math.max(1, scale))}
           fontWeight={800}
           fill={mark === 'passed' ? '#0f7b6c' : '#b42318'}
           aria-label={mark === 'passed' ? S.passedMark : S.blockedMark}

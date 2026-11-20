@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import { canvasScale, logicalToScreen } from './canvas-point';
 import { expectControlsAboveFold } from './controls-fold';
 
@@ -406,14 +406,20 @@ const RANGE_CONFIG = {
   riders: [118, 125, 129, 130, 131, 140, 145, 150, 151, 155],
 };
 /** range 수직선의 논리 y. 화면 배율은 판 상자 너비 / 1000으로만 정하고 논리 높이는 가정하지 않는다. */
-const RANGE_LINE_Y = 385;
+const RANGE_LINE_Y = 490;
 
 async function openRange(page: Page, config: Record<string, unknown> = RANGE_CONFIG) {
   const view = await openNumberLine(page, config);
   await selectMode(page, 'range');
-  const box = await view.canvas.boundingBox();
+  return view;
+}
+
+/** 판이 화면보다 높을 수 있어, 수직선이 보이게 스크롤한 뒤의 판 상자를 돌려준다. */
+async function rangeBoxInView(canvas: Locator) {
+  await canvas.evaluate((element) => element.scrollIntoView({ block: 'end' }));
+  const box = await canvas.boundingBox();
   if (!box) throw new Error('range 판 크기를 알 수 없습니다.');
-  return { ...view, box };
+  return box;
 }
 
 /** range 수직선 위 값(100~160)의 화면 좌표. */
@@ -433,8 +439,9 @@ async function waitGateDone(page: Page): Promise<void> {
 }
 
 test('range에서 누르고 끌어 130 이상을 만들고 게이트를 연다', async ({ page }) => {
-  const { box } = await openRange(page);
+  const { canvas } = await openRange(page);
   await expectControlsAboveFold(page, 'range', 0, 'range-controls', 'page');
+  const box = await rangeBoxInView(canvas);
 
   // 120을 눌러 경계점을 놓고, 130으로 끌어 옮긴다.
   const from = rangeScreenAt(box, 120);
@@ -473,7 +480,8 @@ test('range에서 누르고 끌어 130 이상을 만들고 게이트를 연다',
 });
 
 test('range에서 경계 둘을 놓고 130 이상 150 미만을 만든다', async ({ page }) => {
-  const { box } = await openRange(page, { ...RANGE_CONFIG, maxBounds: 2 });
+  const { canvas } = await openRange(page, { ...RANGE_CONFIG, maxBounds: 2 });
+  const box = await rangeBoxInView(canvas);
   const first = rangeScreenAt(box, 150);
   const second = rangeScreenAt(box, 130);
   await page.mouse.click(first.x, first.y);
@@ -615,4 +623,46 @@ test('left-behind 오버레이는 rounding 판과 같은 자리·크기에 겹�
   await expect(
     page.locator('[data-testid="overlay-left-behind"] [data-testid="scene-student"]'),
   ).toHaveCount(3);
+});
+
+/** range 캐릭터 키 글: 화면 12px 이상이고 이웃 글 상자가 겹치지 않는다. */
+async function expectRiderLabelsReadable(page: Page): Promise<void> {
+  const result = await page.evaluate(() => {
+    const svg = document.querySelector('[data-testid="number-line-canvas"]');
+    const scale = (svg?.getBoundingClientRect().width ?? 0) / 1000;
+    const labels = [...document.querySelectorAll('[data-rider-label]')].map((node) => {
+      const rect = node.getBoundingClientRect();
+      return {
+        left: rect.left,
+        right: rect.right,
+        top: rect.top,
+        bottom: rect.bottom,
+        px: Number(node.getAttribute('font-size')) * scale,
+      };
+    });
+    let overlap = 0;
+    for (let a = 0; a < labels.length; a += 1) {
+      for (let b = a + 1; b < labels.length; b += 1) {
+        const p = labels[a];
+        const q = labels[b];
+        if (!p || !q) continue;
+        if (p.left < q.right && q.left < p.right && p.top < q.bottom && q.top < p.bottom) {
+          overlap += 1;
+        }
+      }
+    }
+    return { count: labels.length, minPx: Math.min(...labels.map((label) => label.px)), overlap };
+  });
+  expect(result.count).toBe(10);
+  expect(result.minPx).toBeGreaterThanOrEqual(12);
+  expect(result.overlap).toBe(0);
+}
+
+test('range 캐릭터 키 글이 줄 선 때와 게이트를 연 뒤 모두 읽을 수 있다', async ({ page }) => {
+  await openRange(page, { ...RANGE_CONFIG, preset: { lower: { value: 130, closed: true } } });
+  await expectRiderLabelsReadable(page);
+  await page.getByRole('button', { name: '게이트 열기', exact: true }).click();
+  await waitGateDone(page);
+  await page.waitForTimeout(500);
+  await expectRiderLabelsReadable(page);
 });

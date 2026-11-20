@@ -123,7 +123,7 @@ export function RangeView({
       index: boundIndexAt(state, bound),
       moved: false,
     };
-    event.currentTarget.focus();
+    event.currentTarget.focus({ preventScroll: true });
     if (bound !== null) event.currentTarget.setPointerCapture?.(event.pointerId);
   };
 
