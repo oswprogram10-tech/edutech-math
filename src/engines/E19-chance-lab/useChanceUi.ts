@@ -5,12 +5,22 @@
 import { useState } from 'react';
 import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { Rational } from '../../core/math';
+import { wordsSlotName } from './layout';
 import { reduce } from './reduce';
 import { parseRational } from './settings';
 import { E19_STRINGS as S } from './strings.ko';
 import type { ChanceAction, ChanceState } from './types';
 
 export const DRAFT_MAX = 14;
+
+/** View가 시행마다 새 seed를 만든다(reduce는 순수라 난수를 쓰지 않는다). */
+export function newSeed(): number {
+  const cryptoApi = typeof globalThis.crypto === 'object' ? globalThis.crypto : undefined;
+  if (cryptoApi !== undefined && typeof cryptoApi.getRandomValues === 'function') {
+    return cryptoApi.getRandomValues(new Uint32Array(1))[0] ?? 0;
+  }
+  return Math.floor(Math.random() * 2 ** 32);
+}
 
 export interface ChanceUi {
   readonly message: string | null;
@@ -29,11 +39,28 @@ export interface ChanceUi {
   readonly typeDraft: (text: string) => void;
   readonly backspaceDraft: () => void;
   readonly submitPrediction: () => void;
+  /** words: 키보드·단추로 고른 카드와 칸. */
+  readonly wordsCard: number;
+  readonly wordsSlot: number;
+  readonly selectWordsCard: (index: number) => void;
+  readonly moveWordsCard: (delta: -1 | 1) => void;
+  readonly moveWordsSlot: (delta: -1 | 1) => void;
+  readonly placeWords: () => void;
+  readonly unplaceWords: () => void;
+  /** spinner·simulate: 고른 회전판 칸. */
+  readonly selectedSector: number;
+  readonly selectSector: (index: number) => void;
+  readonly moveSector: (delta: -1 | 1) => void;
+  readonly spin: () => void;
+  readonly run: (batch: number) => void;
   readonly tell: (text: string | null) => void;
   readonly onWrapKeyDown: (event: ReactKeyboardEvent<HTMLElement>) => void;
 }
 
 function rejection(state: ChanceState, action: ChanceAction): string {
+  if (state.mode === 'words' || state.mode === 'spinner' || state.mode === 'simulate') {
+    return rejectionOther(state, action);
+  }
   if (state.mode === 'leveling') {
     if (action.type !== 'move') return '';
     if (action.from === action.to) return S.leveling.rejected.same;
@@ -53,6 +80,26 @@ function rejection(state: ChanceState, action: ChanceAction): string {
   return '';
 }
 
+function rejectionOther(state: ChanceState, action: ChanceAction): string {
+  if (state.mode === 'words') {
+    if (action.type === 'place') return S.words.rejected.same;
+    if (action.type === 'unplace') return S.words.rejected.none;
+    return '';
+  }
+  if (state.mode !== 'spinner' && state.mode !== 'simulate') return '';
+  if (!state.editable) {
+    return action.type.startsWith('sector-') || action.type === 'marble-set'
+      ? S.device.rejected.locked
+      : '';
+  }
+  if (action.type === 'sector-size') return S.device.rejected.size;
+  if (action.type === 'sector-add' || action.type === 'sector-remove') {
+    return S.device.rejected.sectors;
+  }
+  if (action.type === 'marble-set') return S.device.rejected.marbles;
+  return '';
+}
+
 function waitingForPrediction(state: ChanceState): boolean {
   return state.mode === 'outlier' && state.requirePrediction && state.prediction === null;
 }
@@ -66,9 +113,21 @@ export function useChanceUi(
   const [cursorRaw, setCursor] = useState(0);
   const [holding, setHolding] = useState<number | null>(null);
   const [draft, setDraft] = useState('');
+  const [wordsCardRaw, setWordsCard] = useState(0);
+  const [wordsSlotRaw, setWordsSlot] = useState<number | null>(null);
+  const [selectedRaw, setSelected] = useState(0);
 
   const count = state.mode === 'leveling' ? state.heights.length : 1;
   const cursor = Math.min(cursorRaw, count - 1);
+  const wordsCount = state.mode === 'words' ? state.cards.length : 1;
+  const slotCount = state.mode === 'words' ? state.slotValues.length : 1;
+  const wordsCard = Math.min(wordsCardRaw, wordsCount - 1);
+  const wordsSlot = Math.min(wordsSlotRaw ?? Math.floor(slotCount / 2), slotCount - 1);
+  const sectorCount =
+    state.mode !== 'words' && 'device' in state && state.device.type === 'spinner'
+      ? state.device.sectors.length
+      : 1;
+  const selectedSector = Math.min(selectedRaw, sectorCount - 1);
 
   const send = (action: ChanceAction): boolean => {
     if (readOnly || state.error !== null) return false;
@@ -107,6 +166,47 @@ export function useChanceUi(
       return;
     }
     if (send({ type: 'move', from: holding, to: cursor })) setHolding(null);
+  };
+
+  const wordsMessage = (card: number, slot: number) => {
+    if (state.mode !== 'words') return;
+    const text = state.cards[card]?.text;
+    setMessage(text === undefined ? null : S.words.cursorText(text, wordsSlotName(state, slot)));
+  };
+  const selectWordsCard = (index: number) => {
+    if (state.mode !== 'words') return;
+    const next = Math.max(0, Math.min(wordsCount - 1, index));
+    setWordsCard(next);
+    wordsMessage(next, wordsSlot);
+  };
+  const moveWordsCard = (delta: -1 | 1) => selectWordsCard(wordsCard + delta);
+  const moveWordsSlot = (delta: -1 | 1) => {
+    const next = Math.max(0, Math.min(slotCount - 1, wordsSlot + delta));
+    setWordsSlot(next);
+    wordsMessage(wordsCard, next);
+  };
+  const placeWords = () => {
+    if (state.mode !== 'words') return;
+    const card = state.cards[wordsCard];
+    const slot = state.slotValues[wordsSlot];
+    if (card === undefined || slot === undefined) return;
+    send({ type: 'place', cardId: card.id, slot });
+  };
+  const unplaceWords = () => {
+    if (state.mode !== 'words') return;
+    const card = state.cards[wordsCard];
+    if (card !== undefined) send({ type: 'unplace', cardId: card.id });
+  };
+  const selectSector = (index: number) => {
+    setSelected(Math.max(0, Math.min(sectorCount - 1, index)));
+    setMessage(S.device.selectedText(Math.max(0, Math.min(sectorCount - 1, index)) + 1));
+  };
+  const moveSector = (delta: -1 | 1) => selectSector(selectedSector + delta);
+  const spin = () => {
+    send({ type: 'spin', seed: newSeed() });
+  };
+  const run = (batch: number) => {
+    send({ type: 'run', batch, seed: newSeed() });
   };
 
   const nudgeFulcrum = (delta: -1 | 1) => {
@@ -174,6 +274,18 @@ export function useChanceUi(
     typeDraft,
     backspaceDraft,
     submitPrediction,
+    wordsCard,
+    wordsSlot,
+    selectWordsCard,
+    moveWordsCard,
+    moveWordsSlot,
+    placeWords,
+    unplaceWords,
+    selectedSector,
+    selectSector,
+    moveSector,
+    spin,
+    run,
     tell: setMessage,
     onWrapKeyDown,
   };

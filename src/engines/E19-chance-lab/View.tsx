@@ -1,5 +1,5 @@
 /**
- * E19 화면. 판(SVG)은 남는 칸에 맞춰 줄고 최소 배율 0.6 아래로는 줄이지 않고 스크롤한다.
+ * E19 화면(여섯 모드). 판(SVG)은 남는 칸에 맞춰 줄고 최소 배율 0.6 아래로는 줄이지 않고 스크롤한다.
  * 조작 칸은 스크롤 상자 밖에 있다. 설정 오류면 오류 문구만 보인다.
  */
 import { useRef } from 'react';
@@ -10,6 +10,9 @@ import { Controls } from './Controls';
 import { LevelingBoard } from './LevelingBoard';
 import { OutlierBoard } from './OutlierBoard';
 import { SeesawBoard } from './SeesawBoard';
+import { SimulateBoard } from './SimulateBoard';
+import { SpinnerBoard } from './SpinnerBoard';
+import { WordsBoard } from './WordsBoard';
 import { E19_STRINGS as S } from './strings.ko';
 import type { ChanceAction, ChanceConfig, ChanceState } from './types';
 import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from './types';
@@ -72,8 +75,14 @@ export function ChanceView({
             <LevelingBoard state={state} {...common} />
           ) : state.mode === 'seesaw' ? (
             <SeesawBoard state={state} {...common} />
-          ) : (
+          ) : state.mode === 'outlier' ? (
             <OutlierBoard state={state} {...common} />
+          ) : state.mode === 'words' ? (
+            <WordsBoard state={state} {...common} />
+          ) : state.mode === 'spinner' ? (
+            <SpinnerBoard state={state} {...common} />
+          ) : (
+            <SimulateBoard state={state} svgStyle={svgStyle} className={styles.boardSvg} />
           )}
         </div>
         <Controls state={state} ui={ui} readOnly={readOnly} />

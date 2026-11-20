@@ -1,7 +1,16 @@
 /** E19 설정 검사·정리. 잘못된 설정은 error 문구와 함께 안전한 기본 상태로 돌려준다. */
 import { Rational } from '../../core/math';
 import { E19_STRINGS as S } from './strings.ko';
+import { emptyCounts, totalOf } from './device';
 import {
+  MAX_BATCHES,
+  MAX_BATCH_SIZE,
+  MAX_MARBLES,
+  MAX_MARBLES_PER_COLOR,
+  MAX_SECTORS,
+  MAX_SECTOR_SIZE,
+  MAX_WORD_CARDS,
+  OUTCOMES,
   DEFAULT_DATA,
   DEFAULT_DRAG_INDEX,
   MAX_AXIS,
@@ -13,10 +22,15 @@ import {
 import type {
   ChanceConfig,
   ChanceState,
+  Device,
   LevelingConfig,
   LevelingState,
+  Outcome,
   OutlierConfig,
   SeesawConfig,
+  SimulateConfig,
+  SpinnerConfig,
+  WordsConfig,
 } from './types';
 
 export function isInt(value: unknown, min: number, max: number): value is number {
@@ -41,7 +55,7 @@ interface Common {
   readonly sample: boolean;
 }
 
-function commonOf(config: ChanceConfig): Common | null {
+function commonOf(config: LevelingConfig | SeesawConfig | OutlierConfig): Common | null {
   const sample = config.data === undefined;
   const data = config.data ?? [...DEFAULT_DATA];
   if (!Array.isArray(data) || data.length < MIN_COUNT || data.length > MAX_COUNT) return null;
@@ -151,9 +165,136 @@ export function normalizeOutlier(config: OutlierConfig): ChanceState {
   };
 }
 
+export function isOutcome(value: unknown): value is Outcome {
+  return typeof value === 'string' && (OUTCOMES as readonly string[]).includes(value);
+}
+
+export const DEFAULT_DEVICE: Device = {
+  type: 'spinner',
+  sectors: [
+    { color: 'red', size: 1 },
+    { color: 'blue', size: 1 },
+  ],
+};
+
+/** 장치 설정을 검사해 정리한다(주머니는 네 색을 모두 가진 목록으로). 잘못이면 null. */
+export function normalizeDevice(raw: unknown): Device | null {
+  if (typeof raw !== 'object' || raw === null) return null;
+  const device = raw as { type?: unknown; sectors?: unknown; marbles?: unknown };
+  if (device.type === 'spinner') {
+    const sectors = device.sectors;
+    if (!Array.isArray(sectors) || sectors.length < 1 || sectors.length > MAX_SECTORS) return null;
+    const out: { color: Outcome; size: number }[] = [];
+    for (const sector of sectors as unknown[]) {
+      if (typeof sector !== 'object' || sector === null) return null;
+      const { color, size } = sector as { color?: unknown; size?: unknown };
+      if (!isOutcome(color) || !isInt(size, 1, MAX_SECTOR_SIZE)) return null;
+      out.push({ color, size });
+    }
+    return { type: 'spinner', sectors: out };
+  }
+  if (device.type === 'bag') {
+    if (!Array.isArray(device.marbles)) return null;
+    const counts = emptyCounts();
+    const seen = new Set<string>();
+    for (const marble of device.marbles as unknown[]) {
+      if (typeof marble !== 'object' || marble === null) return null;
+      const { color, count } = marble as { color?: unknown; count?: unknown };
+      if (!isOutcome(color) || seen.has(color) || !isInt(count, 0, MAX_MARBLES_PER_COLOR)) {
+        return null;
+      }
+      seen.add(color);
+      counts[color] = count;
+    }
+    const result: Device = {
+      type: 'bag',
+      marbles: OUTCOMES.map((color) => ({ color, count: counts[color] })),
+    };
+    const total = totalOf(result);
+    return total >= 1 && total <= MAX_MARBLES ? result : null;
+  }
+  return null;
+}
+
+function normalizeWords(config: WordsConfig): ChanceState {
+  const cards = config.cards ?? S.words.defaultCards.map((text, i) => ({ id: `c${i + 1}`, text }));
+  if (!Array.isArray(cards) || cards.length < 1 || cards.length > MAX_WORD_CARDS) {
+    return fallback(S.configError);
+  }
+  const ids = new Set<string>();
+  for (const card of cards) {
+    if (typeof card !== 'object' || card === null) return fallback(S.configError);
+    if (typeof card.id !== 'string' || card.id === '' || ids.has(card.id)) {
+      return fallback(S.configError);
+    }
+    if (typeof card.text !== 'string' || card.text === '') return fallback(S.configError);
+    ids.add(card.id);
+  }
+  const slots = config.slots ?? 'five';
+  if (slots !== 'five' && slots !== 'three') return fallback(S.configError);
+  const labels = config.slotLabels ?? 'both';
+  if (labels !== 'words' && labels !== 'numbers' && labels !== 'both') {
+    return fallback(S.configError);
+  }
+  return {
+    mode: 'words',
+    error: null,
+    cards: cards.map((c) => ({ id: c.id, text: c.text })),
+    slotValues: slots === 'five' ? ['0', '1/4', '1/2', '3/4', '1'] : ['0', '1/2', '1'],
+    slotLabels: labels,
+    placements: Object.fromEntries(cards.map((c) => [c.id, null])),
+  };
+}
+
+function normalizeDeviceFields(config: SpinnerConfig | SimulateConfig) {
+  const device = config.device === undefined ? DEFAULT_DEVICE : normalizeDevice(config.device);
+  const editable = config.editable ?? true;
+  if (device === null || typeof editable !== 'boolean') return null;
+  return { device, initialDevice: device, editable, edits: 0 };
+}
+
+function normalizeSpinner(config: SpinnerConfig): ChanceState {
+  const fields = normalizeDeviceFields(config);
+  if (fields === null) return fallback(S.configError);
+  return {
+    mode: 'spinner',
+    error: null,
+    ...fields,
+    trials: 0,
+    counts: emptyCounts(),
+    last: [],
+    lastPick: null,
+  };
+}
+
+function normalizeSimulate(config: SimulateConfig): ChanceState {
+  const fields = normalizeDeviceFields(config);
+  if (fields === null) return fallback(S.configError);
+  const batches = config.batches ?? [10, 1000, 10000];
+  if (!Array.isArray(batches) || batches.length < 1 || batches.length > MAX_BATCHES) {
+    return fallback(S.configError);
+  }
+  for (const batch of batches) if (!isInt(batch, 1, MAX_BATCH_SIZE)) return fallback(S.configError);
+  if (new Set(batches).size !== batches.length) return fallback(S.configError);
+  const showExpected = config.showExpected ?? true;
+  if (typeof showExpected !== 'boolean') return fallback(S.configError);
+  return {
+    mode: 'simulate',
+    error: null,
+    ...fields,
+    batches: [...batches],
+    showExpected,
+    results: [],
+    runs: 0,
+  };
+}
+
 export function normalizeConfig(config: ChanceConfig): ChanceState {
   const raw = (config ?? {}) as ChanceConfig;
   if (raw.mode === 'seesaw') return normalizeSeesaw(raw);
   if (raw.mode === 'outlier') return normalizeOutlier(raw);
+  if (raw.mode === 'words') return normalizeWords(raw);
+  if (raw.mode === 'spinner') return normalizeSpinner(raw);
+  if (raw.mode === 'simulate') return normalizeSimulate(raw);
   return normalizeLeveling(raw);
 }

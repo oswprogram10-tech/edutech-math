@@ -208,3 +208,31 @@
   flex-direction: column;
   gap: 0.4rem;
 }
+
+.deviceRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.deviceName {
+  min-width: 2.6rem;
+  color: #1d2330;
+  font-weight: 700;
+}
+
+.deviceCount {
+  min-width: 1.6rem;
+  color: #1d2330;
+  font-size: 1.2rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.miniDevice {
+  display: block;
+  width: 100%;
+  max-width: 112px;
+  height: auto;
+}
