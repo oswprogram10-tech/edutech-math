@@ -17,6 +17,15 @@ export function emit(prev: ChanceState, next: ChanceState, action: ChanceAction)
   if (next.mode === 'seesaw') {
     return [{ name: 'chance-changed', payload: { tilt: o['tilt'] ?? 'level' } }];
   }
+  if (next.mode === 'words') {
+    return [{ name: 'chance-changed', payload: { allPlaced: o['allPlaced'] ?? false } }];
+  }
+  if (next.mode === 'spinner') {
+    return [{ name: 'chance-changed', payload: { trials: o['trials'] ?? 0 } }];
+  }
+  if (next.mode === 'simulate') {
+    return [{ name: 'chance-changed', payload: { runs: o['runs'] ?? 0 } }];
+  }
   return [{ name: 'chance-changed', payload: { dragged: o['dragged'] ?? false } }];
 }
 
@@ -66,6 +75,58 @@ export const predicates: Readonly<Record<string, EnginePredicate>> = {
     if (!Array.isArray(values) || typeof index !== 'number') return false;
     return values[index] === wanted?.['value'];
   },
+  /** words, args `{ card, value }`: 그 카드가 이 칸 위치(0·1/4·1/2…)에 놓였는가. */
+  placementIs: (observation, args) => {
+    const placements = observation['placements'];
+    const wanted = record(args);
+    const card = wanted?.['card'];
+    if (typeof card !== 'string' || record(placements as JsonValue) === null) return false;
+    const placed = record(placements as JsonValue)?.[card];
+    return placed !== null && placed !== undefined && sameRational(placed, wanted?.['value']);
+  },
+  /** words: 모든 카드를 놓았는가. */
+  allPlaced: (observation) => observation['allPlaced'] === true,
+  /** spinner·simulate, args `{ outcome, value }`: 장치의 그 색 가능성이 이 수인가. */
+  probabilityIs: (observation, args) => {
+    const wanted = record(args);
+    const outcome = wanted?.['outcome'];
+    const probabilities = record(observation['probabilities']);
+    if (typeof outcome !== 'string' || probabilities === null) return false;
+    return sameRational(probabilities[outcome], wanted?.['value']);
+  },
+  /** spinner, args `{ n }`: 돌린 횟수가 n 이상인가. */
+  trialsAtLeast: (observation, args) => {
+    const n = record(args)?.['n'];
+    const trials = observation['trials'];
+    return typeof n === 'number' && typeof trials === 'number' && trials >= n;
+  },
+  /** spinner·simulate, args `{ outcome, count }`: 주머니 개수 또는 회전판 칸 크기 합이 count인가. */
+  deviceHas: (observation, args) => {
+    const wanted = record(args);
+    const outcome = wanted?.['outcome'];
+    const device = record(observation['device']);
+    if (typeof outcome !== 'string' || device === null) return false;
+    const list = device['type'] === 'bag' ? device['marbles'] : device['sectors'];
+    if (!Array.isArray(list)) return false;
+    let sum = 0;
+    for (const entry of list) {
+      const item = record(entry);
+      if (item?.['color'] !== outcome) continue;
+      const amount = item['count'] ?? item['size'];
+      if (typeof amount === 'number') sum += amount;
+    }
+    return sum === wanted?.['count'];
+  },
+  /** simulate, args `{ batch }`: 그 칸을 돌렸는가. */
+  batchRun: (observation, args) => {
+    const batch = record(args)?.['batch'];
+    const results = observation['results'];
+    return (
+      Array.isArray(results) && results.some((r) => record(r as JsonValue)?.['batch'] === batch)
+    );
+  },
+  /** simulate: 모든 칸을 돌렸는가. */
+  allBatchesRun: (observation) => observation['allBatchesRun'] === true,
   /** args `{ value }`: 평균이 이 수인가("10.6"과 "53/5" 표기 차이 무시). */
   meanIs: (observation, args) => sameRational(observation['mean'], record(args)?.['value']),
   /** outlier: 점을 한 번이라도 끌었는가. */

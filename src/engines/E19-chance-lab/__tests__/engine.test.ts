@@ -53,12 +53,21 @@ const pred = (name: string, observation: Observation, args?: Record<string, unkn
 describe('정의', () => {
   it('id·모드·레이아웃·오버레이 이름', () => {
     expect(definition.id).toBe('E19');
-    expect(definition.modes).toEqual(['leveling', 'seesaw', 'outlier']);
+    expect(definition.modes).toEqual([
+      'leveling',
+      'seesaw',
+      'outlier',
+      'words',
+      'spinner',
+      'simulate',
+    ]);
     expect(definition.layout).toBe('fit');
     expect(Object.keys(definition.overlays ?? {}).sort()).toEqual([
+      'after-streak',
       'arms',
       'level-try',
       'mean-pull',
+      'small-batches',
       'sum-tower',
     ]);
   });

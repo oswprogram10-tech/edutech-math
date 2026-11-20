@@ -4,7 +4,9 @@
  */
 import type { Observation } from '../../core/engine-sdk';
 import { Rational } from '../../core/math';
+import { probabilitiesOf } from './device';
 import type { ChanceConfig, ChanceState, OutlierState, SeesawState } from './types';
+import { OUTCOMES } from './types';
 
 /** 평균 = 합 ÷ 개수. */
 export function meanOf(values: readonly number[]): Rational {
@@ -61,6 +63,46 @@ export function observe(state: ChanceState, config?: ChanceConfig): Observation 
       tilt,
       mean: meanOf(state.data).toString(),
       moves: state.moves,
+      misconceptions: [],
+    };
+  }
+  if (state.mode === 'words') {
+    const placements = { ...state.placements };
+    return {
+      mode: 'words',
+      placements,
+      allPlaced: state.cards.every((c) => state.placements[c.id] !== null),
+      misconceptions: [],
+    };
+  }
+  if (state.mode === 'spinner') {
+    return {
+      mode: 'spinner',
+      device: JSON.parse(JSON.stringify(state.device)),
+      probabilities: probabilitiesOf(state.device),
+      trials: state.trials,
+      counts: { ...state.counts },
+      last: [...state.last],
+      edits: state.edits,
+      misconceptions: [],
+    };
+  }
+  if (state.mode === 'simulate') {
+    return {
+      mode: 'simulate',
+      device: JSON.parse(JSON.stringify(state.device)),
+      probabilities: probabilitiesOf(state.device),
+      batches: [...state.batches],
+      results: state.results.map((r) => ({
+        batch: r.batch,
+        counts: { ...r.counts },
+        rel: Object.fromEntries(
+          OUTCOMES.map((c) => [c, Rational.of(r.counts[c], r.batch).toString()]),
+        ),
+      })),
+      allBatchesRun: state.batches.every((b) => state.results.some((r) => r.batch === b)),
+      runs: state.runs,
+      edits: state.edits,
       misconceptions: [],
     };
   }

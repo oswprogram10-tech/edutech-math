@@ -3,7 +3,8 @@
  * 화면 좌표만 number다. 수학 값(평균·받침점)은 Rational에서 한 번만 number로 바꾼다.
  */
 import { Rational } from '../../core/math';
-import type { LevelingState, OutlierState, SeesawState } from './types';
+import { E19_STRINGS as S } from './strings.ko';
+import type { LevelingState, OutlierState, SeesawState, WordsState } from './types';
 
 export function toNumber(value: Rational): number {
   return Number(value.n) / Number(value.d);
@@ -174,3 +175,115 @@ export function anchorAt(x: number): 'start' | 'middle' | 'end' {
   if (x > 810) return 'end';
   return 'middle';
 }
+
+// ── words ────────────────────────────────────────────────
+
+export const WORDS = {
+  left: 40,
+  right: 960,
+  slotTop: 96,
+  slotBottom: 400,
+  headerH: 64,
+  trayTop: 430,
+  trayCardY: 470,
+  cardW: 150,
+  cardH: 70,
+} as const;
+
+export function slotWidth(count: number): number {
+  return (WORDS.right - WORDS.left) / count;
+}
+
+export function slotCenterX(count: number, index: number): number {
+  return WORDS.left + slotWidth(count) * (index + 0.5);
+}
+
+/** x 위치가 몇 번째 칸인지(칸 구역 밖이면 null). */
+export function slotAtX(count: number, x: number): number | null {
+  if (x < WORDS.left || x > WORDS.right) return null;
+  return Math.min(count - 1, Math.floor((x - WORDS.left) / slotWidth(count)));
+}
+
+const WORD_KEYS: Readonly<Record<string, keyof typeof S.words.slotWords>> = {
+  '0': 'zero',
+  '1/4': 'quarter',
+  '1/2': 'half',
+  '3/4': 'threeQuarter',
+  '1': 'one',
+};
+
+/** 칸 이름 글: 말·수·둘 다. */
+export function wordsSlotName(
+  state: Pick<WordsState, 'slotValues' | 'slotLabels'>,
+  index: number,
+): string {
+  const value = state.slotValues[index] ?? '0';
+  const key = WORD_KEYS[value];
+  const word = key === undefined ? value : S.words.slotWords[key];
+  if (state.slotLabels === 'words') return word;
+  if (state.slotLabels === 'numbers') return value;
+  return `${word} ${value}`;
+}
+
+/** 줄바꿈: 한 줄 최대 max자, 최대 3줄. */
+export function wrapText(text: string, max: number): string[] {
+  const lines: string[] = [];
+  let rest = text;
+  while (rest.length > 0 && lines.length < 3) {
+    if (rest.length <= max) {
+      lines.push(rest);
+      rest = '';
+      break;
+    }
+    let cut = rest.lastIndexOf(' ', max);
+    if (cut <= 0) cut = max;
+    lines.push(rest.slice(0, cut).trim());
+    rest = rest.slice(cut).trim();
+  }
+  if (rest.length > 0 && lines.length > 0) {
+    lines[lines.length - 1] = `${(lines[lines.length - 1] ?? '').slice(0, max - 1)}…`;
+  }
+  return lines;
+}
+
+/** 카드의 자리(좌상단). 놓지 않은 카드는 아래 칸, 놓은 카드는 칸 안에 아래에서 위로 쌓는다. */
+export function cardPosition(
+  state: WordsState,
+  cardIndex: number,
+): { x: number; y: number; slot: number | null } {
+  const card = state.cards[cardIndex];
+  const count = state.slotValues.length;
+  const placed = card === undefined ? null : (state.placements[card.id] ?? null);
+  if (card === undefined || placed === null) {
+    const trayIndex = state.cards
+      .slice(0, cardIndex)
+      .filter((c) => state.placements[c.id] === null).length;
+    const free = state.cards.filter((c) => state.placements[c.id] === null).length;
+    const gap = 10;
+    const rowW = free * WORDS.cardW + (free - 1) * gap;
+    const start = (1000 - rowW) / 2;
+    return { x: start + trayIndex * (WORDS.cardW + gap), y: WORDS.trayCardY, slot: null };
+  }
+  const slot = state.slotValues.indexOf(placed);
+  const same = state.cards.filter((c) => state.placements[c.id] === placed);
+  const level = same.findIndex((c) => c.id === card.id);
+  const area = WORDS.slotBottom - WORDS.slotTop - WORDS.headerH - 8;
+  const step =
+    same.length <= 1 ? 0 : Math.min(WORDS.cardH + 4, (area - WORDS.cardH) / (same.length - 1));
+  return {
+    x: slotCenterX(count, slot) - WORDS.cardW / 2,
+    y: WORDS.slotBottom - 8 - WORDS.cardH - level * step,
+    slot,
+  };
+}
+
+// ── simulate ─────────────────────────────────────────────
+
+export const SIM = {
+  left: 90,
+  right: 960,
+  baseY: 420,
+  topY: 140,
+  titleY: 56,
+  legendY: 86,
+} as const;

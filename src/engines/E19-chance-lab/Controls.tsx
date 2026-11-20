@@ -2,34 +2,13 @@
  * E19 조작 칸(SVG 밖). 끌기를 못 쓰는 학생을 위해 모든 조작에 단추가 있다(키보드·화면 읽기 도구 공통).
  * leveling: 기둥 고르기·집기/놓기·취소·처음으로 / seesaw: 받침점 한 칸씩 / outlier: 예측 키패드·한 칸씩.
  */
+import { Btn } from './Btn';
 import { observe } from './observe';
+import { SimulateControls, SpinnerControls, WordsControls } from './ProbabilityControls';
 import { E19_STRINGS as S } from './strings.ko';
 import type { ChanceState } from './types';
 import type { ChanceUi } from './useChanceUi';
 import styles from './View.module.css';
-
-interface ButtonProps {
-  readonly label: string;
-  readonly onClick: () => void;
-  readonly disabled?: boolean;
-  readonly primary?: boolean;
-  readonly action: string;
-}
-
-function Btn({ label, onClick, disabled = false, primary = false, action }: ButtonProps) {
-  return (
-    <button
-      type="button"
-      className={primary ? `${styles.button} ${styles.primary}` : styles.button}
-      aria-label={label}
-      data-action={action}
-      disabled={disabled}
-      onClick={onClick}
-    >
-      {label}
-    </button>
-  );
-}
 
 export interface ControlsProps {
   readonly state: ChanceState;
@@ -61,6 +40,14 @@ export function Controls({ state, ui, readOnly }: ControlsProps) {
       }}
     />
   );
+
+  if (state.mode === 'words') return <WordsControls state={state} ui={ui} readOnly={readOnly} />;
+  if (state.mode === 'spinner') {
+    return <SpinnerControls state={state} ui={ui} readOnly={readOnly} />;
+  }
+  if (state.mode === 'simulate') {
+    return <SimulateControls state={state} ui={ui} readOnly={readOnly} />;
+  }
 
   if (state.mode === 'leveling') {
     return (

@@ -2,10 +2,11 @@ import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 
 /**
- * E19 평균·가능성 실험실(leveling·seesaw·outlier) 샌드박스 E2E. 아이패드(WebKit)·크롬북·전자칠판 뷰포트.
+ * E19 평균·가능성 실험실(leveling·seesaw·outlier·words·spinner·simulate) 샌드박스 E2E. 아이패드(WebKit)·크롬북·전자칠판 뷰포트.
  *
  * - leveling: 끌기·키보드로 고르게 / seesaw: 받침점 끌기·키보드로 수평 / outlier: 예측 → 끌기 → 평균선 이동
- * - 힌트 ② 오버레이 넷이 본 캔버스와 1px 안에 겹침
+ * - words: 카드 끌어 놓기·키보드 / spinner: 장치 편집 → 돌리기(reduced-motion) / simulate: 세 칸 돌리기·10,000회 1초 안
+ * - 힌트 ② 오버레이 여섯이 본 캔버스와 1px 안에 겹침
  * - 모드별 첫 화면 기준 이미지, 좁은 판에서 최소 배율 0.6 + 판 안 스크롤, 터치 타깃 48/64px
  */
 
@@ -27,6 +28,20 @@ interface Observation {
   readonly dragged?: boolean;
   readonly prediction?: string | null;
   readonly predictionLocked?: boolean;
+  readonly placements?: Record<string, string | null>;
+  readonly allPlaced?: boolean;
+  readonly probabilities?: Record<string, string>;
+  readonly trials?: number;
+  readonly counts?: Record<string, number>;
+  readonly last?: string[];
+  readonly edits?: number;
+  readonly runs?: number;
+  readonly results?: {
+    batch: number;
+    counts: Record<string, number>;
+    rel: Record<string, string>;
+  }[];
+  readonly allBatchesRun?: boolean;
 }
 
 async function readObservation(page: Page): Promise<Observation> {
@@ -38,9 +53,11 @@ async function pollObservation(page: Page, check: (o: Observation) => boolean): 
   await expect.poll(async () => check(await readObservation(page))).toBe(true);
 }
 
+type Mode = 'leveling' | 'seesaw' | 'outlier' | 'words' | 'spinner' | 'simulate';
+
 async function open(
   page: Page,
-  mode: 'leveling' | 'seesaw' | 'outlier',
+  mode: Mode,
   config: Record<string, unknown> = {},
   query = 'stage=fit',
 ): Promise<void> {
@@ -417,14 +434,290 @@ test('힌트 ② mean-pull: 끈 점과 평균의 화살표, 값 글은 없다', 
   expect((to - from) / (840 / 36)).toBeCloseTo(1, 1);
 });
 
+// ── words ────────────────────────────────────────────────
+
+/** words 판: 칸 5개(0, 1/4, 1/2, 3/4, 1). 칸 가운데 논리 x. */
+const wordsSlotX = (i: number) => 40 + (920 / 5) * (i + 0.5);
+
+async function cardCenter(page: Page, id: string): Promise<{ x: number; y: number }> {
+  const box = canvas(page).locator(`[data-card="${id}"]`);
+  const x = Number(await box.getAttribute('data-x'));
+  const y = Number(await box.locator('[data-part="card-box"]').getAttribute('y'));
+  return { x: x + 75, y: y + 35 };
+}
+
+test('words: 카드를 끌어 칸에 놓고, 다른 칸으로 옮기고, 아래 칸으로 빼낸다', async ({ page }) => {
+  await open(page, 'words');
+  await expect(canvas(page).locator('[data-part="card"]')).toHaveCount(5);
+  await dragLogical(page, await cardCenter(page, 'c1'), { x: wordsSlotX(4), y: 250 });
+  await pollObservation(page, (o) => o.placements?.['c1'] === '1');
+  await dragLogical(page, await cardCenter(page, 'c2'), { x: wordsSlotX(2), y: 250 });
+  await pollObservation(page, (o) => o.placements?.['c2'] === '1/2');
+  // 같은 칸에 여러 장
+  await dragLogical(page, await cardCenter(page, 'c3'), { x: wordsSlotX(2) + 20, y: 250 });
+  await pollObservation(page, (o) => o.placements?.['c3'] === '1/2');
+  const y2 = Number(
+    await canvas(page).locator('[data-card="c2"] [data-part="card-box"]').getAttribute('y'),
+  );
+  const y3 = Number(
+    await canvas(page).locator('[data-card="c3"] [data-part="card-box"]').getAttribute('y'),
+  );
+  expect(y3).toBeLessThan(y2);
+  // 다른 칸으로 옮기기
+  await dragLogical(page, await cardCenter(page, 'c1'), { x: wordsSlotX(0), y: 250 });
+  await pollObservation(page, (o) => o.placements?.['c1'] === '0');
+  // 칸 밖(칸 구역 위)에 놓으면 아무 일도 없다
+  await dragLogical(page, await cardCenter(page, 'c1'), { x: 500, y: 40 });
+  await pollObservation(page, (o) => o.placements?.['c1'] === '0');
+  // 아래 칸으로 끌어 빼기
+  await dragLogical(page, await cardCenter(page, 'c1'), { x: 500, y: 520 });
+  await pollObservation(page, (o) => o.placements?.['c1'] === null);
+  await expect(page.getByTestId('chance-placed')).toHaveText('놓은 카드 2 / 5장');
+});
+
+test('words 키보드만으로: 카드에서 ←→ Enter로 놓고 Delete로 뺀다', async ({ page }) => {
+  await open(page, 'words');
+  const card = canvas(page).locator('[data-card="c2"]');
+  await card.focus();
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('Enter');
+  await pollObservation(page, (o) => o.placements?.['c2'] === '3/4');
+  await page.keyboard.press('ArrowLeft');
+  await page.keyboard.press('ArrowLeft');
+  await page.keyboard.press('Space');
+  await pollObservation(page, (o) => o.placements?.['c2'] === '1/4');
+  await page.keyboard.press('Delete');
+  await pollObservation(page, (o) => o.placements?.['c2'] === null);
+});
+
+test('words 단추만으로: 카드·칸 고르기와 놓기·빼기·처음으로', async ({ page }) => {
+  await open(page, 'words', { slots: 'three', slotLabels: 'numbers' });
+  await expect(canvas(page).locator('[data-part="slot"]')).toHaveCount(3);
+  await button(page, '다음 카드 고르기').click();
+  await button(page, '오른쪽 칸 고르기').click();
+  await button(page, '고른 칸에 놓기').click();
+  await pollObservation(page, (o) => o.placements?.['c2'] === '1');
+  await button(page, '카드 빼기').click();
+  await pollObservation(page, (o) => o.placements?.['c2'] === null);
+  await button(page, '고른 칸에 놓기').click();
+  await button(page, '처음으로').click();
+  await pollObservation(page, (o) => o.allPlaced === false && o.placements?.['c2'] === null);
+});
+
+// ── spinner ──────────────────────────────────────────────
+
+test('spinner: 칸을 더하고 크기를 바꾼 뒤 돌린다(reduced-motion이면 바로 결과)', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await open(page, 'spinner');
+  await expect(canvas(page).locator('[data-part="sector"]')).toHaveCount(2);
+  await pollObservation(page, (o) => o.probabilities?.['red'] === '1/2');
+  await button(page, '칸 더하기').click();
+  await expect(canvas(page).locator('[data-part="sector"]')).toHaveCount(3);
+  await pollObservation(
+    page,
+    (o) => o.probabilities?.['yellow'] === '1/3' && o.edits === 1 && o.trials === 0,
+  );
+  // 칸을 눌러 고르고 크게
+  const third = canvas(page).locator('[data-part="sector"][data-index="2"]');
+  const label = third.locator('text');
+  const at = await screenPoint(
+    page,
+    Number(await label.getAttribute('x')),
+    Number(await label.getAttribute('y')) - 8,
+  );
+  await page.mouse.click(at.x, at.y);
+  await expect(page.getByTestId('sector-selected')).toContainText('3번 칸');
+  await button(page, '칸 키우기').click();
+  await pollObservation(page, (o) => o.probabilities?.['yellow'] === '1/2');
+  await button(page, '칸 색 바꾸기').click();
+  await pollObservation(page, (o) => o.probabilities?.['green'] === '1/2');
+  // 돌리기
+  for (let i = 0; i < 3; i += 1) await button(page, '돌리기').click();
+  await pollObservation(page, (o) => o.trials === 3 && (o.last?.length ?? 0) === 3);
+  const o = await readObservation(page);
+  expect(Object.values(o.counts ?? {}).reduce((a, b) => a + b, 0)).toBe(3);
+  await expect(page.getByTestId('chance-trials')).toHaveText('돌린 횟수 3번');
+  // 화살표는 바로 자리에 있다(연출 없음)
+  await expect(canvas(page).locator('[data-part="arrow"]')).toHaveAttribute(
+    'style',
+    /transition: none/,
+  );
+  // 장치를 바꾸면 결과가 지워지고 edits는 남는다
+  await button(page, '칸 빼기').click();
+  await pollObservation(page, (x) => x.trials === 0 && x.edits === 4);
+  await button(page, '처음으로').click();
+  await pollObservation(page, (x) => x.edits === 0 && x.probabilities?.['red'] === '1/2');
+});
+
+test('spinner: 한계(칸 8개·크기 4)에서 막히고 안내 글이 나온다', async ({ page }) => {
+  await open(page, 'spinner');
+  for (let i = 0; i < 8; i += 1) await button(page, '칸 더하기').click();
+  await expect(canvas(page).locator('[data-part="sector"]')).toHaveCount(8);
+  await expect(page.getByTestId('chance-message')).toHaveText('칸은 1개부터 8개까지예요.');
+  await pollObservation(page, (o) => o.edits === 6);
+  for (let i = 0; i < 4; i += 1) await button(page, '칸 키우기').click();
+  await expect(page.getByTestId('chance-message')).toHaveText('칸 크기는 1부터 4까지예요.');
+});
+
+test('spinner 주머니: 구슬을 더하고 빼고 꺼낸다', async ({ page }) => {
+  await open(page, 'spinner', {
+    device: {
+      type: 'bag',
+      marbles: [
+        { color: 'red', count: 2 },
+        { color: 'blue', count: 1 },
+      ],
+    },
+  });
+  await expect(canvas(page).locator('[data-part="marble"]')).toHaveCount(3);
+  await pollObservation(page, (o) => o.probabilities?.['red'] === '2/3');
+  await button(page, '노랑 구슬 더하기').click();
+  await pollObservation(page, (o) => o.probabilities?.['yellow'] === '1/4');
+  await button(page, '파랑 구슬 빼기').click();
+  await pollObservation(page, (o) => o.probabilities?.['blue'] === '0');
+  await button(page, '꺼내기').click();
+  await pollObservation(page, (o) => o.trials === 1);
+  await expect(canvas(page).locator('[data-part="picked"]')).toHaveCount(1);
+});
+
+// ── simulate ─────────────────────────────────────────────
+
+function columnBars(page: Page, batch: number): Locator {
+  return canvas(page).locator(`[data-part="column"][data-batch="${batch}"] [data-part="bar"]`);
+}
+
+test('simulate: 세 칸을 차례로 돌려 상대도수 막대를 나란히 비교한다', async ({ page }) => {
+  await open(page, 'simulate');
+  await expect(canvas(page).locator('[data-part="column"]')).toHaveCount(3);
+  await expect(canvas(page).locator('[data-part="bar"]')).toHaveCount(0);
+  await expect(canvas(page).locator('[data-part="expected"]')).toHaveCount(12);
+  for (const n of [10, 1000, 10000]) {
+    await button(page, `${n}회 돌리기`).click();
+    await expect(columnBars(page, n)).toHaveCount(4);
+  }
+  await pollObservation(page, (o) => o.allBatchesRun === true && o.runs === 3);
+  const o = await readObservation(page);
+  const big = o.results?.find((r) => r.batch === 10000);
+  expect(big).toBeTruthy();
+  const red = (big?.counts['red'] ?? 0) / 10000;
+  expect(red).toBeGreaterThan(0.45);
+  expect(red).toBeLessThan(0.55);
+  expect(Object.values(big?.counts ?? {}).reduce((a, b) => a + b, 0)).toBe(10000);
+  await expect(canvas(page).locator('[data-part="column"][data-batch="10000"]')).toContainText(
+    '10000번 중',
+  );
+  // 같은 축척: 10000회 칸의 빨강 막대 높이 = 상대도수 × 280
+  const h = Number(await columnBars(page, 10000).first().getAttribute('height'));
+  expect(h).toBeCloseTo(red * 280, 0);
+  // 같은 칸을 다시 돌리면 그 칸만 새로
+  const before = await columnBars(page, 10).first().getAttribute('data-count');
+  await button(page, '1000회 돌리기').click();
+  await pollObservation(page, (x) => x.runs === 4);
+  expect(await columnBars(page, 10).first().getAttribute('data-count')).toBe(before);
+  await button(page, '결과 지우기').click();
+  await expect(canvas(page).locator('[data-part="bar"]')).toHaveCount(0);
+});
+
+test('simulate: 10,000회 단추를 누르면 막대가 1초 안에 나온다', async ({ page }) => {
+  await open(page, 'simulate');
+  await button(page, '10000회 돌리기').click();
+  await expect(columnBars(page, 10000)).toHaveCount(4, { timeout: 1000 });
+});
+
+test('simulate: 장치를 편집하면 결과가 지워지고 점선이 따라 움직인다', async ({ page }) => {
+  await open(page, 'simulate', { batches: [10, 100] });
+  await expect(canvas(page).locator('[data-part="column"]')).toHaveCount(2);
+  await button(page, '10회 돌리기').click();
+  await expect(columnBars(page, 10)).toHaveCount(4);
+  const redLine = canvas(page).locator('[data-part="expected"][data-outcome="red"]').first();
+  const before = Number(await redLine.getAttribute('data-y'));
+  await button(page, '칸 키우기').click();
+  await expect(canvas(page).locator('[data-part="bar"]')).toHaveCount(0);
+  await pollObservation(page, (o) => o.runs === 0 && o.probabilities?.['red'] === '2/3');
+  const after = Number(await redLine.getAttribute('data-y'));
+  expect(after).toBeLessThan(before);
+});
+
+// ── 화면 기준 이미지(가능성 모드) ─────────────────────────
+
+test('화면 기준: words 첫 화면', async ({ page }) => {
+  await open(page, 'words');
+  await page.getByRole('heading', { name: '평균·가능성 실험실' }).focus();
+  await expectPageSnapshot(page, 'chance-words.png');
+});
+
+test('화면 기준: spinner 첫 화면', async ({ page }) => {
+  await open(page, 'spinner');
+  await page.getByRole('heading', { name: '평균·가능성 실험실' }).focus();
+  await expectPageSnapshot(page, 'chance-spinner.png');
+});
+
+test('화면 기준: simulate 첫 화면', async ({ page }) => {
+  await open(page, 'simulate');
+  await page.getByRole('heading', { name: '평균·가능성 실험실' }).focus();
+  await expectPageSnapshot(page, 'chance-simulate.png');
+});
+
+// ── 힌트 ② 오버레이(가능성) ──────────────────────────────
+
+test('힌트 ② small-batches: 10번씩 5묶음 막대, 판 아래 줄에 정렬', async ({ page }) => {
+  await open(page, 'spinner', {}, 'stage=fit&overlay=small-batches');
+  await toggleOverlay(page);
+  const layer = await expectAligned(page, 'small-batches');
+  await expect(layer.locator('[data-part="batch"]')).toHaveCount(5);
+  await expect(layer.locator('[data-part="bar"]')).toHaveCount(20);
+  await expect(layer.locator('[data-part="title"]')).toHaveText('10번씩 5묶음');
+  // 돌리기와 상관없이 같은 그림(고정 seed)
+  const first = await layer
+    .locator('[data-part="bar"]')
+    .evaluateAll((els) => els.map((e) => e.getAttribute('data-count')).join(','));
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await button(page, '돌리기').click();
+  await pollObservation(page, (o) => o.trials === 1);
+  const second = await layer
+    .locator('[data-part="bar"]')
+    .evaluateAll((els) => els.map((e) => e.getAttribute('data-count')).join(','));
+  expect(second).toBe(first);
+});
+
+test('힌트 ② after-streak: 5번 이어진 다음 막대와 전체 막대, 빨강이 없으면 그리지 않는다', async ({
+  page,
+}) => {
+  await open(page, 'simulate', {}, 'stage=fit&overlay=after-streak');
+  await toggleOverlay(page);
+  const layer = await expectAligned(page, 'after-streak');
+  await expect(layer.locator('[data-part="after"] [data-part="bar"]')).toHaveCount(4);
+  await expect(layer.locator('[data-part="whole"] [data-part="bar"]')).toHaveCount(4);
+  await expect(layer.locator('[data-part="after-title"]')).toHaveText(
+    '빨강이 5번 이어진 바로 다음',
+  );
+  const redAfter = Number(
+    await layer.locator('[data-part="after"] [data-outcome="red"]').getAttribute('data-rel'),
+  );
+  expect(redAfter).toBeGreaterThan(0.35);
+  expect(redAfter).toBeLessThan(0.65);
+  // 빨강 칸을 파랑으로 바꾸면 빨강이 없는 장치라 그리지 않는다
+  await button(page, '칸 색 바꾸기').click();
+  await expect(layer.locator('svg')).toHaveCount(0);
+});
+
 // ── 판 크기·터치 타깃 ────────────────────────────────────
 
 test('넓은 판은 줄여서 맞추고, 좁은 판은 최소 배율 0.6에서 멈추고 판 안에서 스크롤한다', async ({
   page,
 }) => {
   test.skip(test.info().project.name !== 'chromebook', '크롬북 뷰포트에서만 판 크기를 바꿔 본다.');
-  const first = { leveling: '왼쪽 기둥 고르기', seesaw: '받침점 왼쪽으로', outlier: '1 줄이기' };
-  for (const mode of ['leveling', 'seesaw', 'outlier'] as const) {
+  const first: Record<Mode, string> = {
+    leveling: '왼쪽 기둥 고르기',
+    seesaw: '받침점 왼쪽으로',
+    outlier: '1 줄이기',
+    words: '이전 카드 고르기',
+    spinner: '돌리기',
+    simulate: '10회 돌리기',
+  };
+  for (const mode of ['leveling', 'seesaw', 'outlier', 'words', 'spinner', 'simulate'] as const) {
     await open(page, mode);
     const wide = await canvas(page).boundingBox();
     if (!wide) throw new Error('캔버스를 찾지 못했습니다.');
@@ -460,7 +753,7 @@ async function expectMin(locator: Locator, min: number, label: string): Promise<
 
 for (const size of [48, 64] as const) {
   test(`터치 타깃 ${size}: 모든 단추가 ${size}px 이상`, async ({ page }) => {
-    for (const mode of ['leveling', 'seesaw', 'outlier'] as const) {
+    for (const mode of ['leveling', 'seesaw', 'outlier', 'words', 'spinner', 'simulate'] as const) {
       await open(page, mode);
       // 설정은 저장되므로 아직 48px일 때만 눌러 64px로 바꾼다.
       const toggle = page.getByRole('button', { name: '터치 48px' });
