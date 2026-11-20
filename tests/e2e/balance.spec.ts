@@ -193,6 +193,11 @@ async function expectPageSnapshot(page: Page, name: string): Promise<void> {
   test.skip(test.info().project.name === 'board', '기준 이미지는 크롬북·아이패드만 둔다.');
   await page.waitForTimeout(600);
   await page.evaluate(() => window.scrollTo(0, 0));
+  // T199: 좁은 판에서는 엔진 바깥 상자(.wrap)가 세로로 스크롤한다.
+  await page
+    .locator('[data-target-size]')
+    .first()
+    .evaluate((element) => element.scrollTo(0, 0));
   await expect(page).toHaveScreenshot(name, { fullPage: true, animations: 'disabled' });
 }
 

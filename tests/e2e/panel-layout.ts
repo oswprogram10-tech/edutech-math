@@ -248,7 +248,11 @@ export async function expectFitCanvasVisible(page: Page): Promise<FitCanvasBox[]
  */
 export async function expectSandboxCanvasVisible(
   page: Page,
-  options: { readonly buttons?: boolean } = {},
+  options: {
+    readonly buttons?: boolean;
+    /** T199: 엔진 바깥 상자(`.wrap`)가 세로로 스크롤하는 것을 허용한다(E06·E19·E20 좁은 판). */
+    readonly outerScrollY?: boolean;
+  } = {},
 ): Promise<FitCanvasBox> {
   const stage = page.locator('main > div[class*="stage"]').first();
   await expect(stage).toBeVisible();
@@ -259,7 +263,9 @@ export async function expectSandboxCanvasVisible(
   if (!measured) return { slot: 'sandbox', width: 0, height: 0, twoColumn: false };
   expect(measured.inside, '샌드박스: 캔버스가 판 밖으로 나갔습니다.').toBe(true);
   expect(measured.overflowX, '샌드박스: 판 안 가로 스크롤이 생겼습니다.').toBeLessThanOrEqual(1);
-  expect(measured.overflowY, '샌드박스: 판 안 세로 스크롤이 생겼습니다.').toBeLessThanOrEqual(1);
+  if (options.outerScrollY !== true) {
+    expect(measured.overflowY, '샌드박스: 판 안 세로 스크롤이 생겼습니다.').toBeLessThanOrEqual(1);
+  }
   expect(measured.overlaps, '샌드박스: 캔버스가 글·단추와 겹칩니다.').toEqual([]);
   // 샌드박스 판 높이는 실행기보다 낮게 고정되어 있어(세로 화면), 단추 잘림은
   // 가로로 넓은 판에서만 본다. 실행기 판(expectFitCanvasVisible)은 늘 본다.
