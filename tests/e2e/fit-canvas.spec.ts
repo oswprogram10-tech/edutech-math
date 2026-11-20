@@ -22,7 +22,7 @@ interface EngineCase {
 }
 
 const ENGINES: readonly EngineCase[] = [
-  { label: 'E06', heading: '양팔저울', modes: ['equation', 'proportion'] },
+  { label: 'E06', heading: '양팔저울', modes: ['equation', 'proportion', 'compare'] },
   {
     label: 'E09',
     heading: '기하판',
