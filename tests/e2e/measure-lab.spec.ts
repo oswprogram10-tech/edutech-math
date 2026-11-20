@@ -837,7 +837,7 @@ test('mergeRule: 틈이 있으면 합체하지 않고, 방향키로 틈을 메�
 const TRAIN_ADD = { variant: 'unit-train', op: 'add', a: '1m 70cm', b: '2m 50cm' };
 const TRAIN_SUB = { variant: 'unit-train', op: 'sub', a: '5m 20cm', b: '2m 60cm' };
 
-test('unit-train 덧셈: 키보드로 [승격]·[풀기]를 누른다(3m 120cm → 4m 20cm → 3m 120cm)', async ({
+test('unit-train 덧셈: 키보드로 [1m로 바꾸기]·[10cm 막대로 풀기]를 누른다(3m 120cm → 4m 20cm → 3m 120cm)', async ({
   page,
 }) => {
   const id = await open(page, 'length', TRAIN_ADD);
@@ -851,7 +851,7 @@ test('unit-train 덧셈: 키보드로 [승격]·[풀기]를 누른다(3m 120cm �
   const canvas = canvasOf(page, id);
   await expect(canvas.locator('[data-part="m-cell"]')).toHaveCount(3);
   await expect(canvas.locator('[data-part="rod"]')).toHaveCount(12);
-  await button(page, '승격').focus();
+  await button(page, '1m로 바꾸기').focus();
   await page.keyboard.press('Enter');
   await pollObservation(page, (o) => o['m'] === 4 && o['cm'] === 20 && o['normalized'] === true);
   expect(await readObservation(page)).toMatchObject({ promotes: 1, misconceptions: [] });
@@ -860,7 +860,7 @@ test('unit-train 덧셈: 키보드로 [승격]·[풀기]를 누른다(3m 120cm �
   // 막대가 10개 모자라 한 번 더 승격하면 거절된다.
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('measure-message')).toContainText('10개');
-  await button(page, '풀기').focus();
+  await button(page, '10cm 막대로 풀기').focus();
   await page.keyboard.press('Space');
   await pollObservation(page, (o) => o['m'] === 3 && o['cm'] === 120);
   expect((await readObservation(page))['unpacks']).toBe(1);
@@ -875,7 +875,7 @@ test('unit-train 뺄셈: 칸이 모자라면 거절 → [풀기] → [빼기]로
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('measure-message')).toHaveText('칸이 모자라요.');
   expect((await readObservation(page))['tookAway']).toBe(false);
-  await button(page, '풀기').focus();
+  await button(page, '10cm 막대로 풀기').focus();
   await page.keyboard.press('Enter');
   await pollObservation(page, (o) => o['m'] === 4 && o['cm'] === 120);
   await button(page, '빼기').focus();
@@ -972,7 +972,7 @@ test('힌트 ② meter-outline: 처음 10cm 막대 10개 둘레에 1m 칸 크기
   ).toBeLessThanOrEqual(1.5);
   expect(Math.abs(outline.width - meter.width)).toBeLessThanOrEqual(0.2 * meter.width);
   // 승격하면 상자가 사라진다.
-  await button(page, '승격').click();
+  await button(page, '1m로 바꾸기').click();
   await pollObservation(page, (o) => o['normalized'] === true);
   await expect(page.locator('[data-overlay="meter-outline"] svg')).toHaveCount(0);
 });

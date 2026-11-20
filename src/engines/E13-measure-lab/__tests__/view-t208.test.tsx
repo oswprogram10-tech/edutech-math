@@ -313,14 +313,14 @@ describe('unit-train 화면', () => {
     );
   });
 
-  it('[승격]·[풀기]·[작게 풀기]·[빼기]·[처음으로]는 Action을 보낸다', () => {
+  it('[1m로 바꾸기]·[10cm 막대로 풀기]·[작게 풀기]·[빼기]·[처음으로]는 Action을 보낸다', () => {
     const dispatch = vi.fn();
     renderTrain(train(subTrain, { type: 'unpack' }), dispatch);
-    fireEvent.click(screen.getByRole('button', { name: '승격' }));
+    fireEvent.click(screen.getByRole('button', { name: '1m로 바꾸기' }));
     expect(dispatch).toHaveBeenLastCalledWith({ type: 'promote' });
-    fireEvent.click(screen.getByRole('button', { name: '풀기' }));
+    fireEvent.click(screen.getByRole('button', { name: '10cm 막대로 풀기' }));
     expect(dispatch).toHaveBeenLastCalledWith({ type: 'unpack' });
-    fireEvent.click(screen.getByRole('button', { name: '작게 풀기' }));
+    fireEvent.click(screen.getByRole('button', { name: '1cm 블록으로 풀기' }));
     expect(dispatch).toHaveBeenLastCalledWith({ type: 'unpack-small' });
     fireEvent.click(screen.getByRole('button', { name: '빼기' }));
     expect(dispatch).toHaveBeenLastCalledWith({ type: 'take-away' });
@@ -334,7 +334,7 @@ describe('unit-train 화면', () => {
     fireEvent.click(screen.getByRole('button', { name: '빼기' }));
     expect(dispatch).not.toHaveBeenCalled();
     expect(screen.getByTestId('measure-message').textContent).toBe('칸이 모자라요.');
-    fireEvent.click(screen.getByRole('button', { name: '승격' }));
+    fireEvent.click(screen.getByRole('button', { name: '1m로 바꾸기' }));
     expect(screen.getByTestId('measure-message').textContent).toContain('10개');
   });
 
@@ -346,7 +346,13 @@ describe('unit-train 화면', () => {
 
   it('readOnly이면 단추가 모두 꺼진다', () => {
     renderTrain(train(subTrain), vi.fn(), true);
-    for (const name of ['승격', '풀기', '작게 풀기', '빼기', '처음으로']) {
+    for (const name of [
+      '1m로 바꾸기',
+      '10cm 막대로 풀기',
+      '1cm 블록으로 풀기',
+      '빼기',
+      '처음으로',
+    ]) {
       expect((screen.getByRole('button', { name }) as HTMLButtonElement).disabled).toBe(true);
     }
   });
