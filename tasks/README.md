@@ -357,6 +357,8 @@ W6에서 E13 측정 실험실과 E14 시계·시간을 새로 만들고, E17 `so
 
 - **T211 병합(2026-11-21):** E13 estimate `zoomLevels`(단추 "눈금 크게"/"눈금 작게" — 도구 줄 "확대"와 이름이 겹쳐 바꿈, `mm-count`), E13 `map-route`(`route/`, 지도 sample-town-01, 1km 막대), E14 `time-calc`(`timecalc/`, [1시간으로 묶기]·[60분으로 풀기], 큰 블록 9개 이하·풀기는 작은 단위 60 미만일 때만, `sixty-overflow`). `mm-count`는 `zoomLevels`에 mm가 있을 때만 그린다. E14 모드 상자 폭 때문에 clock-gears·unrolled·duration·calendar 기준 이미지를 다시 찍었다(도구 줄만). 시범 운영 메모: 지도 980m 이름표가 학교–공원 선보다 도서관 쪽에 가까워 헷갈릴 수 있음.
 
+- **T212 병합(2026-11-21):** g3s1u5 길이와 시간 콘텐츠(A1 4과제, A2 4과제)와 E2E. E13 물건 목록에 연필심이 없어 A1.T1은 "연필 길이"(`pencil`). E14에도 `hasMisconception`이 없어 A2.T1은 `when` any[misconceptions equals, m=75]로 건다(묶기 전에는 어떤 오답도 MC-TIME-BASE-100 ①). 시범 운영 메모: 조작 칸 첫 줄이 A1.T1(E13 estimate 확대) 크롬북 42px·아이패드 3px, A2.T4(E14 duration) 크롬북 49px·아이패드 10px 아래 — 웨이브 끝 레이아웃 정리 후보.
+
 ## 상시
 | 카드 | 내용 |
 | --- | --- |
