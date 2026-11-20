@@ -78,7 +78,7 @@ async function polarPoint(
   const rad = (deg * Math.PI) / 180;
   const lx = CENTER.x + radius * Math.sin(rad);
   const ly = CENTER.y - radius * Math.cos(rad);
-  return { x: box.x + (lx / 1000) * box.width, y: box.y + (ly / 600) * box.height };
+  return { x: box.x + (lx / 1000) * box.width, y: box.y + (ly / 1000) * box.width };
 }
 
 /** 원 둘레를 따라 fromDeg에서 toDeg까지 끈다(toDeg는 fromDeg보다 커도 작아도 된다). */
@@ -371,7 +371,8 @@ test('넓은 판은 줄여서 맞추고, 좁은 판은 최소 배율 0.6에서 �
   if (!narrow) throw new Error('캔버스를 찾지 못했습니다.');
   expect(narrow.width).toBeGreaterThanOrEqual(599);
   expect(narrow.width).toBeLessThanOrEqual(601);
-  expect(narrow.height).toBeGreaterThanOrEqual(359);
+  // 펼치지 않은 판은 시계만 담는 논리 1000×510이라 최소 배율 0.6에서 306px다.
+  expect(narrow.height).toBeGreaterThanOrEqual(305);
   const scrolls = await page
     .getByTestId('clock-board')
     .evaluate((element) => element.scrollWidth > element.clientWidth);
@@ -450,7 +451,7 @@ async function openMode(
 async function logicalPoint(page: Page, lx: number, ly: number): Promise<{ x: number; y: number }> {
   const box = await canvas(page).boundingBox();
   if (!box) throw new Error('캔버스를 찾지 못했습니다.');
-  return { x: box.x + (lx / 1000) * box.width, y: box.y + (ly / 600) * box.height };
+  return { x: box.x + (lx / 1000) * box.width, y: box.y + (ly / 1000) * box.width };
 }
 
 async function dragLogical(

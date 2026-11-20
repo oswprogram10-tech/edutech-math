@@ -4,9 +4,9 @@
  */
 import { CanvasAlignedOverlay } from '../../../core/engine-sdk';
 import type { OverlayProps } from '../../../core/engine-sdk';
-import { CLOCK, SIDE, handAngles } from '../layout';
+import { CLOCK, SIDE, boardSize, handAngles } from '../layout';
 import { E14_STRINGS as S } from '../strings.ko';
-import { CANVAS_SELECTOR, LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../types';
+import { CANVAS_SELECTOR } from '../types';
 import type { ClockConfig, ClockState } from '../types';
 
 const INK = '#1d2330';
@@ -27,8 +27,8 @@ export function HourHandFocusOverlay({ state }: OverlayProps<ClockConfig, ClockS
     <CanvasAlignedOverlay
       testId="overlay-hour-hand-focus"
       canvasSelector={CANVAS_SELECTOR}
-      logicalWidth={LOGICAL_WIDTH}
-      logicalHeight={LOGICAL_HEIGHT}
+      logicalWidth={boardSize(state.unrolled).width}
+      logicalHeight={boardSize(state.unrolled).height}
     >
       <g
         data-part="long-ghost"

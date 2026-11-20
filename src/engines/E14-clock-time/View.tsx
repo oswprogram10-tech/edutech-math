@@ -10,7 +10,7 @@ import { ClockBoard } from './ClockBoard';
 import { Controls } from './Controls';
 import { E14_STRINGS as S } from './strings.ko';
 import type { ClockAction, ClockConfig, ClockState } from './types';
-import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from './types';
+import { boardSize } from './layout';
 import { useClockUi } from './useClockUi';
 import styles from './View.module.css';
 
@@ -39,13 +39,14 @@ export function ClockView({
     );
   }
 
+  const logical = boardSize(state.unrolled);
   let svgStyle: CSSProperties | undefined;
   let scroll = false;
   if (board.width > 0 && board.height > 0) {
-    const fit = Math.min(board.width / LOGICAL_WIDTH, board.height / LOGICAL_HEIGHT, MAX_FIT);
+    const fit = Math.min(board.width / logical.width, board.height / logical.height, MAX_FIT);
     const scale = Math.max(fit, MIN_SCALE);
     scroll = fit < MIN_SCALE - 0.005;
-    svgStyle = { width: `${LOGICAL_WIDTH * scale}px`, height: `${LOGICAL_HEIGHT * scale}px` };
+    svgStyle = { width: `${logical.width * scale}px`, height: `${logical.height * scale}px` };
   }
 
   return (
@@ -56,6 +57,7 @@ export function ClockView({
           className={styles.boardArea}
           data-scroll={scroll ? 'true' : 'false'}
           data-testid="clock-board"
+          style={{ minHeight: `${Math.round(logical.height * MIN_SCALE)}px` }}
         >
           <ClockBoard
             state={state}

@@ -5,9 +5,9 @@
  */
 import { CanvasAlignedOverlay } from '../../../core/engine-sdk';
 import type { OverlayProps } from '../../../core/engine-sdk';
-import { CLOCK, STRIP, polar, stripX } from '../layout';
+import { CLOCK, STRIP, boardSize, polar, stripX } from '../layout';
 import { E14_STRINGS as S } from '../strings.ko';
-import { CANVAS_SELECTOR, LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../types';
+import { CANVAS_SELECTOR } from '../types';
 import type { ClockConfig, ClockState } from '../types';
 
 const INK = '#1d2330';
@@ -40,8 +40,8 @@ export function NumeralMinutesOverlay({ state, args }: OverlayProps<ClockConfig,
     <CanvasAlignedOverlay
       testId="overlay-numeral-minutes"
       canvasSelector={CANVAS_SELECTOR}
-      logicalWidth={LOGICAL_WIDTH}
-      logicalHeight={LOGICAL_HEIGHT}
+      logicalWidth={boardSize(state.unrolled).width}
+      logicalHeight={boardSize(state.unrolled).height}
     >
       <g data-part="clock-label" data-numeral={numeral}>
         <circle cx={spot.x} cy={spot.y} r={4} fill={ORANGE} />
