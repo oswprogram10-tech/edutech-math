@@ -1,0 +1,1237 @@
+{
+  "unit": "g6s1u4",
+  "title": "비와 비율",
+  "activities": [
+    {
+      "id": "g6s1u4.A1",
+      "title": "초코 우유 배합 실험",
+      "tasks": [
+        {
+          "id": "g6s1u4.A1.T1",
+          "prompt": "기준 컵과 진하기가 같은 초코 우유를 우유 8칸으로 만들어요.",
+          "engine": "E20",
+          "mode": "mix",
+          "cpa": "C",
+          "config": {
+            "mode": "mix",
+            "reference": {
+              "milk": 4,
+              "syrup": 1
+            },
+            "make": {
+              "milk": 0,
+              "syrup": 0
+            }
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "cupIs",
+            "args": {
+              "milk": 8,
+              "syrup": 2
+            }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-RATIO-ADDITIVE"
+                }
+              },
+              "level": 1,
+              "say": "그렇게 섞으면 같은 색일까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-RATIO-ADDITIVE"
+                }
+              },
+              "level": 2,
+              "say": "내 컵과 기준 컵을 나란히 놓고 색을 비교해 봐요.",
+              "show": {
+                "engine": "E20",
+                "overlay": "side-by-side"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-RATIO-ADDITIVE"
+                }
+              },
+              "level": 3,
+              "backtrack": "g5s1u3.rule-expression"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "mix"
+              },
+              "level": 1,
+              "say": "기준 컵 한 묶음을 몇 번 모아야 우유가 8칸이 될까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "mix"
+              },
+              "level": 2,
+              "say": "기준 컵 한 묶음씩 짝지어 봐요.",
+              "show": {
+                "engine": "E20",
+                "overlay": "unit-groups"
+              }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "mix"
+              },
+              "level": 3,
+              "backtrack": "g6s1u4.ratio-notation"
+            }
+          ],
+          "concepts": [
+            "g6s1u4.ratio-value"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g6s1u4.A1.T2",
+          "prompt": "가 컵: 우유 5, 시럽 2 / 나 컵: 우유 8, 시럽 3. 더 진한 컵은 어느 것일까요?",
+          "engine": "E20",
+          "mode": "mix",
+          "cpa": "P",
+          "config": {
+            "mode": "mix",
+            "reference": null,
+            "fixedCups": [
+              {
+                "id": "ga",
+                "label": "가",
+                "milk": 5,
+                "syrup": 2
+              },
+              {
+                "id": "na",
+                "label": "나",
+                "milk": 8,
+                "syrup": 3
+              }
+            ],
+            "make": null,
+            "look": "strip"
+          },
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "darker",
+                "label": "더 진한 컵",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "ga",
+                    "label": "가"
+                  },
+                  {
+                    "id": "na",
+                    "label": "나"
+                  }
+                ]
+              }
+            ]
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.darker.selected",
+            "value": [
+              "ga"
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "mix"
+              },
+              "level": 1,
+              "say": "두 컵의 진하기를 띠에서 비교해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "mix"
+              },
+              "level": 2,
+              "say": "우유 한 칸에 시럽이 얼마만큼 들어 있는지 견줘 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "mix"
+              },
+              "level": 3,
+              "backtrack": "g6s1u4.ratio-notation"
+            }
+          ],
+          "concepts": [
+            "g6s1u4.ratio-value"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g6s1u4.A1.T3",
+          "prompt": "우유 양과 시럽 양의 비 4 : 1에서 기준량은 어느 것일까요? 가: 4 나: 1",
+          "engine": "E20",
+          "mode": "mix",
+          "cpa": "A",
+          "config": {
+            "mode": "mix",
+            "reference": {
+              "milk": 4,
+              "syrup": 1
+            },
+            "make": null,
+            "look": "ratio"
+          },
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "base",
+                "label": "기준량",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "ga",
+                    "label": "가"
+                  },
+                  {
+                    "id": "na",
+                    "label": "나"
+                  }
+                ]
+              }
+            ]
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.base.selected",
+            "value": [
+              "na"
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.base.selected",
+                "value": [
+                  "ga"
+                ]
+              },
+              "level": 1,
+              "say": "무엇을 기준으로 비교했지?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.base.selected",
+                "value": [
+                  "ga"
+                ]
+              },
+              "level": 2,
+              "say": "기준이 되는 양이 어느 쪽인지 말로 다시 읽어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.base.selected",
+                "value": [
+                  "ga"
+                ]
+              },
+              "level": 3,
+              "backtrack": "g6s1u4.ratio-notation"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "mix"
+              },
+              "level": 1,
+              "say": "두 수 가운데 기준이 되는 쪽이 어느 것인지 생각해 보고 골라요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "mix"
+              },
+              "level": 2,
+              "say": "비 4 : 1에서 앞의 수와 뒤의 수가 각각 무엇을 나타내는지 말해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "mix"
+              },
+              "level": 3,
+              "backtrack": "g6s1u4.difference-vs-ratio"
+            }
+          ],
+          "concepts": [
+            "g6s1u4.ratio-notation"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g6s1u4.A1.T4",
+          "prompt": "우유 양에 대한 시럽 양의 비율을 분수, 소수, 백분율로 나타내요.",
+          "engine": "E20",
+          "mode": "mix",
+          "cpa": "A",
+          "config": {
+            "mode": "mix",
+            "reference": {
+              "milk": 4,
+              "syrup": 1
+            },
+            "make": null,
+            "look": "ratio"
+          },
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "frac",
+                "label": "분수",
+                "forms": [
+                  "fraction"
+                ]
+              },
+              {
+                "kind": "number",
+                "id": "dec",
+                "label": "소수",
+                "forms": [
+                  "decimal"
+                ]
+              },
+              {
+                "kind": "number",
+                "id": "pct",
+                "label": "백분율(%)",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "equals",
+                "path": "response.frac.value",
+                "value": "1/4"
+              },
+              {
+                "kind": "equals",
+                "path": "response.dec.value",
+                "value": "1/4"
+              },
+              {
+                "kind": "equals",
+                "path": "response.pct.value",
+                "value": "25"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.frac.value",
+                "value": "4"
+              },
+              "level": 1,
+              "say": "무엇을 기준으로 비교했지?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.frac.value",
+                "value": "4"
+              },
+              "level": 2,
+              "say": "기준이 되는 양이 분수의 어느 자리에 가는지 생각해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.frac.value",
+                "value": "4"
+              },
+              "level": 3,
+              "backtrack": "g6s1u4.ratio-notation"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "mix"
+              },
+              "level": 1,
+              "say": "비교하는 양을 기준량으로 나누어 먼저 분수로 나타내 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "mix"
+              },
+              "level": 2,
+              "say": "분수로 나타낸 값을 소수와 백분율로 바꿔 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "mix"
+              },
+              "level": 3,
+              "backtrack": "g6s1u4.ratio-value"
+            }
+          ],
+          "concepts": [
+            "g6s1u4.percent"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g6s1u4.A1.T5",
+          "prompt": "반 학생 20명 가운데 5명이 안경을 썼어요. 안경 쓴 학생의 비율만큼 100칸에 칠해요.",
+          "engine": "E20",
+          "mode": "percent",
+          "cpa": "P",
+          "config": {
+            "mode": "percent",
+            "layout": "grid",
+            "shaded": 0
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "shadedIs",
+            "args": {
+              "n": 25
+            }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "shadedIs",
+                "args": {
+                  "n": 5
+                }
+              },
+              "level": 1,
+              "say": "100칸 중 몇 칸이었지?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "shadedIs",
+                "args": {
+                  "n": 5
+                }
+              },
+              "level": 2,
+              "say": "10칸씩 묶어서 칠한 칸이 전체 100칸 중 얼마인지 세어 봐요.",
+              "show": {
+                "engine": "E20",
+                "overlay": "tens-brackets"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "shadedIs",
+                "args": {
+                  "n": 5
+                }
+              },
+              "level": 3,
+              "backtrack": "g6s1u4.percent"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "percent"
+              },
+              "level": 1,
+              "say": "안경 쓴 학생은 전체의 얼마만큼일까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "percent"
+              },
+              "level": 2,
+              "say": "칠한 칸을 10칸씩 묶어서 세어 봐요.",
+              "show": {
+                "engine": "E20",
+                "overlay": "tens-brackets"
+              }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "percent"
+              },
+              "level": 3,
+              "backtrack": "g6s1u4.ratio-value"
+            }
+          ],
+          "concepts": [
+            "g6s1u4.percent"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g6s1u4.A1.T6",
+          "prompt": "300명의 25%는 몇 명일까요?",
+          "engine": "E20",
+          "mode": "percent",
+          "cpa": "A",
+          "config": {
+            "mode": "percent",
+            "layout": "grid",
+            "shaded": 25,
+            "editable": false
+          },
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "n",
+                "label": "인원(명)",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.n.value",
+            "value": "75"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.n.value",
+                    "value": "7500"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.n.value",
+                    "value": "25"
+                  }
+                ]
+              },
+              "level": 1,
+              "say": "100칸 중 몇 칸이었지?"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.n.value",
+                    "value": "7500"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.n.value",
+                    "value": "25"
+                  }
+                ]
+              },
+              "level": 2,
+              "say": "칠한 칸을 10칸씩 묶어서 전체와 견줘 봐요.",
+              "show": {
+                "engine": "E20",
+                "overlay": "tens-brackets"
+              }
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.n.value",
+                    "value": "7500"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.n.value",
+                    "value": "25"
+                  }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g6s1u4.percent"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "percent"
+              },
+              "level": 1,
+              "say": "300명을 100칸으로 나누면 한 칸은 몇 명일까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "percent"
+              },
+              "level": 2,
+              "say": "칠한 칸을 10칸씩 묶어서 몇 묶음인지 세어 봐요.",
+              "show": {
+                "engine": "E20",
+                "overlay": "tens-brackets"
+              }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "percent"
+              },
+              "level": 3,
+              "backtrack": "g6s1u4.ratio-value"
+            }
+          ],
+          "concepts": [
+            "g6s1u4.percent"
+          ],
+          "submit": "button"
+        }
+      ]
+    },
+    {
+      "id": "g6s1u4.A2",
+      "title": "사진 리사이저와 속력 경주",
+      "tasks": [
+        {
+          "id": "g6s1u4.A2.T1",
+          "prompt": "사진이 찌그러지지 않는 크기를 3개 찾아 담아요.",
+          "engine": "E20",
+          "mode": "resize",
+          "cpa": "C",
+          "config": {
+            "mode": "resize",
+            "base": {
+              "w": 4,
+              "h": 3
+            }
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "savedEquivalentAtLeast",
+                "args": {
+                  "n": 3
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "allSavedEquivalent"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-RATIO-ADDITIVE"
+                }
+              },
+              "level": 1,
+              "say": "그렇게 늘리면 같은 모양일까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-RATIO-ADDITIVE"
+                }
+              },
+              "level": 2,
+              "say": "가로와 세로가 늘어난 길이를 화살표로 비교해 봐요.",
+              "show": {
+                "engine": "E20",
+                "overlay": "growth-arrows"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-RATIO-ADDITIVE"
+                }
+              },
+              "level": 3,
+              "backtrack": "g5s1u3.rule-expression"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "resize"
+              },
+              "level": 1,
+              "say": "담은 크기가 처음 모양과 같은지 하나씩 살펴봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "resize"
+              },
+              "level": 2,
+              "say": "처음 크기와 담은 크기를 칸 격자로 견줘 봐요.",
+              "show": {
+                "engine": "E20",
+                "overlay": "ratio-grid"
+              }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "resize"
+              },
+              "level": 3,
+              "backtrack": "g5s1u3.correspondence-table"
+            }
+          ],
+          "concepts": [
+            "g6s1u4.difference-vs-ratio"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g6s1u4.A2.T2",
+          "prompt": "가로와 세로를 둘 다 +2씩 늘리면 사진이 찌그러져요. 왜 그럴까요? 가: 가로와 세로가 늘어나는 비율이 달라서 나: 더한 수가 너무 작아서 다: 가로가 세로보다 길어서",
+          "engine": "E20",
+          "mode": "resize",
+          "cpa": "P",
+          "config": {
+            "mode": "resize",
+            "base": {
+              "w": 4,
+              "h": 3
+            },
+            "look": "table"
+          },
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "why",
+                "label": "왜 찌그러질까요?",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "ga",
+                    "label": "가"
+                  },
+                  {
+                    "id": "na",
+                    "label": "나"
+                  },
+                  {
+                    "id": "da",
+                    "label": "다"
+                  }
+                ]
+              }
+            ]
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.why.selected",
+            "value": [
+              "ga"
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "resize"
+              },
+              "level": 1,
+              "say": "가로는 몇 배가 되었고 세로는 몇 배가 되었는지 표에서 견줘 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "resize"
+              },
+              "level": 2,
+              "say": "처음 크기와 늘린 크기에서 가로와 세로가 늘어난 모습을 비교해 봐요.",
+              "show": {
+                "engine": "E20",
+                "overlay": "growth-arrows"
+              }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "resize"
+              },
+              "level": 3,
+              "backtrack": "g5s1u3.correspondence-table"
+            }
+          ],
+          "concepts": [
+            "g6s1u4.difference-vs-ratio"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g6s1u4.A2.T3",
+          "prompt": "누가 더 빠를지 먼저 예측하고 경주해 봐요. 경주가 끝나면 더 빠른 쪽을 골라요.",
+          "engine": "E20",
+          "mode": "rate",
+          "cpa": "C",
+          "config": {
+            "mode": "rate",
+            "racers": [
+              {
+                "id": "rabbit",
+                "name": "토끼",
+                "distance": 120,
+                "time": 20
+              },
+              {
+                "id": "turtle",
+                "name": "거북",
+                "distance": 200,
+                "time": 40
+              }
+            ],
+            "predictFirst": true
+          },
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "fast",
+                "label": "더 빠른 쪽",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "rabbit",
+                    "label": "토끼"
+                  },
+                  {
+                    "id": "turtle",
+                    "label": "거북"
+                  }
+                ]
+              }
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "ran"
+              },
+              {
+                "kind": "equals",
+                "path": "response.fast.selected",
+                "value": [
+                  "rabbit"
+                ]
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-RATE-DISTANCE-ONLY"
+                }
+              },
+              "level": 1,
+              "say": "1초 동안 간 거리로 비교하면?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-RATE-DISTANCE-ONLY"
+                }
+              },
+              "level": 2,
+              "say": "1초마다 어디까지 갔는지 발자국으로 살펴봐요.",
+              "show": {
+                "engine": "E20",
+                "overlay": "footprints"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-RATE-DISTANCE-ONLY"
+                }
+              },
+              "level": 3,
+              "backtrack": "g6s1u4.ratio-value"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.fast.selected",
+                "value": [
+                  "turtle"
+                ]
+              },
+              "level": 1,
+              "say": "같은 시간 동안 누가 더 멀리 갔는지 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.fast.selected",
+                "value": [
+                  "turtle"
+                ]
+              },
+              "level": 2,
+              "say": "같은 시간에 두 캐릭터가 어디에 있는지 비교해 봐요.",
+              "show": {
+                "engine": "E20",
+                "overlay": "same-time"
+              }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.fast.selected",
+                "value": [
+                  "turtle"
+                ]
+              },
+              "level": 3,
+              "backtrack": "g6s1u4.ratio-value"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "rate"
+              },
+              "level": 1,
+              "say": "경주를 끝까지 보고 두 캐릭터를 같은 시간에 놓고 비교해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "rate"
+              },
+              "level": 2,
+              "say": "같은 시간에 두 캐릭터가 어디에 있는지 비교해 봐요.",
+              "show": {
+                "engine": "E20",
+                "overlay": "same-time"
+              }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "rate"
+              },
+              "level": 3,
+              "backtrack": "g6s1u4.ratio-value"
+            }
+          ],
+          "concepts": [
+            "g6s1u4.rate-in-life"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g6s1u4.A2.T4",
+          "prompt": "토끼와 빠르기가 같도록 거북의 거리와 시간을 정해요. 토끼와 다른 수로 정해요.",
+          "engine": "E20",
+          "mode": "rate",
+          "cpa": "C",
+          "config": {
+            "mode": "rate",
+            "racers": [
+              {
+                "id": "rabbit",
+                "name": "토끼",
+                "distance": 60,
+                "time": 10
+              },
+              {
+                "id": "turtle",
+                "name": "거북",
+                "distance": null,
+                "time": null
+              }
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "sameSpeed"
+              },
+              {
+                "kind": "predicate",
+                "name": "racersDiffer"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "sameSpeed"
+              },
+              "level": 1,
+              "say": "토끼와 똑같은 수 말고 다른 수로도 만들 수 있을까요?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "sameSpeed"
+              },
+              "level": 2,
+              "say": "거리와 시간을 같은 수로 곱하거나 나눠 봐요.",
+              "show": {
+                "engine": "E20",
+                "overlay": "same-time"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "sameSpeed"
+              },
+              "level": 3,
+              "backtrack": "g6s1u4.ratio-value"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "rate"
+              },
+              "level": 1,
+              "say": "거북이 1초 동안 가는 거리를 토끼와 견줘 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "rate"
+              },
+              "level": 2,
+              "say": "경주를 시켜 두 캐릭터가 같은 시간에 어디에 있는지 비교해 봐요.",
+              "show": {
+                "engine": "E20",
+                "overlay": "same-time"
+              }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "rate"
+              },
+              "level": 3,
+              "backtrack": "g6s1u4.ratio-value"
+            }
+          ],
+          "concepts": [
+            "g6s1u4.rate-in-life"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g6s1u4.A2.T5",
+          "prompt": "가 마을은 넓이 2km²에 400명, 나 마을은 넓이 3km²에 690명이 살아요. 1km²에 사는 사람이 더 많은 마을을 고르고, 그 마을의 인구 밀도(1km²당 사람 수)를 써요.",
+          "engine": "E20",
+          "mode": "rate",
+          "cpa": "A",
+          "config": {
+            "mode": "rate",
+            "look": "table",
+            "racers": [
+              {
+                "id": "ga",
+                "name": "가",
+                "distance": 60,
+                "time": 10,
+                "editable": false
+              },
+              {
+                "id": "na",
+                "name": "나",
+                "distance": 60,
+                "time": 10,
+                "editable": false
+              }
+            ]
+          },
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "town",
+                "label": "사람이 더 많은 마을",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "ga",
+                    "label": "가"
+                  },
+                  {
+                    "id": "na",
+                    "label": "나"
+                  }
+                ]
+              },
+              {
+                "kind": "number",
+                "id": "d",
+                "label": "인구 밀도(명/km²)",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          },
+          "showEngine": false,
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "equals",
+                "path": "response.town.selected",
+                "value": [
+                  "na"
+                ]
+              },
+              {
+                "kind": "equals",
+                "path": "response.d.value",
+                "value": "230"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.town.selected",
+                "value": [
+                  "ga"
+                ]
+              },
+              "level": 1,
+              "say": "넓이도 함께 살펴봤나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "rate"
+              },
+              "level": 1,
+              "say": "각 마을의 사람 수를 넓이로 나누면 무엇을 알 수 있을까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "rate"
+              },
+              "level": 2,
+              "say": "한 마을을 1km²씩 똑같이 나누었다고 생각해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "rate"
+              },
+              "level": 3,
+              "backtrack": "g6s1u4.ratio-value"
+            }
+          ],
+          "concepts": [
+            "g6s1u4.rate-in-life"
+          ],
+          "submit": "button"
+        }
+      ]
+    }
+  ]
+}
