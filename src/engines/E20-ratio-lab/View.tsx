@@ -8,6 +8,8 @@ import { useRenderedSize } from '../../core/engine-sdk';
 import type { EngineViewProps } from '../../core/engine-sdk';
 import { Controls } from './Controls';
 import { MixBoard } from './MixBoard';
+import { PercentBoard } from './PercentBoard';
+import { RateBoard } from './RateBoard';
 import { ResizeBoard } from './ResizeBoard';
 import { E20_STRINGS as S } from './strings.ko';
 import type { RatioAction, RatioConfig, RatioState } from './types';
@@ -57,7 +59,7 @@ export function RatioView({
       className={styles.wrap}
       data-target-size={targetSize}
       data-mode={state.mode}
-      data-look={state.settings.look}
+      data-look={state.mode === 'percent' ? state.settings.layout : state.settings.look}
       onKeyDown={ui.onKeyDown}
     >
       <div className={styles.stageRow}>
@@ -69,9 +71,22 @@ export function RatioView({
         >
           {state.mode === 'mix' ? (
             <MixBoard state={state} svgStyle={svgStyle} className={styles.boardSvg} />
-          ) : (
+          ) : null}
+          {state.mode === 'resize' ? (
             <ResizeBoard state={state} svgStyle={svgStyle} className={styles.boardSvg} />
-          )}
+          ) : null}
+          {state.mode === 'rate' ? (
+            <RateBoard state={state} svgStyle={svgStyle} className={styles.boardSvg} />
+          ) : null}
+          {state.mode === 'percent' ? (
+            <PercentBoard
+              state={state}
+              ui={ui}
+              readOnly={readOnly}
+              svgStyle={svgStyle}
+              className={styles.boardSvg}
+            />
+          ) : null}
         </div>
         <Controls state={state} dispatch={dispatch} ui={ui} readOnly={readOnly} />
       </div>

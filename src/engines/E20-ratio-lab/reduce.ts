@@ -2,11 +2,15 @@
  * E20 상태 전이. 순수 함수이고 상태는 JSON 직렬화가 가능하다.
  * 거절된 Action(범위 밖·최대 초과·모드 불일치)은 상태 그대로(같은 객체)를 돌려준다.
  */
-import { isInt, normalizeConfig } from './settings';
-import { MAX_SAVED } from './types';
+import { isDistanceOnly, racersComplete } from './observe';
+import { isInt, normalizeConfig, prefixCells } from './settings';
+import { MAX_SAVED, PERCENT_CELLS, SAME_PREDICTION } from './types';
 import type {
   Amounts,
   MixState,
+  PercentState,
+  RacerState,
+  RateState,
   RatioAction,
   RatioConfig,
   RatioState,
@@ -90,7 +94,94 @@ function reduceResize(state: ResizeState, action: RatioAction): ResizeState {
   }
 }
 
+function sameRacers(a: readonly RacerState[], b: readonly RacerState[]): boolean {
+  return a.every((r, i) => r.distance === b[i]?.distance && r.time === b[i]?.time);
+}
+
+function reduceRate(state: RateState, action: RatioAction): RateState {
+  const { settings } = state;
+  switch (action.type) {
+    case 'set': {
+      const racer = state.racers.find((r) => r.id === action.racerId);
+      if (!racer) return state;
+      if (action.field !== 'distance' && action.field !== 'time') return state;
+      const editable = action.field === 'distance' ? racer.editDistance : racer.editTime;
+      const max = action.field === 'distance' ? settings.maxDistance : settings.maxTime;
+      if (!editable || !isInt(action.value, 1, max)) return state;
+      if (racer[action.field] === action.value) return state;
+      return {
+        ...state,
+        racers: state.racers.map((r) =>
+          r.id === racer.id ? { ...r, [action.field]: action.value } : r,
+        ),
+      };
+    }
+    case 'predict': {
+      if (state.prediction !== null || !racersComplete(state.racers)) return state;
+      const known =
+        action.value === SAME_PREDICTION || state.racers.some((r) => r.id === action.value);
+      if (!known) return state;
+      return {
+        ...state,
+        prediction: action.value,
+        distanceOnly: isDistanceOnly(state.racers, action.value),
+      };
+    }
+    case 'run':
+      if (!racersComplete(state.racers)) return state;
+      if (settings.predictFirst && state.prediction === null) return state;
+      return { ...state, runs: state.runs + 1 };
+    case 'reset':
+      // 예측·실행 기록은 지우지 않는다.
+      return sameRacers(state.racers, state.initialRacers)
+        ? state
+        : { ...state, racers: state.initialRacers };
+    default:
+      return state;
+  }
+}
+
+function reducePercent(state: PercentState, action: RatioAction): PercentState {
+  if (action.type === 'reset') {
+    return state.cells.length === state.initialCells.length &&
+      state.cells.every((c, i) => c === state.initialCells[i])
+      ? state
+      : { ...state, cells: state.initialCells };
+  }
+  if (!state.settings.editable) return state;
+  switch (action.type) {
+    case 'toggle': {
+      if (!isInt(action.index, 0, PERCENT_CELLS - 1)) return state;
+      const on = state.cells.includes(action.index);
+      const cells = on
+        ? state.cells.filter((c) => c !== action.index)
+        : [...state.cells, action.index].sort((a, b) => a - b);
+      return { ...state, cells };
+    }
+    case 'fill-to': {
+      if (!isInt(action.count, 0, PERCENT_CELLS)) return state;
+      const cells = prefixCells(action.count);
+      return cells.length === state.cells.length && cells.every((c, i) => c === state.cells[i])
+        ? state
+        : { ...state, cells };
+    }
+    case 'clear':
+      return state.cells.length === 0 ? state : { ...state, cells: [] };
+    default:
+      return state;
+  }
+}
+
 export function reduce(state: RatioState, action: RatioAction): RatioState {
   if (state.error !== null) return state;
-  return state.mode === 'mix' ? reduceMix(state, action) : reduceResize(state, action);
+  switch (state.mode) {
+    case 'mix':
+      return reduceMix(state, action);
+    case 'resize':
+      return reduceResize(state, action);
+    case 'rate':
+      return reduceRate(state, action);
+    case 'percent':
+      return reducePercent(state, action);
+  }
 }

@@ -19,6 +19,33 @@ function digit(k: number): { code: string; label: string } | null {
 
 export function shortcutsOf(state: RatioState): readonly Shortcut[] {
   const list: Shortcut[] = [];
+  if (state.mode === 'rate') {
+    state.racers.forEach((racer, i) => {
+      list.push({
+        id: `predict-${racer.id}`,
+        code: `Digit${i + 1}`,
+        label: String(i + 1),
+        action: { type: 'predict', value: racer.id },
+      });
+    });
+    list.push(
+      {
+        id: 'predict-same',
+        code: 'Digit3',
+        label: '3',
+        action: { type: 'predict', value: 'same' },
+      },
+      { id: 'run', code: 'KeyG', label: 'G', action: { type: 'run' } },
+      { id: 'reset', code: 'KeyR', label: 'R', action: { type: 'reset' } },
+    );
+    return list;
+  }
+  if (state.mode === 'percent') {
+    return [
+      { id: 'clear', code: 'KeyC', label: 'C', action: { type: 'clear' } },
+      { id: 'reset', code: 'KeyR', label: 'R', action: { type: 'reset' } },
+    ];
+  }
   const factors = state.settings.scaleFactors;
   if (state.mode === 'mix') {
     list.push(

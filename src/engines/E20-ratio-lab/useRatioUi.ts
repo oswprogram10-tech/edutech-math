@@ -1,6 +1,7 @@
 /** E20 조작 칸의 지역 상태(안내 글)와 키보드 처리. 거절된 조작은 이유를 글로 알린다. */
 import { useState } from 'react';
 import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
+import { racersComplete } from './observe';
 import { reduce } from './reduce';
 import { shortcutsOf } from './shortcuts';
 import { E20_STRINGS as S } from './strings.ko';
@@ -9,10 +10,36 @@ import type { RatioAction, RatioState } from './types';
 export interface RatioUi {
   readonly message: string | null;
   readonly send: (action: RatioAction) => void;
+  /** rate: 입력 칸에서 글자를 받아 검사한 뒤 `set`을 보낸다. 잘못된 글은 안내만 하고 칸에 남긴다. */
+  readonly draft: (racerId: string, field: 'distance' | 'time') => string | null;
+  readonly typeValue: (racerId: string, field: 'distance' | 'time', text: string) => void;
+  readonly clearDraft: (racerId: string, field: 'distance' | 'time') => void;
   readonly onKeyDown: (event: ReactKeyboardEvent<HTMLElement>) => void;
 }
 
 function rejection(state: RatioState, action: RatioAction): string {
+  if (state.mode === 'rate') {
+    const text = S.rate.rejected;
+    if (action.type === 'set') {
+      const racer = state.racers.find((r) => r.id === action.racerId);
+      const editable = action.field === 'distance' ? racer?.editDistance : racer?.editTime;
+      if (!editable) return text.locked;
+      if (racer?.[action.field] === action.value) return '';
+      return action.field === 'distance'
+        ? text.distanceRange(state.settings.maxDistance)
+        : text.timeRange(state.settings.maxTime);
+    }
+    if (action.type === 'predict') {
+      return state.prediction !== null ? text.predicted : text.needValues;
+    }
+    if (action.type === 'run') {
+      return racersComplete(state.racers) ? text.needPrediction : text.needValues;
+    }
+    return '';
+  }
+  if (state.mode === 'percent') {
+    return action.type === 'reset' ? '' : S.percent.rejected.locked;
+  }
   if (state.mode === 'mix') {
     if (action.type === 'add') return S.mix.rejected.full;
     if (action.type === 'remove') return S.mix.rejected.empty;
@@ -39,9 +66,11 @@ export function useRatioUi(
   readOnly: boolean,
 ): RatioUi {
   const [message, setMessage] = useState<string | null>(null);
+  const [drafts, setDrafts] = useState<Readonly<Record<string, string>>>({});
 
   const send = (action: RatioAction) => {
     if (readOnly) return;
+    if (action.type === 'reset') setDrafts({});
     if (reduce(state, action) === state) {
       const text = rejection(state, action);
       setMessage(text === '' ? null : text);
@@ -51,7 +80,35 @@ export function useRatioUi(
     dispatch(action);
   };
 
+  const draftKey = (racerId: string, field: string) => `${racerId}.${field}`;
+  const clearDraft = (racerId: string, field: 'distance' | 'time') => {
+    setDrafts((current) => {
+      const key = draftKey(racerId, field);
+      return Object.fromEntries(Object.entries(current).filter(([k]) => k !== key));
+    });
+  };
+  const typeValue = (racerId: string, field: 'distance' | 'time', text: string) => {
+    if (readOnly) return;
+    setDrafts((current) => ({ ...current, [draftKey(racerId, field)]: text }));
+    if (text === '') {
+      setMessage(null);
+      return;
+    }
+    if (!/^[0-9]{1,6}$/.test(text)) {
+      setMessage(S.rate.rejected.notNumber);
+      return;
+    }
+    send({ type: 'set', racerId, field, value: Number(text) });
+  };
+  const draft = (racerId: string, field: 'distance' | 'time') =>
+    drafts[draftKey(racerId, field)] ?? null;
+
   const onKeyDown = (event: ReactKeyboardEvent<HTMLElement>) => {
+    // 입력 칸에 글을 쓰는 중에는 단축키(숫자·R·G)를 쓰지 않는다.
+    const target = event.target;
+    if (target instanceof HTMLElement && (target.tagName === 'INPUT' || target.isContentEditable)) {
+      return;
+    }
     if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return;
     const hit = shortcutsOf(state).find((s) => s.code === event.code);
     if (!hit) return;
@@ -59,5 +116,5 @@ export function useRatioUi(
     send(hit.action);
   };
 
-  return { message, send, onKeyDown };
+  return { message, send, draft, typeValue, clearDraft, onKeyDown };
 }

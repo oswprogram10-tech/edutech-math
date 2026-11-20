@@ -1,6 +1,7 @@
 /** E20 비·비율 실험실의 학생 문구. 화면에 하드코딩하지 않는다. 학년 표시·점수는 두지 않는다. */
 
 export const MC_RATIO_ADDITIVE = 'MC-RATIO-ADDITIVE';
+export const MC_RATE_DISTANCE_ONLY = 'MC-RATE-DISTANCE-ONLY';
 
 export const E20_STRINGS = {
   name: '비·비율 실험실',
@@ -71,5 +72,53 @@ export const E20_STRINGS = {
       savedFull: '더 담을 수 없어요.',
     },
     overlay: { addArrow: (d: number) => `+${d}` },
+  },
+  rate: {
+    instructions: '거리와 시간을 넣고, 누가 더 빠를지 먼저 생각해 보세요. 그다음 경주를 봅니다.',
+    fieldDistance: '거리',
+    fieldTime: '시간',
+    distanceUnit: 'm',
+    timeUnit: '초',
+    tableTitle: '거리와 시간',
+    tableName: '이름',
+    tableDistance: '거리(m)',
+    tableTime: '시간(초)',
+    empty: '?',
+    racerLine: (name: string, distance: number | null, time: number | null) =>
+      `${name}  ${distance === null ? '?' : `${distance} m`} · ${time === null ? '?' : `${time} 초`}`,
+    startLine: '출발',
+    finishLine: '도착',
+    axisZero: '0',
+    axisMax: (max: number) => `${max} m`,
+    inputDistance: (name: string) => `${name} 거리(m)`,
+    inputTime: (name: string) => `${name} 시간(초)`,
+    fixedValue: (value: number | null) => (value === null ? '?' : String(value)),
+    predictTitle: '누가 더 빠를까요?',
+    predictSame: '같아요',
+    predictedLine: (label: string) => `내 예측: ${label}`,
+    run: '경주 시작',
+    runAgain: '다시 보기',
+    reset: '처음으로',
+    rejected: {
+      notNumber: '숫자만 넣어 주세요.',
+      distanceRange: (max: number) => `거리는 1부터 ${max}까지 정수로 넣어 주세요.`,
+      timeRange: (max: number) => `시간은 1부터 ${max}까지 정수로 넣어 주세요.`,
+      locked: '이 칸은 바꿀 수 없어요.',
+      needValues: '거리와 시간을 모두 넣어 주세요.',
+      predicted: '이미 예측했어요.',
+      needPrediction: '먼저 누가 더 빠를지 예측해 주세요.',
+    },
+    overlay: { sameTime: '같은 시간' },
+  },
+  percent: {
+    instructions: '칸을 눌러 칠해 보세요. 누른 채 끌면 여러 칸이 한꺼번에 바뀌어요.',
+    gridLabel: '100칸 판',
+    stripLabel: '100칸 띠',
+    cursorLabel: (n: number, shaded: boolean) => `${n}번 칸, ${shaded ? '칠함' : '안 칠함'}`,
+    count: (n: number) => `칠한 칸 ${n} / 100`,
+    keyHelp: '방향키: 칸 옮기기 · Space: 칠하기/지우기 · Enter: 여기까지 칠하기',
+    buttons: { clear: '모두 지우기', reset: '처음으로' },
+    rejected: { locked: '이 판은 칠할 수 없어요.' },
+    overlay: { ten: '10' },
   },
 } as const;
