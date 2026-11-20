@@ -61,7 +61,7 @@
 ## E03 수직선 `number-line`
 **목적:** 수의 연속성과 크기, 연산을 '이동'으로 본다. 가장 많은 단원이 쓰는 엔진.
 - **필수 모드:** `integer`(눈금·점 찍기·점프 화살표), `fraction`(등분 눈금, 분수 위치), `decimal`(핀치 줌: 1→0.1→0.01→0.001 눈금이 차례로 나타남)
-- **확장 모드:** `log-zoom`(10→100→1000→10000 줌아웃, 큰 수), `range`(이상·이하·초과·미만: 속 찬/빈 동그라미, 구간 색칠), `rounding`(올림·버림·반올림: 가까운 눈금으로 끌림 표시), `double`(이중 수직선: 위아래 두 양의 대응 — 비례, 분수 나눗셈), `skip-count`(뛰어 세기·배수)
+- **확장 모드:** `log-zoom`(10→100→1000→10000 줌아웃, 큰 수), `range`(이상·이하·초과·미만: 속 찬/빈 동그라미, 구간 색칠, 경계점·게이트, T219), `rounding`(올림·버림·반올림: 가까운 눈금으로 끌림 표시), `double`(이중 수직선: 위아래 두 양의 대응 — 비례, 분수 나눗셈), `skip-count`(뛰어 세기·배수)
 - **상태:** `{ min, max, unit: Rational, subdivisions, points: {value: Rational, label?}[], jumps: {from, to}[], zoom }`
 - **Observation:** 학생이 놓은 점의 값(가장 가까운 눈금으로 스냅, 정확한 유리수로 기록), 점프 합계, 구간 경계 포함 여부
 - **주의:** 모든 위치는 `Rational`로 다룬다(부동소수 금지). 핀치 줌은 두 손가락 + 마우스 휠 + `+/−` 버튼을 모두 지원.
@@ -125,7 +125,7 @@
 ## E12 3D 입체 `solid-3d`
 **목적:** 공간 감각: 입체를 돌려 보고, 전개도를 접고, 쌓기나무를 투영한다.
 - **필수 모드:** `cubes`(쌓기나무 쌓기 + 위·앞·옆 직교 투영 3개 뷰 실시간 동기화, 개수 세기), `net-fold`(모눈에 전개도 그리기 → 접기 애니메이션 → 겹치는 면 빨간색, 열린 면 표시)
-- **확장 모드:** `shapes-sort`(1학년: 상자·둥근기둥·공 모양 굴리기·쌓기 — 물리 연출 선택), `prism-pyramid`(밑면 다각형을 위로 밀어 올리면 각기둥, 한 점으로 모으면 각뿔; 면·모서리·꼭짓점 자동 세기 `n+2, 3n, 2n` / `n+1, 2n, n+1`), `surface-volume`(겉넓이: 전개도 칠하기 / 부피: 1cm³ 쌓기), `lathe`(평면도형을 축으로 돌려 원기둥·원뿔·구), `cross-section`(단면 자르기), `xray`(보이지 않는 모서리 점선)
+- **확장 모드:** `shapes-sort`(1학년: 상자·둥근기둥·공 모양 굴리기·쌓기 — 물리 연출 선택), `prism-pyramid`(밑면 다각형을 위로 밀어 올리면 각기둥, 한 점으로 모으면 각뿔; 면·모서리·꼭짓점 자동 세기 `n+2, 3n, 2n` / `n+1, 2n, n+1`), `surface-volume`(겉넓이: 전개도 칠하기 / 부피: 1cm³ 쌓기), `lathe`(평면도형을 축으로 돌려 원기둥·원뿔·구), `cross-section`(단면 자르기)(미구현), `xray`(보이지 않는 모서리 점선)
 - **3D 대체 원칙:** 저사양 기기에서는 등각(아이소메트릭) 2D 렌더로 자동 전환(성능 예산 미달 감지 시). AR(WebXR)은 안드로이드 크롬 한정 *선택 기능*이며, 아이패드에서는 지원되지 않는다.
 - **Observation:** 쌓기나무 좌표 집합, 각 투영의 칸 집합, 전개도 유효성(정육면체/직육면체가 되는지, 겹침), 입체 구성 요소 수
 
@@ -133,10 +133,11 @@
 **목적:** 단위의 필요성과 단위 사이 관계(길이·들이·무게).
 - **필수 모드:** `length`(비표준 단위 반복 → 1cm 자 만들기, 자 영점 맞추기, cm·mm·m·km 변환), `compare-direct`(1학년: 길이·넓이·들이·무게 직접 비교)
 - **확장 모드:** `capacity`(비커 물 붓기: 눈금 없는 두 비커 계량 퍼즐, L·mL), `weight`(저울·용수철: g·kg·t), `estimate`(어림 후 측정), `map-route`(지도 위 경로 길이 합)
+- **구현된 변형(엔진 `index.ts`의 `modes`는 위 6개이고, 아래는 설정으로 나뉜다):** `compare-direct`는 length 펴기·area 겹치기·capacity 같은 수조 붓기(T205), `length`는 단위 이어 붙이기·`mergeRule`·`unit-train`(T208)·`roll-circle` 굴렁쇠(T215), `estimate`는 `zoomLevels`(mm 확대, T211), `capacity`는 `cup-count`·`puzzle`, `weight`는 윗접시저울·용수철저울(T213)
 - **Observation:** 측정값(단위 포함, 정확 유리수), 영점 위치, 단위 반복 횟수와 틈·겹침 여부
 
 ## E14 시계·시간 `clock-time`
-- **필수 모드:** `clock`(긴바늘을 돌리면 짧은바늘이 톱니처럼 연동: 정시·30분 → 5분 → 1분 단위), `unroll`(원형 시계 둘레를 직선 시간 띠로 펼치기)
+- **필수 모드:** `clock`(긴바늘을 돌리면 짧은바늘이 톱니처럼 연동: 정시·30분 → 5분 → 1분 단위), `unroll`(원형 시계 둘레를 직선 시간 띠로 펼치기 — 별도 모드가 아니라 `clock`의 `unroll` 설정과 펼치기 단추로 구현, T201)
 - **확장 모드:** `duration`(시작~끝 시각 띠 위 걸린 시간), `time-calc`(60진법 시간 블록 덧셈·뺄셈: 60분 = 1시간 묶기), `calendar`(달력 규칙: 세로줄 +7)
 - **Observation:** 시각(시·분), 걸린 시간, 블록 정규형 여부
 
@@ -152,7 +153,7 @@
 
 ## E17 분류기 `sorter`
 - **필수 모드:** `sort`(속성 카드—색·모양·크기·구멍 수—를 상자에 넣기, 기준 이름 붙이기), `secret-rule`(컴퓨터가 정한 비밀 기준을 몇 장 보고 추리)
-- **확장 모드:** `venn`(두 기준 벤다이어그램: 예 — 변의 길이 × 각의 크기로 삼각형 분류), `hierarchy`(사각형 포함 관계 트리)
+- **확장 모드:** `venn`(두 기준 벤다이어그램: 예 — 변의 길이 × 각의 크기로 삼각형 분류), `hierarchy`(사각형 포함 관계 트리), `predict`(`secret-rule`의 예측 변형: 비밀 기준은 맞히기 전 화면에 없음, 엔진 `modes`에 'predict'로 등록, T217)
 - **Observation:** 상자별 카드, 기준의 일관성(같은 상자 안 카드가 기준을 모두 만족하는지), 분류 결과 수 세기 → E18 표로 넘김
 
 ## E18 그래프 스튜디오 `graph-studio`
@@ -167,7 +168,7 @@
 
 ## E20 비·비율 실험실 `ratio-lab`
 - **필수 모드:** `mix`(우유와 초코 시럽 비율에 따라 색 진하기가 변함: 같은 비율이면 같은 색), `resize`(사진을 같은 수 더하기로 늘리면 찌그러지고, 같은 수 곱하기로 늘리면 유지)
-- **확장 모드:** `rate`(속력 경주: 거리·시간 비율대로 캐릭터가 달림), `bar-model`(문장제 → 막대 모델 분할: 비례배분), `proportion-grid`(비례식 외항·내항 곱을 직사각형 넓이로 비교 → E06 `proportion`과 같은 시각 언어), `percent`(백분율 100칸 띠)
+- **확장 모드:** `rate`(속력 경주: 거리·시간 비율대로 캐릭터가 달림), `bar-model`(문장제 → 막대 모델 분할: 비례배분), `proportion-grid`(미구현 — 같은 격자 저울 그림을 E06 `proportion`으로 만들었다, T196·T198), `percent`(백분율 100칸 띠)
 - **Observation:** 비의 값(정확 유리수), 두 비의 동치 여부, 막대 모델 분할 수와 각 부분 값
 
 ---
@@ -176,21 +177,21 @@
 
 단원 명세(`docs/04-units/`)를 쓰면서 위 목록에 없는 옵션·변형이 필요해졌다. **그 단원을 구현하는 웨이브에서** 해당 엔진에 추가한다. 각 단원의 '후순위·선택' 칸에 "엔진 확장 필요"로 표시되어 있다.
 
-| 엔진 | 확장 | 필요한 단원 |
-| --- | --- | --- |
-| 러너 | `linkedViews`: 같은 수를 여러 엔진으로 나란히 보여 주고 동기화 (예: 묶어 세기–배열–수직선, 성장 패턴–쌓기나무, 톱니바퀴–뛰어 세기, 수 모형–나눗셈 세로셈) | g2s1u6, g2s2u6, g5s1u2, g3s2u2 |
-| E01 | `divide`의 `rewindCheck`(되감기 검산) | g3s2u2 |
-| E02 | `part-whole`의 `bubble-pairs`(10의 보수 방울), `bridge`(빈틈 채우는 막대) | g1s2u4, g1s2u6 |
-| E04 | `dot-array`의 `factFamily`(곱셈·나눗셈 삼각형 카드), `tiling` 두 방 비교, `fraction-area`의 `scaler`(리본 길이) | g3s1u3, g5s1u2, g5s2u2 |
-| E05 | `allowBreakWhole`, `fuseWhole`(대분수 쪼개기·합치기), `partition`의 `share`·`divide-whole`(÷자연수 → ×1/n 모핑) | g4s2u1, g3s2u4, g6s1u1 |
-| E07 | `remainderAlarm`, `estimateBar`, `magnetAlign`, `decimal`의 자릿값 시프트 데모(E01 `place-chart` 재사용 검토), `div`의 확대경·나머지 위치 표시 | g3s2u2, g4s1u3, g4s2u3, g5s2u4, g6s2u2 |
-| E08 | `fraction-steps`의 크로스 약분 보조 | g5s2u2 |
-| E09 | `construct`의 `showExtension`(선 연장 레이저), 디지털 종이접기(1단계는 정지 그림), `angle`의 레이저·거울 반사 퍼즐, `diagonalToggles`, `geoboard`의 `fixed-perimeter` | g3s1u2, g4s1u2, g4s2u6, g5s1u6 |
-| E12 | `net-fold`의 다각형 밑면·원기둥 전개도, `surface-volume`의 `fixed-volume`, `cubes`의 `top-numbers-layers`(층별 슬라이더)·`reconstruct`(투영도 역추론, 최소·최대 개수) | g6s1u2, g6s1u6, g6s2u3, g6s2u6 |
-| E13 | `compare-direct`의 `straighten`·`pour`, `length`의 `mergeRule`(10cm×10 → 1m)·`unit-train`·`zoomLevels`(mm)·`roll-circle`(굴렁쇠) | g1s1u4, g2s2u3, g3s1u5, g6s2u5 |
-| E14 | `clock`의 `showGears`, `snapMinuteTo` | g1s2u3, g2s2u4 |
-| E15 | `sequence`의 `translate`(표현 바꾸기), `calc-pattern`의 `table`·`magnifierUses` | g1s2u5, g2s2u6 |
-| E16 | `rule-shooter`의 빗나간 보석 설명 패널 | g5s1u3 |
-| E17 | `secret-rule`의 `twenty-questions`(스무고개, 역할 바꾸기), `hierarchy`의 `constraintToggles`·`trapezoidDefinition`(사다리꼴 정의 포함적/배타적 — 교과서 확인) | g4s2u4 |
-| E18 | `pictograph` 지도 배경(후순위), `orientationFlip`, `datasetPicker`, `line-graph`의 이미지 시퀀스 동기화 | g3s2u6, g4s1u5, g4s2u5 |
-| E20 | `rate`의 인구 밀도 장면, `bar-model`의 문장 형광펜 | g6s1u4, g6s2u4 |
+| 엔진 | 확장 | 필요한 단원 | 상태 |
+| --- | --- | --- | --- |
+| 러너 | `linkedViews`: 같은 수를 여러 엔진으로 나란히 보여 주고 동기화 (예: 묶어 세기–배열–수직선, 성장 패턴–쌓기나무, 톱니바퀴–뛰어 세기, 수 모형–나눗셈 세로셈) | g2s1u6, g2s2u6, g5s1u2, g3s2u2 | T005 |
+| E01 | `divide`의 `rewindCheck`(되감기 검산) | g3s2u2 | T043 |
+| E02 | `part-whole`의 `bubble-pairs`(10의 보수 방울), `bridge`(빈틈 채우는 막대) | g1s2u4, g1s2u6 | T041 |
+| E04 | `dot-array`의 `factFamily`(곱셈·나눗셈 삼각형 카드), `tiling` 두 방 비교, `fraction-area`의 `scaler`(리본 길이) | g3s1u3, g5s1u2, g5s2u2 | `factFamily` T044, `tiling` 두 방 비교 확인 필요, `scaler` T045 |
+| E05 | `allowBreakWhole`, `fuseWhole`(대분수 쪼개기·합치기), `partition`의 `share`·`divide-whole`(÷자연수 → ×1/n 모핑) | g4s2u1, g3s2u4, g6s1u1 | `allowBreakWhole`·`fuseWhole` T010, `share`·`divide-whole` T049 |
+| E07 | `remainderAlarm`, `estimateBar`, `magnetAlign`, `decimal`의 자릿값 시프트 데모(E01 `place-chart` 재사용 검토), `div`의 확대경·나머지 위치 표시 | g3s2u2, g4s1u3, g4s2u3, g5s2u4, g6s2u2 | `remainderAlarm` T047, `estimateBar` T046, `magnetAlign` T014, 자릿값 시프트 데모 T077(`shiftDemo`), `div` 확대경 T078(나머지 위치 표시는 확인 필요) |
+| E08 | `fraction-steps`의 크로스 약분 보조 | g5s2u2 | 미구현 (확인 필요: 코드에서 크로스 약분 보조를 찾지 못함) |
+| E09 | `construct`의 `showExtension`(선 연장 레이저), 디지털 종이접기(1단계는 정지 그림), `angle`의 레이저·거울 반사 퍼즐, `diagonalToggles`, `geoboard`의 `fixed-perimeter` | g3s1u2, g4s1u2, g4s2u6, g5s1u6 | `showExtension` T100, `angle` 레이저·거울 T102, `diagonalToggles` T101, `fixed-perimeter` T100, 디지털 종이접기 미구현 |
+| E12 | `net-fold`의 다각형 밑면·원기둥 전개도, `surface-volume`의 `fixed-volume`, `cubes`의 `top-numbers-layers`(층별 슬라이더)·`reconstruct`(투영도 역추론, 최소·최대 개수) | g6s1u2, g6s1u6, g6s2u3, g6s2u6 | 다각형 밑면 전개도 T143, 원기둥 전개도 T150, `fixed-volume` T145, 층별 슬라이더(`LayerPanelMode`) T134, `reconstruct` T135 |
+| E13 | `compare-direct`의 `straighten`·`pour`, `length`의 `mergeRule`(10cm×10 → 1m)·`unit-train`·`zoomLevels`(mm)·`roll-circle`(굴렁쇠) | g1s1u4, g2s2u3, g3s1u5, g6s2u5 | `straighten`·`pour` T205, `mergeRule`·`unit-train` T208, `zoomLevels` T211, `roll-circle` T215 |
+| E14 | `clock`의 `showGears`, `snapMinuteTo` | g1s2u3, g2s2u4 | T201 |
+| E15 | `sequence`의 `translate`(표현 바꾸기), `calc-pattern`의 `table`·`magnifierUses` | g1s2u5, g2s2u6 | `translate` T170, `calc-pattern` `table`·`magnifierUses` T179 |
+| E16 | `rule-shooter`의 빗나간 보석 설명 패널 | g5s1u3 | T174 |
+| E17 | `secret-rule`의 `twenty-questions`(스무고개, 역할 바꾸기), `hierarchy`의 `constraintToggles`·`trapezoidDefinition`(사다리꼴 정의 포함적/배타적 — 교과서 확인) | g4s2u4 | `twenty-questions`·`constraintToggles`·`trapezoidDefinition` T108 |
+| E18 | `pictograph` 지도 배경(후순위), `orientationFlip`, `datasetPicker`, `line-graph`의 이미지 시퀀스 동기화 | g3s2u6, g4s1u5, g4s2u5 | `orientationFlip` T155, `datasetPicker` T161, `pictograph` 지도 배경 미구현(후순위), `line-graph` 이미지 시퀀스 동기화 미구현 |
+| E20 | `rate`의 인구 밀도 장면, `bar-model`의 문장 형광펜 | g6s1u4, g6s2u4 | `bar-model` 문장 형광펜 T197, `rate` 인구 밀도 장면 미구현(g6s1u4 A2.T5는 문장 과제로 처리, T192) |
