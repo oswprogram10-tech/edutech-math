@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
+import { expectControlsAboveFold } from './controls-fold';
 
 /**
  * E14 시계·시간(clock) 샌드박스 E2E. 아이패드(WebKit)·크롬북·전자칠판 뷰포트.
@@ -8,6 +9,7 @@ import type { Locator, Page } from '@playwright/test';
  * - 톱니 회전, 펼치기·다시 감기와 띠 위 표시 이동
  * - 힌트 ② 오버레이 셋이 본 캔버스와 1px 안에 겹침(펼친 상태의 numeral-minutes 포함)
  * - 첫 화면 기준 이미지(톱니 보임, 펼친 상태), 좁은 판에서 최소 배율 0.6 + 판 안 스크롤
+ * - time-calc(T211): 키보드로 묶기·풀기·빼기, 올가미 연출, 분·초 단위, 힌트 ② sixty-overflow 정렬
  */
 
 test.describe.configure({ timeout: 120_000 });
@@ -709,4 +711,251 @@ test('힌트 ② plus-seven: 그 칸에서 같은 열 아래로 끝까지 +7 점
   expect(Math.abs(arrow.x - want.x)).toBeLessThanOrEqual(1);
   // 오버레이는 칸 숫자를 새로 쓰지 않는다.
   await expect(layer).toHaveText('+7+7+7');
+});
+
+// ══ T211: time-calc(시·분·초 블록 60 묶기·풀기) ═══════════════════════
+
+const TIME_ADD = {
+  op: 'add',
+  a: { h: 1, m: 45, s: 0 },
+  b: { h: 0, m: 30, s: 0 },
+  units: ['h', 'm'],
+};
+const TIME_SUB = {
+  op: 'sub',
+  a: { h: 3, m: 10, s: 0 },
+  b: { h: 1, m: 40, s: 0 },
+  units: ['h', 'm'],
+};
+const TIME_SEC = { op: 'add', a: { m: 1, s: 40 }, b: { m: 0, s: 50 }, units: ['m', 's'] };
+
+interface TimeObservation {
+  readonly mode?: string;
+  readonly big?: number;
+  readonly small?: number;
+  readonly normalized?: boolean;
+  readonly bundles?: number;
+  readonly unbundles?: number;
+  readonly tookAway?: boolean;
+  readonly misconceptions?: string[];
+}
+
+async function readTime(page: Page): Promise<TimeObservation> {
+  const text = await page.getByTestId('observation').textContent();
+  return JSON.parse(text ?? '{}') as TimeObservation;
+}
+
+async function pollTime(page: Page, check: (o: TimeObservation) => boolean): Promise<void> {
+  await expect.poll(async () => check(await readTime(page))).toBe(true);
+}
+
+function timeCanvas(page: Page): Locator {
+  return page.getByTestId('timecalc-canvas');
+}
+
+async function openTime(
+  page: Page,
+  config: Record<string, unknown> = {},
+  query = 'stage=fit',
+): Promise<void> {
+  const params = new URLSearchParams({ config: JSON.stringify(config) });
+  for (const [key, value] of new URLSearchParams(query)) params.set(key, value);
+  await page.goto(`/?${params.toString()}#/sandbox/E14`);
+  await expect(page.getByRole('heading', { name: '시계·시간' })).toBeVisible();
+  await page.getByRole('combobox', { name: '모드' }).selectOption('time-calc');
+  await pollTime(page, (o) => o.mode === 'time-calc');
+  let previous = '';
+  await expect
+    .poll(async () => {
+      const now = JSON.stringify(await timeCanvas(page).boundingBox());
+      const same = now === previous;
+      previous = now;
+      return same;
+    })
+    .toBe(true);
+}
+
+/** 올가미가 한 번이라도 그려졌는지 기록한다(400ms 동안만 보이므로 DOM 변화를 지켜본다). */
+async function watchLasso(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const w = window as unknown as { __lasso?: boolean };
+    w.__lasso = false;
+    new MutationObserver(() => {
+      if (document.querySelector('[data-part="lasso"]')) w.__lasso = true;
+    }).observe(document.body, { subtree: true, childList: true });
+  });
+}
+
+async function sawLasso(page: Page): Promise<boolean> {
+  return page.evaluate(() => (window as unknown as { __lasso?: boolean }).__lasso === true);
+}
+
+test('time-calc: 1시간 45분 + 30분은 처음부터 한 줄(1시간 75분)이고, 키보드로 묶으면 2시간 15분이 된다', async ({
+  page,
+}) => {
+  await openTime(page, TIME_ADD);
+  const board = timeCanvas(page);
+  expect(await readTime(page)).toMatchObject({
+    big: 1,
+    small: 75,
+    normalized: false,
+    misconceptions: ['MC-TIME-BASE-100'],
+  });
+  await expect(board.locator('[data-part="big-block"]')).toHaveCount(1);
+  await expect(board.locator('[data-part="rod"]')).toHaveCount(7);
+  await expect(board.locator('[data-part="single"]')).toHaveCount(5);
+  await watchLasso(page);
+  await button(page, '1시간으로 묶기').focus();
+  await page.keyboard.press('Enter');
+  await pollTime(page, (o) => o.big === 2 && o.small === 15 && o.normalized === true);
+  expect(await readTime(page)).toMatchObject({ bundles: 1, misconceptions: [] });
+  expect(await sawLasso(page)).toBe(true);
+  await expect(board.locator('[data-part="lasso"]')).toHaveCount(0);
+  await expect(board.locator('[data-part="big-block"]')).toHaveCount(2);
+  await expect(board.locator('[data-part="rod"]')).toHaveCount(1);
+  await expect(board.locator('[data-part="single"]')).toHaveCount(5);
+  // 60 미만이면 더 묶을 수 없다.
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('clock-message')).toContainText('60개');
+  await button(page, '처음으로').focus();
+  await page.keyboard.press('Space');
+  await pollTime(page, (o) => o.big === 1 && o.small === 75 && o.bundles === 0);
+});
+
+test('time-calc: 움직임 줄이기를 켜면 올가미 없이 바로 묶인다', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await openTime(page, TIME_ADD);
+  await watchLasso(page);
+  await button(page, '1시간으로 묶기').click();
+  await pollTime(page, (o) => o.big === 2 && o.small === 15);
+  expect(await sawLasso(page)).toBe(false);
+});
+
+test('time-calc: 3시간 10분 − 1시간 40분은 칸이 모자라 풀고 빼면 1시간 30분이다(키보드)', async ({
+  page,
+}) => {
+  await openTime(page, TIME_SUB);
+  const board = timeCanvas(page);
+  await expect(board.locator('[data-part="subtrahend"]')).toHaveText('뺄 시간 1시간 40분');
+  await expect(board.locator('[data-part="big-block"]')).toHaveCount(3);
+  await button(page, '빼기').focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('clock-message')).toHaveText('칸이 모자라요.');
+  expect((await readTime(page)).tookAway).toBe(false);
+  await button(page, '60분으로 풀기').focus();
+  await page.keyboard.press('Space');
+  await pollTime(page, (o) => o.big === 2 && o.small === 70 && o.unbundles === 1);
+  // 분 칸이 70개: 막대 7개
+  await expect(board.locator('[data-part="rod"]')).toHaveCount(7);
+  await expect(board.locator('[data-part="single"]')).toHaveCount(0);
+  await button(page, '빼기').focus();
+  await page.keyboard.press('Enter');
+  await pollTime(page, (o) => o.tookAway === true);
+  expect(await readTime(page)).toMatchObject({
+    big: 1,
+    small: 30,
+    normalized: true,
+    unbundles: 1,
+    misconceptions: [],
+  });
+  // 이미 뺐으면 거절한다.
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('clock-message')).toHaveText('이미 뺐어요.');
+});
+
+test('time-calc: 분·초 단위(1분 40초 + 50초)는 묶으면 2분 30초(150초)다', async ({ page }) => {
+  await openTime(page, TIME_SEC);
+  expect(await readTime(page)).toMatchObject({ big: 1, small: 90 });
+  await expect(page.getByText('초 칸', { exact: true })).toBeVisible();
+  await button(page, '1분으로 묶기').click();
+  await pollTime(page, (o) => o.big === 2 && o.small === 30 && o.normalized === true);
+});
+
+test('time-calc: 모드 상자에 time-calc가 있고, 단추가 모두 48px 이상이다', async ({ page }) => {
+  await openTime(page, TIME_SUB);
+  const buttons = page.getByTestId('clock-controls').getByRole('button');
+  const count = await buttons.count();
+  // 묶기·풀기·빼기·처음으로
+  expect(count).toBe(4);
+  for (let i = 0; i < count; i += 1) {
+    await buttons.nth(i).scrollIntoViewIfNeeded();
+    await expectMin(buttons.nth(i), 48, `단추 ${i}`);
+  }
+});
+
+test('T211 time-calc 조작 칸 첫 단추 줄이 첫 화면에 보인다', async ({ page }) => {
+  await openTime(page, TIME_ADD);
+  await expectControlsAboveFold(page, 'time-calc add', 0, 'clock-controls', 'page');
+  await openTime(page, TIME_SUB);
+  await expectControlsAboveFold(page, 'time-calc sub', 0, 'clock-controls', 'page');
+});
+
+test('힌트 ② sixty-overflow: 처음 60칸 둘레에 큰 블록 크기의 점선 상자, "60분 = 1시간", 시계 아이콘', async ({
+  page,
+}) => {
+  await openTime(page, TIME_ADD, 'stage=fit&overlay=sixty-overflow');
+  await toggleOverlayTime(page);
+  const layer = await expectAlignedTime(page, 'sixty-overflow');
+  await expect(layer.locator('[data-part="label"]')).toHaveText('60분 = 1시간');
+  await expect(layer.locator('[data-part="clock"]')).toHaveCount(1);
+  const box = await layer.locator('[data-part="box"]').boundingBox();
+  const group = await timeCanvas(page).locator('[data-part="rod-group"]').first().boundingBox();
+  const big = await timeCanvas(page).locator('[data-part="big-block"] rect').first().boundingBox();
+  if (!box || !group || !big) throw new Error('상자를 찾지 못했습니다.');
+  // 상자 중심이 처음 60칸(막대 6개) 묶음의 중심과 같다.
+  expect(Math.abs(box.x + box.width / 2 - (group.x + group.width / 2))).toBeLessThanOrEqual(1.5);
+  expect(Math.abs(box.y + box.height / 2 - (group.y + group.height / 2))).toBeLessThanOrEqual(1.5);
+  // 큰 블록과 같은 크기(바깥 여백 6px씩만 더 크다).
+  const scale = big.width / 96;
+  expect(Math.abs(box.width - big.width - 12 * scale)).toBeLessThanOrEqual(2);
+  expect(Math.abs(box.height - big.height - 12 * scale)).toBeLessThanOrEqual(2);
+  // 묶으면 사라진다.
+  await button(page, '1시간으로 묶기').click();
+  await pollTime(page, (o) => o.normalized === true);
+  await expect(page.locator('[data-overlay="sixty-overflow"] svg')).toHaveCount(0);
+});
+
+test('힌트 ② sixty-overflow: 분·초 단위는 "60초 = 1분"', async ({ page }) => {
+  await openTime(page, TIME_SEC, 'stage=fit&overlay=sixty-overflow');
+  await toggleOverlayTime(page);
+  const layer = await expectAlignedTime(page, 'sixty-overflow');
+  await expect(layer.locator('[data-part="label"]')).toHaveText('60초 = 1분');
+});
+
+/** 오버레이 svg 상자가 timecalc-canvas 상자와 1px 이내로 같다. */
+async function expectAlignedTime(page: Page, overlay: string): Promise<Locator> {
+  const layer = page.locator(`[data-overlay="${overlay}"]`);
+  await expect(layer).toBeVisible();
+  await expect
+    .poll(async () => {
+      const a = await timeCanvas(page).boundingBox();
+      const b = await layer.locator('svg').first().boundingBox();
+      if (!a || !b) return Number.POSITIVE_INFINITY;
+      return Math.max(
+        Math.abs(a.x - b.x),
+        Math.abs(a.y - b.y),
+        Math.abs(a.width - b.width),
+        Math.abs(a.height - b.height),
+      );
+    })
+    .toBeLessThanOrEqual(1);
+  return layer;
+}
+
+async function toggleOverlayTime(page: Page): Promise<void> {
+  await page.getByRole('button', { name: '힌트 겹쳐 보기' }).click();
+}
+
+test('화면 기준: time-calc 덧셈 첫 화면(1시간 75분)', async ({ page }) => {
+  await openTime(page, TIME_ADD);
+  await page.getByRole('heading', { name: '시계·시간' }).focus();
+  await expectPageSnapshot(page, 'clock-timecalc.png');
+});
+
+test('화면 기준: time-calc 뺄셈에서 1시간을 풀어 분 칸 70개가 된 화면', async ({ page }) => {
+  await openTime(page, TIME_SUB);
+  await button(page, '60분으로 풀기').click();
+  await pollTime(page, (o) => o.unbundles === 1);
+  await page.getByRole('heading', { name: '시계·시간' }).focus();
+  await expectPageSnapshot(page, 'clock-timecalc-sub.png');
 });

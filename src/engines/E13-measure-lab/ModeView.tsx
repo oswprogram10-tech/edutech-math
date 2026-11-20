@@ -3,6 +3,8 @@ import type { EngineViewProps } from '../../core/engine-sdk';
 import { CompareView } from './compare/CompareView';
 import { EstimateView } from './estimate/EstimateView';
 import type { EstimateAction } from './estimate/types';
+import { RouteView } from './route/RouteView';
+import type { RouteAction } from './route/types';
 import { TrainView } from './train/TrainView';
 import type { TrainAction } from './train/types';
 import type { CompareAction } from './compare/types';
@@ -22,6 +24,16 @@ export function E13View({
       <TrainView
         state={state}
         dispatch={(action) => dispatch(action as TrainAction)}
+        targetSize={targetSize}
+        readOnly={readOnly}
+      />
+    );
+  }
+  if (state.mode === 'map-route') {
+    return (
+      <RouteView
+        state={state}
+        dispatch={(action) => dispatch(action as RouteAction)}
         targetSize={targetSize}
         readOnly={readOnly}
       />

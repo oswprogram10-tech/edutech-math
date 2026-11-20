@@ -67,4 +67,49 @@ export const E14_MODE_STRINGS = {
       cannotArrow: '이 활동에서는 화살표를 그릴 수 없어요.',
     },
   },
+  timeCalc: {
+    configError: '이 활동의 설정이 올바르지 않아요.',
+    boardLabel: '시간 블록',
+    instructions:
+      '단추를 눌러 큰 블록과 작은 칸을 바꿔 보세요. Tab으로 단추를 고르고 Enter로 눌러요.',
+    subtrahend: (text: string) => `뺄 시간 ${text}`,
+    takeAway: '빼기',
+    reset: '처음으로',
+    units: {
+      hm: {
+        bigTitle: '시간 칸',
+        smallTitle: '분 칸',
+        bigCell: '1시간',
+        bundle: '1시간으로 묶기',
+        unbundle: '60분으로 풀기',
+        box: '60분 = 1시간',
+        format: (big: number, small: number): string =>
+          [big > 0 ? `${big}시간` : '', small > 0 || big === 0 ? `${small}분` : '']
+            .filter((part) => part !== '')
+            .join(' '),
+      },
+      ms: {
+        bigTitle: '분 칸',
+        smallTitle: '초 칸',
+        bigCell: '1분',
+        bundle: '1분으로 묶기',
+        unbundle: '60초로 풀기',
+        box: '60초 = 1분',
+        format: (big: number, small: number): string =>
+          [big > 0 ? `${big}분` : '', small > 0 || big === 0 ? `${small}초` : '']
+            .filter((part) => part !== '')
+            .join(' '),
+      },
+    },
+    rejected: {
+      readOnly: '지금은 조작할 수 없어요.',
+      bundle: '작은 칸이 60개가 되어야 묶을 수 있어요.',
+      unbundleNone: '풀 큰 블록이 없어요.',
+      unbundleFull: '작은 칸이 60개가 안 될 때만 풀 수 있어요.',
+      takeAway: '칸이 모자라요.',
+      tookAway: '이미 뺐어요.',
+      notSub: '이 활동에서는 빼지 않아요.',
+      same: '이미 처음 모습이에요.',
+    },
+  },
 } as const;

@@ -25,7 +25,7 @@ export function EstimateView({ state, dispatch, targetSize, readOnly = false }: 
       mode="estimate"
       error={state.error}
       targetSize={targetSize}
-      logicalHeight={boardHeight()}
+      logicalHeight={boardHeight(state)}
       renderBoard={(svgStyle, className) => (
         <EstimateBoard
           svgRef={svgRef}

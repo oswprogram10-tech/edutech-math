@@ -8,4 +8,6 @@ export const estimatePredicates: Readonly<Record<string, EnginePredicate>> = {
   estimateLocked: (observation) => observation['estimateLocked'] === true,
   /** 자를 한 번 이상 옮겼다(처음으로 누르면 다시 false). */
   rulerMoved: (observation) => observation['rulerMoved'] === true,
+  /** mm 눈금 확대를 보고 있다. */
+  zoomed: (observation) => observation['zoomed'] === true,
 };

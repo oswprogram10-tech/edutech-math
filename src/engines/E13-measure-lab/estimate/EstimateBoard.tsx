@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import type { CSSProperties, RefObject } from 'react';
 import { pointerToLogical, useDrag } from '../../../core/engine-sdk';
+import { Rational } from '../../../core/math';
 import { ObjectShape } from '../length/LengthBoard';
 import { num } from '../rat';
 import { E13_STRINGS as S } from '../strings.ko';
@@ -20,10 +21,14 @@ import {
   PPC,
   RULER,
   RULER_WIDTH,
+  ZOOM,
+  ZOOM_LEFT,
+  ZOOM_PPC,
+  ZOOM_RIGHT,
   r2,
   rulerLeft,
 } from './layout';
-import { rulerHidden } from './settings';
+import { endTick, rulerHidden } from './settings';
 import { MAX_OFFSET_CM, RULER_CM } from './types';
 import type { EstimateState } from './types';
 import type { EstimateUi } from './useEstimateUi';
@@ -185,6 +190,135 @@ function EstimateBar({ value }: { value: number }) {
   );
 }
 
+/**
+ * mm 확대 칸(zoomLevels가 ['cm','mm']일 때만). 물건 오른쪽 끝을 중심으로 2cm 구간을 8배로 그린다.
+ * 1mm 눈금 10칸, cm 숫자만 쓰고 mm 숫자는 쓰지 않는다. 5mm 눈금만 조금 길다.
+ * 값을 글로 쓰지 않는다(눈금 위치로만 읽는다).
+ */
+function ZoomPanel({ state, objectEnd }: { state: EstimateState; objectEnd: number }) {
+  const shown = state.zoomed && !rulerHidden(state);
+  const frameX = ZOOM_LEFT - 10;
+  const frameW = ZOOM_RIGHT - ZOOM_LEFT + 20;
+  const frame = (
+    <rect
+      data-part="zoom-frame"
+      x={frameX}
+      y={ZOOM.frameTop}
+      width={frameW}
+      height={ZOOM.frameHeight}
+      rx={10}
+      fill={shown ? '#fffdf6' : 'rgba(255,255,255,0.5)'}
+      stroke={shown ? INK : '#7a8497'}
+      strokeWidth={shown ? 3 : 2.5}
+      strokeDasharray={shown ? undefined : '10 6'}
+    />
+  );
+  if (!shown) {
+    return (
+      <g data-part="zoom" data-zoomed="false">
+        {frame}
+        <text
+          x={ZOOM.centerX}
+          y={ZOOM.frameTop + ZOOM.frameHeight / 2}
+          textAnchor="middle"
+          dominantBaseline="central"
+          fontSize={24}
+          fontWeight={800}
+          fill="#5b6578"
+        >
+          {S.estimate.zoomHint}
+        </text>
+      </g>
+    );
+  }
+  const endMm = Number(endTick(state).mul(Rational.of(10)).integerPart());
+  const mmWidth = ZOOM_PPC / 10;
+  const stripBottom = ZOOM.stripTop + ZOOM.stripHeight;
+  return (
+    <g data-part="zoom" data-zoomed="true" role="img" aria-label={S.estimate.zoomFrame}>
+      {/* 자에서 확대 칸으로 이어지는 선(1cm 앞뒤 구간). */}
+      <g data-part="zoom-wedge" stroke="#7a8497" strokeWidth={2} strokeDasharray="4 6">
+        <line
+          x1={r2(objectEnd - PPC)}
+          y1={RULER.top + RULER.height}
+          x2={ZOOM_LEFT - 10}
+          y2={ZOOM.frameTop}
+        />
+        <line
+          x1={r2(objectEnd + PPC)}
+          y1={RULER.top + RULER.height}
+          x2={ZOOM_RIGHT + 10}
+          y2={ZOOM.frameTop}
+        />
+      </g>
+      {frame}
+      <rect
+        data-part="zoom-object"
+        x={ZOOM_LEFT}
+        y={ZOOM.objectTop}
+        width={ZOOM.centerX - ZOOM_LEFT}
+        height={ZOOM.objectHeight}
+        fill="#e8f0ff"
+        stroke={INK}
+        strokeWidth={3}
+      />
+      <rect
+        data-part="zoom-strip"
+        x={ZOOM_LEFT}
+        y={ZOOM.stripTop}
+        width={ZOOM_RIGHT - ZOOM_LEFT}
+        height={ZOOM.stripHeight}
+        fill="#fff6c9"
+        stroke={INK}
+        strokeWidth={3}
+      />
+      {Array.from({ length: 21 }, (_, i) => {
+        const k = endMm - 10 + i;
+        const x = ZOOM.centerX + (i - 10) * mmWidth;
+        const whole = k % 10 === 0;
+        const half = k % 10 === 5;
+        const len = whole ? 60 : half ? 42 : 28;
+        return (
+          <g key={k} data-part="zoom-tick" data-kind={whole ? 'cm' : half ? 'half' : 'mm'}>
+            <line
+              x1={x}
+              y1={ZOOM.stripTop}
+              x2={x}
+              y2={ZOOM.stripTop + len}
+              stroke={INK}
+              strokeWidth={whole ? 4 : half ? 3 : 2}
+            />
+            {whole ? (
+              <text
+                x={x}
+                y={ZOOM.stripTop + 80}
+                textAnchor="middle"
+                dominantBaseline="central"
+                fontSize={24}
+                fontWeight={800}
+                fill={INK}
+              >
+                {k / 10}
+              </text>
+            ) : null}
+          </g>
+        );
+      })}
+      {/* 물건 끝 표시선. */}
+      <line
+        data-part="zoom-end"
+        x1={ZOOM.centerX}
+        y1={ZOOM.objectTop}
+        x2={ZOOM.centerX}
+        y2={stripBottom - 8}
+        stroke={ORANGE}
+        strokeWidth={4}
+        strokeDasharray="8 5"
+      />
+    </g>
+  );
+}
+
 export function EstimateBoard({ svgRef, state, ui, locked, svgStyle, className }: Props) {
   const objectW = num(state.lengthCm) * PPC;
   const hidden = rulerHidden(state);
@@ -194,7 +328,7 @@ export function EstimateBoard({ svgRef, state, ui, locked, svgStyle, className }
       ref={svgRef}
       className={className}
       style={{ ...svgStyle, touchAction: 'none' }}
-      viewBox={`0 0 ${BOARD.width} ${boardHeight()}`}
+      viewBox={`0 0 ${BOARD.width} ${boardHeight(state)}`}
       preserveAspectRatio="xMidYMid meet"
       data-testid="estimate-canvas"
       role="group"
@@ -240,6 +374,7 @@ export function EstimateBoard({ svgRef, state, ui, locked, svgStyle, className }
           <RulerShape svgRef={svgRef} state={state} ui={ui} locked={locked} />
         </>
       )}
+      {state.zoomMm ? <ZoomPanel state={state} objectEnd={objectEnd} /> : null}
     </svg>
   );
 }

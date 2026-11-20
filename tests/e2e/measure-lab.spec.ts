@@ -1,14 +1,16 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
+import { expectControlsAboveFold } from './controls-fold';
 
 /**
- * E13 측정 실험실(compare-direct·length·estimate) 샌드박스 E2E. 아이패드(WebKit)·크롬북·전자칠판 뷰포트.
+ * E13 측정 실험실(compare-direct·length·estimate·map-route) 샌드박스 E2E. 아이패드(WebKit)·크롬북·전자칠판 뷰포트.
  *
  * - compare-direct: 펴기 단추·끌어 펴기, 출발선 자석, 넓이 겹치기, 들이 붓기
  * - length: 클립 4개 자석 이어 붙이기 → exact, 일부러 만든 틈 표시, 키보드로 1cm 블록 10개 → 자 만들기 → 숫자 놓기
  * - estimate(T208): 어림 먼저 → 자 끌어 영점 맞추기(자석·키보드), length mergeRule: 10cm 막대 10개 → 합체,
  *   length unit-train: 키보드로 승격·풀기·빼기
- * - 힌트 ② 오버레이 여덟이 본 판과 1px 안에 겹침
+ * - estimate zoomLevels(T211): [확대]로 1cm가 mm 눈금 10칸으로 보임, map-route(T211): 길을 눌러·키보드로 경로 만들기
+ * - 힌트 ② 오버레이 아홉이 본 판과 1px 안에 겹침
  * - 첫 화면 기준 이미지(모드별 크롬북·아이패드), 64px 모드의 단추 크기
  *
  * 판 좌표는 논리 1000×600이지만 판 높이를 가정하지 않고 상자 너비로만 배율을 구한다(T222 메모).
@@ -41,7 +43,7 @@ async function settleCanvas(page: Page, testId: string): Promise<void> {
     .toBe(true);
 }
 
-type ModeName = 'compare-direct' | 'length' | 'estimate';
+type ModeName = 'compare-direct' | 'length' | 'estimate' | 'map-route';
 
 async function open(
   page: Page,
@@ -60,11 +62,13 @@ async function open(
   const canvasId =
     mode === 'estimate'
       ? 'estimate-canvas'
-      : mode === 'length'
-        ? config['variant'] === undefined
-          ? 'length-canvas'
-          : 'train-canvas'
-        : 'compare-canvas';
+      : mode === 'map-route'
+        ? 'route-canvas'
+        : mode === 'length'
+          ? config['variant'] === undefined
+            ? 'length-canvas'
+            : 'train-canvas'
+          : 'compare-canvas';
   await settleCanvas(page, canvasId);
   return canvasId;
 }
@@ -1007,4 +1011,260 @@ test('화면 기준: length unit-train 첫 화면(1m 70cm + 2m 50cm)', async ({ 
   await open(page, 'length', TRAIN_ADD);
   await page.getByRole('heading', { name: '측정 실험실' }).focus();
   await expectPageSnapshot(page, 'measure-train.png');
+});
+
+// ══ T211: estimate 확대(zoomLevels) · map-route ═══════════════════════
+
+const ZOOM_CONFIG = {
+  object: { name: 'pencil', lengthCm: '3.7' },
+  ruler: { offsetCm: 0, draggable: true },
+  zoomLevels: ['cm', 'mm'],
+};
+
+/** 두 요소의 가로 중심 간격(화면 px). */
+async function gapX(a: Locator, b: Locator): Promise<number> {
+  const [boxA, boxB] = [await a.boundingBox(), await b.boundingBox()];
+  if (!boxA || !boxB) throw new Error('상자를 찾지 못했습니다.');
+  return boxB.x + boxB.width / 2 - (boxA.x + boxA.width / 2);
+}
+
+test('estimate 확대: [눈금 크게]를 누르면 1cm가 mm 눈금 10칸으로 나뉘어 8배로 보이고 [눈금 작게]로 돌아온다', async ({
+  page,
+}) => {
+  const id = await open(page, 'estimate', ZOOM_CONFIG);
+  const canvas = canvasOf(page, id);
+  expect(await readObservation(page)).toMatchObject({ zoomed: false, lengthMm: '37' });
+  await expect(canvas.locator('[data-part="zoom-tick"]')).toHaveCount(0);
+  await button(page, '눈금 크게').click();
+  await pollObservation(page, (o) => o['zoomed'] === true);
+  const ticks = canvas.locator('[data-part="zoom-tick"]');
+  await expect(ticks).toHaveCount(21);
+  await expect(canvas.locator('[data-part="zoom-tick"][data-kind="cm"]')).toHaveCount(2);
+  // 확대 눈금 한 칸(1mm)의 간격은 자의 1cm 간격의 0.8배(= 8배 확대 ÷ 10칸)다.
+  const zoomStep = await gapX(ticks.nth(0).locator('line'), ticks.nth(1).locator('line'));
+  const rulerStep = await gapX(
+    canvas.locator('[data-part="ruler-tick"] line').nth(4),
+    canvas.locator('[data-part="ruler-tick"] line').nth(5),
+  );
+  expect(zoomStep / rulerStep).toBeGreaterThan(0.78);
+  expect(zoomStep / rulerStep).toBeLessThan(0.82);
+  // 5mm 눈금은 mm 눈금보다 길고 cm 눈금은 더 길다.
+  const heightOf = async (kind: string) =>
+    (
+      await canvas
+        .locator(`[data-part="zoom-tick"][data-kind="${kind}"] line`)
+        .first()
+        .boundingBox()
+    )?.height ?? 0;
+  const [mmH, halfH, cmH] = [await heightOf('mm'), await heightOf('half'), await heightOf('cm')];
+  expect(halfH).toBeGreaterThan(mmH + 1);
+  expect(cmH).toBeGreaterThan(halfH + 1);
+  // 물건 끝은 확대 그림의 가운데 선이고, 확대한 물건의 오른쪽 끝과 같은 자리다.
+  const end = await canvas.locator('[data-part="zoom-end"]').boundingBox();
+  const object = await canvas.locator('[data-part="zoom-object"]').boundingBox();
+  const strip = await canvas.locator('[data-part="zoom-strip"]').boundingBox();
+  if (!end || !object || !strip) throw new Error('상자를 찾지 못했습니다.');
+  expect(Math.abs(end.x + end.width / 2 - (object.x + object.width))).toBeLessThanOrEqual(2);
+  expect(Math.abs(end.x + end.width / 2 - (strip.x + strip.width / 2))).toBeLessThanOrEqual(2);
+  // 3.7cm 끝의 확대 구간에는 cm 숫자 3과 4만 있고 판 글에 mm 값(37)은 없다.
+  expect(await canvas.locator('[data-part="zoom-tick"] text').allTextContents()).toEqual([
+    '3',
+    '4',
+  ]);
+  expect((await page.getByTestId('measure-board').textContent()) ?? '').not.toContain('37');
+  await button(page, '눈금 작게').click();
+  await pollObservation(page, (o) => o['zoomed'] === false);
+  await expect(ticks).toHaveCount(0);
+});
+
+test('estimate 확대: 키보드(Enter)로 [눈금 크게]를 누르고, 자를 옮기면 확대 숫자가 따라간다', async ({
+  page,
+}) => {
+  const id = await open(page, 'estimate', {
+    ...ZOOM_CONFIG,
+    ruler: { offsetCm: 3, draggable: true },
+  });
+  const numerals = () =>
+    canvasOf(page, id).locator('[data-part="zoom-tick"] text').allTextContents();
+  await button(page, '눈금 크게').focus();
+  await page.keyboard.press('Enter');
+  await pollObservation(page, (o) => o['zoomed'] === true);
+  // 끝이 6.7cm: 숫자 6과 7
+  expect(await numerals()).toEqual(['6', '7']);
+  // 자를 0.5cm 옮기면(끝 7.2) 숫자가 7과 8로 바뀐다. (방향키: 자 왼쪽 이동 = 눈금 +0.5)
+  await canvasOf(page, id).locator('[data-part="ruler"]').focus();
+  await page.keyboard.press('ArrowLeft');
+  await pollObservation(page, (o) => o['rulerOffset'] === '7/2');
+  expect(await numerals()).toEqual(['7', '8']);
+});
+
+const TOWN = {
+  map: 'sample-town-01',
+  segmentsM: { 'school-library': 450, 'library-park': 620, 'school-park': 980 },
+  targetM: 1000,
+};
+/** 지도 위 길 한가운데·노드의 논리 좌표(maps.ts의 고정 좌표). 배율은 상자 너비로만 구한다. */
+const ROAD_MID = {
+  'school-library': { x: 310, y: 110 },
+  'library-park': { x: 635, y: 115 },
+} as const;
+const NODE_AT = { school: { x: 150, y: 150 } } as const;
+
+async function tapOnBoard(page: Page, id: string, at: { x: number; y: number }): Promise<void> {
+  await canvasOf(page, id).scrollIntoViewIfNeeded();
+  const point = await toScreen(page, id, at.x, at.y);
+  await page.mouse.click(point.x, point.y);
+}
+
+test('map-route: 출발 노드와 길을 눌러 경로를 만들고, 1km 막대가 합만큼 채워진다(숫자 합계는 없다)', async ({
+  page,
+}) => {
+  const id = await open(page, 'map-route', TOWN);
+  const canvas = canvasOf(page, id);
+  expect(await readObservation(page)).toMatchObject({ path: [], totalM: 0, reachedTo: false });
+  await expect(canvas.locator('[data-part="goal-fill"]')).toHaveCount(0);
+  // 출발을 정하기 전에는 길을 눌러도 이어지지 않는다.
+  await tapOnBoard(page, id, ROAD_MID['school-library']);
+  await expect(page.getByTestId('measure-message')).toContainText('출발');
+  expect((await readObservation(page))['path']).toEqual([]);
+  await tapOnBoard(page, id, NODE_AT.school);
+  await pollObservation(page, (o) => Array.isArray(o['path']) && o['path'].length === 1);
+  await tapOnBoard(page, id, ROAD_MID['school-library']);
+  await tapOnBoard(page, id, ROAD_MID['library-park']);
+  await pollObservation(page, (o) => o['totalM'] === 1070);
+  expect(await readObservation(page)).toMatchObject({
+    path: ['school', 'library', 'park'],
+    diffFromTarget: 70,
+    bestDiff: 20,
+  });
+  // 막대: 칠한 길이 / 전체 = 1070/1200, 목표 눈금은 전체의 1000/1200 자리.
+  const track = await canvas.locator('[data-part="goal-track"]').boundingBox();
+  const fill = await canvas.locator('[data-part="goal-fill"]').boundingBox();
+  const mark = await canvas.locator('[data-part="goal-mark"]').boundingBox();
+  if (!track || !fill || !mark) throw new Error('상자를 찾지 못했습니다.');
+  expect(Math.abs(fill.width / track.width - 1070 / 1200)).toBeLessThan(0.01);
+  expect(Math.abs((mark.x + mark.width / 2 - track.x) / track.width - 1000 / 1200)).toBeLessThan(
+    0.01,
+  );
+  await expect(canvas.locator('[data-part="goal-label"]')).toHaveText('1km');
+  // 판에 합계 숫자가 없다(구간 길이 글만).
+  expect((await page.getByTestId('measure-board').textContent()) ?? '').not.toMatch(/1070|1,070/);
+  // 같은 구간을 다시 누르면 거절된다.
+  await tapOnBoard(page, id, ROAD_MID['school-library']);
+  await expect(page.getByTestId('measure-message')).toContainText('이미 지나온');
+  expect((await readObservation(page))['totalM']).toBe(1070);
+});
+
+test('map-route: 키보드로 출발·구간 단추(Enter)를 눌러 경로를 만들고 하나 지우기·처음으로', async ({
+  page,
+}) => {
+  await open(page, 'map-route', TOWN);
+  await button(page, '학교에서 출발').focus();
+  await page.keyboard.press('Enter');
+  await pollObservation(page, (o) => Array.isArray(o['path']) && o['path'].length === 1);
+  // 출발하면 길 단추 목록으로 바뀐다.
+  await expect(button(page, '학교–공원')).toBeVisible();
+  await button(page, '도서관–공원').focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('measure-message')).toContainText('이어진 길이 아니에요');
+  await button(page, '학교–공원').focus();
+  await page.keyboard.press('Enter');
+  await pollObservation(page, (o) => o['totalM'] === 980);
+  expect(await readObservation(page)).toMatchObject({
+    path: ['school', 'park'],
+    diffFromTarget: 20,
+    bestDiff: 20,
+  });
+  await button(page, '하나 지우기').focus();
+  await page.keyboard.press('Space');
+  await pollObservation(page, (o) => o['totalM'] === 0);
+  await button(page, '학교–도서관').focus();
+  await page.keyboard.press('Enter');
+  await button(page, '도서관–공원').focus();
+  await page.keyboard.press('Enter');
+  await pollObservation(page, (o) => o['totalM'] === 1070);
+  await button(page, '처음으로').focus();
+  await page.keyboard.press('Enter');
+  await pollObservation(
+    page,
+    (o) => o['totalM'] === 0 && Array.isArray(o['path']) && o['path'].length === 0,
+  );
+});
+
+test('map-route: from·to가 있으면 처음부터 그 노드에서 시작하고 reachedTo를 판정한다', async ({
+  page,
+}) => {
+  await open(page, 'map-route', { ...TOWN, from: 'school', to: 'park' });
+  expect(await readObservation(page)).toMatchObject({ path: ['school'], reachedTo: false });
+  await expect(button(page, '학교에서 출발')).toHaveCount(0);
+  await button(page, '학교–도서관').click();
+  await expect(page.getByTestId('measure-message')).toHaveText('');
+  expect((await readObservation(page))['reachedTo']).toBe(false);
+  await button(page, '도서관–공원').click();
+  await pollObservation(page, (o) => o['reachedTo'] === true);
+  const done = await readObservation(page);
+  expect(done).toMatchObject({ totalM: 1070, diffFromTarget: 70, bestDiff: 20 });
+});
+
+test('map-route: 단추가 모두 48px 이상이다', async ({ page }) => {
+  await open(page, 'map-route', { ...TOWN, from: 'school' });
+  const buttons = page.getByTestId('measure-controls').getByRole('button');
+  const count = await buttons.count();
+  // 구간 3개 + 하나 지우기 + 처음으로
+  expect(count).toBe(5);
+  for (let i = 0; i < count; i += 1) {
+    await buttons.nth(i).scrollIntoViewIfNeeded();
+    await expectMin(buttons.nth(i), 48, `단추 ${i}`);
+  }
+});
+
+test('T211 조작 칸 첫 단추 줄이 첫 화면에 보인다(map-route·확대)', async ({ page }) => {
+  await open(page, 'map-route', { ...TOWN, from: 'school' });
+  await expectControlsAboveFold(page, 'map-route', 0, 'measure-controls', 'page');
+  await open(page, 'estimate', { ...ZOOM_CONFIG, estimateFirst: false });
+  await expectControlsAboveFold(page, 'estimate zoom', 0, 'measure-controls', 'page');
+});
+
+test('힌트 ② mm-count: 확대 구간과 같은 크기의 1cm에 mm 칸 10개를 1~10으로 번호 붙인다', async ({
+  page,
+}) => {
+  await open(page, 'estimate', ZOOM_CONFIG, 'stage=fit&overlay=mm-count');
+  await toggleOverlay(page);
+  const layer = await expectAligned(page, 'estimate-canvas', 'mm-count');
+  await expect(layer.locator('[data-part="mm-cell"]')).toHaveCount(10);
+  expect(await layer.locator('[data-part="mm-cell"] text').allTextContents()).toEqual(
+    Array.from({ length: 10 }, (_, i) => String(i + 1)),
+  );
+  await expect(layer.locator('[data-part="label"]')).toHaveText('1cm');
+  // 확대하면 확대 구간의 cm 눈금 사이(1cm)가 이 막대 길이와 같다.
+  await button(page, '눈금 크게').click();
+  await pollObservation(page, (o) => o['zoomed'] === true);
+  const cells = layer.locator('[data-part="mm-cell"] rect');
+  const first = await cells.first().boundingBox();
+  const last = await cells.last().boundingBox();
+  const board = canvasOf(page, 'estimate-canvas');
+  const cmTicks = board.locator('[data-part="zoom-tick"][data-kind="cm"] line');
+  const t0 = await cmTicks.nth(0).boundingBox();
+  const t1 = await cmTicks.nth(1).boundingBox();
+  const strip = await board.locator('[data-part="zoom-strip"]').boundingBox();
+  if (!first || !last || !t0 || !t1 || !strip) throw new Error('상자를 찾지 못했습니다.');
+  expect(Math.abs(last.x + last.width - first.x - (t1.x - t0.x))).toBeLessThanOrEqual(3);
+  // 확대 그림을 가리지 않는다: 막대 오른쪽 끝이 확대 칸 왼쪽 끝보다 왼쪽이다.
+  expect(last.x + last.width).toBeLessThan(strip.x);
+});
+
+test('화면 기준: estimate 확대(1cm가 mm 눈금 10칸으로)', async ({ page }) => {
+  await open(page, 'estimate', ZOOM_CONFIG);
+  await button(page, '눈금 크게').click();
+  await pollObservation(page, (o) => o['zoomed'] === true);
+  await page.getByRole('heading', { name: '측정 실험실' }).focus();
+  await expectPageSnapshot(page, 'measure-zoom.png');
+});
+
+test('화면 기준: map-route 경로를 만든 화면(학교→도서관)', async ({ page }) => {
+  await open(page, 'map-route', { ...TOWN, from: 'school' });
+  await button(page, '학교–도서관').click();
+  await pollObservation(page, (o) => o['totalM'] === 450);
+  await page.getByRole('heading', { name: '측정 실험실' }).focus();
+  await expectPageSnapshot(page, 'measure-route.png');
 });

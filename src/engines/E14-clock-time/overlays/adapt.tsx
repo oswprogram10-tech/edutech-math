@@ -7,6 +7,7 @@ import type { OverlayProps } from '../../../core/engine-sdk';
 import type { CalendarConfig, CalendarState } from '../calendar/types';
 import type { DurationConfig, DurationState } from '../duration/types';
 import type { E14Config, E14State } from '../modes';
+import type { TimeCalcConfig, TimeCalcState } from '../timecalc/types';
 import type { ClockConfig, ClockState } from '../types';
 
 export function forClock(
@@ -36,5 +37,15 @@ export function forCalendar(
     const { state } = props;
     if (state.mode !== 'calendar') return null;
     return <Overlay {...props} config={props.config as CalendarConfig} state={state} />;
+  };
+}
+
+export function forTimeCalc(
+  Overlay: ComponentType<OverlayProps<TimeCalcConfig, TimeCalcState>>,
+): ComponentType<OverlayProps<E14Config, E14State>> {
+  return function TimeCalcOverlay(props) {
+    const { state } = props;
+    if (state.mode !== 'time-calc') return null;
+    return <Overlay {...props} config={props.config as TimeCalcConfig} state={state} />;
   };
 }

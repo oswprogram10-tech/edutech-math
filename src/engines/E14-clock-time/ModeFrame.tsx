@@ -15,14 +15,24 @@ const MIN_SCALE = 0.6;
 const MAX_FIT = 1.5;
 
 export interface ModeFrameProps {
-  readonly mode: 'duration' | 'calendar';
+  readonly mode: 'duration' | 'calendar' | 'time-calc';
+  /** 판의 논리 높이. 안 주면 600이다(duration·calendar). 주면 판 칸 최소 높이도 0.6 × 이 값이 된다(T222). */
+  readonly logicalHeight?: number;
   readonly error: string | null;
   readonly targetSize: number;
   readonly renderBoard: (svgStyle: CSSProperties | undefined, className: string) => ReactNode;
   readonly controls: ReactNode;
 }
 
-export function ModeFrame({ mode, error, targetSize, renderBoard, controls }: ModeFrameProps) {
+export function ModeFrame({
+  mode,
+  error,
+  targetSize,
+  logicalHeight,
+  renderBoard,
+  controls,
+}: ModeFrameProps) {
+  const height = logicalHeight ?? LOGICAL_HEIGHT;
   const boardRef = useRef<HTMLDivElement>(null);
   const board = useRenderedSize(boardRef);
 
@@ -40,10 +50,10 @@ export function ModeFrame({ mode, error, targetSize, renderBoard, controls }: Mo
   let svgStyle: CSSProperties | undefined;
   let scroll = false;
   if (board.width > 0 && board.height > 0) {
-    const fit = Math.min(board.width / LOGICAL_WIDTH, board.height / LOGICAL_HEIGHT, MAX_FIT);
+    const fit = Math.min(board.width / LOGICAL_WIDTH, board.height / height, MAX_FIT);
     const scale = Math.max(fit, MIN_SCALE);
     scroll = fit < MIN_SCALE - 0.005;
-    svgStyle = { width: `${LOGICAL_WIDTH * scale}px`, height: `${LOGICAL_HEIGHT * scale}px` };
+    svgStyle = { width: `${LOGICAL_WIDTH * scale}px`, height: `${height * scale}px` };
   }
 
   return (
@@ -54,6 +64,11 @@ export function ModeFrame({ mode, error, targetSize, renderBoard, controls }: Mo
           className={styles.boardArea}
           data-scroll={scroll ? 'true' : 'false'}
           data-testid="clock-board"
+          style={
+            logicalHeight === undefined
+              ? undefined
+              : { minHeight: `${Math.round(logicalHeight * MIN_SCALE)}px` }
+          }
         >
           {renderBoard(svgStyle, styles.boardSvg ?? '')}
         </div>

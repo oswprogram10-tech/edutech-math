@@ -110,6 +110,12 @@ export const E13_STRINGS = {
     draftLabel: (draft: string) => `어림: ${draft === '' ? '□' : draft}cm`,
     lockedLabel: (value: number) => `어림: ${value}cm`,
     myEstimate: '내 어림',
+    /** 앱 도구 줄의 [확대](판 크기)와 이름이 겹치지 않게 "눈금"을 붙인다. */
+    zoomOn: '눈금 크게',
+    zoomOff: '눈금 작게',
+    zoomFrame: '확대한 눈금',
+    zoomHint: '[눈금 크게]를 눌러 보세요',
+    zoomInstructions: '[눈금 크게]를 누르면 1cm가 작은 눈금 10칸으로 나뉘어 보여요.',
     rejected: {
       readOnly: '지금은 조작할 수 없어요.',
       first: '먼저 어림해 보세요.',
@@ -118,6 +124,7 @@ export const E13_STRINGS = {
       out: '자를 그쪽으로는 옮길 수 없어요.',
       badEstimate: '1부터 99까지의 수를 넣어 주세요.',
       locked: '어림은 한 번만 넣을 수 있어요.',
+      noZoom: '이 활동에서는 확대하지 않아요.',
     },
   },
   train: {
@@ -145,6 +152,42 @@ export const E13_STRINGS = {
       notSub: '이 활동에서는 빼지 않아요.',
     },
   },
+  route: {
+    boardLabel: '동네 지도',
+    instructionsStart: '출발할 곳을 눌러 보세요. 그다음 길을 차례로 눌러 이어 가요.',
+    instructionsGo:
+      '지금 있는 곳에서 이어진 길을 눌러 경로를 만들어 보세요. Tab으로 단추를 고르고 Enter로 눌러요.',
+    nodeNames: {
+      school: '학교',
+      library: '도서관',
+      park: '공원',
+      market: '시장',
+      station: '역',
+      post: '우체국',
+    } as Readonly<Record<string, string>>,
+    startMark: '출발',
+    startButton: (name: string) => `${name}에서 출발`,
+    startGroup: '출발할 곳',
+    segmentGroup: '길 고르기',
+    segmentButton: (a: string, b: string) => `${a}–${b}`,
+    segmentLength: (m: number) => `${m}m`,
+    roadLabel: (a: string, b: string) => `${a}와 ${b}를 잇는 길`,
+    goalBar: '목표 막대',
+    /** 목표 눈금 이름표(1000m는 1km). */
+    goalLabel: (m: number) => (m % 1000 === 0 ? `${m / 1000}km` : `${m}m`),
+    undo: '하나 지우기',
+    reset: '처음으로',
+    rejected: {
+      readOnly: '지금은 조작할 수 없어요.',
+      notStarted: '먼저 출발할 곳을 눌러 주세요.',
+      startFixed: '출발할 곳은 정해져 있어요.',
+      started: '이미 출발했어요. 길을 눌러 이어 가요.',
+      notConnected: '지금 있는 곳에 이어진 길이 아니에요.',
+      used: '이미 지나온 길이에요.',
+      nothingToUndo: '지울 길이 없어요.',
+      same: '이미 처음 모습이에요.',
+    },
+  },
   overlay: {
     meter100: '1m',
     meterOutline: '1m',
@@ -152,5 +195,6 @@ export const E13_STRINGS = {
     sameTank: '같은 수조에 부어 봐요',
     gap: '틈',
     overlap: '겹침',
+    mmCount: '1cm',
   },
 } as const;

@@ -24,6 +24,9 @@ export function EstimateControls({ state, ui, readOnly }: EstimateControlsProps)
     : state.draggable
       ? S.estimate.instructions
       : S.estimate.instructionsFixed;
+  const shownInstructions = state.zoomMm
+    ? `${instructions} ${S.estimate.zoomInstructions}`
+    : instructions;
   const keypad = state.estimateFirst ? (
     <div className={styles.group}>
       <div className={styles.keyHead}>
@@ -69,12 +72,21 @@ export function EstimateControls({ state, ui, readOnly }: EstimateControlsProps)
   return (
     <div className={styles.sideStack} data-testid="measure-controls">
       {keypadFirst ? keypad : null}
-      <p className={styles.instructions}>{instructions}</p>
+      <p className={styles.instructions}>{shownInstructions}</p>
       <p className={styles.status} role="status" data-testid="measure-message">
         {ui.message ?? ''}
       </p>
       {keypadFirst ? null : keypad}
       <div className={styles.row} role="group" aria-label={S.controlsLabel}>
+        {state.zoomMm ? (
+          <Btn
+            label={state.zoomed ? S.estimate.zoomOff : S.estimate.zoomOn}
+            action="zoom"
+            primary
+            disabled={readOnly}
+            onClick={() => ui.send({ type: 'zoom', on: !state.zoomed })}
+          />
+        ) : null}
         <Btn
           label={S.estimate.reset}
           action="reset"
