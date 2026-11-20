@@ -12,7 +12,8 @@ import { boardHeight as lengthBoardHeight } from '../length/layout';
 import { Meter100 } from '../length/overlays/meter-100';
 import type { LengthConfig, MeasureState } from '../length/types';
 import { LENGTH_CANVAS_SELECTOR } from '../length/types';
-import { isTrain } from '../modes';
+import type { RollConfig, RollState } from '../length/roll-circle/types';
+import { isPlainLength, isRoll, isTrain } from '../modes';
 import type { E13Config, E13State } from '../modes';
 import type { TrainConfig, TrainState } from '../train/types';
 import { boardHeight as trainBoardHeight } from '../train/layout';
@@ -33,8 +34,18 @@ export function forLength(
 ): ComponentType<OverlayProps<E13Config, E13State>> {
   return function LengthOverlay(props) {
     const { state } = props;
-    if (state.mode !== 'length' || isTrain(state)) return null;
+    if (!isPlainLength(state)) return null;
     return <Overlay {...props} config={props.config as LengthConfig} state={state} />;
+  };
+}
+
+export function forRoll(
+  Overlay: ComponentType<OverlayProps<RollConfig, RollState>>,
+): ComponentType<OverlayProps<E13Config, E13State>> {
+  return function RollOverlay(props) {
+    const { state } = props;
+    if (!isRoll(state)) return null;
+    return <Overlay {...props} config={props.config as RollConfig} state={state} />;
   };
 }
 
@@ -80,7 +91,8 @@ export function forWeight(
 
 /** meter-100은 length(합체 규칙)·unit-train 두 판에서 쓴다. 판마다 맞출 본 판 svg가 다르다. */
 export function Meter100Overlay({ state }: OverlayProps<E13Config, E13State>) {
-  if (state.mode !== 'length' || state.error !== null) return null;
+  if (!isTrain(state) && !isPlainLength(state)) return null;
+  if (state.error !== null) return null;
   if (isTrain(state)) {
     return (
       <Meter100 canvasSelector={TRAIN_CANVAS_SELECTOR} logicalHeight={trainBoardHeight(state)} />

@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 import { expectControlsAboveFold } from './controls-fold';
+import { expectChromeBookCanvasSize, expectSandboxCanvasVisible } from './panel-layout';
 
 /**
  * E13 측정 실험실(compare-direct·length·estimate·map-route·capacity·weight) 샌드박스 E2E. 아이패드(WebKit)·크롬북·전자칠판 뷰포트.
@@ -11,6 +12,7 @@ import { expectControlsAboveFold } from './controls-fold';
  *   length unit-train: 키보드로 승격·풀기·빼기
  * - estimate zoomLevels(T211): [확대]로 1cm가 mm 눈금 10칸으로 보임, map-route(T211): 길을 눌러·키보드로 경로 만들기
  * - capacity·weight(T213): 컵으로 붓기, 눈금 없는 비커 퍼즐(단추·끌어서 붓기), 예측 → 윗접시저울, 용수철저울 걸기, 키보드
+ * - roll-circle(T215): 지름 고르기 → 굴리기(단추·끌기·키보드) → 지름 막대 → 기록표, 오버레이 둘
  * - 힌트 ② 오버레이 열셋이 본 판과 1px 안에 겹침
  * - 첫 화면 기준 이미지(모드별 크롬북·아이패드), 64px 모드의 단추 크기
  *
@@ -72,7 +74,9 @@ async function open(
             : mode === 'length'
               ? config['variant'] === undefined
                 ? 'length-canvas'
-                : 'train-canvas'
+                : config['variant'] === 'roll-circle'
+                  ? 'roll-canvas'
+                  : 'train-canvas'
               : 'compare-canvas';
   await settleCanvas(page, canvasId);
   return canvasId;
@@ -1724,4 +1728,330 @@ test('화면 기준: weight 두 저울(비치볼·쇠구슬을 접시에, 책을
   await pollObservation(page, (o) => o['hung'] === 'book' && o['tilt'] === 'right');
   await page.getByRole('heading', { name: '측정 실험실' }).focus();
   await expectPageSnapshot(page, 'measure-weight.png');
+});
+
+// ══ T215: length roll-circle(굴렁쇠 굴리기·지름 막대·기록표) ═══════════════════════════
+
+const ROLL = {
+  variant: 'roll-circle',
+  diameters: ['2', '3', '5', '8', '10'],
+  unit: 'cm',
+  precision: '0.01',
+};
+const ROLL_ID = 'roll-canvas';
+/** 바닥 자 1cm = 논리 20px(layout.ts의 PX_CM). */
+const ROLL_PX_CM = 20;
+
+/** 판 안 요소의 가운데 x를 논리 좌표(1000 기준)로. 배율은 상자 너비로만 구한다. */
+async function logicalCenterX(page: Page, id: string, locator: Locator): Promise<number> {
+  const board = await canvasOf(page, id).boundingBox();
+  const box = await locator.boundingBox();
+  if (!board || !box) throw new Error('상자를 찾지 못했습니다.');
+  return ((box.x + box.width / 2 - board.x) * 1000) / board.width;
+}
+
+/** 글·aria·data- 속성값을 모두 모은 글(좌표 속성은 제외). */
+async function exposedText(page: Page, id: string): Promise<string> {
+  return canvasOf(page, id).evaluate((root) => {
+    const parts: string[] = [root.textContent ?? ''];
+    for (const element of root.querySelectorAll('*')) {
+      for (const attribute of element.attributes) {
+        if (attribute.name.startsWith('data-') || attribute.name.startsWith('aria-')) {
+          parts.push(attribute.value);
+        }
+      }
+    }
+    return parts.join('\n');
+  });
+}
+
+const ROLL_SECRET = /6\.3|9\.4|15\.7|25\.1|31\.4|3\.14|3\.15|3\.13/;
+
+test('roll-circle: 지름을 고르고 [굴리기] → 물감 자국 둘 사이가 측정 원주, 굴리기 전 DOM에는 원주·비가 없다', async ({
+  page,
+}) => {
+  const id = await open(page, 'length', ROLL);
+  expect(await exposedText(page, id)).not.toMatch(ROLL_SECRET);
+  await expect(canvasOf(page, id).locator('[data-part="mark"]')).toHaveCount(0);
+  await button(page, '지름 5cm').click();
+  await pollObservation(page, (o) => o['diameter'] === '5' && o['measuredCm'] === null);
+  await button(page, '굴리기').click();
+  await pollObservation(page, (o) => o['rolled'] === true && o['measuredCm'] === '15.7');
+  // 굴리고 기록하기 전에도 원주 숫자는 글·aria·data-에 없다.
+  expect(await exposedText(page, id)).not.toMatch(ROLL_SECRET);
+  const marks = canvasOf(page, id).locator('[data-part="mark"]');
+  await expect(marks).toHaveCount(2);
+  const a = await logicalCenterX(page, id, marks.nth(0));
+  const b = await logicalCenterX(page, id, marks.nth(1));
+  // 자국 사이는 15.7cm(= 논리 314px)다. 굴렁쇠는 한 바퀴 돌아 둘째 자국 위에 선다.
+  expect(Math.abs(b - a - 15.7 * ROLL_PX_CM)).toBeLessThanOrEqual(1.5);
+  const ring = canvasOf(page, id).locator('[data-part="ring"] [data-part="hit"]');
+  await expect
+    .poll(async () => Math.abs((await logicalCenterX(page, id, ring)) - b))
+    .toBeLessThanOrEqual(1.5);
+  // 굴린 뒤 다시 굴리기는 거절하고 안내한다.
+  await button(page, '굴리기').click();
+  await expect(page.getByTestId('measure-message')).toContainText('이미 굴렸어요');
+});
+
+test('roll-circle: 지름 막대를 네 개까지 잇고(네 번째는 넘는 부분이 빗금) 기록하면 표에 한 줄이 쌓인다', async ({
+  page,
+}) => {
+  const id = await open(page, 'length', ROLL);
+  await button(page, '지름 막대 잇기').click();
+  await expect(page.getByTestId('measure-message')).toContainText('먼저');
+  await button(page, '지름 3cm').click();
+  await button(page, '굴리기').click();
+  await pollObservation(page, (o) => o['rolled'] === true);
+  const sticks = canvasOf(page, id).locator('[data-part="stick"]');
+  for (let i = 1; i <= 4; i += 1) {
+    await button(page, '지름 막대 잇기').click();
+    await pollObservation(page, (o) => o['sticks'] === i);
+    await expect(sticks).toHaveCount(i);
+  }
+  await expect(canvasOf(page, id).locator('[data-part="overflow"]')).toHaveCount(1);
+  await pollObservation(page, (o) => o['sticksFit'] === 3);
+  // 막대 하나 길이는 지름(3cm = 논리 60px). 셋째 막대의 오른쪽 끝(9cm)은 자국 끝(9.4cm)보다 왼쪽,
+  // 넷째 막대(12cm)는 자국을 넘는다.
+  const marks = canvasOf(page, id).locator('[data-part="mark"]');
+  const end = await logicalCenterX(page, id, marks.nth(1));
+  const board = await canvasOf(page, id).boundingBox();
+  const first = await sticks.nth(0).boundingBox();
+  const third = await sticks.nth(2).boundingBox();
+  const fourth = await sticks.nth(3).boundingBox();
+  if (!board || !first || !third || !fourth) throw new Error('상자를 찾지 못했습니다.');
+  const logical = (px: number) => (px * 1000) / board.width;
+  // 막대 테두리(2.5px)가 상자에 더해진다.
+  expect(Math.abs(logical(first.width) - 3 * ROLL_PX_CM)).toBeLessThanOrEqual(3.5);
+  expect(logical(third.x + third.width - board.x)).toBeLessThan(end);
+  expect(logical(fourth.x + fourth.width - board.x)).toBeGreaterThan(end + 1);
+  await button(page, '지름 막대 잇기').click();
+  await expect(page.getByTestId('measure-message')).toContainText('네 개까지');
+  await button(page, '막대 하나 빼기').click();
+  await pollObservation(page, (o) => o['sticks'] === 3);
+  // 기록하면 표에 한 줄(지름 3, 원주 9.4, 비 3.13)이 쌓이고, 같은 지름은 한 번만 기록된다.
+  await button(page, '기록하기').click();
+  await pollObservation(page, (o) => o['logCount'] === 1);
+  const cells = canvasOf(page, id).locator('[data-part="cell"]');
+  await expect(cells).toHaveText(['3', '9.4', '3.13']);
+  await button(page, '기록하기').click();
+  await expect(page.getByTestId('measure-message')).toContainText('이미 기록했어요');
+  await pollObservation(page, (o) => o['logCount'] === 1);
+  // 지름을 다시 고르면 굴리기·막대는 처음으로, 기록표는 남는다.
+  await button(page, '지름 5cm').click();
+  await pollObservation(
+    page,
+    (o) => o['rolled'] === false && o['sticks'] === 0 && o['logCount'] === 1,
+  );
+  await expect(cells).toHaveCount(3);
+  await expect(canvasOf(page, id).locator('[data-part="mark"]')).toHaveCount(0);
+});
+
+test('roll-circle: 굴렁쇠를 지름의 절반 넘게 오른쪽으로 끌면 굴러가고, 조금만 끌면 안 굴러간다', async ({
+  page,
+}) => {
+  const id = await open(page, 'length', ROLL);
+  await button(page, '지름 10cm').click();
+  await pollObservation(page, (o) => o['diameter'] === '10');
+  const ring = canvasOf(page, id).locator('[data-part="ring"] [data-part="hit"]');
+  const board = await canvasOf(page, id).boundingBox();
+  if (!board) throw new Error('캔버스를 찾지 못했습니다.');
+  const scale = board.width / 1000;
+  const from = await centerOf(ring);
+  // 지름 10cm의 반지름은 논리 100px. 60px만 끌면 안 굴러간다.
+  await dragBetween(page, from, { x: from.x + 60 * scale, y: from.y });
+  await pollObservation(page, (o) => o['rolled'] === false);
+  await dragBetween(page, from, { x: from.x + 130 * scale, y: from.y });
+  await pollObservation(page, (o) => o['rolled'] === true && o['measuredCm'] === '31.4');
+  await expect(canvasOf(page, id).locator('[data-part="mark"]')).toHaveCount(2);
+});
+
+test('roll-circle: 움직임 줄이기를 켜면 굴린 바로 뒤에 물감 자국이 보인다', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  const id = await open(page, 'length', ROLL);
+  await button(page, '굴리기').click();
+  await pollObservation(page, (o) => o['rolled'] === true);
+  const marks = canvasOf(page, id).locator('[data-part="marks"]');
+  await expect.poll(() => marks.evaluate((node) => getComputedStyle(node).opacity)).toBe('1');
+});
+
+test('roll-circle: 키보드(Tab 초점 + Enter·Space)로 지름 고르기·굴리기·막대·기록·처음으로', async ({
+  page,
+}) => {
+  const id = await open(page, 'length', ROLL);
+  await button(page, '지름 8cm').focus();
+  await page.keyboard.press('Enter');
+  await pollObservation(page, (o) => o['diameter'] === '8');
+  await button(page, '굴리기').focus();
+  await page.keyboard.press('Space');
+  await pollObservation(page, (o) => o['rolled'] === true && o['measuredCm'] === '25.1');
+  await button(page, '지름 막대 잇기').focus();
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Space');
+  await pollObservation(page, (o) => o['sticks'] === 2);
+  await button(page, '막대 하나 빼기').focus();
+  await page.keyboard.press('Enter');
+  await pollObservation(page, (o) => o['sticks'] === 1);
+  await button(page, '기록하기').focus();
+  await page.keyboard.press('Enter');
+  await pollObservation(page, (o) => o['logCount'] === 1);
+  await expect(canvasOf(page, id).locator('[data-part="cell"]')).toHaveText(['8', '25.1', '3.14']);
+  await button(page, '처음으로').focus();
+  await page.keyboard.press('Enter');
+  await pollObservation(
+    page,
+    (o) => o['rolled'] === false && o['sticks'] === 0 && o['logCount'] === 1,
+  );
+  // 굴렁쇠 자체도 초점을 받아 Enter로 굴린다.
+  await canvasOf(page, id).locator('[data-part="ring"]').focus();
+  await page.keyboard.press('Enter');
+  await pollObservation(page, (o) => o['rolled'] === true);
+});
+
+test('roll-circle: precision 0.001이면 기록표 비가 세 자리다', async ({ page }) => {
+  const id = await open(page, 'length', { ...ROLL, precision: '0.001' });
+  await button(page, '지름 8cm').click();
+  await button(page, '굴리기').click();
+  await button(page, '기록하기').click();
+  await pollObservation(page, (o) => o['logCount'] === 1);
+  await expect(canvasOf(page, id).locator('[data-part="cell"]')).toHaveText(['8', '25.1', '3.138']);
+});
+
+test('roll-circle: 단추가 모두 48px 이상이다', async ({ page }) => {
+  await open(page, 'length', ROLL);
+  const buttons = page.getByTestId('measure-controls').getByRole('button');
+  const count = await buttons.count();
+  // 지름 다섯 + 굴리기·지름 막대 잇기·막대 하나 빼기·기록하기·처음으로
+  expect(count).toBe(10);
+  for (let i = 0; i < count; i += 1) {
+    await buttons.nth(i).scrollIntoViewIfNeeded();
+    await expectMin(buttons.nth(i), 48, `단추 ${i}`);
+  }
+});
+
+test('roll-circle 판이 판 안에 다 보이고, 조작 칸 첫 단추 줄이 첫 화면에 보인다', async ({
+  page,
+}, testInfo) => {
+  for (const config of [
+    ROLL,
+    { ...ROLL, diameters: ['1', '2', '3', '5', '8', '10'] },
+    { ...ROLL, diameters: ['2', '3'], log: false },
+  ]) {
+    await open(page, 'length', config);
+    const box = await expectSandboxCanvasVisible(page, {
+      buttons: testInfo.project.name !== 'ipad',
+      outerScrollY: true,
+    });
+    console.log('T215 판', testInfo.project.name, Math.round(box.width), Math.round(box.height));
+    // 도구·기록표가 없는 낮은 판(셋째)은 원래 납작해서 크롬북 최소 크기 검사를 하지 않는다.
+    if (testInfo.project.name === 'chromebook' && (config as Json)['log'] !== false) {
+      expectChromeBookCanvasSize([box]);
+    }
+    await expectControlsAboveFold(page, 'roll-circle', 0, 'measure-controls', 'page');
+  }
+});
+
+// ── roll-circle 오버레이 ─────────────────────────────────
+
+/** 지름 5·8을 굴려 기록한다. */
+async function logTwo(page: Page): Promise<void> {
+  for (const d of ['5', '8']) {
+    await button(page, `지름 ${d}cm`).click();
+    await button(page, '굴리기').click();
+    await button(page, '기록하기').click();
+  }
+  await pollObservation(page, (o) => o['logCount'] === 2);
+}
+
+test('힌트 ② diameter-column: 기록이 없어도 지름 칸 전체(머리칸+모든 줄)를 점선으로 두르고 "지름" 꼬리표', async ({
+  page,
+}) => {
+  await open(page, 'length', ROLL, 'stage=fit&overlay=diameter-column');
+  await toggleOverlay(page);
+  const layer = await expectAligned(page, ROLL_ID, 'diameter-column');
+  await expect(layer.locator('[data-part="label"]')).toHaveText('지름');
+  const column = layer.locator('[data-part="column"]');
+  // 두른 상자는 표의 첫 칸(지름 칸 150px)의 머리칸에서 맨 아래 줄까지를 사방 4px 여유로 두른다.
+  const box = await column.boundingBox();
+  const board = await canvasOf(page, ROLL_ID).boundingBox();
+  const table = await canvasOf(page, ROLL_ID)
+    .locator('[data-part="log-table"] > rect')
+    .first()
+    .boundingBox();
+  if (!box || !table || !board) throw new Error('상자를 찾지 못했습니다.');
+  const s = board.width / 1000;
+  // 선 굵기가 상자에 더해질 수 있어 중심과 크기 범위로 본다. 지름 칸은 표 왼쪽 끝에서 150px 폭이다.
+  expect(Math.abs(box.x + box.width / 2 - (table.x + 76 * s))).toBeLessThanOrEqual(1.5);
+  expect(box.width).toBeGreaterThanOrEqual(150 * s);
+  expect(box.width).toBeLessThanOrEqual(170 * s);
+  expect(Math.abs(box.y + box.height / 2 - (table.y + table.height / 2))).toBeLessThanOrEqual(1.5);
+  expect(box.height).toBeGreaterThanOrEqual(table.height);
+  expect(box.height).toBeLessThanOrEqual(table.height + 14 * s);
+  // 두른 칸의 머리칸은 "지름(cm)"이다.
+  await expect(canvasOf(page, ROLL_ID).locator('[data-part="head"]').first()).toHaveText(
+    '지름(cm)',
+  );
+  // 기록을 쌓아도 같은 자리다.
+  await logTwo(page);
+  const after = await column.boundingBox();
+  if (!after) throw new Error('상자를 찾지 못했습니다.');
+  expect(Math.abs(after.x - box.x)).toBeLessThanOrEqual(1);
+  expect(Math.abs(after.height - box.height)).toBeLessThanOrEqual(1);
+});
+
+test('힌트 ② pi-precision: 기록이 2줄이 되면 표 오른쪽에 "더 자세히(0.001)" 칸이 줄마다 정렬해 나타난다', async ({
+  page,
+}) => {
+  await open(page, 'length', ROLL, 'stage=fit&overlay=pi-precision');
+  await toggleOverlay(page);
+  await expect(page.locator('[data-overlay="pi-precision"] svg')).toHaveCount(0);
+  await button(page, '지름 5cm').click();
+  await button(page, '굴리기').click();
+  await button(page, '기록하기').click();
+  await pollObservation(page, (o) => o['logCount'] === 1);
+  await expect(page.locator('[data-overlay="pi-precision"] svg')).toHaveCount(0);
+  await button(page, '지름 8cm').click();
+  await button(page, '굴리기').click();
+  await button(page, '기록하기').click();
+  await pollObservation(page, (o) => o['logCount'] === 2);
+  const layer = await expectAligned(page, ROLL_ID, 'pi-precision');
+  await expect(layer.locator('[data-part="head"]')).toContainText('0.001');
+  await expect(layer.locator('[data-part="cell"]')).toHaveText(['3.140', '3.138']);
+  // 줄 구분선이 본 표의 같은 줄 구분선과 같은 높이이고, 덧그린 칸은 표 오른쪽에서 표와 같은 높이다.
+  const ownLines = canvasOf(page, ROLL_ID).locator('[data-part="row-line"]');
+  const lines = layer.locator('[data-part="row-line"]');
+  const count = await lines.count();
+  expect(count).toBe(await ownLines.count());
+  for (let i = 0; i < count; i += 1) {
+    const a = await lines.nth(i).boundingBox();
+    const b = await ownLines.nth(i).boundingBox();
+    if (!a || !b) throw new Error('상자를 찾지 못했습니다.');
+    expect(Math.abs(a.y - b.y)).toBeLessThanOrEqual(1.5);
+  }
+  const panel = await layer.locator('[data-part="panel"]').boundingBox();
+  const table = await canvasOf(page, ROLL_ID)
+    .locator('[data-part="log-table"] > rect')
+    .first()
+    .boundingBox();
+  if (!panel || !table) throw new Error('상자를 찾지 못했습니다.');
+  expect(panel.x).toBeGreaterThan(table.x + table.width);
+  expect(Math.abs(panel.y - table.y)).toBeLessThanOrEqual(1.5);
+  expect(Math.abs(panel.height - table.height)).toBeLessThanOrEqual(1.5);
+});
+
+// ── roll-circle 기준 이미지 ──────────────────────────────
+
+test('화면 기준: roll-circle(굴린 뒤 + 기록 2줄 + 지름 막대 4개)', async ({ page }) => {
+  await open(page, 'length', ROLL);
+  await button(page, '지름 2cm').click();
+  await button(page, '굴리기').click();
+  await button(page, '기록하기').click();
+  await button(page, '지름 3cm').click();
+  await button(page, '굴리기').click();
+  for (let i = 0; i < 4; i += 1) await button(page, '지름 막대 잇기').click();
+  await button(page, '기록하기').click();
+  await pollObservation(page, (o) => o['logCount'] === 2 && o['sticks'] === 4);
+  await page.waitForTimeout(1200);
+  await page.getByRole('heading', { name: '측정 실험실' }).focus();
+  await expectPageSnapshot(page, 'measure-roll.png');
 });

@@ -1,4 +1,4 @@
-/** E13 측정 실험실 엔진 정의. 모드 여섯(`compare-direct`, `length`(+`unit-train` 변형), `estimate`, `map-route`, `capacity`, `weight`). */
+/** E13 측정 실험실 엔진 정의. 모드 여섯(`compare-direct`, `length`(+`unit-train`·`roll-circle` 변형), `estimate`, `map-route`, `capacity`, `weight`). */
 import type { EngineDefinition } from '../../core/engine-sdk';
 import { LiterCupsOverlay } from './capacity/overlays/liter-cups';
 import { MlMergeOverlay } from './capacity/overlays/ml-merge';
@@ -11,6 +11,8 @@ import { HalfStraightenOverlay } from './compare/overlays/half-straighten';
 import { SameTankOverlay } from './compare/overlays/same-tank';
 import { GapMarksOverlay } from './length/overlays/gap-marks';
 import { SpanCompareOverlay } from './length/overlays/span-compare';
+import { DiameterColumnOverlay } from './length/roll-circle/overlays/diameter-column';
+import { PiPrecisionOverlay } from './length/roll-circle/overlays/pi-precision';
 import { MeterOutlineOverlay } from './train/overlays/meter-outline';
 import {
   E13_EVENT_NAMES,
@@ -29,6 +31,7 @@ import {
   forCompare,
   forEstimate,
   forLength,
+  forRoll,
   forTrain,
   forWeight,
 } from './overlays/adapt';
@@ -56,6 +59,8 @@ const definition: EngineDefinition<E13Config, E13State, E13Action> = {
     'mm-count': forEstimate(MmCountOverlay),
     'meter-100': Meter100Overlay,
     'meter-outline': forTrain(MeterOutlineOverlay),
+    'diameter-column': forRoll(DiameterColumnOverlay),
+    'pi-precision': forRoll(PiPrecisionOverlay),
     'same-beaker': forCapacity(SameBeakerOverlay),
     'liter-cups': forCapacity(LiterCupsOverlay),
     'ml-merge': forCapacity(MlMergeOverlay),
