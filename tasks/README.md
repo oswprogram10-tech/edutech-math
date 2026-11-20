@@ -367,6 +367,8 @@ W6에서 E13 측정 실험실과 E14 시계·시간을 새로 만들고, E17 `so
 
 - **T216 병합(2026-11-21):** g6s2u5.A1 굴렁쇠 콘텐츠(5과제)를 A2 앞에 더했고 E2E를 넓혔다. MC-GEO-RADIUS-DIAMETER 감지 함수(`radiusDiameter`)는 정답의 1/2·4배만 잡아, 2배 값(T4 43.96, T5 20)은 검수 때 `when` 규칙으로 같은 힌트를 걸었다(코드 기록 없음). 조작 칸 첫 화면 검사 통과.
 
+- **T217 병합(2026-11-21):** E17 `sort`(buttons-12·classroom-objects-12 묶음, 기준 고르기·컨베이어·개수표·상자 이름 아이콘·prefill, 오개념 4종)와 `secret-rule` `predict`(비밀 기준은 맞히기 전 DOM에 없음), 오버레이 5개(`touch-dots`는 번호 없음), core 레지스트리 MC-SHAPE-BY-COLOR-SIZE(g1s1u2). 판 높이 sort 최대 700·predict 500. 검수 때 상자 안 카드를 트레이 크기로 키우고 사물 카드에 이름 글을 붙였다. 샌드박스 predict 상태 `mode`는 'predict'(관찰은 secret-rule+variant). 조작 칸 첫 화면 검사 통과.
+
 ## 상시
 | 카드 | 내용 |
 | --- | --- |
