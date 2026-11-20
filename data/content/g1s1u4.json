@@ -1,0 +1,968 @@
+{
+  "unit": "g1s1u4",
+  "title": "비교하기",
+  "activities": [
+    {
+      "id": "g1s1u4.A1",
+      "title": "밧줄 펴기·겹치기·옮겨 담기",
+      "tasks": [
+        {
+          "id": "g1s1u4.A1.T1",
+          "prompt": "어느 밧줄이 더 길까요? 펴 보고 골라요.",
+          "engine": "E13",
+          "mode": "compare-direct",
+          "cpa": "C",
+          "config": {
+            "mode": "compare-direct",
+            "attribute": "length",
+            "baseline": true,
+            "straighten": true,
+            "items": [
+              {
+                "id": "rope-a",
+                "label": "구불구불한 밧줄",
+                "kind": "rope",
+                "shape": "curvy",
+                "length": 7,
+                "offset": 0
+              },
+              {
+                "id": "rope-b",
+                "label": "곧은 밧줄",
+                "kind": "rope",
+                "shape": "straight",
+                "length": 6,
+                "offset": 0
+              }
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "allStraight"
+              },
+              {
+                "kind": "equals",
+                "path": "response.pick.selected.0",
+                "value": "ga"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "misconception": "MC-MEASURE-CURVE"
+              },
+              "level": 1,
+              "say": "밧줄을 쭉 펴 보면?"
+            },
+            {
+              "when": {
+                "misconception": "MC-MEASURE-CURVE"
+              },
+              "level": 2,
+              "say": "밧줄이 어떻게 펴지는지 봐요. 끝까지 펴 볼까요?",
+              "show": {
+                "engine": "E13",
+                "overlay": "half-straighten",
+                "args": {
+                  "id": "rope-a"
+                }
+              }
+            },
+            {
+              "when": {
+                "misconception": "MC-MEASURE-CURVE"
+              },
+              "level": 3,
+              "backtrack": "g1s1u4.length-direct"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "compare-direct"
+              },
+              "level": 1,
+              "say": "밧줄을 펴서 견주어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "compare-direct"
+              },
+              "level": 2,
+              "say": "구불구불한 밧줄을 곧게 펴서 나란히 놓아 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "compare-direct"
+              },
+              "level": 3,
+              "backtrack": "g1s1u4.length-direct"
+            }
+          ],
+          "concepts": [
+            "g1s1u4.length-direct"
+          ],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-MEASURE-CURVE",
+              "args": {
+                "trap": "na",
+                "expected": "ga"
+              },
+              "path": "response.pick.selected.0"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "pick",
+                "label": "골라요.",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "ga",
+                    "label": "구불구불한 밧줄"
+                  },
+                  {
+                    "id": "na",
+                    "label": "곧은 밧줄"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g1s1u4.A1.T2",
+          "prompt": "긴 연필부터 차례로 놓아요.",
+          "engine": "E13",
+          "mode": "compare-direct",
+          "cpa": "C",
+          "config": {
+            "mode": "compare-direct",
+            "attribute": "length",
+            "baseline": true,
+            "items": [
+              {
+                "id": "ga",
+                "label": "연필 가",
+                "kind": "pencil",
+                "shape": "straight",
+                "length": 8,
+                "offset": 0
+              },
+              {
+                "id": "na",
+                "label": "연필 나",
+                "kind": "pencil",
+                "shape": "straight",
+                "length": 7,
+                "offset": 3
+              },
+              {
+                "id": "da",
+                "label": "연필 다",
+                "kind": "pencil",
+                "shape": "straight",
+                "length": 5,
+                "offset": 2
+              }
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "allAligned"
+              },
+              {
+                "kind": "equals",
+                "path": "response.ord.order",
+                "value": [
+                  "ga",
+                  "na",
+                  "da"
+                ]
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.ord.order",
+                    "value": [
+                      "na",
+                      "ga",
+                      "da"
+                    ]
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "allAligned",
+                    "value": false
+                  }
+                ]
+              },
+              "level": 1,
+              "say": "출발선을 똑같이 맞췄어?"
+            },
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.ord.order",
+                    "value": [
+                      "na",
+                      "ga",
+                      "da"
+                    ]
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "allAligned",
+                    "value": false
+                  }
+                ]
+              },
+              "level": 2,
+              "say": "왼쪽 끝이 얼마나 어긋났는지 봐요.",
+              "show": {
+                "engine": "E13",
+                "overlay": "endpoint-lines"
+              }
+            },
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.ord.order",
+                    "value": [
+                      "na",
+                      "ga",
+                      "da"
+                    ]
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "allAligned",
+                    "value": false
+                  }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g1s1u4.length-direct"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "compare-direct"
+              },
+              "level": 1,
+              "say": "연필의 왼쪽 끝을 출발선에 맞춰 견주어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "compare-direct"
+              },
+              "level": 2,
+              "say": "왼쪽 끝을 같게 맞추면 오른쪽 끝을 견줄 수 있어요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "compare-direct"
+              },
+              "level": 3,
+              "backtrack": "g1s1u4.length-direct"
+            }
+          ],
+          "concepts": [
+            "g1s1u4.length-direct"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "order",
+                "id": "ord",
+                "label": "차례로 놓아요.",
+                "items": [
+                  {
+                    "id": "da",
+                    "label": "연필 다"
+                  },
+                  {
+                    "id": "ga",
+                    "label": "연필 가"
+                  },
+                  {
+                    "id": "na",
+                    "label": "연필 나"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g1s1u4.A1.T3",
+          "prompt": "손수건과 책을 겹쳐 보고 더 넓은 것을 골라요.",
+          "engine": "E13",
+          "mode": "compare-direct",
+          "cpa": "C",
+          "config": {
+            "mode": "compare-direct",
+            "attribute": "area",
+            "items": [
+              {
+                "id": "hanky",
+                "label": "손수건",
+                "kind": "handkerchief",
+                "w": 4,
+                "h": 4
+              },
+              {
+                "id": "book",
+                "label": "책",
+                "kind": "book",
+                "w": 5,
+                "h": 3
+              }
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "overlapped"
+              },
+              {
+                "kind": "equals",
+                "path": "response.pick.selected.0",
+                "value": "ga"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "compare-direct"
+              },
+              "level": 1,
+              "say": "한쪽 끝을 맞춰 겹쳐 보면 어느 쪽이 남을까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "compare-direct"
+              },
+              "level": 2,
+              "say": "손수건을 끌어 책 위에 모서리를 맞춰 올려 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "compare-direct"
+              },
+              "level": 3,
+              "backtrack": "g1s1u4.area-direct"
+            }
+          ],
+          "concepts": [
+            "g1s1u4.area-direct"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "pick",
+                "label": "골라요.",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "ga",
+                    "label": "손수건"
+                  },
+                  {
+                    "id": "na",
+                    "label": "책"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g1s1u4.A1.T4",
+          "prompt": "물이 더 많이 들어가는 컵은 어느 것일까요? 부어 보고 골라요.",
+          "engine": "E13",
+          "mode": "compare-direct",
+          "cpa": "C",
+          "config": {
+            "mode": "compare-direct",
+            "attribute": "capacity",
+            "pour": true,
+            "items": [
+              {
+                "id": "tall",
+                "label": "키 큰 컵",
+                "kind": "cup",
+                "shape": "tall",
+                "capacity": 4
+              },
+              {
+                "id": "wide",
+                "label": "넓은 컵",
+                "kind": "cup",
+                "shape": "wide",
+                "capacity": 6
+              }
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "pouredAll"
+              },
+              {
+                "kind": "equals",
+                "path": "response.pick.selected.0",
+                "value": "na"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "misconception": "MC-SIZE-IS-WEIGHT"
+              },
+              "level": 1,
+              "say": "같은 수조에 부어 보면?"
+            },
+            {
+              "when": {
+                "misconception": "MC-SIZE-IS-WEIGHT"
+              },
+              "level": 2,
+              "say": "두 컵의 물을 같은 수조에 부어 봐요.",
+              "show": {
+                "engine": "E13",
+                "overlay": "same-tank"
+              }
+            },
+            {
+              "when": {
+                "misconception": "MC-SIZE-IS-WEIGHT"
+              },
+              "level": 3,
+              "backtrack": "g1s1u4.capacity-direct"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "compare-direct"
+              },
+              "level": 1,
+              "say": "컵의 물을 수조에 부어서 견주어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "compare-direct"
+              },
+              "level": 2,
+              "say": "두 컵을 모두 같은 수조에 부어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "compare-direct"
+              },
+              "level": 3,
+              "backtrack": "g1s1u4.capacity-direct"
+            }
+          ],
+          "concepts": [
+            "g1s1u4.capacity-direct"
+          ],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-SIZE-IS-WEIGHT",
+              "args": {
+                "trap": "ga",
+                "expected": "na"
+              },
+              "path": "response.pick.selected.0"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "pick",
+                "label": "골라요.",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "ga",
+                    "label": "키 큰 컵"
+                  },
+                  {
+                    "id": "na",
+                    "label": "넓은 컵"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "g1s1u4.A2",
+      "title": "양팔저울 무게 비교",
+      "tasks": [
+        {
+          "id": "g1s1u4.A2.T1",
+          "prompt": "사과와 깃털을 저울에 올리고 더 무거운 것을 골라요.",
+          "engine": "E06",
+          "mode": "compare",
+          "cpa": "C",
+          "config": {
+            "mode": "compare",
+            "showValues": false,
+            "items": [
+              {
+                "id": "apple",
+                "kind": "apple",
+                "weight": 3
+              },
+              {
+                "id": "feather",
+                "kind": "feather",
+                "weight": 1
+              }
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "compared",
+                "args": {
+                  "a": "apple",
+                  "b": "feather"
+                }
+              },
+              {
+                "kind": "equals",
+                "path": "response.pick.selected.0",
+                "value": "ga"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "compare"
+              },
+              "level": 1,
+              "say": "두 물건을 저울에 하나씩 올려 보았나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "compare"
+              },
+              "level": 2,
+              "say": "사과와 깃털을 양쪽 접시에 하나씩 올려 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "compare"
+              },
+              "level": 3,
+              "backtrack": "g1s1u4.weight-direct"
+            }
+          ],
+          "concepts": [
+            "g1s1u4.weight-direct"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "pick",
+                "label": "골라요.",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "ga",
+                    "label": "사과"
+                  },
+                  {
+                    "id": "na",
+                    "label": "깃털"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g1s1u4.A2.T2",
+          "prompt": "큰 스펀지와 작은 쇠공 중 더 무거운 것을 골라요.",
+          "engine": "E06",
+          "mode": "compare",
+          "cpa": "C",
+          "config": {
+            "mode": "compare",
+            "showValues": false,
+            "items": [
+              {
+                "id": "sponge",
+                "kind": "sponge",
+                "weight": 2,
+                "visualSize": "large"
+              },
+              {
+                "id": "iron-ball",
+                "kind": "iron-ball",
+                "weight": 9,
+                "visualSize": "small"
+              }
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "compared",
+                "args": {
+                  "a": "sponge",
+                  "b": "iron-ball"
+                }
+              },
+              {
+                "kind": "equals",
+                "path": "response.pick.selected.0",
+                "value": "na"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "misconception": "MC-SIZE-IS-WEIGHT"
+              },
+              "level": 1,
+              "say": "저울에 올려 보면?"
+            },
+            {
+              "when": {
+                "misconception": "MC-SIZE-IS-WEIGHT"
+              },
+              "level": 2,
+              "say": "저울에 올려서 크기와 무게를 나란히 견주어 봐요.",
+              "show": {
+                "engine": "E06",
+                "overlay": "size-vs-weight"
+              }
+            },
+            {
+              "when": {
+                "misconception": "MC-SIZE-IS-WEIGHT"
+              },
+              "level": 3,
+              "backtrack": "g1s1u4.weight-direct"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "compare"
+              },
+              "level": 1,
+              "say": "두 물건을 저울에 하나씩 올려 보았나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "compare"
+              },
+              "level": 2,
+              "say": "스펀지와 쇠공을 양쪽 접시에 하나씩 올려 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "compare"
+              },
+              "level": 3,
+              "backtrack": "g1s1u4.weight-direct"
+            }
+          ],
+          "concepts": [
+            "g1s1u4.weight-direct"
+          ],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-SIZE-IS-WEIGHT",
+              "args": {
+                "trap": "ga",
+                "expected": "na"
+              },
+              "path": "response.pick.selected.0"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "pick",
+                "label": "골라요.",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "ga",
+                    "label": "큰 스펀지"
+                  },
+                  {
+                    "id": "na",
+                    "label": "작은 쇠공"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g1s1u4.A2.T3",
+          "prompt": "세 물건을 무거운 것부터 차례로 놓아요. 저울을 두 번 넘게 써 봐요.",
+          "engine": "E06",
+          "mode": "compare",
+          "cpa": "C",
+          "config": {
+            "mode": "compare",
+            "showValues": false,
+            "items": [
+              {
+                "id": "stone",
+                "kind": "stone",
+                "weight": 6
+              },
+              {
+                "id": "apple",
+                "kind": "apple",
+                "weight": 3
+              },
+              {
+                "id": "eraser",
+                "kind": "eraser",
+                "weight": 1
+              }
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "weighingsAtLeast",
+                "args": {
+                  "n": 2
+                }
+              },
+              {
+                "kind": "equals",
+                "path": "response.ord.order",
+                "value": [
+                  "ga",
+                  "na",
+                  "da"
+                ]
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "compare"
+              },
+              "level": 1,
+              "say": "두 개씩 저울에 올려 보았나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "compare"
+              },
+              "level": 2,
+              "say": "짝을 바꿔 가며 저울에 올려 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "compare"
+              },
+              "level": 3,
+              "backtrack": "g1s1u4.weight-direct"
+            }
+          ],
+          "concepts": [
+            "g1s1u4.weight-direct"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "order",
+                "id": "ord",
+                "label": "차례로 놓아요.",
+                "items": [
+                  {
+                    "id": "na",
+                    "label": "사과"
+                  },
+                  {
+                    "id": "da",
+                    "label": "지우개"
+                  },
+                  {
+                    "id": "ga",
+                    "label": "돌"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g1s1u4.A2.T4",
+          "prompt": "저울이 수평이 되게 해요.",
+          "engine": "E06",
+          "mode": "compare",
+          "cpa": "C",
+          "config": {
+            "mode": "compare",
+            "showValues": false,
+            "maxPerPan": 2,
+            "items": [
+              {
+                "id": "book",
+                "kind": "book",
+                "weight": 5
+              },
+              {
+                "id": "apple",
+                "kind": "apple",
+                "weight": 3
+              },
+              {
+                "id": "eraser",
+                "kind": "eraser",
+                "weight": 2
+              }
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "bothPansUsed"
+              },
+              {
+                "kind": "predicate",
+                "name": "balanced"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "compare"
+              },
+              "level": 1,
+              "say": "한쪽에 두 개를 올려 보면 어떨까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "compare"
+              },
+              "level": 2,
+              "say": "저울이 기우는 쪽을 보고 물건을 바꿔 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "compare"
+              },
+              "level": 3,
+              "backtrack": "g1s1u4.weight-direct"
+            }
+          ],
+          "concepts": [
+            "g1s1u4.weight-direct"
+          ],
+          "submit": "button"
+        }
+      ]
+    }
+  ]
+}
