@@ -1,0 +1,1239 @@
+{
+  "unit": "g6s2u4",
+  "title": "비례식과 비례배분",
+  "activities": [
+    {
+      "id": "g6s2u4.A1",
+      "title": "외항·내항 격자 넓이 동치 저울",
+      "tasks": [
+        {
+          "id": "g6s2u4.A1.T1",
+          "prompt": "카드를 하나씩 저울에 올려 보고 비례식인 것을 골라요. 가: 2 : 3 = 4 : 6 나: 2 : 3 = 3 : 4 다: 4 : 5 = 8 : 9",
+          "engine": "E06",
+          "mode": "proportion",
+          "cpa": "C",
+          "config": {
+            "mode": "proportion",
+            "cards": [
+              "2 : 3 = 4 : 6",
+              "2 : 3 = 3 : 4",
+              "4 : 5 = 8 : 9"
+            ]
+          },
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "prop",
+                "label": "비례식인 카드를 골라요.",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "ga",
+                    "label": "가"
+                  },
+                  {
+                    "id": "na",
+                    "label": "나"
+                  },
+                  {
+                    "id": "da",
+                    "label": "다"
+                  }
+                ]
+              }
+            ]
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.prop.selected",
+            "value": [
+              "ga"
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.prop.selected",
+                    "value": [
+                      "na"
+                    ]
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.prop.selected",
+                    "value": [
+                      "da"
+                    ]
+                  }
+                ]
+              },
+              "level": 1,
+              "say": "앞의 수가 몇 배가 되었는지, 뒤의 수도 똑같이 그 배가 되었는지 살펴봐요."
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.prop.selected",
+                    "value": [
+                      "na"
+                    ]
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.prop.selected",
+                    "value": [
+                      "da"
+                    ]
+                  }
+                ]
+              },
+              "level": 2,
+              "say": "앞의 수와 뒤의 수가 각각 몇씩 늘었는지만 보지 말고, 몇 배가 되었는지 곱셈으로 견주어 봐요."
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.prop.selected",
+                    "value": [
+                      "na"
+                    ]
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.prop.selected",
+                    "value": [
+                      "da"
+                    ]
+                  }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g6s1u4.ratio-value"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "proportion"
+              },
+              "level": 1,
+              "say": "카드를 하나씩 저울에 올려 보았나요? 저울이 어떻게 되는지 살펴봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "proportion"
+              },
+              "level": 2,
+              "say": "올려 본 카드마다 두 접시의 칸 수를 견주어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "proportion"
+              },
+              "level": 3,
+              "backtrack": "g6s2u4.ratio-property"
+            }
+          ],
+          "concepts": [
+            "g6s2u4.proportion"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g6s2u4.A1.T2",
+          "prompt": "저울이 수평이 되도록 □를 찾아요.",
+          "engine": "E06",
+          "mode": "proportion",
+          "cpa": "C",
+          "config": {
+            "mode": "proportion",
+            "equation": "3 : 5 = □ : 20",
+            "unknownSlider": {
+              "min": 1,
+              "max": 20
+            }
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "balanced"
+              },
+              {
+                "kind": "predicate",
+                "name": "boxValueIs",
+                "args": {
+                  "value": "12"
+                }
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-RATIO-ADDITIVE"
+                }
+              },
+              "level": 1,
+              "say": "5가 20이 되려면 몇 배가 되었지?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-RATIO-ADDITIVE"
+                }
+              },
+              "level": 2,
+              "say": "넣어 본 값으로 만든 두 접시의 넓이를 견주어 봐요.",
+              "show": {
+                "engine": "E06",
+                "overlay": "big-tilt"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-RATIO-ADDITIVE"
+                }
+              },
+              "level": 3,
+              "backtrack": "g6s1u4.ratio-value"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "proportion"
+              },
+              "level": 1,
+              "say": "3 : 5와 □ : 20에서 뒤의 수가 몇 배가 되었는지 살펴봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "proportion"
+              },
+              "level": 2,
+              "say": "두 접시의 격자가 어디서 서로 다른지 견주어 봐요.",
+              "show": {
+                "engine": "E06",
+                "overlay": "area-diff"
+              }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "proportion"
+              },
+              "level": 3,
+              "backtrack": "g6s2u4.proportion"
+            }
+          ],
+          "concepts": [
+            "g6s2u4.extremes-means"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g6s2u4.A1.T3",
+          "prompt": "넓이가 같은 두 직사각형이 되도록 곱할 두 수를 골라요.",
+          "engine": "E06",
+          "mode": "proportion",
+          "cpa": "P",
+          "config": {
+            "mode": "proportion",
+            "equation": "2 : 3 = 4 : 6",
+            "pairSelect": true,
+            "look": "grid"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "pairingCorrect"
+              },
+              {
+                "kind": "predicate",
+                "name": "balanced"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PROPORTION-CROSS-WRONG"
+                }
+              },
+              "level": 1,
+              "say": "바깥쪽 두 수, 안쪽 두 수는 어느 것이었지?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PROPORTION-CROSS-WRONG"
+                }
+              },
+              "level": 2,
+              "say": "바깥쪽 두 수와 안쪽 두 수를 서로 다른 괄호로 묶어 짝지어 봐요.",
+              "show": {
+                "engine": "E06",
+                "overlay": "cross-brackets"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PROPORTION-CROSS-WRONG"
+                }
+              },
+              "level": 3,
+              "backtrack": "g6s2u4.extremes-means"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "proportion"
+              },
+              "level": 1,
+              "say": "직사각형의 가로와 세로가 될 두 수를 골랐나요? 두 접시의 넓이가 같으려면 어떻게 짝지어야 할까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "proportion"
+              },
+              "level": 2,
+              "say": "비례식에서 바깥쪽에 있는 두 수와 안쪽에 있는 두 수의 이름을 떠올려 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "proportion"
+              },
+              "level": 3,
+              "backtrack": "g6s2u4.proportion"
+            }
+          ],
+          "concepts": [
+            "g6s2u4.extremes-means"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g6s2u4.A1.T4",
+          "prompt": "0.4 : 1.2를 간단한 자연수의 비로 나타내요.",
+          "engine": "E06",
+          "mode": "proportion",
+          "cpa": "A",
+          "config": {
+            "mode": "proportion",
+            "equation": "2 : 3 = 4 : 6",
+            "look": "symbols"
+          },
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "a",
+                "label": "전항",
+                "forms": [
+                  "integer"
+                ]
+              },
+              {
+                "kind": "number",
+                "id": "b",
+                "label": "후항",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          },
+          "showEngine": false,
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "equals",
+                "path": "response.a.value",
+                "value": "1"
+              },
+              {
+                "kind": "equals",
+                "path": "response.b.value",
+                "value": "3"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "proportion"
+              },
+              "level": 1,
+              "say": "전항과 후항에 같은 수를 곱하거나 나누면 비율은 어떻게 될까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "proportion"
+              },
+              "level": 2,
+              "say": "소수 한 자리인 두 수에 같은 수를 곱하면 자연수가 돼요. 그다음 더 간단히 할 수 있는지 살펴봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "proportion"
+              },
+              "level": 3,
+              "backtrack": "g6s1u4.ratio-value"
+            }
+          ],
+          "concepts": [
+            "g6s2u4.ratio-property"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g6s2u4.A1.T5",
+          "prompt": "1/2 : 1/3을 간단한 자연수의 비로 나타내요.",
+          "engine": "E06",
+          "mode": "proportion",
+          "cpa": "A",
+          "config": {
+            "mode": "proportion",
+            "equation": "2 : 3 = 4 : 6",
+            "look": "symbols"
+          },
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "a",
+                "label": "전항",
+                "forms": [
+                  "integer"
+                ]
+              },
+              {
+                "kind": "number",
+                "id": "b",
+                "label": "후항",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          },
+          "showEngine": false,
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "equals",
+                "path": "response.a.value",
+                "value": "3"
+              },
+              {
+                "kind": "equals",
+                "path": "response.b.value",
+                "value": "2"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "proportion"
+              },
+              "level": 1,
+              "say": "전항과 후항에 같은 수를 곱했나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "proportion"
+              },
+              "level": 2,
+              "say": "분모 2와 3의 공배수를 두 수에 곱하면 분수가 사라져요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "proportion"
+              },
+              "level": 3,
+              "backtrack": "g6s1u4.ratio-value"
+            }
+          ],
+          "concepts": [
+            "g6s2u4.ratio-property"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g6s2u4.A1.T6",
+          "prompt": "□에 알맞은 수를 찾아요.",
+          "engine": "E06",
+          "mode": "proportion",
+          "cpa": "A",
+          "config": {
+            "mode": "proportion",
+            "equation": "7 : □ = 21 : 27",
+            "look": "symbols",
+            "unknownSlider": {
+              "min": 1,
+              "max": 30
+            }
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "balanced"
+              },
+              {
+                "kind": "predicate",
+                "name": "boxValueIs",
+                "args": {
+                  "value": "9"
+                }
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-RATIO-ADDITIVE"
+                }
+              },
+              "level": 1,
+              "say": "7이 21이 되려면 몇 배가 되었지?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-RATIO-ADDITIVE"
+                }
+              },
+              "level": 2,
+              "say": "뒤의 수가 늘어난 양이 아니라 몇 배가 되었는지로 생각해 봐요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-RATIO-ADDITIVE"
+                }
+              },
+              "level": 3,
+              "backtrack": "g6s1u4.ratio-value"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "proportion"
+              },
+              "level": 1,
+              "say": "외항의 곱과 내항의 곱이 같아지는 수를 찾아봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "proportion"
+              },
+              "level": 2,
+              "say": "바깥쪽 두 수의 곱과 안쪽 두 수의 곱을 각각 써 놓고 견주어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "proportion"
+              },
+              "level": 3,
+              "backtrack": "g6s2u4.proportion"
+            }
+          ],
+          "concepts": [
+            "g6s2u4.extremes-means"
+          ],
+          "submit": "button"
+        }
+      ]
+    },
+    {
+      "id": "g6s2u4.A2",
+      "title": "문장제 형광펜과 막대 모델",
+      "tasks": [
+        {
+          "id": "g6s2u4.A2.T1",
+          "prompt": "문장에서 전체와 비를 형광펜으로 칠해요.",
+          "engine": "E20",
+          "mode": "bar-model",
+          "cpa": "P",
+          "config": {
+            "mode": "bar-model",
+            "problem": "사탕 35개를 형과 동생이 3 : 4로 나누어 가지려고 합니다. 각각 몇 개씩 가질까요?",
+            "parts": [
+              "형",
+              "동생"
+            ],
+            "ratio": [
+              3,
+              4
+            ],
+            "total": 35,
+            "highlight": {
+              "total": "35",
+              "ratio": [
+                "3",
+                "4"
+              ]
+            }
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "highlightCorrect"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "bar-model"
+              },
+              "level": 1,
+              "say": "전체를 나타내는 수와 나누는 비를 찾아봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "bar-model"
+              },
+              "level": 2,
+              "say": "'전체'는 나누어지는 양이고 '비'는 나누는 기준이에요. 문장에서 각각 어느 수인지 찾아봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "bar-model"
+              },
+              "level": 3,
+              "backtrack": "g6s1u4.ratio-notation"
+            }
+          ],
+          "concepts": [
+            "g6s2u4.proportional-distribution"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g6s2u4.A2.T2",
+          "prompt": "막대 한 칸은 몇 개일까요?",
+          "engine": "E20",
+          "mode": "bar-model",
+          "cpa": "P",
+          "config": {
+            "mode": "bar-model",
+            "problem": "사탕 35개를 형과 동생이 3 : 4로 나누어 가지려고 합니다. 각각 몇 개씩 가질까요?",
+            "parts": [
+              "형",
+              "동생"
+            ],
+            "ratio": [
+              3,
+              4
+            ],
+            "total": 35,
+            "highlight": null
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "unitCorrect"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PROPORTION-DIVIDE-BY-RATIO-TERM"
+                }
+              },
+              "level": 1,
+              "say": "형과 동생 몫을 합치면 35가 될까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PROPORTION-DIVIDE-BY-RATIO-TERM"
+                }
+              },
+              "level": 2,
+              "say": "막대의 칸을 하나씩 세어 전체가 모두 몇 칸인지 확인해 봐요.",
+              "show": {
+                "engine": "E20",
+                "overlay": "unit-count"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PROPORTION-DIVIDE-BY-RATIO-TERM"
+                }
+              },
+              "level": 3,
+              "backtrack": "g6s2u4.proportional-distribution"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "bar-model"
+              },
+              "level": 1,
+              "say": "같은 크기의 칸으로 이루어진 막대 전체가 35개예요. 한 칸은 몇 개일까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "bar-model"
+              },
+              "level": 2,
+              "say": "형의 칸 수가 한 칸의 몇 배인지 묶어서 생각해 봐요.",
+              "show": {
+                "engine": "E20",
+                "overlay": "share-bracket"
+              }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "bar-model"
+              },
+              "level": 3,
+              "backtrack": "g6s2u4.ratio-property"
+            }
+          ],
+          "concepts": [
+            "g6s2u4.proportional-distribution"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g6s2u4.A2.T3",
+          "prompt": "형과 동생이 각각 몇 개씩 가지는지 써요.",
+          "engine": "E20",
+          "mode": "bar-model",
+          "cpa": "P",
+          "config": {
+            "mode": "bar-model",
+            "problem": "사탕 35개를 형과 동생이 3 : 4로 나누어 가지려고 합니다. 각각 몇 개씩 가질까요?",
+            "parts": [
+              "형",
+              "동생"
+            ],
+            "ratio": [
+              3,
+              4
+            ],
+            "total": 35,
+            "highlight": null
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "allPartsCorrect"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PROPORTION-DIVIDE-BY-RATIO-TERM"
+                }
+              },
+              "level": 1,
+              "say": "형과 동생 몫을 합치면 35가 될까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PROPORTION-DIVIDE-BY-RATIO-TERM"
+                }
+              },
+              "level": 2,
+              "say": "막대의 칸을 하나씩 세어 전체가 모두 몇 칸인지 확인해 봐요.",
+              "show": {
+                "engine": "E20",
+                "overlay": "unit-count"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PROPORTION-DIVIDE-BY-RATIO-TERM"
+                }
+              },
+              "level": 3,
+              "backtrack": "g6s2u4.proportional-distribution"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "bar-model"
+              },
+              "level": 1,
+              "say": "한 칸의 크기에 형과 동생이 각각 가진 칸 수를 곱해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "bar-model"
+              },
+              "level": 2,
+              "say": "형의 칸 수가 한 칸의 몇 배인지 묶어서 생각해 봐요.",
+              "show": {
+                "engine": "E20",
+                "overlay": "share-bracket"
+              }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "bar-model"
+              },
+              "level": 3,
+              "backtrack": "g6s2u4.ratio-property"
+            }
+          ],
+          "concepts": [
+            "g6s2u4.proportional-distribution"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g6s2u4.A2.T4",
+          "prompt": "전체와 비를 칠하고, 두 도막의 길이를 구해요.",
+          "engine": "E20",
+          "mode": "bar-model",
+          "cpa": "P",
+          "config": {
+            "mode": "bar-model",
+            "problem": "길이가 48cm인 끈을 5 : 3으로 나누려고 합니다. 가 도막과 나 도막의 길이는 각각 몇 cm일까요?",
+            "highlight": {
+              "total": "48",
+              "ratio": [
+                "5",
+                "3"
+              ]
+            },
+            "parts": [
+              "가",
+              "나"
+            ],
+            "ratio": [
+              5,
+              3
+            ],
+            "total": 48
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "highlightCorrect"
+              },
+              {
+                "kind": "predicate",
+                "name": "allPartsCorrect"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PROPORTION-DIVIDE-BY-RATIO-TERM"
+                }
+              },
+              "level": 1,
+              "say": "두 도막의 길이를 합치면 48cm가 될까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PROPORTION-DIVIDE-BY-RATIO-TERM"
+                }
+              },
+              "level": 2,
+              "say": "막대의 칸을 하나씩 세어 전체가 모두 몇 칸인지 확인해 봐요.",
+              "show": {
+                "engine": "E20",
+                "overlay": "unit-count"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PROPORTION-DIVIDE-BY-RATIO-TERM"
+                }
+              },
+              "level": 3,
+              "backtrack": "g6s2u4.proportional-distribution"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "highlightCorrect",
+                "value": false
+              },
+              "level": 1,
+              "say": "전체를 나타내는 수와 나누는 비를 찾아봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "highlightCorrect",
+                "value": false
+              },
+              "level": 2,
+              "say": "'전체'는 나누어지는 양이고 '비'는 나누는 기준이에요. 문장에서 각각 어느 수인지 찾아봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "highlightCorrect",
+                "value": false
+              },
+              "level": 3,
+              "backtrack": "g6s1u4.ratio-notation"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "bar-model"
+              },
+              "level": 1,
+              "say": "한 칸의 크기에 각 도막의 칸 수를 곱하면 도막의 길이를 알 수 있어요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "bar-model"
+              },
+              "level": 2,
+              "say": "가 도막의 칸 수가 한 칸의 몇 배인지 묶어서 생각해 봐요.",
+              "show": {
+                "engine": "E20",
+                "overlay": "share-bracket"
+              }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "bar-model"
+              },
+              "level": 3,
+              "backtrack": "g6s2u4.ratio-property"
+            }
+          ],
+          "concepts": [
+            "g6s2u4.proportional-distribution"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g6s2u4.A2.T5",
+          "prompt": "사탕이 모두 몇 개였는지 구해요.",
+          "engine": "E20",
+          "mode": "bar-model",
+          "cpa": "A",
+          "config": {
+            "mode": "bar-model",
+            "problem": "형과 동생이 사탕을 3 : 5로 나누었더니 형이 24개를 가졌습니다. 사탕은 모두 몇 개였을까요?",
+            "parts": [
+              "형",
+              "동생"
+            ],
+            "ratio": [
+              3,
+              5
+            ],
+            "known": {
+              "part": 0,
+              "value": 24
+            },
+            "look": "bars"
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "totalCorrect"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PROPORTION-DIVIDE-BY-RATIO-TERM"
+                }
+              },
+              "level": 1,
+              "say": "형 몫과 동생 몫이 비 3 : 5에 맞는지 확인해 봐요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PROPORTION-DIVIDE-BY-RATIO-TERM"
+                }
+              },
+              "level": 2,
+              "say": "막대의 칸을 하나씩 세어 전체가 모두 몇 칸인지 확인해 봐요.",
+              "show": {
+                "engine": "E20",
+                "overlay": "unit-count"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PROPORTION-DIVIDE-BY-RATIO-TERM"
+                }
+              },
+              "level": 3,
+              "backtrack": "g6s2u4.proportional-distribution"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "bar-model"
+              },
+              "level": 1,
+              "say": "알려 준 형의 몫 24개는 막대 몇 칸일까요? 거기서 한 칸의 크기를 찾아봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "bar-model"
+              },
+              "level": 2,
+              "say": "형의 칸 수가 한 칸의 몇 배인지 묶어서 생각해 봐요.",
+              "show": {
+                "engine": "E20",
+                "overlay": "share-bracket"
+              }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "bar-model"
+              },
+              "level": 3,
+              "backtrack": "g6s2u4.ratio-property"
+            }
+          ],
+          "concepts": [
+            "g6s2u4.proportional-distribution"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g6s2u4.A2.T6",
+          "prompt": "형의 몫을 구하는 식을 쓰고 몫을 구해요.",
+          "engine": "E20",
+          "mode": "bar-model",
+          "cpa": "A",
+          "config": {
+            "mode": "bar-model",
+            "problem": "사탕 35개를 형과 동생이 3 : 4로 나누어 가지려고 합니다. 각각 몇 개씩 가질까요?",
+            "parts": [
+              "형",
+              "동생"
+            ],
+            "ratio": [
+              3,
+              4
+            ],
+            "total": 35,
+            "highlight": null,
+            "look": "symbols"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "exprMatchesPart",
+                "args": {
+                  "index": 0
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "partCorrect",
+                "args": {
+                  "index": 0
+                }
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PROPORTION-DIVIDE-BY-RATIO-TERM"
+                }
+              },
+              "level": 1,
+              "say": "형과 동생 몫을 합치면 35가 될까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PROPORTION-DIVIDE-BY-RATIO-TERM"
+                }
+              },
+              "level": 2,
+              "say": "전체를 비의 한 항으로 나누는 대신, 전체가 비의 칸 수로 모두 몇 칸인지 먼저 생각해 봐요."
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "hasMisconception",
+                "args": {
+                  "code": "MC-PROPORTION-DIVIDE-BY-RATIO-TERM"
+                }
+              },
+              "level": 3,
+              "backtrack": "g6s2u4.proportional-distribution"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "bar-model"
+              },
+              "level": 1,
+              "say": "형이 가지는 몫은 전체의 얼마만큼일까요? 비의 두 수를 더하면 전체 칸 수가 돼요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "bar-model"
+              },
+              "level": 2,
+              "say": "전체 칸 수 가운데 형이 차지하는 칸 수로 분수를 만들어 전체에 곱해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "bar-model"
+              },
+              "level": 3,
+              "backtrack": "g6s2u4.ratio-property"
+            }
+          ],
+          "concepts": [
+            "g6s2u4.proportional-distribution"
+          ],
+          "submit": "button"
+        }
+      ]
+    }
+  ]
+}
