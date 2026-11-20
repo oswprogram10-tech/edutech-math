@@ -23,8 +23,29 @@ export const RULER_WIDTH = RULER_CM * PPC;
 /** 판 아래 여백(논리 px). */
 const BOTTOM_PAD = 30;
 
-/** estimate 판의 논리 높이: 자 아래 끝 + 여백. 물건과 자가 모두 위쪽에 있어 설정과 무관하다. */
-export function boardHeight(): number {
+/**
+ * mm 확대 칸(zoomLevels가 ['cm','mm']일 때만 판 아래에 더한다, T211). 자 아래 끝에서 이어지는 선으로
+ * 확대 구간을 보여 주고, 1cm = 240px(8배)다. 확대 구간의 중심은 물건 오른쪽 끝이고 2cm 폭이다.
+ * 확대를 켜고 끄는 것과 무관하게 높이가 같아 판이 늘었다 줄지 않는다(힌트 mm-count 자리도 여기다).
+ */
+export const ZOOM_PPC = 240;
+export const ZOOM = {
+  /** 확대 구간 중심 x(물건 오른쪽 끝이 놓인다). */
+  centerX: 540,
+  frameTop: 376,
+  frameHeight: 146,
+  objectTop: 384,
+  objectHeight: 24,
+  stripTop: 414,
+  stripHeight: 100,
+} as const;
+export const ZOOM_LEFT = ZOOM.centerX - ZOOM_PPC;
+export const ZOOM_RIGHT = ZOOM.centerX + ZOOM_PPC;
+export const ZOOM_BOTTOM = ZOOM.frameTop + ZOOM.frameHeight;
+
+/** estimate 판의 논리 높이: 자 아래 끝 + 여백. mm 확대 칸이 있으면 그 칸 아래 끝 + 여백이다(600 이하). */
+export function boardHeight(state?: Pick<EstimateState, 'zoomMm'>): number {
+  if (state?.zoomMm) return ZOOM_BOTTOM + 28;
   return RULER.top + RULER.height + BOTTOM_PAD;
 }
 

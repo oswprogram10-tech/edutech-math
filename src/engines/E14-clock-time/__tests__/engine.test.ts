@@ -228,7 +228,7 @@ describe('Observation·predicates·JSON', () => {
     expect(events).toEqual([{ name: 'clock-changed', payload: { moved: true, unrolled: false } }]);
     expect(emit(s, s, { type: 'reset' })).toEqual([]);
     expect(definition.events).toContain('clock-changed');
-    expect(definition.modes).toEqual(['clock', 'duration', 'calendar']);
+    expect(definition.modes).toEqual(['clock', 'duration', 'calendar', 'time-calc']);
   });
 });
 

@@ -7,6 +7,10 @@ import { createCalendarState, reduceCalendar } from './calendar/reduce';
 import { CALENDAR_EVENT_NAMES, calendarPredicates, emitCalendar } from './calendar/events';
 import { observeCalendar } from './calendar/observe';
 import type { CalendarAction, CalendarConfig, CalendarState } from './calendar/types';
+import { createTimeCalcState, reduceTimeCalc } from './timecalc/reduce';
+import { TIMECALC_EVENT_NAMES, emitTimeCalc, timeCalcPredicates } from './timecalc/events';
+import { observeTimeCalc } from './timecalc/observe';
+import type { TimeCalcAction, TimeCalcConfig, TimeCalcState } from './timecalc/types';
 import { createDurationState, reduceDuration } from './duration/reduce';
 import { DURATION_EVENT_NAMES, durationPredicates, emitDuration } from './duration/events';
 import { observeDuration } from './duration/observe';
@@ -16,22 +20,24 @@ import { observe as observeClock } from './observe';
 import { createInitialState as createClockState, reduce as reduceClock } from './reduce';
 import type { ClockAction, ClockConfig, ClockState } from './types';
 
-export type E14Config = ClockConfig | DurationConfig | CalendarConfig;
-export type E14State = ClockState | DurationState | CalendarState;
-export type E14Action = ClockAction | DurationAction | CalendarAction;
+export type E14Config = ClockConfig | DurationConfig | CalendarConfig | TimeCalcConfig;
+export type E14State = ClockState | DurationState | CalendarState | TimeCalcState;
+export type E14Action = ClockAction | DurationAction | CalendarAction | TimeCalcAction;
 
-export const E14_MODES = ['clock', 'duration', 'calendar'];
+export const E14_MODES = ['clock', 'duration', 'calendar', 'time-calc'];
 
 export const E14_EVENT_NAMES = [
   ...EVENT_NAMES,
   ...DURATION_EVENT_NAMES,
   ...CALENDAR_EVENT_NAMES,
+  ...TIMECALC_EVENT_NAMES,
 ] as const;
 
 export const E14_PREDICATES: Readonly<Record<string, EnginePredicate>> = {
   ...clockPredicates,
   ...durationPredicates,
   ...calendarPredicates,
+  ...timeCalcPredicates,
 };
 
 function modeOf(config: E14Config): unknown {
@@ -42,24 +48,28 @@ export function createInitialState(config: E14Config): E14State {
   const mode = modeOf(config);
   if (mode === 'duration') return createDurationState(config as DurationConfig);
   if (mode === 'calendar') return createCalendarState(config as CalendarConfig);
+  if (mode === 'time-calc') return createTimeCalcState(config as TimeCalcConfig);
   return createClockState(config as ClockConfig);
 }
 
 export function reduce(state: E14State, action: E14Action): E14State {
   if (state.mode === 'duration') return reduceDuration(state, action as DurationAction);
   if (state.mode === 'calendar') return reduceCalendar(state, action as CalendarAction);
+  if (state.mode === 'time-calc') return reduceTimeCalc(state, action as TimeCalcAction);
   return reduceClock(state, action as ClockAction);
 }
 
 export function observe(state: E14State): Observation {
   if (state.mode === 'duration') return observeDuration(state);
   if (state.mode === 'calendar') return observeCalendar(state);
+  if (state.mode === 'time-calc') return observeTimeCalc(state);
   return observeClock(state);
 }
 
 export function emit(prev: E14State, next: E14State, action: E14Action): EngineEvent[] {
   if (prev.mode === 'duration' && next.mode === 'duration') return emitDuration(prev, next);
   if (prev.mode === 'calendar' && next.mode === 'calendar') return emitCalendar(prev, next);
+  if (prev.mode === 'time-calc' && next.mode === 'time-calc') return emitTimeCalc(prev, next);
   if (prev.mode === 'clock' && next.mode === 'clock') {
     return emitClock(prev, next, action as ClockAction);
   }

@@ -1,6 +1,7 @@
-/** E14 시계·시간 엔진 정의. 모드 셋(`clock`, `duration`, `calendar`). 펼치기는 clock의 `unroll` 옵션이다. */
+/** E14 시계·시간 엔진 정의. 모드 넷(`clock`, `duration`, `calendar`, `time-calc`). 펼치기는 clock의 `unroll` 옵션이다. */
 import type { EngineDefinition } from '../../core/engine-sdk';
 import { PlusSevenOverlay } from './calendar/overlays/plus-seven';
+import { SixtyOverflowOverlay } from './timecalc/overlays/sixty-overflow';
 import { Hour60SplitOverlay } from './duration/overlays/hour-60-split';
 import {
   E14_EVENT_NAMES,
@@ -13,7 +14,7 @@ import {
 } from './modes';
 import type { E14Action, E14Config, E14State } from './modes';
 import { E14View } from './ModeView';
-import { forCalendar, forClock, forDuration } from './overlays/adapt';
+import { forCalendar, forClock, forDuration, forTimeCalc } from './overlays/adapt';
 import { HourHandFocusOverlay } from './overlays/hour-hand-focus';
 import { NumeralMinutesOverlay } from './overlays/numeral-minutes';
 import { RewindToHourOverlay } from './overlays/rewind-to-hour';
@@ -37,6 +38,7 @@ const definition: EngineDefinition<E14Config, E14State, E14Action> = {
     'numeral-minutes': forClock(NumeralMinutesOverlay),
     'hour-60-split': forDuration(Hour60SplitOverlay),
     'plus-seven': forCalendar(PlusSevenOverlay),
+    'sixty-overflow': forTimeCalc(SixtyOverflowOverlay),
   },
 };
 

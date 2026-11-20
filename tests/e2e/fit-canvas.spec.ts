@@ -46,8 +46,12 @@ const ENGINES: readonly EngineCase[] = [
     modes: ['slice', 'formula-derive', 'angle-gather', 'tangram', 'circle-sectors'],
   },
   { label: 'E12', heading: '3D 입체', modes: ['cubes'] },
-  { label: 'E13', heading: '측정 실험실', modes: ['compare-direct', 'length', 'estimate'] },
-  { label: 'E14', heading: '시계·시간', modes: ['clock', 'duration', 'calendar'] },
+  {
+    label: 'E13',
+    heading: '측정 실험실',
+    modes: ['compare-direct', 'length', 'estimate', 'map-route'],
+  },
+  { label: 'E14', heading: '시계·시간', modes: ['clock', 'duration', 'calendar', 'time-calc'] },
   { label: 'E15', heading: '규칙·패턴', modes: ['sequence', 'calc-pattern', 'growth', 'gears'] },
   { label: 'E16', heading: '대응 관계', modes: ['black-box', 'table', 'covary', 'rule-shooter'] },
   {

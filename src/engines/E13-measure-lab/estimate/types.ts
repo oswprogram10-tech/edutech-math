@@ -10,6 +10,8 @@ export interface EstimateConfig {
   object?: { name: string; lengthCm: string | number };
   ruler?: { offsetCm?: number | string; draggable?: boolean };
   estimateFirst?: boolean;
+  /** `['cm']`(기본) 또는 `['cm','mm']`. 뒤쪽이면 [눈금 크게] 단추로 mm 눈금을 볼 수 있다. */
+  zoomLevels?: readonly string[];
 }
 
 export interface EstimateState {
@@ -25,6 +27,10 @@ export interface EstimateState {
   readonly rulerOffset: string;
   readonly draggable: boolean;
   readonly estimateFirst: boolean;
+  /** zoomLevels가 ['cm','mm']인가([눈금 크게] 단추가 있다). */
+  readonly zoomMm: boolean;
+  /** 지금 mm 눈금 확대를 보고 있는가. */
+  readonly zoomed: boolean;
   /** 잠긴 어림(정수 1~99). 넣기 전에는 null. */
   readonly estimate: number | null;
   readonly estimateLocked: boolean;
@@ -36,6 +42,7 @@ export interface EstimateState {
 export type EstimateAction =
   | { readonly type: 'move-ruler'; readonly offsetCm: string }
   | { readonly type: 'estimate'; readonly value: number }
+  | { readonly type: 'zoom'; readonly on: boolean }
   | { readonly type: 'reset' };
 
 /** 자는 0~25cm. */

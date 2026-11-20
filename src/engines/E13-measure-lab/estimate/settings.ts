@@ -58,6 +58,8 @@ function failure(): EstimateState {
     rulerOffset: '0',
     draggable: false,
     estimateFirst: false,
+    zoomMm: false,
+    zoomed: false,
     estimate: null,
     estimateLocked: false,
     rulerMoves: 0,
@@ -85,6 +87,13 @@ export function normalizeEstimate(config: EstimateConfig): EstimateState {
     if (parsed === null) return failure();
     offset = parsed;
   }
+  const zoomLevels = source['zoomLevels'];
+  let zoomMm = false;
+  if (zoomLevels !== undefined) {
+    if (!Array.isArray(zoomLevels)) return failure();
+    if (zoomLevels.length === 2 && zoomLevels[0] === 'cm' && zoomLevels[1] === 'mm') zoomMm = true;
+    else if (!(zoomLevels.length === 1 && zoomLevels[0] === 'cm')) return failure();
+  }
   return {
     mode: 'estimate',
     error: null,
@@ -94,6 +103,8 @@ export function normalizeEstimate(config: EstimateConfig): EstimateState {
     rulerOffset: offset.toString(),
     draggable: ruler?.['draggable'] !== false,
     estimateFirst: source['estimateFirst'] === true,
+    zoomMm,
+    zoomed: false,
     estimate: null,
     estimateLocked: false,
     rulerMoves: 0,

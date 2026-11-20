@@ -381,9 +381,9 @@ describe('predicates·JSON 왕복·엔진 정의', () => {
     }
   });
 
-  it('엔진 정의: id E13, 모드 셋(T208), 오버레이 여덟(T208), emit은 상태가 바뀔 때만', () => {
+  it('엔진 정의: id E13, 모드 넷(T211), 오버레이 아홉(T211), emit은 상태가 바뀔 때만', () => {
     expect(definition.id).toBe('E13');
-    expect(definition.modes).toEqual(['compare-direct', 'length', 'estimate']);
+    expect(definition.modes).toEqual(['compare-direct', 'length', 'estimate', 'map-route']);
     expect(definition.layout).toBe('fit');
     expect(Object.keys(definition.overlays ?? {}).sort()).toEqual([
       'count-cells',
@@ -392,6 +392,7 @@ describe('predicates·JSON 왕복·엔진 정의', () => {
       'half-straighten',
       'meter-100',
       'meter-outline',
+      'mm-count',
       'same-tank',
       'span-compare',
     ]);

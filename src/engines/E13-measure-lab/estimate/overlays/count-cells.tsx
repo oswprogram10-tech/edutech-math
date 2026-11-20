@@ -26,7 +26,7 @@ export function CountCellsOverlay({ state }: OverlayProps<EstimateConfig, Estima
       testId="overlay-count-cells"
       canvasSelector={ESTIMATE_CANVAS_SELECTOR}
       logicalWidth={BOARD.width}
-      logicalHeight={boardHeight()}
+      logicalHeight={boardHeight(state)}
     >
       <defs>
         <pattern id="e13-ov-cell-hatch" width={10} height={10} patternUnits="userSpaceOnUse">

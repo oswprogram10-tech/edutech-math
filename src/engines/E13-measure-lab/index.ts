@@ -1,6 +1,7 @@
-/** E13 측정 실험실 엔진 정의. 모드 셋(`compare-direct`, `length`(+`unit-train` 변형), `estimate`). */
+/** E13 측정 실험실 엔진 정의. 모드 넷(`compare-direct`, `length`(+`unit-train` 변형), `estimate`, `map-route`). */
 import type { EngineDefinition } from '../../core/engine-sdk';
 import { CountCellsOverlay } from './estimate/overlays/count-cells';
+import { MmCountOverlay } from './estimate/overlays/mm-count';
 import { EndpointLinesOverlay } from './compare/overlays/endpoint-lines';
 import { HalfStraightenOverlay } from './compare/overlays/half-straighten';
 import { SameTankOverlay } from './compare/overlays/same-tank';
@@ -40,6 +41,7 @@ const definition: EngineDefinition<E13Config, E13State, E13Action> = {
     'gap-marks': forLength(GapMarksOverlay),
     'span-compare': forLength(SpanCompareOverlay),
     'count-cells': forEstimate(CountCellsOverlay),
+    'mm-count': forEstimate(MmCountOverlay),
     'meter-100': Meter100Overlay,
     'meter-outline': forTrain(MeterOutlineOverlay),
   },

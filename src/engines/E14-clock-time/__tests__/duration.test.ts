@@ -170,7 +170,7 @@ describe('Observation·predicates·JSON·등록', () => {
   });
 
   it('엔진 정의가 reduce·observe·predicates를 모드로 나눠 준다', () => {
-    expect(definition.modes).toEqual(['clock', 'duration', 'calendar']);
+    expect(definition.modes).toEqual(['clock', 'duration', 'calendar', 'time-calc']);
     const state = definition.createInitialState({ mode: 'duration', from: '2:00', to: '4:00' });
     expect(state.mode).toBe('duration');
     const next = definition.reduce(state, start('2:40'));

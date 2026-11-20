@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { Rational } from '../../../core/math';
 import { E13_STRINGS as S } from '../strings.ko';
 import { reduceEstimate } from './reduce';
-import { offsetOf, snapRulerOffset } from './settings';
+import { offsetOf, rulerHidden, snapRulerOffset } from './settings';
 import type { EstimateAction, EstimateState } from './types';
 
 export interface EstimateUi {
@@ -26,6 +26,10 @@ export interface EstimateUi {
 function rejection(state: EstimateState, action: EstimateAction): string {
   const text = S.estimate.rejected;
   if (action.type === 'estimate') return state.estimateLocked ? text.locked : text.badEstimate;
+  if (action.type === 'zoom') {
+    if (!state.zoomMm) return text.noZoom;
+    return rulerHidden(state) ? text.first : text.same;
+  }
   if (action.type === 'move-ruler') {
     if (!state.draggable) return text.fixed;
     if (state.estimateFirst && !state.estimateLocked) return text.first;
