@@ -325,6 +325,7 @@ W6에서 E13 측정 실험실과 E14 시계·시간을 새로 만들고, E17 `so
 | T218 | 단원 콘텐츠: g2s1u5 분류하기와 g1s1u2.A1 모양 상자(소넷 구현) | T217 |
 | T219 | E03 `range`(경계점 속 찬/빈 동그라미·구간 화살표·게이트)와 `rounding` 상황 장면(소넷 구현) | T200 |
 | T220 | 단원 콘텐츠: g5s2u1 수의 범위와 어림하기(소넷 구현) | T219 |
+| T222 | E14 clock 판: 응답 칸 옆 좁은 판에서 시계 윗부분이 잘리는 문제(T204에서 발견, T205 전에 함)(소넷 구현) | T204 |
 | T221 | 문서 정리: `docs/03-engines.md`(E20 `proportion-grid` 줄 등 실제 구현과 다른 곳), `docs/00-handoff.md` W5·W6 요약(소넷 구현) | T220 |
 
 - **T200 병합(2026-11-20):** W6 오개념 18개(수 함정 7, 고르기 7, 관찰 4)를 `misconceptions-w6.ts`·`diagnose-w6.ts`에 등록했다. 수 함정 `trapValue`는 `diagnose-shared.ts`로 옮겨 W5·W6가 같이 쓴다. 관찰 코드(MC-MEASURE-GAP, MC-LENGTH-NO-PROMOTE, MC-SORT-INCONSISTENT, MC-RANGE-BOUNDARY-INCLUSION)는 엔진 Observation이 맡는다. 단위 3583 통과.
@@ -334,6 +335,8 @@ W6에서 E13 측정 실험실과 E14 시계·시간을 새로 만들고, E17 `so
 - **T202 병합(2026-11-20):** g1s2u3.A2 톱니 연동 시계 5과제(만들기 3:00·8:30, 읽기 7시·짧은바늘만 4시 30분, 디지털 짝짓기). T1만 `snapMinuteTo [0,15,30,45]`(긴바늘을 3에 두는 MC-CLOCK-HANDS를 만들 수 있게). 명세 과제 5(하루 일과 순서)는 그림 자산이 없어 후순위. 남은 점: readOnly 시계 아래 안내가 "바늘을 돌려 보세요"(T203에서 고침), 이 단원 [확인하기]가 64px인지 확인 필요(실행기 몫). g1s2u3 E2E 15 통과.
 
 - **T203 병합(2026-11-20):** E14 `duration`(한 시간 한 블록 띠, 시작·끝 표시, 칠한 구간, 오버레이 hour-60-split)과 `calendar`(Zeller 요일, 고르기·가려진 칸 채우기·세로줄 +7 화살표, 오버레이 plus-seven). 가려진 칸은 `data-day` 없이 "?"와 "가려진 칸, 요일" aria. `hidden`이 비면 hiddenCorrect는 false. clock readOnly는 안내 "시계를 잘 보세요."와 돌리기 단추 숨김. 모드 상자 폭으로 clock 기준 이미지 4장 다시 찍음(도구 줄만). 남은 점: +7 화살표 글씨가 작음, 저학년 64px에서 달력 칸·띠 표시가 판 배율을 따름(최소 약 53px), 시작·끝 표시가 겹치면 시작을 끌기 어려움(단추·키보드는 됨). 범위 E2E 252 통과.
+
+- **T204 병합(2026-11-20):** g2s2u4 콘텐츠(A1 clock·duration 5과제, A2 calendar 4과제). 수가 값인 관찰(분 등)은 `diagnose`가 안 되므로 전용 규칙은 `when` 목표(`timeIs`·응답 `any`)로 건다. sort 판정은 `response.<id>.bins.<bin>` equals 배열(카드 id `m01`…`m12`). 병합 때 Claude가 A2.T4 ② 문구("7월과 8월은 둘 다 31일" — 답 일부)를 손등 세기 안내로 바꿨다. 남은 문제: A1.T2(readOnly+unroll+응답 둘)에서 크롬북·아이패드 시계 윗부분이 잘림 → T222. 아이패드 A1.T4 조작 단추 줄은 판 안 스크롤로 닿음. g2s2u4 E2E 9 통과.
 
 ## 상시
 | 카드 | 내용 |
