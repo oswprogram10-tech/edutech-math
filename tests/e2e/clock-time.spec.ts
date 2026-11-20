@@ -1,0 +1,408 @@
+import { expect, test } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
+
+/**
+ * E14 시계·시간(clock) 샌드박스 E2E. 아이패드(WebKit)·크롬북·전자칠판 뷰포트.
+ *
+ * - 긴바늘 끌기(12를 지나 감아 돌기 포함), 키보드 한 시간 넘기기
+ * - 톱니 회전, 펼치기·다시 감기와 띠 위 표시 이동
+ * - 힌트 ② 오버레이 셋이 본 캔버스와 1px 안에 겹침(펼친 상태의 numeral-minutes 포함)
+ * - 첫 화면 기준 이미지(톱니 보임, 펼친 상태), 좁은 판에서 최소 배율 0.6 + 판 안 스크롤
+ */
+
+test.describe.configure({ timeout: 120_000 });
+
+interface Observation {
+  readonly mode?: string;
+  readonly time?: string;
+  readonly hour?: number;
+  readonly minute?: number;
+  readonly moves?: number;
+  readonly unrolled?: boolean;
+}
+
+async function readObservation(page: Page): Promise<Observation> {
+  const text = await page.getByTestId('observation').textContent();
+  return JSON.parse(text ?? '{}') as Observation;
+}
+
+async function pollObservation(page: Page, check: (o: Observation) => boolean): Promise<void> {
+  await expect.poll(async () => check(await readObservation(page))).toBe(true);
+}
+
+async function open(
+  page: Page,
+  config: Record<string, unknown> = {},
+  query = 'stage=fit',
+): Promise<void> {
+  const params = new URLSearchParams({ config: JSON.stringify(config) });
+  for (const [key, value] of new URLSearchParams(query)) params.set(key, value);
+  await page.goto(`/?${params.toString()}#/sandbox/E14`);
+  await expect(page.getByRole('heading', { name: '시계·시간' })).toBeVisible();
+  await pollObservation(page, (o) => o.mode === 'clock');
+  await settleCanvas(page);
+}
+
+/** 판이 칸에 맞춰 크기를 정할 때까지(상자가 두 번 연속 같아질 때까지) 기다린다. */
+async function settleCanvas(page: Page): Promise<void> {
+  let previous = '';
+  await expect
+    .poll(async () => {
+      const box = await page.getByTestId('clock-canvas').boundingBox();
+      const now = JSON.stringify(box);
+      const same = now === previous;
+      previous = now;
+      return same;
+    })
+    .toBe(true);
+}
+
+function button(page: Page, name: string): Locator {
+  return page.getByRole('button', { name, exact: true });
+}
+
+function canvas(page: Page): Locator {
+  return page.getByTestId('clock-canvas');
+}
+
+const CENTER = { x: 275, y: 255 };
+
+/** 시계 중심에서 deg(12시 방향 0°, 시계 방향)·반지름 r인 논리 좌표를 화면 좌표로. */
+async function polarPoint(
+  page: Page,
+  deg: number,
+  radius: number,
+): Promise<{ x: number; y: number }> {
+  const box = await canvas(page).boundingBox();
+  if (!box) throw new Error('캔버스를 찾지 못했습니다.');
+  const rad = (deg * Math.PI) / 180;
+  const lx = CENTER.x + radius * Math.sin(rad);
+  const ly = CENTER.y - radius * Math.cos(rad);
+  return { x: box.x + (lx / 1000) * box.width, y: box.y + (ly / 600) * box.height };
+}
+
+/** 원 둘레를 따라 fromDeg에서 toDeg까지 끈다(toDeg는 fromDeg보다 커도 작아도 된다). */
+async function dragArc(
+  page: Page,
+  fromDeg: number,
+  toDeg: number,
+  radius = 150,
+  from: { deg: number; radius: number } = { deg: fromDeg, radius },
+): Promise<void> {
+  const start = await polarPoint(page, from.deg, from.radius);
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  const steps = Math.max(2, Math.ceil(Math.abs(toDeg - fromDeg) / 8));
+  for (let i = 1; i <= steps; i += 1) {
+    const p = await polarPoint(page, fromDeg + ((toDeg - fromDeg) * i) / steps, radius);
+    await page.mouse.move(p.x, p.y);
+  }
+  await page.mouse.up();
+}
+
+// ── 끌기·키보드 ──────────────────────────────────────────
+
+test('긴바늘을 끌어 4:25를 만든다(분 단위, 짧은바늘이 따라 돈다)', async ({ page }) => {
+  await open(page, { start: '4:00' });
+  await dragArc(page, 0, 150);
+  await pollObservation(page, (o) => o.time === '4:25' && o.moves === 1);
+  await expect(canvas(page).locator('[data-part="short-hand"]')).toHaveAttribute(
+    'data-angle',
+    '132.50',
+  );
+  await expect(canvas(page).locator('[data-part="long-hand"]')).toHaveAttribute(
+    'data-angle',
+    '150.00',
+  );
+});
+
+test('긴바늘을 12 너머로 끌면 다음 시로 넘어가고, 거꾸로 끌면 이전 시로 돌아간다', async ({
+  page,
+}) => {
+  await open(page, { start: '4:50' });
+  // 4:50의 긴바늘은 300°. 시계 방향으로 90° 더 돌려 4:50 → 5:05.
+  await dragArc(page, 300, 390);
+  await pollObservation(page, (o) => o.time === '5:05');
+  // 5:05의 긴바늘(30°)을 반시계로 60° 돌려 5:05 → 4:55.
+  await dragArc(page, 30, -30);
+  await pollObservation(page, (o) => o.time === '4:55');
+});
+
+test('짧은바늘을 끌어도 돌아가고(긴바늘이 그만큼 빨리 돈다) 정시 규칙에 붙는다', async ({
+  page,
+}) => {
+  await open(page, { start: '3:00', granularity: 'hour' });
+  // 짧은바늘 3시(90°)를 4시(120°) 쪽으로 끈다.
+  await dragArc(page, 90, 118, 80);
+  await pollObservation(page, (o) => o.time === '4:00' && o.moves === 1);
+});
+
+test('5-weak: 끌다가 4:24에서 놓으면 4:25에 붙고 4:22는 그대로', async ({ page }) => {
+  await open(page, { start: '4:00', snapMinuteTo: '5-weak' });
+  await dragArc(page, 0, 144);
+  await pollObservation(page, (o) => o.time === '4:25');
+  await dragArc(page, 150, 132);
+  await pollObservation(page, (o) => o.time === '4:22');
+});
+
+test('키보드: ←→는 한 칸, Shift+→는 한 시간(12를 넘어 감아 돈다)', async ({ page }) => {
+  await open(page, { start: '11:00', granularity: 'half-hour' });
+  await canvas(page).getByRole('slider').focus();
+  await page.keyboard.press('ArrowRight');
+  await pollObservation(page, (o) => o.time === '11:30');
+  await page.keyboard.press('Shift+ArrowRight');
+  await pollObservation(page, (o) => o.time === '12:30');
+  await page.keyboard.press('ArrowLeft');
+  await pollObservation(page, (o) => o.time === '12:00');
+  await page.keyboard.press('Shift+ArrowLeft');
+  await pollObservation(page, (o) => o.time === '11:00');
+});
+
+test('단추: 거꾸로·앞으로·처음으로, 읽기 과제는 조작을 막는다', async ({ page }) => {
+  await open(page, { start: '3:00' });
+  await button(page, '앞으로 ▶').click();
+  await pollObservation(page, (o) => o.time === '3:01');
+  await button(page, '◀ 거꾸로').click();
+  await button(page, '◀ 거꾸로').click();
+  await pollObservation(page, (o) => o.time === '2:59' && o.moves === 3);
+  await button(page, '처음으로').click();
+  await pollObservation(page, (o) => o.time === '3:00' && o.moves === 0);
+
+  await open(page, { start: '3:00', readOnly: true });
+  await expect(button(page, '앞으로 ▶')).toBeDisabled();
+  await dragArc(page, 0, 90);
+  await pollObservation(page, (o) => o.time === '3:00' && o.moves === 0);
+});
+
+test('시각 글은 기본으로 보이지 않고, always면 보인다', async ({ page }) => {
+  await open(page, { start: '8:30' });
+  await expect(page.getByTestId('clock-digital')).toHaveCount(0);
+  await expect(canvas(page).locator('[data-part="long-hand"]')).toHaveAttribute(
+    'aria-label',
+    '긴바늘이 6을 가리켜요',
+  );
+  await expect(page.getByRole('slider')).toHaveAttribute(
+    'aria-valuetext',
+    '긴바늘이 6을 가리켜요. 짧은바늘이 8과 9 사이에 있어요',
+  );
+  await open(page, { start: '8:30', digitalReadout: 'always' });
+  await expect(page.getByTestId('clock-digital')).toHaveText('8:30');
+});
+
+// ── 톱니 ────────────────────────────────────────────────
+
+test('톱니: 긴바늘·짧은바늘과 같이 돈다', async ({ page }) => {
+  await open(page, { start: '3:00', showGears: true });
+  const big = canvas(page).locator('[data-part="gear-big"]');
+  const small = canvas(page).locator('[data-part="gear-small"]');
+  await expect(big).toHaveAttribute('data-angle', '0.00');
+  await expect(small).toHaveAttribute('data-angle', '90.00');
+  await expect(page.getByText('긴바늘이 한 바퀴 돌면 짧은바늘은 한 칸')).toBeVisible();
+  for (let i = 0; i < 10; i += 1) await button(page, '앞으로 ▶').click();
+  await expect(big).toHaveAttribute('data-angle', '60.00');
+  await expect(small).toHaveAttribute('data-angle', '95.00');
+  // 큰 톱니 그림의 실제 회전 변환도 바뀐다.
+  await expect(big.locator(':scope > g')).toHaveAttribute('transform', /rotate\(60 /);
+});
+
+// ── 펼치기 ──────────────────────────────────────────────
+
+test('펼치기·다시 감기: 띠가 생기고 표시가 긴바늘을 따라 움직인다', async ({ page }) => {
+  await open(page, { start: '4:25', unroll: true });
+  await expect(canvas(page).locator('[data-part="strip"]')).toHaveCount(0);
+  await button(page, '펼치기').click();
+  await pollObservation(page, (o) => o.unrolled === true);
+  const strip = canvas(page).locator('[data-part="strip"]');
+  await expect(strip).toBeVisible();
+  await expect(strip.locator('[data-part="strip-numeral"]')).toHaveCount(12);
+  await expect(strip.locator('[data-part="strip-minute"]')).toHaveCount(13);
+  const marker = strip.locator('[data-part="strip-marker"]');
+  const before = Number(await marker.getAttribute('data-x'));
+  expect(before).toBeCloseTo(60 + (25 / 60) * 880, 0);
+  // 시계 판은 그대로 있고, 긴바늘을 돌리면 표시가 같이 움직인다.
+  await expect(canvas(page).locator('[data-part="long-hand"]')).toBeVisible();
+  for (let i = 0; i < 5; i += 1) await button(page, '앞으로 ▶').click();
+  await expect(marker).toHaveAttribute('data-x', (60 + (30 / 60) * 880).toFixed(2));
+  expect(Number(await marker.getAttribute('data-x'))).toBeGreaterThan(before);
+  await button(page, '다시 감기').click();
+  await pollObservation(page, (o) => o.unrolled === false);
+  await expect(canvas(page).locator('[data-part="strip"]')).toHaveCount(0);
+});
+
+test('읽기 과제(readOnly)에서는 펼쳐도 띠 위 표시를 그리지 않는다', async ({ page }) => {
+  await open(page, { start: '4:25', unroll: true, readOnly: true });
+  await button(page, '펼치기').click();
+  await expect(canvas(page).locator('[data-part="strip"]')).toBeVisible();
+  await expect(canvas(page).locator('[data-part="strip-marker"]')).toHaveCount(0);
+});
+
+// ── 기준 이미지 ──────────────────────────────────────────
+
+async function expectPageSnapshot(page: Page, name: string): Promise<void> {
+  test.skip(test.info().project.name === 'board', '기준 이미지는 크롬북·아이패드만 둔다.');
+  await page.waitForTimeout(600);
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.getByTestId('clock-controls').evaluate((element) => {
+    element.scrollTo(0, 0);
+    // T199 원칙: 좁은 판에서는 엔진 바깥 상자(.wrap)가 세로로 스크롤한다.
+    element.closest('[class*="wrap"]')?.scrollTo(0, 0);
+  });
+  await expect(page).toHaveScreenshot(name, { fullPage: true, animations: 'disabled' });
+}
+
+test('화면 기준: 톱니가 보이는 첫 화면', async ({ page }) => {
+  await open(page, { start: '4:25', showGears: true, unroll: true });
+  await page.getByRole('heading', { name: '시계·시간' }).focus();
+  await expectPageSnapshot(page, 'clock-gears.png');
+});
+
+test('화면 기준: 펼친 상태', async ({ page }) => {
+  await open(page, { start: '4:25', showGears: true, unroll: true });
+  await button(page, '펼치기').click();
+  await pollObservation(page, (o) => o.unrolled === true);
+  await page.getByRole('heading', { name: '시계·시간' }).focus();
+  await expectPageSnapshot(page, 'clock-unrolled.png');
+});
+
+// ── 오버레이 정렬 ────────────────────────────────────────
+
+/** 오버레이 svg 상자가 clock-canvas 상자와 1px 이내로 같다(overlay-alignment 방식). */
+async function expectAligned(page: Page, overlay: string): Promise<Locator> {
+  const layer = page.locator(`[data-overlay="${overlay}"]`);
+  await expect(layer).toBeVisible();
+  await expect
+    .poll(async () => {
+      const a = await canvas(page).boundingBox();
+      const b = await layer.locator('svg').first().boundingBox();
+      if (!a || !b) return Number.POSITIVE_INFINITY;
+      return Math.max(
+        Math.abs(a.x - b.x),
+        Math.abs(a.y - b.y),
+        Math.abs(a.width - b.width),
+        Math.abs(a.height - b.height),
+      );
+    })
+    .toBeLessThanOrEqual(1);
+  return layer;
+}
+
+async function toggleOverlay(page: Page): Promise<void> {
+  await page.getByRole('button', { name: '힌트 겹쳐 보기' }).click();
+}
+
+/** 오버레이 요소의 화면 중심이 본 바늘의 화면 중심(같은 각도·반지름)과 1px 안인지 본다. */
+async function centerOf(locator: Locator): Promise<{ x: number; y: number }> {
+  const box = await locator.boundingBox();
+  if (!box) throw new Error('상자를 찾지 못했습니다.');
+  return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+}
+
+test('힌트 ② hour-hand-focus: 긴바늘 점선 윤곽과 짧은바늘 굵은 윤곽', async ({ page }) => {
+  await open(page, { start: '3:25' }, 'stage=fit&overlay=hour-hand-focus');
+  await toggleOverlay(page);
+  const layer = await expectAligned(page, 'hour-hand-focus');
+  await expect(layer.locator('[data-part="short-focus"]')).toHaveAttribute('data-angle', '102.50');
+  await expect(layer.locator('[data-part="long-ghost"]')).toHaveAttribute('data-angle', '150.00');
+  await expect(layer).toContainText('몇 시는 짧은바늘이 알려 줘요');
+  // 짧은바늘 윤곽은 본 짧은바늘 그림과 같은 자리에 겹친다.
+  const mine = await centerOf(canvas(page).locator('[data-part="short-hand"] polygon'));
+  const focus = await centerOf(layer.locator('[data-part="short-focus"] polygon'));
+  expect(Math.abs(mine.x - focus.x)).toBeLessThanOrEqual(1);
+  expect(Math.abs(mine.y - focus.y)).toBeLessThanOrEqual(1);
+});
+
+test('힌트 ② rewind-to-hour: 정시로 되감은 유령 바늘과 12까지의 호', async ({ page }) => {
+  await open(page, { start: '8:30' }, 'stage=fit&overlay=rewind-to-hour');
+  await toggleOverlay(page);
+  const layer = await expectAligned(page, 'rewind-to-hour');
+  await expect(layer.locator('[data-part="ghost-short"]')).toHaveAttribute('data-angle', '240.00');
+  await expect(layer.locator('[data-part="ghost-long"]')).toHaveAttribute('data-angle', '0.00');
+  await expect(layer.locator('[data-part="rewind-arc"]')).toHaveCount(1);
+  // 둘러싼 원은 시계의 숫자 8 자리(240°, 반지름 170)에 놓인다.
+  const ring = await centerOf(layer.locator('[data-part="hour-ring"]'));
+  const eight = await polarPoint(page, 240, 170);
+  expect(Math.abs(ring.x - eight.x)).toBeLessThanOrEqual(6);
+  expect(Math.abs(ring.y - eight.y)).toBeLessThanOrEqual(6);
+});
+
+test('힌트 ② rewind-to-hour: 분이 0이면 그리지 않는다', async ({ page }) => {
+  await open(page, { start: '8:00' }, 'stage=fit&overlay=rewind-to-hour');
+  await toggleOverlay(page);
+  await expect(page.locator('[data-overlay="rewind-to-hour"] svg')).toHaveCount(0);
+});
+
+test('힌트 ② numeral-minutes: 시계 바깥과 펼친 띠 위에 같은 이름표', async ({ page }) => {
+  await open(
+    page,
+    { start: '4:25', unroll: true },
+    `stage=fit&overlay=numeral-minutes&overlayArgs=${encodeURIComponent('{"numeral":5}')}`,
+  );
+  await button(page, '펼치기').click();
+  await pollObservation(page, (o) => o.unrolled === true);
+  await page.waitForTimeout(500); // 펼치기 보간(300ms)이 끝난 뒤에 잰다.
+  await toggleOverlay(page);
+  const layer = await expectAligned(page, 'numeral-minutes');
+  await expect(layer.locator('[data-part="clock-label"]')).toContainText('25분');
+  await expect(layer.locator('[data-part="strip-label"]')).toContainText('25분');
+  // 띠 이름표는 띠의 25분 눈금 위에 놓인다.
+  const label = await centerOf(layer.locator('[data-part="strip-label"] line'));
+  const box = await canvas(page).boundingBox();
+  if (!box) throw new Error('캔버스를 찾지 못했습니다.');
+  const tickX = box.x + ((60 + (25 / 60) * 880) / 1000) * box.width;
+  expect(Math.abs(label.x - tickX)).toBeLessThanOrEqual(1);
+});
+
+// ── 판 크기·터치 타깃 ────────────────────────────────────
+
+test('넓은 판은 줄여서 맞추고, 좁은 판은 최소 배율 0.6에서 멈추고 판 안에서 스크롤한다', async ({
+  page,
+}) => {
+  test.skip(test.info().project.name !== 'chromebook', '크롬북 뷰포트에서만 판 크기를 바꿔 본다.');
+  await open(page, { start: '3:00', unroll: true });
+  const wide = await canvas(page).boundingBox();
+  if (!wide) throw new Error('캔버스를 찾지 못했습니다.');
+  expect(wide.width / 1000).toBeGreaterThanOrEqual(0.6);
+  await expect(page.getByTestId('clock-board')).toHaveAttribute('data-scroll', 'false');
+
+  await page.setViewportSize({ width: 520, height: 700 });
+  await expect(page.getByTestId('clock-board')).toHaveAttribute('data-scroll', 'true');
+  const narrow = await canvas(page).boundingBox();
+  if (!narrow) throw new Error('캔버스를 찾지 못했습니다.');
+  expect(narrow.width).toBeGreaterThanOrEqual(599);
+  expect(narrow.width).toBeLessThanOrEqual(601);
+  expect(narrow.height).toBeGreaterThanOrEqual(359);
+  const scrolls = await page
+    .getByTestId('clock-board')
+    .evaluate((element) => element.scrollWidth > element.clientWidth);
+  expect(scrolls).toBe(true);
+  // 조작 칸은 스크롤 상자 밖이고 눌리지 않는다(T199).
+  await expect(button(page, '앞으로 ▶')).toBeVisible();
+  const outside = await button(page, '앞으로 ▶').evaluate(
+    (el) => !document.querySelector('[data-testid="clock-board"]')?.contains(el),
+  );
+  expect(outside).toBe(true);
+  const height = (await button(page, '앞으로 ▶').boundingBox())?.height ?? 0;
+  expect(height).toBeGreaterThanOrEqual(47.5);
+});
+
+async function expectMin(locator: Locator, min: number, label: string): Promise<void> {
+  const box = await locator.boundingBox();
+  if (!box) throw new Error(`${label}: 상자를 찾지 못했습니다.`);
+  expect(Math.min(box.width, box.height), label).toBeGreaterThanOrEqual(min - 0.5);
+}
+
+for (const size of [48, 64] as const) {
+  test(`터치 타깃 ${size}: 모든 단추가 ${size}px 이상`, async ({ page }) => {
+    await open(page, { start: '3:00', unroll: true });
+    // 설정은 저장되므로 아직 48px일 때만 눌러 64px로 바꾼다.
+    const toggle = page.getByRole('button', { name: '터치 48px' });
+    if (size === 64 && (await toggle.count()) > 0) await toggle.click();
+    const controls = page.getByTestId('clock-controls').getByRole('button');
+    const count = await controls.count();
+    expect(count).toBe(4);
+    for (let i = 0; i < count; i += 1) {
+      await controls.nth(i).scrollIntoViewIfNeeded();
+      await expectMin(controls.nth(i), size, `단추 ${i}`);
+    }
+  });
+}
