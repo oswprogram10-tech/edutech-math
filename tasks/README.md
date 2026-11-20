@@ -222,6 +222,7 @@ T153은 소넷 구현 → 검수 1회(수정 없음)를 거쳐 main에 병합했
 | T196 | E06 `proportion`: 외항·내항 격자 넓이 저울(소넷 구현) | T193 |
 | T197 | E20 `bar-model`: 문장제 형광펜과 비례배분 막대 모델(소넷 구현) | T196 |
 | T198 | g6s2u4 비례식과 비례배분 콘텐츠(소넷 구현) | T196, T197, T195 |
+| T199 | E06·E19·E20: 좁은 실행기 판에서 조작 칸이 눌려 사라지는 문제(소넷 구현) | T192 |
 
 W5는 E18(그래프 5단원) → E15·E16(규칙·대응) → E06·E20(저울·비) → E19(평균·가능성) → g5s1u1(E08 확장) 순서로 한다. g2s2u6은 실행기 `linkedViews` core 카드 뒤에 한다. 이번 웨이브부터 푸시와 CI 확인은 웨이브가 끝날 때 한 번만 한다(운영자 지시 2026-11-18).
 
@@ -283,6 +284,8 @@ T173은 소넷 구현 → 검수 1회(판 전체 화면 기준 스냅샷 6장, �
 - **T190 병합(2026-11-20):** E20 `rate`(트랙 두 줄, 3초 재생은 화면 상태, 결과 글·1초당 거리 없음, table look은 표 + 작은 트랙)·`percent`(grid·strip, 끌어 칠하기·방향키·Space). `racers` 생략 때만 predictFirst 기본 true, id 없는 racer는 `racer-1`·`racer-2`. MC-RATE-DISTANCE-ONLY는 예측 순간 기록. 샌드박스 모드 상자가 넓어져 mix·resize 기준 이미지 10장을 운영자 승인으로 다시 찍었다. strip 칸 폭이 작아(논리 9px) 한 칸 누르기보다 끌기·키보드가 주 입력이다. 범위 E2E 192 통과.
 
 - **T193 병합(2026-11-20):** 새 엔진 E19 평균·가능성 실험실 `leveling`·`seesaw`·`outlier`(오버레이 level-try·sum-tower·arms·mean-pull). `data`를 주면 outlier `dragIndex` 필수, `predict` 기본 false. outlier `reset`은 잠근 예측을 남긴다. 평균은 Observation에만 있고 outlier 예측 잠금 뒤에만 평균선이 보인다. 이벤트 `chance-changed`. 남은 점: 예측과 평균이 가까우면 글이 겹친다, level-try 빈 칸에 기둥 숫자가 겹친다. fit-canvas ENGINES 줄 병합 충돌을 손으로 풀었다. 범위 E2E 171 통과(fit-canvas E09 board 1건 부하 실패, 단독 통과).
+
+- **T192 병합(2026-11-20):** g6s1u4 콘텐츠(A1 mix·percent 6과제, A2 resize·rate 5과제). number 응답은 Rational로 정규화되어 2/8도 1/4로 맞고, 소수 칸은 `^\d+\.\d+$`만 받는다. 응답만 있는 과제는 `showEngine:false`(engine·mode·config는 필수라 숨은 설정을 둔다). MC-RATIO-ADDITIVE ③은 `g5s1u3.rule-expression`. 발견: 응답 칸 옆 E20 rate 판에서 조작 칸이 눌려 사라진다(E2E는 단축키·ratio 0.9로 우회) → T199. 남은 점: resize에서 담은 크기는 [처음으로]로 안 지워진다([되돌리기]로 뺀다). g6s1u4 E2E 24 통과.
 
 ## 상시
 | 카드 | 내용 |
