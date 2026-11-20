@@ -18,13 +18,17 @@ export function Controls({ state, ui, readOnly }: ControlsProps) {
   const locked = readOnly || state.readOnly;
   return (
     <div className={styles.sideStack} data-testid="clock-controls">
-      <p className={styles.instructions}>{S.instructions}</p>
+      <p className={styles.instructions}>{locked ? S.instructionsReadOnly : S.instructions}</p>
       <p className={styles.status} role="status" data-testid="clock-message">
         {ui.message ?? ''}
       </p>
       <div className={styles.row} role="group" aria-label={S.controlsLabel}>
-        <Btn label={S.backward} action="backward" disabled={locked} onClick={() => ui.stepBy(-1)} />
-        <Btn label={S.forward} action="forward" disabled={locked} onClick={() => ui.stepBy(1)} />
+        {locked ? null : (
+          <>
+            <Btn label={S.backward} action="backward" onClick={() => ui.stepBy(-1)} />
+            <Btn label={S.forward} action="forward" onClick={() => ui.stepBy(1)} />
+          </>
+        )}
         {state.unroll ? (
           <Btn
             label={state.unrolled ? S.rewind : S.unroll}

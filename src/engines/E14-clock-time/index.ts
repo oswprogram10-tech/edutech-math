@@ -1,31 +1,42 @@
-/** E14 시계·시간 엔진 정의. 이 카드에서는 `clock` 모드 하나만 등록한다(펼치기는 `unroll` 옵션). */
+/** E14 시계·시간 엔진 정의. 모드 셋(`clock`, `duration`, `calendar`). 펼치기는 clock의 `unroll` 옵션이다. */
 import type { EngineDefinition } from '../../core/engine-sdk';
-import { EVENT_NAMES, emit, predicates } from './events';
-import { observe } from './observe';
+import { PlusSevenOverlay } from './calendar/overlays/plus-seven';
+import { Hour60SplitOverlay } from './duration/overlays/hour-60-split';
+import {
+  E14_EVENT_NAMES,
+  E14_MODES,
+  E14_PREDICATES,
+  createInitialState,
+  emit,
+  observe,
+  reduce,
+} from './modes';
+import type { E14Action, E14Config, E14State } from './modes';
+import { E14View } from './ModeView';
+import { forCalendar, forClock, forDuration } from './overlays/adapt';
 import { HourHandFocusOverlay } from './overlays/hour-hand-focus';
 import { NumeralMinutesOverlay } from './overlays/numeral-minutes';
 import { RewindToHourOverlay } from './overlays/rewind-to-hour';
-import { createInitialState, reduce } from './reduce';
 import { E14_STRINGS } from './strings.ko';
-import type { ClockAction, ClockConfig, ClockState } from './types';
-import { ClockView } from './View';
 
-const definition: EngineDefinition<ClockConfig, ClockState, ClockAction> = {
+const definition: EngineDefinition<E14Config, E14State, E14Action> = {
   id: 'E14',
   name: E14_STRINGS.name,
-  modes: ['clock'],
+  modes: E14_MODES,
   layout: 'fit',
   createInitialState,
   reduce,
-  View: ClockView,
+  View: E14View,
   observe,
-  events: EVENT_NAMES,
+  events: E14_EVENT_NAMES,
   emit,
-  predicates,
+  predicates: E14_PREDICATES,
   overlays: {
-    'hour-hand-focus': HourHandFocusOverlay,
-    'rewind-to-hour': RewindToHourOverlay,
-    'numeral-minutes': NumeralMinutesOverlay,
+    'hour-hand-focus': forClock(HourHandFocusOverlay),
+    'rewind-to-hour': forClock(RewindToHourOverlay),
+    'numeral-minutes': forClock(NumeralMinutesOverlay),
+    'hour-60-split': forDuration(Hour60SplitOverlay),
+    'plus-seven': forCalendar(PlusSevenOverlay),
   },
 };
 

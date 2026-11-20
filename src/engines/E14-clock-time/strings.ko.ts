@@ -40,6 +40,7 @@ export const E14_STRINGS = {
   configErrorBody: '선생님께 알려 주세요.',
   boardLabel: '시계 판',
   instructions: '바늘을 돌려 보세요. 키보드는 ←→로 돌려요.',
+  instructionsReadOnly: '시계를 잘 보세요.',
   backward: '◀ 거꾸로',
   forward: '앞으로 ▶',
   unroll: '펼치기',
