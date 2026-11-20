@@ -365,6 +365,8 @@ W6에서 E13 측정 실험실과 E14 시계·시간을 새로 만들고, E17 `so
 
 - **T215 병합(2026-11-21):** E13 `length` `roll-circle`(`length/roll-circle/`, PI_APPROX Rational, 측정 원주 0.1cm 반올림, 기록표 SVG, `diameter-column`·`pi-precision`). 샌드박스 모드 상자 항목은 넣지 않고 `?config={"variant":"roll-circle"}`로 연다(fit-canvas 모드 값 규칙과 충돌). 판 높이는 가장 큰 지름 기준(기본 약 560), 조작 칸 첫 화면 검사 통과. 시범 운영 메모: 1mm 눈금이 촘촘함, 지름 10cm 4번째 막대가 자 끝을 넘어 그려짐.
 
+- **T216 병합(2026-11-21):** g6s2u5.A1 굴렁쇠 콘텐츠(5과제)를 A2 앞에 더했고 E2E를 넓혔다. MC-GEO-RADIUS-DIAMETER 감지 함수(`radiusDiameter`)는 정답의 1/2·4배만 잡아, 2배 값(T4 43.96, T5 20)은 검수 때 `when` 규칙으로 같은 힌트를 걸었다(코드 기록 없음). 조작 칸 첫 화면 검사 통과.
+
 ## 상시
 | 카드 | 내용 |
 | --- | --- |
