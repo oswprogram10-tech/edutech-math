@@ -8,7 +8,7 @@ import {
 } from '../panel-layout';
 
 /**
- * T110 g1s2u3 「모양과 시각」 A1 「그림자 퍼즐」 단원 E2E.
+ * T110 g1s2u3 「모양과 시각」 A1 「그림자 퍼즐」, T202 A2 「톱니 연동 시계」 단원 E2E.
  * 과제마다 대표 오답 → 힌트 ① → 고쳐서 통과 순서로 끝까지 해 본다.
  * 아이패드(WebKit)·크롬북·전자칠판 세 뷰포트에서 같은 흐름을 확인한다.
  */
@@ -216,6 +216,193 @@ test('A1 그림자 퍼즐 — 대표 오답 뒤 고쳐서 네 과제를 통과�
   await selectPiece(page, panel, 'p3');
   await submit(page);
   await expectPassed(page, true);
+});
+
+// ── A2 톱니 연동 시계 ─────────────────────────────────────
+
+function clockCanvas(page: Page): Locator {
+  return slot(page, 'main').getByTestId('clock-canvas');
+}
+
+function clockSlider(page: Page): Locator {
+  return clockCanvas(page).getByRole('slider');
+}
+
+const CLOCK_CENTER = { x: 275, y: 255 };
+
+/** 시계 중심에서 deg(12시 방향 0°, 시계 방향)·반지름 r인 논리 좌표를 화면 좌표로. */
+async function clockPoint(
+  page: Page,
+  deg: number,
+  radius: number,
+): Promise<{ x: number; y: number }> {
+  const box = await clockCanvas(page).boundingBox();
+  if (!box) throw new Error('시계 캔버스를 찾지 못했습니다.');
+  const rad = (deg * Math.PI) / 180;
+  return {
+    x: box.x + ((CLOCK_CENTER.x + radius * Math.sin(rad)) / 1000) * box.width,
+    y: box.y + ((CLOCK_CENTER.y - radius * Math.cos(rad)) / 600) * box.height,
+  };
+}
+
+/** 원 둘레를 따라 fromDeg에서 toDeg까지 긴바늘을 끈다. */
+async function dragLongHand(page: Page, fromDeg: number, toDeg: number): Promise<void> {
+  const start = await clockPoint(page, fromDeg, 150);
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  const steps = Math.max(2, Math.ceil(Math.abs(toDeg - fromDeg) / 8));
+  for (let i = 1; i <= steps; i += 1) {
+    const p = await clockPoint(page, fromDeg + ((toDeg - fromDeg) * i) / steps, 150);
+    await page.mouse.move(p.x, p.y);
+  }
+  await page.mouse.up();
+}
+
+async function expectHands(page: Page, shortDeg: string, longDeg: string): Promise<void> {
+  await expect(clockCanvas(page).locator('[data-part="short-hand"]')).toHaveAttribute(
+    'data-angle',
+    shortDeg,
+  );
+  await expect(clockCanvas(page).locator('[data-part="long-hand"]')).toHaveAttribute(
+    'data-angle',
+    longDeg,
+  );
+}
+
+async function pressTimes(page: Page, key: string, times: number): Promise<void> {
+  for (let count = 0; count < times; count += 1) await page.keyboard.press(key);
+}
+
+async function centerOf(locator: Locator): Promise<{ x: number; y: number }> {
+  const box = await locator.boundingBox();
+  if (!box) throw new Error('상자를 찾지 못했습니다.');
+  return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+}
+
+function answerField(page: Page): Locator {
+  return slot(page, 'response').locator('[data-response-field="h"]');
+}
+
+async function typeAnswer(page: Page, keys: readonly string[]): Promise<void> {
+  await answerField(page).getByRole('button', { name: /빈칸$/ }).first().click();
+  for (const key of keys) await page.keyboard.press(key);
+}
+
+async function clearAnswer(page: Page): Promise<void> {
+  await answerField(page).getByRole('button').first().click();
+  await slot(page, 'response').getByRole('button', { name: '모두 지우기' }).click();
+}
+
+async function pickChoice(page: Page, label: string): Promise<void> {
+  await slot(page, 'response').getByRole('button', { name: label, exact: true }).click();
+}
+
+/** 읽기 과제 시작 화면: 시계 판·조작 칸 DOM과 쪽 전체 글에 읽을 시각·학년이 없다. */
+async function expectNoTimeLeak(page: Page): Promise<void> {
+  const html = await slot(page, 'main').innerHTML();
+  expect(html).not.toMatch(/7시|4시|7:30|4:30|7:00/);
+  const text = await page.locator('body').innerText();
+  expect(text).not.toMatch(/7시|4시/);
+  expect(text).not.toMatch(/\d\s*학년/);
+}
+
+test('A2 톱니 연동 시계 — 대표 오답 뒤 고쳐서 다섯 과제를 통과한다', async ({ page }) => {
+  await openActivity(page, 'g1s2u3.A2', '톱니 연동 시계');
+  const main = slot(page, 'main');
+
+  // T1 — 긴바늘을 3에 둔 오답(분 15)은 MC-CLOCK-HANDS ①·②, 그 뒤 12로 되돌려 정시 3시를 만든다.
+  await expect(main.getByText('긴바늘이 한 바퀴 돌면 짧은바늘은 한 칸')).toBeVisible();
+  await screenshot(page, 'g1s2u3-a2-t1.png');
+  await dragLongHand(page, 0, 90);
+  await expectHands(page, '7.50', '90.00');
+  await submit(page);
+  await expectFailedWithHint(page, '몇 시는 어느 바늘이 알려 줄까?');
+  await submit(page);
+  await expectFailedWithHint(page, '짧은바늘을 진하게 그렸어요.', 2);
+  const hands = await expectOverlayOverCanvas(main, 'hour-hand-focus', 'clock-canvas');
+  // 오버레이의 짧은바늘 윤곽이 본 짧은바늘과 같은 자리에 겹친다(1px 정렬).
+  const mine = await centerOf(clockCanvas(page).locator('[data-part="short-hand"] polygon'));
+  const focus = await centerOf(hands.locator('[data-part="short-focus"] polygon'));
+  expect(Math.abs(mine.x - focus.x)).toBeLessThanOrEqual(1);
+  expect(Math.abs(mine.y - focus.y)).toBeLessThanOrEqual(1);
+  await dragLongHand(page, 90, 0);
+  await expectHands(page, '0.00', '0.00');
+  await clockSlider(page).focus();
+  await pressTimes(page, 'Shift+ArrowRight', 3);
+  await expectHands(page, '90.00', '0.00');
+  await submit(page);
+  await expectPassed(page);
+
+  // T2 — 짧은바늘이 7인 시계. 12라고 답하면 MC-CLOCK-HANDS ①·②, 그 뒤 7로 고친다.
+  await expectHands(page, '210.00', '0.00');
+  await expectNoTimeLeak(page);
+  await typeAnswer(page, ['1', '2']);
+  await submit(page);
+  await expectFailedWithHint(page, '몇 시는 어느 바늘이 알려 줄까?');
+  await submit(page);
+  await expectFailedWithHint(page, '짧은바늘을 진하게 그렸어요.', 2);
+  await expectOverlayOverCanvas(main, 'hour-hand-focus', 'clock-canvas');
+  await clearAnswer(page);
+  await typeAnswer(page, ['7']);
+  await submit(page);
+  await expectPassed(page);
+
+  // T3 — 키보드만으로. 9:30을 만들어 MC-CLOCK-HOUR-BETWEEN ①·②를 본 뒤 8:30으로 되돌린다.
+  await clockSlider(page).focus();
+  await pressTimes(page, 'Shift+ArrowRight', 9);
+  await page.keyboard.press('ArrowRight');
+  await expectHands(page, '285.00', '180.00');
+  await submit(page);
+  await expectFailedWithHint(page, '짧은바늘이 다음 수를 지났어?');
+  await submit(page);
+  await expectFailedWithHint(page, '긴바늘을 거꾸로 돌려 정시로 되감아 봤어요.', 2);
+  const rewind = await expectOverlayOverCanvas(main, 'rewind-to-hour', 'clock-canvas');
+  await expect(rewind.locator('[data-part="ghost-short"]')).toHaveAttribute('data-angle', '270.00');
+  await clockSlider(page).focus();
+  await page.keyboard.press('Shift+ArrowLeft');
+  await expectHands(page, '255.00', '180.00');
+  await submit(page);
+  await expectPassed(page);
+
+  // T4 — 짧은바늘만 남은 4:30. 5라고 답하면 MC-CLOCK-HOUR-BETWEEN ①·②, 그 뒤 4로 고친다.
+  await expect(clockCanvas(page).locator('[data-part="long-hand"]')).toHaveCount(0);
+  await expectNoTimeLeak(page);
+  await screenshot(page, 'g1s2u3-a2-t4.png');
+  await typeAnswer(page, ['5']);
+  await submit(page);
+  await expectFailedWithHint(page, '짧은바늘이 다음 수를 지났어?');
+  await submit(page);
+  await expectFailedWithHint(page, '긴바늘을 거꾸로 돌려 정시로 되감아 봤어요.', 2);
+  const back = await expectOverlayOverCanvas(main, 'rewind-to-hour', 'clock-canvas');
+  await expect(back.locator('[data-part="ghost-short"]')).toHaveAttribute('data-angle', '120.00');
+  await clearAnswer(page);
+  await typeAnswer(page, ['4']);
+  await submit(page);
+  await expectPassed(page);
+
+  // T5 — 7:30과 같은 시각 고르기. 나(8:30)는 MC-CLOCK-HOUR-BETWEEN ①·② say(오버레이 없음).
+  await expectNoTimeLeak(page);
+  await pickChoice(page, '나');
+  await submit(page);
+  await expectFailedWithHint(page, '짧은바늘이 다음 수를 지났어?');
+  await submit(page);
+  await expectFailedWithHint(page, '짧은바늘이 두 수 사이에 있으면 앞의 수를 읽어요.', 2);
+  await expect(main.locator('[data-overlay]')).toHaveCount(0);
+  // 세 번째 실패는 ③ 역추적 부스터가 열리므로 여기서 멈추고 가로 고친다.
+  await pickChoice(page, '가');
+  await submit(page);
+  await expectPassed(page, true);
+});
+
+test('A2 시계 조작 단추와 확인하기는 64px 터치 타깃이다', async ({ page }) => {
+  await openActivity(page, 'g1s2u3.A2', '톱니 연동 시계');
+  await expectContentPanelsReachable(page);
+  for (const name of ['◀ 거꾸로', '앞으로 ▶']) {
+    const box = await page.getByRole('button', { name, exact: true }).boundingBox();
+    if (!box) throw new Error(`${name} 단추를 찾지 못했습니다.`);
+    expect(box.width).toBeGreaterThanOrEqual(63.5);
+    expect(box.height).toBeGreaterThanOrEqual(63.5);
+  }
 });
 
 test('아이패드·크롬북·전자칠판 첫 화면에 엔진·확인하기가 들어온다', async ({ page }, testInfo) => {
