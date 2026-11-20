@@ -38,6 +38,7 @@ import { LINE_LEFT, LINE_RIGHT, LOGICAL_HEIGHT, LOGICAL_WIDTH } from './types';
 import type { NumberLineAction, NumberLineConfig, NumberLineMode, NumberLineState } from './types';
 import { DoubleView } from './views/DoubleView';
 import { LogZoomView } from './views/LogZoomView';
+import { RangeView } from './views/RangeView';
 import { RoundingView } from './views/RoundingView';
 import { SkipCountView } from './views/SkipCountView';
 import styles from './View.module.css';
@@ -154,6 +155,8 @@ export function NumberLineView(props: NumberLineViewProps) {
       return <LogZoomView {...props} />;
     case 'double':
       return <DoubleView {...props} />;
+    case 'range':
+      return <RangeView {...props} />;
     default:
       return <BasicNumberLineView {...props} />;
   }

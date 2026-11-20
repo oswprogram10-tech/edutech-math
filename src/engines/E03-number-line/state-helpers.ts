@@ -22,6 +22,7 @@ export const DEFAULT_MAX: Record<NumberLineMode, string> = {
   rounding: '100',
   'log-zoom': '10',
   double: '1',
+  range: '100',
 };
 
 export function modeOf(config: NumberLineConfig): NumberLineMode {
@@ -32,6 +33,7 @@ export function modeOf(config: NumberLineConfig): NumberLineMode {
     case 'rounding':
     case 'log-zoom':
     case 'double':
+    case 'range':
       return config.mode;
     default:
       return 'integer';
@@ -90,6 +92,7 @@ export interface BaseStateInput {
   readonly rounding?: NumberLineState['rounding'];
   readonly logZoom?: NumberLineState['logZoom'];
   readonly double?: NumberLineState['double'];
+  readonly range?: NumberLineState['range'];
 }
 
 /** 새 모드의 공통 상태. 기존 3개 모드의 createInitialState는 손대지 않았다. */
@@ -126,6 +129,7 @@ export function makeBaseState(input: BaseStateInput): NumberLineState {
     rounding: input.rounding ?? null,
     logZoom: input.logZoom ?? null,
     double: input.double ?? null,
+    range: input.range ?? null,
     frog: null,
   };
 }

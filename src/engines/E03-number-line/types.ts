@@ -6,7 +6,20 @@
  * 화면 좌표만 number다(T011 구현 결정 2).
  */
 export type NumberLineMode =
-  'integer' | 'fraction' | 'decimal' | 'skip-count' | 'rounding' | 'log-zoom' | 'double';
+  'integer' | 'fraction' | 'decimal' | 'skip-count' | 'rounding' | 'log-zoom' | 'double' | 'range';
+
+/** range 모드 이야기 장면. */
+export type RangeStory = 'rollercoaster' | 'train' | 'none';
+/** rounding 모드 상황 장면(T219). */
+export type RoundingScenario = 'bus-seats' | 'candy-bags' | 'height';
+export type RoundingConsequence =
+  'all-seated' | 'left-behind' | 'partial-bag' | 'leftover' | 'exact';
+export type RangeDirection = 'left' | 'right';
+
+export interface RangeBoundConfig {
+  readonly value: number | string;
+  readonly closed: boolean;
+}
 
 /** 어림 방법. 반올림은 5 이상을 올린다(ticks.roundRational). */
 export type RoundingMethod = 'up' | 'down' | 'half-up';
@@ -86,6 +99,21 @@ export interface NumberLineConfig {
   /** 받기만 하고 무시한다(문장은 콘텐츠·응답 위젯 몫). */
   readonly scenarios?: unknown;
   readonly showConsequence?: boolean;
+  /** T219: 값이 하나일 때 상황 장면. 여러 값이면 설정 오류. */
+  readonly scenario?: RoundingScenario;
+
+  // ── range (T219) ───────────────────────────────────────────
+  readonly story?: RangeStory;
+  /** 게이트 앞을 지나는 캐릭터의 키. 0~10명, min~max 안의 정수. */
+  readonly riders?: readonly number[];
+  readonly maxBounds?: 1 | 2;
+  /** 게이트를 미리 만들어 둔다(말로 쓰기 과제용). */
+  readonly preset?: {
+    readonly lower?: RangeBoundConfig;
+    readonly upper?: RangeBoundConfig;
+  };
+  /** true면 경계점·방향을 바꿀 수 없다. */
+  readonly readOnly?: boolean;
 
   // ── log-zoom ───────────────────────────────────────────────
   /** 단계별 최댓값. 정수 문자열 16자리까지. */
@@ -163,6 +191,27 @@ export interface RoundingItemState {
 export interface RoundingState {
   readonly items: readonly RoundingItemState[];
   readonly selected: number;
+  /** T219: 상황 장면. 설정이 없으면 이 두 칸 자체가 없다. */
+  readonly scenario?: RoundingScenario;
+  readonly showConsequence?: boolean;
+}
+
+export interface RangeBoundState {
+  readonly value: string;
+  readonly closed: boolean;
+}
+
+/** range 모드 상태. 경계점은 값이 작은 순으로 늘 정렬한다. */
+export interface RangeState {
+  readonly bounds: readonly RangeBoundState[];
+  /** 경계가 하나일 때만 뜻이 있다. */
+  readonly direction: RangeDirection | null;
+  readonly gateOpened: boolean;
+  readonly story: RangeStory;
+  /** 게이트 앞을 지나는 캐릭터의 키(정수). */
+  readonly riders: readonly number[];
+  readonly maxBounds: 1 | 2;
+  readonly locked: boolean;
 }
 
 export interface LogZoomState {
@@ -241,6 +290,8 @@ export interface NumberLineState {
   readonly rounding: RoundingState | null;
   readonly logZoom: LogZoomState | null;
   readonly double: DoubleLineState | null;
+  /** T219 range 모드. 다른 모드에서는 null이다. */
+  readonly range: RangeState | null;
   /** T080 integer 개구리. 다른 모드·설정 없음이면 null. */
   readonly frog: NumberLineFrogState | null;
 }
@@ -278,7 +329,15 @@ export type NumberLineAction =
   // T080 integer 개구리 점프
   | { readonly type: 'frog-jump'; readonly size: string }
   | { readonly type: 'frog-undo' }
-  | { readonly type: 'frog-reset' };
+  | { readonly type: 'frog-reset' }
+  // T219 range
+  | { readonly type: 'place-bound'; readonly value: string }
+  | { readonly type: 'move-bound'; readonly index: number; readonly value: string }
+  | { readonly type: 'toggle-closed'; readonly index: number }
+  | { readonly type: 'set-direction'; readonly dir: RangeDirection }
+  | { readonly type: 'remove-bound'; readonly index?: number }
+  | { readonly type: 'open-gate' }
+  | { readonly type: 'reset' };
 
 export const LOGICAL_WIDTH = 1000;
 export const LOGICAL_HEIGHT = 600;

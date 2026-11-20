@@ -11,6 +11,8 @@ import type { NumberLineAction, NumberLineConfig, NumberLineState } from './type
 import { NumberLineView } from './View';
 import { DistanceFromZeroOverlay } from './overlays/distance-from-zero';
 import { HopNumbersOverlay } from './overlays/hop-numbers';
+import { BoundaryRiderOverlay } from './overlays/boundary-rider';
+import { LeftBehindOverlay } from './overlays/left-behind';
 import { PairReplayOverlay } from './overlays/pair-replay';
 import { PrevBandOverlay } from './overlays/prev-band';
 import { SamePointOverlay } from './overlays/same-point';
@@ -19,7 +21,16 @@ import { TwoTicksOverlay } from './overlays/two-ticks';
 const definition: EngineDefinition<NumberLineConfig, NumberLineState, NumberLineAction> = {
   id: 'E03',
   name: numberLineStrings.name,
-  modes: ['integer', 'fraction', 'decimal', 'skip-count', 'rounding', 'log-zoom', 'double'],
+  modes: [
+    'integer',
+    'fraction',
+    'decimal',
+    'skip-count',
+    'rounding',
+    'log-zoom',
+    'double',
+    'range',
+  ],
   createInitialState,
   reduce,
   View: NumberLineView,
@@ -45,6 +56,8 @@ const definition: EngineDefinition<NumberLineConfig, NumberLineState, NumberLine
     'pair-replay': PairReplayOverlay,
     'prev-band': PrevBandOverlay,
     'hop-numbers': HopNumbersOverlay,
+    'boundary-rider': BoundaryRiderOverlay,
+    'left-behind': LeftBehindOverlay,
   },
 };
 

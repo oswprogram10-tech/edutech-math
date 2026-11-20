@@ -11,12 +11,14 @@ import type { EngineViewProps, Point } from '../../../core/engine-sdk';
 import { Rational } from '../../../core/math/rational';
 import { formatNumber, isBigTick, roundValue } from '../rounding';
 import { roundingPlaceOf } from '../reduce-rounding';
+import { roundingScene } from '../scenario';
 import { numberLineStrings } from '../strings.ko';
 import { parseValue, visibleTicks, xOfValue } from '../ticks';
 import type { TickRow } from '../ticks';
 import { LINE_LEFT, LINE_RIGHT, LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../types';
 import type { NumberLineAction, NumberLineConfig, NumberLineState, RoundingMethod } from '../types';
 import styles from '../View.module.css';
+import { ResultScene } from './rounding-scene/ResultScene';
 
 const LOGICAL = { width: LOGICAL_WIDTH, height: LOGICAL_HEIGHT };
 const METHODS: readonly RoundingMethod[] = ['up', 'down', 'half-up'];
@@ -57,6 +59,7 @@ export function RoundingView({
   const place = roundingPlaceOf(state) ?? unit.mul(Rational.of(10));
   const row: TickRow = { index: 0, step: unit, subdivisions: 0, y: LINE_Y };
   const ticks = visibleTicks(row, min, viewMin, viewMax);
+  const scene = state.rounding?.showConsequence === false ? null : roundingScene(state);
   const dragMode = config.controls === 'drag';
   const methods = (config.methods ?? METHODS).filter((method) => METHODS.includes(method));
   const itemValue = parseValue(item?.value);
@@ -194,7 +197,7 @@ export function RoundingView({
       data-cpa={cpa}
       style={{ width: `${100 * scale}%` }}
     >
-      <div className={styles.toolbar}>
+      <div className={styles.toolbar} data-testid="rounding-controls">
         <div
           role="group"
           aria-label={numberLineStrings.rounding.itemGroup}
@@ -402,6 +405,8 @@ export function RoundingView({
             </g>
           );
         })}
+
+        {scene ? <ResultScene scene={scene} /> : null}
 
         {dragMode && focused && !readOnly ? (
           <g pointerEvents="none" data-testid="rounding-cursor">

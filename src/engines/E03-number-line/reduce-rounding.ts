@@ -13,6 +13,7 @@ import {
   makeBaseState,
   ZERO,
 } from './state-helpers';
+import { numberLineStrings } from './strings.ko';
 import { parseValue } from './ticks';
 import { bumpCounts } from './types';
 import type {
@@ -29,6 +30,8 @@ export type RoundingAction = Extract<
 >;
 
 const DEFAULT_PLACE = Rational.of(10);
+const MIN_GROUP = Rational.of(2);
+const MAX_GROUP = Rational.of(20);
 const METHODS: readonly RoundingMethod[] = ['up', 'down', 'half-up'];
 
 export function roundingPlaceOf(state: NumberLineState): Rational | null {
@@ -42,12 +45,30 @@ export function createRoundingState(config: NumberLineConfig): NumberLineState {
   const placeRaw = configRational(config.place);
   const place = placeRaw && !placeRaw.isZero() && !placeRaw.isNegative() ? placeRaw : DEFAULT_PLACE;
 
-  let values = configRationals(config.values).slice(0, 3);
+  const listed = configRationals(config.values);
+  let values = listed.slice(0, 3);
   if (values.length === 0) {
     const single = configRational(config.value);
     if (single) values = [single];
   }
   if (values.length === 0) values = [ZERO];
+  const scenario = config.scenario;
+  // 상황 장면은 값이 하나일 때만 쓴다(T219). 여러 값이면 설정 오류.
+  if (scenario !== undefined && listed.length > 1) {
+    throw new Error(numberLineStrings.rounding.scenarioMultiError);
+  }
+  if (scenario === 'bus-seats' || scenario === 'candy-bags') {
+    const single = values[0] ?? ZERO;
+    if (
+      !single.isInteger() ||
+      single.isNegative() ||
+      !place.isInteger() ||
+      place.compareTo(MIN_GROUP) < 0 ||
+      place.compareTo(MAX_GROUP) > 0
+    ) {
+      throw new Error(numberLineStrings.rounding.scenarioValueError);
+    }
+  }
 
   const bounds = roundingBounds(values, place);
   const min = bounds.min;
@@ -64,7 +85,13 @@ export function createRoundingState(config: NumberLineConfig): NumberLineState {
     min,
     max,
     unit: place.div(Rational.of(10)),
-    rounding: { items, selected: 0 },
+    rounding: {
+      items,
+      selected: 0,
+      ...(scenario === 'bus-seats' || scenario === 'candy-bags' || scenario === 'height'
+        ? { scenario, showConsequence: config.showConsequence !== false }
+        : {}),
+    },
   });
 }
 
@@ -78,6 +105,7 @@ function withItem(
   return {
     ...state,
     rounding: {
+      ...state.rounding,
       items: state.rounding.items.map((current, index) => (index === item ? next : current)),
       selected,
     },

@@ -6,7 +6,9 @@ import { Rational } from '../../core/math/rational';
 import type { JsonValue, Observation } from '../../core/engine-sdk';
 import { frogAt, frogJumpTotal } from './frog';
 import { parseValue } from './ticks';
+import { rangeComplete, rangeEnds, riderResults } from './reduce-range';
 import { rowsOf } from './reduce';
+import { roundingConsequence } from './scenario';
 import type { NumberLineState } from './types';
 
 interface PointView {
@@ -147,6 +149,38 @@ function doubleObservation(state: NumberLineState): {
   return { pairs, ops };
 }
 
+function boundView(bound: { readonly value: string; readonly closed: boolean } | null): JsonValue {
+  return bound === null ? null : { value: bound.value, closed: bound.closed };
+}
+
+/** range 모드 전용 키. 다른 모드의 Observation에는 넣지 않는다. */
+function rangeObservation(state: NumberLineState): Record<string, JsonValue> {
+  const range = state.range;
+  if (!range) return {};
+  const ends = rangeEnds(range);
+  const results = range.gateOpened ? riderResults(range) : { passed: [], blocked: [] };
+  return {
+    lower: boundView(ends.lower),
+    upper: boundView(ends.upper),
+    complete: rangeComplete(range),
+    gateOpened: range.gateOpened,
+    passed: results.passed,
+    blocked: results.blocked,
+    misconceptions: [],
+  };
+}
+
+/** rounding 상황 장면 전용 키. `scenario` 설정이 없으면 넣지 않는다. */
+function scenarioObservation(state: NumberLineState): Record<string, JsonValue> {
+  const scenario = state.rounding?.scenario;
+  if (!scenario) return {};
+  return {
+    scenario,
+    consequence: roundingConsequence(state),
+    misconceptions: [],
+  };
+}
+
 export function observe(state: NumberLineState): Observation {
   const rows = rowsOf(state);
   const tick = rows[0]?.step.toJSON() ?? '1';
@@ -237,5 +271,7 @@ export function observe(state: NumberLineState): Observation {
     frogStart: frog ? frog.start : null,
     frogJumps: frog ? [...frog.jumps] : null,
     frogJumpTotal: frog ? frogJumpTotal(frog).toJSON() : null,
+    ...rangeObservation(state),
+    ...scenarioObservation(state),
   };
 }
