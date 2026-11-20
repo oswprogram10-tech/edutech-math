@@ -143,11 +143,14 @@ describe('조작', () => {
     const dispatch = vi.fn();
     renderState(play({ start: '3:00', readOnly: true }), dispatch);
     fireEvent.keyDown(screen.getByRole('slider'), { key: 'ArrowRight' });
-    fireEvent.click(screen.getByRole('button', { name: '앞으로 ▶' }));
+    expect(screen.queryByRole('button', { name: '앞으로 ▶' })).toBeNull();
+    expect(screen.queryByRole('button', { name: '◀ 거꾸로' })).toBeNull();
+    expect(screen.getByText('시계를 잘 보세요.')).toBeTruthy();
     expect(dispatch).not.toHaveBeenCalled();
     cleanup();
     renderState(play({ start: '3:00' }), dispatch, true);
-    fireEvent.click(screen.getByRole('button', { name: '앞으로 ▶' }));
+    expect(screen.queryByRole('button', { name: '앞으로 ▶' })).toBeNull();
+    expect(screen.getByText('시계를 잘 보세요.')).toBeTruthy();
     expect(dispatch).not.toHaveBeenCalled();
   });
 

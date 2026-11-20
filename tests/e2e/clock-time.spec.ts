@@ -169,7 +169,8 @@ test('단추: 거꾸로·앞으로·처음으로, 읽기 과제는 조작을 막
   await pollObservation(page, (o) => o.time === '3:00' && o.moves === 0);
 
   await open(page, { start: '3:00', readOnly: true });
-  await expect(button(page, '앞으로 ▶')).toBeDisabled();
+  await expect(button(page, '앞으로 ▶')).toHaveCount(0);
+  await expect(page.getByText('시계를 잘 보세요.')).toBeVisible();
   await dragArc(page, 0, 90);
   await pollObservation(page, (o) => o.time === '3:00' && o.moves === 0);
 });
@@ -406,3 +407,305 @@ for (const size of [48, 64] as const) {
     }
   });
 }
+
+// ── duration·calendar ───────────────────────────────────
+
+interface ModeObservation {
+  readonly mode?: string;
+  readonly start?: string | null;
+  readonly end?: string | null;
+  readonly elapsed?: number | null;
+  readonly selected?: number[];
+  readonly filled?: Record<string, number>;
+  readonly hiddenCorrect?: boolean;
+  readonly arrows?: number;
+}
+
+async function readMode(page: Page): Promise<ModeObservation> {
+  const text = await page.getByTestId('observation').textContent();
+  return JSON.parse(text ?? '{}') as ModeObservation;
+}
+
+async function pollMode(page: Page, check: (o: ModeObservation) => boolean): Promise<void> {
+  await expect.poll(async () => check(await readMode(page))).toBe(true);
+}
+
+/** 샌드박스를 열고 모드 상자에서 모드를 고른다(설정은 주소로 넘긴 값 그대로). */
+async function openMode(
+  page: Page,
+  mode: 'duration' | 'calendar',
+  config: Record<string, unknown> = {},
+  query = 'stage=fit',
+): Promise<void> {
+  const params = new URLSearchParams({ config: JSON.stringify(config) });
+  for (const [key, value] of new URLSearchParams(query)) params.set(key, value);
+  await page.goto(`/?${params.toString()}#/sandbox/E14`);
+  await expect(page.getByRole('heading', { name: '시계·시간' })).toBeVisible();
+  await page.getByRole('combobox', { name: '모드' }).selectOption(mode);
+  await pollMode(page, (o) => o.mode === mode);
+  await settleCanvas(page);
+}
+
+/** 논리 좌표(1000×600)를 화면 좌표로. */
+async function logicalPoint(page: Page, lx: number, ly: number): Promise<{ x: number; y: number }> {
+  const box = await canvas(page).boundingBox();
+  if (!box) throw new Error('캔버스를 찾지 못했습니다.');
+  return { x: box.x + (lx / 1000) * box.width, y: box.y + (ly / 600) * box.height };
+}
+
+async function dragLogical(
+  page: Page,
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+): Promise<void> {
+  const a = await logicalPoint(page, from.x, from.y);
+  await page.mouse.move(a.x, a.y);
+  await page.mouse.down();
+  for (let i = 1; i <= 6; i += 1) {
+    const p = await logicalPoint(
+      page,
+      from.x + ((to.x - from.x) * i) / 6,
+      from.y + ((to.y - from.y) * i) / 6,
+    );
+    await page.mouse.move(p.x, p.y);
+  }
+  await page.mouse.up();
+}
+
+// from 2:00, to 4:00 의 띠: 블록 둘(60~493, 507~940). 2:40 → 348.67, 3:20 → 651.33.
+const X_2_40 = 60 + (40 / 60) * 433;
+const X_3_20 = 507 + (20 / 60) * 433;
+// 놓지 않은 표시가 쉬는 자리(꼭짓점 130/250, 150)에서 몸통 한가운데(위로 40)를 잡는다.
+const TRAY_START = { x: 130, y: 110 };
+const TRAY_END = { x: 250, y: 110 };
+const BAR_MID = 290;
+
+async function placeSpan(page: Page): Promise<void> {
+  await dragLogical(page, TRAY_START, { x: X_2_40, y: BAR_MID });
+  await pollMode(page, (o) => o.start === '2:40');
+  await dragLogical(page, TRAY_END, { x: X_3_20, y: BAR_MID });
+  await pollMode(page, (o) => o.end === '3:20');
+}
+
+function cellOf(page: Page, col: number, row: number): Locator {
+  return canvas(page).locator(`[data-part="cell"][data-col="${col}"][data-row="${row}"]`);
+}
+
+/** 달력 칸 한가운데(논리 좌표). */
+function cellCenter(col: number, row: number): { x: number; y: number } {
+  return { x: 80 + col * 120 + 60, y: 64 + row * 88 + 44 };
+}
+
+test('duration: 시작·끝 표시를 끌어 2:40·3:20에 놓으면 구간이 칠해지고 걸린 시간은 40분이다', async ({
+  page,
+}) => {
+  await openMode(page, 'duration', { from: '2:00', to: '4:00' });
+  await expect(canvas(page).locator('[data-part="block"]')).toHaveCount(2);
+  await expect(canvas(page).locator('[data-part="hour-name"]')).toHaveText(['2시', '3시', '4시']);
+  await expect(canvas(page).locator('[data-part="span-piece"]')).toHaveCount(0);
+  await placeSpan(page);
+  await pollMode(page, (o) => o.elapsed === 40);
+  await expect(canvas(page).locator('[data-part="span-piece"]')).toHaveCount(2);
+  // 걸린 시간은 화면 글에 없다(Observation에만 있다).
+  await expect(canvas(page)).not.toContainText(/걸린|40분|80분/);
+  await expect(page.getByTestId('clock-controls')).not.toContainText(/40분|80분/);
+  // 놓은 표시는 눈금 자리에 있다.
+  const mark = await canvas(page).locator('[data-part="mark-start"]').getAttribute('data-x');
+  expect(Number(mark)).toBeCloseTo(X_2_40, 1);
+});
+
+test('duration: 띠 밖에 놓으면 취소되고, 끝이 시작보다 앞이면 거절한다', async ({ page }) => {
+  await openMode(page, 'duration', { from: '2:00', to: '4:00' });
+  await dragLogical(page, TRAY_START, { x: 600, y: 520 });
+  await pollMode(page, (o) => o.start === null);
+  await dragLogical(page, TRAY_START, { x: X_3_20, y: BAR_MID });
+  await pollMode(page, (o) => o.start === '3:20');
+  await dragLogical(page, TRAY_END, { x: X_2_40, y: BAR_MID });
+  await expect(page.getByTestId('clock-message')).toHaveText('끝은 시작보다 앞에 놓을 수 없어요.');
+  await pollMode(page, (o) => o.end === null);
+});
+
+test('duration: 키보드로 표시를 고르고 ←→로 5분씩 옮긴다', async ({ page }) => {
+  await openMode(page, 'duration', { from: '2:00', to: '4:00', start: '2:40' });
+  await pollMode(page, (o) => o.start === '2:40' && o.end === null);
+  const end = page.getByRole('slider', { name: '끝 표시' });
+  await end.focus();
+  await page.keyboard.press('ArrowRight'); // 처음 누르면 시작 자리에 놓는다
+  await pollMode(page, (o) => o.end === '2:40' && o.elapsed === 0);
+  for (let i = 0; i < 8; i += 1) await page.keyboard.press('ArrowRight');
+  await pollMode(page, (o) => o.end === '3:20' && o.elapsed === 40);
+  await page.keyboard.press('ArrowLeft');
+  await pollMode(page, (o) => o.end === '3:15');
+  // 같은 일을 하는 조작 칸 단추
+  await button(page, '끝 ▶').click();
+  await pollMode(page, (o) => o.end === '3:20');
+  await button(page, '시작 ◀').click();
+  await pollMode(page, (o) => o.start === '2:35' && o.elapsed === 45);
+  await button(page, '처음으로').click();
+  await pollMode(page, (o) => o.start === '2:40' && o.end === null);
+});
+
+test('duration: startFixed는 시작 표시를 끌어도 못 움직이고 끝만 놓는다', async ({ page }) => {
+  await openMode(page, 'duration', { from: '2:00', to: '4:00', start: '2:40', startFixed: true });
+  await expect(button(page, '시작 ▶')).toHaveCount(0);
+  await dragLogical(page, { x: X_2_40, y: 200 }, { x: X_3_20, y: BAR_MID });
+  await pollMode(page, (o) => o.start === '2:40');
+  await dragLogical(page, TRAY_END, { x: X_3_20, y: BAR_MID });
+  await pollMode(page, (o) => o.end === '3:20' && o.elapsed === 40);
+});
+
+test('calendar: 날짜 고르기·풀기, 가려진 칸 채우기, 세로줄 쓸기', async ({ page }) => {
+  await openMode(page, 'calendar', {});
+  await expect(canvas(page).locator('[data-part="weekday"]')).toHaveText([
+    '일',
+    '월',
+    '화',
+    '수',
+    '목',
+    '금',
+    '토',
+  ]);
+  // 5일은 목요일(열 4, 줄 0)
+  await expect(cellOf(page, 4, 0)).toHaveAttribute('data-day', '5');
+  await cellOf(page, 4, 0).click();
+  await pollMode(page, (o) => (o.selected ?? []).join() === '5');
+  await cellOf(page, 3, 0).click(); // 4일
+  await pollMode(page, (o) => (o.selected ?? []).join() === '4,5');
+  await cellOf(page, 4, 0).click();
+  await pollMode(page, (o) => (o.selected ?? []).join() === '4');
+  await expect(cellOf(page, 3, 0)).toHaveAttribute('data-selected', 'true');
+
+  // 가려진 칸(8·12·19·26)은 값이 DOM에 없고 눌러서 수를 넣는다.
+  for (const day of [8, 12, 19, 26]) {
+    await expect(canvas(page).locator(`[data-day="${day}"]`)).toHaveCount(0);
+  }
+  await expect(cellOf(page, 0, 1)).toHaveText('?');
+  await cellOf(page, 0, 1).click();
+  await button(page, '8').click();
+  await button(page, '넣기').click();
+  await pollMode(page, (o) => o.filled?.['8'] === 8 && o.hiddenCorrect === false);
+  await expect(cellOf(page, 0, 1)).toHaveText('8');
+  const fills: [number, number, string[]][] = [
+    [4, 1, ['1', '2']],
+    [4, 2, ['1', '9']],
+    [4, 3, ['2', '6']],
+  ];
+  for (const [col, row, digits] of fills) {
+    await cellOf(page, col, row).click();
+    for (const d of digits) await button(page, d).click();
+    await button(page, '넣기').click();
+  }
+  await pollMode(page, (o) => o.hiddenCorrect === true);
+
+  // 같은 세로줄을 위에서 아래로 쓸면 +7 화살표가 마디마다 생긴다.
+  await dragLogical(page, cellCenter(4, 0), cellCenter(4, 2));
+  await pollMode(page, (o) => o.arrows === 2);
+  await expect(canvas(page).locator('[data-part="arrow"]')).toHaveCount(2);
+  // 다른 세로줄로 벗어난 쓸기는 거절한다.
+  await dragLogical(page, cellCenter(1, 0), cellCenter(2, 2));
+  await expect(page.getByTestId('clock-message')).toHaveText(
+    '같은 세로줄에서 위에서 아래로 쓸어 보세요.',
+  );
+  expect((await readMode(page)).arrows).toBe(2);
+  // 키보드: 칸에서 A 키
+  await cellOf(page, 1, 0).focus();
+  await page.keyboard.press('a');
+  await pollMode(page, (o) => o.arrows === 3);
+  await button(page, '처음으로').click();
+  await pollMode(page, (o) => o.arrows === 0 && (o.selected ?? []).length === 0);
+});
+
+test('calendar: 가려진 날짜 값이 DOM·data-·aria 어디에도 없다', async ({ page }) => {
+  await openMode(page, 'calendar', {});
+  const leaked = await canvas(page).evaluate((svg) => {
+    const found: string[] = [];
+    for (const cell of svg.querySelectorAll('[data-part="cell"][data-hidden="true"]')) {
+      if (cell.textContent !== '?') found.push(`text:${cell.textContent}`);
+      for (const attribute of cell.attributes) {
+        if (['data-col', 'data-row', 'tabindex'].includes(attribute.name)) continue;
+        if (/\d/.test(attribute.value) || attribute.name === 'data-day') {
+          found.push(`${attribute.name}=${attribute.value}`);
+        }
+      }
+    }
+    for (const day of [8, 12, 19, 26]) {
+      if (svg.querySelector(`[data-day="${day}"]`)) found.push(`day:${day}`);
+    }
+    return found;
+  });
+  expect(leaked).toEqual([]);
+});
+
+test('calendar: 칸이 48px 이상이다', async ({ page }) => {
+  await openMode(page, 'calendar', {});
+  const cells = canvas(page).locator('[data-part="cell"] rect');
+  expect(await cells.count()).toBe(30);
+  for (const index of [0, 12, 29]) {
+    await expectMin(cells.nth(index), 48, `칸 ${index}`);
+  }
+});
+
+test('모드 상자에서 duration·calendar를 고르면 판이 바뀐다', async ({ page }) => {
+  await open(page, {});
+  await page.getByRole('combobox', { name: '모드' }).selectOption('duration');
+  await pollMode(page, (o) => o.mode === 'duration');
+  await expect(canvas(page).locator('[data-part="band"]')).toBeVisible();
+  await page.getByRole('combobox', { name: '모드' }).selectOption('calendar');
+  await pollMode(page, (o) => o.mode === 'calendar');
+  await expect(canvas(page).locator('[data-part="cell"]')).toHaveCount(30);
+});
+
+test('화면 기준: duration 첫 화면(시작·끝을 놓은 뒤)', async ({ page }) => {
+  await openMode(page, 'duration', { from: '2:00', to: '4:00' });
+  await placeSpan(page);
+  await page.getByRole('heading', { name: '시계·시간' }).focus();
+  await expectPageSnapshot(page, 'clock-duration.png');
+});
+
+test('화면 기준: calendar 첫 화면(고른 날과 화살표)', async ({ page }) => {
+  await openMode(page, 'calendar', {});
+  await cellOf(page, 4, 0).click();
+  await dragLogical(page, cellCenter(4, 0), cellCenter(4, 2));
+  await pollMode(page, (o) => o.arrows === 2);
+  await page.getByRole('heading', { name: '시계·시간' }).focus();
+  await expectPageSnapshot(page, 'clock-calendar.png');
+});
+
+test('힌트 ② hour-60-split: 지나는 경계마다 말풍선·강조선, 조각마다 괄호', async ({ page }) => {
+  await openMode(page, 'duration', { from: '2:00', to: '4:00' }, 'stage=fit&overlay=hour-60-split');
+  await placeSpan(page);
+  await toggleOverlay(page);
+  const layer = await expectAligned(page, 'hour-60-split');
+  await expect(layer).toContainText('60분이 되면 다음 시');
+  await expect(layer.locator('[data-part="piece-bracket"]')).toHaveCount(2);
+  // 강조선은 블록 사이 틈(500)의 한가운데에 놓인다.
+  const line = await centerOf(layer.locator('[data-part="split-boundary"] line').first());
+  const want = await logicalPoint(page, 500, 290);
+  expect(Math.abs(line.x - want.x)).toBeLessThanOrEqual(1);
+});
+
+test('힌트 ② hour-60-split: 표시가 하나뿐이면 그리지 않는다', async ({ page }) => {
+  await openMode(page, 'duration', { from: '2:00', to: '4:00' }, 'stage=fit&overlay=hour-60-split');
+  await dragLogical(page, TRAY_START, { x: X_2_40, y: BAR_MID });
+  await pollMode(page, (o) => o.start === '2:40');
+  await toggleOverlay(page);
+  await expect(page.locator('[data-overlay="hour-60-split"] svg')).toHaveCount(0);
+});
+
+test('힌트 ② plus-seven: 그 칸에서 같은 열 아래로 끝까지 +7 점선 화살표', async ({ page }) => {
+  await openMode(
+    page,
+    'calendar',
+    {},
+    `stage=fit&overlay=plus-seven&overlayArgs=${encodeURIComponent('{"day":5}')}`,
+  );
+  await toggleOverlay(page);
+  const layer = await expectAligned(page, 'plus-seven');
+  await expect(layer.locator('[data-part="plus-seven"]')).toHaveCount(3);
+  // 첫 화살표는 5일 칸(열 4, 줄 0) 안쪽 세로선 자리(칸 가운데에서 왼쪽 22)에 놓인다.
+  const arrow = await centerOf(layer.locator('[data-part="plus-seven"] line').first());
+  const want = await logicalPoint(page, cellCenter(4, 0).x - 22, 64 + 88 - 4 - 9 + 20);
+  expect(Math.abs(arrow.x - want.x)).toBeLessThanOrEqual(1);
+  // 오버레이는 칸 숫자를 새로 쓰지 않는다.
+  await expect(layer).toHaveText('+7+7+7');
+});
