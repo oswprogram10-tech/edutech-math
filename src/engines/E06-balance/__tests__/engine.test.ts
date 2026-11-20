@@ -405,15 +405,16 @@ describe('emit / 정의', () => {
     for (const event of emit(prev, next, action)) expect(definition.events).toContain(event.name);
   });
 
-  it('정의: E06, equation 모드만, fit, 오버레이 둘', () => {
+  it('정의: E06, 모드 셋(equation·proportion·compare), fit, 오버레이', () => {
     expect(definition.id).toBe('E06');
-    expect(definition.modes).toEqual(['equation', 'proportion']);
+    expect(definition.modes).toEqual(['equation', 'proportion', 'compare']);
     expect(definition.layout).toBe('fit');
     expect(Object.keys(definition.overlays ?? {}).sort()).toEqual([
       'area-diff',
       'big-tilt',
       'cross-brackets',
       'match-bars',
+      'size-vs-weight',
     ]);
   });
 });

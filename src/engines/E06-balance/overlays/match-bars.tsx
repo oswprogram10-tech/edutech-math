@@ -28,7 +28,7 @@ function lengthOf(value: Rational): number {
 
 export function MatchBarsOverlay({ state }: OverlayProps<E06Config, E06State>) {
   // proportion 모드에는 없는 힌트다(막대가 아니라 격자를 쓴다).
-  if (state.mode === 'proportion') return null;
+  if (state.mode !== 'equation') return null;
   if (state.error !== null || state.settings.look === 'symbols') return null;
   const boxName = boxSideOf(state);
   if (boxName === null) return null;

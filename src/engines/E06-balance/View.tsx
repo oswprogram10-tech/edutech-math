@@ -6,6 +6,8 @@ import { useRef } from 'react';
 import { useRenderedSize } from '../../core/engine-sdk';
 import type { EngineViewProps } from '../../core/engine-sdk';
 import { BalanceBoard } from './Board';
+import { CompareView } from './compare/View';
+import type { CompareConfig } from './compare/types';
 import { Controls } from './Controls';
 import { MIN_SCALE, fitBoard } from './fit';
 import { ProportionView } from './proportion/View';
@@ -63,9 +65,14 @@ function EquationView({
   );
 }
 
-/** 상태의 모드(equation·proportion)에 맞는 화면을 고른다. */
+/** 상태의 모드(equation·proportion·compare)에 맞는 화면을 고른다. */
 export function BalanceView(props: EngineViewProps<E06Config, E06State, E06Action>) {
   const { state, dispatch, config, ...rest } = props;
+  if (state.mode === 'compare') {
+    return (
+      <CompareView {...rest} config={config as CompareConfig} state={state} dispatch={dispatch} />
+    );
+  }
   if (state.mode === 'proportion') {
     return (
       <ProportionView

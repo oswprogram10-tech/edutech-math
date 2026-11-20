@@ -4,6 +4,9 @@
  */
 import type { Observation } from '../../core/engine-sdk';
 import { observe as observeEquation } from './observe';
+import { observeCompare } from './compare/observe';
+import { createCompareState, reduceCompare } from './compare/reduce';
+import type { CompareAction } from './compare/types';
 import { observeProportion } from './proportion/observe';
 import { createProportionState, reduceProportion } from './proportion/reduce';
 import type { ProportionAction } from './proportion/types';
@@ -12,6 +15,7 @@ import type { BalanceAction, BalanceConfig } from './types';
 import type { E06Action, E06Config, E06State } from './unions';
 
 export function createState(config: E06Config): E06State {
+  if (config?.mode === 'compare') return createCompareState(config);
   return config?.mode === 'proportion'
     ? createProportionState(config)
     : createEquationState(config as BalanceConfig);
@@ -26,6 +30,7 @@ const PROPORTION_ACTIONS: ReadonlySet<string> = new Set([
 const EQUATION_ACTIONS: ReadonlySet<string> = new Set(['try', 'both', 'one', 'predict', 'reset']);
 
 export function reduceState(state: E06State, action: E06Action): E06State {
+  if (state.mode === 'compare') return reduceCompare(state, action as CompareAction);
   if (state.mode === 'proportion') {
     return PROPORTION_ACTIONS.has(action.type)
       ? reduceProportion(state, action as ProportionAction)
@@ -35,6 +40,7 @@ export function reduceState(state: E06State, action: E06Action): E06State {
 }
 
 export function observeState(state: E06State, config: E06Config): Observation {
+  if (state.mode === 'compare') return observeCompare(state);
   return state.mode === 'proportion'
     ? observeProportion(state)
     : observeEquation(state, config as BalanceConfig);

@@ -131,6 +131,7 @@ function ProportionBigTilt({ state }: OverlayProps<ProportionConfig, ProportionS
 
 export function BigTiltOverlay(props: OverlayProps<E06Config, E06State>) {
   const { state, config, args, scale } = props;
+  if (state.mode === 'compare') return null;
   if (state.mode === 'proportion') {
     return (
       <ProportionBigTilt

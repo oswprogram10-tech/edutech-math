@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 
 /**
- * E06 양팔저울(equation·proportion) 샌드박스 E2E. 아이패드(WebKit)·크롬북·전자칠판 뷰포트에서 모두 돈다.
+ * E06 양팔저울(equation·proportion·compare) 샌드박스 E2E. 아이패드(WebKit)·크롬북·전자칠판 뷰포트에서 모두 돈다.
  *
  * - 넣어 보기 → 기울기·수평, 양쪽 빼기로 □ 남기기, 예측 잠금, 키보드만으로 한 과제
  * - look 세 가지 첫 화면 기준 이미지, 힌트 ② 오버레이 둘이 본 캔버스와 1px 안에 겹침
@@ -31,6 +31,11 @@ interface ObservationRecord {
   readonly isProportion?: boolean | null;
   readonly pair?: number[] | null;
   readonly pairing?: string | null;
+  readonly left?: string[];
+  readonly right?: string[];
+  readonly weighings?: number;
+  readonly pairsCompared?: string[];
+  readonly orderHeavyFirst?: string[];
 }
 
 async function readObservation(page: Page): Promise<ObservationRecord> {
@@ -605,5 +610,186 @@ for (const size of [48, 64] as const) {
       await locator.scrollIntoViewIfNeeded();
       await expectMin(locator, size, '슬라이더 조작');
     }
+  });
+}
+
+// ───────────────────────── compare (T206) ─────────────────────────
+
+/** compare 모드로 연다(샌드박스 기본: 큰 스펀지 2·작은 쇠공 9·사과 3). */
+async function openCompare(
+  page: Page,
+  config: Record<string, unknown> = {},
+  query = 'stage=fit',
+): Promise<void> {
+  const params = new URLSearchParams({ config: JSON.stringify(config) });
+  for (const [key, value] of new URLSearchParams(query)) params.set(key, value);
+  await page.goto(`/?${params.toString()}#/sandbox/E06`);
+  await expect(page.getByRole('heading', { name: '양팔저울' })).toBeVisible();
+  await page.getByLabel('모드').selectOption('compare');
+  await pollObservation(page, (o) => o.mode === 'compare');
+}
+
+function item(page: Page, id: string): Locator {
+  return page.locator(`[data-item="${id}"]`);
+}
+
+/** 물건을 끌어 접시·선반에 놓는다. 좌표는 판 상자 너비로만 배율을 구한다(논리 높이를 가정하지 않는다). */
+async function dragItem(page: Page, id: string, target: 'left' | 'right' | 'shelf'): Promise<void> {
+  await canvas(page).scrollIntoViewIfNeeded();
+  await page.waitForTimeout(500); // 접시 옮김 애니메이션(400ms)이 끝난 뒤의 자리를 잡는다.
+  const board = await canvas(page).boundingBox();
+  const from = await item(page, id).boundingBox();
+  if (!board || !from) throw new Error('판이나 물건을 찾지 못했습니다.');
+  const scale = board.width / 1000;
+  const drop = { left: [180, 300], right: [820, 300], shelf: [500, 540] }[target] as [
+    number,
+    number,
+  ];
+  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(board.x + drop[0] * scale, board.y + drop[1] * scale, { steps: 8 });
+  await page.mouse.up();
+}
+
+test('compare: 물건을 끌어 접시에 올리면 무거운 쪽으로 기울고 결과 글이 나온다', async ({
+  page,
+}) => {
+  await openCompare(page);
+  await expect(page.getByTestId('balance-result')).toHaveText('물건을 접시에 올려 보세요');
+  await dragItem(page, 'sponge', 'left');
+  await pollObservation(page, (o) => o.left?.join() === 'sponge');
+  await expect(canvas(page)).toHaveAttribute('data-tilt', 'left');
+  await expect(page.getByTestId('balance-result')).toHaveText('왼쪽이 더 무거워요');
+  await dragItem(page, 'iron-ball', 'right');
+  await pollObservation(page, (o) => o.right?.join() === 'iron-ball' && o.weighings === 1);
+  // 큰 스펀지보다 작은 쇠공이 무겁다.
+  await expect(canvas(page)).toHaveAttribute('data-tilt', 'right');
+  await expect(page.getByTestId('balance-result')).toHaveText('오른쪽이 더 무거워요');
+  // 접시의 물건을 끌어 선반으로 되돌린다.
+  await dragItem(page, 'sponge', 'shelf');
+  await pollObservation(page, (o) => o.left?.length === 0);
+  await expect(item(page, 'sponge')).toHaveAttribute('data-place', 'shelf');
+});
+
+test('compare: 가득 찬 접시에는 올라가지 않는다', async ({ page }) => {
+  await openCompare(page);
+  await dragItem(page, 'sponge', 'left');
+  await pollObservation(page, (o) => o.left?.join() === 'sponge');
+  await dragItem(page, 'apple', 'left');
+  await expect(page.getByTestId('compare-status')).toHaveText('접시가 가득 찼어요');
+  expect((await readObservation(page)).left).toEqual(['sponge']);
+});
+
+test('compare: 키보드 L·R·Backspace로 물건을 옮긴다', async ({ page }) => {
+  await openCompare(page);
+  await item(page, 'apple').focus();
+  await page.keyboard.press('l');
+  await pollObservation(page, (o) => o.left?.join() === 'apple');
+  await item(page, 'iron-ball').focus();
+  await page.keyboard.press('r');
+  await pollObservation(page, (o) => o.right?.join() === 'iron-ball' && o.weighings === 1);
+  await expect(canvas(page)).toHaveAttribute('data-tilt', 'right');
+  // 옮긴 뒤에도 초점이 물건에 남아 Backspace로 선반에 되돌릴 수 있다.
+  await page.keyboard.press('Backspace');
+  await pollObservation(page, (o) => o.right?.length === 0);
+  await item(page, 'apple').focus();
+  await page.keyboard.press('r');
+  await pollObservation(page, (o) => o.right?.join() === 'apple' && o.left?.length === 0);
+});
+
+test('compare: 조작 칸 단추로도 옮기고 [처음으로]는 접시만 비운다', async ({ page }) => {
+  await openCompare(page);
+  await item(page, 'sponge').focus();
+  await page.getByTestId('compare-left').click();
+  await item(page, 'apple').focus();
+  await page.getByTestId('compare-right').click();
+  await pollObservation(
+    page,
+    (o) => o.left?.join() === 'sponge' && o.right?.join() === 'apple' && o.weighings === 1,
+  );
+  await pad(page, '처음으로').scrollIntoViewIfNeeded();
+  await pad(page, '처음으로').click();
+  await pollObservation(page, (o) => o.left?.length === 0 && o.right?.length === 0);
+  expect((await readObservation(page)).weighings).toBe(1);
+});
+
+test('compare: 세 물건을 두 번 비교하면 weighings 2, 같은 조합은 다시 세지 않는다', async ({
+  page,
+}) => {
+  await openCompare(page);
+  await item(page, 'iron-ball').focus();
+  await page.keyboard.press('l');
+  await item(page, 'apple').focus();
+  await page.keyboard.press('r');
+  await pollObservation(page, (o) => o.weighings === 1);
+  await page.keyboard.press('Backspace');
+  await item(page, 'sponge').focus();
+  await page.keyboard.press('r');
+  await pollObservation(page, (o) => o.weighings === 2);
+  await expect(canvas(page)).toHaveAttribute('data-tilt', 'left');
+  // 사과를 다시 올려도 (쇠공 | 사과)는 이미 센 조합이다.
+  await page.keyboard.press('Backspace');
+  await item(page, 'apple').focus();
+  await page.keyboard.press('r');
+  await pollObservation(page, (o) => o.right?.join() === 'apple' && o.weighings === 2);
+  const observation = await readObservation(page);
+  expect(observation.pairsCompared).toEqual(['apple|iron-ball', 'iron-ball|sponge']);
+  expect(observation.orderHeavyFirst).toEqual(['iron-ball', 'apple', 'sponge']);
+});
+
+test('힌트 ② size-vs-weight: 본 캔버스와 겹치고 숫자를 쓰지 않는다', async ({ page }) => {
+  await openCompare(page, {}, 'stage=fit&overlay=size-vs-weight');
+  await item(page, 'sponge').focus();
+  await page.keyboard.press('l');
+  await item(page, 'iron-ball').focus();
+  await page.keyboard.press('r');
+  await pollObservation(page, (o) => o.weighings === 1);
+  await toggleOverlay(page);
+  const layer = await expectAligned(page, 'size-vs-weight');
+  await expect(layer).toContainText('크기');
+  await expect(layer).toContainText('무게');
+  await expect(layer).not.toContainText(/\d/);
+  // 크기 막대는 큰 스펀지(왼쪽)가 길고, 무게 막대는 쇠공(오른쪽)이 길다.
+  const width = async (name: string) =>
+    (await layer.locator(`[data-bar="${name}"] rect`).boundingBox())?.width ?? 0;
+  expect(await width('size-left')).toBeGreaterThan(await width('size-right'));
+  expect(await width('weight-right')).toBeGreaterThan(await width('weight-left'));
+});
+
+test('힌트 ② size-vs-weight: 두 접시에 물건이 하나씩 없으면 그리지 않는다', async ({ page }) => {
+  await openCompare(page, {}, 'stage=fit&overlay=size-vs-weight');
+  await item(page, 'sponge').focus();
+  await page.keyboard.press('l');
+  await toggleOverlay(page);
+  await expect(page.locator('[data-overlay="size-vs-weight"] svg')).toHaveCount(0);
+});
+
+test('화면 기준: compare 첫 화면', async ({ page }) => {
+  await openCompare(page);
+  await expect(item(page, 'sponge')).toBeVisible();
+  await expectPageSnapshot(page, 'balance-compare.png');
+});
+
+test('화면 기준: compare 큰 스펀지와 작은 쇠공을 올려 기울어진 화면', async ({ page }) => {
+  await openCompare(page);
+  await item(page, 'sponge').focus();
+  await page.keyboard.press('l');
+  await item(page, 'iron-ball').focus();
+  await page.keyboard.press('r');
+  await expect(canvas(page)).toHaveAttribute('data-tilt', 'right');
+  await expectPageSnapshot(page, 'balance-compare-tilt.png');
+});
+
+for (const size of [48, 64] as const) {
+  test(`compare 터치 타깃 ${size}: 옮기기 단추와 [처음으로]가 ${size}px 이상`, async ({ page }) => {
+    await openCompare(page);
+    if (size === 64) await page.getByRole('button', { name: '터치 48px' }).click();
+    await item(page, 'apple').focus();
+    for (const testId of ['compare-left', 'compare-right', 'compare-shelf']) {
+      await page.getByTestId(testId).scrollIntoViewIfNeeded();
+      await expectMin(page.getByTestId(testId), size, testId);
+    }
+    await pad(page, '처음으로').scrollIntoViewIfNeeded();
+    await expectMin(pad(page, '처음으로'), size, '처음으로');
   });
 }

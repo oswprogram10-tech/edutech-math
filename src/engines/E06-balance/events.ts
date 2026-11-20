@@ -10,7 +10,7 @@ export const EVENT_NAMES = ['balance-changed'] as const;
 /** 상태가 바뀔 때 저울 상태(수평 여부·기울기)를 알린다. */
 export function emit(prev: E06State, next: E06State, action: E06Action): EngineEvent[] {
   void action;
-  if (prev === next) return [];
+  if (prev === next || next.mode === 'compare') return []; // compare는 compare/events.ts
   const reading = next.mode === 'proportion' ? readProportion(next) : readBalance(next);
   return [{ name: 'balance-changed', payload: { balanced: reading.balanced, tilt: reading.tilt } }];
 }
