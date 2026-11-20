@@ -2,15 +2,16 @@
 import type { EngineEvent, EnginePredicate, JsonValue, Observation } from '../../core/engine-sdk';
 import { Rational } from '../../core/math';
 import { readBalance } from './observe';
-import type { BalanceAction, BalanceState } from './types';
+import { readProportion } from './proportion/read';
+import type { E06Action, E06State } from './unions';
 
 export const EVENT_NAMES = ['balance-changed'] as const;
 
 /** 상태가 바뀔 때 저울 상태(수평 여부·기울기)를 알린다. */
-export function emit(prev: BalanceState, next: BalanceState, action: BalanceAction): EngineEvent[] {
+export function emit(prev: E06State, next: E06State, action: E06Action): EngineEvent[] {
   void action;
   if (prev === next) return [];
-  const reading = readBalance(next);
+  const reading = next.mode === 'proportion' ? readProportion(next) : readBalance(next);
   return [{ name: 'balance-changed', payload: { balanced: reading.balanced, tilt: reading.tilt } }];
 }
 
@@ -67,6 +68,15 @@ export const predicates: Readonly<Record<string, EnginePredicate>> = {
     const tries = observation['tries'];
     return n !== null && Array.isArray(tries) && tries.length <= n;
   },
+  /** proportion: 네 항이 정해졌고 외항의 곱 = 내항의 곱이다(올린 카드, 또는 □에 넣어 본 값). */
+  isProportion: (observation) => observation['isProportion'] === true,
+  /** proportion 카드 모드: args `{ index }`번 카드를 저울에 올렸는가. */
+  cardIs: (observation, args) => {
+    const index = record(args)?.['index'];
+    return typeof index === 'number' && observation['cardIndex'] === index;
+  },
+  /** proportion pairSelect: 고른 두 항이 외항 짝 또는 내항 짝이다. */
+  pairingCorrect: (observation) => observation['pairing'] === 'extremes-means',
   hasMisconception: (observation, args) => {
     const code = record(args)?.['code'];
     const list = observation['misconceptions'];

@@ -63,4 +63,61 @@ export const balanceStrings = {
   overlay: {
     unknownPart: '?',
   },
+  /** `proportion` 모드(외항·내항 격자 넓이 저울). */
+  proportion: {
+    equationLabel: '비례식',
+    ordinal: ['첫째', '둘째', '셋째', '넷째'],
+    termLabel: (ordinal: string, text: string) => `${ordinal} 항 ${text}`,
+    result: {
+      pickCard: '카드를 골라 저울에 올려 보세요',
+      pickPair: '항 두 개를 골라 왼쪽에 올려 보세요',
+    },
+    instructions: {
+      slider: '슬라이더로 □에 수를 넣어 보면서 두 접시의 칸 수가 같아지는지 봐요.',
+      cards: '카드를 하나 골라 저울에 올려 보세요. 두 접시의 칸 수가 같은지 살펴봐요.',
+      fixed: '두 접시에 올린 격자의 칸 수를 견줘 보세요.',
+      pair: '네 항 가운데 두 개를 골라 왼쪽 접시의 격자를 만들어 보세요.',
+    },
+    gridLabel: { left: '왼쪽 격자', right: '오른쪽 격자' },
+    gridUnknown: '아직 모르는 격자',
+    dims: (w: string, h: string) => `가로 ${w}칸 × 세로 ${h}칸`,
+    total: (n: string) => `모두 ${n}칸`,
+    symbols: {
+      extremes: '외항의 곱',
+      means: '내항의 곱',
+      picked: '고른 두 항의 곱',
+      rest: '나머지 두 항의 곱',
+    },
+    slider: {
+      group: '□에 넣을 수',
+      hint: '□에 넣을 수 고르기',
+      label: '□에 넣을 수 슬라이더',
+      none: '아직 넣지 않았어요',
+      minus: '1 줄이기',
+      plus: '1 늘리기',
+      value: (value: string) => `□ = ${value}`,
+    },
+    cards: {
+      group: '비례식 카드',
+      hint: '저울에 올릴 카드',
+    },
+    pair: {
+      group: '왼쪽 접시에 올릴 두 항',
+      hint: '왼쪽 접시에 올릴 두 항 고르기',
+      more: '하나 더 골라 보세요',
+      made: (first: string, second: string) => `왼쪽에 올린 항: ${first}, ${second}`,
+      waitCard: '먼저 카드를 골라 주세요',
+    },
+    brackets: {
+      outer: '바깥쪽',
+      inner: '안쪽',
+      outerLabel: '바깥쪽 두 항을 잇는 괄호',
+      innerLabel: '안쪽 두 항을 잇는 괄호',
+    },
+    areaDiff: {
+      label: '두 격자를 왼쪽 아래 모서리에 맞춰 겹친 그림',
+      leftOnly: '왼쪽만',
+      rightOnly: '오른쪽만',
+    },
+  },
 } as const;
