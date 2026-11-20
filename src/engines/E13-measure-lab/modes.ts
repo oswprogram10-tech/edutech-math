@@ -1,6 +1,6 @@
 /**
  * E13의 모드 묶음. 설정·상태·Action 합집합과 모드별 reduce·observe·emit 분배를 한곳에 둔다.
- * 모드별 규칙은 `compare/`, `length/`, `estimate/`, `route/`(map-route), `train/`(length의 unit-train 변형) 폴더에 있고
+ * 모드별 규칙은 `compare/`, `length/`, `estimate/`, `route/`(map-route), `train/`(length의 unit-train 변형), `length/roll-circle/`(length의 roll-circle 변형) 폴더에 있고
  * 여기서는 `mode`·`variant`로 나누기만 한다.
  */
 import type { EngineEvent, EnginePredicate, Observation } from '../../core/engine-sdk';
@@ -32,11 +32,16 @@ import { lengthPredicates } from './length/events';
 import { observeLength } from './length/observe';
 import { createLengthState, reduceLength } from './length/reduce';
 import type { LengthAction, LengthConfig, MeasureState } from './length/types';
+import { rollPredicates } from './length/roll-circle/events';
+import { observeRoll } from './length/roll-circle/observe';
+import { createRollState, reduceRoll } from './length/roll-circle/reduce';
+import type { RollAction, RollConfig, RollState } from './length/roll-circle/types';
 
 export type E13Config =
   | CompareConfig
   | LengthConfig
   | TrainConfig
+  | RollConfig
   | EstimateConfig
   | RouteConfig
   | CapacityConfig
@@ -45,6 +50,7 @@ export type E13State =
   | CompareState
   | MeasureState
   | TrainState
+  | RollState
   | EstimateState
   | RouteState
   | CapacityState
@@ -53,6 +59,7 @@ export type E13Action =
   | CompareAction
   | LengthAction
   | TrainAction
+  | RollAction
   | EstimateAction
   | RouteAction
   | CapacityAction
@@ -86,6 +93,7 @@ export const E13_PREDICATES: Readonly<Record<string, EnginePredicate>> = {
   ...lengthPredicates,
   ...estimatePredicates,
   ...trainPredicates,
+  ...rollPredicates,
   ...routePredicates,
   ...capacityPredicates,
   ...weightPredicates,
@@ -93,7 +101,17 @@ export const E13_PREDICATES: Readonly<Record<string, EnginePredicate>> = {
 
 /** length 모드의 unit-train 변형 상태인가(MeasureState에는 `variant`가 없다). */
 export function isTrain(state: E13State): state is TrainState {
-  return state.mode === 'length' && 'variant' in state;
+  return state.mode === 'length' && 'variant' in state && state.variant === 'unit-train';
+}
+
+/** length 모드의 roll-circle 변형(굴렁쇠 굴리기) 상태인가. */
+export function isRoll(state: E13State): state is RollState {
+  return state.mode === 'length' && 'variant' in state && state.variant === 'roll-circle';
+}
+
+/** variant가 없는 기본 length 상태인가(T205·T208 mergeRule). */
+export function isPlainLength(state: E13State): state is MeasureState {
+  return state.mode === 'length' && !('variant' in state);
 }
 
 export function createInitialState(config: E13Config): E13State {
@@ -104,7 +122,8 @@ export function createInitialState(config: E13Config): E13State {
   if (record.mode === 'capacity') return createCapacityState(config as CapacityConfig);
   if (record.mode === 'weight') return createWeightState(config as WeightConfig);
   if (record.mode === 'length') {
-    // variant가 적혀 있으면 unit-train만 허용한다(그 밖의 값은 설정 오류).
+    if (record.variant === 'roll-circle') return createRollState(config as RollConfig);
+    // 그 밖에 variant가 적혀 있으면 unit-train만 허용한다(그 밖의 값은 설정 오류).
     if (record.variant !== undefined) return createTrainState(config as TrainConfig);
     return createLengthState(config as LengthConfig);
   }
@@ -113,6 +132,7 @@ export function createInitialState(config: E13Config): E13State {
 
 export function reduce(state: E13State, action: E13Action): E13State {
   if (isTrain(state)) return reduceTrain(state, action as TrainAction);
+  if (isRoll(state)) return reduceRoll(state, action as RollAction);
   if (state.mode === 'length') return reduceLength(state, action as LengthAction);
   if (state.mode === 'estimate') return reduceEstimate(state, action as EstimateAction);
   if (state.mode === 'map-route') return reduceRoute(state, action as RouteAction);
@@ -123,6 +143,7 @@ export function reduce(state: E13State, action: E13Action): E13State {
 
 export function observe(state: E13State): Observation {
   if (isTrain(state)) return observeTrain(state);
+  if (isRoll(state)) return observeRoll(state);
   if (state.mode === 'length') return observeLength(state);
   if (state.mode === 'estimate') return observeEstimate(state);
   if (state.mode === 'map-route') return observeRoute(state);
@@ -135,13 +156,7 @@ export function observe(state: E13State): Observation {
 export function emit(prev: E13State, next: E13State): EngineEvent[] {
   if (prev === next) return [];
   const events: EngineEvent[] = [{ name: 'measure-changed', payload: { moved: next.moves >= 1 } }];
-  if (
-    next.mode === 'length' &&
-    !isTrain(next) &&
-    prev.mode === 'length' &&
-    !isTrain(prev) &&
-    next.merges > prev.merges
-  ) {
+  if (isPlainLength(next) && isPlainLength(prev) && next.merges > prev.merges) {
     events.push({ name: 'merged', payload: { merges: next.merges } });
   }
   return events;

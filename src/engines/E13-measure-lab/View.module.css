@@ -318,3 +318,28 @@
     transition: none;
   }
 }
+
+/* T215: roll-circle 굴렁쇠가 굴러가는 전환(1초)과 물감 자국이 나타나는 때(굴리기가 끝난 뒤).
+   움직임 줄이기를 켜면 바로 끝 상태다. */
+.rollMove {
+  transition: transform 1000ms ease-in-out;
+}
+
+.rollMarks {
+  opacity: 0;
+}
+
+.rollMarks[data-on='true'] {
+  opacity: 1;
+  transition: opacity 0ms linear 1000ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rollMove {
+    transition: none;
+  }
+
+  .rollMarks[data-on='true'] {
+    transition: none;
+  }
+}

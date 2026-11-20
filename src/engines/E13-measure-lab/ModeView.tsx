@@ -14,7 +14,9 @@ import type { TrainAction } from './train/types';
 import type { CompareAction } from './compare/types';
 import { LengthView } from './length/LengthView';
 import type { LengthAction } from './length/types';
-import { isTrain } from './modes';
+import { RollView } from './length/roll-circle/RollView';
+import type { RollAction } from './length/roll-circle/types';
+import { isRoll, isTrain } from './modes';
 import type { E13Action, E13Config, E13State } from './modes';
 
 export function E13View({
@@ -28,6 +30,16 @@ export function E13View({
       <TrainView
         state={state}
         dispatch={(action) => dispatch(action as TrainAction)}
+        targetSize={targetSize}
+        readOnly={readOnly}
+      />
+    );
+  }
+  if (isRoll(state)) {
+    return (
+      <RollView
+        state={state}
+        dispatch={(action) => dispatch(action as RollAction)}
         targetSize={targetSize}
         readOnly={readOnly}
       />
