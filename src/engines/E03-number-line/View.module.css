@@ -461,3 +461,52 @@
   flex-wrap: wrap;
   font-variant-numeric: tabular-nums;
 }
+
+/* ── T219 range · rounding 상황 장면 ──────────────────────── */
+
+.riderMove {
+  transition: transform 300ms ease;
+}
+
+.rangeBound {
+  cursor: grab;
+}
+
+.rangeInterval {
+  stroke: #0f7b6c;
+  stroke-width: 10;
+  stroke-linecap: round;
+}
+
+.rangeBoundBody {
+  stroke: #101828;
+  stroke-width: 5;
+}
+
+.rangeBound:focus-visible .rangeBoundBody {
+  stroke-dasharray: 8 4;
+}
+
+.overlayRider {
+  animation: e03-rider-walk 1000ms ease-out both;
+}
+
+@keyframes e03-rider-walk {
+  from {
+    transform: translateX(-160px);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .riderMove {
+    transition: none;
+  }
+
+  .overlayRider {
+    animation: none;
+  }
+}

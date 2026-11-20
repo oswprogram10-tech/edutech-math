@@ -474,6 +474,63 @@ export const hasPair: EnginePredicate = (
   });
 };
 
+// ── T219 range predicates ───────────────────────────────────
+
+function boundArg(
+  record: Readonly<Record<string, JsonValue>>,
+  key: string,
+): { readonly value: Rational; readonly closed: boolean } | null | undefined {
+  if (!Object.prototype.hasOwnProperty.call(record, key)) return null;
+  const raw = record[key];
+  if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) return undefined;
+  const value = parseValue(typeof raw['value'] === 'string' ? raw['value'] : undefined);
+  const closed = raw['closed'];
+  if (!value || typeof closed !== 'boolean') return undefined;
+  return { value, closed };
+}
+
+function boundMatches(
+  actual: JsonValue | undefined,
+  expected: { readonly value: Rational; readonly closed: boolean } | null,
+): boolean {
+  if (expected === null) return actual === null;
+  if (actual === null || actual === undefined || typeof actual !== 'object') return false;
+  if (Array.isArray(actual)) return false;
+  return (
+    rationalFieldEquals(actual['value'], expected.value) && actual['closed'] === expected.closed
+  );
+}
+
+/** args `{ lower?, upper? }`(각 `{ value, closed }`): 주지 않은 쪽은 null이어야 한다. */
+export const rangeIs: EnginePredicate = (
+  observation: Observation,
+  args: JsonValue | undefined,
+): boolean => {
+  const record = payloadRecord(args);
+  if (!record) return false;
+  const lower = boundArg(record, 'lower');
+  const upper = boundArg(record, 'upper');
+  if (lower === undefined || upper === undefined) return false;
+  if (observation['complete'] !== true) return false;
+  return boundMatches(observation['lower'], lower) && boundMatches(observation['upper'], upper);
+};
+
+export const gateOpened: EnginePredicate = (observation: Observation): boolean =>
+  observation['gateOpened'] === true;
+
+export const complete: EnginePredicate = (observation: Observation): boolean =>
+  observation['complete'] === true;
+
+/** args `{ code }`: 이 엔진이 감지한 오개념 코드 목록에 있는가(감지는 콘텐츠 `when`이 건다). */
+export const hasMisconception: EnginePredicate = (
+  observation: Observation,
+  args: JsonValue | undefined,
+): boolean => {
+  const code = payloadRecord(args)?.['code'];
+  const list = observation['misconceptions'];
+  return typeof code === 'string' && Array.isArray(list) && list.includes(code);
+};
+
 export const predicates: Readonly<Record<string, EnginePredicate>> = {
   hasPointAt,
   onlyPointAt,
@@ -492,4 +549,9 @@ export const predicates: Readonly<Record<string, EnginePredicate>> = {
   hasPointNear,
   levelIs,
   hasPair,
+  // T219
+  rangeIs,
+  gateOpened,
+  complete,
+  hasMisconception,
 };

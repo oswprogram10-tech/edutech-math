@@ -8,6 +8,7 @@ import { Rational } from '../../core/math/rational';
 import { createFrogState, frogAt } from './frog';
 import { createDoubleState, reduceDoubleAction } from './reduce-double';
 import { createLogZoomState, reduceLogZoom } from './reduce-log';
+import { createRangeState, reduceRangeAction } from './reduce-range';
 import { createRoundingState, reduceRoundingAction } from './reduce-rounding';
 import { createSkipState, reduceSkipAction } from './reduce-skip';
 import { configRational, DEFAULT_MAX, modeOf, normalizeCards } from './state-helpers';
@@ -61,6 +62,7 @@ export function createInitialState(config: NumberLineConfig): NumberLineState {
   if (mode === 'rounding') return createRoundingState(config);
   if (mode === 'log-zoom') return createLogZoomState(config);
   if (mode === 'double') return createDoubleState(config);
+  if (mode === 'range') return createRangeState(config);
   const unit = configRational(config.unit) ?? ONE;
   const safeUnit = unit.isZero() || unit.isNegative() ? ONE : unit;
   const min = configRational(config.min) ?? Rational.of(0);
@@ -109,6 +111,7 @@ export function createInitialState(config: NumberLineConfig): NumberLineState {
     rounding: null,
     logZoom: null,
     double: null,
+    range: null,
     frog: createFrogState(config, mode, min, max),
   };
 }
@@ -385,6 +388,15 @@ export function reduce(state: NumberLineState, action: NumberLineAction): Number
     case 'scale-pair':
     case 'remove-pair':
       return reduceDoubleAction(state, action) ?? state;
+
+    case 'place-bound':
+    case 'move-bound':
+    case 'toggle-closed':
+    case 'set-direction':
+    case 'remove-bound':
+    case 'open-gate':
+    case 'reset':
+      return reduceRangeAction(state, action) ?? state;
 
     case 'frog-jump': {
       const frog = state.frog;
