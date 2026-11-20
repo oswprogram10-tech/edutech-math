@@ -346,6 +346,8 @@ W6에서 E13 측정 실험실과 E14 시계·시간을 새로 만들고, E17 `so
 
 - **T207 병합(2026-11-20):** g1s1u4 비교하기 콘텐츠(A1 E13 compare-direct 4과제, A2 E06 compare 4과제)와 E2E. MC-MEASURE-ENDPOINT는 순서 응답이라 `when`(순서 na·ga·da + `allAligned` false)으로 걸었고, CURVE·SIZE-IS-WEIGHT는 trapChoice다. 병합 때 A2.T3 발문을 "두 번 이상"으로 고쳤다(판정 `weighingsAtLeast 2`). 시범 운영 메모: 실행기 [확인하기]는 저학년에서도 48px, 아이패드에서 조작 단추 줄이 반쯤 잘림(T205·T206과 같음).
 
+- **T208 병합(2026-11-20):** E13 `estimate`(영점 어긋난 자·자 끌기·어림 먼저, `count-cells`), `length` `mergeRule`(0부터 틈 없는 10cm 막대 10개 → 1m 줄자, `meter-100`), `unit-train`(1m 칸·10cm 막대·1cm 블록, MC-LENGTH-NO-PROMOTE, `meter-outline`). 검수 때 학생 단추 이름을 [1m로 바꾸기]·[10cm 막대로 풀기]·[1cm 블록으로 풀기]로 바꿨다. 새 단위는 `MERGE_UNITS`에 있다. 기존 E13 기준 이미지 변경 없음.
+
 ## 상시
 | 카드 | 내용 |
 | --- | --- |
