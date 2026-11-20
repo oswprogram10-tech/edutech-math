@@ -359,6 +359,8 @@ W6에서 E13 측정 실험실과 E14 시계·시간을 새로 만들고, E17 `so
 
 - **T212 병합(2026-11-21):** g3s1u5 길이와 시간 콘텐츠(A1 4과제, A2 4과제)와 E2E. E13 물건 목록에 연필심이 없어 A1.T1은 "연필 길이"(`pencil`). E14에도 `hasMisconception`이 없어 A2.T1은 `when` any[misconceptions equals, m=75]로 건다(묶기 전에는 어떤 오답도 MC-TIME-BASE-100 ①). 시범 운영 메모: 조작 칸 첫 줄이 A1.T1(E13 estimate 확대) 크롬북 42px·아이패드 3px, A2.T4(E14 duration) 크롬북 49px·아이패드 10px 아래 — 웨이브 끝 레이아웃 정리 후보.
 
+- **T213 병합(2026-11-21):** E13 `capacity`(cup-count·puzzle, `same-beaker`·`liter-cups`·`ml-merge`)와 `weight`(윗접시저울·용수철저울·클립·예측, `size-weight-bars`), E13 predicate `hasMisconception {code}`(모든 모드). 검수 때 용수철 10g 눈금 간격을 논리 8px 이상(springMaxG 500 → 눈금 길이 400, 1000이면 4.3px라 콘텐츠는 500 이하 권장)으로, 용수철이 있으면 선반을 용수철 칸 왼쪽까지만 그리게 고쳤다. 두 저울은 항상 좌우 배치. 시범 운영 메모: 아이패드 puzzle 단추 셋째 줄은 칸 스크롤 아래.
+
 ## 상시
 | 카드 | 내용 |
 | --- | --- |
