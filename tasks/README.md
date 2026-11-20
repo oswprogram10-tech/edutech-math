@@ -314,6 +314,7 @@ W6에서 E13 측정 실험실과 E14 시계·시간을 새로 만들고, E17 `so
 | T207 | 단원 콘텐츠: g1s1u4 비교하기(소넷 구현) | T206 |
 | T208 | E13 `estimate`(영점 어긋난 자·어림 먼저), `length`의 `mergeRule`(10cm×10 → 1m)·`unit-train`(m·cm 기차)(소넷 구현) | T207 |
 | T209 | 단원 콘텐츠: g2s1u4 길이 재기(소넷 구현) | T208 |
+| T223 | E13 판 높이: 모드별 논리 높이로 조작 칸이 첫 화면에 보이게(T209에서 발견, T210 전에 함)(소넷 구현) | T209 |
 | T210 | 단원 콘텐츠: g2s2u3 길이 재기(m·cm)(소넷 구현) | T209 |
 | T211 | E13 `zoomLevels`(mm 확대)·`map-route`(가상 동네 지도 경로)와 E14 `time-calc`(60 묶기·풀기 블록)(소넷 구현) | T210 |
 | T212 | 단원 콘텐츠: g3s1u5 길이와 시간(소넷 구현) | T211, T204 |
@@ -347,6 +348,8 @@ W6에서 E13 측정 실험실과 E14 시계·시간을 새로 만들고, E17 `so
 - **T207 병합(2026-11-20):** g1s1u4 비교하기 콘텐츠(A1 E13 compare-direct 4과제, A2 E06 compare 4과제)와 E2E. MC-MEASURE-ENDPOINT는 순서 응답이라 `when`(순서 na·ga·da + `allAligned` false)으로 걸었고, CURVE·SIZE-IS-WEIGHT는 trapChoice다. 병합 때 A2.T3 발문을 "두 번 이상"으로 고쳤다(판정 `weighingsAtLeast 2`). 시범 운영 메모: 실행기 [확인하기]는 저학년에서도 48px, 아이패드에서 조작 단추 줄이 반쯤 잘림(T205·T206과 같음).
 
 - **T208 병합(2026-11-20):** E13 `estimate`(영점 어긋난 자·자 끌기·어림 먼저, `count-cells`), `length` `mergeRule`(0부터 틈 없는 10cm 막대 10개 → 1m 줄자, `meter-100`), `unit-train`(1m 칸·10cm 막대·1cm 블록, MC-LENGTH-NO-PROMOTE, `meter-outline`). 검수 때 학생 단추 이름을 [1m로 바꾸기]·[10cm 막대로 풀기]·[1cm 블록으로 풀기]로 바꿨다. 새 단위는 `MERGE_UNITS`에 있다. 기존 E13 기준 이미지 변경 없음.
+
+- **T209 병합(2026-11-20):** g2s1u4 길이 재기 콘텐츠(A1 4과제, A2 6과제)와 E2E. A1.T1은 엔진이 빈 `units`를 거절해 뼘 두 개(`hand-span-a/b`)와 `demoSpans`로 했다. MC-MEASURE-GAP은 E13에 `hasMisconception`이 없어 힌트 `when` equals `misconceptions ["MC-MEASURE-GAP"]`로 걸었다(코드가 둘 이상 동시에 붙으면 깨짐). 검수에서 크롬북·아이패드 E13 조작 칸(어림 키패드·[클립 놓기])이 판 아래로 숨는 것을 확인해 T223을 만들었다.
 
 ## 상시
 | 카드 | 내용 |
