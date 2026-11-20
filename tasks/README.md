@@ -331,6 +331,8 @@ W6에서 E13 측정 실험실과 E14 시계·시간을 새로 만들고, E17 `so
 
 - **T201 병합(2026-11-20):** E14 시계·시간 `clock`(분 0~719, 긴바늘 각도 누적으로 시 넘김, granularity·`snapMinuteTo` 배열·`'5-weak'`, readOnly·hideMinuteHand, 톱니는 한 축에 겹친 큰·작은 톱니, 펼친 0~60분 띠, 오버레이 hour-hand-focus·rewind-to-hour·numeral-minutes). `digitalReadout:'after-submit'`은 'never'로 읽는다. 시각 문자열은 엄격한 "H:MM"(1~12시, "03:25" 거절). 슬라이더는 aria-valuenow 없이 방향 문장만. readOnly·hideMinuteHand이면 펼친 띠 위 표시도 없다. 엔진 등록은 `import.meta.glob` 자동. 범위 E2E 194 통과.
 
+- **T202 병합(2026-11-20):** g1s2u3.A2 톱니 연동 시계 5과제(만들기 3:00·8:30, 읽기 7시·짧은바늘만 4시 30분, 디지털 짝짓기). T1만 `snapMinuteTo [0,15,30,45]`(긴바늘을 3에 두는 MC-CLOCK-HANDS를 만들 수 있게). 명세 과제 5(하루 일과 순서)는 그림 자산이 없어 후순위. 남은 점: readOnly 시계 아래 안내가 "바늘을 돌려 보세요"(T203에서 고침), 이 단원 [확인하기]가 64px인지 확인 필요(실행기 몫). g1s2u3 E2E 15 통과.
+
 ## 상시
 | 카드 | 내용 |
 | --- | --- |
