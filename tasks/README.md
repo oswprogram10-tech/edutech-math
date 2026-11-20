@@ -327,6 +327,8 @@ W6에서 E13 측정 실험실과 E14 시계·시간을 새로 만들고, E17 `so
 | T220 | 단원 콘텐츠: g5s2u1 수의 범위와 어림하기(소넷 구현) | T219 |
 | T221 | 문서 정리: `docs/03-engines.md`(E20 `proportion-grid` 줄 등 실제 구현과 다른 곳), `docs/00-handoff.md` W5·W6 요약(소넷 구현) | T220 |
 
+- **T200 병합(2026-11-20):** W6 오개념 18개(수 함정 7, 고르기 7, 관찰 4)를 `misconceptions-w6.ts`·`diagnose-w6.ts`에 등록했다. 수 함정 `trapValue`는 `diagnose-shared.ts`로 옮겨 W5·W6가 같이 쓴다. 관찰 코드(MC-MEASURE-GAP, MC-LENGTH-NO-PROMOTE, MC-SORT-INCONSISTENT, MC-RANGE-BOUNDARY-INCLUSION)는 엔진 Observation이 맡는다. 단위 3583 통과.
+
 ## 상시
 | 카드 | 내용 |
 | --- | --- |
