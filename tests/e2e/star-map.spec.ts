@@ -212,9 +212,13 @@ test('크롬북 첫 화면에 범례가 들어오고 처음 보기에 켜진 별
   }
 
   // 꺼진 단원 개념은 별 모양이 아니라 작은 점으로 그린다.
-  const disabled = canvas.locator('[data-enabled="false"]').first();
-  await expect(disabled.locator('circle')).toHaveCount(1);
-  await expect(disabled.locator('path')).toHaveCount(0);
+  // 71개 단원 콘텐츠가 모두 들어온 뒤로는 기본 상태에 꺼진 단원이 없을 수 있다.
+  const disabledAll = canvas.locator('[data-enabled="false"]');
+  if ((await disabledAll.count()) > 0) {
+    const disabled = disabledAll.first();
+    await expect(disabled.locator('circle')).toHaveCount(1);
+    await expect(disabled.locator('path')).toHaveCount(0);
+  }
 });
 
 test('교사가 단원을 끄면 별이 흐려지고 누를 수 없다', async ({ page }) => {
