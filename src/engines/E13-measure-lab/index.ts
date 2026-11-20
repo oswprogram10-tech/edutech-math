@@ -1,10 +1,12 @@
-/** E13 측정 실험실 엔진 정의. 모드 둘(`compare-direct`, `length`). */
+/** E13 측정 실험실 엔진 정의. 모드 셋(`compare-direct`, `length`(+`unit-train` 변형), `estimate`). */
 import type { EngineDefinition } from '../../core/engine-sdk';
+import { CountCellsOverlay } from './estimate/overlays/count-cells';
 import { EndpointLinesOverlay } from './compare/overlays/endpoint-lines';
 import { HalfStraightenOverlay } from './compare/overlays/half-straighten';
 import { SameTankOverlay } from './compare/overlays/same-tank';
 import { GapMarksOverlay } from './length/overlays/gap-marks';
 import { SpanCompareOverlay } from './length/overlays/span-compare';
+import { MeterOutlineOverlay } from './train/overlays/meter-outline';
 import {
   E13_EVENT_NAMES,
   E13_MODES,
@@ -16,7 +18,7 @@ import {
 } from './modes';
 import type { E13Action, E13Config, E13State } from './modes';
 import { E13View } from './ModeView';
-import { forCompare, forLength } from './overlays/adapt';
+import { Meter100Overlay, forCompare, forEstimate, forLength, forTrain } from './overlays/adapt';
 import { E13_STRINGS } from './strings.ko';
 
 const definition: EngineDefinition<E13Config, E13State, E13Action> = {
@@ -37,6 +39,9 @@ const definition: EngineDefinition<E13Config, E13State, E13Action> = {
     'same-tank': forCompare(SameTankOverlay),
     'gap-marks': forLength(GapMarksOverlay),
     'span-compare': forLength(SpanCompareOverlay),
+    'count-cells': forEstimate(CountCellsOverlay),
+    'meter-100': Meter100Overlay,
+    'meter-outline': forTrain(MeterOutlineOverlay),
   },
 };
 

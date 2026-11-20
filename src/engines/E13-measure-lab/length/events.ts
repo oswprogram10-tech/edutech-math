@@ -1,4 +1,6 @@
 /** E13 length의 공개 판정(순수 함수). 이벤트에는 재어서 나온 값(정답)을 싣지 않는다. */
+import { Rational } from '../../../core/math';
+import { rat } from '../rat';
 import type { EnginePredicate, JsonValue, Observation } from '../../../core/engine-sdk';
 
 function record(args: JsonValue | undefined): Readonly<Record<string, JsonValue>> | null {
@@ -36,6 +38,18 @@ export const lengthPredicates: Readonly<Record<string, EnginePredicate>> = {
     observation['count'] > 0 &&
     observation['gaps'] === 0 &&
     observation['overlaps'] === 0,
+  /** T208: 합체가 한 번 이상 일어났다. */
+  merged: (observation) => typeof observation['merges'] === 'number' && observation['merges'] >= 1,
+  /** T208 args `{ m, cm }`: 틈·겹침 없이 물건 길이를 쟀고, 1m 줄자가 m개이고 남은 cm 조각 길이 합이 cm이다. */
+  measuredAs: (observation, args) => {
+    const rec = record(args);
+    const m = rec?.['m'];
+    const cm = rec?.['cm'];
+    if (!Number.isInteger(m) || !Number.isInteger(cm)) return false;
+    if (observation['exact'] !== true || observation['meters'] !== m) return false;
+    const rest = rat(observation['restCm']);
+    return rest !== null && rest.equals(Rational.of(cm as number));
+  },
   rulerMade: (observation) => observation['rulerMade'] === true,
   labelsCorrect: (observation) => observation['labelsCorrect'] === true,
 };

@@ -4,7 +4,7 @@
  * 물건의 길이는 그림의 크기로만 드러나고 글·data-·aria에는 두지 않는다.
  * 틈은 빨간 점선 + 빗금 + "틈" 글, 겹침은 진한 줄무늬 + "겹침" 글로 색만으로 전하지 않는다.
  */
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { CSSProperties, RefObject } from 'react';
 import { pointerToLogical, useDrag } from '../../../core/engine-sdk';
 import { num, toNumber } from '../rat';
@@ -46,7 +46,8 @@ interface Props {
 
 // ── 물건 그림 ────────────────────────────────────────────
 
-function ObjectShape({ name, x, y, w }: { name: string; x: number; y: number; w: number }) {
+/** 물건 그림(length·estimate 두 모드가 함께 쓴다). 길이 글은 없고 그림 크기로만 드러난다. */
+export function ObjectShape({ name, x, y, w }: { name: string; x: number; y: number; w: number }) {
   const h = OBJECT_H;
   const label = S.objectNames[name] ?? name;
   let body;
@@ -98,6 +99,68 @@ function ObjectShape({ name, x, y, w }: { name: string; x: number; y: number; w:
           fill="#8b5a2b"
           stroke={INK}
           strokeWidth={2}
+        />
+      </>
+    );
+  } else if (name === 'crayon') {
+    const tip = Math.min(26, w * 0.25);
+    body = (
+      <>
+        <rect x={x} y={y} width={w - tip} height={h} fill="#e8872e" stroke={INK} strokeWidth={3} />
+        <rect
+          x={x + 10}
+          y={y}
+          width={Math.max(0, w - tip - 20)}
+          height={h}
+          fill="#fff1d6"
+          stroke={INK}
+          strokeWidth={2}
+        />
+        <polygon
+          points={`${x + w - tip},${y} ${x + w},${y + h / 2} ${x + w - tip},${y + h}`}
+          fill="#e8872e"
+          stroke={INK}
+          strokeWidth={3}
+          strokeLinejoin="round"
+        />
+      </>
+    );
+  } else if (name === 'eraser') {
+    body = (
+      <>
+        <rect x={x} y={y} width={w} height={h} rx={8} fill="#f7b6c8" stroke={INK} strokeWidth={3} />
+        <rect
+          x={x + w * 0.3}
+          y={y}
+          width={w * 0.4}
+          height={h}
+          fill="#6fa8ff"
+          stroke={INK}
+          strokeWidth={3}
+        />
+      </>
+    );
+  } else if (name === 'blackboard') {
+    body = (
+      <>
+        <rect
+          x={x}
+          y={y}
+          width={w}
+          height={h}
+          rx={3}
+          fill="#2f5d46"
+          stroke="#8b5a2b"
+          strokeWidth={5}
+        />
+        <line
+          x1={x + 12}
+          y1={y + h - 8}
+          x2={x + Math.min(60, w / 3)}
+          y2={y + h - 8}
+          stroke="#e8e8e8"
+          strokeWidth={3}
+          strokeLinecap="round"
         />
       </>
     );
@@ -240,9 +303,43 @@ interface PieceProps {
   readonly index: number;
   readonly piece: Piece;
   readonly geo: Geo;
+  /** 방금 합체해 만들어진 1m 줄자면 말리는 연출(400ms)을 보인다. */
+  readonly rolling?: boolean;
 }
 
-function PieceShape({ svgRef, ui, locked, index, piece, geo }: PieceProps) {
+/** 막대·줄자 안쪽 눈금: 10cm 막대는 1cm마다 가는 선, 1m 줄자는 10cm마다 굵은 선. */
+function UnitTicks({
+  unit,
+  x,
+  y,
+  w,
+  h,
+}: {
+  unit: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}) {
+  if (unit !== 'cm-10-rod' && unit !== 'm-tape') return null;
+  const parts = unit === 'cm-10-rod' ? 10 : 10;
+  const d = Array.from({ length: parts - 1 }, (_, i) => {
+    const tx = x + (w * (i + 1)) / parts;
+    return `M${tx},${y} V${y + h}`;
+  }).join(' ');
+  return (
+    <path
+      data-part="unit-ticks"
+      d={d}
+      fill="none"
+      stroke={unit === 'm-tape' ? '#9a6b00' : '#2a7a2a'}
+      strokeWidth={unit === 'm-tape' ? 2.5 : 1}
+      pointerEvents="none"
+    />
+  );
+}
+
+function PieceShape({ svgRef, ui, locked, index, piece, geo, rolling = false }: PieceProps) {
   const [shift, setShift] = useState<{ dx: number; dy: number } | null>(null);
   const [focused, setFocused] = useState(false);
   const def = unitOf(piece.unit);
@@ -264,7 +361,7 @@ function PieceShape({ svgRef, ui, locked, index, piece, geo }: PieceProps) {
   });
   return (
     <g
-      className={styles.piece}
+      className={rolling ? `${styles.piece} ${styles.roll}` : styles.piece}
       data-part="piece"
       data-index={index}
       data-unit={piece.unit}
@@ -278,7 +375,7 @@ function PieceShape({ svgRef, ui, locked, index, piece, geo }: PieceProps) {
         if (locked) return;
         if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
           event.preventDefault();
-          ui.nudge(index, event.key === 'ArrowRight' ? 0.5 : -0.5);
+          ui.nudge(index, event.key === 'ArrowRight' ? ui.step : -ui.step);
         } else if (event.key === 'Delete') {
           event.preventDefault();
           ui.removeAt(index);
@@ -296,6 +393,7 @@ function PieceShape({ svgRef, ui, locked, index, piece, geo }: PieceProps) {
         stroke={def?.stroke ?? INK}
         strokeWidth={3}
       />
+      <UnitTicks unit={piece.unit} x={x} y={y} w={w} h={BAND_H - 8} />
       {w >= 44 ? (
         <text
           x={x + w / 2}
@@ -305,6 +403,9 @@ function PieceShape({ svgRef, ui, locked, index, piece, geo }: PieceProps) {
           fontSize={16}
           fontWeight={800}
           fill={INK}
+          {...(piece.unit === 'm-tape'
+            ? { stroke: '#fff3c4', strokeWidth: 5, paintOrder: 'stroke' }
+            : {})}
         >
           {name}
         </text>
@@ -513,6 +614,29 @@ function RulerTicks({
   );
 }
 
+// ── 합체 연출 ─────────────────────────────────────────────
+
+/** 합체로 새로 생긴 1m 줄자의 시작 위치 목록(400ms 동안). 움직임 줄이기는 CSS가 처리한다. */
+function useRollingTapes(state: MeasureState): readonly string[] {
+  const seen = useRef<{ merges: number; tapes: readonly string[] }>({
+    merges: state.merges,
+    tapes: state.pieces.filter((piece) => piece.unit === 'm-tape').map((piece) => piece.start),
+  });
+  const [rolling, setRolling] = useState<readonly string[]>([]);
+  useEffect(() => {
+    const tapes = state.pieces
+      .filter((piece) => piece.unit === 'm-tape')
+      .map((piece) => piece.start);
+    const before = seen.current;
+    seen.current = { merges: state.merges, tapes };
+    if (state.merges <= before.merges) return undefined;
+    setRolling(tapes.filter((start) => !before.tapes.includes(start)));
+    const timer = window.setTimeout(() => setRolling([]), 400);
+    return () => window.clearTimeout(timer);
+  }, [state.merges, state.pieces]);
+  return rolling;
+}
+
 // ── 판 ────────────────────────────────────────────────────
 
 export function LengthBoard({ svgRef, state, ui, locked, svgStyle, className }: Props) {
@@ -521,6 +645,7 @@ export function LengthBoard({ svgRef, state, ui, locked, svgStyle, className }: 
   const ghost = ui.ghost;
   const ghostDef = ghost?.kind === 'unit' ? unitOf(ghost.unit) : undefined;
   const ghostW = ghostDef ? num(ghostDef.cm) * geo.ppc : 0;
+  const rolling = useRollingTapes(state);
   return (
     <svg
       ref={svgRef}
@@ -577,6 +702,7 @@ export function LengthBoard({ svgRef, state, ui, locked, svgStyle, className }: 
           index={index}
           piece={piece}
           geo={geo}
+          rolling={piece.unit === 'm-tape' && rolling.includes(piece.start)}
         />
       ))}
       {state.showGapOverlap ? <GapOverlapMarks state={state} geo={geo} /> : null}

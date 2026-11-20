@@ -9,6 +9,7 @@ import { E13_STRINGS as S } from '../strings.ko';
 import { unitLength } from '../units';
 import { toNumber } from '../rat';
 import { BAND_H, cmOfX, geoOf, tickOfX } from './layout';
+import { snapStartGrid } from './merge';
 import { reduceLength } from './reduce';
 import { endStart, pieceStart, snapStart } from './settings';
 import type { LengthAction, MeasureState } from './types';
@@ -32,6 +33,8 @@ export interface LengthUi {
   /** 놓은 조각을 끌어 옮겼을 때. 띠 밖에 놓으면 지운다. */
   readonly dropPiece: (index: number, rawStartCm: number, pointY: number) => void;
   readonly nudge: (index: number, deltaCm: number) => void;
+  /** 방향키 한 번에 옮기는 cm(기본 0.5, 합체 규칙이 있으면 10cm 격자). */
+  readonly step: number;
   readonly removeLast: () => void;
   readonly removeAt: (index: number) => void;
   /** 숫자 카드를 끌어 놓았을 때(가장 가까운 눈금). */
@@ -91,7 +94,8 @@ export function useLengthUi(
     const length = unitLength(unit);
     if (length === null) return;
     const raw = cmOfX(geoOf(state), point.x) - toNumber(length) / 2;
-    send({ type: 'add', unit, start: snapStart(state, unit, raw).toString() });
+    const start = state.mergeRule ? snapStartGrid(state, unit, raw) : snapStart(state, unit, raw);
+    send({ type: 'add', unit, start: start.toString() });
   };
 
   const dropPiece = (index: number, rawStartCm: number, pointY: number) => {
@@ -101,7 +105,9 @@ export function useLengthUi(
       send({ type: 'remove', index });
       return;
     }
-    const start = snapStart(state, piece.unit, rawStartCm, index);
+    const start = state.mergeRule
+      ? snapStartGrid(state, piece.unit, rawStartCm)
+      : snapStart(state, piece.unit, rawStartCm, index);
     if (start.toString() !== piece.start) send({ type: 'move', index, start: start.toString() });
   };
 
@@ -147,6 +153,7 @@ export function useLengthUi(
     dropUnit,
     dropPiece,
     nudge,
+    step: state.mergeRule ? 10 : 0.5,
     removeLast,
     removeAt,
     dropCard,

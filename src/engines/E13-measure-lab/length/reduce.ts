@@ -3,6 +3,7 @@
  * 거절된 Action(40개 초과·띠 밖·자를 만든 뒤 조각 변경·조건 미달 자 만들기)은 상태 그대로를 돌려준다.
  */
 import { rat } from '../rat';
+import { applyMerge } from './merge';
 import { unitOf } from '../units';
 import { normalizeLength, rulerReady, validStart } from './settings';
 import { MAX_PIECES } from './types';
@@ -24,11 +25,11 @@ export function reduceLength(state: MeasureState, action: LengthAction): Measure
       if (!state.units.includes(action.unit) || unitOf(action.unit) === undefined) return state;
       const start = rat(action.start);
       if (start === null || !validStart(state, action.unit, start)) return state;
-      return {
+      return applyMerge({
         ...state,
         pieces: [...state.pieces, { unit: action.unit, start: start.toString() }],
         moves: state.moves + 1,
-      };
+      });
     }
     case 'move': {
       if (state.rulerMade || !isInt(action.index, 0, state.pieces.length - 1)) return state;
@@ -36,13 +37,13 @@ export function reduceLength(state: MeasureState, action: LengthAction): Measure
       const start = rat(action.start);
       if (!piece || start === null || !validStart(state, piece.unit, start)) return state;
       if (piece.start === start.toString()) return state;
-      return {
+      return applyMerge({
         ...state,
         pieces: state.pieces.map((item, index) =>
           index === action.index ? { ...item, start: start.toString() } : item,
         ),
         moves: state.moves + 1,
-      };
+      });
     }
     case 'remove': {
       if (state.rulerMade || !isInt(action.index, 0, state.pieces.length - 1)) return state;
@@ -68,7 +69,7 @@ export function reduceLength(state: MeasureState, action: LengthAction): Measure
     }
     case 'reset': {
       if (state.pieces.length === 0 && !state.rulerMade && state.moves === 0) return state;
-      return { ...state, pieces: [], rulerMade: false, labels: {}, moves: 0 };
+      return { ...state, pieces: [], rulerMade: false, labels: {}, moves: 0, merges: 0 };
     }
     default:
       return state;

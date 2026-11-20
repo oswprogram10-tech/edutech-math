@@ -5,8 +5,14 @@
 import type { ComponentType } from 'react';
 import type { OverlayProps } from '../../../core/engine-sdk';
 import type { CompareConfig, CompareState } from '../compare/types';
+import type { EstimateConfig, EstimateState } from '../estimate/types';
+import { Meter100 } from '../length/overlays/meter-100';
 import type { LengthConfig, MeasureState } from '../length/types';
+import { LENGTH_CANVAS_SELECTOR } from '../length/types';
+import { isTrain } from '../modes';
 import type { E13Config, E13State } from '../modes';
+import type { TrainConfig, TrainState } from '../train/types';
+import { TRAIN_CANVAS_SELECTOR } from '../train/types';
 
 export function forCompare(
   Overlay: ComponentType<OverlayProps<CompareConfig, CompareState>>,
@@ -23,7 +29,34 @@ export function forLength(
 ): ComponentType<OverlayProps<E13Config, E13State>> {
   return function LengthOverlay(props) {
     const { state } = props;
-    if (state.mode !== 'length') return null;
+    if (state.mode !== 'length' || isTrain(state)) return null;
     return <Overlay {...props} config={props.config as LengthConfig} state={state} />;
   };
+}
+
+export function forEstimate(
+  Overlay: ComponentType<OverlayProps<EstimateConfig, EstimateState>>,
+): ComponentType<OverlayProps<E13Config, E13State>> {
+  return function EstimateOverlay(props) {
+    const { state } = props;
+    if (state.mode !== 'estimate') return null;
+    return <Overlay {...props} config={props.config as EstimateConfig} state={state} />;
+  };
+}
+
+export function forTrain(
+  Overlay: ComponentType<OverlayProps<TrainConfig, TrainState>>,
+): ComponentType<OverlayProps<E13Config, E13State>> {
+  return function TrainOverlay(props) {
+    const { state } = props;
+    if (!isTrain(state)) return null;
+    return <Overlay {...props} config={props.config as TrainConfig} state={state} />;
+  };
+}
+
+/** meter-100은 length(합체 규칙)·unit-train 두 판에서 쓴다. 판마다 맞출 본 판 svg가 다르다. */
+export function Meter100Overlay({ state }: OverlayProps<E13Config, E13State>) {
+  if (state.mode !== 'length' || state.error !== null) return null;
+  const selector = isTrain(state) ? TRAIN_CANVAS_SELECTOR : LENGTH_CANVAS_SELECTOR;
+  return <Meter100 canvasSelector={selector} />;
 }

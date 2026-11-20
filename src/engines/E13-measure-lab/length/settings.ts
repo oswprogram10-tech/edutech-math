@@ -37,6 +37,8 @@ function failure(): MeasureState {
     rulerMade: false,
     labels: {},
     moves: 0,
+    mergeRule: false,
+    merges: 0,
   };
 }
 
@@ -51,7 +53,21 @@ export function normalizeLength(config: LengthConfig): MeasureState {
   const name = object['name'];
   const objectCm = ratFromConfig(object['lengthCm']);
   if (typeof name !== 'string' || name.length === 0 || objectCm === null) return failure();
-  if (objectCm.compareTo(ZERO) <= 0 || objectCm.compareTo(Rational.of(100)) > 0) return failure();
+  let mergeRule = false;
+  if (source['mergeRule'] !== undefined) {
+    const rule = source['mergeRule'];
+    if (
+      !isRecord(rule) ||
+      rule['from'] !== 'cm-10-rod' ||
+      rule['count'] !== 10 ||
+      rule['to'] !== 'm-tape'
+    ) {
+      return failure();
+    }
+    mergeRule = true;
+  }
+  const maxObjectCm = Rational.of(mergeRule ? 400 : 100);
+  if (objectCm.compareTo(ZERO) <= 0 || objectCm.compareTo(maxObjectCm) > 0) return failure();
   const rawUnits = source['units'];
   if (!Array.isArray(rawUnits) || rawUnits.length === 0) return failure();
   const units: string[] = [];
@@ -82,6 +98,8 @@ export function normalizeLength(config: LengthConfig): MeasureState {
     rulerMade: false,
     labels: {},
     moves: 0,
+    mergeRule,
+    merges: 0,
   };
 }
 

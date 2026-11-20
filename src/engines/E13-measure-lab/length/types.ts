@@ -15,6 +15,14 @@ export interface LengthConfig {
   buildRuler?: boolean;
   /** 뼘 시연: 같은 물건을 두 친구가 다른 뼘으로 잰 결과를 보여 준다(학생 조작과 상관없음). */
   demoSpans?: { objectName: string; objectCm: string | number };
+  /** T208: 10cm 막대 열 개가 0부터 틈 없이 이어지면 1m 줄자 하나로 합쳐진다. */
+  mergeRule?: MergeRuleConfig;
+}
+
+export interface MergeRuleConfig {
+  from: 'cm-10-rod';
+  count: 10;
+  to: 'm-tape';
 }
 
 export interface Piece {
@@ -40,6 +48,10 @@ export interface MeasureState {
   /** 눈금 번호(0~10) → 눈금에 놓은 숫자. */
   readonly labels: Readonly<Record<string, number>>;
   readonly moves: number;
+  /** T208: 합체 규칙이 켜져 있으면 true. */
+  readonly mergeRule: boolean;
+  /** 합체가 일어난 횟수(mergeRule이 없으면 항상 0). */
+  readonly merges: number;
 }
 
 export type LengthAction =

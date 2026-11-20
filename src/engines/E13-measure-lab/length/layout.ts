@@ -26,9 +26,12 @@ export interface Geo {
   readonly slotBottom: number;
 }
 
-/** 뼘 시연이 있으면 판 위쪽을 시연에 내주고 나머지를 아래로 민다. */
-export function geoOf(state: Pick<MeasureState, 'objectCm' | 'demo'>): Geo {
-  const top = state.demo === null ? 40 : 210;
+/**
+ * 뼘 시연이 있으면 판 위쪽을 시연에 내주고 나머지를 아래로 민다.
+ * 합체 규칙(mergeRule)이 있으면 위쪽 120px을 1m 줄자 오버레이(meter-100) 자리로 비워 둔다.
+ */
+export function geoOf(state: Pick<MeasureState, 'objectCm' | 'demo' | 'mergeRule'>): Geo {
+  const top = state.demo !== null ? 210 : state.mergeRule ? 120 : 40;
   const bandTop = top + 80;
   const bandBottom = bandTop + BAND_H;
   const slotTop = bandBottom + 64;

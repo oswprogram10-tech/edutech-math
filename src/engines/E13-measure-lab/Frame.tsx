@@ -1,5 +1,5 @@
 /**
- * E13 두 모드 공용 틀. 판(SVG)은 남는 칸에 맞춰 줄고 최소 배율 0.6 아래로는 줄이지 않고 판 안에서 스크롤한다.
+ * E13 모드 공용 틀. 판(SVG)은 남는 칸에 맞춰 줄고 최소 배율 0.6 아래로는 줄이지 않고 판 안에서 스크롤한다.
  * 조작 칸은 스크롤 상자 밖에 있다. 설정 오류면 오류 문구만 보인다.
  */
 import { useRef } from 'react';
@@ -8,14 +8,14 @@ import { useRenderedSize } from '../../core/engine-sdk';
 import { E13_STRINGS as S } from './strings.ko';
 import styles from './View.module.css';
 
-/** 판의 논리 크기(두 모드가 같다). */
+/** 판의 논리 크기(모든 모드가 같다). */
 const LOGICAL = { width: 1000, height: 600 } as const;
 /** 판의 최소 배율(논리 1 → 화면 0.6px). */
 const MIN_SCALE = 0.6;
 const MAX_FIT = 1.5;
 
 export interface FrameProps {
-  readonly mode: 'compare-direct' | 'length';
+  readonly mode: 'compare-direct' | 'length' | 'estimate';
   readonly error: string | null;
   readonly targetSize: number;
   readonly renderBoard: (svgStyle: CSSProperties | undefined, className: string) => ReactNode;
