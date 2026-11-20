@@ -381,19 +381,30 @@ describe('predicates·JSON 왕복·엔진 정의', () => {
     }
   });
 
-  it('엔진 정의: id E13, 모드 넷(T211), 오버레이 아홉(T211), emit은 상태가 바뀔 때만', () => {
+  it('엔진 정의: id E13, 모드 여섯(T213), 오버레이 열셋(T213), emit은 상태가 바뀔 때만', () => {
     expect(definition.id).toBe('E13');
-    expect(definition.modes).toEqual(['compare-direct', 'length', 'estimate', 'map-route']);
+    expect(definition.modes).toEqual([
+      'compare-direct',
+      'length',
+      'estimate',
+      'map-route',
+      'capacity',
+      'weight',
+    ]);
     expect(definition.layout).toBe('fit');
     expect(Object.keys(definition.overlays ?? {}).sort()).toEqual([
       'count-cells',
       'endpoint-lines',
       'gap-marks',
       'half-straighten',
+      'liter-cups',
       'meter-100',
       'meter-outline',
+      'ml-merge',
       'mm-count',
+      'same-beaker',
       'same-tank',
+      'size-weight-bars',
       'span-compare',
     ]);
     const a = definition.createInitialState({ mode: 'compare-direct' });

@@ -307,3 +307,14 @@
   padding: 0 0.25rem;
   white-space: nowrap;
 }
+
+/* T213: 저울 가로대·접시·물건·바늘이 움직이는 전환(0.4초). 움직임 줄이기를 켜면 바로 바뀐다. */
+.motion {
+  transition: transform 400ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion {
+    transition: none;
+  }
+}

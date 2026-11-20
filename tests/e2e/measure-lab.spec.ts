@@ -3,14 +3,15 @@ import type { Locator, Page } from '@playwright/test';
 import { expectControlsAboveFold } from './controls-fold';
 
 /**
- * E13 측정 실험실(compare-direct·length·estimate·map-route) 샌드박스 E2E. 아이패드(WebKit)·크롬북·전자칠판 뷰포트.
+ * E13 측정 실험실(compare-direct·length·estimate·map-route·capacity·weight) 샌드박스 E2E. 아이패드(WebKit)·크롬북·전자칠판 뷰포트.
  *
  * - compare-direct: 펴기 단추·끌어 펴기, 출발선 자석, 넓이 겹치기, 들이 붓기
  * - length: 클립 4개 자석 이어 붙이기 → exact, 일부러 만든 틈 표시, 키보드로 1cm 블록 10개 → 자 만들기 → 숫자 놓기
  * - estimate(T208): 어림 먼저 → 자 끌어 영점 맞추기(자석·키보드), length mergeRule: 10cm 막대 10개 → 합체,
  *   length unit-train: 키보드로 승격·풀기·빼기
  * - estimate zoomLevels(T211): [확대]로 1cm가 mm 눈금 10칸으로 보임, map-route(T211): 길을 눌러·키보드로 경로 만들기
- * - 힌트 ② 오버레이 아홉이 본 판과 1px 안에 겹침
+ * - capacity·weight(T213): 컵으로 붓기, 눈금 없는 비커 퍼즐(단추·끌어서 붓기), 예측 → 윗접시저울, 용수철저울 걸기, 키보드
+ * - 힌트 ② 오버레이 열셋이 본 판과 1px 안에 겹침
  * - 첫 화면 기준 이미지(모드별 크롬북·아이패드), 64px 모드의 단추 크기
  *
  * 판 좌표는 논리 1000×600이지만 판 높이를 가정하지 않고 상자 너비로만 배율을 구한다(T222 메모).
@@ -43,7 +44,7 @@ async function settleCanvas(page: Page, testId: string): Promise<void> {
     .toBe(true);
 }
 
-type ModeName = 'compare-direct' | 'length' | 'estimate' | 'map-route';
+type ModeName = 'compare-direct' | 'length' | 'estimate' | 'map-route' | 'capacity' | 'weight';
 
 async function open(
   page: Page,
@@ -64,11 +65,15 @@ async function open(
       ? 'estimate-canvas'
       : mode === 'map-route'
         ? 'route-canvas'
-        : mode === 'length'
-          ? config['variant'] === undefined
-            ? 'length-canvas'
-            : 'train-canvas'
-          : 'compare-canvas';
+        : mode === 'capacity'
+          ? 'capacity-canvas'
+          : mode === 'weight'
+            ? 'weight-canvas'
+            : mode === 'length'
+              ? config['variant'] === undefined
+                ? 'length-canvas'
+                : 'train-canvas'
+              : 'compare-canvas';
   await settleCanvas(page, canvasId);
   return canvasId;
 }
@@ -1267,4 +1272,439 @@ test('화면 기준: map-route 경로를 만든 화면(학교→도서관)', asy
   await pollObservation(page, (o) => o['totalM'] === 450);
   await page.getByRole('heading', { name: '측정 실험실' }).focus();
   await expectPageSnapshot(page, 'measure-route.png');
+});
+
+// ══ T213: capacity(컵으로 세기·눈금 없는 비커 퍼즐) · weight(윗접시저울·용수철저울) ═══════════════
+
+const CUPS = {
+  variant: 'cup-count',
+  containers: [
+    { id: 'bottle', kind: 'bottle', shape: 'tall', capacityMl: 600 },
+    { id: 'bowl', kind: 'bowl', shape: 'wide', capacityMl: 500 },
+  ],
+  cupMl: 100,
+};
+const PUZZLE = {
+  variant: 'puzzle',
+  containers: [
+    { id: 'beaker-a', capacityMl: 300, marks: false },
+    { id: 'beaker-b', capacityMl: 500, marks: false },
+  ],
+  source: 'infinite',
+  targetMl: 100,
+};
+const OBJECTS = [
+  { id: 'beachball', kind: 'beachball', g: 200, visualSize: 'large' },
+  { id: 'iron-ball', kind: 'iron-ball', g: 700, visualSize: 'small' },
+  { id: 'book', kind: 'book', g: 450 },
+];
+const PAN_ONLY = { tools: ['pan-balance'], objects: OBJECTS, unitObjects: { clip: 50 } };
+const SPRING_ONLY = { tools: ['spring-scale'], objects: OBJECTS, springMaxG: 1000 };
+
+/** 윗접시저울만 있는 판에서 두 접시 가운데의 논리 좌표(1000 기준, 접시 윗면 근처). */
+const PAN_LEFT_AT = { x: 200, y: 280 };
+const PAN_RIGHT_AT = { x: 800, y: 280 };
+
+/** 판 안 요소의 가운데(화면 좌표). */
+async function partCenter(page: Page, id: string, selector: string) {
+  return centerOf(canvasOf(page, id).locator(selector).first());
+}
+
+test('capacity cup-count: [컵으로 붓기]로 컵 횟수를 세고 물 높이가 차오르며, 들이 숫자는 없다', async ({
+  page,
+}) => {
+  const id = await open(page, 'capacity', CUPS);
+  const canvas = canvasOf(page, id);
+  const board = page.getByTestId('measure-board');
+  await expect(canvas.locator('[data-part="cup-count"]').first()).toHaveText('컵 0번');
+  await button(page, '병 컵으로 붓기').click();
+  await button(page, '병 컵으로 붓기').click();
+  await button(page, '병 컵으로 붓기').click();
+  await pollObservation(page, (o) => (o['cups'] as Json | undefined)?.['bottle'] === 3);
+  await expect(canvas.locator('[data-part="cup-count"]').first()).toHaveText('컵 3번');
+  // 6컵짜리 병에 3컵이면 물 높이가 병 높이의 절반이다(숫자 없이 그림으로만 본다).
+  await page.waitForTimeout(500);
+  const water = await canvas
+    .locator('[data-id="bottle"] [data-part="water"]')
+    .evaluate((el) => el.getBoundingClientRect().height);
+  const art = await canvas
+    .locator('[data-id="bottle"] [data-part="art"] > path')
+    .first()
+    .evaluate((el) => el.getBoundingClientRect().height);
+  expect(Math.abs(water / art - 0.5)).toBeLessThan(0.06);
+  expect((await board.textContent()) ?? '').not.toMatch(/600|500|\b100\b|mL/);
+  // 그릇을 직접 눌러도 컵 하나가 부어진다(병은 판 위 가운데쯤).
+  const at = await toScreen(page, id, 240, 150);
+  await page.mouse.click(at.x, at.y);
+  await pollObservation(page, (o) => (o['cups'] as Json | undefined)?.['bottle'] === 4);
+  // 가득 찰 때까지(6번) 붓고 나면 더 붓기를 거절한다.
+  await button(page, '병 컵으로 붓기').click();
+  await button(page, '병 컵으로 붓기').click();
+  await pollObservation(page, (o) => (o['full'] as Json | undefined)?.['bottle'] === true);
+  await button(page, '병 컵으로 붓기').click();
+  await expect(page.getByTestId('measure-message')).toContainText('가득');
+  expect((await readObservation(page))['cups']).toMatchObject({ bottle: 6, bowl: 0 });
+  await button(page, '병 비우기').click();
+  await pollObservation(page, (o) => (o['cups'] as Json | undefined)?.['bottle'] === 0);
+});
+
+test('capacity puzzle: 단추로 100mL 만들기(300 채움 → 500에 부음 → 300 채움 → 500에 부음)', async ({
+  page,
+}) => {
+  const id = await open(page, 'capacity', PUZZLE);
+  expect(await readObservation(page)).toMatchObject({ reached: false, steps: 0 });
+  await button(page, '비커 가 채우기').click();
+  await button(page, '비커 가의 물을 비커 나에 붓기').click();
+  await button(page, '비커 가 채우기').click();
+  await button(page, '비커 가의 물을 비커 나에 붓기').click();
+  await pollObservation(page, (o) => o['reached'] === true);
+  expect(await readObservation(page)).toMatchObject({
+    reachedIn: 'beaker-a',
+    steps: 4,
+    amounts: { 'beaker-a': '100', 'beaker-b': '500' },
+  });
+  // 물의 양·목표 숫자는 화면 어디에도 없다.
+  const board = (await page.getByTestId('measure-board').textContent()) ?? '';
+  expect(board).not.toMatch(/\d/);
+  expect(await canvasOf(page, id).locator('[data-part="water"]').count()).toBe(2);
+  // 받는 비커가 가득 찼으면 거절한다.
+  await button(page, '비커 가의 물을 비커 나에 붓기').click();
+  await expect(page.getByTestId('measure-message')).toContainText('가득');
+  expect((await readObservation(page))['steps']).toBe(4);
+});
+
+test('capacity puzzle: 비커를 다른 비커 위로 끌어 놓으면 붓는다', async ({ page }) => {
+  const id = await open(page, 'capacity', PUZZLE);
+  await button(page, '비커 가 채우기').click();
+  await pollObservation(page, (o) => (o['amounts'] as Json | undefined)?.['beaker-a'] === '300');
+  const hitA = '[data-part="beaker"][data-id="beaker-a"] [data-part="hit"]';
+  const hitB = '[data-part="beaker"][data-id="beaker-b"] [data-part="hit"]';
+  await dragBetween(page, await partCenter(page, id, hitA), await partCenter(page, id, hitB));
+  await pollObservation(
+    page,
+    (o) =>
+      (o['amounts'] as Json | undefined)?.['beaker-a'] === '0' &&
+      (o['amounts'] as Json | undefined)?.['beaker-b'] === '300',
+  );
+  // 다른 비커가 아닌 빈 자리에 놓으면 아무 일도 없다.
+  await button(page, '비커 가 채우기').click();
+  const nowA = await partCenter(page, id, hitA);
+  await dragBetween(page, nowA, await toScreen(page, id, 500, 60));
+  expect((await readObservation(page))['steps']).toBe(3);
+});
+
+test('capacity puzzle: 키보드(Tab 초점 + Enter)로 채우기·붓기·비우기', async ({ page }) => {
+  await open(page, 'capacity', PUZZLE);
+  await button(page, '비커 나 채우기').focus();
+  await page.keyboard.press('Enter');
+  await button(page, '비커 나의 물을 비커 가에 붓기').focus();
+  await page.keyboard.press('Enter');
+  await pollObservation(
+    page,
+    (o) =>
+      (o['amounts'] as Json | undefined)?.['beaker-a'] === '300' &&
+      (o['amounts'] as Json | undefined)?.['beaker-b'] === '200',
+  );
+  await button(page, '비커 가 비우기').focus();
+  await page.keyboard.press('Space');
+  await pollObservation(page, (o) => (o['amounts'] as Json | undefined)?.['beaker-a'] === '0');
+});
+
+test('capacity: 단추가 모두 48px 이상이고 이름에 숫자가 없다', async ({ page }) => {
+  for (const config of [CUPS, PUZZLE]) {
+    await open(page, 'capacity', config);
+    const buttons = page.getByTestId('measure-controls').getByRole('button');
+    const count = await buttons.count();
+    expect(count).toBeGreaterThanOrEqual(5);
+    for (let i = 0; i < count; i += 1) {
+      await buttons.nth(i).scrollIntoViewIfNeeded();
+      await expectMin(buttons.nth(i), 48, `단추 ${i}`);
+      expect((await buttons.nth(i).textContent()) ?? '').not.toMatch(/\d/);
+    }
+  }
+});
+
+test('weight: 예측 → 놓기 → 기울기(저울 쓰기 전에 예측해야 하고, 끌어서 접시에 놓는다)', async ({
+  page,
+}) => {
+  const id = await open(page, 'weight', { ...PAN_ONLY, predict: true });
+  // 예측 전에는 놓을 곳 단추가 없다.
+  await expect(button(page, '왼쪽 접시에 놓기')).toHaveCount(0);
+  await button(page, '쇠구슬').click();
+  await button(page, '예측하기').click();
+  await pollObservation(
+    page,
+    (o) => o['predictionLocked'] === true && o['prediction'] === 'iron-ball',
+  );
+  await expect(page.getByTestId('weight-prediction')).toHaveText('내 예측: 쇠구슬');
+  // 끌어서 놓기: 비치볼 → 왼쪽 접시, 쇠구슬 → 오른쪽 접시.
+  const ballHit = '[data-part="item"][data-id="beachball"] [data-part="hit"]';
+  const ironHit = '[data-part="item"][data-id="iron-ball"] [data-part="hit"]';
+  const ball = await partCenter(page, id, ballHit);
+  await dragBetween(page, ball, await toScreen(page, id, PAN_LEFT_AT.x, PAN_LEFT_AT.y));
+  await pollObservation(page, (o) => o['left'] === 'beachball');
+  const iron = await partCenter(page, id, ironHit);
+  await dragBetween(page, iron, await toScreen(page, id, PAN_RIGHT_AT.x, PAN_RIGHT_AT.y));
+  await pollObservation(page, (o) => o['right'] === 'iron-ball' && o['tilt'] === 'right');
+  await expect(page.getByTestId('weight-result')).toHaveText('오른쪽이 더 무거워요');
+  await expect(canvasOf(page, id)).toHaveAttribute('data-tilt', 'right');
+  // 오른쪽 접시가 내려갔다(접시 그룹의 y가 왼쪽보다 크다).
+  await page.waitForTimeout(600);
+  const [leftPan, rightPan] = await Promise.all([
+    canvasOf(page, id).locator('[data-pan="left"]').boundingBox(),
+    canvasOf(page, id).locator('[data-pan="right"]').boundingBox(),
+  ]);
+  if (!leftPan || !rightPan) throw new Error('접시를 찾지 못했습니다.');
+  expect(rightPan.y).toBeGreaterThan(leftPan.y + 5);
+  // 무게(g) 숫자가 물건 글·aria에 없다.
+  const board = (await page.getByTestId('measure-board').textContent()) ?? '';
+  expect(board).not.toMatch(/200|700|450/);
+  expect(await readObservation(page)).toMatchObject({ pairsCompared: ['beachball|iron-ball'] });
+});
+
+test('weight: 클립을 쌓아 무게를 센다(450g 책 = 클립 9개에서 수평)', async ({ page }) => {
+  const id = await open(page, 'weight', PAN_ONLY);
+  await button(page, '책').click();
+  await button(page, '왼쪽 접시에 놓기').click();
+  for (let i = 0; i < 9; i += 1) await button(page, '클립 하나 더').click();
+  await pollObservation(page, (o) => o['clips'] === 9 && o['balanced'] === true);
+  await expect(canvasOf(page, id).locator('[data-part="clip-count"]')).toHaveText('클립 9개');
+  await expect(canvasOf(page, id).locator('[data-part="clip"]')).toHaveCount(9);
+  await expect(page.getByTestId('weight-result')).toHaveText('무게가 같아요');
+  await button(page, '클립 하나 더').click();
+  await pollObservation(page, (o) => o['clips'] === 10 && o['tilt'] === 'right');
+  await button(page, '클립 하나 빼기').click();
+  await pollObservation(page, (o) => o['clips'] === 9);
+});
+
+test('weight 용수철저울: 걸면 바늘이 g에 맞는 눈금을 가리킨다(숫자 글은 없다)', async ({
+  page,
+}) => {
+  const id = await open(page, 'weight', SPRING_ONLY);
+  const canvas = canvasOf(page, id);
+  await button(page, '책').click();
+  await button(page, '용수철저울에 걸기').click();
+  await pollObservation(page, (o) => o['hung'] === 'book' && o['springG'] === '450');
+  await page.waitForTimeout(600);
+  // 바늘 높이 = 눈금 450g(0g 눈금에서 45번째) 높이.
+  const pointer = await canvas.locator('[data-part="pointer"] line').boundingBox();
+  const tick = await canvas.locator('[data-part="tick"] line').nth(45).boundingBox();
+  if (!pointer || !tick) throw new Error('상자를 찾지 못했습니다.');
+  expect(Math.abs(pointer.y + pointer.height / 2 - (tick.y + tick.height / 2))).toBeLessThanOrEqual(
+    1.5,
+  );
+  // 눈금 숫자는 100g마다만 있고 물건 쪽에는 g 숫자가 없다.
+  expect(await canvas.locator('[data-part="spring-ticks"] text').allTextContents()).toEqual([
+    ...Array.from({ length: 11 }, (_, i) => String(i * 100)),
+    'g',
+  ]);
+  const itemText = await canvas
+    .locator('[data-part="item"]')
+    .evaluateAll((els) => els.map((el) => el.textContent ?? '').join(' '));
+  expect(itemText).not.toMatch(/\d/);
+  // 더 무거운 물건을 걸면 바늘이 더 내려간다.
+  await button(page, '쇠구슬').click();
+  await button(page, '용수철저울에 걸기').click();
+  await pollObservation(page, (o) => o['springG'] === '700');
+  await page.waitForTimeout(600);
+  const lower = await canvas.locator('[data-part="pointer"] line').boundingBox();
+  if (!lower) throw new Error('바늘을 찾지 못했습니다.');
+  expect(lower.y).toBeGreaterThan(pointer.y + 5);
+});
+
+test('weight 두 저울(샌드박스 기본): 물건을 끌어 용수철저울 고리에 걸고 윗접시저울에도 놓는다', async ({
+  page,
+}) => {
+  const id = await open(page, 'weight');
+  expect(await readObservation(page)).toMatchObject({ hung: null, left: null, right: null });
+  const ironHit = '[data-part="item"][data-id="iron-ball"] [data-part="hit"]';
+  const ballHit = '[data-part="item"][data-id="beachball"] [data-part="hit"]';
+  // 용수철저울은 판 오른쪽(논리 x≈770) 위쪽에 있다.
+  await dragBetween(page, await partCenter(page, id, ironHit), await toScreen(page, id, 770, 200));
+  await pollObservation(page, (o) => o['hung'] === 'iron-ball' && o['springG'] === '700');
+  await dragBetween(page, await partCenter(page, id, ballHit), await toScreen(page, id, 110, 260));
+  await pollObservation(page, (o) => o['left'] === 'beachball');
+  // 선반으로 끌어 내리면 고리가 빈다.
+  await page.waitForTimeout(600);
+  await dragBetween(page, await partCenter(page, id, ironHit), await toScreen(page, id, 500, 555));
+  await pollObservation(page, (o) => o['hung'] === null);
+});
+
+test('weight: 키보드로 물건을 고르고(Enter) 놓을 곳 단추(Enter)로 접시·고리에 놓는다', async ({
+  page,
+}) => {
+  await open(page, 'weight');
+  const item = page.getByRole('button', { name: /^책\. Enter로/ });
+  await item.focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('button', { name: '책', pressed: true, exact: true })).toHaveCount(1);
+  await button(page, '왼쪽 접시에 놓기').focus();
+  await page.keyboard.press('Enter');
+  await pollObservation(page, (o) => o['left'] === 'book');
+  await button(page, '용수철저울에 걸기').focus();
+  await page.keyboard.press('Enter');
+  await pollObservation(page, (o) => o['hung'] === 'book' && o['left'] === null);
+  await button(page, '클립 하나 더').focus();
+  await page.keyboard.press('Enter');
+  await pollObservation(page, (o) => o['clips'] === 1);
+  await button(page, '처음으로').focus();
+  await page.keyboard.press('Enter');
+  await pollObservation(page, (o) => o['hung'] === null && o['clips'] === 0);
+});
+
+test('weight: 단추가 모두 48px 이상이다', async ({ page }) => {
+  await open(page, 'weight');
+  const buttons = page.getByTestId('measure-controls').getByRole('button');
+  const count = await buttons.count();
+  expect(count).toBeGreaterThanOrEqual(10);
+  for (let i = 0; i < count; i += 1) {
+    await buttons.nth(i).scrollIntoViewIfNeeded();
+    await expectMin(buttons.nth(i), 48, `단추 ${i}`);
+  }
+});
+
+test('T213 조작 칸 첫 단추 줄이 첫 화면에 보인다(capacity 둘·weight 여럿)', async ({ page }) => {
+  const cases: [ModeName, Json, string][] = [
+    ['capacity', CUPS, 'capacity cup-count'],
+    ['capacity', PUZZLE, 'capacity puzzle'],
+    ['weight', {}, 'weight 두 저울'],
+    ['weight', PAN_ONLY, 'weight 윗접시저울'],
+    ['weight', SPRING_ONLY, 'weight 용수철저울'],
+    ['weight', { ...PAN_ONLY, predict: true }, 'weight 예측'],
+  ];
+  for (const [mode, config, label] of cases) {
+    await open(page, mode, config);
+    await expectControlsAboveFold(page, label, 0, 'measure-controls', 'page');
+  }
+});
+
+test('힌트 ② same-beaker: 두 그릇 아래 같은 모양 점선 비커 둘과 화살표, 수위는 없다', async ({
+  page,
+}) => {
+  for (const config of [CUPS, PUZZLE]) {
+    await open(page, 'capacity', config, 'stage=fit&overlay=same-beaker');
+    await toggleOverlay(page);
+    const layer = await expectAligned(page, 'capacity-canvas', 'same-beaker');
+    await expect(layer).toContainText('같은 모양 비커에');
+    await expect(layer).toContainText('옮겨 담으면?');
+    await expect(layer.locator('[data-part="beaker-outline"]')).toHaveCount(2);
+    await expect(layer.locator('[data-part="arrow"]')).toHaveCount(2);
+    await expect(layer.locator('[data-part="water"]')).toHaveCount(0);
+    // 점선 윤곽은 각 그릇 바로 아래(같은 가로 중심)에 놓인다.
+    const hits =
+      config === CUPS
+        ? '[data-part="container"] [data-part="hit"]'
+        : '[data-part="beaker"] [data-part="hit"]';
+    await expectCentersClose(
+      layer.locator('[data-part="beaker-outline"]').first(),
+      canvasOf(page, 'capacity-canvas').locator(hits).first(),
+      1.5,
+      'x',
+    );
+    // 점선 비커는 본 그릇보다 아래(판 안)에 있다.
+    const outline = await layer.locator('[data-part="beaker-outline"]').first().boundingBox();
+    const bowl = await canvasOf(page, 'capacity-canvas').locator(hits).first().boundingBox();
+    const board = await canvasOf(page, 'capacity-canvas').boundingBox();
+    if (!outline || !bowl || !board) throw new Error('상자를 찾지 못했습니다.');
+    expect(outline.y).toBeGreaterThan(bowl.y + bowl.height - 2);
+    expect(outline.y + outline.height).toBeLessThanOrEqual(board.y + board.height + 1);
+  }
+});
+
+test('힌트 ② liter-cups: 1L 병 하나와 100mL 컵 10개와 고정 글', async ({ page }) => {
+  await open(page, 'capacity', CUPS, 'stage=fit&overlay=liter-cups');
+  await toggleOverlay(page);
+  const layer = await expectAligned(page, 'capacity-canvas', 'liter-cups');
+  await expect(layer.locator('[data-part="cup"]')).toHaveCount(10);
+  await expect(layer.locator('[data-part="liter-bottle"]')).toHaveCount(1);
+  await expect(layer).toContainText('1L = 100mL 컵 10번 = 1000mL');
+  // 그림은 본 판 안에 있다.
+  const panel = await layer.locator('[data-part="panel"]').boundingBox();
+  const board = await canvasOf(page, 'capacity-canvas').boundingBox();
+  if (!panel || !board) throw new Error('상자를 찾지 못했습니다.');
+  expect(panel.x).toBeGreaterThanOrEqual(board.x - 1);
+  expect(panel.y + panel.height).toBeLessThanOrEqual(board.y + board.height + 1);
+});
+
+test('힌트 ② ml-merge: 1000칸 막대(100칸 묶음 10개)가 화살표 하나로 1L 병이 된다', async ({
+  page,
+}) => {
+  await open(page, 'capacity', PUZZLE, 'stage=fit&overlay=ml-merge');
+  await toggleOverlay(page);
+  const layer = await expectAligned(page, 'capacity-canvas', 'ml-merge');
+  await expect(layer.locator('[data-part="ml-group"]')).toHaveCount(10);
+  await expect(layer.locator('[data-part="arrow"]')).toHaveCount(1);
+  await expect(layer.locator('[data-part="liter-bottle"]')).toHaveCount(1);
+  await expect(layer).toContainText('1L = 1000mL');
+  // 막대는 병보다 왼쪽에 있고 화살표가 둘 사이에 있다.
+  const bar = await layer.locator('[data-part="ml-bar"]').boundingBox();
+  const arrow = await layer.locator('[data-part="arrow"]').boundingBox();
+  const bottle = await layer.locator('[data-part="liter-bottle"]').boundingBox();
+  if (!bar || !arrow || !bottle) throw new Error('상자를 찾지 못했습니다.');
+  expect(arrow.x).toBeGreaterThanOrEqual(bar.x + bar.width - 1);
+  expect(arrow.x + arrow.width).toBeLessThanOrEqual(bottle.x + 1);
+});
+
+test('힌트 ② size-weight-bars: 두 접시에 물건이 하나씩 있을 때 크기 막대와 무게 방향 막대(숫자 없음)', async ({
+  page,
+}) => {
+  const id = await open(page, 'weight', PAN_ONLY, 'stage=fit&overlay=size-weight-bars');
+  await toggleOverlay(page);
+  // 접시가 비어 있으면 그리지 않는다.
+  await expect(page.locator('[data-overlay="size-weight-bars"] svg')).toHaveCount(0);
+  await button(page, '비치볼').click();
+  await button(page, '왼쪽 접시에 놓기').click();
+  await button(page, '쇠구슬').click();
+  await button(page, '오른쪽 접시에 놓기').click();
+  await pollObservation(page, (o) => o['left'] === 'beachball' && o['right'] === 'iron-ball');
+  const layer = await expectAligned(page, id, 'size-weight-bars');
+  await expect(layer.locator('[data-bar^="size-"]')).toHaveCount(2);
+  await expect(layer.locator('[data-bar^="weight-"]')).toHaveCount(2);
+  expect((await layer.textContent()) ?? '').not.toMatch(/\d/);
+  const width = async (name: string) =>
+    (await layer.locator(`[data-bar="${name}"]`).boundingBox())?.width ?? 0;
+  // 비치볼이 더 크고(크기 막대), 쇠구슬이 더 무겁다(무게 막대).
+  expect(await width('size-left')).toBeGreaterThan(await width('size-right'));
+  expect(await width('weight-right')).toBeGreaterThan(await width('weight-left'));
+  // 막대 상자는 두 접시 사이 빈 자리에 있다(왼쪽·오른쪽 접시와 겹치지 않는다).
+  const panel = await layer.locator('[data-part="panel"]').boundingBox();
+  const left = await canvasOf(page, id).locator('[data-pan="left"]').boundingBox();
+  const right = await canvasOf(page, id).locator('[data-pan="right"]').boundingBox();
+  if (!panel || !left || !right) throw new Error('상자를 찾지 못했습니다.');
+  expect(panel.x).toBeGreaterThanOrEqual(left.x + left.width - 1);
+  expect(panel.x + panel.width).toBeLessThanOrEqual(right.x + 1);
+});
+
+test('화면 기준: capacity cup-count(병에 컵 둘)', async ({ page }) => {
+  await open(page, 'capacity');
+  await button(page, '병 컵으로 붓기').click();
+  await button(page, '병 컵으로 붓기').click();
+  await pollObservation(page, (o) => (o['cups'] as Json | undefined)?.['bottle'] === 2);
+  await page.getByRole('heading', { name: '측정 실험실' }).focus();
+  await expectPageSnapshot(page, 'measure-capacity.png');
+});
+
+test('화면 기준: capacity puzzle(비커 가에 물을 채워 비커 나에 부은 뒤)', async ({ page }) => {
+  await open(page, 'capacity', PUZZLE);
+  await button(page, '비커 가 채우기').click();
+  await button(page, '비커 가의 물을 비커 나에 붓기').click();
+  await button(page, '비커 가 채우기').click();
+  await pollObservation(page, (o) => (o['amounts'] as Json | undefined)?.['beaker-a'] === '300');
+  await page.getByRole('heading', { name: '측정 실험실' }).focus();
+  await expectPageSnapshot(page, 'measure-puzzle.png');
+});
+
+test('화면 기준: weight 두 저울(비치볼·쇠구슬을 접시에, 책을 용수철저울에)', async ({ page }) => {
+  await open(page, 'weight');
+  for (const [name, where] of [
+    ['비치볼', '왼쪽 접시에 놓기'],
+    ['쇠구슬', '오른쪽 접시에 놓기'],
+    ['책', '용수철저울에 걸기'],
+  ] as const) {
+    await button(page, name).click();
+    await button(page, where).click();
+  }
+  await pollObservation(page, (o) => o['hung'] === 'book' && o['tilt'] === 'right');
+  await page.getByRole('heading', { name: '측정 실험실' }).focus();
+  await expectPageSnapshot(page, 'measure-weight.png');
 });

@@ -1,6 +1,10 @@
 /** E13 화면. 상태의 `mode`에 따라 compare-direct·length 화면으로 나눈다. */
 import type { EngineViewProps } from '../../core/engine-sdk';
+import { CapacityView } from './capacity/CapacityView';
+import type { CapacityAction } from './capacity/types';
 import { CompareView } from './compare/CompareView';
+import { WeightView } from './weight/WeightView';
+import type { WeightAction } from './weight/types';
 import { EstimateView } from './estimate/EstimateView';
 import type { EstimateAction } from './estimate/types';
 import { RouteView } from './route/RouteView';
@@ -24,6 +28,26 @@ export function E13View({
       <TrainView
         state={state}
         dispatch={(action) => dispatch(action as TrainAction)}
+        targetSize={targetSize}
+        readOnly={readOnly}
+      />
+    );
+  }
+  if (state.mode === 'capacity') {
+    return (
+      <CapacityView
+        state={state}
+        dispatch={(action) => dispatch(action as CapacityAction)}
+        targetSize={targetSize}
+        readOnly={readOnly}
+      />
+    );
+  }
+  if (state.mode === 'weight') {
+    return (
+      <WeightView
+        state={state}
+        dispatch={(action) => dispatch(action as WeightAction)}
         targetSize={targetSize}
         readOnly={readOnly}
       />

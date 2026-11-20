@@ -15,7 +15,7 @@ const MIN_SCALE = 0.6;
 const MAX_FIT = 1.5;
 
 export interface FrameProps {
-  readonly mode: 'compare-direct' | 'length' | 'estimate' | 'map-route';
+  readonly mode: 'compare-direct' | 'length' | 'estimate' | 'map-route' | 'capacity' | 'weight';
   readonly error: string | null;
   readonly targetSize: number;
   /** 이 설정에서 판이 쓰는 논리 높이(600 이하). 판 최소 높이는 0.6 × 이 값이다. */

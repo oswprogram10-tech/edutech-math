@@ -4,7 +4,9 @@
  */
 import type { ComponentType } from 'react';
 import type { OverlayProps } from '../../../core/engine-sdk';
+import type { CapacityConfig, CapacityState } from '../capacity/types';
 import type { CompareConfig, CompareState } from '../compare/types';
+import type { WeightConfig, WeightState } from '../weight/types';
 import type { EstimateConfig, EstimateState } from '../estimate/types';
 import { boardHeight as lengthBoardHeight } from '../length/layout';
 import { Meter100 } from '../length/overlays/meter-100';
@@ -53,6 +55,26 @@ export function forTrain(
     const { state } = props;
     if (!isTrain(state)) return null;
     return <Overlay {...props} config={props.config as TrainConfig} state={state} />;
+  };
+}
+
+export function forCapacity(
+  Overlay: ComponentType<OverlayProps<CapacityConfig, CapacityState>>,
+): ComponentType<OverlayProps<E13Config, E13State>> {
+  return function CapacityOverlay(props) {
+    const { state } = props;
+    if (state.mode !== 'capacity') return null;
+    return <Overlay {...props} config={props.config as CapacityConfig} state={state} />;
+  };
+}
+
+export function forWeight(
+  Overlay: ComponentType<OverlayProps<WeightConfig, WeightState>>,
+): ComponentType<OverlayProps<E13Config, E13State>> {
+  return function WeightOverlay(props) {
+    const { state } = props;
+    if (state.mode !== 'weight') return null;
+    return <Overlay {...props} config={props.config as WeightConfig} state={state} />;
   };
 }
 
