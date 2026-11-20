@@ -1,0 +1,891 @@
+{
+  "unit": "g2s2u4",
+  "title": "시각과 시간",
+  "activities": [
+    {
+      "id": "g2s2u4.A1",
+      "title": "원→직선 펼치기 시계",
+      "tasks": [
+        {
+          "id": "g2s2u4.A1.T1",
+          "prompt": "4시 25분을 만들어요.",
+          "engine": "E14",
+          "mode": "clock",
+          "cpa": "C",
+          "config": {
+            "mode": "clock",
+            "start": "12:00",
+            "snapMinuteTo": "5-weak",
+            "unroll": true
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "timeIs",
+            "args": {
+              "time": "4:25"
+            }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "timeIs",
+                "args": {
+                  "time": "4:05"
+                }
+              },
+              "level": 1,
+              "say": "숫자 한 칸은 몇 분이었지?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "timeIs",
+                "args": {
+                  "time": "4:05"
+                }
+              },
+              "level": 2,
+              "say": "긴바늘이 가리키는 숫자마다 몇 분인지 이름표를 달아 봤어요. 다시 세어 볼까요?",
+              "show": {
+                "engine": "E14",
+                "overlay": "numeral-minutes",
+                "args": {
+                  "numeral": 3
+                }
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "timeIs",
+                "args": {
+                  "time": "4:05"
+                }
+              },
+              "level": 3,
+              "backtrack": "g2s2u4.clock-minute"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "clock"
+              },
+              "level": 1,
+              "say": "긴바늘이 숫자 한 칸 갈 때마다 5분이에요. 몇 칸 가야 할까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "clock"
+              },
+              "level": 2,
+              "say": "펼치기를 눌러 긴바늘이 간 길을 띠로 펴 보고, 5분씩 세어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "clock"
+              },
+              "level": 3,
+              "backtrack": "g2s2u4.clock-minute"
+            }
+          ],
+          "concepts": [
+            "g2s2u4.clock-minute"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g2s2u4.A1.T2",
+          "prompt": "시계를 보고 몇 시 몇 분인지 써요.",
+          "engine": "E14",
+          "mode": "clock",
+          "cpa": "C",
+          "config": {
+            "mode": "clock",
+            "start": "7:48",
+            "readOnly": true,
+            "unroll": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "equals",
+                "path": "response.h.value",
+                "value": "7"
+              },
+              {
+                "kind": "equals",
+                "path": "response.m.value",
+                "value": "48"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "misconception": "MC-CLOCK-MINUTE-NUMERAL"
+              },
+              "level": 1,
+              "say": "숫자 한 칸은 몇 분이었지?"
+            },
+            {
+              "when": {
+                "misconception": "MC-CLOCK-MINUTE-NUMERAL"
+              },
+              "level": 2,
+              "say": "긴바늘이 가리키는 숫자마다 몇 분인지 이름표를 달아 봤어요. 어떤 눈금인지 다시 세어 볼까요?",
+              "show": {
+                "engine": "E14",
+                "overlay": "numeral-minutes",
+                "args": {
+                  "numeral": 2
+                }
+              }
+            },
+            {
+              "when": {
+                "misconception": "MC-CLOCK-MINUTE-NUMERAL"
+              },
+              "level": 3,
+              "backtrack": "g2s2u4.clock-minute"
+            },
+            {
+              "when": {
+                "misconception": "MC-CLOCK-HOUR-BETWEEN"
+              },
+              "level": 1,
+              "say": "짧은바늘이 다음 수를 지났어?"
+            },
+            {
+              "when": {
+                "misconception": "MC-CLOCK-HOUR-BETWEEN"
+              },
+              "level": 2,
+              "say": "짧은바늘을 정시까지 되감아 봤어요. 어느 수를 지났나요?",
+              "show": {
+                "engine": "E14",
+                "overlay": "rewind-to-hour"
+              }
+            },
+            {
+              "when": {
+                "misconception": "MC-CLOCK-HOUR-BETWEEN"
+              },
+              "level": 3,
+              "backtrack": "g1s2u3.clock-hour"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "clock"
+              },
+              "level": 1,
+              "say": "짧은바늘이 어느 수를 지났는지, 긴바늘이 작은 눈금 몇 칸을 지났는지 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "clock"
+              },
+              "level": 2,
+              "say": "펼치기를 눌러 띠에서 긴바늘 자리를 5분씩 세어 보고, 남은 작은 눈금도 세어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "clock"
+              },
+              "level": 3,
+              "backtrack": "g2s2u4.clock-minute"
+            }
+          ],
+          "concepts": [
+            "g2s2u4.clock-minute"
+          ],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-CLOCK-HOUR-BETWEEN",
+              "args": {
+                "hour": "7"
+              },
+              "path": "response.h.value"
+            },
+            {
+              "code": "MC-CLOCK-MINUTE-NUMERAL",
+              "args": {
+                "trap": [
+                  "9",
+                  "10"
+                ],
+                "expected": "48"
+              },
+              "path": "response.m.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "h",
+                "label": "시",
+                "forms": [
+                  "integer"
+                ]
+              },
+              {
+                "kind": "number",
+                "id": "m",
+                "label": "분",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g2s2u4.A1.T3",
+          "prompt": "8시 10분 전을 만들어요.",
+          "engine": "E14",
+          "mode": "clock",
+          "cpa": "P",
+          "config": {
+            "mode": "clock",
+            "start": "8:00",
+            "snapMinuteTo": "5-weak"
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "timeIs",
+            "args": {
+              "time": "7:50"
+            }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "timeIs",
+                "args": {
+                  "time": "8:10"
+                }
+              },
+              "level": 1,
+              "say": "'10분 전'은 8시가 되기 10분 전이에요. 긴바늘을 거꾸로 돌려 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "clock"
+              },
+              "level": 1,
+              "say": "8시에서 긴바늘을 거꾸로 몇 칸 돌려야 할까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "clock"
+              },
+              "level": 2,
+              "say": "8시가 되기 전이니까 긴바늘을 거꾸로 돌려요. 짧은바늘은 어느 수 가까이에 있을까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "clock"
+              },
+              "level": 3,
+              "backtrack": "g2s2u4.clock-minute"
+            }
+          ],
+          "concepts": [
+            "g2s2u4.clock-minute"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g2s2u4.A1.T4",
+          "prompt": "2시 40분에 시작해서 3시 20분에 끝났어요. 띠에 시작과 끝을 놓고 걸린 시간을 써요.",
+          "engine": "E14",
+          "mode": "duration",
+          "cpa": "P",
+          "config": {
+            "mode": "duration",
+            "from": "2:00",
+            "to": "4:00"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "startIs",
+                "args": {
+                  "time": "2:40"
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "endIs",
+                "args": {
+                  "time": "3:20"
+                }
+              },
+              {
+                "kind": "equals",
+                "path": "response.min.value",
+                "value": "40"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "misconception": "MC-TIME-BASE-100"
+              },
+              "level": 1,
+              "say": "긴바늘이 한 바퀴 돌면 몇 분?"
+            },
+            {
+              "when": {
+                "misconception": "MC-TIME-BASE-100"
+              },
+              "level": 2,
+              "say": "60분이 되면 다음 시로 넘어가요.",
+              "show": {
+                "engine": "E14",
+                "overlay": "hour-60-split"
+              }
+            },
+            {
+              "when": {
+                "misconception": "MC-TIME-BASE-100"
+              },
+              "level": 3,
+              "backtrack": "g2s2u4.hour-60"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "duration"
+              },
+              "level": 1,
+              "say": "띠에서 3시까지 몇 분, 3시부터 몇 분인지 나누어 세어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "duration"
+              },
+              "level": 2,
+              "say": "시작과 끝이 서로 다른 시에 걸쳐 있어요. 한 시가 끝나는 곳에서 나누어 세어 볼까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "duration"
+              },
+              "level": 3,
+              "backtrack": "g2s2u4.hour-60"
+            }
+          ],
+          "concepts": [
+            "g2s2u4.hour-60"
+          ],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-TIME-BASE-100",
+              "args": {
+                "trap": "80",
+                "expected": "40"
+              },
+              "path": "response.min.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "min",
+                "label": "분",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g2s2u4.A1.T5",
+          "prompt": "1시간 20분은 몇 분일까요?",
+          "engine": "E14",
+          "mode": "clock",
+          "cpa": "A",
+          "config": {
+            "mode": "clock",
+            "start": "1:00",
+            "readOnly": true
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.min.value",
+            "value": "80"
+          },
+          "hints": [
+            {
+              "when": {
+                "misconception": "MC-TIME-BASE-100"
+              },
+              "level": 1,
+              "say": "긴바늘이 한 바퀴 돌면 몇 분?"
+            },
+            {
+              "when": {
+                "misconception": "MC-TIME-BASE-100"
+              },
+              "level": 2,
+              "say": "긴바늘이 한 바퀴 돌면 한 시간이 지나요. 한 바퀴가 몇 분인지 떠올려 봐요."
+            },
+            {
+              "when": {
+                "misconception": "MC-TIME-BASE-100"
+              },
+              "level": 3,
+              "backtrack": "g2s2u4.hour-60"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "clock"
+              },
+              "level": 1,
+              "say": "1시간은 몇 분이었지요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "clock"
+              },
+              "level": 2,
+              "say": "1시간을 분으로 바꾼 뒤 남은 분을 이어서 더해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "clock"
+              },
+              "level": 3,
+              "backtrack": "g2s2u4.hour-60"
+            }
+          ],
+          "concepts": [
+            "g2s2u4.hour-60"
+          ],
+          "submit": "button",
+          "showEngine": false,
+          "diagnose": [
+            {
+              "code": "MC-TIME-BASE-100",
+              "args": {
+                "trap": "120",
+                "expected": "80"
+              },
+              "path": "response.min.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "min",
+                "label": "분",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "g2s2u4.A2",
+      "title": "달력 세로줄 규칙 퍼즐",
+      "tasks": [
+        {
+          "id": "g2s2u4.A2.T1",
+          "prompt": "5일과 같은 요일인 날을 모두 골라요.",
+          "engine": "E14",
+          "mode": "calendar",
+          "cpa": "P",
+          "config": {
+            "mode": "calendar",
+            "month": "2026-11",
+            "select": true
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "selectedEquals",
+            "args": {
+              "days": [
+                5,
+                12,
+                19,
+                26
+              ]
+            }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "calendar"
+              },
+              "level": 1,
+              "say": "5일이 무슨 요일인지 보고, 같은 세로줄을 살펴봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "calendar"
+              },
+              "level": 2,
+              "say": "3일에서 아래로 내려가면 7씩 커져요.",
+              "show": {
+                "engine": "E14",
+                "overlay": "plus-seven",
+                "args": {
+                  "day": 3
+                }
+              }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "calendar"
+              },
+              "level": 3,
+              "backtrack": "g2s2u4.calendar"
+            }
+          ],
+          "concepts": [
+            "g2s2u4.calendar"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g2s2u4.A2.T2",
+          "prompt": "가려진 날짜를 모두 채워요.",
+          "engine": "E14",
+          "mode": "calendar",
+          "cpa": "P",
+          "config": {
+            "mode": "calendar",
+            "month": "2026-11",
+            "hidden": [
+              8,
+              12,
+              19,
+              26
+            ],
+            "fill": true,
+            "arrows": true
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "hiddenAllCorrect"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "calendar"
+              },
+              "level": 1,
+              "say": "바로 위 칸의 날짜와 몇 차이가 날까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "calendar"
+              },
+              "level": 2,
+              "say": "2일에서 아래로 내려가면 7씩 커져요.",
+              "show": {
+                "engine": "E14",
+                "overlay": "plus-seven",
+                "args": {
+                  "day": 2
+                }
+              }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "calendar"
+              },
+              "level": 3,
+              "backtrack": "g2s2u4.calendar"
+            }
+          ],
+          "concepts": [
+            "g2s2u4.calendar"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g2s2u4.A2.T3",
+          "prompt": "오늘이 3일이에요. 2주일 뒤는 며칠일까요?",
+          "engine": "E14",
+          "mode": "calendar",
+          "cpa": "P",
+          "config": {
+            "mode": "calendar",
+            "month": "2026-11",
+            "arrows": true
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.d.value",
+            "value": "17"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.d.value",
+                    "value": "5"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.d.value",
+                    "value": "10"
+                  }
+                ]
+              },
+              "level": 1,
+              "say": "1주일은 며칠이었지요? 2주일이면?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "calendar"
+              },
+              "level": 1,
+              "say": "달력에서 3일부터 세로줄을 따라 내려가 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "calendar"
+              },
+              "level": 2,
+              "say": "4일에서 아래로 내려가면 7씩 커져요. 같은 세로줄은 모두 그래요.",
+              "show": {
+                "engine": "E14",
+                "overlay": "plus-seven",
+                "args": {
+                  "day": 4
+                }
+              }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "calendar"
+              },
+              "level": 3,
+              "backtrack": "g2s2u4.calendar"
+            }
+          ],
+          "concepts": [
+            "g2s2u4.calendar"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "d",
+                "label": "며칠",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g2s2u4.A2.T4",
+          "prompt": "30일까지 있는 달과 31일까지 있는 달로 나누어요(2월은 빼요).",
+          "engine": "E14",
+          "mode": "calendar",
+          "cpa": "A",
+          "config": {
+            "mode": "calendar",
+            "month": "2026-11"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "equals",
+                "path": "response.months.bins.d30",
+                "value": [
+                  "m04",
+                  "m06",
+                  "m09",
+                  "m11"
+                ]
+              },
+              {
+                "kind": "equals",
+                "path": "response.months.bins.d31",
+                "value": [
+                  "m01",
+                  "m03",
+                  "m05",
+                  "m07",
+                  "m08",
+                  "m10",
+                  "m12"
+                ]
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "calendar"
+              },
+              "level": 1,
+              "say": "주먹을 쥐고 손등의 볼록한 곳과 오목한 곳으로 세어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "calendar"
+              },
+              "level": 2,
+              "say": "7월과 8월은 둘 다 31일이에요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "calendar"
+              },
+              "level": 3,
+              "backtrack": "g2s2u4.calendar"
+            }
+          ],
+          "concepts": [
+            "g2s2u4.calendar"
+          ],
+          "submit": "button",
+          "showEngine": false,
+          "response": {
+            "fields": [
+              {
+                "kind": "sort",
+                "id": "months",
+                "label": "달을 알맞은 상자에",
+                "bins": [
+                  {
+                    "id": "d30",
+                    "label": "30일"
+                  },
+                  {
+                    "id": "d31",
+                    "label": "31일"
+                  }
+                ],
+                "cards": [
+                  {
+                    "id": "m01",
+                    "label": "1월"
+                  },
+                  {
+                    "id": "m03",
+                    "label": "3월"
+                  },
+                  {
+                    "id": "m04",
+                    "label": "4월"
+                  },
+                  {
+                    "id": "m05",
+                    "label": "5월"
+                  },
+                  {
+                    "id": "m06",
+                    "label": "6월"
+                  },
+                  {
+                    "id": "m07",
+                    "label": "7월"
+                  },
+                  {
+                    "id": "m08",
+                    "label": "8월"
+                  },
+                  {
+                    "id": "m09",
+                    "label": "9월"
+                  },
+                  {
+                    "id": "m10",
+                    "label": "10월"
+                  },
+                  {
+                    "id": "m11",
+                    "label": "11월"
+                  },
+                  {
+                    "id": "m12",
+                    "label": "12월"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
