@@ -239,3 +239,63 @@
 .padWide {
   grid-column: span 2;
 }
+
+/* proportion: □ 슬라이더 */
+.sliderRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.stepButton {
+  flex: none;
+  padding: 0;
+  font-size: 1.4rem;
+}
+
+.slider {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 120px;
+  min-height: var(--target);
+  border-radius: 12px;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.slider:focus-visible {
+  outline: 3px solid #e8872e;
+  outline-offset: 3px;
+}
+
+.slider[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.sliderTrack {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  left: 14px;
+  height: 8px;
+  border-radius: 4px;
+  background: #8b96ab;
+  transform: translateY(-50%);
+}
+
+.sliderThumb {
+  position: absolute;
+  top: 50%;
+  box-sizing: border-box;
+  width: 28px;
+  height: 28px;
+  border: 4px solid #2f6fde;
+  border-radius: 50%;
+  background: #ffffff;
+  transform: translate(-50%, -50%);
+}
+
+.sliderThumb[data-empty='true'] {
+  border-style: dashed;
+}

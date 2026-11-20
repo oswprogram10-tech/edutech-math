@@ -3,22 +3,22 @@
  * 조작 칸은 스크롤 상자 밖에 있다. 설정 오류면 오류 문구만 보인다.
  */
 import { useRef } from 'react';
-import type { CSSProperties } from 'react';
 import { useRenderedSize } from '../../core/engine-sdk';
 import type { EngineViewProps } from '../../core/engine-sdk';
 import { BalanceBoard } from './Board';
 import { Controls } from './Controls';
+import { MIN_SCALE, fitBoard } from './fit';
+import { ProportionView } from './proportion/View';
 import { balanceStrings as S } from './strings.ko';
 import type { BalanceAction, BalanceConfig, BalanceState } from './types';
-import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from './types';
+import type { ProportionConfig } from './proportion/types';
+import type { E06Action, E06Config, E06State } from './unions';
 import { useBalanceUi } from './useBalanceUi';
 import styles from './View.module.css';
 
-/** 판의 최소 배율(논리 1 → 화면 0.6px). 이보다 작아지면 줄이지 않고 판 안에서 스크롤한다. */
-export const MIN_SCALE = 0.6;
-const MAX_FIT = 1.5;
+export { MIN_SCALE };
 
-export function BalanceView({
+function EquationView({
   state,
   dispatch,
   targetSize,
@@ -39,17 +39,7 @@ export function BalanceView({
     );
   }
 
-  let svgStyle: CSSProperties | undefined;
-  let scroll = false;
-  if (board.width > 0 && board.height > 0) {
-    const fit = Math.min(board.width / LOGICAL_WIDTH, board.height / LOGICAL_HEIGHT, MAX_FIT);
-    const scale = Math.max(fit, MIN_SCALE);
-    scroll = fit < MIN_SCALE - 0.005;
-    svgStyle = {
-      width: `${LOGICAL_WIDTH * scale}px`,
-      height: `${LOGICAL_HEIGHT * scale}px`,
-    };
-  }
+  const { svgStyle, scroll } = fitBoard(board);
 
   return (
     <div
@@ -70,5 +60,23 @@ export function BalanceView({
         <Controls state={state} dispatch={dispatch} ui={ui} readOnly={readOnly} />
       </div>
     </div>
+  );
+}
+
+/** 상태의 모드(equation·proportion)에 맞는 화면을 고른다. */
+export function BalanceView(props: EngineViewProps<E06Config, E06State, E06Action>) {
+  const { state, dispatch, config, ...rest } = props;
+  if (state.mode === 'proportion') {
+    return (
+      <ProportionView
+        {...rest}
+        config={config as ProportionConfig}
+        state={state}
+        dispatch={dispatch}
+      />
+    );
+  }
+  return (
+    <EquationView {...rest} config={config as BalanceConfig} state={state} dispatch={dispatch} />
   );
 }

@@ -407,8 +407,13 @@ describe('emit / 정의', () => {
 
   it('정의: E06, equation 모드만, fit, 오버레이 둘', () => {
     expect(definition.id).toBe('E06');
-    expect(definition.modes).toEqual(['equation']);
+    expect(definition.modes).toEqual(['equation', 'proportion']);
     expect(definition.layout).toBe('fit');
-    expect(Object.keys(definition.overlays ?? {}).sort()).toEqual(['big-tilt', 'match-bars']);
+    expect(Object.keys(definition.overlays ?? {}).sort()).toEqual([
+      'area-diff',
+      'big-tilt',
+      'cross-brackets',
+      'match-bars',
+    ]);
   });
 });

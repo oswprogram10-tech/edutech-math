@@ -32,14 +32,19 @@ function lengthOf(value: Rational): number {
   return Number(value.n) / Number(value.d);
 }
 
+/** 두 접시의 값으로 정하는 기울기 각도(0~12). 모르거나 같으면 0. (equation·proportion 공용) */
+export function tiltDegreesOf(left: Rational | null, right: Rational | null): number {
+  if (left === null || right === null || left.compareTo(right) === 0) return 0;
+  const diff = lengthOf(abs(left.sub(right)));
+  const biggest = Math.max(lengthOf(abs(left)), lengthOf(abs(right)), 1);
+  const ratio = Math.min(1, diff / biggest);
+  return Math.min(MAX_TILT, MIN_TILT + (MAX_TILT - MIN_TILT) * ratio);
+}
+
 /** 기울기 각도(0~12). level·unknown은 0. */
 export function tiltDegrees(state: BalanceState): number {
   const reading = readBalance(state);
-  if (reading.left === null || reading.right === null || reading.tilt === 'level') return 0;
-  const diff = lengthOf(abs(reading.left.sub(reading.right)));
-  const biggest = Math.max(lengthOf(abs(reading.left)), lengthOf(abs(reading.right)), 1);
-  const ratio = Math.min(1, diff / biggest);
-  return Math.min(MAX_TILT, MIN_TILT + (MAX_TILT - MIN_TILT) * ratio);
+  return tiltDegreesOf(reading.left, reading.right);
 }
 
 /** 가로대 회전(CSS rotate 각도). 왼쪽이 무거우면 왼쪽 끝이 내려가도록 음수. */
