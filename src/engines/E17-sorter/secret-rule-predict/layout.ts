@@ -8,7 +8,7 @@ import type { PredictBin, PredictState } from './types';
 export const PREDICT_WIDTH = 1000;
 export const PREDICT_HEIGHT = 500;
 export const PREDICT_TOP = 150;
-export const PREDICT_CARD = 62;
+export const PREDICT_CARD = 66;
 export const NEW_CARD = 100;
 const HEADER = 52;
 

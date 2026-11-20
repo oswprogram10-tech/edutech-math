@@ -21,11 +21,12 @@ import { ArtDefs, CardArt, CriterionIconSvg, IconSvg, ValueIcon } from './art';
 import { criterionValues, iconChoices, parseIcon } from './criteria';
 import {
   BELT_CARD,
-  SORT_TOP,
   SORT_WIDTH,
   binBoxes,
   binHeaderBox,
+  NAME_FONT,
   sortBoardHeight,
+  sortGeometry,
   sortCardSlots,
   sortTargetAt,
 } from './layout';
@@ -44,7 +45,8 @@ type SortViewProps = EngineViewProps<SorterConfig, SortState, SorterAction>;
 
 export function SortView({ state, dispatch, readOnly = false, targetSize }: SortViewProps) {
   const svgRef = useRef<SVGSVGElement>(null);
-  const logicalHeight = sortBoardHeight();
+  const geometry = sortGeometry(state.settings);
+  const logicalHeight = sortBoardHeight(state.settings);
   const logical = { width: SORT_WIDTH, height: logicalHeight };
   const rendered = useRenderedSize(svgRef);
   const [held, setHeld] = useState<string | null>(null);
@@ -56,7 +58,7 @@ export function SortView({ state, dispatch, readOnly = false, targetSize }: Sort
   const definition = deckDefinition(settings.deck);
   const cardsById = new Map(definition.cards.map((card) => [card.id, card]));
   const binIds = activeBins(state);
-  const boxes = binBoxes(binIds.length);
+  const boxes = binBoxes(binIds.length, geometry);
   const current = settings.conveyor ? currentCard(state) : null;
   const slots = sortCardSlots(state, current);
   const gray = settings.render === 'gray';
@@ -95,7 +97,7 @@ export function SortView({ state, dispatch, readOnly = false, targetSize }: Sort
   };
 
   const dropTarget = (point: Point): BinId | 'tray' | null => {
-    const target = sortTargetAt(point, binIds.length);
+    const target = sortTargetAt(point, binIds.length, geometry);
     if (target === null) return null;
     if (target.kind === 'tray') return 'tray';
     return binIds[target.index] ?? null;
@@ -253,6 +255,19 @@ export function SortView({ state, dispatch, readOnly = false, targetSize }: Sort
           />
         ) : null}
         <CardArt card={card} size={slot.size} x={slot.center.x} y={slot.center.y} gray={gray} />
+        {card.name !== null ? (
+          <text
+            x={slot.center.x}
+            y={slot.center.y + slot.size * 0.6 + NAME_FONT - 1}
+            fontSize={NAME_FONT}
+            fontWeight={700}
+            textAnchor="middle"
+            fill="#1d2330"
+            pointerEvents="none"
+          >
+            {card.name}
+          </text>
+        ) : null}
       </g>
     );
     if (slot.where === 'belt') {
@@ -464,7 +479,7 @@ export function SortView({ state, dispatch, readOnly = false, targetSize }: Sort
               x={0}
               y={0}
               width={SORT_WIDTH}
-              height={SORT_TOP}
+              height={geometry.top}
               fill={hoverTarget === 'tray' ? '#e6edfb' : '#f1f4fa'}
               stroke={GRID}
               strokeWidth={2}
@@ -521,7 +536,7 @@ export function SortView({ state, dispatch, readOnly = false, targetSize }: Sort
           {needsCriterion ? (
             <text
               x={SORT_WIDTH / 2}
-              y={SORT_TOP + 150}
+              y={geometry.top + 150}
               fontSize={26}
               fontWeight={700}
               textAnchor="middle"

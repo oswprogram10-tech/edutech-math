@@ -21,7 +21,7 @@ export function TouchDotsOverlay({ state }: OverlayProps<SorterConfig, SorterSta
       return { slot, order: n };
     });
   return (
-    <SortOverlayFrame testId="touch-dots">
+    <SortOverlayFrame testId="touch-dots" settings={sort.settings}>
       {dots.map(({ slot, order }) => (
         <circle
           key={slot.id}

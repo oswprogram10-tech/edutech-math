@@ -7,7 +7,7 @@ import type { OverlayProps } from '../../../../core/engine-sdk';
 import { deckAttributes, deckDefinition, valueKey } from '../../decks';
 import type { SorterConfig, SorterState } from '../../types';
 import { ValueIcon } from '../art';
-import { binBoxes, binHeaderBox } from '../layout';
+import { binBoxes, binHeaderBox, sortGeometry } from '../layout';
 import { activeBins } from '../reduce';
 import { sortStrings as S } from '../strings.ko';
 import { SortOverlayFrame } from './frame';
@@ -34,12 +34,12 @@ export function BinAttributesOverlay({ state }: OverlayProps<SorterConfig, Sorte
   const sort = sortStateOf(state);
   if (!sort) return null;
   const binIds = activeBins(sort);
-  const boxes = binBoxes(binIds.length);
+  const boxes = binBoxes(binIds.length, sortGeometry(sort.settings));
   const definition = deckDefinition(sort.settings.deck);
   const attributes = deckAttributes(sort.settings.deck);
 
   return (
-    <SortOverlayFrame testId="bin-attributes">
+    <SortOverlayFrame testId="bin-attributes" settings={sort.settings}>
       {boxes.map((box, index) => {
         const bin = binIds[index];
         if (bin === undefined) return null;

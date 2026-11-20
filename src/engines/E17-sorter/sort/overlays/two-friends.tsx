@@ -31,11 +31,11 @@ const FRIENDS: readonly Friend[] = [
 
 export function TwoFriendsOverlay({ state }: OverlayProps<SorterConfig, SorterState>) {
   if (state.mode !== 'sort') return null;
-  const height = sortBoardHeight();
+  const height = sortBoardHeight(state.settings);
   const panel = { x: 70, y: 40, width: SORT_WIDTH - 140, height: height - 80 };
   const half = panel.width / 2;
   return (
-    <SortOverlayFrame testId="two-friends">
+    <SortOverlayFrame testId="two-friends" settings={state.settings}>
       <rect
         x={panel.x}
         y={panel.y}

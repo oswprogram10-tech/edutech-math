@@ -15,7 +15,7 @@ export function GrayShapesOverlay({ state }: OverlayProps<SorterConfig, SorterSt
   const cards = new Map(deckDefinition(sort.settings.deck).cards.map((card) => [card.id, card]));
   const slots = slotsOf(sort).filter((slot) => slot.where !== 'tray' && slot.where !== 'belt');
   return (
-    <SortOverlayFrame testId="gray-shapes">
+    <SortOverlayFrame testId="gray-shapes" settings={sort.settings}>
       {slots.map((slot) => {
         const card = cards.get(slot.id);
         if (!card) return null;

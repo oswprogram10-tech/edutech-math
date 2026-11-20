@@ -8,7 +8,7 @@ import type { OverlayProps } from '../../../../core/engine-sdk';
 import { sortCardById } from '../../decks';
 import type { SorterConfig, SorterState } from '../../types';
 import { ObjectArt } from '../art';
-import { BIN_CARD, beltCardCenter } from '../layout';
+import { beltCardCenter, sortGeometry } from '../layout';
 import { SortOverlayFrame } from './frame';
 import { slotsOf, sortStateOf } from './helpers';
 import styles from './Overlays.module.css';
@@ -19,15 +19,16 @@ export function RotateMatchOverlay({ state }: OverlayProps<SorterConfig, SorterS
   if (!sort.settings.cards.includes('o-can-side')) return null;
   const side = sortCardById('classroom-objects-12', 'o-can-side');
   if (!side) return null;
+  const geometry = sortGeometry(sort.settings);
   const slots = slotsOf(sort);
   const sideSlot = slots.find((slot) => slot.id === 'o-can-side');
   const upSlot = slots.find((slot) => slot.id === 'o-can-up');
-  const from = sideSlot?.center ?? beltCardCenter();
+  const from = sideSlot?.center ?? beltCardCenter(geometry);
   const to = upSlot?.center ?? from;
-  const size = upSlot?.size ?? sideSlot?.size ?? BIN_CARD;
+  const size = upSlot?.size ?? sideSlot?.size ?? geometry.binSize;
   const motion = { '--dx': `${from.x - to.x}px`, '--dy': `${from.y - to.y}px` } as CSSProperties;
   return (
-    <SortOverlayFrame testId="rotate-match">
+    <SortOverlayFrame testId="rotate-match" settings={sort.settings}>
       <g transform={`translate(${to.x},${to.y})`}>
         <g className={styles.rotateMatch} style={motion} data-rotate-match="true">
           <g transform={`scale(${size / 100})`}>
