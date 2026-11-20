@@ -329,6 +329,8 @@ W6에서 E13 측정 실험실과 E14 시계·시간을 새로 만들고, E17 `so
 
 - **T200 병합(2026-11-20):** W6 오개념 18개(수 함정 7, 고르기 7, 관찰 4)를 `misconceptions-w6.ts`·`diagnose-w6.ts`에 등록했다. 수 함정 `trapValue`는 `diagnose-shared.ts`로 옮겨 W5·W6가 같이 쓴다. 관찰 코드(MC-MEASURE-GAP, MC-LENGTH-NO-PROMOTE, MC-SORT-INCONSISTENT, MC-RANGE-BOUNDARY-INCLUSION)는 엔진 Observation이 맡는다. 단위 3583 통과.
 
+- **T201 병합(2026-11-20):** E14 시계·시간 `clock`(분 0~719, 긴바늘 각도 누적으로 시 넘김, granularity·`snapMinuteTo` 배열·`'5-weak'`, readOnly·hideMinuteHand, 톱니는 한 축에 겹친 큰·작은 톱니, 펼친 0~60분 띠, 오버레이 hour-hand-focus·rewind-to-hour·numeral-minutes). `digitalReadout:'after-submit'`은 'never'로 읽는다. 시각 문자열은 엄격한 "H:MM"(1~12시, "03:25" 거절). 슬라이더는 aria-valuenow 없이 방향 문장만. readOnly·hideMinuteHand이면 펼친 띠 위 표시도 없다. 엔진 등록은 `import.meta.glob` 자동. 범위 E2E 194 통과.
+
 ## 상시
 | 카드 | 내용 |
 | --- | --- |
