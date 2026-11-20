@@ -295,6 +295,8 @@ T173은 소넷 구현 → 검수 1회(판 전체 화면 기준 스냅샷 6장, �
 
 - **T196 병합(2026-11-20):** E06 `proportion`(외항·내항 격자 넓이 저울, cards·pairSelect·슬라이더, look scale·grid·symbols, 오버레이 big-tilt·cross-brackets·area-diff). 코드는 `proportion/` 폴더에 따로 두고 equation 파일은 그대로다. `equation`·`cards`가 둘 다 없으면 샌드박스 기본 식. 슬라이더 상한 45. 슬라이더는 놓을 때만 `try`를 보낸다. ADDITIVE는 '차 보존' 값이 비례식도 되면 기록하지 않는다. equation 기준 이미지 8장 다시 찍음(도구 줄만). 남은 점: 격자 그림이 판에 비해 작다(3×20이면 폭 약 20px). 범위 E2E 249 통과.
 
+- **T197 병합(2026-11-20):** E20 `bar-model`(문장 토큰 형광펜 HTML 줄 + SVG 막대, 한 칸·몫·전체·식 칸, 오버레이 unit-count·share-bracket). 정답 값은 판정할 때만 계산하고 화면·DOM에는 학생 값만. bar-model 판 논리 높이는 500(최소 300px). 식 칸은 core `parse`·`evaluate`. 모드 상자 너비로 기존 E20 기준 이미지 18장 다시 찍음(도구 줄만). 남은 점: 아이패드에서 값 칸·키패드가 판 아래로 스크롤. 범위 E2E 281 통과.
+
 ## 상시
 | 카드 | 내용 |
 | --- | --- |
