@@ -674,7 +674,7 @@
         },
         {
           "id": "g2s2u3.A2.T3",
-          "prompt": "5m 20cm에서 2m 60cm를 빼요.",
+          "prompt": "5m 20cm에서 2m 70cm를 빼요.",
           "engine": "E13",
           "mode": "length",
           "cpa": "P",
@@ -683,7 +683,7 @@
             "variant": "unit-train",
             "op": "sub",
             "a": "5m 20cm",
-            "b": "2m 60cm"
+            "b": "2m 70cm"
           },
           "goal": {
             "kind": "all",
@@ -704,7 +704,7 @@
                 "name": "trainIs",
                 "args": {
                   "m": 2,
-                  "cm": 60
+                  "cm": 50
                 }
               },
               {
@@ -715,7 +715,7 @@
               {
                 "kind": "equals",
                 "path": "response.cm.value",
-                "value": "60"
+                "value": "50"
               }
             ]
           },

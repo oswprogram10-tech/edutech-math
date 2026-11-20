@@ -203,7 +203,7 @@ async function passA2T3(page: Page): Promise<void> {
   await settleCanvas(page, 'train-canvas');
   await button(page, '10cm 막대로 풀기').click();
   await button(page, '빼기').click();
-  await writeAnswer(page, { m: '2', cm: '60' });
+  await writeAnswer(page, { m: '2', cm: '50' });
   await submit(page);
   await expectPassed(page);
 }
@@ -280,7 +280,7 @@ test('A2 길이 블록 기차 단위 승격기 — 대표 오답 뒤 고쳐서 �
 
   // T3 — 풀지 않고 빼기만 하거나 값만 쓰면 일반 ① 뒤, 풀고 빼면 통과한다.
   await settleCanvas(page, 'train-canvas');
-  await writeAnswer(page, { m: '2', cm: '60' });
+  await writeAnswer(page, { m: '2', cm: '50' });
   await submit(page);
   await expectHint(page, 1, 'cm 칸이 모자라면 1m 칸 하나를 풀어 봐요.');
   await button(page, '10cm 막대로 풀기').click();
@@ -312,7 +312,7 @@ test('A2.T3을 키보드만으로 푼다', async ({ page }) => {
   await page.keyboard.press('Space');
   for (const [id, keys] of [
     ['m', '2'],
-    ['cm', '60'],
+    ['cm', '50'],
   ] as const) {
     await field(page, id).getByRole('button').first().focus();
     await page.keyboard.press('Enter');
@@ -395,6 +395,16 @@ test('시작 화면 DOM·aria·data-에 정답 길이와 결과 글이 없고 �
   await settleCanvas(page, 'train-canvas');
   text = await exposedText(page);
   expect(text).not.toMatch(/4\s*m\s*20\s*cm|420/);
+  await noGrade(page);
+  await button(page, '1m로 바꾸기').click();
+  await writeAnswer(page, { m: '4', cm: '20' });
+  await submit(page);
+  await expectPassed(page);
+
+  // A2.T3 — 5m 20cm − 2m 70cm. 답 2m 50cm(250)는 뺄 길이와 달라 판에서 베낄 수 없다.
+  await settleCanvas(page, 'train-canvas');
+  text = await exposedText(page);
+  expect(text).not.toMatch(/2\s*m\s*50\s*cm|250/);
   await noGrade(page);
 });
 
