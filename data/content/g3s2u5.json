@@ -1,0 +1,974 @@
+{
+  "unit": "g3s2u5",
+  "title": "들이와 무게",
+  "activities": [
+    {
+      "id": "g3s2u5.A1",
+      "title": "눈금 없는 비커 물약 계량",
+      "tasks": [
+        {
+          "id": "g3s2u5.A1.T1",
+          "prompt": "같은 컵으로 물을 부어 두 그릇을 가득 채워 보고, 들이가 더 많은 것을 골라요. 가: 길쭉한 병 나: 넓은 그릇",
+          "engine": "E13",
+          "mode": "capacity",
+          "cpa": "C",
+          "config": {
+            "mode": "capacity",
+            "variant": "cup-count",
+            "containers": [
+              {
+                "id": "bottle",
+                "kind": "bottle",
+                "shape": "tall",
+                "capacityMl": 600
+              },
+              {
+                "id": "bowl",
+                "kind": "bowl",
+                "shape": "wide",
+                "capacityMl": 800
+              }
+            ],
+            "cupMl": 200
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "allFull"
+              },
+              {
+                "kind": "equals",
+                "path": "response.pick.selected.0",
+                "value": "na"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "misconception": "MC-MEAS-CAPACITY-SHAPE"
+              },
+              "level": 1,
+              "say": "컵으로 몇 번 들어갔는지 세어 볼까?"
+            },
+            {
+              "when": {
+                "misconception": "MC-MEAS-CAPACITY-SHAPE"
+              },
+              "level": 2,
+              "say": "두 그릇을 같은 모양 비커에 옮겨 담았다고 생각하고 물의 높이를 견주어 봐요.",
+              "show": {
+                "engine": "E13",
+                "overlay": "same-beaker"
+              }
+            },
+            {
+              "when": {
+                "misconception": "MC-MEAS-CAPACITY-SHAPE"
+              },
+              "level": 3,
+              "backtrack": "g3s2u5.capacity-units"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "capacity"
+              },
+              "level": 1,
+              "say": "두 그릇을 모두 가득 채웠는지, 컵을 몇 번 부었는지 확인해요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "capacity"
+              },
+              "level": 2,
+              "say": "같은 컵으로 부은 횟수를 견주어 보면 어느 그릇에 물이 더 들어가는지 알 수 있어요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "capacity"
+              },
+              "level": 3,
+              "backtrack": "g3s2u5.capacity-units"
+            }
+          ],
+          "concepts": [
+            "g3s2u5.capacity-units"
+          ],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-MEAS-CAPACITY-SHAPE",
+              "args": {
+                "trap": "ga",
+                "expected": "na"
+              },
+              "path": "response.pick.selected.0"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "pick",
+                "label": "들이가 더 많은 그릇",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "ga",
+                    "label": "가 길쭉한 병"
+                  },
+                  {
+                    "id": "na",
+                    "label": "나 넓은 그릇"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s2u5.A1.T2",
+          "prompt": "1L 비커를 200mL 컵으로 가득 채우려면 몇 번 부어야 할까요?",
+          "engine": "E13",
+          "mode": "capacity",
+          "cpa": "C",
+          "config": {
+            "mode": "capacity",
+            "variant": "cup-count",
+            "containers": [
+              {
+                "id": "beaker",
+                "kind": "beaker",
+                "shape": "tall",
+                "capacityMl": 1000
+              }
+            ],
+            "cupMl": 200
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "full",
+                "args": {
+                  "id": "beaker"
+                }
+              },
+              {
+                "kind": "equals",
+                "path": "response.n.value",
+                "value": "5"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "capacity"
+              },
+              "level": 1,
+              "say": "컵으로 한 번 부을 때마다 비커가 얼마나 차는지 보며 세어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "capacity"
+              },
+              "level": 2,
+              "say": "1L 병 하나가 100mL 컵 몇 개와 같은지 그림으로 봐요. 200mL 컵이면 어떻게 될까요?",
+              "show": {
+                "engine": "E13",
+                "overlay": "liter-cups"
+              }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "capacity"
+              },
+              "level": 3,
+              "backtrack": "g3s2u5.capacity-units"
+            }
+          ],
+          "concepts": [
+            "g3s2u5.capacity-units"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "n",
+                "label": "번",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s2u5.A1.T3",
+          "prompt": "눈금 없는 두 비커로 물약 100mL를 만들어요.",
+          "engine": "E13",
+          "mode": "capacity",
+          "cpa": "P",
+          "config": {
+            "mode": "capacity",
+            "variant": "puzzle",
+            "containers": [
+              {
+                "id": "A",
+                "capacityMl": 500,
+                "marks": false
+              },
+              {
+                "id": "B",
+                "capacityMl": 300,
+                "marks": false
+              }
+            ],
+            "source": "infinite",
+            "targetMl": 100
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "reached"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "capacity"
+              },
+              "level": 1,
+              "say": "큰 비커를 채워 작은 비커에 부으면 큰 비커에는 얼마가 남을까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "capacity"
+              },
+              "level": 2,
+              "say": "작은 비커를 두 번 채워 큰 비커에 부어 보면 어떻게 될까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "capacity"
+              },
+              "level": 3,
+              "backtrack": "g3s2u5.estimate-measure"
+            }
+          ],
+          "concepts": [
+            "g3s2u5.estimate-measure"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g3s2u5.A1.T4",
+          "prompt": "이번에는 물약 400mL를 만들어요.",
+          "engine": "E13",
+          "mode": "capacity",
+          "cpa": "P",
+          "config": {
+            "mode": "capacity",
+            "variant": "puzzle",
+            "containers": [
+              {
+                "id": "A",
+                "capacityMl": 500,
+                "marks": false
+              },
+              {
+                "id": "B",
+                "capacityMl": 300,
+                "marks": false
+              }
+            ],
+            "source": "infinite",
+            "targetMl": 400
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "reached"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "capacity"
+              },
+              "level": 1,
+              "say": "큰 비커를 채워 작은 비커에 부으면 큰 비커에는 얼마가 남을까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "capacity"
+              },
+              "level": 2,
+              "say": "남은 물을 다른 비커로 옮겨 두고 다시 채워 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "capacity"
+              },
+              "level": 3,
+              "backtrack": "g3s2u5.estimate-measure"
+            }
+          ],
+          "concepts": [
+            "g3s2u5.estimate-measure"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g3s2u5.A1.T5",
+          "prompt": "1L 300mL + 900mL는 몇 L 몇 mL일까요?",
+          "engine": "E13",
+          "mode": "capacity",
+          "cpa": "A",
+          "config": {
+            "mode": "capacity",
+            "variant": "cup-count",
+            "containers": [
+              {
+                "id": "beaker",
+                "kind": "beaker",
+                "shape": "tall",
+                "capacityMl": 1000
+              }
+            ],
+            "cupMl": 200
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "equals",
+                "path": "response.L.value",
+                "value": "2"
+              },
+              {
+                "kind": "equals",
+                "path": "response.mL.value",
+                "value": "200"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "misconception": "MC-MEAS-MIXED-UNIT-CALC"
+              },
+              "level": 1,
+              "say": "mL가 1000이 넘으면 무엇으로 바꿀 수 있지?"
+            },
+            {
+              "when": {
+                "misconception": "MC-MEAS-MIXED-UNIT-CALC"
+              },
+              "level": 2,
+              "say": "mL 막대 1000칸이 1L 병 하나로 합쳐지는 그림을 봐요. 이 그림을 보고 L와 mL를 다시 써 봐요.",
+              "show": {
+                "engine": "E13",
+                "overlay": "ml-merge"
+              }
+            },
+            {
+              "when": {
+                "misconception": "MC-MEAS-MIXED-UNIT-CALC"
+              },
+              "level": 3,
+              "backtrack": "g3s2u5.measure-add-sub"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "capacity"
+              },
+              "level": 1,
+              "say": "L는 L끼리, mL는 mL끼리 더해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "capacity"
+              },
+              "level": 2,
+              "say": "mL끼리 더한 값이 1000이 넘으면 1000mL를 1L로 바꿔서 L 칸으로 옮겨요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "capacity"
+              },
+              "level": 3,
+              "backtrack": "g3s2u5.measure-add-sub"
+            }
+          ],
+          "concepts": [
+            "g3s2u5.measure-add-sub"
+          ],
+          "submit": "button",
+          "showEngine": false,
+          "diagnose": [
+            {
+              "code": "MC-MEAS-MIXED-UNIT-CALC",
+              "args": {
+                "trap": "1200",
+                "expected": "200"
+              },
+              "path": "response.mL.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "L",
+                "label": "L",
+                "forms": [
+                  "integer"
+                ]
+              },
+              {
+                "kind": "number",
+                "id": "mL",
+                "label": "mL",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "g3s2u5.A2",
+      "title": "저울 실험실",
+      "tasks": [
+        {
+          "id": "g3s2u5.A2.T1",
+          "prompt": "큰 공과 작은 쇠공 중 어느 것이 더 무거울지 먼저 예측하고 저울로 확인해요.",
+          "engine": "E13",
+          "mode": "weight",
+          "cpa": "C",
+          "config": {
+            "mode": "weight",
+            "tools": [
+              "pan-balance"
+            ],
+            "objects": [
+              {
+                "id": "beachball",
+                "kind": "beachball",
+                "g": 150,
+                "visualSize": "large"
+              },
+              {
+                "id": "iron-ball",
+                "kind": "iron-ball",
+                "g": 800,
+                "visualSize": "small"
+              }
+            ],
+            "predict": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "predictionLocked"
+              },
+              {
+                "kind": "predicate",
+                "name": "compared",
+                "args": {
+                  "a": "beachball",
+                  "b": "iron-ball"
+                }
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "weight"
+              },
+              "level": 1,
+              "say": "저울을 쓰기 전에 어느 쪽이 더 무거울지 예측했는지 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "weight"
+              },
+              "level": 2,
+              "say": "예측한 뒤 두 공을 접시에 하나씩 올려서 어느 쪽이 내려가는지 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "weight"
+              },
+              "level": 3,
+              "backtrack": "g3s2u5.weight-units"
+            }
+          ],
+          "concepts": [
+            "g3s2u5.weight-units"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g3s2u5.A2.T2",
+          "prompt": "책을 용수철저울에 걸고 몇 g인지 읽어요.",
+          "engine": "E13",
+          "mode": "weight",
+          "cpa": "C",
+          "config": {
+            "mode": "weight",
+            "tools": [
+              "spring-scale"
+            ],
+            "objects": [
+              {
+                "id": "book",
+                "kind": "book",
+                "g": 450,
+                "visualSize": "medium"
+              }
+            ],
+            "springMaxG": 500
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "hungIs",
+                "args": {
+                  "id": "book"
+                }
+              },
+              {
+                "kind": "equals",
+                "path": "response.total.value",
+                "value": "450"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.total.value",
+                    "value": "400"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.total.value",
+                    "value": "500"
+                  }
+                ]
+              },
+              "level": 1,
+              "say": "바늘이 400과 500 사이 어디에 있는지 작은 눈금을 세어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "weight"
+              },
+              "level": 1,
+              "say": "책을 용수철저울 고리에 걸었는지 확인하고, 바늘이 가리키는 눈금을 읽어요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "weight"
+              },
+              "level": 2,
+              "say": "큰 눈금 사이에 작은 눈금이 몇 칸 있는지 세어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "weight"
+              },
+              "level": 3,
+              "backtrack": "g3s2u5.weight-units"
+            }
+          ],
+          "concepts": [
+            "g3s2u5.weight-units"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "total",
+                "label": "g",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s2u5.A2.T3",
+          "prompt": "1kg 250g은 몇 g일까요?",
+          "engine": "E13",
+          "mode": "weight",
+          "cpa": "A",
+          "config": {
+            "mode": "weight",
+            "tools": [
+              "pan-balance"
+            ],
+            "objects": [
+              {
+                "id": "book",
+                "kind": "book",
+                "g": 450,
+                "visualSize": "medium"
+              }
+            ]
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.total.value",
+            "value": "1250"
+          },
+          "hints": [
+            {
+              "when": {
+                "misconception": "MC-MEAS-UNIT-CONVERT"
+              },
+              "level": 1,
+              "say": "1kg은 몇 g이었지?"
+            },
+            {
+              "when": {
+                "misconception": "MC-MEAS-UNIT-CONVERT"
+              },
+              "level": 2,
+              "say": "1kg은 1000g이에요."
+            },
+            {
+              "when": {
+                "misconception": "MC-MEAS-UNIT-CONVERT"
+              },
+              "level": 3,
+              "backtrack": "g3s1u5.mm-unit"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "weight"
+              },
+              "level": 1,
+              "say": "1kg은 몇 g과 같은지 먼저 떠올려 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "weight"
+              },
+              "level": 2,
+              "say": "1kg을 g으로 바꾼 다음, 남은 g을 더해요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "weight"
+              },
+              "level": 3,
+              "backtrack": "g3s2u5.weight-units"
+            }
+          ],
+          "concepts": [
+            "g3s2u5.weight-units"
+          ],
+          "submit": "button",
+          "showEngine": false,
+          "diagnose": [
+            {
+              "code": "MC-MEAS-UNIT-CONVERT",
+              "args": {
+                "trap": [
+                  "125",
+                  "10250"
+                ],
+                "expected": "1250"
+              },
+              "path": "response.total.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "total",
+                "label": "g",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s2u5.A2.T4",
+          "prompt": "2kg 300g − 800g은 몇 kg 몇 g일까요?",
+          "engine": "E13",
+          "mode": "weight",
+          "cpa": "A",
+          "config": {
+            "mode": "weight",
+            "tools": [
+              "pan-balance"
+            ],
+            "objects": [
+              {
+                "id": "book",
+                "kind": "book",
+                "g": 450,
+                "visualSize": "medium"
+              }
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "equals",
+                "path": "response.kg.value",
+                "value": "1"
+              },
+              {
+                "kind": "equals",
+                "path": "response.g.value",
+                "value": "500"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "response.kg.value",
+                        "value": "1"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.g.value",
+                        "value": "1500"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "response.kg.value",
+                        "value": "2"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.g.value",
+                        "value": "500"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "level": 1,
+              "say": "kg와 g를 따로 계산한 뒤 알맞게 정리했는지 다시 봐요. g가 1000이 넘으면 무엇으로 바꿀 수 있지?"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "response.kg.value",
+                        "value": "1"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.g.value",
+                        "value": "1500"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "response.kg.value",
+                        "value": "2"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.g.value",
+                        "value": "500"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "level": 2,
+              "say": "1000g은 1kg이에요. g 칸이 1000 이상이거나 모자라면 kg와 g를 서로 바꿔 써요."
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "response.kg.value",
+                        "value": "1"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.g.value",
+                        "value": "1500"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "all",
+                    "of": [
+                      {
+                        "kind": "equals",
+                        "path": "response.kg.value",
+                        "value": "2"
+                      },
+                      {
+                        "kind": "equals",
+                        "path": "response.g.value",
+                        "value": "500"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g3s2u5.measure-add-sub"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "weight"
+              },
+              "level": 1,
+              "say": "kg는 kg끼리, g는 g끼리 어떻게 계산할지 생각해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "weight"
+              },
+              "level": 2,
+              "say": "g끼리 뺄 수 없으면 1kg을 1000g으로 바꿔서 빼요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "weight"
+              },
+              "level": 3,
+              "backtrack": "g3s2u5.measure-add-sub"
+            }
+          ],
+          "concepts": [
+            "g3s2u5.measure-add-sub"
+          ],
+          "submit": "button",
+          "showEngine": false,
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "kg",
+                "label": "kg",
+                "forms": [
+                  "integer"
+                ]
+              },
+              {
+                "kind": "number",
+                "id": "g",
+                "label": "g",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
