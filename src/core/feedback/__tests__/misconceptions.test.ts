@@ -7,6 +7,7 @@ import {
   diagnoseObservation,
   misconceptionOf,
 } from '../misconceptions';
+import { W6_MISCONCEPTIONS } from '../misconceptions-w6';
 import type { ContentTask } from '../../runner/types';
 
 interface UnitsFile {
@@ -91,6 +92,17 @@ const W5_UNITS = new Set([
   'g6s2u4',
 ]);
 
+const W6_UNITS = new Set([
+  'g1s1u4',
+  'g2s1u4',
+  'g2s1u5',
+  'g2s2u3',
+  'g2s2u4',
+  'g3s1u5',
+  'g3s2u5',
+  'g5s2u1',
+]);
+
 /** docs/05 §5 표를 코드 → 단원 목록으로 읽는다. */
 function documentedRows(): Map<string, string[]> {
   const text = Object.values(docModules)[0] ?? '';
@@ -117,7 +129,7 @@ function documentedCodes(units: ReadonlySet<string>): Set<string> {
   return codes;
 }
 
-describe('W1·W2·W3·W5 오개념 레지스트리', () => {
+describe('W1·W2·W3·W5·W6 오개념 레지스트리', () => {
   const units = new Set(dataAt<UnitsFile>('/units.json').units.map((unit) => unit.id));
   const concepts = new Set(
     dataAt<ConceptsFile>('/concepts.json').concepts.map((concept) => concept.id),
@@ -132,13 +144,14 @@ describe('W1·W2·W3·W5 오개념 레지스트리', () => {
     expect(registryW1.sort()).toEqual([...documented].sort());
   });
 
-  it('docs/05 §5의 W1·W2·W3·W5 코드를 모두 담는다', () => {
-    const union = new Set([...W1_UNITS, ...W2_UNITS, ...W3_UNITS, ...W5_UNITS]);
+  it('docs/05 §5의 W1·W2·W3·W5·W6 코드를 모두 담는다', () => {
+    const union = new Set([...W1_UNITS, ...W2_UNITS, ...W3_UNITS, ...W5_UNITS, ...W6_UNITS]);
     const documented = documentedCodes(union);
     expect(W2_UNITS.size).toBe(26);
     expect(W3_UNITS.size).toBe(12);
     expect(W5_UNITS.size).toBe(13);
-    expect(documented.size).toBe(158);
+    expect(W6_UNITS.size).toBe(8);
+    expect(documented.size).toBe(176);
     expect([...MISCONCEPTIONS.map((item) => item.code)].sort()).toEqual([...documented].sort());
   });
 
@@ -155,6 +168,20 @@ describe('W1·W2·W3·W5 오개념 레지스트리', () => {
     expect(misconceptionOf('MC-COUNT-ONE-TO-ONE')?.units).toContain('g2s2u5');
     expect(misconceptionOf('MC-CHART-ROW-COL')?.units).toContain('g2s2u6');
     expect(new Set(MISCONCEPTIONS.map((item) => item.code)).size).toBe(MISCONCEPTIONS.length);
+  });
+
+  it('W6 코드 18개는 수 7개·고르기 7개·관찰 4개 구성이고 W1~W5와 겹치지 않는다', () => {
+    const prior = new Set([...W1_UNITS, ...W2_UNITS, ...W3_UNITS, ...W5_UNITS]);
+    const priorCodes = documentedCodes(prior);
+    const w6Only = [...documentedCodes(W6_UNITS)].filter((code) => !priorCodes.has(code));
+    expect(w6Only.sort()).toEqual(W6_MISCONCEPTIONS.map((item) => item.code).sort());
+    expect(w6Only).toHaveLength(18);
+    expect(W6_MISCONCEPTIONS.filter((item) => item.detect === 'diagnose')).toHaveLength(14);
+    expect(W6_MISCONCEPTIONS.filter((item) => item.detect === 'observation')).toHaveLength(4);
+    // 이미 있는 코드는 W6 단원을 units에 담는다.
+    expect(misconceptionOf('MC-CLOCK-HOUR-BETWEEN')?.units).toContain('g2s2u4');
+    expect(misconceptionOf('MC-COUNT-ONE-TO-ONE')?.units).toContain('g2s1u5');
+    expect(misconceptionOf('MC-GEO-RADIUS-DIAMETER')?.units).toContain('g3s2u3');
   });
 
   it('각 항목의 units가 docs/05 §5 표의 단원 열 전체와 같다', () => {

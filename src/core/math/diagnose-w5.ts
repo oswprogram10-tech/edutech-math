@@ -12,7 +12,7 @@
  * 엔진 predicate `hasMisconception`이나 GoalSpec이 맡는다.
  */
 import type { DiagnoseDetector, DiagnoseInput } from './diagnose-shared';
-import { rationalOf, recordOf, studentValue, trapChoice, trapsOf } from './diagnose-shared';
+import { rationalOf, recordOf, studentValue, trapChoice, trapValue } from './diagnose-shared';
 import { Rational } from './rational';
 
 const ZERO = 0n;
@@ -122,27 +122,6 @@ const ratioOrder: DiagnoseDetector = (input) => {
   if (a.equals(b) || a.equals(zero) || b.equals(zero)) return false;
   if (isExpected(input, student)) return false;
   return student.equals(b.div(a));
-};
-
-/**
- * 수 함정: 오답 값을 콘텐츠 작성자가 계산해 args `trap`(문자열 또는 배열)으로
- * 넘긴다. v가 trap 중 하나와 같고 expected와 다르면 감지한다.
- */
-const trapValue: DiagnoseDetector = (input) => {
-  const traps = trapsOf(input);
-  const student = studentValue(input);
-  if (traps === null || student === null) return false;
-  if (isExpected(input, student)) return false;
-  for (const trap of traps) {
-    let parsed: Rational;
-    try {
-      parsed = Rational.parse(trap);
-    } catch {
-      return false;
-    }
-    if (student.equals(parsed)) return true;
-  }
-  return false;
 };
 
 /**

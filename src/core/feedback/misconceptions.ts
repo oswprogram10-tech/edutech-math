@@ -1,8 +1,8 @@
 /**
- * W1·W2·W3·W5 오개념 레지스트리.
+ * W1·W2·W3·W5·W6 오개념 레지스트리.
  *
  * `docs/05-learning-engine.md` §5 표에서 W1 여섯 단원(g3s1u6, g3s2u4, g4s2u1,
- * g4s2u3, g5s1u4, g5s1u5), W2 26개 단원, W3 12개 단원, W5 13개 단원 중 하나라도 쓰는 코드를
+ * g4s2u3, g5s1u4, g5s1u5), W2 26개 단원, W3 12개 단원, W5 13개 단원, W6 8개 단원 중 하나라도 쓰는 코드를
  * 모두 옮겼다.
  * `backtrack`은 단원 명세 오개념 표의 ③ 열에 있는 개념·단원 ID다.
  * 기본 발문은 넣지 않는다. 발문은 과제 콘텐츠의 HintRule이 맡는다.
@@ -18,6 +18,7 @@ import type { ContentTask } from '../runner/types';
 import { W2_MISCONCEPTIONS } from './misconceptions-w2';
 import { W3_MISCONCEPTIONS } from './misconceptions-w3';
 import { W5_MISCONCEPTIONS } from './misconceptions-w5';
+import { W6_MISCONCEPTIONS } from './misconceptions-w6';
 
 export type MisconceptionDetect = 'diagnose' | 'observation';
 
@@ -218,12 +219,13 @@ const W1_MISCONCEPTIONS: readonly Misconception[] = [
   },
 ];
 
-/** W1·W2·W3·W5 코드 전체. 코드가 겹치지 않아 순서대로 합치기만 한다. */
+/** W1·W2·W3·W5·W6 코드 전체. 코드가 겹치지 않아 순서대로 합치기만 한다. */
 export const MISCONCEPTIONS: readonly Misconception[] = [
   ...W1_MISCONCEPTIONS,
   ...W2_MISCONCEPTIONS,
   ...W3_MISCONCEPTIONS,
   ...W5_MISCONCEPTIONS,
+  ...W6_MISCONCEPTIONS,
 ];
 
 const byCode = new Map(MISCONCEPTIONS.map((item) => [item.code, item]));

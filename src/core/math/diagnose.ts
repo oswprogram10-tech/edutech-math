@@ -15,6 +15,7 @@ import { integerOf, rationalOf, studentValue, textOf } from './diagnose-shared';
 import { diagnoseDetectorsW2 } from './diagnose-w2';
 import { diagnoseDetectorsW3 } from './diagnose-w3';
 import { diagnoseDetectorsW5 } from './diagnose-w5';
+import { diagnoseDetectorsW6 } from './diagnose-w6';
 
 export type { DiagnoseDetector, DiagnoseInput };
 export { integerOf, rationalOf, studentValue, textOf };
@@ -456,10 +457,11 @@ const diagnoseDetectorsW1: Readonly<Record<string, DiagnoseDetector>> = {
   'MC-SUB-SMALLER-FROM-LARGER': subSmallerFromLarger,
 };
 
-/** W1·W2·W3·W5 `detect: 'diagnose'` 코드의 감지 함수 전체. */
+/** W1·W2·W3·W5·W6 `detect: 'diagnose'` 코드의 감지 함수 전체. */
 export const diagnoseDetectors: Readonly<Record<string, DiagnoseDetector>> = {
   ...diagnoseDetectorsW1,
   ...diagnoseDetectorsW2,
   ...diagnoseDetectorsW3,
   ...diagnoseDetectorsW5,
+  ...diagnoseDetectorsW6,
 };
