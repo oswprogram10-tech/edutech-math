@@ -1,0 +1,1014 @@
+{
+  "unit": "g3s1u5",
+  "title": "길이와 시간",
+  "activities": [
+    {
+      "id": "g3s1u5.A1",
+      "title": "mm 현미경과 km 지도",
+      "tasks": [
+        {
+          "id": "g3s1u5.A1.T1",
+          "prompt": "자를 맞추고 확대해서 연필 길이를 재요. 몇 cm 몇 mm일까요?",
+          "engine": "E13",
+          "mode": "estimate",
+          "cpa": "C",
+          "config": {
+            "mode": "estimate",
+            "object": {
+              "name": "pencil",
+              "lengthCm": "3.7"
+            },
+            "ruler": {
+              "offsetCm": 2,
+              "draggable": true
+            },
+            "zoomLevels": [
+              "cm",
+              "mm"
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "zeroAligned"
+              },
+              {
+                "kind": "equals",
+                "path": "response.cm.value",
+                "value": "3"
+              },
+              {
+                "kind": "equals",
+                "path": "response.mm.value",
+                "value": "7"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "misconception": "MC-MEASURE-ENDPOINT"
+              },
+              "level": 1,
+              "say": "물체가 어디서부터 시작했지?"
+            },
+            {
+              "when": {
+                "misconception": "MC-MEASURE-ENDPOINT"
+              },
+              "level": 2,
+              "show": {
+                "engine": "E13",
+                "overlay": "count-cells"
+              },
+              "say": "물체가 시작한 눈금부터 1cm 칸을 하나씩 칠해 봤어요. 칸을 세어 봐요."
+            },
+            {
+              "when": {
+                "misconception": "MC-MEASURE-ENDPOINT"
+              },
+              "level": 3,
+              "backtrack": "g2s2u3.m-cm-convert"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "estimate"
+              },
+              "level": 1,
+              "say": "자의 0을 연필 끝에 맞췄나요? 확대해서 작은 눈금을 세어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "estimate"
+              },
+              "level": 2,
+              "say": "[눈금 크게]를 눌러 1cm가 작은 눈금 몇 칸으로 나뉘는지 세어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "estimate"
+              },
+              "level": 3,
+              "backtrack": "g3s1u5.mm-unit"
+            }
+          ],
+          "concepts": [
+            "g3s1u5.mm-unit"
+          ],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-MEASURE-ENDPOINT",
+              "args": {
+                "trap": "5",
+                "expected": "3"
+              },
+              "path": "response.cm.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "cm",
+                "label": "cm",
+                "forms": [
+                  "integer"
+                ]
+              },
+              {
+                "kind": "number",
+                "id": "mm",
+                "label": "mm",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s1u5.A1.T2",
+          "prompt": "3cm 7mm는 몇 mm일까요?",
+          "engine": "E13",
+          "mode": "estimate",
+          "cpa": "A",
+          "config": {
+            "mode": "estimate",
+            "object": {
+              "name": "pencil",
+              "lengthCm": "3.7"
+            },
+            "ruler": {
+              "offsetCm": 2,
+              "draggable": true
+            },
+            "zoomLevels": [
+              "cm",
+              "mm"
+            ]
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.total.value",
+            "value": "37"
+          },
+          "hints": [
+            {
+              "when": {
+                "misconception": "MC-MEAS-UNIT-CONVERT"
+              },
+              "level": 1,
+              "say": "1cm 안에 1mm가 몇 개 들어가지?"
+            },
+            {
+              "when": {
+                "misconception": "MC-MEAS-UNIT-CONVERT"
+              },
+              "level": 2,
+              "say": "1cm 안에는 1mm가 10개 있어요."
+            },
+            {
+              "when": {
+                "misconception": "MC-MEAS-UNIT-CONVERT"
+              },
+              "level": 3,
+              "backtrack": "g3s1u5.mm-unit"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "estimate"
+              },
+              "level": 1,
+              "say": "1cm는 몇 mm인지 떠올려 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "estimate"
+              },
+              "level": 2,
+              "say": "3cm를 mm로 바꾼 다음, 남은 mm를 더해요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "estimate"
+              },
+              "level": 3,
+              "backtrack": "g3s1u5.mm-unit"
+            }
+          ],
+          "concepts": [
+            "g3s1u5.mm-unit"
+          ],
+          "submit": "button",
+          "showEngine": false,
+          "diagnose": [
+            {
+              "code": "MC-MEAS-UNIT-CONVERT",
+              "args": {
+                "trap": [
+                  "307",
+                  "370"
+                ],
+                "expected": "37"
+              },
+              "path": "response.total.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "total",
+                "label": "mm",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s1u5.A1.T3",
+          "prompt": "학교에서 공원까지 1km에 가장 가까운 길을 찾아요.",
+          "engine": "E13",
+          "mode": "map-route",
+          "cpa": "C",
+          "config": {
+            "mode": "map-route",
+            "map": "sample-town-01",
+            "segmentsM": {
+              "school-library": 450,
+              "library-park": 620,
+              "school-park": 980
+            },
+            "from": "school",
+            "to": "park",
+            "targetM": 1000
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "closestToTarget"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "map-route"
+              },
+              "level": 1,
+              "say": "길마다 길이를 더해 보고 1000m와 얼마나 차이 나는지 견주어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "map-route"
+              },
+              "level": 2,
+              "say": "1km는 1000m예요. 1km 막대의 굵은 선과 가장 가깝게 끝나는 길을 찾아요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "map-route"
+              },
+              "level": 3,
+              "backtrack": "g3s1u5.km-unit"
+            }
+          ],
+          "concepts": [
+            "g3s1u5.km-unit"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g3s1u5.A1.T4",
+          "prompt": "학교에서 도서관을 지나 공원까지 가요. 길을 만들고 몇 km 몇 m인지 써요.",
+          "engine": "E13",
+          "mode": "map-route",
+          "cpa": "P",
+          "config": {
+            "mode": "map-route",
+            "map": "sample-town-01",
+            "segmentsM": {
+              "school-library": 450,
+              "library-park": 620,
+              "school-park": 980
+            },
+            "from": "school",
+            "to": "park",
+            "targetM": 1000
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "pathIs",
+                "args": {
+                  "nodes": [
+                    "school",
+                    "library",
+                    "park"
+                  ]
+                }
+              },
+              {
+                "kind": "equals",
+                "path": "response.km.value",
+                "value": "1"
+              },
+              {
+                "kind": "equals",
+                "path": "response.m.value",
+                "value": "70"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.m.value",
+                "value": "1070"
+              },
+              "level": 1,
+              "say": "1000m는 1km로 바꿔 쓸 수 있어요."
+            },
+            {
+              "when": {
+                "misconception": "MC-MEAS-UNIT-CONVERT"
+              },
+              "level": 1,
+              "say": "1km는 몇 m였지?"
+            },
+            {
+              "when": {
+                "misconception": "MC-MEAS-UNIT-CONVERT"
+              },
+              "level": 2,
+              "say": "1km는 1000m예요. 1km는 1m가 몇 개 모인 길이인지 다시 생각해 봐요."
+            },
+            {
+              "when": {
+                "misconception": "MC-MEAS-UNIT-CONVERT"
+              },
+              "level": 3,
+              "backtrack": "g3s1u5.km-unit"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "map-route"
+              },
+              "level": 1,
+              "say": "학교에서 도서관을 지나 공원까지 가는 길을 만들었는지 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "map-route"
+              },
+              "level": 2,
+              "say": "두 길의 길이를 더한 뒤 1000m와 견주어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "map-route"
+              },
+              "level": 3,
+              "backtrack": "g3s1u5.km-unit"
+            }
+          ],
+          "concepts": [
+            "g3s1u5.km-unit"
+          ],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-MEAS-UNIT-CONVERT",
+              "args": {
+                "trap": "10",
+                "expected": "1"
+              },
+              "path": "response.km.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "km",
+                "label": "km",
+                "forms": [
+                  "integer"
+                ]
+              },
+              {
+                "kind": "number",
+                "id": "m",
+                "label": "m",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "g3s1u5.A2",
+      "title": "60진법 시간 블록",
+      "tasks": [
+        {
+          "id": "g3s1u5.A2.T1",
+          "prompt": "1시간 45분 + 30분을 블록으로 계산해요.",
+          "engine": "E14",
+          "mode": "time-calc",
+          "cpa": "C",
+          "config": {
+            "mode": "time-calc",
+            "op": "add",
+            "a": {
+              "h": 1,
+              "m": 45
+            },
+            "b": {
+              "m": 30
+            },
+            "units": [
+              "h",
+              "m"
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "normalized"
+              },
+              {
+                "kind": "predicate",
+                "name": "valueIs",
+                "args": {
+                  "big": 2,
+                  "small": 15
+                }
+              },
+              {
+                "kind": "equals",
+                "path": "response.h.value",
+                "value": "2"
+              },
+              {
+                "kind": "equals",
+                "path": "response.m.value",
+                "value": "15"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "misconceptions",
+                    "value": [
+                      "MC-TIME-BASE-100"
+                    ]
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.m.value",
+                    "value": "75"
+                  }
+                ]
+              },
+              "level": 1,
+              "say": "1시간은 몇 분이었지? 분 칸에 60이 넘으면?"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "misconceptions",
+                    "value": [
+                      "MC-TIME-BASE-100"
+                    ]
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.m.value",
+                    "value": "75"
+                  }
+                ]
+              },
+              "level": 2,
+              "show": {
+                "engine": "E14",
+                "overlay": "sixty-overflow"
+              },
+              "say": "분 칸에 큰 블록 크기의 점선 상자를 그렸어요. 그만큼 모이면 어떻게 할까요?"
+            },
+            {
+              "when": {
+                "kind": "any",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "misconceptions",
+                    "value": [
+                      "MC-TIME-BASE-100"
+                    ]
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.m.value",
+                    "value": "75"
+                  }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g2s2u4.hour-60"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "time-calc"
+              },
+              "level": 1,
+              "say": "시간 칸과 분 칸의 블록을 더하면 분 칸이 어떻게 되는지 살펴봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "time-calc"
+              },
+              "level": 2,
+              "say": "분 칸의 작은 칸 60개는 큰 블록 1개와 같아요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "time-calc"
+              },
+              "level": 3,
+              "backtrack": "g3s1u5.time-add-sub"
+            }
+          ],
+          "concepts": [
+            "g3s1u5.time-add-sub"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "h",
+                "label": "시간",
+                "forms": [
+                  "integer"
+                ]
+              },
+              {
+                "kind": "number",
+                "id": "m",
+                "label": "분",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s1u5.A2.T2",
+          "prompt": "3시간 10분 − 1시간 40분을 계산해요.",
+          "engine": "E14",
+          "mode": "time-calc",
+          "cpa": "P",
+          "config": {
+            "mode": "time-calc",
+            "op": "sub",
+            "a": {
+              "h": 3,
+              "m": 10
+            },
+            "b": {
+              "h": 1,
+              "m": 40
+            },
+            "units": [
+              "h",
+              "m"
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "unbundledAtLeast",
+                "args": {
+                  "n": 1
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "tookAway"
+              },
+              {
+                "kind": "predicate",
+                "name": "valueIs",
+                "args": {
+                  "big": 1,
+                  "small": 30
+                }
+              },
+              {
+                "kind": "equals",
+                "path": "response.h.value",
+                "value": "1"
+              },
+              {
+                "kind": "equals",
+                "path": "response.m.value",
+                "value": "30"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "misconception": "MC-TIME-BASE-100"
+              },
+              "level": 1,
+              "say": "1시간은 몇 분이었지? 풀면 분 칸에 몇 칸이 생길까?"
+            },
+            {
+              "when": {
+                "misconception": "MC-TIME-BASE-100"
+              },
+              "level": 2,
+              "show": {
+                "engine": "E14",
+                "overlay": "sixty-overflow"
+              },
+              "say": "분 칸에 큰 블록 크기의 점선 상자를 그렸어요. 큰 블록 하나는 작은 칸 몇 개일까요?"
+            },
+            {
+              "when": {
+                "misconception": "MC-TIME-BASE-100"
+              },
+              "level": 3,
+              "backtrack": "g2s2u4.hour-60"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "time-calc"
+              },
+              "level": 1,
+              "say": "분 칸이 모자라면 시간 칸 하나를 풀어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "time-calc"
+              },
+              "level": 2,
+              "say": "시간 블록 1개를 풀면 분 칸에 작은 칸이 생겨요. 풀어서 뺄 수 있는지 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "time-calc"
+              },
+              "level": 3,
+              "backtrack": "g3s1u5.time-add-sub"
+            }
+          ],
+          "concepts": [
+            "g3s1u5.time-add-sub"
+          ],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-TIME-BASE-100",
+              "args": {
+                "trap": "70",
+                "expected": "30"
+              },
+              "path": "response.m.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "h",
+                "label": "시간",
+                "forms": [
+                  "integer"
+                ]
+              },
+              {
+                "kind": "number",
+                "id": "m",
+                "label": "분",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s1u5.A2.T3",
+          "prompt": "2분 30초는 몇 초일까요?",
+          "engine": "E14",
+          "mode": "time-calc",
+          "cpa": "A",
+          "config": {
+            "mode": "time-calc",
+            "op": "add",
+            "a": {
+              "m": 2,
+              "s": 30
+            },
+            "b": {},
+            "units": [
+              "m",
+              "s"
+            ]
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.total.value",
+            "value": "150"
+          },
+          "hints": [
+            {
+              "when": {
+                "misconception": "MC-TIME-BASE-100"
+              },
+              "level": 1,
+              "say": "1분은 몇 초였지?"
+            },
+            {
+              "when": {
+                "misconception": "MC-TIME-BASE-100"
+              },
+              "level": 2,
+              "say": "1분을 60칸으로 펼치면 한 칸이 1초예요."
+            },
+            {
+              "when": {
+                "misconception": "MC-TIME-BASE-100"
+              },
+              "level": 3,
+              "backtrack": "g2s2u4.hour-60"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "time-calc"
+              },
+              "level": 1,
+              "say": "2분을 먼저 초로 바꿔 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "time-calc"
+              },
+              "level": 2,
+              "say": "2분은 1분이 2개예요. 1분은 몇 초일까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "time-calc"
+              },
+              "level": 3,
+              "backtrack": "g3s1u5.second-unit"
+            }
+          ],
+          "concepts": [
+            "g3s1u5.second-unit"
+          ],
+          "submit": "button",
+          "showEngine": false,
+          "diagnose": [
+            {
+              "code": "MC-TIME-BASE-100",
+              "args": {
+                "trap": "230",
+                "expected": "150"
+              },
+              "path": "response.total.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "total",
+                "label": "초",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g3s1u5.A2.T4",
+          "prompt": "9시 50분에 출발해서 40분 걸렸어요. 띠에 끝을 놓고 도착 시각을 써요.",
+          "engine": "E14",
+          "mode": "duration",
+          "cpa": "P",
+          "config": {
+            "mode": "duration",
+            "from": "9:00",
+            "to": "11:00",
+            "start": "9:50",
+            "startFixed": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "endIs",
+                "args": {
+                  "time": "10:30"
+                }
+              },
+              {
+                "kind": "equals",
+                "path": "response.h.value",
+                "value": "10"
+              },
+              {
+                "kind": "equals",
+                "path": "response.m.value",
+                "value": "30"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.h.value",
+                    "value": "9"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.m.value",
+                    "value": "90"
+                  }
+                ]
+              },
+              "level": 1,
+              "say": "1시간은 몇 분이었지? 분이 60이 되면 시는 어떻게 될까?"
+            },
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.h.value",
+                    "value": "9"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.m.value",
+                    "value": "90"
+                  }
+                ]
+              },
+              "level": 2,
+              "show": {
+                "engine": "E14",
+                "overlay": "hour-60-split"
+              },
+              "say": "띠가 지나는 블록 경계에 \"60분이 되면 다음 시\"를 표시했어요. 경계를 지나는 곳을 봐요."
+            },
+            {
+              "when": {
+                "kind": "all",
+                "of": [
+                  {
+                    "kind": "equals",
+                    "path": "response.h.value",
+                    "value": "9"
+                  },
+                  {
+                    "kind": "equals",
+                    "path": "response.m.value",
+                    "value": "90"
+                  }
+                ]
+              },
+              "level": 3,
+              "backtrack": "g2s2u4.hour-60"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "duration"
+              },
+              "level": 1,
+              "say": "10시까지 몇 분 남았는지 먼저 세어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "duration"
+              },
+              "level": 2,
+              "say": "10시까지 간 만큼을 40분에서 빼고, 남은 분을 10시에서 더해요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "duration"
+              },
+              "level": 3,
+              "backtrack": "g3s1u5.time-add-sub"
+            }
+          ],
+          "concepts": [
+            "g3s1u5.time-add-sub"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "h",
+                "label": "시",
+                "forms": [
+                  "integer"
+                ]
+              },
+              {
+                "kind": "number",
+                "id": "m",
+                "label": "분",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
