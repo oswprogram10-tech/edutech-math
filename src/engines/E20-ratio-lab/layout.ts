@@ -13,30 +13,43 @@ export const STRIP = { x: 80, y: 475, w: 840, h: 40 };
 export const MARKER_LABEL_Y = 358;
 export const MARKER_LABEL_STEP = 20;
 
-/** 진하기 단계 색(10단계, 연한 갈색 → 진한 갈색). 정해진 표라 결정적이다. */
-export const BROWNS: readonly string[] = [
-  '#f7efe2',
-  '#ecd9bd',
-  '#dfc19b',
-  '#cfa578',
-  '#bd8a5a',
-  '#a97244',
-  '#8f5a33',
-  '#744526',
-  '#5a331b',
-  '#3f230f',
-];
+export const STRIP_SEGMENTS = 10;
+const LIGHT = [0xf7, 0xef, 0xe2] as const;
+const DARK = [0x3f, 0x23, 0x0f] as const;
 
 export function positionNumber(pos: Rational): number {
   return Number(pos.n) / Number(pos.d);
 }
 
-export function stripX(pos: Rational): number {
-  return STRIP.x + STRIP.w * positionNumber(pos);
+/** 실제 진하기(0~1)에 해당하는 섞인 색. 우유색에서 시럽색으로 곧게 섞는다(결정적). */
+export function shade(position: number): string {
+  const t = Math.min(1, Math.max(0, position));
+  const channel = (i: 0 | 1 | 2) => Math.round(LIGHT[i] + (DARK[i] - LIGHT[i]) * t);
+  return `#${[0, 1, 2]
+    .map((i) =>
+      channel(i as 0 | 1 | 2)
+        .toString(16)
+        .padStart(2, '0'),
+    )
+    .join('')}`;
 }
 
-export function stageOf(pos: Rational): number {
-  return Math.min(BROWNS.length - 1, Number((pos.n * BigInt(BROWNS.length)) / pos.d));
+/** 진하기가 띠 범위(stripMax)를 넘는가. */
+export function isOverflow(pos: Rational, stripMax: number): boolean {
+  return positionNumber(pos) > stripMax + 1e-12;
+}
+
+/** 띠 위 가로 위치. 범위를 넘으면 띠 오른쪽 끝. */
+export function stripX(pos: Rational, stripMax: number): number {
+  return STRIP.x + STRIP.w * Math.min(1, positionNumber(pos) / stripMax);
+}
+
+/** 띠 범위 안의 색 단계(0~9). */
+export function stageOf(pos: Rational, stripMax: number): number {
+  return Math.min(
+    STRIP_SEGMENTS - 1,
+    Math.floor((positionNumber(pos) / stripMax) * STRIP_SEGMENTS + 1e-9),
+  );
 }
 
 export type CupRole = 'reference' | 'cup' | 'fixed';
@@ -66,6 +79,15 @@ export interface CupLayout {
   readonly blocks: readonly Block[];
   /** 띠 위 위치. 빈 컵이면 null. */
   readonly position: Rational | null;
+  /** 띠 위 표시의 가로 위치(범위를 넘으면 오른쪽 끝). 빈 컵이면 null. */
+  readonly markerX: number | null;
+  readonly overflow: boolean;
+  /** 실제 진하기로 칠한 섞은 색. 빈 컵이면 null. */
+  readonly color: string | null;
+  /** blocks 모양: 컵 안쪽 아래부터 블록 높이까지 칠하는 칸. */
+  readonly fill: { x: number; y: number; w: number; h: number } | null;
+  /** strip·ratio 모양: 섞은 색 견본 칸. */
+  readonly swatch: { x: number; y: number; w: number; h: number } | null;
 }
 
 const CUP = { w: 150, h: 216, top: 85, side: 10, bottom: 6, innerH: 200, taper: 6 };
@@ -172,10 +194,20 @@ export function mixCups(state: MixState): CupLayout[] {
   const { look } = state.settings;
   return entries.map((entry, i) => {
     const position = stripPosition(entry);
+    const { stripMax } = state.settings;
+    const common = {
+      position,
+      markerX: position === null ? null : stripX(position, stripMax),
+      overflow: position !== null && isOverflow(position, stripMax),
+      color: position === null ? null : shade(positionNumber(position)),
+    };
     if (look === 'blocks') {
       const slot = 920 / Math.max(n, 1);
       const cx = 40 + slot * (i + 0.5);
       const bodyX = cx - CUP.w / 2;
+      const blocks = gridBlocks(entry.milk, entry.syrup, bodyX);
+      const top = blocks.length === 0 ? 0 : Math.min(...blocks.map((b) => b.y));
+      const bottom = CUP.top + CUP.h - CUP.bottom;
       return {
         ...entry,
         body: { x: bodyX, y: CUP.top, w: CUP.w, h: CUP.h },
@@ -184,8 +216,13 @@ export function mixCups(state: MixState): CupLayout[] {
         textX: cx,
         textY: CUP.top + CUP.h + 34,
         anchor: 'middle',
-        blocks: gridBlocks(entry.milk, entry.syrup, bodyX),
-        position,
+        blocks,
+        fill:
+          blocks.length === 0
+            ? null
+            : { x: bodyX + CUP.side, y: top, w: CUP.w - CUP.side * 2, h: bottom - top },
+        swatch: null,
+        ...common,
       };
     }
     const rowY = ROW.top + i * ROW.step;
@@ -198,7 +235,9 @@ export function mixCups(state: MixState): CupLayout[] {
       textY: rowY + 46,
       anchor: 'start',
       blocks: look === 'strip' ? rowBlocks(entry.milk, entry.syrup, rowY) : [],
-      position,
+      fill: null,
+      swatch: position === null ? null : { x: ROW.barX - 36, y: rowY + 11, w: 28, h: 28 },
+      ...common,
     };
   });
 }
@@ -229,22 +268,33 @@ export function pictureRect(size: Size): PictureRect {
  * 띠 위 이름표가 서로 겹치지 않게 줄(row)을 정한다. 왼쪽부터 놓되, 앞 이름표와 가로로 겹치면 한 줄 아래로 내린다.
  * 글자 너비는 글자 수로 어림한다(논리 20px 글자).
  */
+export function markerLabel(cup: CupLayout): {
+  text: string;
+  anchor: 'middle' | 'end';
+  x: number;
+} {
+  const x = cup.markerX ?? 0;
+  return cup.overflow
+    ? { text: `${cup.label} ${S.mix.overflow}`, anchor: 'end', x: x + 14 }
+    : { text: cup.label, anchor: 'middle', x };
+}
+
 export function markerRows(cups: readonly CupLayout[]): Map<string, number> {
   const placed = cups
-    .filter((c) => c.position !== null)
-    .map((c) => ({
-      key: c.key,
-      x: stripX(c.position as Rational),
-      width: c.label.length * 20 + 12,
-    }))
-    .sort((a, b) => a.x - b.x);
+    .filter((c) => c.markerX !== null)
+    .map((c) => {
+      const label = markerLabel(c);
+      const width = label.text.length * 20 + 12;
+      const center = label.anchor === 'end' ? label.x - width / 2 : label.x;
+      return { key: c.key, left: center - width / 2, right: center + width / 2 };
+    })
+    .sort((a, b) => a.left - b.left);
   const rowRight: number[] = [];
   const rows = new Map<string, number>();
   for (const item of placed) {
-    const left = item.x - item.width / 2;
-    let row = rowRight.findIndex((right) => left > right + 4);
+    let row = rowRight.findIndex((right) => item.left > right + 4);
     if (row === -1) row = rowRight.length;
-    rowRight[row] = item.x + item.width / 2;
+    rowRight[row] = item.right;
     rows.set(item.key, row);
   }
   return rows;

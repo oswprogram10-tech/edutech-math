@@ -14,6 +14,8 @@ export const E20_STRINGS = {
     referenceName: '기준 컵',
     amounts: (milk: number, syrup: number) => `우유 ${milk}, 시럽 ${syrup}`,
     ratioText: (milk: number, syrup: number) => `우유 ${milk} : 시럽 ${syrup}`,
+    overflow: '▶ 더 진해요',
+    swatchLabel: '섞은 색',
     stripLight: '연해요',
     stripDark: '진해요',
     stripName: '진하기 띠',

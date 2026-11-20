@@ -7,15 +7,16 @@
 import { useId } from 'react';
 import type { CSSProperties } from 'react';
 import {
-  BROWNS,
+  STRIP_SEGMENTS,
   CUP_GEOMETRY as CUP,
   MARKER_LABEL_STEP,
   MARKER_LABEL_Y,
   STRIP,
   markerRows,
   mixCups,
+  markerLabel,
+  shade,
   stageOf,
-  stripX,
 } from './layout';
 import type { CupLayout } from './layout';
 import { E20_STRINGS as S } from './strings.ko';
@@ -34,7 +35,21 @@ function Cup({ cup }: { cup: CupLayout }) {
   if (body === null) return null;
   const poly = `${body.x},${body.y} ${body.x + body.w},${body.y} ${body.x + body.w - CUP.taper},${body.y + body.h} ${body.x + CUP.taper},${body.y + body.h}`;
   return (
-    <polygon points={poly} fill="#fbfdff" stroke="#4b566b" strokeWidth={4} strokeLinejoin="round" />
+    <g>
+      <polygon points={poly} fill="#fbfdff" stroke="none" />
+      {cup.fill !== null && cup.color !== null ? (
+        <rect
+          x={cup.fill.x}
+          y={cup.fill.y}
+          width={cup.fill.w}
+          height={cup.fill.h}
+          fill={cup.color}
+          data-part="mixed-color"
+          data-color={cup.color}
+        />
+      ) : null}
+      <polygon points={poly} fill="none" stroke="#4b566b" strokeWidth={4} strokeLinejoin="round" />
+    </g>
   );
 }
 
@@ -50,6 +65,7 @@ function Blocks({ cup, dotsId }: { cup: CupLayout; dotsId: string }) {
               width={block.w - 2}
               height={block.h - 2}
               fill="#ffffff"
+              fillOpacity={0.55}
               stroke="#6b7487"
               strokeWidth={1.5}
             />
@@ -79,16 +95,18 @@ function Blocks({ cup, dotsId }: { cup: CupLayout; dotsId: string }) {
   );
 }
 
-function Marker({ cup, row }: { cup: CupLayout; row: number }) {
-  if (cup.position === null) return null;
-  const x = stripX(cup.position);
+function Marker({ cup, row, stripMax }: { cup: CupLayout; row: number; stripMax: number }) {
+  if (cup.position === null || cup.markerX === null) return null;
+  const x = cup.markerX;
+  const label = markerLabel(cup);
   const labelY = MARKER_LABEL_Y + row * MARKER_LABEL_STEP;
   return (
     <g
       data-marker={cup.role}
       data-key={cup.key}
       data-pos={cup.position.toString()}
-      data-stage={stageOf(cup.position)}
+      data-stage={stageOf(cup.position, stripMax)}
+      data-overflow={cup.overflow ? 'true' : undefined}
       data-x={x.toFixed(2)}
     >
       <line x1={x} y1={labelY + 6} x2={x} y2={MARKER_TOP} stroke={INK} strokeWidth={2} />
@@ -113,9 +131,9 @@ function Marker({ cup, row }: { cup: CupLayout; row: number }) {
         />
       )}
       <text
-        x={x}
+        x={label.x}
         y={labelY}
-        textAnchor="middle"
+        textAnchor={label.anchor}
         fontSize={20}
         fontWeight={800}
         fill={INK}
@@ -123,18 +141,20 @@ function Marker({ cup, row }: { cup: CupLayout; row: number }) {
         strokeWidth={4}
         paintOrder="stroke"
       >
-        {cup.label}
+        {label.text}
       </text>
     </g>
   );
 }
 
-function Strip({ cups }: { cups: readonly CupLayout[] }) {
-  const segment = STRIP.w / BROWNS.length;
+function Strip({ cups, stripMax }: { cups: readonly CupLayout[]; stripMax: number }) {
+  const segment = STRIP.w / STRIP_SEGMENTS;
   const rows = markerRows(cups);
   return (
     <g data-part="strip">
-      {BROWNS.map((color, i) => (
+      {Array.from({ length: STRIP_SEGMENTS }, (_, i) =>
+        shade(((i + 0.5) / STRIP_SEGMENTS) * stripMax),
+      ).map((color, i) => (
         <rect
           key={color}
           x={STRIP.x + i * segment}
@@ -169,7 +189,7 @@ function Strip({ cups }: { cups: readonly CupLayout[] }) {
         {S.mix.stripDark}
       </text>
       {cups.map((cup) => (
-        <Marker key={cup.key} cup={cup} row={rows.get(cup.key) ?? 0} />
+        <Marker key={cup.key} cup={cup} row={rows.get(cup.key) ?? 0} stripMax={stripMax} />
       ))}
     </g>
   );
@@ -226,6 +246,19 @@ export function MixBoard({ state, svgStyle, className }: MixBoardProps) {
           </text>
           {look === 'blocks' ? <Cup cup={cup} /> : null}
           {look !== 'ratio' ? <Blocks cup={cup} dotsId={dotsId} /> : null}
+          {look !== 'blocks' && cup.swatch !== null && cup.color !== null ? (
+            <rect
+              x={cup.swatch.x}
+              y={cup.swatch.y}
+              width={cup.swatch.w}
+              height={cup.swatch.h}
+              fill={cup.color}
+              stroke="#4b566b"
+              strokeWidth={2}
+              data-part="swatch"
+              data-color={cup.color}
+            />
+          ) : null}
           {look === 'ratio' ? (
             <text
               x={230}
@@ -252,7 +285,7 @@ export function MixBoard({ state, svgStyle, className }: MixBoardProps) {
           )}
         </g>
       ))}
-      {showStrip ? <Strip cups={cups} /> : null}
+      {showStrip ? <Strip cups={cups} stripMax={state.settings.stripMax} /> : null}
     </svg>
   );
 }

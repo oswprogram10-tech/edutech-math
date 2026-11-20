@@ -83,7 +83,7 @@ describe('mix 화면', () => {
         mode: 'mix',
         fixedCups: [{ id: 'a', label: '가', milk: 3, syrup: 1 }],
       },
-      [add('milk'), add('syrup')],
+      [add('milk'), add('milk'), add('milk'), add('syrup')],
     );
     const { container } = renderState(state);
     const reference = container.querySelector('[data-marker="reference"]');
@@ -114,6 +114,60 @@ describe('mix 화면', () => {
     expect(same.x).toBe(same.refX);
     const other = marker([...repeat(add('milk'), 5), ...repeat(add('syrup'), 2)]);
     expect(other.x).not.toBe(other.refX);
+  });
+
+  it('학생 컵이 띠 범위를 넘으면 오른쪽 끝에 두고 "▶ 더 진해요"로 구별한다', () => {
+    const state = play({ mode: 'mix', stripMax: 0.3 }, [
+      ...repeat(add('milk'), 1),
+      ...repeat(add('syrup'), 3),
+    ]);
+    const { container } = renderState(state);
+    const mine = container.querySelector('[data-marker="cup"]');
+    expect(mine?.getAttribute('data-overflow')).toBe('true');
+    expect(Number(mine?.getAttribute('data-x'))).toBe(920);
+    expect(mine?.textContent).toBe('내 컵 ▶ 더 진해요');
+    expect(
+      container.querySelector('[data-marker="reference"]')?.getAttribute('data-overflow'),
+    ).toBeNull();
+  });
+
+  it('띠 범위 끝(stripMax와 같은 진하기)은 넘침이 아니다', () => {
+    const state = play({ mode: 'mix', stripMax: 0.5 }, [add('milk'), add('syrup')]);
+    const { container } = renderState(state);
+    expect(
+      container.querySelector('[data-marker="cup"]')?.getAttribute('data-overflow'),
+    ).toBeNull();
+    expect(Number(container.querySelector('[data-marker="cup"]')?.getAttribute('data-x'))).toBe(
+      920,
+    );
+  });
+
+  it('컵 안에 실제 진하기 색이 칠해진다: 같은 비는 같은 색, 다른 비는 다른 색(띠 범위와 무관)', () => {
+    const color = (stripMax: number, milk: number, syrup: number) => {
+      const state = play({ mode: 'mix', stripMax }, [
+        ...repeat(add('milk'), milk),
+        ...repeat(add('syrup'), syrup),
+      ]);
+      const { container } = renderState(state);
+      const value = container
+        .querySelector('[data-cup="cup"] [data-part="mixed-color"]')
+        ?.getAttribute('data-color');
+      cleanup();
+      return value;
+    };
+    expect(color(0.5, 4, 1)).toBe(color(0.9, 8, 2));
+    expect(color(0.5, 4, 1)).not.toBe(color(0.5, 1, 1));
+    expect(color(0.5, 0, 0)).toBeUndefined();
+  });
+
+  it('strip·ratio look은 글 옆에 같은 색 견본이 있다', () => {
+    for (const look of ['strip', 'ratio'] as const) {
+      const state = play({ mode: 'mix', look }, [add('milk'), add('syrup')]);
+      const { container } = renderState(state);
+      const swatch = container.querySelector('[data-cup="cup"] [data-part="swatch"]');
+      expect(swatch?.getAttribute('data-color')).toMatch(/^#[0-9a-f]{6}$/);
+      cleanup();
+    }
   });
 
   it('showStrip:false면 띠가 없다', () => {

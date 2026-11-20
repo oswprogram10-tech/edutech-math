@@ -32,6 +32,11 @@ export interface MixConfig {
   look?: MixLook;
   /** 기본 true: 진하기 띠. */
   showStrip?: boolean;
+  /**
+   * 띠의 오른쪽 끝 진하기(0 초과 1 이하). 생략하면 기준·고정 컵의 가장 진한 값 × 1.5를 0.1 단위로
+   * 올림해 0.2~1로 자른다(설정만으로 정한다. 학생 컵 값으로 움직이지 않는다).
+   */
+  stripMax?: number;
 }
 
 export interface ResizeConfig {
@@ -55,6 +60,8 @@ export type RatioConfig = MixConfig | ResizeConfig;
 export interface MixSettings {
   readonly look: MixLook;
   readonly showStrip: boolean;
+  /** 띠의 오른쪽 끝 진하기(0 초과 1 이하). */
+  readonly stripMax: number;
   readonly scaleFactors: readonly number[];
   readonly maxEach: number;
   /** 학생 컵이 있는가(make가 null이면 false). */

@@ -1,4 +1,5 @@
 /** E20 설정 검사·정리. 잘못된 설정은 error 문구와 함께 안전한 기본 상태로 돌려준다. */
+import { defaultStripMax } from './observe';
 import { E20_STRINGS as S } from './strings.ko';
 import {
   DEFAULT_BASE,
@@ -49,6 +50,7 @@ function mixFallback(error: string | null): MixState {
     settings: {
       look: 'blocks',
       showStrip: true,
+      stripMax: 0.5,
       scaleFactors: [2, 3],
       maxEach: DEFAULT_MAX_EACH,
       hasCup: true,
@@ -103,10 +105,18 @@ export function normalizeMix(config: MixConfig): MixState {
     fixedCups.push({ id, label, ...amounts });
   }
 
+  let stripMax: number;
+  if (config.stripMax === undefined) {
+    stripMax = defaultStripMax([...(reference === null ? [] : [reference]), ...fixedCups]);
+  } else {
+    stripMax = config.stripMax;
+    if (typeof stripMax !== 'number' || !(stripMax > 0 && stripMax <= 1)) return bad();
+  }
+
   return {
     mode: 'mix',
     error: null,
-    settings: { look, showStrip, scaleFactors, maxEach, hasCup },
+    settings: { look, showStrip, stripMax, scaleFactors, maxEach, hasCup },
     reference,
     fixedCups,
     cup,

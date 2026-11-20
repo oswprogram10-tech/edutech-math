@@ -172,6 +172,34 @@ describe('mix 설정 검사', () => {
   });
 });
 
+describe('mix stripMax', () => {
+  const fixed = [
+    { id: 'a', label: '가', milk: 5, syrup: 2 },
+    { id: 'b', label: '나', milk: 8, syrup: 3 },
+  ];
+  it('기준·고정 컵만으로 정한다: 4:1·5:2·8:3이면 0.5', () => {
+    expect(mixState({ fixedCups: fixed }).settings.stripMax).toBe(0.5);
+  });
+  it('기준 4:1만이면 0.3, 기준 컵·고정 컵이 없으면 0.5', () => {
+    expect(mixState({}).settings.stripMax).toBe(0.3);
+    expect(mixState({ reference: null }).settings.stripMax).toBe(0.5);
+  });
+  it('학생 컵 값으로 움직이지 않는다', () => {
+    expect(cupOf(1, 9).settings.stripMax).toBe(0.3);
+  });
+  it('0.2~1로 자른다', () => {
+    expect(mixState({ reference: { milk: 9, syrup: 1 } }).settings.stripMax).toBe(0.2);
+    expect(mixState({ reference: { milk: 0, syrup: 3 } }).settings.stripMax).toBe(1);
+    expect(mixState({ reference: { milk: 1, syrup: 1 } }).settings.stripMax).toBe(0.8);
+  });
+  it('직접 주면 그대로, 0 이하·1 초과는 오류', () => {
+    expect(mixState({ stripMax: 0.6 }).settings.stripMax).toBe(0.6);
+    expect(mixState({ stripMax: 1 }).error).toBeNull();
+    expect(mixState({ stripMax: 0 }).error).not.toBeNull();
+    expect(mixState({ stripMax: 1.1 }).error).not.toBeNull();
+  });
+});
+
 describe('mix observe', () => {
   it('8:2는 기준 4:1과 같다', () => {
     const o = obs(cupOf(8, 2));

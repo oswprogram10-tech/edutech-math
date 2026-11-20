@@ -5,8 +5,7 @@
  */
 import { CanvasAlignedOverlay } from '../../../core/engine-sdk';
 import type { OverlayProps } from '../../../core/engine-sdk';
-import { STRIP, stripX } from '../layout';
-import { stripPosition } from '../observe';
+import { STRIP, markerLabel, mixCups } from '../layout';
 import { E20_STRINGS as S } from '../strings.ko';
 import { CANVAS_SELECTOR, LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../types';
 import type { RatioConfig, RatioState } from '../types';
@@ -17,12 +16,14 @@ const TOP = 400;
 export function SideBySideOverlay({ state }: OverlayProps<RatioConfig, RatioState>) {
   if (state.mode !== 'mix' || state.error !== null || !state.settings.showStrip) return null;
   if (state.reference === null || !state.settings.hasCup) return null;
-  const refPos = stripPosition(state.reference);
-  const cupPos = stripPosition(state.cup);
-  if (refPos === null || cupPos === null) return null;
-  const refX = stripX(refPos);
-  const cupX = stripX(cupPos);
-  const differs = !refPos.equals(cupPos);
+  const cups = mixCups(state);
+  const ref = cups.find((c) => c.role === 'reference');
+  const mine = cups.find((c) => c.role === 'cup');
+  if (!ref || !mine || ref.position === null || mine.position === null) return null;
+  if (ref.markerX === null || mine.markerX === null) return null;
+  const refX = ref.markerX;
+  const cupX = mine.markerX;
+  const differs = !ref.position.equals(mine.position);
   const mid = (refX + cupX) / 2;
   const dir = cupX >= refX ? 1 : -1;
   return (
@@ -46,8 +47,8 @@ export function SideBySideOverlay({ state }: OverlayProps<RatioConfig, RatioStat
         data-part="panel"
       />
       {[
-        { key: 'reference', x: refX, label: S.mix.referenceName, labelY: TOP - 6 },
-        { key: 'cup', x: cupX, label: S.mix.cupName, labelY: TOP + 20 },
+        { key: 'reference', x: refX, label: markerLabel(ref), labelY: TOP - 6 },
+        { key: 'cup', x: cupX, label: markerLabel(mine), labelY: TOP + 20 },
       ].map((mark) => (
         <g key={mark.key} data-part={`mark-${mark.key}`} data-x={mark.x.toFixed(2)}>
           <line
@@ -67,9 +68,9 @@ export function SideBySideOverlay({ state }: OverlayProps<RatioConfig, RatioStat
             <circle cx={mark.x} cy={TOP + 62} r={14} fill={INK} />
           )}
           <text
-            x={mark.x}
+            x={mark.label.x}
             y={mark.labelY}
-            textAnchor="middle"
+            textAnchor={mark.label.anchor}
             fontSize={24}
             fontWeight={800}
             fill={INK}
@@ -77,7 +78,7 @@ export function SideBySideOverlay({ state }: OverlayProps<RatioConfig, RatioStat
             strokeWidth={5}
             paintOrder="stroke"
           >
-            {mark.label}
+            {mark.label.text}
           </text>
         </g>
       ))}

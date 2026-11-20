@@ -18,6 +18,18 @@ export function stripPosition(amounts: Amounts): Rational | null {
   return total === 0 ? null : Rational.of(amounts.syrup, total);
 }
 
+/** 띠 범위 기본값: 기준·고정 컵의 가장 진한 값 × 1.5를 0.1 단위로 올림, 0.2~1. 컵이 없으면 0.5. */
+export function defaultStripMax(cups: readonly Amounts[]): number {
+  let best: Rational | null = null;
+  for (const cup of cups) {
+    const pos = stripPosition(cup);
+    if (pos !== null && (best === null || pos.compareTo(best) > 0)) best = pos;
+  }
+  if (best === null) return 0.5;
+  const tenths = Number((best.n * 15n + best.d - 1n) / best.d);
+  return Math.min(10, Math.max(2, tenths)) / 10;
+}
+
 function text(value: Rational | null): string | null {
   return value === null ? null : value.toString();
 }
