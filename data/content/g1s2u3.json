@@ -299,6 +299,524 @@
           "submit": "button"
         }
       ]
+    },
+    {
+      "id": "g1s2u3.A2",
+      "title": "톱니 연동 시계",
+      "tasks": [
+        {
+          "id": "g1s2u3.A2.T1",
+          "prompt": "3시를 만들어요.",
+          "engine": "E14",
+          "mode": "clock",
+          "cpa": "C",
+          "config": {
+            "mode": "clock",
+            "granularity": "half-hour",
+            "snapMinuteTo": [
+              0,
+              15,
+              30,
+              45
+            ],
+            "showGears": true,
+            "start": "12:00",
+            "digitalReadout": "never"
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "timeIs",
+            "args": {
+              "time": "3:00"
+            }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "minuteIs",
+                "args": {
+                  "minute": 15
+                }
+              },
+              "level": 1,
+              "say": "몇 시는 어느 바늘이 알려 줄까?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "minuteIs",
+                "args": {
+                  "minute": 15
+                }
+              },
+              "level": 2,
+              "say": "짧은바늘을 진하게 그렸어요.",
+              "show": {
+                "engine": "E14",
+                "overlay": "hour-hand-focus"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "minuteIs",
+                "args": {
+                  "minute": 15
+                }
+              },
+              "level": 3,
+              "backtrack": "g1s2u3.clock-hour"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "clock"
+              },
+              "level": 1,
+              "say": "긴바늘과 짧은바늘이 각각 어디를 가리키는지 살펴봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "clock"
+              },
+              "level": 2,
+              "say": "긴바늘이 12에 있으면 '몇 시', 6에 있으면 '몇 시 30분'이에요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "clock"
+              },
+              "level": 3,
+              "backtrack": "g1s2u3.clock-hour"
+            }
+          ],
+          "concepts": [
+            "g1s2u3.clock-hour"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g1s2u3.A2.T2",
+          "prompt": "시계를 보고 몇 시인지 써요.",
+          "engine": "E14",
+          "mode": "clock",
+          "cpa": "C",
+          "config": {
+            "mode": "clock",
+            "granularity": "half-hour",
+            "snapMinuteTo": [
+              0,
+              30
+            ],
+            "showGears": true,
+            "start": "7:00",
+            "digitalReadout": "never",
+            "readOnly": true
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.h.value",
+            "value": "7"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.h.value",
+                "value": "12"
+              },
+              "level": 1,
+              "say": "몇 시는 어느 바늘이 알려 줄까?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.h.value",
+                "value": "12"
+              },
+              "level": 2,
+              "say": "짧은바늘을 진하게 그렸어요.",
+              "show": {
+                "engine": "E14",
+                "overlay": "hour-hand-focus"
+              }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.h.value",
+                "value": "12"
+              },
+              "level": 3,
+              "backtrack": "g1s2u3.clock-hour"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "clock"
+              },
+              "level": 1,
+              "say": "짧은바늘이 어느 수를 가리키는지 먼저 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "clock"
+              },
+              "level": 2,
+              "say": "긴바늘이 12에 있으면 '몇 시', 6에 있으면 '몇 시 30분'이에요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "clock"
+              },
+              "level": 3,
+              "backtrack": "g1s2u3.clock-hour"
+            }
+          ],
+          "concepts": [
+            "g1s2u3.clock-hour"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "h",
+                "label": "몇 시",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g1s2u3.A2.T3",
+          "prompt": "8시 30분을 만들어요.",
+          "engine": "E14",
+          "mode": "clock",
+          "cpa": "P",
+          "config": {
+            "mode": "clock",
+            "granularity": "half-hour",
+            "snapMinuteTo": [
+              0,
+              30
+            ],
+            "showGears": false,
+            "start": "12:00",
+            "digitalReadout": "never"
+          },
+          "goal": {
+            "kind": "predicate",
+            "name": "timeIs",
+            "args": {
+              "time": "8:30"
+            }
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "timeIs",
+                "args": {
+                  "time": "9:30"
+                }
+              },
+              "level": 1,
+              "say": "짧은바늘이 다음 수를 지났어?"
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "timeIs",
+                "args": {
+                  "time": "9:30"
+                }
+              },
+              "level": 2,
+              "say": "긴바늘을 거꾸로 돌려 정시로 되감아 봤어요.",
+              "show": {
+                "engine": "E14",
+                "overlay": "rewind-to-hour"
+              }
+            },
+            {
+              "when": {
+                "kind": "predicate",
+                "name": "timeIs",
+                "args": {
+                  "time": "9:30"
+                }
+              },
+              "level": 3,
+              "backtrack": "g1s2u3.clock-hour"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "clock"
+              },
+              "level": 1,
+              "say": "긴바늘과 짧은바늘이 각각 어디를 가리키는지 살펴봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "clock"
+              },
+              "level": 2,
+              "say": "긴바늘이 12에 있으면 '몇 시', 6에 있으면 '몇 시 30분'이에요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "clock"
+              },
+              "level": 3,
+              "backtrack": "g1s2u3.clock-half"
+            }
+          ],
+          "concepts": [
+            "g1s2u3.clock-half"
+          ],
+          "submit": "button"
+        },
+        {
+          "id": "g1s2u3.A2.T4",
+          "prompt": "짧은바늘만 남은 시계예요. 몇 시 30분일까요?",
+          "engine": "E14",
+          "mode": "clock",
+          "cpa": "P",
+          "config": {
+            "mode": "clock",
+            "granularity": "half-hour",
+            "snapMinuteTo": [
+              0,
+              30
+            ],
+            "showGears": false,
+            "start": "4:30",
+            "digitalReadout": "never",
+            "readOnly": true,
+            "hideMinuteHand": true
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.h.value",
+            "value": "4"
+          },
+          "hints": [
+            {
+              "when": {
+                "misconception": "MC-CLOCK-HOUR-BETWEEN"
+              },
+              "level": 1,
+              "say": "짧은바늘이 다음 수를 지났어?"
+            },
+            {
+              "when": {
+                "misconception": "MC-CLOCK-HOUR-BETWEEN"
+              },
+              "level": 2,
+              "say": "긴바늘을 거꾸로 돌려 정시로 되감아 봤어요.",
+              "show": {
+                "engine": "E14",
+                "overlay": "rewind-to-hour"
+              }
+            },
+            {
+              "when": {
+                "misconception": "MC-CLOCK-HOUR-BETWEEN"
+              },
+              "level": 3,
+              "backtrack": "g1s2u3.clock-hour"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "clock"
+              },
+              "level": 1,
+              "say": "짧은바늘이 어느 수를 가리키는지 먼저 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "clock"
+              },
+              "level": 2,
+              "say": "긴바늘이 12에 있으면 '몇 시', 6에 있으면 '몇 시 30분'이에요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "clock"
+              },
+              "level": 3,
+              "backtrack": "g1s2u3.clock-half"
+            }
+          ],
+          "concepts": [
+            "g1s2u3.clock-half"
+          ],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-CLOCK-HOUR-BETWEEN",
+              "args": {
+                "hour": "4"
+              },
+              "path": "response.h.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "h",
+                "label": "몇 시",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g1s2u3.A2.T5",
+          "prompt": "이 시계와 같은 시각을 골라요. 가: 7:30 나: 8:30 다: 7:00",
+          "engine": "E14",
+          "mode": "clock",
+          "cpa": "A",
+          "config": {
+            "mode": "clock",
+            "granularity": "half-hour",
+            "snapMinuteTo": [
+              0,
+              30
+            ],
+            "showGears": false,
+            "start": "7:30",
+            "digitalReadout": "never",
+            "readOnly": true
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.pick.selected",
+            "value": [
+              "ga"
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.pick.selected",
+                "value": [
+                  "na"
+                ]
+              },
+              "level": 1,
+              "say": "짧은바늘이 다음 수를 지났어?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.pick.selected",
+                "value": [
+                  "na"
+                ]
+              },
+              "level": 2,
+              "say": "짧은바늘이 두 수 사이에 있으면 앞의 수를 읽어요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.pick.selected",
+                "value": [
+                  "na"
+                ]
+              },
+              "level": 3,
+              "backtrack": "g1s2u3.clock-hour"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "clock"
+              },
+              "level": 1,
+              "say": "짧은바늘이 어느 수를 가리키는지 먼저 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "clock"
+              },
+              "level": 2,
+              "say": "긴바늘이 12에 있으면 '몇 시', 6에 있으면 '몇 시 30분'이에요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "clock"
+              },
+              "level": 3,
+              "backtrack": "g1s2u3.clock-half"
+            }
+          ],
+          "concepts": [
+            "g1s2u3.clock-half"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "pick",
+                "label": "같은 시각",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "ga",
+                    "label": "가"
+                  },
+                  {
+                    "id": "na",
+                    "label": "나"
+                  },
+                  {
+                    "id": "da",
+                    "label": "다"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }
