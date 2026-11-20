@@ -1,0 +1,987 @@
+{
+  "unit": "g2s1u4",
+  "title": "길이 재기",
+  "activities": [
+    {
+      "id": "g2s1u4.A1",
+      "title": "뼘 vs 클립, 1cm 자 발명",
+      "tasks": [
+        {
+          "id": "g2s1u4.A1.T1",
+          "prompt": "두 친구가 책상을 뼘으로 쟀더니 수가 달라요. 왜 그럴까요?",
+          "engine": "E13",
+          "mode": "length",
+          "cpa": "C",
+          "config": {
+            "mode": "length",
+            "object": {
+              "name": "desk",
+              "lengthCm": "60"
+            },
+            "units": [
+              "hand-span-a",
+              "hand-span-b"
+            ],
+            "demoSpans": {
+              "objectName": "desk",
+              "objectCm": "60"
+            }
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.why.selected.0",
+            "value": "ga"
+          },
+          "hints": [
+            {
+              "when": {
+                "misconception": "MC-MEASURE-UNIT-SIZE"
+              },
+              "level": 1,
+              "say": "두 뼘의 크기는 같아?"
+            },
+            {
+              "when": {
+                "misconception": "MC-MEASURE-UNIT-SIZE"
+              },
+              "level": 2,
+              "say": "두 친구의 뼘을 나란히 겹쳐 놓았어요. 어느 쪽이 더 큰지 봐요.",
+              "show": {
+                "engine": "E13",
+                "overlay": "span-compare"
+              }
+            },
+            {
+              "when": {
+                "misconception": "MC-MEASURE-UNIT-SIZE"
+              },
+              "level": 3,
+              "backtrack": "g2s1u4.standard-unit"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 1,
+              "say": "두 친구의 뼘을 나란히 대 보면 어떨까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 2,
+              "say": "두 친구의 뼘이 같은 크기인지 생각해 봐요. 크기가 다르면 센 수도 달라질까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 3,
+              "backtrack": "g2s1u4.standard-unit"
+            }
+          ],
+          "concepts": [
+            "g2s1u4.standard-unit"
+          ],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-MEASURE-UNIT-SIZE",
+              "args": {
+                "trap": "na",
+                "expected": "ga"
+              },
+              "path": "response.why.selected.0"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "why",
+                "label": "골라요.",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "ga",
+                    "label": "두 친구의 뼘 크기가 달라서"
+                  },
+                  {
+                    "id": "na",
+                    "label": "수가 큰 친구의 책상이 더 길어서"
+                  },
+                  {
+                    "id": "da",
+                    "label": "한 친구가 잘못 세어서"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g2s1u4.A1.T2",
+          "prompt": "클립을 틈 없이 이어 붙여 연필 길이를 재요. 클립 몇 개일까요?",
+          "engine": "E13",
+          "mode": "length",
+          "cpa": "C",
+          "config": {
+            "mode": "length",
+            "object": {
+              "name": "pencil",
+              "lengthCm": "12"
+            },
+            "units": [
+              "clip-3cm"
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "exact"
+              },
+              {
+                "kind": "predicate",
+                "name": "countIs",
+                "args": {
+                  "n": 4,
+                  "unit": "clip-3cm"
+                }
+              },
+              {
+                "kind": "equals",
+                "path": "response.n.value",
+                "value": "4"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "misconceptions",
+                "value": [
+                  "MC-MEASURE-GAP"
+                ]
+              },
+              "level": 1,
+              "say": "사이에 빈 곳이 있어?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "misconceptions",
+                "value": [
+                  "MC-MEASURE-GAP"
+                ]
+              },
+              "level": 2,
+              "say": "빈 곳은 빨간 줄로, 겹친 곳은 진한 색으로 표시했어요. 표시된 곳을 고쳐 봐요.",
+              "show": {
+                "engine": "E13",
+                "overlay": "gap-marks"
+              }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "misconceptions",
+                "value": [
+                  "MC-MEASURE-GAP"
+                ]
+              },
+              "level": 3,
+              "backtrack": "g2s1u4.unit-iteration"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 1,
+              "say": "물건 처음부터 끝까지 빈틈없이 이어 붙였나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 2,
+              "say": "물건의 왼쪽 끝에서 시작해 오른쪽 끝까지, 틈도 겹침도 없이 이어 붙였는지 살펴봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 3,
+              "backtrack": "g2s1u4.unit-iteration"
+            }
+          ],
+          "concepts": [
+            "g2s1u4.unit-iteration"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "n",
+                "label": "개",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g2s1u4.A1.T3",
+          "prompt": "이번에는 1cm 블록으로 재요. 몇 cm일까요?",
+          "engine": "E13",
+          "mode": "length",
+          "cpa": "C",
+          "config": {
+            "mode": "length",
+            "object": {
+              "name": "pencil",
+              "lengthCm": "12"
+            },
+            "units": [
+              "cm-block"
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "exact"
+              },
+              {
+                "kind": "equals",
+                "path": "response.n.value",
+                "value": "12"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "misconceptions",
+                "value": [
+                  "MC-MEASURE-GAP"
+                ]
+              },
+              "level": 1,
+              "say": "사이에 빈 곳이 있어?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "misconceptions",
+                "value": [
+                  "MC-MEASURE-GAP"
+                ]
+              },
+              "level": 2,
+              "say": "빈 곳은 빨간 줄로, 겹친 곳은 진한 색으로 표시했어요. 표시된 곳을 고쳐 봐요.",
+              "show": {
+                "engine": "E13",
+                "overlay": "gap-marks"
+              }
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "misconceptions",
+                "value": [
+                  "MC-MEASURE-GAP"
+                ]
+              },
+              "level": 3,
+              "backtrack": "g2s1u4.unit-iteration"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 1,
+              "say": "물건 처음부터 끝까지 빈틈없이 이어 붙였나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 2,
+              "say": "물건의 왼쪽 끝에서 시작해 오른쪽 끝까지, 틈도 겹침도 없이 이어 붙였는지 살펴봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 3,
+              "backtrack": "g2s1u4.unit-iteration"
+            }
+          ],
+          "concepts": [
+            "g2s1u4.unit-iteration"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "n",
+                "label": "cm",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g2s1u4.A1.T4",
+          "prompt": "1cm 블록 10개로 자를 만들고 눈금에 숫자를 놓아요.",
+          "engine": "E13",
+          "mode": "length",
+          "cpa": "P",
+          "config": {
+            "mode": "length",
+            "object": {
+              "name": "막대",
+              "lengthCm": "10"
+            },
+            "units": [
+              "cm-block"
+            ],
+            "buildRuler": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "rulerMade"
+              },
+              {
+                "kind": "predicate",
+                "name": "labelsCorrect"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 1,
+              "say": "0은 어디에 놓아야 할까요? 블록 하나가 1cm예요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 2,
+              "say": "블록 하나가 끝날 때마다 눈금이 하나씩 늘어나요. 눈금 숫자는 블록 몇 개째인지 생각해 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 3,
+              "backtrack": "g2s1u4.standard-unit"
+            }
+          ],
+          "concepts": [
+            "g2s1u4.ruler-use"
+          ],
+          "submit": "button"
+        }
+      ]
+    },
+    {
+      "id": "g2s1u4.A2",
+      "title": "영점 교정 어림 게임",
+      "tasks": [
+        {
+          "id": "g2s1u4.A2.T1",
+          "prompt": "자로 지우개 길이를 재요. 몇 cm일까요?",
+          "engine": "E13",
+          "mode": "estimate",
+          "cpa": "P",
+          "config": {
+            "mode": "estimate",
+            "object": {
+              "name": "eraser",
+              "lengthCm": "5"
+            },
+            "ruler": {
+              "offsetCm": 0,
+              "draggable": true
+            }
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.n.value",
+            "value": "5"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "estimate"
+              },
+              "level": 1,
+              "say": "물건의 처음과 끝이 자의 어느 눈금에 있는지 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "estimate"
+              },
+              "level": 2,
+              "say": "물건이 시작한 눈금과 끝난 눈금을 찾아서, 그 사이에 1cm 칸이 몇 개 있는지 세어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "estimate"
+              },
+              "level": 3,
+              "backtrack": "g2s1u4.standard-unit"
+            }
+          ],
+          "concepts": [
+            "g2s1u4.ruler-use"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "n",
+                "label": "cm",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g2s1u4.A2.T2",
+          "prompt": "자가 3에서 시작해요. 크레파스 길이는 몇 cm일까요?",
+          "engine": "E13",
+          "mode": "estimate",
+          "cpa": "P",
+          "config": {
+            "mode": "estimate",
+            "object": {
+              "name": "crayon",
+              "lengthCm": "7"
+            },
+            "ruler": {
+              "offsetCm": 3,
+              "draggable": false
+            }
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.n.value",
+            "value": "7"
+          },
+          "hints": [
+            {
+              "when": {
+                "misconception": "MC-MEASURE-ENDPOINT"
+              },
+              "level": 1,
+              "say": "물건이 어디에서 시작했어?"
+            },
+            {
+              "when": {
+                "misconception": "MC-MEASURE-ENDPOINT"
+              },
+              "level": 2,
+              "say": "물건이 시작한 눈금부터 칸마다 색을 칠했어요. 칠한 칸이 몇 개인지 세어 봐요.",
+              "show": {
+                "engine": "E13",
+                "overlay": "count-cells"
+              }
+            },
+            {
+              "when": {
+                "misconception": "MC-MEASURE-ENDPOINT"
+              },
+              "level": 3,
+              "backtrack": "g1s1u4.length-direct"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "estimate"
+              },
+              "level": 1,
+              "say": "물건의 처음과 끝이 자의 어느 눈금에 있는지 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "estimate"
+              },
+              "level": 2,
+              "say": "물건이 시작한 눈금과 끝난 눈금을 찾아서, 그 사이에 1cm 칸이 몇 개 있는지 세어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "estimate"
+              },
+              "level": 3,
+              "backtrack": "g2s1u4.standard-unit"
+            }
+          ],
+          "concepts": [
+            "g2s1u4.ruler-use"
+          ],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-MEASURE-ENDPOINT",
+              "args": {
+                "trap": "10",
+                "expected": "7"
+              },
+              "path": "response.n.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "n",
+                "label": "cm",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g2s1u4.A2.T3",
+          "prompt": "끝이 눈금 사이에 있어요. 약 몇 cm일까요?",
+          "engine": "E13",
+          "mode": "estimate",
+          "cpa": "P",
+          "config": {
+            "mode": "estimate",
+            "object": {
+              "name": "클립",
+              "lengthCm": "6.7"
+            },
+            "ruler": {
+              "offsetCm": 0,
+              "draggable": true
+            }
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.n.value",
+            "value": "7"
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.n.value",
+                "value": "6"
+              },
+              "level": 1,
+              "say": "끝이 6과 7 중 어느 눈금에 더 가까운지 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "estimate"
+              },
+              "level": 1,
+              "say": "물건의 처음과 끝이 자의 어느 눈금에 있는지 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "estimate"
+              },
+              "level": 2,
+              "say": "물건이 시작한 눈금과 끝난 눈금을 찾아서, 그 사이에 1cm 칸이 몇 개 있는지 세어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "estimate"
+              },
+              "level": 3,
+              "backtrack": "g2s1u4.standard-unit"
+            }
+          ],
+          "concepts": [
+            "g2s1u4.ruler-use"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "n",
+                "label": "cm",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g2s1u4.A2.T4",
+          "prompt": "먼저 길이를 어림해서 넣고, 자를 맞춰 재어 봐요.",
+          "engine": "E13",
+          "mode": "estimate",
+          "cpa": "A",
+          "config": {
+            "mode": "estimate",
+            "object": {
+              "name": "풀",
+              "lengthCm": "9"
+            },
+            "ruler": {
+              "offsetCm": 2,
+              "draggable": true
+            },
+            "estimateFirst": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "estimateLocked"
+              },
+              {
+                "kind": "equals",
+                "path": "response.n.value",
+                "value": "9"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "misconception": "MC-MEASURE-ENDPOINT"
+              },
+              "level": 1,
+              "say": "물건이 어디에서 시작했어?"
+            },
+            {
+              "when": {
+                "misconception": "MC-MEASURE-ENDPOINT"
+              },
+              "level": 2,
+              "say": "물건이 시작한 눈금부터 칸마다 색을 칠했어요. 칠한 칸이 몇 개인지 세어 봐요.",
+              "show": {
+                "engine": "E13",
+                "overlay": "count-cells"
+              }
+            },
+            {
+              "when": {
+                "misconception": "MC-MEASURE-ENDPOINT"
+              },
+              "level": 3,
+              "backtrack": "g1s1u4.length-direct"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "estimate"
+              },
+              "level": 1,
+              "say": "물건의 끝이 몇 칸째인지 세어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "estimate"
+              },
+              "level": 2,
+              "say": "물건이 시작한 눈금부터 1cm 칸이 몇 개인지 하나씩 세어 봐요. 어림한 값과도 견주어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "estimate"
+              },
+              "level": 3,
+              "backtrack": "g2s1u4.ruler-use"
+            }
+          ],
+          "concepts": [
+            "g2s1u4.estimate-length"
+          ],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-MEASURE-ENDPOINT",
+              "args": {
+                "trap": "11",
+                "expected": "9"
+              },
+              "path": "response.n.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "n",
+                "label": "cm",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g2s1u4.A2.T5",
+          "prompt": "먼저 길이를 어림해서 넣고, 자를 맞춰 재어 봐요.",
+          "engine": "E13",
+          "mode": "estimate",
+          "cpa": "A",
+          "config": {
+            "mode": "estimate",
+            "object": {
+              "name": "색연필",
+              "lengthCm": "13"
+            },
+            "ruler": {
+              "offsetCm": 0,
+              "draggable": true
+            },
+            "estimateFirst": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "estimateLocked"
+              },
+              {
+                "kind": "equals",
+                "path": "response.n.value",
+                "value": "13"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "estimate"
+              },
+              "level": 1,
+              "say": "물건의 끝이 몇 칸째인지 세어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "estimate"
+              },
+              "level": 2,
+              "say": "물건이 시작한 눈금부터 1cm 칸이 몇 개인지 하나씩 세어 봐요. 어림한 값과도 견주어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "estimate"
+              },
+              "level": 3,
+              "backtrack": "g2s1u4.ruler-use"
+            }
+          ],
+          "concepts": [
+            "g2s1u4.estimate-length"
+          ],
+          "submit": "button",
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "n",
+                "label": "cm",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g2s1u4.A2.T6",
+          "prompt": "먼저 길이를 어림해서 넣고, 자를 맞춰 재어 봐요.",
+          "engine": "E13",
+          "mode": "estimate",
+          "cpa": "A",
+          "config": {
+            "mode": "estimate",
+            "object": {
+              "name": "머리핀",
+              "lengthCm": "6"
+            },
+            "ruler": {
+              "offsetCm": 1,
+              "draggable": true
+            },
+            "estimateFirst": true
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "estimateLocked"
+              },
+              {
+                "kind": "equals",
+                "path": "response.n.value",
+                "value": "6"
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "misconception": "MC-MEASURE-ENDPOINT"
+              },
+              "level": 1,
+              "say": "물건이 어디에서 시작했어?"
+            },
+            {
+              "when": {
+                "misconception": "MC-MEASURE-ENDPOINT"
+              },
+              "level": 2,
+              "say": "물건이 시작한 눈금부터 칸마다 색을 칠했어요. 칠한 칸이 몇 개인지 세어 봐요.",
+              "show": {
+                "engine": "E13",
+                "overlay": "count-cells"
+              }
+            },
+            {
+              "when": {
+                "misconception": "MC-MEASURE-ENDPOINT"
+              },
+              "level": 3,
+              "backtrack": "g1s1u4.length-direct"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "estimate"
+              },
+              "level": 1,
+              "say": "물건의 끝이 몇 칸째인지 세어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "estimate"
+              },
+              "level": 2,
+              "say": "물건이 시작한 눈금부터 1cm 칸이 몇 개인지 하나씩 세어 봐요. 어림한 값과도 견주어 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "estimate"
+              },
+              "level": 3,
+              "backtrack": "g2s1u4.ruler-use"
+            }
+          ],
+          "concepts": [
+            "g2s1u4.estimate-length"
+          ],
+          "submit": "button",
+          "diagnose": [
+            {
+              "code": "MC-MEASURE-ENDPOINT",
+              "args": {
+                "trap": "7",
+                "expected": "6"
+              },
+              "path": "response.n.value"
+            }
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "n",
+                "label": "cm",
+                "forms": [
+                  "integer"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
