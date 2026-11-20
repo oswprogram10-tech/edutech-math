@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 
 /**
- * E20 비·비율 실험실(mix·resize) 샌드박스 E2E. 아이패드(WebKit)·크롬북·전자칠판 뷰포트에서 모두 돈다.
+ * E20 비·비율 실험실(mix·resize·rate·percent) 샌드박스 E2E. 아이패드(WebKit)·크롬북·전자칠판 뷰포트에서 모두 돈다.
  *
  * - mix: ×2는 같은 띠 위치, 우유만 더하면 달라짐 / resize: +2 찌그러짐, ×2 유지, 담기
  * - 키보드만으로 각 모드 한 번, 힌트 ② 오버레이 넷이 본 캔버스와 1px 안에 겹침
@@ -22,6 +22,14 @@ interface Observation {
   readonly saved?: { w: number; h: number; equivalent: boolean }[];
   readonly savedEquivalentCount?: number;
   readonly misconceptions?: string[];
+  readonly racers?: { id: string; distance: number | null; time: number | null }[];
+  readonly prediction?: string | null;
+  readonly predictionLocked?: boolean;
+  readonly ran?: boolean;
+  readonly runs?: number;
+  readonly shaded?: number;
+  readonly cells?: number[];
+  readonly fraction?: string;
 }
 
 async function readObservation(page: Page): Promise<Observation> {
@@ -35,7 +43,7 @@ async function pollObservation(page: Page, check: (o: Observation) => boolean): 
 
 async function open(
   page: Page,
-  mode: 'mix' | 'resize',
+  mode: 'mix' | 'resize' | 'rate' | 'percent',
   config: Record<string, unknown> = {},
   query = 'stage=fit',
 ): Promise<void> {
@@ -313,7 +321,7 @@ test('넓은 판은 줄여서 맞추고, 좁은 판은 최소 배율 0.6에서 �
   page,
 }) => {
   test.skip(test.info().project.name !== 'chromebook', '크롬북 뷰포트에서만 판 크기를 바꿔 본다.');
-  for (const mode of ['mix', 'resize'] as const) {
+  for (const mode of ['mix', 'resize', 'rate', 'percent'] as const) {
     await open(page, mode);
     const wide = await canvas(page).boundingBox();
     if (!wide) throw new Error('캔버스를 찾지 못했습니다.');
@@ -332,7 +340,12 @@ test('넓은 판은 줄여서 맞추고, 좁은 판은 최소 배율 0.6에서 �
       .evaluate((element) => element.scrollWidth > element.clientWidth);
     expect(scrolls).toBe(true);
     // 조작 칸은 스크롤 상자 밖이라 단추가 그대로 보인다.
-    const first = mode === 'mix' ? '우유 넣기' : '가로 늘리기';
+    const first = {
+      mix: '우유 넣기',
+      resize: '가로 늘리기',
+      rate: '경주 시작',
+      percent: '모두 지우기',
+    }[mode];
     await expect(button(page, first)).toBeVisible();
     const outside = await button(page, first).evaluate(
       (el) => !document.querySelector('[data-testid="ratio-board"]')?.contains(el),
@@ -350,18 +363,291 @@ async function expectMin(locator: Locator, min: number, label: string): Promise<
 
 for (const size of [48, 64] as const) {
   test(`터치 타깃 ${size}: 모든 단추가 ${size}px 이상`, async ({ page }) => {
-    for (const mode of ['mix', 'resize'] as const) {
+    for (const mode of ['mix', 'resize', 'rate', 'percent'] as const) {
       await open(page, mode);
       // 설정은 저장되므로 아직 48px일 때만 눌러 64px로 바꾼다.
       const toggle = page.getByRole('button', { name: '터치 48px' });
       if (size === 64 && (await toggle.count()) > 0) await toggle.click();
       const controls = page.getByTestId('ratio-controls').getByRole('button');
       const count = await controls.count();
-      expect(count).toBeGreaterThan(4);
+      expect(count).toBeGreaterThan(mode === 'percent' ? 1 : 4);
       for (let i = 0; i < count; i += 1) {
         await controls.nth(i).scrollIntoViewIfNeeded();
         await expectMin(controls.nth(i), size, `${mode} 단추 ${i}`);
       }
+      const inputs = page.getByTestId('ratio-controls').locator('input');
+      for (let i = 0; i < (await inputs.count()); i += 1) {
+        await inputs.nth(i).scrollIntoViewIfNeeded();
+        await expectMin(inputs.nth(i), size, `${mode} 입력 ${i}`);
+      }
     }
   });
 }
+
+// ───────────── rate · percent (T190) ─────────────
+
+const BLANK_RACERS = [
+  { id: 'rabbit', name: '토끼', distance: null, time: null },
+  { id: 'turtle', name: '거북', distance: null, time: null },
+];
+
+/** 캐릭터 가운데 x(논리 좌표). 도착선 `[data-part="finish"]`가 아니라 캐릭터 묶음을 읽는다. */
+async function racerX(page: Page, id: string): Promise<number> {
+  const value = await canvas(page)
+    .locator(`g[data-racer="${id}"][data-at-finish]`)
+    .getAttribute('data-x');
+  return Number(value);
+}
+
+async function finishX(page: Page, id: string): Promise<number> {
+  const value = await canvas(page)
+    .locator(`[data-part="finish"][data-racer="${id}"]`)
+    .getAttribute('data-x');
+  return Number(value);
+}
+
+async function fillRacers(page: Page): Promise<void> {
+  await page.getByLabel('토끼 거리(m)').fill('120');
+  await page.getByLabel('토끼 시간(초)').fill('20');
+  await page.getByLabel('거북 거리(m)').fill('200');
+  await page.getByLabel('거북 시간(초)').fill('40');
+}
+
+test('rate: 값 넣기 → 예측 → 경주(재생 뒤 각자 자기 거리에 도착, 결과 글 없음)', async ({
+  page,
+}) => {
+  await open(page, 'rate', { racers: BLANK_RACERS, predictFirst: true });
+  await expect(canvas(page)).toHaveAttribute('data-ran', 'false');
+  // 값이 없을 때는 경주를 시작할 수 없다.
+  await click(page, '경주 시작');
+  await expect(page.getByTestId('ratio-message')).toHaveText('거리와 시간을 모두 넣어 주세요.');
+  await fillRacers(page);
+  await pollObservation(
+    page,
+    (o) => o.racers?.[0]?.distance === 120 && o.racers[1]?.time === 40 && o.ran === false,
+  );
+  // 예측 전에는 경주를 시작할 수 없다.
+  await click(page, '경주 시작');
+  await expect(page.getByTestId('ratio-message')).toHaveText('먼저 누가 더 빠를지 예측해 주세요.');
+  await click(page, '거북');
+  await expect(page.getByTestId('rate-prediction')).toHaveText('내 예측: 거북');
+  await pollObservation(
+    page,
+    (o) =>
+      o.prediction === 'turtle' &&
+      o.predictionLocked === true &&
+      (o.misconceptions ?? []).includes('MC-RATE-DISTANCE-ONLY'),
+  );
+  expect(await racerX(page, 'rabbit')).toBe(150);
+  await click(page, '경주 시작');
+  await expect(canvas(page)).toHaveAttribute('data-ran', 'true');
+  await expect(canvas(page)).toHaveAttribute('data-playing', 'false', { timeout: 10_000 });
+  expect(await racerX(page, 'rabbit')).toBe(await finishX(page, 'rabbit'));
+  expect(await racerX(page, 'turtle')).toBe(await finishX(page, 'turtle'));
+  await pollObservation(page, (o) => o.ran === true && o.runs === 1);
+  const text = (await page.getByTestId('ratio-board').textContent()) ?? '';
+  expect(text).not.toMatch(/1초에|더 빠|더 멀리/);
+});
+
+test('rate: prefers-reduced-motion이면 끝 장면이 바로 보이고, 처음으로를 누르면 시작 장면', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await open(page, 'rate');
+  await click(page, '토끼');
+  await click(page, '경주 시작');
+  await expect(canvas(page)).toHaveAttribute('data-playing', 'false');
+  await expect(canvas(page)).toHaveAttribute('data-step', '1000');
+  expect(await racerX(page, 'rabbit')).toBe(await finishX(page, 'rabbit'));
+  expect(await racerX(page, 'turtle')).toBe(await finishX(page, 'turtle'));
+  // 처음으로(값은 그대로여도 기록은 남고 장면은 끝 그대로, 값을 바꾸면 시작 장면)
+  await page.getByLabel('토끼 시간(초)').fill('30');
+  expect(await racerX(page, 'rabbit')).toBe(150);
+  await expect(canvas(page)).toHaveAttribute('data-ran', 'true');
+});
+
+test('rate 키보드만으로: 입력 칸에 쓰고 Tab, 숫자 단축키로 예측, G로 경주', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await open(page, 'rate', { racers: BLANK_RACERS, predictFirst: true });
+  await page.getByLabel('토끼 거리(m)').focus();
+  for (const value of ['120', '20', '200', '40']) {
+    await page.keyboard.type(value);
+    await page.keyboard.press('Tab');
+  }
+  await pollObservation(
+    page,
+    (o) => o.racers?.[0]?.distance === 120 && o.racers[0].time === 20 && o.racers[1]?.time === 40,
+  );
+  // 이제 포커스는 예측 단추에 있다. 입력 칸에서 친 숫자는 단축키로 쓰이지 않았다.
+  await expect(page.getByRole('button', { name: '토끼', exact: true })).toBeFocused();
+  expect((await readObservation(page)).prediction).toBeNull();
+  await page.keyboard.press('Digit1');
+  await pollObservation(page, (o) => o.prediction === 'rabbit');
+  await page.keyboard.press('KeyG');
+  await pollObservation(page, (o) => o.ran === true);
+  await expect(canvas(page)).toHaveAttribute('data-playing', 'false');
+  await page.keyboard.press('KeyR');
+  await pollObservation(page, (o) => o.racers?.[0]?.distance === null && o.ran === true);
+});
+
+test('rate: 잠긴 칸은 글자만, 범위 밖·숫자 아닌 입력은 안내하고 값은 그대로', async ({ page }) => {
+  await open(page, 'rate', {
+    racers: [
+      { id: 'a', name: '가', distance: 60, time: null },
+      { id: 'b', name: '나', distance: null, time: null },
+    ],
+  });
+  await expect(page.getByLabel('가 거리(m)')).toHaveText('60');
+  await page.getByLabel('나 시간(초)').fill('999');
+  await expect(page.getByTestId('ratio-message')).toHaveText(
+    '시간은 1부터 120까지 정수로 넣어 주세요.',
+  );
+  await pollObservation(page, (o) => o.racers?.[1]?.time === null);
+  await page.getByLabel('나 시간(초)').fill('x');
+  await expect(page.getByTestId('ratio-message')).toHaveText('숫자만 넣어 주세요.');
+});
+
+/** percent 칸 가운데의 화면 좌표(논리 좌표 → 화면). */
+async function cellPoint(
+  page: Page,
+  layout: 'grid' | 'strip',
+  index: number,
+): Promise<{ x: number; y: number }> {
+  const box = await canvas(page).boundingBox();
+  if (!box) throw new Error('캔버스를 찾지 못했습니다.');
+  const lx = layout === 'grid' ? 60 + (index % 10) * 46 + 23 : 50 + index * 9 + 4.5;
+  const ly = layout === 'grid' ? 70 + Math.floor(index / 10) * 46 + 23 : 315;
+  return { x: box.x + (lx * box.width) / 1000, y: box.y + (ly * box.height) / 600 };
+}
+
+async function dragCells(
+  page: Page,
+  layout: 'grid' | 'strip',
+  from: number,
+  to: number,
+): Promise<void> {
+  await canvas(page).scrollIntoViewIfNeeded();
+  const start = await cellPoint(page, layout, from);
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  const step = from <= to ? 1 : -1;
+  for (let i = from + step; step > 0 ? i <= to : i >= to; i += step) {
+    const point = await cellPoint(page, layout, i);
+    await page.mouse.move(point.x, point.y, { steps: 2 });
+  }
+  await page.mouse.up();
+}
+
+test('percent grid: 누르면 한 칸, 끌면 지나간 칸이 처음 칸의 새 상태로 바뀐다', async ({
+  page,
+}) => {
+  await open(page, 'percent');
+  await expect(page.getByTestId('percent-count')).toHaveText('칠한 칸 0 / 100');
+  await dragCells(page, 'grid', 0, 9);
+  await pollObservation(page, (o) => o.shaded === 10 && o.fraction === '1/10');
+  await dragCells(page, 'grid', 10, 14);
+  await pollObservation(page, (o) => o.shaded === 15);
+  // 칠한 칸에서 시작해 끌면 지운다.
+  await dragCells(page, 'grid', 9, 5);
+  await pollObservation(page, (o) => o.shaded === 10 && !(o.cells ?? []).includes(7));
+  // 한 칸 누르기
+  const point = await cellPoint(page, 'grid', 99);
+  await page.mouse.click(point.x, point.y);
+  await pollObservation(page, (o) => (o.cells ?? []).includes(99));
+  await expect(page.getByTestId('percent-count')).toHaveText('칠한 칸 11 / 100');
+  await click(page, '모두 지우기');
+  await pollObservation(page, (o) => o.shaded === 0);
+});
+
+test('percent strip: 끌어서 25칸을 칠하면 분수 1/4', async ({ page }) => {
+  await open(page, 'percent', { layout: 'strip' });
+  await expect(canvas(page)).toHaveAttribute('data-layout', 'strip');
+  await dragCells(page, 'strip', 0, 24);
+  await pollObservation(page, (o) => o.shaded === 25 && o.fraction === '1/4');
+});
+
+test('percent 키보드만으로: 방향키로 옮기고 Space·Enter, C·R', async ({ page }) => {
+  await open(page, 'percent', { shaded: 3 });
+  const group = page.getByTestId('percent-cells');
+  await group.focus();
+  await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('ArrowRight');
+  await expect(group).toHaveAttribute('data-cursor', '11');
+  await page.keyboard.press('Space');
+  await pollObservation(page, (o) => o.shaded === 4 && (o.cells ?? []).includes(11));
+  await page.keyboard.press('Space');
+  await pollObservation(page, (o) => o.shaded === 3);
+  await page.keyboard.press('Enter');
+  await pollObservation(page, (o) => o.shaded === 12);
+  await page.keyboard.press('KeyC');
+  await pollObservation(page, (o) => o.shaded === 0);
+  await page.keyboard.press('KeyR');
+  await pollObservation(page, (o) => o.shaded === 3);
+});
+
+for (const [config, name] of [
+  [{}, 'race'],
+  [{ look: 'table' }, 'table'],
+] as const) {
+  test(`화면 기준: rate ${name} 첫 화면`, async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await open(page, 'rate', config);
+    await click(page, '토끼');
+    await click(page, '경주 시작');
+    await expect(canvas(page)).toHaveAttribute('data-look', name);
+    await expect(canvas(page)).toHaveAttribute('data-step', '1000');
+    await expectPageSnapshot(page, `ratio-rate-${name}.png`);
+  });
+}
+
+for (const layout of ['grid', 'strip'] as const) {
+  test(`화면 기준: percent ${layout} 첫 화면`, async ({ page }) => {
+    await open(page, 'percent', { layout, shaded: 35 });
+    await expect(canvas(page)).toHaveAttribute('data-look', layout);
+    await expectPageSnapshot(page, `ratio-percent-${layout}.png`);
+  });
+}
+
+test('힌트 ② footprints: 처음 3초 발자국이 두 줄에 찍히고 글이 없다', async ({ page }) => {
+  await open(page, 'rate', {}, 'stage=fit&overlay=footprints');
+  await toggleOverlay(page);
+  const layer = await expectAligned(page, 'footprints');
+  await expect(layer.locator('[data-racer="rabbit"] [data-part="footprint"]')).toHaveCount(3);
+  await expect(layer.locator('[data-racer="turtle"] [data-part="footprint"]')).toHaveCount(3);
+  await expect(layer.locator('text')).toHaveCount(0);
+  // 1초 발자국은 출발선보다 오른쪽에 찍힌다.
+  const x = Number(
+    await layer
+      .locator('[data-racer="rabbit"] [data-part="footprint"][data-second="1"]')
+      .getAttribute('data-x'),
+  );
+  expect(x).toBeGreaterThan(150);
+});
+
+test('힌트 ② same-time: 같은 시간 위치에 점선 둘과 글', async ({ page }) => {
+  await open(page, 'rate', {}, 'stage=fit&overlay=same-time');
+  await toggleOverlay(page);
+  const layer = await expectAligned(page, 'same-time');
+  await expect(layer.locator('[data-part="time-line"]')).toHaveCount(2);
+  await expect(layer.locator('[data-part="same-time-label"]')).toHaveText('같은 시간');
+  const rabbit = Number(
+    await layer.locator('[data-part="time-line"][data-racer="rabbit"]').getAttribute('data-x'),
+  );
+  const turtle = Number(
+    await layer.locator('[data-part="time-line"][data-racer="turtle"]').getAttribute('data-x'),
+  );
+  // 20초: 토끼는 120m(도착), 거북은 100m 지점.
+  expect(rabbit).toBeGreaterThan(turtle);
+});
+
+test('힌트 ② tens-brackets: 다 찬 10칸마다 괄호와 10, 남은 칸은 점선', async ({ page }) => {
+  await open(page, 'percent', { shaded: 25 }, 'stage=fit&overlay=tens-brackets');
+  await toggleOverlay(page);
+  const layer = await expectAligned(page, 'tens-brackets');
+  await expect(layer.locator('[data-part="ten-bracket"]')).toHaveCount(2);
+  await expect(layer.locator('[data-part="ten-label"]').first()).toHaveText('10');
+  await expect(layer.locator('[data-part="rest-ring"]')).toHaveCount(1);
+  await page.getByTestId('percent-cells').focus();
+  await page.keyboard.press('KeyC');
+  await expect(layer.locator('[data-part="ten-bracket"]')).toHaveCount(0);
+});

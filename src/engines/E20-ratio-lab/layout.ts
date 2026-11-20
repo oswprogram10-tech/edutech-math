@@ -2,10 +2,10 @@
  * E20 판 배치(논리 1000×600). 화면과 오버레이가 같은 좌표를 쓰도록 순수 함수로 둔다.
  * 화면 좌표는 number, 수학 값(비·위치)은 Rational에서 온다.
  */
-import type { Rational } from '../../core/math';
+import { Rational } from '../../core/math';
 import { E20_STRINGS as S } from './strings.ko';
 import { stripPosition } from './observe';
-import type { Ingredient, MixState, Size } from './types';
+import type { Ingredient, MixState, PercentLayout, RacerState, RateLook, Size } from './types';
 
 // ───────────── mix ─────────────
 
@@ -298,4 +298,125 @@ export function markerRows(cups: readonly CupLayout[]): Map<string, number> {
     rows.set(item.key, row);
   }
   return rows;
+}
+
+// ───────────── rate ─────────────
+
+/** 트랙: 논리 x0에서 x0+w가 0~maxDistance(m)이다. */
+export const TRACK = { x0: 150, w: 760 };
+export const LANE = { halfH: 34 };
+
+/** 경주 재생 눈금: 0~1000(천분율). 화면 시간 0~T(두 시간 중 큰 값)를 이 눈금으로 센다. */
+export const RACE_STEPS = 1000;
+
+/** 줄(0, 1)의 가운데 y. table look은 표 아래로 내린다. */
+export function laneY(look: RateLook, index: number): number {
+  const ys = look === 'race' ? [215, 415] : [385, 510];
+  return ys[index] ?? ys[0] ?? 0;
+}
+
+export const TABLE = {
+  x: 150,
+  y: 50,
+  w: 700,
+  rowH: 54,
+  colName: 20,
+  colDistance: 300,
+  colTime: 500,
+};
+
+/** 트랙 위 거리(m, Rational)의 논리 x. */
+export function trackX(distance: Rational, maxDistance: number): number {
+  return TRACK.x0 + (TRACK.w * positionNumber(distance)) / maxDistance;
+}
+
+/** 두 시간 중 큰 값(초). 값이 비면 null. */
+export function raceTotalTime(racers: readonly RacerState[]): number | null {
+  const times = racers.map((r) => r.time);
+  if (times.some((t) => t === null)) return null;
+  return Math.max(...(times as number[]));
+}
+
+/**
+ * 화면 시간 step/1000·T일 때 캐릭터의 거리(m). 각자 자기 시간에 자기 거리에 닿고 그 뒤엔 멈춘다.
+ * 순수 함수라 같은 값이면 언제나 같은 위치다(결정적).
+ */
+export function racerDistanceAt(racer: RacerState, total: number, step: number): Rational | null {
+  if (racer.distance === null || racer.time === null) return null;
+  const run = Rational.of(racer.distance * total * step, racer.time * RACE_STEPS);
+  const end = Rational.of(racer.distance);
+  return run.compareTo(end) > 0 ? end : run;
+}
+
+/** 실제 t초 때 거리(m). t가 시간보다 길면 null(그 시각엔 이미 도착). */
+export function distanceAtSecond(racer: RacerState, second: number): Rational | null {
+  if (racer.distance === null || racer.time === null || second > racer.time) return null;
+  return Rational.of(racer.distance * second, racer.time);
+}
+
+// ───────────── percent ─────────────
+
+export const PERCENT_GRID = { x: 60, y: 70, cell: 46 };
+export const PERCENT_STRIP = { x: 50, y: 270, cellW: 9, cellH: 90 };
+
+export interface CellRect {
+  readonly index: number;
+  readonly x: number;
+  readonly y: number;
+  readonly w: number;
+  readonly h: number;
+}
+
+export function percentCellRect(layout: PercentLayout, index: number): CellRect {
+  if (layout === 'strip') {
+    const { x, y, cellW, cellH } = PERCENT_STRIP;
+    return { index, x: x + index * cellW, y, w: cellW, h: cellH };
+  }
+  const { x, y, cell } = PERCENT_GRID;
+  return {
+    index,
+    x: x + (index % 10) * cell,
+    y: y + Math.floor(index / 10) * cell,
+    w: cell,
+    h: cell,
+  };
+}
+
+/** 논리 좌표가 누른 칸 번호(칸 밖이면 null). */
+export function percentCellAt(layout: PercentLayout, x: number, y: number): number | null {
+  if (layout === 'strip') {
+    const { x: x0, y: y0, cellW, cellH } = PERCENT_STRIP;
+    if (y < y0 || y >= y0 + cellH || x < x0 || x >= x0 + cellW * 100) return null;
+    return Math.floor((x - x0) / cellW);
+  }
+  const { x: x0, y: y0, cell } = PERCENT_GRID;
+  if (x < x0 || y < y0 || x >= x0 + cell * 10 || y >= y0 + cell * 10) return null;
+  return Math.floor((y - y0) / cell) * 10 + Math.floor((x - x0) / cell);
+}
+
+/** 한 줄(10칸) 묶음 j의 바깥 상자. */
+export function decadeRect(layout: PercentLayout, j: number): CellRect {
+  const first = percentCellRect(layout, j * 10);
+  return { index: j, x: first.x, y: first.y, w: first.w * 10, h: first.h };
+}
+
+/** 키보드로 옮긴 칸 번호. 판 밖으로는 나가지 않는다. */
+export function moveCursor(layout: PercentLayout, index: number, key: string): number {
+  const steps: Readonly<Record<string, number>> = {
+    ArrowLeft: -1,
+    ArrowRight: 1,
+    ArrowUp: -10,
+    ArrowDown: 10,
+  };
+  const delta = steps[key];
+  if (delta === undefined) return index;
+  const next = index + delta;
+  if (
+    layout === 'grid' &&
+    Math.abs(delta) === 1 &&
+    Math.floor(next / 10) !== Math.floor(index / 10)
+  ) {
+    return index;
+  }
+  return next < 0 || next > 99 ? index : next;
 }

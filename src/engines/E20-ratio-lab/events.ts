@@ -10,16 +10,23 @@ export const EVENT_NAMES = ['ratio-changed'] as const;
 export function emit(prev: RatioState, next: RatioState, action: RatioAction): EngineEvent[] {
   void action;
   if (prev === next) return [];
-  if (next.mode === 'mix') {
-    const reading = readMix(next);
-    return [
-      {
-        name: 'ratio-changed',
-        payload: { value: reading.cup.value, sameAsReference: reading.sameAsReference },
-      },
-    ];
+  switch (next.mode) {
+    case 'mix': {
+      const reading = readMix(next);
+      return [
+        {
+          name: 'ratio-changed',
+          payload: { value: reading.cup.value, sameAsReference: reading.sameAsReference },
+        },
+      ];
+    }
+    case 'resize':
+      return [{ name: 'ratio-changed', payload: { distorted: readResize(next).distorted } }];
+    case 'rate':
+      return [{ name: 'ratio-changed', payload: { ran: next.runs > 0 } }];
+    case 'percent':
+      return [{ name: 'ratio-changed', payload: { shaded: next.cells.length } }];
   }
-  return [{ name: 'ratio-changed', payload: { distorted: readResize(next).distorted } }];
 }
 
 function record(args: JsonValue | undefined): Readonly<Record<string, JsonValue>> | null {
@@ -102,6 +109,66 @@ export const predicates: Readonly<Record<string, EnginePredicate>> = {
     );
   },
   distorted: (observation) => observation['distorted'] === true,
+  /** args `{ value }`: 학생이 예측한 쪽(캐릭터 id 또는 'same'). */
+  predictionIs: (observation, args) => {
+    const value = record(args)?.['value'];
+    return (
+      observation['mode'] === 'rate' &&
+      typeof value === 'string' &&
+      observation['prediction'] === value
+    );
+  },
+  /** 예측이 실제 더 빠른 쪽과 같다(속력이 같으면 'same'). */
+  predictionCorrect: (observation) => {
+    if (observation['mode'] !== 'rate' || typeof observation['prediction'] !== 'string') {
+      return false;
+    }
+    if (observation['sameSpeed'] === true) return observation['prediction'] === 'same';
+    const fastest = observation['fastestId'];
+    return typeof fastest === 'string' && observation['prediction'] === fastest;
+  },
+  ran: (observation) => observation['mode'] === 'rate' && count(observation, 'runs') >= 1,
+  sameSpeed: (observation) => observation['sameSpeed'] === true,
+  /** args `{ id, distance, time }`: 이 캐릭터의 거리·시간이 이 값인가. */
+  racerIs: (observation, args) => {
+    const wanted = record(args);
+    const list = observation['racers'];
+    if (!Array.isArray(list) || wanted === null) return false;
+    const id = wanted['id'];
+    const distance = integer(wanted['distance']);
+    const time = integer(wanted['time']);
+    if (typeof id !== 'string' || distance === null || time === null) return false;
+    return list.some((r) => {
+      const item = record(r);
+      return item?.['id'] === id && item['distance'] === distance && item['time'] === time;
+    });
+  },
+  /** 두 캐릭터의 거리·시간 쌍이 모두 들어 있고 서로 다르다. */
+  racersDiffer: (observation) => {
+    const list = observation['racers'];
+    if (!Array.isArray(list) || list.length !== 2) return false;
+    const [a, b] = list.map(record);
+    if (!a || !b) return false;
+    const values = [a['distance'], a['time'], b['distance'], b['time']];
+    if (!values.every((v) => typeof v === 'number')) return false;
+    return a['distance'] !== b['distance'] || a['time'] !== b['time'];
+  },
+  /** args `{ n }`: 칠한 칸 수가 n인가. */
+  shadedIs: (observation, args) => {
+    const n = integer(record(args)?.['n']);
+    return observation['mode'] === 'percent' && n !== null && observation['shaded'] === n;
+  },
+  /** args `{ value }`: 칠한 칸 ÷ 100이 이 수와 같은가("1/4"와 "25/100" 표기 차이 무시). */
+  fractionIs: (observation, args) => {
+    const wanted = rationalOf(record(args)?.['value']);
+    const actual = rationalOf(observation['fraction']);
+    return (
+      observation['mode'] === 'percent' &&
+      wanted !== null &&
+      actual !== null &&
+      wanted.equals(actual)
+    );
+  },
   hasMisconception: (observation, args) => {
     const code = record(args)?.['code'];
     const list = observation['misconceptions'];

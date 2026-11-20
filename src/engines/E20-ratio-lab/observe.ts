@@ -4,8 +4,19 @@
  */
 import type { JsonValue, Observation } from '../../core/engine-sdk';
 import { Rational } from '../../core/math';
-import { MC_RATIO_ADDITIVE } from './strings.ko';
-import type { Amounts, MixState, RatioConfig, RatioState, ResizeState, Size } from './types';
+import { MC_RATE_DISTANCE_ONLY, MC_RATIO_ADDITIVE } from './strings.ko';
+import { PERCENT_CELLS, SAME_PREDICTION } from './types';
+import type {
+  Amounts,
+  MixState,
+  PercentState,
+  RacerState,
+  RateState,
+  RatioConfig,
+  RatioState,
+  ResizeState,
+  Size,
+} from './types';
 
 /** 시럽 ÷ 우유. 우유가 0이면 null. */
 export function ratioValue(amounts: Amounts): Rational | null {
@@ -150,7 +161,113 @@ function observeResize(state: ResizeState): Observation {
   };
 }
 
+// ───────────── rate ─────────────
+
+/** 속력 = 거리 ÷ 시간(기약분수). 값이 비어 있으면 null. */
+export function speedOf(racer: Pick<RacerState, 'distance' | 'time'>): Rational | null {
+  return racer.distance === null || racer.time === null
+    ? null
+    : Rational.of(racer.distance, racer.time);
+}
+
+/** 두 캐릭터의 거리·시간이 모두 들어 있는가. */
+export function racersComplete(racers: readonly RacerState[]): boolean {
+  return racers.length === 2 && racers.every((r) => speedOf(r) !== null);
+}
+
+export interface RateReading {
+  readonly speeds: readonly (Rational | null)[];
+  /** 더 빠른 쪽(같거나 값이 비면 null). */
+  readonly fastestId: string | null;
+  readonly sameSpeed: boolean;
+}
+
+export function readRate(state: RateState): RateReading {
+  const speeds = state.racers.map(speedOf);
+  const [a, b] = speeds;
+  if (a === null || b === null || a === undefined || b === undefined) {
+    return { speeds, fastestId: null, sameSpeed: false };
+  }
+  const order = a.compareTo(b);
+  return {
+    speeds,
+    fastestId: order === 0 ? null : (state.racers[order > 0 ? 0 : 1]?.id ?? null),
+    sameSpeed: order === 0,
+  };
+}
+
+/** 예측이 거리(또는 시간)가 더 긴 쪽이고 그 캐릭터가 더 빠르지 않은가. */
+export function isDistanceOnly(racers: readonly RacerState[], prediction: string | null): boolean {
+  if (prediction === null || prediction === SAME_PREDICTION || racers.length !== 2) return false;
+  const index = racers.findIndex((r) => r.id === prediction);
+  if (index < 0) return false;
+  const picked = racers[index];
+  const other = racers[1 - index];
+  if (!picked || !other) return false;
+  const pickedSpeed = speedOf(picked);
+  const otherSpeed = speedOf(other);
+  if (
+    picked.distance === null ||
+    picked.time === null ||
+    other.distance === null ||
+    other.time === null ||
+    pickedSpeed === null ||
+    otherSpeed === null
+  ) {
+    return false;
+  }
+  const longer = picked.distance > other.distance || picked.time > other.time;
+  return longer && pickedSpeed.compareTo(otherSpeed) <= 0;
+}
+
+function observeRate(state: RateState): Observation {
+  const reading = readRate(state);
+  return {
+    mode: 'rate',
+    racers: state.racers.map((r, i) => ({
+      id: r.id,
+      distance: r.distance,
+      time: r.time,
+      speed: text(reading.speeds[i] ?? null),
+    })),
+    fastestId: reading.fastestId,
+    sameSpeed: reading.sameSpeed,
+    prediction: state.prediction,
+    predictionLocked: state.prediction !== null,
+    ran: state.runs > 0,
+    runs: state.runs,
+    misconceptions: state.distanceOnly ? [MC_RATE_DISTANCE_ONLY] : [],
+  };
+}
+
+// ───────────── percent ─────────────
+
+export function percentFraction(shaded: number): Rational {
+  return Rational.of(shaded, PERCENT_CELLS);
+}
+
+function observePercent(state: PercentState): Observation {
+  const shaded = state.cells.length;
+  return {
+    mode: 'percent',
+    shaded,
+    cells: [...state.cells],
+    percent: String(shaded),
+    fraction: percentFraction(shaded).toString(),
+    misconceptions: [],
+  };
+}
+
 export function observe(state: RatioState, config: RatioConfig): Observation {
   void config;
-  return state.mode === 'mix' ? observeMix(state) : observeResize(state);
+  switch (state.mode) {
+    case 'mix':
+      return observeMix(state);
+    case 'resize':
+      return observeResize(state);
+    case 'rate':
+      return observeRate(state);
+    case 'percent':
+      return observePercent(state);
+  }
 }

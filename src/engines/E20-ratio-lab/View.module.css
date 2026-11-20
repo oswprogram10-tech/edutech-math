@@ -186,3 +186,59 @@
   font-size: 1rem;
   font-weight: 800;
 }
+
+.racerBox {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.9rem;
+  align-items: center;
+  padding: 0.5rem 0.7rem;
+  border: 2px solid #d7deea;
+  border-radius: 12px;
+}
+
+.racerName {
+  min-width: 3.2em;
+  font-size: 1.05rem;
+}
+
+.field {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.fieldName,
+.fieldUnit {
+  color: #3d485c;
+  font-size: 0.95rem;
+}
+
+.numberInput,
+.fixedValue {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 5.2em;
+  min-height: var(--target);
+  padding: 0 0.5rem;
+  border: 2px solid #2f6fde;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #1d2330;
+  font: inherit;
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.numberInput:focus-visible {
+  outline: 3px solid #e8872e;
+  outline-offset: 3px;
+}
+
+.fixedValue {
+  border-color: #c7cfdd;
+  background: #f4f6fa;
+}

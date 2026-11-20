@@ -1,44 +1,18 @@
 /**
  * E20 조작 칸(SVG 밖). 단추마다 단축키 하나(<kbd>)가 있고 키보드로 모두 닿는다.
+ * rate·percent 조작 칸은 RateControls·PercentControls.
  * mix: 우유·시럽 넣기/빼기, 모두 ×k, 처음으로. resize: 가로·세로 한 칸씩, 둘 다 +n/×k, 담기, 처음으로.
  */
 import { sameShape } from './observe';
+import { ActionButton } from './ActionButton';
 import { shortcutsOf } from './shortcuts';
 import type { Shortcut } from './shortcuts';
 import { E20_STRINGS as S } from './strings.ko';
+import { PercentControls } from './PercentControls';
+import { RateControls } from './RateControls';
 import type { RatioAction, RatioState } from './types';
 import type { RatioUi } from './useRatioUi';
 import styles from './View.module.css';
-
-interface ButtonProps {
-  readonly id: string;
-  readonly label: string;
-  readonly shortcuts: readonly Shortcut[];
-  readonly ui: RatioUi;
-  readonly readOnly: boolean;
-  readonly primary?: boolean;
-}
-
-function ActionButton({ id, label, shortcuts, ui, readOnly, primary }: ButtonProps) {
-  const shortcut = shortcuts.find((s) => s.id === id);
-  if (!shortcut) return null;
-  return (
-    <button
-      type="button"
-      className={primary ? `${styles.button} ${styles.primary}` : styles.button}
-      aria-label={label}
-      aria-keyshortcuts={shortcut.code.replace('Digit', '')}
-      data-action={id}
-      disabled={readOnly}
-      onClick={() => ui.send(shortcut.action)}
-    >
-      <span>{label}</span>
-      <kbd className={styles.kbd} aria-hidden="true">
-        {shortcut.label}
-      </kbd>
-    </button>
-  );
-}
 
 export interface ControlsProps {
   readonly state: RatioState;
@@ -48,6 +22,9 @@ export interface ControlsProps {
 }
 
 export function Controls({ state, ui, readOnly }: ControlsProps) {
+  if (state.mode === 'rate') return <RateControls state={state} ui={ui} readOnly={readOnly} />;
+  if (state.mode === 'percent')
+    return <PercentControls state={state} ui={ui} readOnly={readOnly} />;
   const shortcuts = shortcutsOf(state);
   const common = { shortcuts, ui, readOnly };
   const factors = state.settings.scaleFactors;
