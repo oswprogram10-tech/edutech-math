@@ -3,6 +3,561 @@
   "title": "원의 둘레와 넓이",
   "activities": [
     {
+      "id": "g6s2u5.A1",
+      "title": "굴렁쇠 물감 굴리기",
+      "tasks": [
+        {
+          "id": "g6s2u5.A1.T1",
+          "engine": "E13",
+          "mode": "length",
+          "submit": "button",
+          "prompt": "지름 2cm, 5cm, 10cm 굴렁쇠를 한 바퀴씩 굴려 기록표에 적어요.",
+          "cpa": "C",
+          "config": {
+            "mode": "length",
+            "variant": "roll-circle",
+            "unit": "cm",
+            "diameters": [
+              "2",
+              "3",
+              "5",
+              "8",
+              "10"
+            ],
+            "precision": "0.01"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "logged",
+                "args": {
+                  "d": "2"
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "logged",
+                "args": {
+                  "d": "5"
+                }
+              },
+              {
+                "kind": "predicate",
+                "name": "logged",
+                "args": {
+                  "d": "10"
+                }
+              }
+            ]
+          },
+          "hints": [
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 1,
+              "say": "고른 굴렁쇠를 굴린 뒤 [기록하기]를 눌러야 표에 남아요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 2,
+              "say": "지름 단추를 바꿔 가며 세 번 굴려 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 3,
+              "backtrack": "g6s2u5.circumference-diameter-ratio"
+            }
+          ],
+          "concepts": [
+            "g6s2u5.circumference-diameter-ratio"
+          ]
+        },
+        {
+          "id": "g6s2u5.A1.T2",
+          "engine": "E13",
+          "mode": "length",
+          "submit": "button",
+          "prompt": "굴렁쇠를 굴린 뒤 지름 막대를 이어 놓아 보고, 원주에 지름이 몇 번 들어가는지 골라요. 가: 딱 3번 나: 3번과 조금 다: 4번",
+          "cpa": "C",
+          "config": {
+            "mode": "length",
+            "variant": "roll-circle",
+            "unit": "cm",
+            "diameters": [
+              "5"
+            ]
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "sticksAtLeast",
+                "args": {
+                  "n": 4
+                }
+              },
+              {
+                "kind": "equals",
+                "path": "response.pick.selected.0",
+                "value": "na"
+              }
+            ]
+          },
+          "diagnose": [
+            {
+              "code": "MC-CIRCLE-PI-EXACT",
+              "args": {
+                "trap": "ga",
+                "expected": "na"
+              },
+              "path": "response.pick.selected.0"
+            }
+          ],
+          "hints": [
+            {
+              "when": {
+                "misconception": "MC-CIRCLE-PI-EXACT"
+              },
+              "level": 1,
+              "say": "기록표 값이 모두 똑같이 3.14였을까?"
+            },
+            {
+              "when": {
+                "misconception": "MC-CIRCLE-PI-EXACT"
+              },
+              "level": 2,
+              "say": "기록표 값을 0.001까지 자세히 나누면 3.150, 3.133, 3.140처럼 조금씩 달라요."
+            },
+            {
+              "when": {
+                "misconception": "MC-CIRCLE-PI-EXACT"
+              },
+              "level": 3,
+              "backtrack": "g6s2u5.circumference-diameter-ratio"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.pick.selected.0",
+                "value": "da"
+              },
+              "level": 1,
+              "say": "네 번째 막대가 물감 자국을 넘었는지 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 1,
+              "say": "지름 막대를 하나씩 이어 놓고 물감 자국과 견주어 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 2,
+              "say": "막대를 이을 때마다 자국에 닿는지, 넘는지 살펴봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 3,
+              "backtrack": "g6s2u5.circumference-diameter-ratio"
+            }
+          ],
+          "concepts": [
+            "g6s2u5.circumference-diameter-ratio"
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "pick",
+                "label": "원주에 지름이 들어가는 횟수",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "ga",
+                    "label": "가 딱 3번"
+                  },
+                  {
+                    "id": "na",
+                    "label": "나 3번과 조금"
+                  },
+                  {
+                    "id": "da",
+                    "label": "다 4번"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g6s2u5.A1.T3",
+          "engine": "E13",
+          "mode": "length",
+          "submit": "button",
+          "prompt": "굴렁쇠 세 개 이상을 굴려 기록하고, 원주 ÷ 지름 값의 공통점을 골라요. 가: 모두 정확히 3.14 나: 모두 약 3.14 다: 지름이 클수록 커진다",
+          "cpa": "P",
+          "config": {
+            "mode": "length",
+            "variant": "roll-circle",
+            "unit": "cm",
+            "diameters": [
+              "2",
+              "3",
+              "5",
+              "8",
+              "10"
+            ],
+            "precision": "0.01"
+          },
+          "goal": {
+            "kind": "all",
+            "of": [
+              {
+                "kind": "predicate",
+                "name": "logCountAtLeast",
+                "args": {
+                  "n": 3
+                }
+              },
+              {
+                "kind": "equals",
+                "path": "response.pick.selected.0",
+                "value": "na"
+              }
+            ]
+          },
+          "diagnose": [
+            {
+              "code": "MC-CIRCLE-PI-EXACT",
+              "args": {
+                "trap": "ga",
+                "expected": "na"
+              },
+              "path": "response.pick.selected.0"
+            }
+          ],
+          "hints": [
+            {
+              "when": {
+                "misconception": "MC-CIRCLE-PI-EXACT"
+              },
+              "level": 1,
+              "say": "기록표 값이 모두 똑같이 3.14였을까?"
+            },
+            {
+              "when": {
+                "misconception": "MC-CIRCLE-PI-EXACT"
+              },
+              "level": 2,
+              "show": {
+                "engine": "E13",
+                "overlay": "pi-precision"
+              },
+              "say": "기록표 값을 0.001까지 자세히 나누면 3.150, 3.133, 3.140처럼 조금씩 달라요."
+            },
+            {
+              "when": {
+                "misconception": "MC-CIRCLE-PI-EXACT"
+              },
+              "level": 3,
+              "backtrack": "g6s2u5.circumference-diameter-ratio"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.pick.selected.0",
+                "value": "da"
+              },
+              "level": 1,
+              "say": "지름 2cm와 10cm의 값을 견주어 봐요. 지름이 5배일 때 값도 5배가 되었나요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 1,
+              "say": "기록표에서 원주 ÷ 지름 값을 줄마다 견주어 보세요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 2,
+              "say": "굴렁쇠를 세 개 이상 기록했나요? 값이 서로 어떻게 다른지, 어디가 같은지 살펴봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 3,
+              "backtrack": "g6s2u5.circumference-diameter-ratio"
+            }
+          ],
+          "concepts": [
+            "g6s2u5.circumference-diameter-ratio"
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "choice",
+                "id": "pick",
+                "label": "원주 ÷ 지름 값의 공통점",
+                "multiple": false,
+                "options": [
+                  {
+                    "id": "ga",
+                    "label": "가 모두 정확히 3.14"
+                  },
+                  {
+                    "id": "na",
+                    "label": "나 모두 약 3.14"
+                  },
+                  {
+                    "id": "da",
+                    "label": "다 지름이 클수록 커진다"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g6s2u5.A1.T4",
+          "engine": "E13",
+          "mode": "length",
+          "submit": "button",
+          "prompt": "지름이 7cm인 원의 원주는 몇 cm일까요? (원주율 3.14)",
+          "cpa": "A",
+          "showEngine": false,
+          "config": {
+            "mode": "length",
+            "variant": "roll-circle",
+            "unit": "cm",
+            "diameters": [
+              "5"
+            ]
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.c.value",
+            "value": "1099/50"
+          },
+          "diagnose": [
+            {
+              "code": "MC-GEO-RADIUS-DIAMETER",
+              "args": {
+                "expected": "21.98"
+              },
+              "path": "response.c.value"
+            }
+          ],
+          "hints": [
+            {
+              "when": {
+                "misconception": "MC-GEO-RADIUS-DIAMETER"
+              },
+              "level": 1,
+              "say": "원주율은 원주와 무엇의 관계였지?"
+            },
+            {
+              "when": {
+                "misconception": "MC-GEO-RADIUS-DIAMETER"
+              },
+              "level": 2,
+              "say": "원주율은 원주를 반지름이 아니라 지름으로 나눈 값이었어요."
+            },
+            {
+              "when": {
+                "misconception": "MC-GEO-RADIUS-DIAMETER"
+              },
+              "level": 3,
+              "backtrack": "g3s2u3.radius-diameter"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.c.value",
+                "value": "7693/50"
+              },
+              "level": 1,
+              "say": "둘레의 길이를 구하는 거예요. 안쪽을 덮는 양이 아니에요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 1,
+              "say": "원주는 지름의 약 몇 배였는지 기록표를 떠올려 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 2,
+              "say": "지름이 7cm일 때 원주를 구하는 식을 세워 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 3,
+              "backtrack": "g6s2u5.circumference-formula"
+            }
+          ],
+          "concepts": [
+            "g6s2u5.circumference-formula"
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "c",
+                "label": "원주(cm)",
+                "forms": [
+                  "decimal",
+                  "integer"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "g6s2u5.A1.T5",
+          "engine": "E13",
+          "mode": "length",
+          "submit": "button",
+          "prompt": "원주가 31.4cm인 원의 지름은 몇 cm일까요? (원주율 3.14)",
+          "cpa": "A",
+          "showEngine": false,
+          "config": {
+            "mode": "length",
+            "variant": "roll-circle",
+            "unit": "cm",
+            "diameters": [
+              "5"
+            ]
+          },
+          "goal": {
+            "kind": "equals",
+            "path": "response.d.value",
+            "value": "10"
+          },
+          "diagnose": [
+            {
+              "code": "MC-GEO-RADIUS-DIAMETER",
+              "args": {
+                "expected": "10"
+              },
+              "path": "response.d.value"
+            }
+          ],
+          "hints": [
+            {
+              "when": {
+                "misconception": "MC-GEO-RADIUS-DIAMETER"
+              },
+              "level": 1,
+              "say": "원주율은 원주와 무엇의 관계였지?"
+            },
+            {
+              "when": {
+                "misconception": "MC-GEO-RADIUS-DIAMETER"
+              },
+              "level": 2,
+              "say": "원주율은 원주를 반지름이 아니라 지름으로 나눈 값이었어요."
+            },
+            {
+              "when": {
+                "misconception": "MC-GEO-RADIUS-DIAMETER"
+              },
+              "level": 3,
+              "backtrack": "g3s2u3.radius-diameter"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 1,
+              "say": "원주 = 지름 × 3.14이면, 지름을 구하려면 원주를 어떻게 해야 할까요?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 2,
+              "say": "곱셈식을 거꾸로 나눗셈으로 바꿔 써 봐요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "mode",
+                "value": "length"
+              },
+              "level": 3,
+              "backtrack": "g6s2u5.circumference-formula"
+            }
+          ],
+          "concepts": [
+            "g6s2u5.circumference-formula"
+          ],
+          "response": {
+            "fields": [
+              {
+                "kind": "number",
+                "id": "d",
+                "label": "지름(cm)",
+                "forms": [
+                  "decimal",
+                  "integer"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "g6s2u5.A2",
       "title": "원을 잘라 늘어놓기",
       "tasks": [

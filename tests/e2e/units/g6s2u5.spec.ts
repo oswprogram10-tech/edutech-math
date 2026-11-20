@@ -6,8 +6,10 @@ import {
   expectContentPanelsReachable,
   expectFitCanvasVisible,
 } from '../panel-layout';
+import { expectControlsAboveFold } from '../controls-fold';
 
 /**
+ * T216: A1 「굴렁쇠 물감 굴리기」(E13 roll-circle) 묶음을 아래쪽에 더했다.
  * T121 g6s2u5 「원의 둘레와 넓이」 A2 「원을 잘라 늘어놓기」 단원 E2E.
  * 과제마다 대표 오답 → 힌트 ① → 고쳐서 통과 순서로 끝까지 해 본다.
  * T5는 오개념 코드가 둘이라 활동을 새로 열어 실패 횟수를 되돌리고 R-D ①을 따로 본다.
@@ -338,6 +340,265 @@ test('A2.T4 f-dr 오답은 첫 실패에서 힌트 ①을 준다', async ({ page
   await choose(page, 'f', '지름 × 반지름 × 원주율');
   await submit(page);
   await expectFailedWithHint(page, '줄의 가로는 원주의 얼마였나요?', 1);
+});
+
+// ══ T216: A1 굴렁쇠 물감 굴리기 (E13 length roll-circle) ═══════════════════════════
+
+async function openA1(page: Page): Promise<void> {
+  await page.goto('/');
+  await page.getByRole('button', { name: '1번', exact: true }).click();
+  await page.getByRole('button', { name: '건너뛰기' }).click();
+  await expect(page).toHaveURL(/#\/map$/);
+  await page.goto('/#/activity/g6s2u5.A1');
+  await expect(page.getByRole('heading', { name: '굴렁쇠 물감 굴리기' })).toBeVisible();
+  await expect(page.getByRole('button', { name: '확인하기' })).toBeVisible();
+}
+
+const ROLL_ID = 'roll-canvas';
+
+function rollBoard(page: Page): Locator {
+  return main(page).getByTestId(ROLL_ID);
+}
+
+function btn(page: Page, name: string): Locator {
+  return page.getByRole('button', { name, exact: true });
+}
+
+/** 판이 칸에 맞춰 크기를 정할 때까지(상자가 두 번 연속 같아질 때까지) 기다린다. */
+async function settleRoll(page: Page): Promise<void> {
+  await rollBoard(page).scrollIntoViewIfNeeded();
+  let previous = '';
+  await expect
+    .poll(async () => {
+      const now = JSON.stringify(await rollBoard(page).boundingBox());
+      const same = now === previous;
+      previous = now;
+      return same;
+    })
+    .toBe(true);
+}
+
+async function rollAndLog(page: Page, diameter: string, rows: number): Promise<void> {
+  await btn(page, `지름 ${diameter}cm`).click();
+  await btn(page, '굴리기').click();
+  await btn(page, '기록하기').click();
+  await expect(rollBoard(page).locator('[data-part="cell"]')).toHaveCount(rows * 3);
+}
+
+async function logThree(page: Page): Promise<void> {
+  await rollAndLog(page, '2', 1);
+  await rollAndLog(page, '5', 2);
+  await rollAndLog(page, '10', 3);
+}
+
+async function solveA1T1(page: Page): Promise<void> {
+  await settleRoll(page);
+  await logThree(page);
+  await submit(page);
+  await expectPassed(page);
+}
+
+async function stickFour(page: Page): Promise<void> {
+  await btn(page, '굴리기').click();
+  for (let count = 0; count < 4; count += 1) await btn(page, '지름 막대 잇기').click();
+}
+
+async function solveA1T2(page: Page): Promise<void> {
+  await settleRoll(page);
+  await stickFour(page);
+  await choose(page, 'pick', '나 3번과 조금');
+  await submit(page);
+  await expectPassed(page);
+}
+
+async function solveA1T3(page: Page): Promise<void> {
+  await settleRoll(page);
+  await logThree(page);
+  await choose(page, 'pick', '나 모두 약 3.14');
+  await submit(page);
+  await expectPassed(page);
+}
+
+test('A1 굴렁쇠 물감 굴리기 — 대표 오답 뒤 고쳐서 다섯 과제를 통과한다', async ({ page }) => {
+  await openA1(page);
+  await settleRoll(page);
+  await expectContentPanelsReachable(page);
+  await expectFitCanvasVisible(page);
+
+  // T1 — 기록 없이 확인해 일반 ①②를 본 뒤, 세 지름을 굴려 기록한다.
+  await submit(page);
+  await expectFailedWithHint(page, '고른 굴렁쇠를 굴린 뒤 [기록하기]를 눌러야 표에 남아요.', 1);
+  await submit(page);
+  await expectFailedWithHint(page, '지름 단추를 바꿔 가며 세 번 굴려 봐요.', 2);
+  await logThree(page);
+  await submit(page);
+  await expectPassed(page);
+
+  // T2 — 막대 4개를 이은 뒤 가(딱 3번)를 골라 MC-CIRCLE-PI-EXACT ①, ②는 say(오버레이 없음).
+  await settleRoll(page);
+  await stickFour(page);
+  await choose(page, 'pick', '가 딱 3번');
+  await submit(page);
+  await expectFailedWithHint(page, '기록표 값이 모두 똑같이 3.14였을까?', 1);
+  await submit(page);
+  await expectFailedWithHint(page, '기록표 값을 0.001까지 자세히 나누면', 2);
+  await expect(main(page).locator('[data-overlay="pi-precision"]')).toHaveCount(0);
+  await choose(page, 'pick', '나 3번과 조금');
+  await submit(page);
+  await expectPassed(page);
+
+  // T3 — 세 줄 기록 뒤 가(모두 정확히 3.14)로 ①, ② pi-precision 오버레이(1px 정렬).
+  await settleRoll(page);
+  await logThree(page);
+  await choose(page, 'pick', '가 모두 정확히 3.14');
+  await submit(page);
+  await expectFailedWithHint(page, '기록표 값이 모두 똑같이 3.14였을까?', 1);
+  await submit(page);
+  await expectFailedWithHint(page, '기록표 값을 0.001까지 자세히 나누면', 2);
+  await expectOverlayOverCanvas(main(page), 'pi-precision', ROLL_ID);
+  await choose(page, 'pick', '나 모두 약 3.14');
+  await submit(page);
+  await expectPassed(page);
+
+  // T4 — 엔진은 숨겨져 있다. 10.99는 MC-GEO-RADIUS-DIAMETER ①②, 바른 값으로 통과.
+  await expect(main(page)).toHaveCount(0);
+  await typePart(page, 'c', 'decimal', '10.99');
+  await submit(page);
+  await expectFailedWithHint(page, '원주율은 원주와 무엇의 관계였지?', 1);
+  await submit(page);
+  await expectFailedWithHint(page, '반지름이 아니라 지름으로 나눈 값', 2);
+  await clearNumber(page, 'c');
+  await typePart(page, 'c', 'decimal', '21.98');
+  await submit(page);
+  await expectPassed(page);
+
+  // T5 — 5는 MC-GEO-RADIUS-DIAMETER ①, 10으로 통과.
+  await expect(main(page)).toHaveCount(0);
+  await typeInteger(page, 'd', '5');
+  await submit(page);
+  await expectFailedWithHint(page, '원주율은 원주와 무엇의 관계였지?', 1);
+  await clearNumber(page, 'd');
+  await typeInteger(page, 'd', '10');
+  await submit(page);
+  await expectPassed(page, true);
+});
+
+test('A1.T2 다(4번)는 일반 전용 ①, T4 153.86은 일반 전용 ①을 준다', async ({ page }) => {
+  await openA1(page);
+  await solveA1T1(page);
+
+  await settleRoll(page);
+  await stickFour(page);
+  await choose(page, 'pick', '다 4번');
+  await submit(page);
+  await expectFailedWithHint(page, '네 번째 막대가 물감 자국을 넘었는지 보세요.', 1);
+  await choose(page, 'pick', '나 3번과 조금');
+  await submit(page);
+  await expectPassed(page);
+
+  await solveA1T3(page);
+
+  await typePart(page, 'c', 'decimal', '153.86');
+  await submit(page);
+  await expectFailedWithHint(page, '둘레의 길이를 구하는 거예요.', 1);
+});
+
+test('A1.T2를 키보드만으로 푼다', async ({ page }) => {
+  await openA1(page);
+  await solveA1T1(page);
+  await settleRoll(page);
+  await btn(page, '굴리기').focus();
+  await page.keyboard.press('Enter');
+  await btn(page, '지름 막대 잇기').focus();
+  for (let count = 0; count < 4; count += 1) await page.keyboard.press('Enter');
+  await field(page, 'pick').getByRole('button', { name: '나 3번과 조금', exact: true }).focus();
+  await page.keyboard.press('Enter');
+  await btn(page, '확인하기').focus();
+  await page.keyboard.press('Enter');
+  await expectPassed(page);
+});
+
+/** 화면 글·aria·data- 속성값을 모은 글(root 안). */
+async function exposedIn(root: Locator): Promise<string> {
+  return root.evaluate((element) => {
+    const parts: string[] = [element.textContent ?? ''];
+    for (const node of [element, ...Array.from(element.querySelectorAll('*'))]) {
+      for (const attribute of Array.from(node.attributes)) {
+        if (attribute.name.startsWith('data-') || attribute.name.startsWith('aria-')) {
+          parts.push(attribute.value);
+        }
+      }
+    }
+    return parts.join('\n');
+  });
+}
+
+test('A1 시작 화면 DOM·aria·data-에 원주·비·답이 없고 학년 표시도 없다', async ({ page }) => {
+  const secret = /6\.3|9\.4|15\.7|25\.1|31\.4|3\.14|3\.15|3\.13|21\.98/;
+  await openA1(page);
+  await settleRoll(page);
+  // T1 — 시작 화면 전체.
+  expect(await exposedIn(page.locator('body'))).not.toMatch(secret);
+  expect((await page.locator('body').textContent()) ?? '').not.toMatch(/[1-6]학년/);
+  await solveA1T1(page);
+  // T2 — 굴리기 전 시작 화면 전체.
+  await settleRoll(page);
+  expect(await exposedIn(page.locator('body'))).not.toMatch(secret);
+  await solveA1T2(page);
+  // T3 — 발문에 보기 글로 3.14가 있으므로 판 안만 본다.
+  await settleRoll(page);
+  expect(await exposedIn(main(page))).not.toMatch(secret);
+  await solveA1T3(page);
+  // T4 — 엔진이 숨겨졌고 응답 칸에도 답이 없다.
+  await expect(main(page)).toHaveCount(0);
+  expect(await slot(page, 'response').textContent()).not.toMatch(/21\.98/);
+});
+
+test('A1 단추·응답 칸이 48px 이상이다(6학년)', async ({ page }) => {
+  await openA1(page);
+  await settleRoll(page);
+  for (const name of [
+    '지름 2cm',
+    '지름 10cm',
+    '굴리기',
+    '지름 막대 잇기',
+    '기록하기',
+    '처음으로',
+  ]) {
+    await btn(page, name).scrollIntoViewIfNeeded();
+    const box = await btn(page, name).boundingBox();
+    expect(box, name).not.toBeNull();
+    expect(box?.height ?? 0, `${name} 높이`).toBeGreaterThanOrEqual(47.5);
+    expect(box?.width ?? 0, `${name} 너비`).toBeGreaterThanOrEqual(47.5);
+  }
+  await solveA1T1(page);
+  await settleRoll(page);
+  const option = field(page, 'pick').getByRole('button', { name: '가 딱 3번', exact: true });
+  await option.scrollIntoViewIfNeeded();
+  const optionBox = await option.boundingBox();
+  expect(optionBox?.height ?? 0).toBeGreaterThanOrEqual(47.5);
+});
+
+test('A1 첫 화면 기준 이미지(T1·T2)와 엔진이 보이는 과제의 조작 칸 첫 줄', async ({ page }) => {
+  await openA1(page);
+  await settleRoll(page);
+  await screenshot(page, 'g6s2u5-a1t1.png');
+  await expectControlsAboveFold(page, 'g6s2u5.A1.T1');
+  await solveA1T1(page);
+
+  await settleRoll(page);
+  await screenshot(page, 'g6s2u5-a1t2.png');
+  await expectControlsAboveFold(page, 'g6s2u5.A1.T2');
+  await solveA1T2(page);
+
+  await settleRoll(page);
+  await expectControlsAboveFold(page, 'g6s2u5.A1.T3');
+  await solveA1T3(page);
+
+  // T4·T5는 엔진을 숨겨 조작 칸이 없다. 응답 칸과 확인하기만 본다.
+  await expect(main(page)).toHaveCount(0);
+  await expect(slot(page, 'response')).toBeVisible();
+  await expect(page.getByRole('button', { name: '확인하기' })).toBeVisible();
 });
 
 test('오프라인에서도 g6s2u5.A2 활동이 열린다', async ({ page, context }) => {
