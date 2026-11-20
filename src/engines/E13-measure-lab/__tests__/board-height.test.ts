@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { TANK, boardHeight as compareHeight } from '../compare/geometry';
 import { boardHeight as estimateHeight, RULER } from '../estimate/layout';
+import { boardHeight as capacityHeight, GUIDE, baseY } from '../capacity/layout';
+import { boardHeight as weightHeight } from '../weight/layout';
 import { BAND_H, boardHeight as lengthHeight, geoOf } from '../length/layout';
 import { boardHeight as trainHeight, geoOf as trainGeoOf } from '../train/layout';
 
@@ -89,6 +91,27 @@ describe('E13 모드별 논리 높이 (T223)', () => {
       expect(compareHeight({ attribute: 'capacity', pour: false })).toBeGreaterThanOrEqual(
         TANK.bottom,
       );
+    });
+  });
+
+  describe('capacity (T213)', () => {
+    it('cup-count 520, puzzle 580: 그릇 바닥 + 점선 비커 자리 + 여백이고 600 이하', () => {
+      expect(capacityHeight({ variant: 'cup-count' })).toBe(520);
+      expect(capacityHeight({ variant: 'puzzle' })).toBe(580);
+      for (const variant of ['cup-count', 'puzzle'] as const) {
+        expect(baseY({ variant }) + GUIDE.gap + GUIDE.size).toBeLessThan(
+          capacityHeight({ variant }),
+        );
+        expect(capacityHeight({ variant })).toBeLessThanOrEqual(MAX);
+      }
+    });
+  });
+
+  describe('weight (T213)', () => {
+    it('윗접시저울만 560, 용수철저울이 있으면 600이고 600 이하', () => {
+      expect(weightHeight({ tools: ['pan-balance'] })).toBe(560);
+      expect(weightHeight({ tools: ['spring-scale'] })).toBe(600);
+      expect(weightHeight({ tools: ['pan-balance', 'spring-scale'] })).toBe(600);
     });
   });
 });

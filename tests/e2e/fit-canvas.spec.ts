@@ -49,7 +49,7 @@ const ENGINES: readonly EngineCase[] = [
   {
     label: 'E13',
     heading: '측정 실험실',
-    modes: ['compare-direct', 'length', 'estimate', 'map-route'],
+    modes: ['compare-direct', 'length', 'estimate', 'map-route', 'capacity', 'weight'],
   },
   { label: 'E14', heading: '시계·시간', modes: ['clock', 'duration', 'calendar', 'time-calc'] },
   { label: 'E15', heading: '규칙·패턴', modes: ['sequence', 'calc-pattern', 'growth', 'gears'] },
