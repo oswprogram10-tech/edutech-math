@@ -408,6 +408,33 @@
               "when": {
                 "kind": "equals",
                 "path": "response.c.value",
+                "value": "1099/25"
+              },
+              "level": 1,
+              "say": "원주율은 원주와 무엇의 관계였지?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.c.value",
+                "value": "1099/25"
+              },
+              "level": 2,
+              "say": "원주율은 원주를 반지름이 아니라 지름으로 나눈 값이었어요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.c.value",
+                "value": "1099/25"
+              },
+              "level": 3,
+              "backtrack": "g3s2u3.radius-diameter"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.c.value",
                 "value": "7693/50"
               },
               "level": 1,
@@ -506,6 +533,33 @@
             {
               "when": {
                 "misconception": "MC-GEO-RADIUS-DIAMETER"
+              },
+              "level": 3,
+              "backtrack": "g3s2u3.radius-diameter"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.d.value",
+                "value": "20"
+              },
+              "level": 1,
+              "say": "원주율은 원주와 무엇의 관계였지?"
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.d.value",
+                "value": "20"
+              },
+              "level": 2,
+              "say": "원주율은 원주를 반지름이 아니라 지름으로 나눈 값이었어요."
+            },
+            {
+              "when": {
+                "kind": "equals",
+                "path": "response.d.value",
+                "value": "20"
               },
               "level": 3,
               "backtrack": "g3s2u3.radius-diameter"

@@ -503,6 +503,23 @@ test('A1.T2 다(4번)는 일반 전용 ①, T4 153.86은 일반 전용 ①을 �
   await expectFailedWithHint(page, '둘레의 길이를 구하는 거예요.', 1);
 });
 
+test('A1.T4 43.96·T5 20도 MC-GEO-RADIUS-DIAMETER ①을 준다(when 규칙)', async ({ page }) => {
+  await openA1(page);
+  await solveA1T1(page);
+  await solveA1T2(page);
+  await solveA1T3(page);
+  await typePart(page, 'c', 'decimal', '43.96');
+  await submit(page);
+  await expectFailedWithHint(page, '원주율은 원주와 무엇의 관계였지?', 1);
+  await clearNumber(page, 'c');
+  await typePart(page, 'c', 'decimal', '21.98');
+  await submit(page);
+  await expectPassed(page);
+  await typeInteger(page, 'd', '20');
+  await submit(page);
+  await expectFailedWithHint(page, '원주율은 원주와 무엇의 관계였지?', 1);
+});
+
 test('A1.T2를 키보드만으로 푼다', async ({ page }) => {
   await openA1(page);
   await solveA1T1(page);
