@@ -73,6 +73,8 @@ for (const engine of ENGINES) {
         await openMode(page, engine.label, engine.heading, mode);
         const box = await expectSandboxCanvasVisible(page, {
           buttons: testInfo.project.name !== 'ipad',
+          // T199: E06·E19·E20은 칸이 낮으면 조작 칸을 누르지 않고 바깥 상자가 세로로 스크롤한다.
+          outerScrollY: ['E06', 'E19', 'E20'].includes(engine.label),
         });
         console.log('T122', {
           project: testInfo.project.name,

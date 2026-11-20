@@ -194,8 +194,11 @@ async function expectPageSnapshot(page: Page, name: string): Promise<void> {
   test.skip(test.info().project.name === 'board', '기준 이미지는 크롬북·아이패드만 둔다.');
   await page.waitForTimeout(600);
   await page.evaluate(() => window.scrollTo(0, 0));
-  // 조작 칸은 좁은 판에서 안쪽 스크롤이 생기므로 단추를 누르며 내려간 위치를 맨 위로 돌린다.
-  await page.getByTestId('ratio-controls').evaluate((element) => element.scrollTo(0, 0));
+  // T199: 좁은 판에서는 엔진 바깥 상자(.wrap)가 세로로 스크롤하므로 단추를 누르며 내려간 위치를 맨 위로 돌린다.
+  await page.getByTestId('ratio-controls').evaluate((element) => {
+    element.scrollTo(0, 0);
+    element.closest('[class*="wrap"]')?.scrollTo(0, 0);
+  });
   await expect(page).toHaveScreenshot(name, { fullPage: true, animations: 'disabled' });
 }
 

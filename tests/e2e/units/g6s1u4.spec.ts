@@ -257,19 +257,33 @@ async function passA2T2(page: Page): Promise<void> {
   await expectPassed(page);
 }
 
-/**
- * 예측하고 경주를 본 뒤 더 빠른 쪽을 고른다.
- * 예측·경주는 단축키(1·2, G)로 한다. 응답 칸이 옆에 있는 반쪽 판에서는 크롬북에서 조작 칸이 32px로 눌려
- * 단추를 마우스로 누를 수 없기 때문이다(메모의 요청 참고).
- */
+/** 예측하고 경주를 본 뒤 더 빠른 쪽을 고른다. 예측·경주는 조작 칸 단추를 마우스로 누른다. */
 async function raceAndChoose(page: Page, predict: '토끼' | '거북', pick: string): Promise<void> {
-  await act(page, predict).focus();
-  await page.keyboard.press(predict === '토끼' ? 'Digit1' : 'Digit2');
+  await act(page, predict).click();
   await expect(page.getByTestId('rate-prediction')).toHaveText(`내 예측: ${predict}`);
-  await page.keyboard.press('KeyG');
+  await act(page, '경주 시작').click();
   await expect(page.getByTestId('ratio-canvas')).toHaveAttribute('data-ran', 'true');
   await expect(page.getByTestId('ratio-canvas')).toHaveAttribute('data-playing', 'false');
   await choose(page, 'fast', pick);
+}
+
+/**
+ * T199: 반쪽 판에서도 조작 칸이 눌리지 않는다. 첫 단추(예측)는 화면 높이 44px 이상이고,
+ * 조작 칸은 내용 높이 그대로이며(눌림 없음), 판 그림은 최소 배율 0.6보다 작지 않고, 단추를 누를 수 있다.
+ */
+async function expectControlsUsable(page: Page): Promise<void> {
+  const main = slot(page, 'main');
+  const controls = main.getByTestId('ratio-controls');
+  const first = act(page, '토끼');
+  await first.scrollIntoViewIfNeeded();
+  await expect(first).toBeInViewport({ ratio: 1 });
+  const box = await first.boundingBox();
+  expect(box?.height ?? 0, '첫 단추의 화면 높이').toBeGreaterThanOrEqual(44);
+  const squeezed = await controls.evaluate((el) => el.scrollHeight - el.clientHeight);
+  expect(squeezed, '조작 칸이 눌려 내용이 잘리면 안 된다').toBeLessThanOrEqual(1);
+  const canvas = await main.getByTestId('ratio-canvas').boundingBox();
+  expect(canvas?.height ?? 0, '판 그림 높이(최소 배율 0.6 → 360px)').toBeGreaterThanOrEqual(359);
+  await first.click({ trial: true });
 }
 
 async function fillTurtle(page: Page, distance: string, time: string): Promise<void> {
@@ -434,8 +448,8 @@ test('g6s1u4.A2 — 사진·경주·인구 밀도 5과제 흐름·오개념 ①�
 
   // T3 첫 화면 + 스냅샷(예측 전)
   await expect(main.getByTestId('ratio-canvas')).toHaveAttribute('data-look', 'race');
-  // 전자칠판(1920px)에서는 반쪽 판의 조작 칸이 판을 8% 가린다(메모의 요청 참고).
-  await expectReachable(page, [main.getByTestId('ratio-canvas')], 0.9);
+  await expectReachable(page, [main.getByTestId('ratio-canvas')]);
+  await expectControlsUsable(page);
   await expectNoLeak(page, [/1초에/, /더 멀리/]);
   await screenshot(page, 'g6s1u4-a2.png');
 
@@ -530,8 +544,7 @@ test('g6s1u4.A2.T3 — 예측하지 않으면 경주를 시작할 수 없고, �
   await openActivity(page, 'g6s1u4.A2', '사진 리사이저와 속력 경주');
   await passA2T1(page);
   await passA2T2(page);
-  await act(page, '경주 시작').focus();
-  await page.keyboard.press('KeyG');
+  await act(page, '경주 시작').click();
   await expect(page.getByTestId('ratio-message')).toHaveText('먼저 누가 더 빠를지 예측해 주세요.');
   await submit(page);
   await expectFailedWithHint(page, null, 1);
